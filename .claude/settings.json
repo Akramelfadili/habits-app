@@ -1,0 +1,29 @@
+{
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Edit|Write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/format.sh",
+						"timeout": 30,
+						"statusMessage": "Running Biome..."
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/run-tests.sh",
+						"timeout": 120,
+						"statusMessage": "Running tests before ending session..."
+					}
+				]
+			}
+		]
+	}
+}
