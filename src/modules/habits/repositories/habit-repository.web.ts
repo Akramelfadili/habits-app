@@ -74,6 +74,8 @@ export async function updateHabit(
 		color: input.color,
 		category: input.category,
 		targetType: input.targetType,
+		targetAmount: input.targetAmount,
+		targetUnit: input.targetUnit,
 		frequency: input.frequency,
 		updatedAt: new Date(),
 	};

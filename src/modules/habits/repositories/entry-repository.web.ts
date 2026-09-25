@@ -66,10 +66,45 @@ export async function setHabitCompletedOn(
 	setEntries(entries.filter((entry) => entry.id !== existing.id));
 }
 
+/** Web counterpart of the native repository's quantity upsert (HAB-07). */
+export async function setHabitQuantityOn(
+	habitId: number,
+	date: Date,
+	value: number,
+): Promise<void> {
+	const dateString = format(date, "yyyy-MM-dd");
+	const entries = getEntries();
+	const existing = entries.find(
+		(entry) => entry.habitId === habitId && entry.date === dateString,
+	);
+
+	if (value <= 0) {
+		if (!existing) return;
+		setEntries(entries.filter((entry) => entry.id !== existing.id));
+		return;
+	}
+
+	if (existing) {
+		setEntries(
+			entries.map((entry) =>
+				entry.id === existing.id ? { ...entry, value } : entry,
+			),
+		);
+		return;
+	}
+
+	const nextId = Math.max(0, ...entries.map((entry) => entry.id)) + 1;
+	setEntries([
+		...entries,
+		{ id: nextId, habitId, date: dateString, value, createdAt: new Date() },
+	]);
+}
+
 // Compile-time guard: this file must export exactly what the native repository
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeEntryRepository = {
 	useEntriesInRange,
 	setHabitCompletedOn,
+	setHabitQuantityOn,
 };
 void _sameShape;

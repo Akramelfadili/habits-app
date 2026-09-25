@@ -28,6 +28,9 @@ export const habits = sqliteTable("habits", {
 	targetType: text("target_type", { enum: ["simple", "quantity"] })
 		.notNull()
 		.default("simple"),
+	/** Set only when targetType is "quantity" (HAB-07) — null for simple-check habits. */
+	targetAmount: integer("target_amount"),
+	targetUnit: text("target_unit"),
 	frequencyType: text("frequency_type", {
 		enum: ["daily", "weekdays", "per-week"],
 	})
@@ -55,6 +58,8 @@ export const entries = sqliteTable(
 			.references(() => habits.id),
 		/** Calendar day, "yyyy-MM-dd" — not a timestamp, so timezone can't shift which day a completion lands on. */
 		date: text("date").notNull(),
+		/** Logged amount for a quantity habit (HAB-07) — null for simple-check entries. */
+		value: integer("value"),
 		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 	},
 	(table) => [

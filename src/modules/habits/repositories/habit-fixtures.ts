@@ -15,7 +15,16 @@ export type FixtureScenario =
 	| "empty"
 	| "rest-day"
 	| "day-closed"
-	| "first-run";
+	| "first-run"
+	| "quantity-log";
+
+const FIXTURE_SCENARIOS: FixtureScenario[] = [
+	"empty",
+	"rest-day",
+	"day-closed",
+	"first-run",
+	"quantity-log",
+];
 
 /**
  * `?fixtures=` on any web URL — read once here so the habit and entry
@@ -26,11 +35,8 @@ export type FixtureScenario =
 export function resolveFixtureScenario(): FixtureScenario {
 	const search = globalThis.location?.search ?? "";
 	const value = new URLSearchParams(search).get("fixtures");
-	return value === "empty" ||
-		value === "rest-day" ||
-		value === "day-closed" ||
-		value === "first-run"
-		? value
+	return (FIXTURE_SCENARIOS as string[]).includes(value ?? "")
+		? (value as FixtureScenario)
 		: "default";
 }
 
@@ -43,6 +49,8 @@ export const HABIT_FIXTURES: Habit[] = [
 		category: "Evening",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -55,6 +63,8 @@ export const HABIT_FIXTURES: Habit[] = [
 		category: "Evening",
 		direction: "build",
 		targetType: "quantity",
+		targetAmount: 20,
+		targetUnit: "pages",
 		frequency: { type: "daily" },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -67,6 +77,8 @@ export const HABIT_FIXTURES: Habit[] = [
 		category: "Morning",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "daily" },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -79,6 +91,8 @@ export const HABIT_FIXTURES: Habit[] = [
 		category: null,
 		direction: "break",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "per-week", timesPerWeek: 5 },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -99,6 +113,8 @@ export const REST_DAY_HABIT_FIXTURES: Habit[] = [
 		category: "Evening",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: {
 			type: "weekdays",
 			days: ([1, 2, 3, 4, 5, 6, 7] as IsoWeekday[]).filter(
@@ -127,6 +143,8 @@ export const DAY_CLOSED_HABIT_FIXTURES: Habit[] = [
 		category: "Morning",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "daily" },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -139,6 +157,8 @@ export const DAY_CLOSED_HABIT_FIXTURES: Habit[] = [
 		category: "Evening",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "daily" },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -151,6 +171,8 @@ export const DAY_CLOSED_HABIT_FIXTURES: Habit[] = [
 		category: null,
 		direction: "break",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "daily" },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
@@ -163,6 +185,8 @@ export const DAY_CLOSED_HABIT_FIXTURES: Habit[] = [
 		category: "Morning",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: {
 			type: "weekdays",
 			days: [((getISODay(new Date()) % 7) + 1) as IsoWeekday],
@@ -178,10 +202,34 @@ export const DAY_CLOSED_HABIT_FIXTURES: Habit[] = [
 		category: "Evening",
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: {
 			type: "weekdays",
 			days: [((getISODay(new Date()) % 7) + 1) as IsoWeekday],
 		},
+		createdAt: FIXTURE_DATE,
+		updatedAt: FIXTURE_DATE,
+	},
+];
+
+/**
+ * A single quantity habit matching docs/mockups/quantity-log.png exactly
+ * (name, target, unit, current value) so the Quantity Log sheet screenshot
+ * (scripts/visual-check.mjs) can be compared to it directly.
+ */
+export const QUANTITY_LOG_HABIT_FIXTURES: Habit[] = [
+	{
+		id: 1,
+		name: "Glass of water",
+		icon: "drop",
+		color: "blue",
+		category: "Morning",
+		direction: "build",
+		targetType: "quantity",
+		targetAmount: 8,
+		targetUnit: "glasses",
+		frequency: { type: "daily" },
 		createdAt: FIXTURE_DATE,
 		updatedAt: FIXTURE_DATE,
 	},
@@ -196,6 +244,8 @@ export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 			return REST_DAY_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "day-closed":
 			return DAY_CLOSED_HABIT_FIXTURES.map((habit) => ({ ...habit }));
+		case "quantity-log":
+			return QUANTITY_LOG_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

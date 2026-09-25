@@ -1,5 +1,6 @@
 import {
 	habitFormSchema,
+	NO_TARGET_UNIT_MESSAGE,
 	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
 	toFrequencyFormValues,
@@ -12,6 +13,8 @@ const validInput = {
 	category: "Morning",
 	direction: "build",
 	targetType: "simple",
+	targetAmount: 8,
+	targetUnit: "",
 	frequencyType: "daily",
 	weekdays: [],
 	timesPerWeek: 3,
@@ -119,6 +122,50 @@ describe("habitFormSchema", () => {
 			...validInput,
 			frequencyType: "per-week",
 			timesPerWeek,
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("allows a blank unit when Target type is Simple check", () => {
+		const result = habitFormSchema.safeParse({
+			...validInput,
+			targetType: "simple",
+			targetUnit: "",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects a blank unit when Target type is Quantity", () => {
+		const result = habitFormSchema.safeParse({
+			...validInput,
+			targetType: "quantity",
+			targetUnit: "",
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0]).toMatchObject({
+				path: ["targetUnit"],
+				message: NO_TARGET_UNIT_MESSAGE,
+			});
+		}
+	});
+
+	it("accepts a Quantity habit with a target amount and unit", () => {
+		const result = habitFormSchema.safeParse({
+			...validInput,
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it.each([0, 1000])("rejects a target amount of %i", (targetAmount) => {
+		const result = habitFormSchema.safeParse({
+			...validInput,
+			targetType: "quantity",
+			targetAmount,
+			targetUnit: "glasses",
 		});
 		expect(result.success).toBe(false);
 	});

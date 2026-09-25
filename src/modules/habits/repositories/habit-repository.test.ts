@@ -54,6 +54,8 @@ describe("habit-repository", () => {
 			color: "green",
 			category: null,
 			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
 			frequency: { type: "daily" },
 		});
 
@@ -64,9 +66,28 @@ describe("habit-repository", () => {
 			color: "green",
 			category: null,
 			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
 			frequency: { type: "daily" },
 			direction: "build",
 		});
+	});
+
+	it("round-trips a quantity habit's target amount and unit", async () => {
+		const habit = await createHabit({
+			...baseInput,
+			targetType: "quantity",
+			targetAmount: 20,
+			targetUnit: "pages",
+		});
+		expect(habit.targetAmount).toBe(20);
+		expect(habit.targetUnit).toBe("pages");
+	});
+
+	it("stores a simple-check habit's target amount and unit as null", async () => {
+		const habit = await createHabit(baseInput);
+		expect(habit.targetAmount).toBeNull();
+		expect(habit.targetUnit).toBeNull();
 	});
 
 	it.each<Frequency>([
@@ -92,13 +113,23 @@ describe("habit-repository", () => {
 			frequency: { type: "weekdays", days: [1, 3, 5] },
 		});
 
-		const { name, icon, color, category, targetType } = baseInput;
+		const {
+			name,
+			icon,
+			color,
+			category,
+			targetType,
+			targetAmount,
+			targetUnit,
+		} = baseInput;
 		const updated = await updateHabit(created.id, {
 			name,
 			icon,
 			color,
 			category,
 			targetType,
+			targetAmount,
+			targetUnit,
 			frequency: { type: "per-week", timesPerWeek: 2 },
 		});
 

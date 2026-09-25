@@ -9,6 +9,7 @@ jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 
 const {
 	setHabitCompletedOn,
+	setHabitQuantityOn,
 }: typeof EntryRepository = require("./entry-repository");
 
 const DAY_1 = new Date("2026-09-14T00:00:00Z"); // Monday
@@ -81,5 +82,67 @@ describe("entry-repository", () => {
 
 		const rows = await mockDb.select().from(entries);
 		expect(rows).toHaveLength(2);
+	});
+
+	describe("setHabitQuantityOn", () => {
+		it("logs a value keyed by calendar day", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 6);
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toEqual([
+				expect.objectContaining({
+					habitId,
+					date: "2026-09-14",
+					value: 6,
+				}),
+			]);
+		});
+
+		it("updates the same day's value instead of inserting a second row", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 3);
+			await setHabitQuantityOn(habitId, DAY_1, 8);
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toHaveLength(1);
+			expect(rows[0].value).toBe(8);
+		});
+
+		it("allows logging past the habit's own target — over-logging is not capped", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 999);
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows[0].value).toBe(999);
+		});
+
+		it("deletes the row when the value is set to 0 — no entry means nothing logged", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 6);
+			await setHabitQuantityOn(habitId, DAY_1, 0);
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toEqual([]);
+		});
+
+		it("deletes the row when the value is set negative", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 6);
+			await setHabitQuantityOn(habitId, DAY_1, -1);
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toEqual([]);
+		});
+
+		it("setting 0 with no existing entry is a no-op", async () => {
+			const habitId = await seedHabit();
+			await expect(
+				setHabitQuantityOn(habitId, DAY_1, 0),
+			).resolves.not.toThrow();
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toEqual([]);
+		});
 	});
 });
