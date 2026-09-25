@@ -4,6 +4,7 @@
 	"version": "1.0.0",
 	"dependencies": {
 		"@expo/ui": "~57.0.20",
+		"@hookform/resolvers": "^5.9.1",
 		"date-fns": "^4.4.0",
 		"drizzle-orm": "^0.45.3",
 		"expo": "~57.0.25",
@@ -38,10 +39,13 @@
 		"@biomejs/biome": "^2.5.14",
 		"@testing-library/react-native": "^14.0.1",
 		"@types/jest": "^29.5.14",
+		"@types/node": "^26.6.2",
 		"@types/react": "~19.2.2",
+		"babel-plugin-inline-import": "^3.0.0",
 		"drizzle-kit": "^0.31.11",
 		"husky": "^9.1.7",
 		"jest-expo": "^57.0.5",
+		"playwright": "^1.63.0",
 		"typescript": "~6.0.3"
 	},
 	"scripts": {
@@ -52,7 +56,8 @@
 		"web": "expo start --web",
 		"lint": "expo lint",
 		"prepare": "husky",
-		"test": "jest"
+		"test": "jest",
+		"visual-check": "node scripts/visual-check.mjs"
 	},
 	"private": true,
 	"jest": {

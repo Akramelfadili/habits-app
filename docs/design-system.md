@@ -56,7 +56,7 @@ Refined monochrome. Black, white, and grey only for all UI chrome (backgrounds, 
 |---|---|---|---|
 | `warnTint` | `#FDF0D5` | `#3A2A0E` | Warning background fill (streak-at-risk icon, slipping-habit card, conflict banners) |
 | `warnInk` | `#9A6708` | `#E8A93A` | Warning foreground (icon strokes, text, "At risk" stat) |
-| `dangerBg` | `#C9372F` | `#D9544D` | Danger — used *only* for permanent delete. Never reused for anything less severe than an irreversible action. |
+| `dangerBg` | `#C9372F` | `#D9544D` | Danger — used for permanent/destructive actions (e.g. delete confirmation) and for inline validation errors; not used elsewhere as decoration. |
 | `frozenBg` | `#EDE8F8` | `#262036` | Frozen-day background fill (heatmap frozen cell, freeze-related chrome) |
 | `frozenInk` | `#7A5AC4` | `#A98FE0` | Frozen-day foreground |
 
@@ -127,31 +127,31 @@ Weight: regular body text, medium-weight for row labels/section headers only —
 
 Each entry: layout structure, and where the primary action sits.
 
-**Onboarding (HAB-01):** Vertical list of suggested habits, each a selectable row (color dot, name, subtitle, checkmark trailing). Primary CTA pinned bottom ("Add N habits"), secondary "Start from scratch" text link beneath it.
+**Onboarding (HAB-06):** Vertical list of suggested habits, each a selectable row (color dot, name, subtitle, checkmark trailing). Primary CTA pinned bottom ("Add N habits"), secondary "Start from scratch" text link beneath it.
 
-**Empty state (HAB-11):** Centered icon, headline, one-line support text, single primary CTA below — no other chrome.
+**Empty state (HAB-05):** Centered icon, headline, one-line support text, single primary CTA below — no other chrome.
 
-**New / Edit habit (HAB-01, HAB-02, HAB-04):** Scrollable form, grouped into cards: Name (text field) → Icon & Color (icon grid + color row) → Category (autocomplete text field) → Direction (segmented control + explanatory caption, locked in Edit mode) → Frequency (chip row + conditional weekday-circle picker) → Target type (segmented control, Quantity reveals Amount/Unit fields). Primary "Save habit" pinned bottom; "Cancel"/"Done" in the header.
+**New / Edit habit (HAB-01, HAB-02, HAB-04, HAB-07):** Scrollable form, grouped into cards: Name (text field) → Icon & Color (icon grid + color row) → Category (autocomplete text field) → Direction (segmented control + explanatory caption, locked in Edit mode) → Frequency (chip row + conditional weekday-circle picker) → Target type (segmented control, Quantity reveals Amount/Unit fields). Primary "Save habit" pinned bottom; "Cancel"/"Done" in the header.
 
 **Today (HAB-02, HAB-03, HAB-04):** Date header → overall progress bar → category-grouped cards, each a section header with a mini-count, then rows. Build-habit rows: filled circle trailing. Break-habit rows: outline amber circle trailing, resistance-framed subtitle copy. Tapping a row's circle toggles instantly; tapping the label opens Habit Detail.
 
-**Quantity log (HAB-03):** Bottom sheet over a dimmed Today background — habit name/target header, large stepper, progress bar, quick-add chip row, primary "Save X of Y" pinned bottom.
+**Quantity log (HAB-07):** Bottom sheet over a dimmed Today background — habit name/target header, large stepper, progress bar, quick-add chip row, primary "Save X of Y" pinned bottom.
 
 **Rest day / Day closed / Empty (HAB-05):** All three share the centered-icon-plus-message layout from Empty State, differentiated by icon, headline, and whether a secondary action ("Log something anyway") or a preview list (tomorrow's habits, Day Closed) appears beneath.
 
-**Streak at risk (HAB-05):** Bottom sheet, habit context header (dimmed background), "You missed yesterday" headline, freeze-count stat row, primary "Use a freeze" then secondary "Reset and start today" beneath it — safe/default option always visually dominant.
+**Streak at risk (HAB-08):** Bottom sheet, habit context header (dimmed background), "You missed yesterday" headline, freeze-count stat row, primary "Use a freeze" then secondary "Reset and start today" beneath it — safe/default option always visually dominant.
 
-**Weekly summary (HAB-08):** Two stat tiles side by side (Completed, Best day) → per-habit progress bar list, sorted worst-to-best → one insight card at the bottom (either the "slipping" warning-toned card with a Reschedule link, or the perfect-week congratulatory variant, same slot).
+**Weekly summary (HAB-11):** Two stat tiles side by side (Completed, Best day) → per-habit progress bar list, sorted worst-to-best → one insight card at the bottom (either the "slipping" warning-toned card with a Reschedule link, or the perfect-week congratulatory variant, same slot).
 
 **Habit detail (HAB-09):** Header row (icon, name, subtitle) → three stat tiles (streak, longest/90-day comparator, rate) → heatmap card with legend → "Recent entries" list, reverse chronological. New-habit variant: stat tiles show zero/dash, heatmap renders as empty/dotted placeholders, entries list shows a prompt instead of items.
 
-**Retro log (HAB-06):** Bottom sheet triggered from tapping a heatmap cell — date header, list of that day's habits with their toggles/values, an optional note field at the bottom, primary "Save changes" pinned bottom.
+**Retro log (HAB-10):** Bottom sheet triggered from tapping a heatmap cell — date header, list of that day's habits with their toggles/values, an optional note field at the bottom, primary "Save changes" pinned bottom.
 
-**Reminders (HAB-07):** List of independent time rows, each showing its time, its own inline weekday-chip row, and a toggle — plus a conflict warning banner inline under any time that doesn't match the habit's schedule. Below the list: "Add a time" (disabled + explanatory caption once 4/4 reached), then a separate "Evening review" toggle row, then the notification-permission banner if applicable.
+**Reminders (HAB-12):** List of independent time rows, each showing its time, its own inline weekday-chip row, and a toggle — plus a conflict warning banner inline under any time that doesn't match the habit's schedule. Below the list: "Add a time" (disabled + explanatory caption once 4/4 reached), then a separate "Evening review" toggle row, then the notification-permission banner if applicable.
 
-**Manage & Archive (HAB-10):** Active habits list with drag handles, grouped above an "Archived" section (dimmed rows + "Restore" text action). No destructive action lives here.
+**Manage & Archive (HAB-13):** Active habits list with drag handles, grouped above an "Archived" section (dimmed rows + "Restore" text action). No destructive action lives here.
 
-**Delete confirmation (HAB-10):** Bottom sheet — warning-tinted icon, "Delete '[habit]'?" headline, consequence copy, an "Archive instead" option surfaced *above* the primary action, primary black "Keep habit" button, with "Delete permanently" demoted to a small red text link beneath everything else. This ordering (safe option dominant, destructive option smallest) is a deliberate, load-bearing decision — not to be "simplified" back to a filled red button later.
+**Delete confirmation (HAB-13):** Bottom sheet — warning-tinted icon, "Delete '[habit]'?" headline, consequence copy, an "Archive instead" option surfaced *above* the primary action, primary black "Keep habit" button, with "Delete permanently" demoted to a small red text link beneath everything else. This ordering (safe option dominant, destructive option smallest) is a deliberate, load-bearing decision — not to be "simplified" back to a filled red button later.
 
 ## Notes for whoever builds from this file
 
