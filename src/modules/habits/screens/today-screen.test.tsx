@@ -19,19 +19,24 @@ const morningHabit = makeHabit({
 });
 const eveningHabit = makeHabit({ id: 2, name: "Read", category: "Evening" });
 
-let mockTotalHabitCount = 0;
 let mockGroups: { category: string; habits: Habit[] }[] = [];
 let mockProgress = { completed: 0, total: 0, fraction: 0 };
 let mockCompletedHabitIds = new Set<number>();
+let mockViewState: "no-habits" | "rest-day" | "day-closed" | "populated" =
+	"no-habits";
+let mockTomorrowPreview: Habit[] = [];
+let mockLastCompletedToday: { id: number; name: string } | null = null;
 const mockToday = new Date("2026-09-16T00:00:00Z");
 
 jest.mock("../hooks/use-today-queries", () => ({
 	useTodayQueries: () => ({
-		totalHabitCount: mockTotalHabitCount,
 		groups: mockGroups,
 		progress: mockProgress,
 		completedHabitIds: mockCompletedHabitIds,
 		today: mockToday,
+		viewState: mockViewState,
+		tomorrowPreview: mockTomorrowPreview,
+		lastCompletedToday: mockLastCompletedToday,
 	}),
 }));
 
@@ -60,10 +65,12 @@ describe("TodayScreen", () => {
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset();
 		mockClearAllHabits.mockReset();
-		mockTotalHabitCount = 0;
 		mockGroups = [];
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
+		mockViewState = "no-habits";
+		mockTomorrowPreview = [];
+		mockLastCompletedToday = null;
 	});
 
 	it("shows the no-habits-yet empty state when there are no habits at all", async () => {
@@ -82,8 +89,73 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
 
+	it("shows the rest-day state distinctly from empty and day-closed", async () => {
+		mockViewState = "rest-day";
+
+		await render(<TodayScreen />);
+
+		expect(screen.getByText("Rest day")).toBeTruthy();
+		expect(
+			screen.getByText(/Nothing is scheduled for \w+\. Streaks stay intact\./),
+		).toBeTruthy();
+		expect(screen.queryByText("Nothing to track yet")).toBeNull();
+	});
+
+	it("opens the add-habit flow from rest day's Log something anyway", async () => {
+		mockViewState = "rest-day";
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Log something anyway"));
+
+		expect(mockPush).toHaveBeenCalledWith("/new-habit");
+	});
+
+	it("shows the day-closed celebratory state with tomorrow's preview", async () => {
+		mockViewState = "day-closed";
+		mockProgress = { completed: 3, total: 3, fraction: 1 };
+		mockTomorrowPreview = [morningHabit, eveningHabit];
+
+		await render(<TodayScreen />);
+
+		expect(screen.getByText("All three done")).toBeTruthy();
+		expect(screen.getByText("TOMORROW")).toBeTruthy();
+		expect(screen.getByText("Glass of water")).toBeTruthy();
+		expect(screen.getByText("Read")).toBeTruthy();
+	});
+
+	it("omits the tomorrow preview card when nothing is due tomorrow", async () => {
+		mockViewState = "day-closed";
+		mockProgress = { completed: 1, total: 1, fraction: 1 };
+		mockTomorrowPreview = [];
+
+		await render(<TodayScreen />);
+
+		expect(screen.queryByText("TOMORROW")).toBeNull();
+	});
+
+	it("shows an Undo toast naming the habit completed most recently, and reverses it", async () => {
+		mockViewState = "day-closed";
+		mockProgress = { completed: 1, total: 1, fraction: 1 };
+		mockLastCompletedToday = { id: 1, name: "Glass of water" };
+
+		await render(<TodayScreen />);
+		expect(screen.getByText("Marked 'Glass of water' complete")).toBeTruthy();
+
+		await fireEvent.press(screen.getByText("Undo"));
+		expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, false);
+	});
+
+	it("omits the toast when there's no known last-completed habit", async () => {
+		mockViewState = "day-closed";
+		mockProgress = { completed: 1, total: 1, fraction: 1 };
+		mockLastCompletedToday = null;
+
+		await render(<TodayScreen />);
+		expect(screen.queryByText("Undo")).toBeNull();
+	});
+
 	it("renders category groups with their mini-counts", async () => {
-		mockTotalHabitCount = 2;
+		mockViewState = "populated";
 		mockGroups = [
 			{ category: "Morning", habits: [morningHabit] },
 			{ category: "Evening", habits: [eveningHabit] },
@@ -101,7 +173,7 @@ describe("TodayScreen", () => {
 	});
 
 	it("renders the overall progress line", async () => {
-		mockTotalHabitCount = 2;
+		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
 		mockProgress = { completed: 1, total: 2, fraction: 0.5 };
 
@@ -112,7 +184,7 @@ describe("TodayScreen", () => {
 	});
 
 	it("tapping a row's completion circle toggles it for today", async () => {
-		mockTotalHabitCount = 1;
+		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
 
 		await render(<TodayScreen />);
@@ -122,7 +194,7 @@ describe("TodayScreen", () => {
 	});
 
 	it("un-completing toggles back to false, with no confirmation", async () => {
-		mockTotalHabitCount = 1;
+		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
 		mockCompletedHabitIds = new Set([1]);
 
@@ -133,7 +205,7 @@ describe("TodayScreen", () => {
 	});
 
 	it("tapping a habit's name navigates toward Habit Detail without crashing", async () => {
-		mockTotalHabitCount = 1;
+		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
 
 		await render(<TodayScreen />);
@@ -143,7 +215,7 @@ describe("TodayScreen", () => {
 	});
 
 	it("still offers a way to add a habit once habits already exist", async () => {
-		mockTotalHabitCount = 1;
+		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
 
 		await render(<TodayScreen />);
@@ -153,7 +225,7 @@ describe("TodayScreen", () => {
 	});
 
 	it("asks for confirmation before clearing all habits, and only clears on confirm", async () => {
-		mockTotalHabitCount = 1;
+		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
 		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
 

@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 import type { Entry } from "../types";
 import { makeEntryFixtures } from "./entry-fixtures";
 import type * as NativeEntryRepository from "./entry-repository";
+import { resolveFixtureScenario } from "./habit-fixtures";
 
 /**
  * Web-only stand-in for `entry-repository.ts` (see `habit-repository.web.ts`
@@ -13,7 +14,7 @@ let store: Entry[] | undefined;
 const listeners = new Set<() => void>();
 
 function getEntries(): Entry[] {
-	store ??= makeEntryFixtures();
+	store ??= makeEntryFixtures(resolveFixtureScenario());
 	return store;
 }
 

@@ -1,27 +1,42 @@
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
+import { ListItem } from "@/components/ui/composite/list-item";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
+import { Toast } from "@/components/ui/composite/toast";
 import { Button } from "@/components/ui/primitives/button";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
-import { typeScale } from "@/theme/theme";
+import { habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HabitTodayRow } from "../components/habit-today-row";
+import { TodayStatePanel } from "../components/today-state-panel";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
+import { celebratoryHeadline } from "./today-screen-helpers";
 
 export function TodayScreen() {
 	const router = useRouter();
-	const { colors } = useTheme();
-	const { totalHabitCount, groups, progress, completedHabitIds, today } =
-		useTodayQueries();
+	const { colors, scheme } = useTheme();
+	const {
+		groups,
+		progress,
+		completedHabitIds,
+		today,
+		viewState,
+		tomorrowPreview,
+		lastCompletedToday,
+	} = useTodayQueries();
 	const { toggleCompletion } = useTodayActions();
 	const { clearAllHabits, isClearingAll } = useHabitActions();
+
+	function handleUndo() {
+		if (!lastCompletedToday) return;
+		toggleCompletion(lastCompletedToday.id, today, false);
+	}
 
 	function handleClearAllHabits() {
 		if (!clearAllHabits) return;
@@ -39,21 +54,92 @@ export function TodayScreen() {
 		);
 	}
 
-	if (totalHabitCount === 0) {
+	const header = (
+		<View style={styles.header}>
+			<SectionLabel>{format(today, "EEEE, d MMMM")}</SectionLabel>
+			<Text style={[styles.title, { color: colors.ink }]}>Today</Text>
+		</View>
+	);
+
+	if (viewState === "no-habits") {
 		return (
 			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
-				<View style={styles.empty}>
-					<View style={[styles.emptyIcon, { backgroundColor: colors.inner }]}>
-						<SymbolView name="circle" size={28} tintColor={colors.faint} />
-					</View>
-					<Text style={[styles.emptyHeadline, { color: colors.ink }]}>
-						Nothing to track yet
-					</Text>
-					<Text style={[styles.emptySubtitle, { color: colors.sub }]}>
-						Add your first habit and it will show up here every morning.
-					</Text>
+				<View style={styles.headerPadding}>{header}</View>
+				<TodayStatePanel
+					icon="circle"
+					headline="Nothing to track yet"
+					subtitle="Add your first habit and it will show up here every morning."
+				>
 					<Button label="Add habit" onPress={() => router.push("/new-habit")} />
-				</View>
+				</TodayStatePanel>
+			</SafeAreaView>
+		);
+	}
+
+	if (viewState === "rest-day") {
+		return (
+			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+				<View style={styles.headerPadding}>{header}</View>
+				<TodayStatePanel
+					icon="minus"
+					headline="Rest day"
+					subtitle={`Nothing is scheduled for ${format(today, "EEEE")}. Streaks stay intact.`}
+				>
+					<Button
+						label="Log something anyway"
+						variant="secondary"
+						fullWidth={false}
+						onPress={() => router.push("/new-habit")}
+					/>
+				</TodayStatePanel>
+			</SafeAreaView>
+		);
+	}
+
+	if (viewState === "day-closed") {
+		return (
+			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+				<ScrollView contentContainerStyle={styles.content}>
+					{header}
+					<TodayStatePanel
+						celebratory
+						centered={false}
+						icon="checkmark"
+						headline={celebratoryHeadline(progress.total)}
+						subtitle="Nothing else is scheduled today."
+					/>
+					{tomorrowPreview.length > 0 ? (
+						<Container>
+							<SectionLabel>Tomorrow</SectionLabel>
+							{tomorrowPreview.map((habit) => (
+								<ListItem
+									key={habit.id}
+									embedded
+									title={habit.name}
+									leading={
+										<View
+											style={[
+												styles.previewDot,
+												{
+													backgroundColor: habitAccentTint(habit.color, scheme),
+												},
+											]}
+										/>
+									}
+								/>
+							))}
+						</Container>
+					) : null}
+				</ScrollView>
+				{lastCompletedToday ? (
+					<View style={styles.footer}>
+						<Toast
+							message={`Marked '${lastCompletedToday.name}' complete`}
+							actionLabel="Undo"
+							onAction={handleUndo}
+						/>
+					</View>
+				) : null}
 			</SafeAreaView>
 		);
 	}
@@ -61,10 +147,7 @@ export function TodayScreen() {
 	return (
 		<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.header}>
-					<SectionLabel>{format(today, "EEEE, d MMMM")}</SectionLabel>
-					<Text style={[styles.title, { color: colors.ink }]}>Today</Text>
-				</View>
+				{header}
 
 				<Container>
 					<View style={styles.progressLabelRow}>
@@ -145,6 +228,10 @@ const styles = StyleSheet.create({
 		paddingBottom: 24,
 		gap: 16,
 	},
+	headerPadding: {
+		paddingHorizontal: 16,
+		paddingTop: 12,
+	},
 	header: {
 		gap: 4,
 	},
@@ -159,27 +246,14 @@ const styles = StyleSheet.create({
 	progressLabel: {
 		fontSize: typeScale.rowLabel,
 	},
-	empty: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-		paddingHorizontal: 32,
-		gap: 12,
+	previewDot: {
+		width: 12,
+		height: 12,
+		borderRadius: 6,
 	},
-	emptyIcon: {
-		width: 64,
-		height: 64,
-		borderRadius: 20,
-		alignItems: "center",
-		justifyContent: "center",
-		marginBottom: 4,
-	},
-	emptyHeadline: {
-		fontSize: typeScale.section,
-		fontWeight: "500",
-	},
-	emptySubtitle: {
-		fontSize: typeScale.subtitle,
-		textAlign: "center",
+	footer: {
+		paddingHorizontal: 16,
+		paddingBottom: 16,
+		paddingTop: 8,
 	},
 });

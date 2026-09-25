@@ -59,3 +59,48 @@ export function computeProgress(
 	).length;
 	return { completed, total, fraction: total === 0 ? 0 : completed / total };
 }
+
+/** Today's four mutually-exclusive display states (HAB-05). */
+export type TodayViewState =
+	| "no-habits"
+	| "rest-day"
+	| "day-closed"
+	| "populated";
+
+/**
+ * "No habits yet" always wins over "rest day" when both could apply (a brand
+ * new user, zero habits, on a day nothing would be scheduled anyway) — check
+ * habit count first, per the HAB-05 edge case.
+ */
+export function resolveTodayViewState(input: {
+	totalHabitCount: number;
+	progress: Progress;
+}): TodayViewState {
+	if (input.totalHabitCount === 0) return "no-habits";
+	if (input.progress.total === 0) return "rest-day";
+	if (input.progress.completed === input.progress.total) return "day-closed";
+	return "populated";
+}
+
+const NUMBER_WORDS = [
+	"zero",
+	"one",
+	"two",
+	"three",
+	"four",
+	"five",
+	"six",
+	"seven",
+	"eight",
+	"nine",
+	"ten",
+	"eleven",
+	"twelve",
+];
+
+/** Day closed's celebratory headline, e.g. "All six done." (HAB-05). */
+export function celebratoryHeadline(total: number): string {
+	const count =
+		total < NUMBER_WORDS.length ? NUMBER_WORDS[total] : String(total);
+	return `All ${count} done`;
+}
