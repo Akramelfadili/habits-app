@@ -31,6 +31,14 @@ const SCREENS = {
 		route: "/habits?fixtures=empty",
 		mockup: "docs/mockups/today-empty-state.png",
 	},
+	"today-rest-day": {
+		route: "/habits?fixtures=rest-day",
+		mockup: "docs/mockups/rest-day.png",
+	},
+	"today-day-closed": {
+		route: "/habits?fixtures=day-closed",
+		mockup: "docs/mockups/day-closed.png",
+	},
 	"new-habit": {
 		route: "/new-habit",
 		mockup: "docs/mockups/new-habit-form.png",

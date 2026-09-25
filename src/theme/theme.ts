@@ -15,6 +15,7 @@ export const surfaceColors = {
 		track: "#DEDDDA",
 		toast: "#1A1A19",
 		toastInk: "#FFFFFF",
+		toastBtn: "rgba(255,255,255,0.14)",
 		scrim: "rgba(26,26,25,0.32)",
 	},
 	dark: {

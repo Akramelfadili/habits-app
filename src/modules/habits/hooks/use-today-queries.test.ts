@@ -29,8 +29,10 @@ const perWeekHabit = makeHabit({
 	frequency: { type: "per-week", timesPerWeek: 1 },
 });
 
+type MockEntry = { habitId: number; date: string; createdAt: Date };
+
 let mockHabits = [dailyHabit, alsoDailyHabit, perWeekHabit];
-let mockEntries: { habitId: number; date: string }[] = [];
+let mockEntries: MockEntry[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
 	useHabitsList: () => mockHabits,
@@ -68,7 +70,7 @@ describe("useTodayQueries", () => {
 	});
 
 	it("marks a habit completed today from its entry", async () => {
-		mockEntries = [{ habitId: 1, date: TODAY_STRING }];
+		mockEntries = [{ habitId: 1, date: TODAY_STRING, createdAt: TODAY }];
 		const { result } = await renderHook(() => useTodayQueries());
 
 		expect(result.current.completedHabitIds.has(1)).toBe(true);
@@ -76,7 +78,7 @@ describe("useTodayQueries", () => {
 	});
 
 	it("computes overall progress from due habits and today's completions", async () => {
-		mockEntries = [{ habitId: 1, date: TODAY_STRING }];
+		mockEntries = [{ habitId: 1, date: TODAY_STRING, createdAt: TODAY }];
 		const { result } = await renderHook(() => useTodayQueries());
 
 		expect(result.current.progress).toEqual({
@@ -87,7 +89,13 @@ describe("useTodayQueries", () => {
 	});
 
 	it("excludes a per-week habit already past its weekly target from due habits", async () => {
-		mockEntries = [{ habitId: 3, date: YESTERDAY_STRING }];
+		mockEntries = [
+			{
+				habitId: 3,
+				date: YESTERDAY_STRING,
+				createdAt: new Date(YESTERDAY_STRING),
+			},
+		];
 
 		const { result } = await renderHook(() => useTodayQueries());
 		const dueIds = result.current.groups.flatMap((group) =>
@@ -102,5 +110,69 @@ describe("useTodayQueries", () => {
 			group.habits.map((habit) => habit.id),
 		);
 		expect(dueIds).toContain(3);
+	});
+
+	it("is rest-day when habits exist but none are due today", async () => {
+		mockHabits = [
+			makeHabit({ id: 1, frequency: { type: "weekdays", days: [4] } }), // Thursday only — TODAY is Wednesday.
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.viewState).toBe("rest-day");
+	});
+
+	it("is day-closed once every due-today habit is completed", async () => {
+		mockEntries = [
+			{ habitId: 1, date: TODAY_STRING, createdAt: TODAY },
+			{ habitId: 2, date: TODAY_STRING, createdAt: TODAY },
+			{ habitId: 3, date: TODAY_STRING, createdAt: TODAY },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.viewState).toBe("day-closed");
+	});
+
+	it("names the due-today habit completed most recently as lastCompletedToday", async () => {
+		const earlier = new Date("2026-09-16T08:00:00Z");
+		const later = new Date("2026-09-16T09:00:00Z");
+		mockEntries = [
+			{ habitId: 1, date: TODAY_STRING, createdAt: later },
+			{ habitId: 2, date: TODAY_STRING, createdAt: earlier },
+			{ habitId: 3, date: TODAY_STRING, createdAt: earlier },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.lastCompletedToday).toEqual({
+			id: 1,
+			name: "Glass of water",
+		});
+	});
+
+	it("is null for lastCompletedToday when nothing due today is completed", async () => {
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.lastCompletedToday).toBeNull();
+	});
+
+	it("ignores an off-schedule entry for a habit that isn't due today", async () => {
+		mockHabits = [
+			makeHabit({
+				id: 1,
+				name: "Glass of water",
+				frequency: { type: "weekdays", days: [4] },
+			}), // Thursday only — TODAY is Wednesday.
+		];
+		mockEntries = [{ habitId: 1, date: TODAY_STRING, createdAt: TODAY }];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.lastCompletedToday).toBeNull();
+	});
+
+	it("includes tomorrow's due habits in tomorrowPreview", async () => {
+		const thursdayOnly = makeHabit({
+			id: 4,
+			name: "Yoga",
+			frequency: { type: "weekdays", days: [4] }, // Thursday — TODAY+1.
+		});
+		mockHabits = [dailyHabit, thursdayOnly];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.tomorrowPreview.map((habit) => habit.id)).toEqual([
+			1, 4,
+		]);
 	});
 });

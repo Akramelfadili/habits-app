@@ -1,6 +1,10 @@
 import { useSyncExternalStore } from "react";
 import type { CreateHabitInput, Habit, UpdateHabitInput } from "../types";
-import { HABIT_FIXTURES } from "./habit-fixtures";
+import {
+	HABIT_FIXTURES,
+	habitFixturesFor,
+	resolveFixtureScenario,
+} from "./habit-fixtures";
 import type * as NativeHabitRepository from "./habit-repository";
 
 /**
@@ -10,14 +14,12 @@ import type * as NativeHabitRepository from "./habit-repository";
  * (scripts/visual-check.mjs) — so it's backed by in-memory fixtures instead.
  * Hooks and screens import `./habit-repository` either way and never know.
  *
- * Append `?fixtures=empty` to any URL to start with no habits (empty states).
+ * Append `?fixtures=empty` (no habits), `?fixtures=rest-day`, or
+ * `?fixtures=day-closed` to any URL to render those Today states (HAB-05).
  */
 
 function initialHabits(): Habit[] {
-	const search = globalThis.location?.search ?? "";
-	return new URLSearchParams(search).get("fixtures") === "empty"
-		? []
-		: HABIT_FIXTURES.map((habit) => ({ ...habit }));
+	return habitFixturesFor(resolveFixtureScenario());
 }
 
 let store: Habit[] | undefined;

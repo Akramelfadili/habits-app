@@ -41,7 +41,7 @@ export function Button({
 				fullWidth ? styles.fullWidth : styles.compact,
 				variant === "primary" && { backgroundColor: colors.ink },
 				variant === "secondary" && {
-					backgroundColor: "transparent",
+					backgroundColor: colors.card,
 					borderWidth: 1,
 					borderColor: colors.border,
 				},
@@ -70,7 +70,8 @@ const styles = StyleSheet.create({
 		paddingVertical: 14,
 	},
 	compact: {
-		paddingHorizontal: 4,
+		paddingVertical: 10,
+		paddingHorizontal: 20,
 	},
 	label: {
 		fontSize: 15,
