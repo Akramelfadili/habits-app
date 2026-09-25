@@ -23,12 +23,11 @@ const BASE_URL = process.env.VISUAL_CHECK_URL ?? "http://localhost:8081";
 
 /** Screen name → route (with fixture query) and the mockup it's checked against. */
 const SCREENS = {
-	"habit-list": {
+	today: {
 		route: "/habits",
-		mockup: null,
-		note: "No mockup for the interim habit list — Today view (HAB-03) replaces it.",
+		mockup: "docs/mockups/today-populated.png",
 	},
-	"habit-list-empty": {
+	"today-empty": {
 		route: "/habits?fixtures=empty",
 		mockup: "docs/mockups/today-empty-state.png",
 	},

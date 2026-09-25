@@ -47,3 +47,12 @@ export type UpdateHabitInput = {
 	frequency: Frequency;
 	// direction is intentionally excluded — it's locked after creation (HAB-01).
 };
+
+/** One completed/resisted day for a habit (HAB-03). Presence is the signal. */
+export type Entry = {
+	id: number;
+	habitId: number;
+	/** Calendar day, "yyyy-MM-dd". */
+	date: string;
+	createdAt: Date;
+};

@@ -1,5 +1,5 @@
-import { HabitListScreen } from "@/modules/habits/screens/habit-list-screen";
+import { TodayScreen } from "@/modules/habits/screens/today-screen";
 
 export default function Habits() {
-	return <HabitListScreen />;
+	return <TodayScreen />;
 }
