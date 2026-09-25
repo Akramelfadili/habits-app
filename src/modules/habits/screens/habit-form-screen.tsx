@@ -26,6 +26,7 @@ import {
 	MAX_TIMES_PER_WEEK,
 	MIN_TIMES_PER_WEEK,
 	NO_CATEGORY_LABEL,
+	QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION,
 	WEEKDAY_SHORTCUT,
 	WEEKDAYS,
 } from "../constants";
@@ -127,6 +128,13 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	const isSubmitting = isCreating || isUpdating;
 	const isSaveDisabled =
 		nameValue.trim().length === 0 || hasNoWeekdays || isSubmitting;
+	const isTargetTypeLockedToSimple = directionValue === "break";
+
+	useEffect(() => {
+		if (isTargetTypeLockedToSimple && targetTypeValue === "quantity") {
+			setValue("targetType", "simple", { shouldDirty: true });
+		}
+	}, [isTargetTypeLockedToSimple, targetTypeValue, setValue]);
 
 	const categorySuggestions = isCategorySheetOpen
 		? filterCategorySuggestions(categories, categoryValue)
@@ -334,7 +342,11 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 						onChange={(value) =>
 							setValue("targetType", value, { shouldDirty: true })
 						}
+						disabled={isTargetTypeLockedToSimple}
 					/>
+					{isTargetTypeLockedToSimple ? (
+						<Caption>{QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION}</Caption>
+					) : null}
 				</Container>
 			</ScrollView>
 

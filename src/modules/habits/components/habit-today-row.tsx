@@ -22,10 +22,36 @@ function iconSymbolFor(icon: Habit["icon"]) {
 }
 
 /**
- * A due-today habit row. Build and Break habits render identically here —
- * HAB-04 (Break-habit framing) hasn't been built yet, so every row uses the
- * plain Build-style filled circle regardless of `habit.direction`, per the
- * feature-spec.md edge case for Break habits appearing before Feature 04.
+ * Resistance-framed completion copy for a resisted Break habit (HAB-04) —
+ * interpolates the real habit name so it's never a single generic string
+ * across different habits, per the feature-spec.md acceptance criterion.
+ */
+function breakCompletionCopy(habitName: string): string {
+	return `${habitName} — resisted`;
+}
+
+/**
+ * The completion circle's accessibility label. Native checked/unchecked
+ * state alone reads the same for every habit, which would let a screen
+ * reader announce a resisted Break habit as "checked" — exactly the
+ * "did the thing" framing HAB-04 exists to avoid. Once completed, the
+ * label says which it was; left plain (just the name) while still due, since
+ * there's no completion state to misrepresent yet.
+ */
+function completionAccessibilityLabel(
+	habit: Habit,
+	completed: boolean,
+): string {
+	if (!completed) return habit.name;
+	return habit.direction === "break"
+		? `${habit.name}, resisted`
+		: `${habit.name}, done`;
+}
+
+/**
+ * A due-today habit row. Break habits (HAB-04) get the outline completion
+ * circle and, once resisted, a resistance-framed caption in place of the
+ * plain Build-style filled circle + "did the thing" framing.
  */
 export function HabitTodayRow({
 	habit,
@@ -34,6 +60,7 @@ export function HabitTodayRow({
 	onPress,
 }: HabitTodayRowProps) {
 	const { colors, scheme, opacity } = useTheme();
+	const showResistedCaption = habit.direction === "break" && completed;
 
 	return (
 		<View style={styles.row}>
@@ -52,12 +79,20 @@ export function HabitTodayRow({
 						ink: habitAccentInk(habit.color, scheme),
 					}}
 				/>
-				<Text style={[styles.name, { color: colors.ink }]}>{habit.name}</Text>
+				<View style={styles.nameColumn}>
+					<Text style={[styles.name, { color: colors.ink }]}>{habit.name}</Text>
+					{showResistedCaption ? (
+						<Text style={[styles.caption, { color: colors.sub }]}>
+							{breakCompletionCopy(habit.name)}
+						</Text>
+					) : null}
+				</View>
 			</Pressable>
 			<CompletionCircle
 				completed={completed}
 				onPress={onToggle}
-				accessibilityLabel={habit.name}
+				accessibilityLabel={completionAccessibilityLabel(habit, completed)}
+				direction={habit.direction}
 			/>
 		</View>
 	);
@@ -75,9 +110,14 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		gap: 12,
 	},
-	name: {
+	nameColumn: {
 		flex: 1,
+	},
+	name: {
 		fontSize: typeScale.rowLabel,
 		fontWeight: "500",
+	},
+	caption: {
+		fontSize: typeScale.subtitle,
 	},
 });

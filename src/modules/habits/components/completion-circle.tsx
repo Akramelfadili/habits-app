@@ -1,25 +1,32 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet } from "react-native";
 import { useTheme } from "@/theme/use-theme";
+import type { HabitDirection } from "../types";
 
 type CompletionCircleProps = {
 	completed: boolean;
 	onPress: () => void;
 	accessibilityLabel: string;
+	/** Build = filled-black-on-done (default). Break = outline-only, never filled (HAB-04). */
+	direction?: HabitDirection;
 };
 
 /**
- * Build-habit completion control (design-system.md's "Completion circle —
- * Build": empty outline / done filled + checkmark). Only these two states are
- * built for HAB-03 — the Break outline-amber variant is HAB-04 scope, and the
- * quantity pie-fill variant is HAB-07 scope (both deferred per feature-spec.md).
+ * Habit completion control (design-system.md's "Completion circle" — Build
+ * and Break variants). Build: empty outline / done filled + checkmark. Break:
+ * outline-only in both states — dashed when empty, solid ink ring + ink
+ * checkmark when resisted — so it can never read as a filled Build circle at
+ * a glance, per HAB-04's hard rule. The quantity pie-fill variant is HAB-07
+ * scope, still deferred.
  */
 export function CompletionCircle({
 	completed,
 	onPress,
 	accessibilityLabel,
+	direction = "build",
 }: CompletionCircleProps) {
 	const { colors, opacity } = useTheme();
+	const isBreak = direction === "break";
 
 	return (
 		<Pressable
@@ -30,9 +37,17 @@ export function CompletionCircle({
 			onPress={onPress}
 			style={({ pressed }) => [
 				styles.circle,
-				completed
-					? { backgroundColor: colors.ink }
-					: { borderWidth: 2, borderColor: colors.border },
+				isBreak
+					? completed
+						? { borderWidth: 2, borderColor: colors.ink }
+						: {
+								borderWidth: 2,
+								borderStyle: "dashed",
+								borderColor: colors.border,
+							}
+					: completed
+						? { backgroundColor: colors.ink }
+						: { borderWidth: 2, borderColor: colors.border },
 				pressed && { opacity: opacity.pressed },
 			]}
 		>
@@ -40,7 +55,7 @@ export function CompletionCircle({
 				<SymbolView
 					name="checkmark"
 					size={14}
-					tintColor={colors.onAccent}
+					tintColor={isBreak ? colors.ink : colors.onAccent}
 					weight="bold"
 				/>
 			) : null}

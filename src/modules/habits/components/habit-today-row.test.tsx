@@ -54,7 +54,7 @@ describe("HabitTodayRow", () => {
 		expect(onPress).not.toHaveBeenCalled();
 	});
 
-	it("renders a Break habit's row identically to a Build habit's (HAB-04 not built yet)", async () => {
+	it("renders a Break habit's row without a resistance caption before it's resisted", async () => {
 		await render(
 			<HabitTodayRow
 				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
@@ -66,5 +66,91 @@ describe("HabitTodayRow", () => {
 		expect(
 			screen.getByLabelText("No phone in bed").props.accessibilityState,
 		).toEqual({ checked: false });
+		expect(screen.queryByText(/resisted/i)).toBeNull();
+	});
+
+	it("shows resistance-framed copy for a resisted Break habit", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
+				completed
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByText("No phone in bed — resisted")).toBeTruthy();
+	});
+
+	it("never shows a resistance caption for a completed Build habit", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "Gym", direction: "build" })}
+				completed
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.queryByText(/resisted/i)).toBeNull();
+	});
+
+	it("gives a resisted Break habit completion copy built from its own name", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
+				completed
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByText("No phone in bed — resisted")).toBeTruthy();
+	});
+
+	it("gives a different resisted Break habit different completion copy, not a generic string", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "Junk food", direction: "break" })}
+				completed
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByText("Junk food — resisted")).toBeTruthy();
+	});
+
+	it("announces a completed Build habit as done, not just checked", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "Gym", direction: "build" })}
+				completed
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByLabelText("Gym, done")).toBeTruthy();
+	});
+
+	it("announces a resisted Break habit as resisted, never as done", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
+				completed
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByLabelText("No phone in bed, resisted")).toBeTruthy();
+		expect(screen.queryByLabelText("No phone in bed, done")).toBeNull();
+	});
+
+	it("announces a due, not-yet-completed habit by name alone, for either direction", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
+				completed={false}
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByLabelText("No phone in bed")).toBeTruthy();
 	});
 });
