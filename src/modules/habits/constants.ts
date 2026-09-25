@@ -53,6 +53,17 @@ export const MIN_TIMES_PER_WEEK = 1;
 export const MAX_TIMES_PER_WEEK = 7;
 export const DEFAULT_TIMES_PER_WEEK = 3;
 
+export const MIN_TARGET_AMOUNT = 1;
+export const MAX_TARGET_AMOUNT = 999;
+export const DEFAULT_TARGET_AMOUNT = 8;
+export const MAX_TARGET_UNIT_LENGTH = 20;
+
+/** The small +1/+2 quick-add chips shown alongside "Full {target}" (HAB-07). */
+export const QUICK_ADD_STEPS = [1, 2] as const;
+
+/** The Quantity Log stepper's ceiling — high enough that over-logging (HAB-07) is never capped in practice. */
+export const MAX_QUANTITY_VALUE = 9999;
+
 /** Label for a habit with no category — also its group name on Today (HAB-01, HAB-03). */
 export const NO_CATEGORY_LABEL = "Anytime";
 
@@ -155,6 +166,8 @@ export function suggestionToCreateHabitInput(
 		category: null,
 		direction: suggestion.direction,
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "daily" },
 	};
 }

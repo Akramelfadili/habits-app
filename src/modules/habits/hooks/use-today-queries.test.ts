@@ -28,8 +28,22 @@ const perWeekHabit = makeHabit({
 	category: null,
 	frequency: { type: "per-week", timesPerWeek: 1 },
 });
+const quantityHabit = makeHabit({
+	id: 4,
+	name: "Push-ups",
+	category: null,
+	targetType: "quantity",
+	targetAmount: 20,
+	targetUnit: "reps",
+	frequency: { type: "daily" },
+});
 
-type MockEntry = { habitId: number; date: string; createdAt: Date };
+type MockEntry = {
+	habitId: number;
+	date: string;
+	createdAt: Date;
+	value?: number;
+};
 
 let mockHabits = [dailyHabit, alsoDailyHabit, perWeekHabit];
 let mockEntries: MockEntry[] = [];
@@ -161,6 +175,67 @@ describe("useTodayQueries", () => {
 		mockEntries = [{ habitId: 1, date: TODAY_STRING, createdAt: TODAY }];
 		const { result } = await renderHook(() => useTodayQueries());
 		expect(result.current.lastCompletedToday).toBeNull();
+	});
+
+	it("does not count a quantity habit's entry as complete when below target", async () => {
+		mockHabits = [quantityHabit];
+		mockEntries = [
+			{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 5 },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.completedHabitIds.has(4)).toBe(false);
+	});
+
+	it("counts a quantity habit's entry as complete once the value reaches target", async () => {
+		mockHabits = [quantityHabit];
+		mockEntries = [
+			{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 20 },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.completedHabitIds.has(4)).toBe(true);
+	});
+
+	it("exposes today's logged value for a quantity habit via quantityValuesByHabitId", async () => {
+		mockHabits = [quantityHabit];
+		mockEntries = [
+			{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 5 },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.quantityValuesByHabitId.get(4)).toBe(5);
+	});
+
+	it("does not treat a below-target quantity entry as lastCompletedToday", async () => {
+		mockHabits = [quantityHabit];
+		mockEntries = [
+			{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 5 },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.lastCompletedToday).toBeNull();
+	});
+
+	it("only counts a fully-reached quantity day toward a per-week habit's weekly target", async () => {
+		const perWeekQuantityHabit = makeHabit({
+			id: 5,
+			name: "Run",
+			targetType: "quantity",
+			targetAmount: 5,
+			targetUnit: "km",
+			frequency: { type: "per-week", timesPerWeek: 1 },
+		});
+		mockHabits = [perWeekQuantityHabit];
+		mockEntries = [
+			{
+				habitId: 5,
+				date: YESTERDAY_STRING,
+				createdAt: new Date(YESTERDAY_STRING),
+				value: 2,
+			},
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		const dueIds = result.current.groups.flatMap((group) =>
+			group.habits.map((habit) => habit.id),
+		);
+		expect(dueIds).toContain(5);
 	});
 
 	it("includes tomorrow's due habits in tomorrowPreview", async () => {

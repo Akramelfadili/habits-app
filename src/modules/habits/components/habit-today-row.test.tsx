@@ -153,4 +153,74 @@ describe("HabitTodayRow", () => {
 		);
 		expect(screen.getByLabelText("No phone in bed")).toBeTruthy();
 	});
+
+	describe("a quantity habit (HAB-07)", () => {
+		function makeQuantityHabit(overrides = {}) {
+			return makeHabit({
+				name: "Glass of water",
+				targetType: "quantity",
+				targetAmount: 8,
+				targetUnit: "glasses",
+				...overrides,
+			});
+		}
+
+		it("tapping the completion control opens the quantity sheet, not onToggle", async () => {
+			const onToggle = jest.fn();
+			const onOpenQuantitySheet = jest.fn();
+			await render(
+				<HabitTodayRow
+					habit={makeQuantityHabit()}
+					completed={false}
+					quantityValue={3}
+					onToggle={onToggle}
+					onOpenQuantitySheet={onOpenQuantitySheet}
+					onPress={jest.fn()}
+				/>,
+			);
+
+			await fireEvent.press(
+				screen.getByLabelText("Log Glass of water, 3 of 8 glasses"),
+			);
+			expect(onOpenQuantitySheet).toHaveBeenCalledTimes(1);
+			expect(onToggle).not.toHaveBeenCalled();
+		});
+
+		it("uses a button role, not a checkbox, for its completion control", async () => {
+			await render(
+				<HabitTodayRow
+					habit={makeQuantityHabit()}
+					completed={false}
+					quantityValue={3}
+					onToggle={jest.fn()}
+					onOpenQuantitySheet={jest.fn()}
+					onPress={jest.fn()}
+				/>,
+			);
+			expect(
+				screen.getByRole("button", {
+					name: "Log Glass of water, 3 of 8 glasses",
+				}),
+			).toBeTruthy();
+		});
+
+		it("tapping the name still calls onPress, not onOpenQuantitySheet", async () => {
+			const onPress = jest.fn();
+			const onOpenQuantitySheet = jest.fn();
+			await render(
+				<HabitTodayRow
+					habit={makeQuantityHabit()}
+					completed={false}
+					quantityValue={3}
+					onToggle={jest.fn()}
+					onOpenQuantitySheet={onOpenQuantitySheet}
+					onPress={onPress}
+				/>,
+			);
+
+			await fireEvent.press(screen.getByText("Glass of water"));
+			expect(onPress).toHaveBeenCalledTimes(1);
+			expect(onOpenQuantitySheet).not.toHaveBeenCalled();
+		});
+	});
 });

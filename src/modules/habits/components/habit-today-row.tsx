@@ -9,13 +9,18 @@ import { CompletionCircle } from "./completion-circle";
 type HabitTodayRowProps = {
 	habit: Habit;
 	completed: boolean;
-	/** Toggles done/undone instantly — no confirmation (HAB-03). */
+	/** Today's logged amount — only meaningful for a quantity habit (HAB-07). */
+	quantityValue?: number;
+	/** Toggles done/undone instantly — no confirmation (HAB-03). Simple/Break habits only. */
 	onToggle: () => void;
+	/** Opens the Quantity Log sheet (HAB-07) instead of toggling directly. */
+	onOpenQuantitySheet?: () => void;
 	/** Opens Habit Detail (HAB-09) — stubbed until that screen exists. */
 	onPress: () => void;
 };
 
-function iconSymbolFor(icon: Habit["icon"]) {
+/** Shared with QuantityLogSheet (HAB-07), which needs the same icon → SF Symbol lookup. */
+export function iconSymbolFor(icon: Habit["icon"]) {
 	return (
 		HABIT_ICONS.find((entry) => entry.key === icon)?.symbol ?? "circle.fill"
 	);
@@ -48,6 +53,12 @@ function completionAccessibilityLabel(
 		: `${habit.name}, done`;
 }
 
+/** Label for a quantity habit's control, which opens the log sheet rather than toggling (HAB-07). */
+function quantityAccessibilityLabel(habit: Habit, value: number): string {
+	const unit = habit.targetUnit ?? "";
+	return `Log ${habit.name}, ${value} of ${habit.targetAmount ?? 0} ${unit}`.trim();
+}
+
 /**
  * A due-today habit row. Break habits (HAB-04) get the outline completion
  * circle and, once resisted, a resistance-framed caption in place of the
@@ -56,11 +67,15 @@ function completionAccessibilityLabel(
 export function HabitTodayRow({
 	habit,
 	completed,
+	quantityValue,
 	onToggle,
+	onOpenQuantitySheet,
 	onPress,
 }: HabitTodayRowProps) {
 	const { colors, scheme, opacity } = useTheme();
 	const showResistedCaption = habit.direction === "break" && completed;
+	const isQuantity = habit.targetType === "quantity";
+	const value = quantityValue ?? 0;
 
 	return (
 		<View style={styles.row}>
@@ -90,9 +105,19 @@ export function HabitTodayRow({
 			</Pressable>
 			<CompletionCircle
 				completed={completed}
-				onPress={onToggle}
-				accessibilityLabel={completionAccessibilityLabel(habit, completed)}
+				onPress={isQuantity ? (onOpenQuantitySheet ?? onToggle) : onToggle}
+				accessibilityLabel={
+					isQuantity
+						? quantityAccessibilityLabel(habit, value)
+						: completionAccessibilityLabel(habit, completed)
+				}
 				direction={habit.direction}
+				role={isQuantity ? "button" : "checkbox"}
+				progress={
+					isQuantity && habit.targetAmount
+						? value / habit.targetAmount
+						: undefined
+				}
 			/>
 		</View>
 	);

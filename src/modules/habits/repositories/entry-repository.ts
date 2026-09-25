@@ -14,6 +14,7 @@ function rowToEntry(row: EntryRow): Entry {
 		id: row.id,
 		habitId: row.habitId,
 		date: row.date,
+		value: row.value ?? undefined,
 		createdAt: row.createdAt,
 	};
 }
@@ -55,4 +56,35 @@ export async function setHabitCompletedOn(
 	await db
 		.delete(entries)
 		.where(and(eq(entries.habitId, habitId), eq(entries.date, dateString)));
+}
+
+/**
+ * Sets `habitId`'s logged quantity on `date` (HAB-07). `value <= 0` deletes the
+ * row instead of storing a zero — keeping "no entry" as the one signal for
+ * "nothing logged," same as `setHabitCompletedOn`, so a zeroed-out quantity
+ * habit doesn't spuriously count as a completion anywhere (e.g. per-week
+ * scheduling). Otherwise upserts, since a day can be logged more than once as
+ * the value is adjusted through the day.
+ */
+export async function setHabitQuantityOn(
+	habitId: number,
+	date: Date,
+	value: number,
+): Promise<void> {
+	const dateString = format(date, DATE_FORMAT);
+
+	if (value <= 0) {
+		await db
+			.delete(entries)
+			.where(and(eq(entries.habitId, habitId), eq(entries.date, dateString)));
+		return;
+	}
+
+	await db
+		.insert(entries)
+		.values({ habitId, date: dateString, value, createdAt: new Date() })
+		.onConflictDoUpdate({
+			target: [entries.habitId, entries.date],
+			set: { value },
+		});
 }

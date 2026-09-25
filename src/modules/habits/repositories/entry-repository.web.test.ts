@@ -81,4 +81,56 @@ describe("entry-repository.web", () => {
 		);
 		expect(result.current).toEqual([]);
 	});
+
+	describe("setHabitQuantityOn", () => {
+		it("logs a value and notifies live readers", async () => {
+			const { setHabitQuantityOn, useEntriesInRange } = loadRepository();
+			const { result } = await renderHook(() =>
+				useEntriesInRange(RANGE_START, RANGE_END),
+			);
+
+			await act(async () => {
+				await setHabitQuantityOn(1, new Date(), 6);
+			});
+
+			const entry = result.current.find((candidate) => candidate.habitId === 1);
+			expect(entry?.value).toBe(6);
+		});
+
+		it("updates the same day's value instead of adding a second entry", async () => {
+			const { setHabitQuantityOn, useEntriesInRange } = loadRepository();
+			const { result } = await renderHook(() =>
+				useEntriesInRange(RANGE_START, RANGE_END),
+			);
+
+			await act(async () => {
+				await setHabitQuantityOn(1, new Date(), 3);
+				await setHabitQuantityOn(1, new Date(), 8);
+			});
+
+			const matches = result.current.filter(
+				(candidate) => candidate.habitId === 1 && candidate.date === TODAY,
+			);
+			expect(matches).toHaveLength(1);
+			expect(matches[0].value).toBe(8);
+		});
+
+		it("deletes the entry when the value is set to 0", async () => {
+			const { setHabitQuantityOn, useEntriesInRange } = loadRepository();
+			const { result } = await renderHook(() =>
+				useEntriesInRange(RANGE_START, RANGE_END),
+			);
+
+			await act(async () => {
+				await setHabitQuantityOn(1, new Date(), 6);
+				await setHabitQuantityOn(1, new Date(), 0);
+			});
+
+			expect(
+				result.current.some(
+					(candidate) => candidate.habitId === 1 && candidate.date === TODAY,
+				),
+			).toBe(false);
+		});
+	});
 });

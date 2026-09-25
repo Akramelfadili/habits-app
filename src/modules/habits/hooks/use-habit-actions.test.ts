@@ -47,6 +47,8 @@ describe("useHabitActions", () => {
 				color: "blue",
 				category: null,
 				targetType: "simple",
+				targetAmount: null,
+				targetUnit: null,
 				frequency: { type: "daily" },
 			}),
 		);
@@ -57,6 +59,8 @@ describe("useHabitActions", () => {
 			color: "blue",
 			category: null,
 			targetType: "simple",
+			targetAmount: null,
+			targetUnit: null,
 			frequency: { type: "daily" },
 		});
 	});

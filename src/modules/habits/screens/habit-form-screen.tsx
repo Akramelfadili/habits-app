@@ -20,10 +20,13 @@ import { habitAccentInk, habitAccentTint } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import {
 	DEFAULT_HABIT_ICON,
+	DEFAULT_TARGET_AMOUNT,
 	DIRECTION_CAPTIONS,
 	HABIT_COLORS,
 	HABIT_ICONS,
+	MAX_TARGET_AMOUNT,
 	MAX_TIMES_PER_WEEK,
+	MIN_TARGET_AMOUNT,
 	MIN_TIMES_PER_WEEK,
 	NO_CATEGORY_LABEL,
 	QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION,
@@ -88,6 +91,8 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 			category: "",
 			direction: "build",
 			targetType: "simple",
+			targetAmount: DEFAULT_TARGET_AMOUNT,
+			targetUnit: "",
 			...DEFAULT_FREQUENCY_FORM_VALUES,
 		},
 	});
@@ -107,6 +112,8 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 				category: habit.category ?? "",
 				direction: habit.direction,
 				targetType: habit.targetType,
+				targetAmount: habit.targetAmount ?? DEFAULT_TARGET_AMOUNT,
+				targetUnit: habit.targetUnit ?? "",
 				...toFrequencyFormValues(habit.frequency),
 			});
 			hasLoadedEditValues.current = true;
@@ -119,15 +126,22 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	const categoryValue = watch("category");
 	const directionValue = watch("direction");
 	const targetTypeValue = watch("targetType");
+	const targetAmountValue = watch("targetAmount");
+	const targetUnitValue = watch("targetUnit");
 	const frequencyTypeValue = watch("frequencyType");
 	const weekdaysValue = watch("weekdays");
 	const timesPerWeekValue = watch("timesPerWeek");
 
 	const hasNoWeekdays =
 		frequencyTypeValue === "weekdays" && weekdaysValue.length === 0;
+	const hasNoTargetUnit =
+		targetTypeValue === "quantity" && targetUnitValue.trim().length === 0;
 	const isSubmitting = isCreating || isUpdating;
 	const isSaveDisabled =
-		nameValue.trim().length === 0 || hasNoWeekdays || isSubmitting;
+		nameValue.trim().length === 0 ||
+		hasNoWeekdays ||
+		hasNoTargetUnit ||
+		isSubmitting;
 	const isTargetTypeLockedToSimple = directionValue === "break";
 
 	useEffect(() => {
@@ -144,6 +158,12 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 		const category =
 			values.category.trim() === "" ? null : values.category.trim();
 		const frequency = toFrequency(values);
+		// Stale Amount/Unit input never leaks in if Quantity was picked, then
+		// switched back to Simple check — a simple-check habit always has null.
+		const targetAmount =
+			values.targetType === "quantity" ? values.targetAmount : null;
+		const targetUnit =
+			values.targetType === "quantity" ? values.targetUnit.trim() : null;
 
 		if (mode === "create") {
 			await createHabit({
@@ -153,6 +173,8 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 				category,
 				direction: values.direction,
 				targetType: values.targetType,
+				targetAmount,
+				targetUnit,
 				frequency,
 			});
 		} else if (habitId !== undefined) {
@@ -162,6 +184,8 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 				color: values.color,
 				category,
 				targetType: values.targetType,
+				targetAmount,
+				targetUnit,
 				frequency,
 			});
 		}
@@ -346,6 +370,40 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 					/>
 					{isTargetTypeLockedToSimple ? (
 						<Caption>{QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION}</Caption>
+					) : null}
+					{targetTypeValue === "quantity" ? (
+						<>
+							<ListItem
+								embedded
+								title="Amount"
+								trailing={
+									<Stepper
+										value={targetAmountValue}
+										min={MIN_TARGET_AMOUNT}
+										max={MAX_TARGET_AMOUNT}
+										accessibilityLabel="target amount"
+										onChange={(value) =>
+											setValue("targetAmount", value, { shouldDirty: true })
+										}
+									/>
+								}
+							/>
+							<Controller
+								control={control}
+								name="targetUnit"
+								render={({ field, fieldState }) => (
+									<TextField
+										label="Unit"
+										placeholder="glasses"
+										value={field.value}
+										onChangeText={field.onChange}
+										onBlur={field.onBlur}
+										error={fieldState.error?.message}
+										maxLength={20}
+									/>
+								)}
+							/>
+						</>
 					) : null}
 				</Container>
 			</ScrollView>

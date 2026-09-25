@@ -5,7 +5,10 @@ import {
 	HABIT_COLORS,
 	HABIT_ICONS,
 	type HabitIconKey,
+	MAX_TARGET_AMOUNT,
+	MAX_TARGET_UNIT_LENGTH,
 	MAX_TIMES_PER_WEEK,
+	MIN_TARGET_AMOUNT,
 	MIN_TIMES_PER_WEEK,
 } from "../constants";
 import type { Frequency, IsoWeekday } from "../types";
@@ -17,6 +20,8 @@ const iconKeys = HABIT_ICONS.map((entry) => entry.key) as [
 const colorKeys = HABIT_COLORS as [HabitAccentKey, ...HabitAccentKey[]];
 
 export const NO_WEEKDAYS_MESSAGE = "Pick at least one day.";
+export const NO_TARGET_UNIT_MESSAGE =
+	'Give this target a unit, e.g. "glasses".';
 
 /**
  * Frequency is kept as three flat fields rather than the `Frequency` union so
@@ -38,6 +43,18 @@ export const habitFormSchema = z
 			.max(40, "Keep the category under 40 characters."),
 		direction: z.enum(["build", "break"]),
 		targetType: z.enum(["simple", "quantity"]),
+		targetAmount: z
+			.number()
+			.int()
+			.min(MIN_TARGET_AMOUNT)
+			.max(MAX_TARGET_AMOUNT),
+		targetUnit: z
+			.string()
+			.trim()
+			.max(
+				MAX_TARGET_UNIT_LENGTH,
+				`Keep the unit under ${MAX_TARGET_UNIT_LENGTH} characters.`,
+			),
 		frequencyType: z.enum(["daily", "weekdays", "per-week"]),
 		weekdays: z.array(z.number().int().min(1).max(7)),
 		timesPerWeek: z
@@ -52,6 +69,13 @@ export const habitFormSchema = z
 				code: "custom",
 				path: ["weekdays"],
 				message: NO_WEEKDAYS_MESSAGE,
+			});
+		}
+		if (values.targetType === "quantity" && values.targetUnit.trim() === "") {
+			ctx.addIssue({
+				code: "custom",
+				path: ["targetUnit"],
+				message: NO_TARGET_UNIT_MESSAGE,
 			});
 		}
 	});

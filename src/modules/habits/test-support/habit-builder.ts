@@ -17,6 +17,8 @@ export function makeHabitInput(
 		category: null,
 		direction: "build",
 		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
 		frequency: { type: "daily" },
 		...overrides,
 	};

@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
@@ -12,10 +13,12 @@ import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HabitTodayRow } from "../components/habit-today-row";
+import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
+import { useQuantityLogActions } from "../hooks/use-quantity-log-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
 import { FirstRunScreen } from "./first-run-screen";
@@ -28,15 +31,28 @@ export function TodayScreen() {
 		groups,
 		progress,
 		completedHabitIds,
+		quantityValuesByHabitId,
 		today,
 		viewState,
 		tomorrowPreview,
 		lastCompletedToday,
 	} = useTodayQueries();
 	const { toggleCompletion } = useTodayActions();
+	const { logQuantity, isLogging } = useQuantityLogActions();
 	const { clearAllHabits, isClearingAll } = useHabitActions();
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const { resetFirstRun, isResetting } = useFirstRunActions();
+	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
+
+	const quantityHabit = groups
+		.flatMap((group) => group.habits)
+		.find((habit) => habit.id === quantityHabitId);
+
+	async function handleSaveQuantity(value: number) {
+		if (quantityHabitId === null) return;
+		await logQuantity(quantityHabitId, today, value);
+		setQuantityHabitId(null);
+	}
 
 	function handleUndo() {
 		if (!lastCompletedToday) return;
@@ -211,6 +227,7 @@ export function TodayScreen() {
 									key={habit.id}
 									habit={habit}
 									completed={completedHabitIds.has(habit.id)}
+									quantityValue={quantityValuesByHabitId.get(habit.id)}
 									onPress={() => router.push(`/habit/${habit.id}`)}
 									onToggle={() =>
 										toggleCompletion(
@@ -219,6 +236,7 @@ export function TodayScreen() {
 											!completedHabitIds.has(habit.id),
 										)
 									}
+									onOpenQuantitySheet={() => setQuantityHabitId(habit.id)}
 								/>
 							))}
 						</Container>
@@ -257,6 +275,16 @@ export function TodayScreen() {
 					/>
 				) : null}
 			</ScrollView>
+			{quantityHabit ? (
+				<QuantityLogSheet
+					visible
+					habit={quantityHabit}
+					value={quantityValuesByHabitId.get(quantityHabit.id) ?? 0}
+					onDismiss={() => setQuantityHabitId(null)}
+					onSave={handleSaveQuantity}
+					isSaving={isLogging}
+				/>
+			) : null}
 		</SafeAreaView>
 	);
 }

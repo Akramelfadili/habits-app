@@ -23,6 +23,9 @@ export type Habit = {
 	category: string | null;
 	direction: HabitDirection;
 	targetType: HabitTargetType;
+	/** Set only when targetType is "quantity" (HAB-07) — null for simple-check habits. */
+	targetAmount: number | null;
+	targetUnit: string | null;
 	frequency: Frequency;
 	createdAt: Date;
 	updatedAt: Date;
@@ -35,6 +38,8 @@ export type CreateHabitInput = {
 	category: string | null;
 	direction: HabitDirection;
 	targetType: HabitTargetType;
+	targetAmount: number | null;
+	targetUnit: string | null;
 	frequency: Frequency;
 };
 
@@ -44,15 +49,24 @@ export type UpdateHabitInput = {
 	color: HabitAccentKey;
 	category: string | null;
 	targetType: HabitTargetType;
+	targetAmount: number | null;
+	targetUnit: string | null;
 	frequency: Frequency;
 	// direction is intentionally excluded — it's locked after creation (HAB-01).
 };
 
-/** One completed/resisted day for a habit (HAB-03). Presence is the signal. */
+/**
+ * One completed/resisted day for a habit (HAB-03). For a simple-check habit,
+ * presence is the whole signal. For a quantity habit (HAB-07), `value` holds
+ * the logged amount — completion is `value >= habit.targetAmount`, computed
+ * where it's needed rather than stored.
+ */
 export type Entry = {
 	id: number;
 	habitId: number;
 	/** Calendar day, "yyyy-MM-dd". */
 	date: string;
+	/** Logged amount for a quantity habit — absent for simple-check entries. */
+	value?: number;
 	createdAt: Date;
 };

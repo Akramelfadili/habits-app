@@ -52,6 +52,14 @@ const SCREENS = {
 		mockup: "docs/mockups/new-habit-form.png",
 		note: "Mockup shows create mode; edit mode should match except Direction is locked.",
 	},
+	"quantity-log": {
+		route: "/habits?fixtures=quantity-log",
+		mockup: "docs/mockups/quantity-log.png",
+		note: "Sheet is opened by simulating the tap the mockup can't capture from a static route load.",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+		},
+	},
 };
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.
@@ -129,6 +137,13 @@ async function capture(browser, name, screen) {
 	await page.evaluate(() => document.fonts.ready);
 	// Let hydration + fixture-driven re-renders and screen transitions settle.
 	await page.waitForTimeout(800);
+
+	// A screen that's only reachable by tapping into it (e.g. a bottom sheet) —
+	// a static route load can't show that state, so simulate the tap first.
+	if (screen.interact) {
+		await screen.interact(page);
+		await page.waitForTimeout(400);
+	}
 
 	const file = path.join(OUT_DIR, `${name}.png`);
 	await page.screenshot({ path: file });

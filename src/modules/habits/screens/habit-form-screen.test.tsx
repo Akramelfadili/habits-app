@@ -194,6 +194,75 @@ describe("HabitFormScreen — create mode", () => {
 			expect.objectContaining({ direction: "break", targetType: "simple" }),
 		);
 	});
+
+	it("reveals Amount and Unit fields when Quantity is selected", async () => {
+		await render(<HabitFormScreen />);
+
+		expect(screen.queryByPlaceholderText("glasses")).toBeNull();
+		await fireEvent.press(screen.getByText("Quantity"));
+		expect(screen.getByText("Amount")).toBeTruthy();
+		expect(screen.getByPlaceholderText("glasses")).toBeTruthy();
+	});
+
+	it("blocks Save until a unit is entered for a Quantity habit", async () => {
+		await render(<HabitFormScreen />);
+
+		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
+		expect(isSaveDisabled()).toBe(false);
+
+		await fireEvent.press(screen.getByText("Quantity"));
+		expect(isSaveDisabled()).toBe(true);
+
+		await fireEvent.changeText(
+			screen.getByPlaceholderText("glasses"),
+			"glasses",
+		);
+		expect(isSaveDisabled()).toBe(false);
+	});
+
+	it("creates a Quantity habit with its amount and unit", async () => {
+		await render(<HabitFormScreen />);
+
+		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
+		await fireEvent.press(screen.getByText("Quantity"));
+		await fireEvent.changeText(
+			screen.getByPlaceholderText("glasses"),
+			"glasses",
+		);
+		await fireEvent.press(screen.getByLabelText("Increase target amount"));
+		await fireEvent.press(screen.getByText("Save habit"));
+
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
+		expect(mockCreateHabit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				targetType: "quantity",
+				targetAmount: 9,
+				targetUnit: "glasses",
+			}),
+		);
+	});
+
+	it("clears amount and unit to null when Quantity is switched back to Simple check", async () => {
+		await render(<HabitFormScreen />);
+
+		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
+		await fireEvent.press(screen.getByText("Quantity"));
+		await fireEvent.changeText(
+			screen.getByPlaceholderText("glasses"),
+			"glasses",
+		);
+		await fireEvent.press(screen.getByText("Simple check"));
+		await fireEvent.press(screen.getByText("Save habit"));
+
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
+		expect(mockCreateHabit).toHaveBeenCalledWith(
+			expect.objectContaining({
+				targetType: "simple",
+				targetAmount: null,
+				targetUnit: null,
+			}),
+		);
+	});
 });
 
 describe("HabitFormScreen — frequency", () => {
@@ -320,6 +389,24 @@ describe("HabitFormScreen — edit mode", () => {
 		expect(
 			screen.getByText("Break").parent?.props.accessibilityState.disabled,
 		).toBe(true);
+	});
+
+	it("pre-fills Amount and Unit from an existing Quantity habit", async () => {
+		const quantityHabit = makeHabit({
+			id: 2,
+			name: "Read before bed",
+			targetType: "quantity",
+			targetAmount: 20,
+			targetUnit: "pages",
+		});
+		mockHabits = [quantityHabit];
+
+		await render(<HabitFormScreen habitId={2} />);
+		await waitFor(() =>
+			expect(screen.getByDisplayValue("Read before bed")).toBeTruthy(),
+		);
+		expect(screen.getByText("20")).toBeTruthy();
+		expect(screen.getByDisplayValue("pages")).toBeTruthy();
 	});
 
 	it("updates the habit without touching direction", async () => {

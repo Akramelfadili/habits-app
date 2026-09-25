@@ -91,4 +91,69 @@ describe("CompletionCircle", () => {
 			screen.getByLabelText("No phone in bed").props.accessibilityState,
 		).toEqual({ checked: true });
 	});
+
+	it("uses the plain empty style when not completed and progress is 0", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Glass of water"
+				progress={0}
+			/>,
+		);
+		const flatStyle = StyleSheet.flatten(
+			screen.getByLabelText("Glass of water").props.style,
+		);
+		expect(flatStyle.borderWidth).toBe(2);
+		expect(flatStyle.backgroundColor).toBeUndefined();
+	});
+
+	it("renders the partial pie-fill style when logged below target", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Glass of water"
+				progress={0.6}
+			/>,
+		);
+		const flatStyle = StyleSheet.flatten(
+			screen.getByLabelText("Glass of water").props.style,
+		);
+		expect(flatStyle.backgroundColor).toBeDefined();
+		expect(flatStyle.borderWidth).toBeUndefined();
+	});
+
+	it("shows the filled done style over partial once completed, regardless of progress", async () => {
+		await render(
+			<CompletionCircle
+				completed
+				onPress={jest.fn()}
+				accessibilityLabel="Glass of water"
+				progress={0.6}
+			/>,
+		);
+		const flatStyle = StyleSheet.flatten(
+			screen.getByLabelText("Glass of water").props.style,
+		);
+		expect(flatStyle.backgroundColor).toBeDefined();
+		expect(
+			screen.getByLabelText("Glass of water").props.accessibilityState,
+		).toEqual({ checked: true });
+	});
+
+	it("uses a button role instead of checkbox when role is 'button'", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Log Glass of water"
+				progress={0.6}
+				role="button"
+			/>,
+		);
+		expect(
+			screen.getByRole("button", { name: "Log Glass of water" }),
+		).toBeTruthy();
+	});
 });

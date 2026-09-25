@@ -1,7 +1,10 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 import type { HabitDirection } from "../types";
+
+const SIZE = 28;
+const RADIUS = SIZE / 2;
 
 type CompletionCircleProps = {
 	completed: boolean;
@@ -9,30 +12,87 @@ type CompletionCircleProps = {
 	accessibilityLabel: string;
 	/** Build = filled-black-on-done (default). Break = outline-only, never filled (HAB-04). */
 	direction?: HabitDirection;
+	/**
+	 * 0–1 fill for a quantity habit logged below its target (HAB-07) — ignored
+	 * once `completed` (done always wins, however it got there), and for Break
+	 * habits (quantity + Break is out of scope for V1).
+	 */
+	progress?: number;
+	/**
+	 * "checkbox" (default) toggles instantly. A quantity habit (HAB-07) opens a
+	 * sheet instead, so it's a "button" — checked/unchecked semantics don't
+	 * apply to "open this habit's log."
+	 */
+	role?: "checkbox" | "button";
 };
 
 /**
+ * A two-half rotating-wedge pie fill, clipped to the circle by the parent.
+ * Each half is a plain rect rotated around the midpoint of its flat (inner)
+ * edge — the circle's center — so it sweeps a wedge into view; no SVG needed.
+ */
+function PieFill({ progress, color }: { progress: number; color: string }) {
+	const angle = Math.min(1, Math.max(0, progress)) * 360;
+	const rightRotation = Math.min(angle, 180) - 180;
+	const leftRotation = Math.max(angle, 180) - 360;
+
+	return (
+		<>
+			<View style={styles.rightHalfClip}>
+				<View
+					style={[
+						styles.half,
+						{
+							backgroundColor: color,
+							transform: [{ rotate: `${rightRotation}deg` }],
+							transformOrigin: "0% 50%",
+						},
+					]}
+				/>
+			</View>
+			<View style={styles.leftHalfClip}>
+				<View
+					style={[
+						styles.half,
+						{
+							backgroundColor: color,
+							transform: [{ rotate: `${leftRotation}deg` }],
+							transformOrigin: "100% 50%",
+						},
+					]}
+				/>
+			</View>
+		</>
+	);
+}
+
+/**
  * Habit completion control (design-system.md's "Completion circle" — Build
- * and Break variants). Build: empty outline / done filled + checkmark. Break:
- * outline-only in both states — dashed when empty, solid ink ring + ink
- * checkmark when resisted — so it can never read as a filled Build circle at
- * a glance, per HAB-04's hard rule. The quantity pie-fill variant is HAB-07
- * scope, still deferred.
+ * and Break variants). Build: empty outline / done filled + checkmark /
+ * partial pie-fill for a quantity habit logged below its target (HAB-07).
+ * Break: outline-only in both states — dashed when empty, solid ink ring +
+ * ink checkmark when resisted — so it can never read as a filled Build circle
+ * at a glance, per HAB-04's hard rule (quantity + Break is out of scope).
  */
 export function CompletionCircle({
 	completed,
 	onPress,
 	accessibilityLabel,
 	direction = "build",
+	progress,
+	role = "checkbox",
 }: CompletionCircleProps) {
 	const { colors, opacity } = useTheme();
 	const isBreak = direction === "break";
+	const showPartial = !completed && !isBreak && !!progress && progress > 0;
 
 	return (
 		<Pressable
-			accessibilityRole="checkbox"
+			accessibilityRole={role}
 			accessibilityLabel={accessibilityLabel}
-			accessibilityState={{ checked: completed }}
+			accessibilityState={
+				role === "checkbox" ? { checked: completed } : undefined
+			}
 			hitSlop={8}
 			onPress={onPress}
 			style={({ pressed }) => [
@@ -47,7 +107,9 @@ export function CompletionCircle({
 							}
 					: completed
 						? { backgroundColor: colors.ink }
-						: { borderWidth: 2, borderColor: colors.border },
+						: showPartial
+							? { backgroundColor: colors.border, overflow: "hidden" }
+							: { borderWidth: 2, borderColor: colors.border },
 				pressed && { opacity: opacity.pressed },
 			]}
 		>
@@ -58,6 +120,8 @@ export function CompletionCircle({
 					tintColor={isBreak ? colors.ink : colors.onAccent}
 					weight="bold"
 				/>
+			) : showPartial ? (
+				<PieFill progress={progress} color={colors.ink} />
 			) : null}
 		</Pressable>
 	);
@@ -65,10 +129,30 @@ export function CompletionCircle({
 
 const styles = StyleSheet.create({
 	circle: {
-		width: 28,
-		height: 28,
-		borderRadius: 14,
+		width: SIZE,
+		height: SIZE,
+		borderRadius: RADIUS,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	rightHalfClip: {
+		position: "absolute",
+		left: RADIUS,
+		top: 0,
+		width: RADIUS,
+		height: SIZE,
+		overflow: "hidden",
+	},
+	leftHalfClip: {
+		position: "absolute",
+		left: 0,
+		top: 0,
+		width: RADIUS,
+		height: SIZE,
+		overflow: "hidden",
+	},
+	half: {
+		width: RADIUS,
+		height: SIZE,
 	},
 });

@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react-native";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Habit } from "../types";
 
@@ -26,6 +31,7 @@ let mockViewState: "no-habits" | "rest-day" | "day-closed" | "populated" =
 	"no-habits";
 let mockTomorrowPreview: Habit[] = [];
 let mockLastCompletedToday: { id: number; name: string } | null = null;
+let mockQuantityValuesByHabitId = new Map<number, number>();
 const mockToday = new Date("2026-09-16T00:00:00Z");
 
 jest.mock("../hooks/use-today-queries", () => ({
@@ -33,6 +39,7 @@ jest.mock("../hooks/use-today-queries", () => ({
 		groups: mockGroups,
 		progress: mockProgress,
 		completedHabitIds: mockCompletedHabitIds,
+		quantityValuesByHabitId: mockQuantityValuesByHabitId,
 		today: mockToday,
 		viewState: mockViewState,
 		tomorrowPreview: mockTomorrowPreview,
@@ -46,6 +53,15 @@ jest.mock("../hooks/use-today-actions", () => ({
 		toggleCompletion: mockToggleCompletion,
 		isToggling: false,
 		toggleError: null,
+	}),
+}));
+
+const mockLogQuantity = jest.fn();
+jest.mock("../hooks/use-quantity-log-actions", () => ({
+	useQuantityLogActions: () => ({
+		logQuantity: mockLogQuantity,
+		isLogging: false,
+		logError: null,
 	}),
 }));
 
@@ -85,11 +101,13 @@ describe("TodayScreen", () => {
 	beforeEach(() => {
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset();
+		mockLogQuantity.mockReset();
 		mockClearAllHabits.mockReset();
 		mockResetFirstRun.mockReset();
 		mockGroups = [];
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
+		mockQuantityValuesByHabitId = new Map();
 		mockViewState = "no-habits";
 		mockTomorrowPreview = [];
 		mockLastCompletedToday = null;
@@ -244,6 +262,55 @@ describe("TodayScreen", () => {
 		await fireEvent.press(screen.getByText("Glass of water"));
 
 		expect(mockPush).toHaveBeenCalledWith("/habit/1");
+	});
+
+	it("tapping a quantity habit's row opens the Quantity Log sheet instead of toggling", async () => {
+		const quantityHabit = makeHabit({
+			id: 3,
+			name: "Glass of water",
+			category: "Morning",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [quantityHabit] }];
+		mockQuantityValuesByHabitId = new Map([[3, 3]]);
+
+		await render(<TodayScreen />);
+		await fireEvent.press(
+			screen.getByLabelText("Log Glass of water, 3 of 8 glasses"),
+		);
+
+		expect(screen.getByText("Save 3 of 8")).toBeTruthy();
+		expect(mockToggleCompletion).not.toHaveBeenCalled();
+	});
+
+	it("saving the Quantity Log sheet logs the value for today and closes it", async () => {
+		const quantityHabit = makeHabit({
+			id: 3,
+			name: "Glass of water",
+			category: "Morning",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [quantityHabit] }];
+		mockQuantityValuesByHabitId = new Map([[3, 3]]);
+		mockLogQuantity.mockResolvedValue(undefined);
+
+		await render(<TodayScreen />);
+		await fireEvent.press(
+			screen.getByLabelText("Log Glass of water, 3 of 8 glasses"),
+		);
+		await fireEvent.press(
+			screen.getByLabelText("Increase Glass of water, glasses"),
+		);
+		await fireEvent.press(screen.getByText("Save 4 of 8"));
+
+		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 4);
+		await waitFor(() => expect(screen.queryByText("Save 4 of 8")).toBeNull());
 	});
 
 	it("still offers a way to add a habit once habits already exist", async () => {
