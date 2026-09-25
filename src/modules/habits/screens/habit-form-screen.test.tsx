@@ -150,6 +150,50 @@ describe("HabitFormScreen — create mode", () => {
 		await render(<HabitFormScreen />);
 		expect(screen.getByText(/checking it off means you did it/)).toBeTruthy();
 	});
+
+	it("disables Quantity and resets it to Simple check when Direction switches to Break", async () => {
+		await render(<HabitFormScreen />);
+
+		await fireEvent.press(screen.getByText("Quantity"));
+		expect(
+			screen.getByText("Quantity").parent?.props.accessibilityState.selected,
+		).toBe(true);
+
+		await fireEvent.press(screen.getByText("Break"));
+
+		await waitFor(() =>
+			expect(
+				screen.getByText("Simple check").parent?.props.accessibilityState
+					.selected,
+			).toBe(true),
+		);
+		expect(
+			screen.getByText("Quantity").parent?.props.accessibilityState.disabled,
+		).toBe(true);
+		expect(
+			screen.getByText(/quantity targets aren't available for Break/),
+		).toBeTruthy();
+	});
+
+	it("saves a Break habit with targetType simple even if Quantity was picked first", async () => {
+		await render(<HabitFormScreen />);
+
+		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "No phone");
+		await fireEvent.press(screen.getByText("Quantity"));
+		await fireEvent.press(screen.getByText("Break"));
+		await waitFor(() =>
+			expect(
+				screen.getByText("Simple check").parent?.props.accessibilityState
+					.selected,
+			).toBe(true),
+		);
+
+		await fireEvent.press(screen.getByText("Save habit"));
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
+		expect(mockCreateHabit).toHaveBeenCalledWith(
+			expect.objectContaining({ direction: "break", targetType: "simple" }),
+		);
+	});
 });
 
 describe("HabitFormScreen — frequency", () => {

@@ -91,7 +91,7 @@ Weight: regular body text, medium-weight for row labels/section headers only —
 
 **Completion circle — Build:** filled states — empty (outline), done (filled black/white + checkmark), partial (for quantity habits, a pie-fill), disabled.
 
-**Completion circle — Break:** outline-only states, using the amber warning color for its ring — empty, resisted, disabled. Visually distinct from Build at a glance; never filled solid black like a Build habit.
+**Completion circle — Break:** outline-only states, never filled solid black like a Build habit — empty (dashed neutral ring), resisted (solid ink-color ring + ink checkmark, still unfilled), at risk (solid amber ring, no checkmark — depends on streak/freeze logic, not yet built as of HAB-04). Amber is reserved for the at-risk state only; resisted stays neutral/monochrome like the rest of the app's chrome, per the "color only for accents + semantic tokens" rule — it isn't a warning. Visually distinct from Build at a glance via the outline-vs-fill treatment.
 
 **Toggle:** binary on/off, on/off/disabled states. Used for reminder times and settings.
 
@@ -133,7 +133,7 @@ Each entry: layout structure, and where the primary action sits.
 
 **New / Edit habit (HAB-01, HAB-02, HAB-04, HAB-07):** Scrollable form, grouped into cards: Name (text field) → Icon & Color (icon grid + color row) → Category (autocomplete text field) → Direction (segmented control + explanatory caption, locked in Edit mode) → Frequency (chip row + conditional weekday-circle picker) → Target type (segmented control, Quantity reveals Amount/Unit fields). Primary "Save habit" pinned bottom; "Cancel"/"Done" in the header.
 
-**Today (HAB-02, HAB-03, HAB-04):** Date header → overall progress bar → category-grouped cards, each a section header with a mini-count, then rows. Build-habit rows: filled circle trailing. Break-habit rows: outline amber circle trailing, resistance-framed subtitle copy. Tapping a row's circle toggles instantly; tapping the label opens Habit Detail.
+**Today (HAB-02, HAB-03, HAB-04):** Date header → overall progress bar → category-grouped cards, each a section header with a mini-count, then rows. Build-habit rows: filled circle trailing. Break-habit rows: outline circle trailing (dashed neutral when empty, solid ink ring when resisted — amber is reserved for the future at-risk state, not used here), resistance-framed subtitle copy. Tapping a row's circle toggles instantly; tapping the label opens Habit Detail.
 
 **Quantity log (HAB-07):** Bottom sheet over a dimmed Today background — habit name/target header, large stepper, progress bar, quick-add chip row, primary "Save X of Y" pinned bottom.
 

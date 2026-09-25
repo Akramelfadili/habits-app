@@ -178,6 +178,7 @@ This is a **visual and copy variant** of the Today row for any habit whose Direc
 
 ### Edge cases
 - A Break habit with a Quantity target (e.g. "limit screen time to under 30 min"): out of scope for V1 — Break habits are Simple-check only in V1. Note this explicitly in the Add-habit form (Quantity toggle should be disabled/hidden when Direction = Break).
+- If Quantity was already selected and the person then switches Direction to Break, the form resets Target type back to Simple check automatically (not just disables the control) — the two must never disagree silently.
 
 ### Acceptance criteria
 - [ ] Break-habit rows use outline check style

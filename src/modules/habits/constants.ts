@@ -64,3 +64,7 @@ export const DIRECTION_CAPTIONS: Record<HabitDirection, string> = {
 	build: `Build — checking it off means you did it. ${DIRECTION_LOCK_NOTE}`,
 	break: `Break — checking it off means you resisted. ${DIRECTION_LOCK_NOTE}`,
 };
+
+/** Caption under Target type when Direction = Break locks it to Simple check (HAB-04). */
+export const QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION =
+	"Break habits are simple check-ins only — quantity targets aren't available for Break in V1.";

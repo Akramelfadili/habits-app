@@ -127,7 +127,7 @@ describe("TodayScreen", () => {
 		mockCompletedHabitIds = new Set([1]);
 
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByLabelText("Glass of water"));
+		await fireEvent.press(screen.getByLabelText("Glass of water, done"));
 
 		expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, false);
 	});
