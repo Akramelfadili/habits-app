@@ -19,6 +19,7 @@ Do the following, in order:
    - Do hooks follow the `use<X>Queries()` / `use<X>Actions()` naming split?
    - Does anything import across a module boundary (e.g. `modules/habits` importing from a future `modules/todos`)?
    - Is a new frequency or streak rule implemented as a new Strategy file, or did it get added as a branch inside existing logic?
+   - Does any screen contain inline-styled UI (raw Pressable/View/Text with custom styles) for an element that docs/design-system.md documents as a primitive or composite component, instead of importing one from components/ui/?
 3. Check the diff against every acceptance criterion and every edge case listed for this feature in the spec. Call out anything unhandled or only partially handled — don't round up.
 4. Confirm tests were added and are colocated with the code they test, per the convention in `CLAUDE.md`.
 5. Report your findings as a plain list: what's solid, what's missing, what violates the architecture, ranked most-serious first. Do not fix the code yourself — you report, the person and the original session decide what to do next.

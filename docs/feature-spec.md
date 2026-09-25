@@ -24,14 +24,15 @@ tags: [spec, habits, v1, personal-app]
 3. [[#03 — Today view and completion]]
 4. [[#04 — Break-habit framing]]
 5. [[#05 — Day-level states (empty, rest day, day closed)]]
-6. [[#06 — Quantity-based habits]]
-7. [[#07 — Streaks and freezes]]
-8. [[#08 — Habit detail and history]]
-9. [[#09 — Retroactive logging and notes]]
-10. [[#10 — Weekly summary]]
-11. [[#11 — Reminders]]
-12. [[#12 — Reorder, archive and delete]]
-13. [[#Out of scope for V1 (backlog)]]
+6. [[#06 — First run]]
+7. [[#07 — Quantity-based habits]]
+8. [[#08 — Streaks and freezes]]
+9. [[#09 — Habit detail and history]]
+10. [[#10 — Retroactive logging and notes]]
+11. [[#11 — Weekly summary]]
+12. [[#12 — Reminders]]
+13. [[#13 — Reorder, archive and delete]]
+14. [[#Out of scope for V1 (backlog)]]
 
 ---
 
@@ -52,7 +53,7 @@ A single form, reachable from an "Add habit" button. Fields, in order:
 | Color | pick one of a fixed set (6 colors) | Yes | defaults to the first color not already used by another active habit |
 | Category | short text | No | free text, auto-suggests values you've typed before; left blank = "Anytime" |
 | Direction | Build / Break toggle | Yes | defaults to **Build** |
-| Target type | Simple check / Quantity toggle | Yes | defaults to **Simple check** (Quantity is detailed in Feature 06 — for this feature, just build the toggle and the "off" state) |
+| Target type | Simple check / Quantity toggle | Yes | defaults to **Simple check** (Quantity is detailed in Feature 07 — for this feature, just build the toggle and the "off" state) |
 
 Save button is disabled until Name has at least 1 character. No confirmation dialog on save — it saves and returns to the previous screen immediately.
 
@@ -101,7 +102,7 @@ Adds a **Frequency** field to the Create/Edit form from Feature 01, with three m
 A "Weekdays" quick-select button pre-fills Mon–Fri into the Specific-weekdays picker as a shortcut. It is not its own mode — after tapping it, the five days are just individually selected and can be adjusted like any other Specific-weekdays selection.
 
 ### Business rules
-- The week runs **Monday to Sunday**. This must match the Weekly Summary feature's week window exactly (Feature 10) — don't let the two be implemented against different week starts.
+- The week runs **Monday to Sunday**. This must match the Weekly Summary feature's week window exactly (Feature 11) — don't let the two be implemented against different week starts.
 - Changing a habit's frequency **does not touch past logs.** Only future scheduling changes. If you go from Daily to Mon/Wed/Fri, everything logged before the change stays exactly as logged.
 
 ### Edge cases
@@ -130,12 +131,12 @@ The main screen. Shows:
 - Habits due today (per Feature 02's logic), **grouped by Category** (Feature 01's field) — each group shown as its own card with its own mini-count (e.g. "Morning 2/3")
 - Habits with no category fall into a group labeled **"Anytime"**, shown last
 
-Tapping a habit row's check control toggles it done/undone **instantly** — no confirmation, no animation delay longer than ~200ms. Tapping the habit's name/label (not the check control) opens Habit Detail (Feature 08 — stub this navigation now, build the destination screen later).
+Tapping a habit row's check control toggles it done/undone **instantly** — no confirmation, no animation delay longer than ~200ms. Tapping the habit's name/label (not the check control) opens Habit Detail (Feature 09 — stub this navigation now, build the destination screen later).
 
 ### Business rules
 - Un-checking a completed habit on the same day is always allowed and immediately decrements the progress bar. No "are you sure."
 - Group order on screen follows the order categories were first created in, not alphabetical — matches how the person naturally organized their own day.
-- Within a group, habits follow the manual sort order from Feature 12 once that exists; until then, creation order is fine.
+- Within a group, habits follow the manual sort order from Feature 13 once that exists; until then, creation order is fine.
 
 ### States
 | State | Trigger | Behavior |
@@ -145,7 +146,7 @@ Tapping a habit row's check control toggles it done/undone **instantly** — no 
 
 ### Edge cases
 - More than ~10 habits due in one day: each category group scrolls independently rather than the whole page growing without bound. (Design constraint — verify visually at high habit counts, don't just assume it'll be fine.)
-- A quantity-type habit appears in this list before Feature 06 is built: for now, treat it as a simple check (tapping toggles done/undone); Feature 06 replaces that tap behavior with the quantity sheet.
+- A quantity-type habit appears in this list before Feature 07 is built: for now, treat it as a simple check (tapping toggles done/undone); Feature 07 replaces that tap behavior with the quantity sheet.
 
 ### Acceptance criteria
 - [ ] Today screen renders only habits due today per Feature 02's logic
@@ -200,7 +201,7 @@ Three specific "nothing to do" situations exist, and they are not the same thing
 | **Day closed** | Every habit due today has been completed | Celebratory tone, e.g. "All six done." + a preview of tomorrow's due habits with their times + an **Undo** affordance for whichever habit was checked off last |
 
 ### Business rules
-- Rest day **never** touches streak or freeze logic (Feature 07) — it's a fundamentally different state from "missed a scheduled day."
+- Rest day **never** touches streak or freeze logic (Feature 08) — it's a fundamentally different state from "missed a scheduled day."
 - "Log something anyway" on a rest day does not count toward that habit's normal schedule or streak — it's an off-schedule bonus log, kept in history but not required.
 - Day-closed's Undo only ever affects the single most recent action — it is not a multi-step undo history.
 
@@ -217,7 +218,53 @@ Three specific "nothing to do" situations exist, and they are not the same thing
 
 ---
 
-## 06 — Quantity-based habits
+## 06 — First run
+
+**Depends on:** 01, 05
+
+### User story
+As me, on the very first time I open the app with zero habits ever created, I want a couple of good defaults to pick from instead of a blank screen, so I don't have to think of habits to track before I've even seen how the app works.
+
+### Behavior
+Shown **instead of** the normal "No habits yet" empty state (Feature 05) only on a genuine first launch — never again after that, even if every habit is later deleted. A fixed list of 6 suggested habits, each a selectable row (icon, color dot, name, subtitle showing category or "Break habit" where relevant):
+
+| Suggestion | Direction | Pre-selected? |
+|---|---|---|
+| Glass of water | Build | Yes |
+| Walk 20 minutes | Build | Yes |
+| Read before bed | Build | No |
+| Lights out by 23:00 | Break | No |
+| Stretch | Build | No |
+| Three lines journal | Build | No |
+
+Primary button reads **"Add N habits"**, N updating live as rows are toggled. Secondary **"Start from scratch"** text link beneath it.
+
+### Business rules
+- **Shown once per install, gated on a persisted flag** — not just "zero habits exist," since deleting all habits later must show Feature 05's empty state, not this screen again.
+- Tapping a suggestion row toggles its checkbox; no limit on how many can be selected.
+- Tapping "Add N habits" creates one real habit per selected suggestion (via the same create-habit path as Feature 01), using each suggestion's fixed name/icon/color/direction, and a default **Daily** frequency (Feature 02 already exists by this point in the build order).
+- Tapping "Start from scratch" creates nothing and dismisses straight to Feature 05's normal empty state.
+- Either path sets the persisted "seen first run" flag so this screen never shows again.
+
+### States
+| State | Trigger | Behavior |
+|---|---|---|
+| Default | First-ever app open, zero habits | Glass of water + Walk 20 minutes pre-checked, others unchecked |
+| All deselected | User unchecks both defaults | Button reads "Add habits", disabled |
+
+### Edge cases
+- App is force-quit mid-First-Run before tapping either button: flag not yet set, screen shows again next open (nothing was committed).
+
+### Acceptance criteria
+- [ ] Shown only on a genuine first launch with zero habits, never again after
+- [ ] 6 suggestions shown with correct pre-selected defaults
+- [ ] "Add N habits" label updates live and creates real habits with default Daily frequency
+- [ ] "Start from scratch" dismisses to Feature 05's empty state without creating anything
+- [ ] Persisted flag prevents recurrence even after all habits are later deleted
+
+---
+
+## 07 — Quantity-based habits
 
 **Depends on:** 03
 
@@ -232,7 +279,7 @@ For any habit with Target type = Quantity (set in Feature 01, with Amount + Unit
 - Value can be pushed past 100% of target (over-logging is allowed, not capped)
 
 ### Business rules
-- If the value is manually lowered back below target after being complete, the habit **reverts to incomplete** on Today and the progress bar/streak-at-risk state (Feature 07) responds exactly as if it had never been completed that day.
+- If the value is manually lowered back below target after being complete, the habit **reverts to incomplete** on Today and the progress bar/streak-at-risk state (Feature 08) responds exactly as if it had never been completed that day.
 - The stepper cannot go below 0.
 - Unit is free text set at habit-creation time (Feature 01) and is not editable per-log — it's a property of the habit, not of each entry.
 
@@ -249,7 +296,7 @@ For any habit with Target type = Quantity (set in Feature 01, with Amount + Unit
 
 ---
 
-## 07 — Streaks and freezes
+## 08 — Streaks and freezes
 
 **Depends on:** 03
 
@@ -269,8 +316,8 @@ Every habit tracks a **current streak** (consecutive scheduled days completed) s
 - Rest days (Feature 05) and off-schedule days never trigger streak-at-risk — only a day the habit was actually scheduled for and missed.
 
 ### Edge cases
-- Editing history retroactively (Feature 09) so that a previously-missed day becomes logged: streak recalculates forward from that date rather than just incrementing a stored counter.
-- A frozen day should visually read as distinct from a completed day in any history view (Feature 08's heatmap) — don't render a freeze as if it were a real completion.
+- Editing history retroactively (Feature 10) so that a previously-missed day becomes logged: streak recalculates forward from that date rather than just incrementing a stored counter.
+- A frozen day should visually read as distinct from a completed day in any history view (Feature 09's heatmap) — don't render a freeze as if it were a real completion.
 
 ### Acceptance criteria
 - [ ] Streak count increments correctly for consecutive completed scheduled days
@@ -281,9 +328,9 @@ Every habit tracks a **current streak** (consecutive scheduled days completed) s
 
 ---
 
-## 08 — Habit detail and history
+## 09 — Habit detail and history
 
-**Depends on:** 03, 07
+**Depends on:** 03, 08
 
 ### User story
 As me, tapping into one habit, I want to see its whole story at a glance — current streak, long-run consistency, and a visual sense of how steady I've actually been.
@@ -293,11 +340,11 @@ Reached by tapping a habit's name from Today (Feature 03). Shows, top to bottom:
 - Current streak (days) and longest streak achieved
 - Completion rate over the last 90 days (e.g. "87% — 78 of 90 logged")
 - A 10-week heatmap, one cell per scheduled day, shaded by completion (unscheduled days are visually blank, not counted against the rate)
-- A reverse-chronological list of recent log entries, each showing its date, value, and note if one was added (notes come from Feature 09)
+- A reverse-chronological list of recent log entries, each showing its date, value, and note if one was added (notes come from Feature 10)
 
 ### Business rules
 - The 90-day completion rate is calculated only against **scheduled** days for that habit — a habit scheduled 3x/week isn't penalized for the 4 days a week it was never due.
-- Heatmap cells are tappable, and tapping one is the entry point into Feature 09 (retroactive logging) — build that navigation hook now even if Feature 09 isn't built yet.
+- Heatmap cells are tappable, and tapping one is the entry point into Feature 10 (retroactive logging) — build that navigation hook now even if Feature 10 isn't built yet.
 
 ### Edge cases
 - A brand-new habit with less than 90 days of history: percentage is calculated against however many scheduled days have actually occurred so far, not artificially padded to 90.
@@ -308,19 +355,19 @@ Reached by tapping a habit's name from Today (Feature 03). Shows, top to bottom:
 - [ ] 90-day rate only counts scheduled days as the denominator
 - [ ] 10-week heatmap renders with distinct states for: completed, missed, frozen, not-scheduled
 - [ ] Recent entries list shows correct dates/values in reverse chronological order
-- [ ] Tapping a heatmap cell is wired up as a navigation hook for Feature 09
+- [ ] Tapping a heatmap cell is wired up as a navigation hook for Feature 10
 
 ---
 
-## 09 — Retroactive logging and notes
+## 10 — Retroactive logging and notes
 
-**Depends on:** 08
+**Depends on:** 09
 
 ### User story
 As me, if I forget to log yesterday, I want to fix it later without that day just being a permanent, unchangeable failure.
 
 ### Behavior
-Tapping any **past** day on the heatmap (Feature 08) opens a log sheet for that specific date: the habit's value can be set/adjusted (check toggle or quantity, matching its type), and an optional free-text **note** can be attached. Future dates are not tappable — no logging ahead of time.
+Tapping any **past** day on the heatmap (Feature 09) opens a log sheet for that specific date: the habit's value can be set/adjusted (check toggle or quantity, matching its type), and an optional free-text **note** can be attached. Future dates are not tappable — no logging ahead of time.
 
 ### Business rules
 - Editing a past day **recalculates the streak forward from that date** — don't just patch the streak counter directly, since one retroactive change can affect every day after it.
@@ -328,7 +375,7 @@ Tapping any **past** day on the heatmap (Feature 08) opens a log sheet for that 
 - A log entry created this way is otherwise identical to one logged the normal way on Today — no visual "this was backfilled" marker is required.
 
 ### Edge cases
-- Retroactively un-completing a day that had already contributed to a now-claimed freeze (Feature 07): out of scope to unwind automatically for V1 — this is a rare enough case that manual correction (re-adjusting the streak by re-logging forward) is acceptable.
+- Retroactively un-completing a day that had already contributed to a now-claimed freeze (Feature 08): out of scope to unwind automatically for V1 — this is a rare enough case that manual correction (re-adjusting the streak by re-logging forward) is acceptable.
 - Adding a note to a day with no value changes (just adding commentary to an already-completed day): allowed, value stays as-is, note is simply attached.
 
 ### Acceptance criteria
@@ -340,9 +387,9 @@ Tapping any **past** day on the heatmap (Feature 08) opens a log sheet for that 
 
 ---
 
-## 10 — Weekly summary
+## 11 — Weekly summary
 
-**Depends on:** 03, 07
+**Depends on:** 03, 08
 
 ### User story
 As me, once a week, I want one honest screen telling me what's working and what's slipping — not just per-habit streak numbers in isolation.
@@ -360,7 +407,7 @@ A dedicated screen, Monday–Sunday window (must match Feature 02's week definit
 - Only one insight card is shown at a time, for the single worst habit — this is not a list of every underperforming habit.
 
 ### Edge cases
-- A habit archived (Feature 12) partway through the week: still counts for the days it was active, excluded from the days after archiving.
+- A habit archived (Feature 13) partway through the week: still counts for the days it was active, excluded from the days after archiving.
 - Exactly two habits tied for worst performance: either may be chosen; no need for a tie-breaking rule beyond picking one deterministically (e.g. first by creation order).
 
 ### Acceptance criteria
@@ -372,7 +419,7 @@ A dedicated screen, Monday–Sunday window (must match Feature 02's week definit
 
 ---
 
-## 11 — Reminders
+## 12 — Reminders
 
 **Depends on:** 01
 
@@ -405,7 +452,7 @@ Additionally, one separate, single, app-wide-per-habit **"Evening review"** togg
 
 ---
 
-## 12 — Reorder, archive and delete
+## 13 — Reorder, archive and delete
 
 **Depends on:** 01
 
@@ -416,11 +463,11 @@ As me, when a habit stops being relevant, I want it out of my daily view without
 A "Manage habits" screen, reachable from the habit list:
 - **Reorder** — drag handles, free reordering; this order is what Feature 03's Today view respects within each category group
 - **Archive** — one tap, removes the habit from Today and all active lists; archived habits appear in a separate "Archived" section on this same screen with a "Restore" action
-- **Delete** — **only available from the habit's own Detail screen** (Feature 08), never from this list. Requires a confirmation step. This is the only unrecoverable, destructive action in the entire Habits module.
+- **Delete** — **only available from the habit's own Detail screen** (Feature 09), never from this list. Requires a confirmation step. This is the only unrecoverable, destructive action in the entire Habits module.
 
 ### Business rules
 - Archiving preserves **every** past log, note, and streak value exactly as it was — archiving is non-destructive by definition. Restoring brings a habit back exactly as it was, including its streak, as if it had just been paused.
-- An archived habit does not count toward the Weekly Summary (Feature 10) or the Today view for any day after its archive date, but its historical days remain in its own detail history.
+- An archived habit does not count toward the Weekly Summary (Feature 11) or the Today view for any day after its archive date, but its historical days remain in its own detail history.
 - Deleting is intentionally buried one level deeper (habit detail, not the management list) and gated by a confirmation — this friction is deliberate, not an oversight to smooth out later.
 
 ### Edge cases

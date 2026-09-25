@@ -6,7 +6,7 @@ A personal iOS habit-tracking app (Expo / React Native / TypeScript). Part of a 
 
 The complete, authoritative specs live in `docs/`. Read the relevant one before implementing anything — this file only holds what you can't infer from the code itself:
 
-- `docs/feature-spec.md` — all 12 V1 features (HAB-01 through HAB-12), states, edge cases, acceptance criteria
+- `docs/feature-spec.md` — all 13 V1 features (HAB-01 through HAB-13), states, edge cases, acceptance criteria
 - `docs/design-system.md` — exact colors, type scale, component states, screen-by-screen structure
 - `docs/technical-architecture.md` — the full stack and why each piece was chosen
 - `docs/app-architecture.md` — folder structure, layered separation, SOLID/design-pattern rules (read this before writing any code that touches data or business logic)
@@ -38,7 +38,7 @@ Other rules:
 
 (Full reasoning is in `docs/app-architecture.md` — this is the enforced summary.)
 
-1. **Only files inside a module's `repositories/` folder may import `drizzle-orm`.** Screens, hooks, and services never touch Drizzle directly, and never receive Drizzle-inferred types — repositories map raw rows to this module's own types in `types.ts` before returning anything.
+1. **Only two places may import `drizzle-orm`: a module's `repositories/` folder, and `src/lib/db/`.** `lib/db/` is the shared database infrastructure the repositories build on (client, `schema.ts`, migrations, provider, test db), per `docs/app-architecture.md` — importing Drizzle there is intended, not a violation. It holds setup only, never queries or business logic. Screens, hooks, services, and components never touch Drizzle directly, and never receive Drizzle-inferred types — repositories map raw rows to this module's own types in `types.ts` before returning anything.
 2. **Reactive reads go through a repository-exported live-query hook** (e.g. `useHabitsToday()`), never a raw `useLiveQuery(...)` call outside `repositories/`.
 3. **Services are optional — only for genuinely composite operations** (e.g. completing a habit = entry + streak + freeze check, together). A single repository call never gets wrapped in a service "for consistency."
 4. **Hooks follow `use<X>Queries()` / `use<X>Actions()` naming** — reads and writes stay in separate, narrow hooks, never one hook that returns everything.
@@ -47,6 +47,7 @@ Other rules:
 7. **Forms use React Hook Form + Zod.** Dates use `date-fns`, never native `Date` math for anything involving streaks or week boundaries.
 8. **Tests are colocated** (`habit-repository.test.ts` next to `habit-repository.ts`). Maestro E2E flows live in `/e2e`, named by feature ID (`hab-01-create-habit.yaml`).
 9. **Routes in `/app` stay thin** — import and render a screen from `/modules`. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) out of `src/app/` entirely.
+10. **Before building a screen, check `components/ui/primitives/` and `components/ui/composite/` for every UI element it needs, per `docs/design-system.md`.** Reuse what exists. If something's missing, create it there first (with all documented states — default, pressed, disabled, error, etc.), then import it into the screen. A screen file never contains raw styled `Pressable`/`View`/`Text` where a primitive or composite is documented for that element.
 
 ## Workflow
 
