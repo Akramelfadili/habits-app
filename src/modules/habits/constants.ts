@@ -1,6 +1,6 @@
 import type { SFSymbol } from "sf-symbols-typescript";
 import { HABIT_ACCENT_KEYS, type HabitAccentKey } from "@/theme/theme";
-import type { HabitDirection, IsoWeekday } from "./types";
+import type { CreateHabitInput, HabitDirection, IsoWeekday } from "./types";
 
 export type HabitIconKey =
 	| "dot"
@@ -68,3 +68,93 @@ export const DIRECTION_CAPTIONS: Record<HabitDirection, string> = {
 /** Caption under Target type when Direction = Break locks it to Simple check (HAB-04). */
 export const QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION =
 	"Break habits are simple check-ins only — quantity targets aren't available for Break in V1.";
+
+/**
+ * The app-settings key gating First Run (HAB-06) — owned by this module, but
+ * stored through the generic `lib/app-settings` KV store, not a habits-only
+ * mechanism, so other modules can add their own flags the same way later.
+ */
+export const SEEN_FIRST_RUN_SETTING_KEY = "habits.seenFirstRun";
+
+export type FirstRunSuggestion = {
+	id: string;
+	name: string;
+	icon: HabitIconKey;
+	color: HabitAccentKey;
+	direction: HabitDirection;
+	subtitle: string;
+	preselected: boolean;
+};
+
+/** The 6 fixed suggestions offered on First Run (HAB-06), in display order. */
+export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
+	{
+		id: "glass-of-water",
+		name: "Glass of water",
+		icon: "drop",
+		color: "teal",
+		direction: "build",
+		subtitle: "Right after waking",
+		preselected: true,
+	},
+	{
+		id: "walk-20-minutes",
+		name: "Walk 20 minutes",
+		icon: "walk",
+		color: "blue",
+		direction: "build",
+		subtitle: "Any time of day",
+		preselected: true,
+	},
+	{
+		id: "read-before-bed",
+		name: "Read before bed",
+		icon: "book",
+		color: "orange",
+		direction: "build",
+		subtitle: "10 pages",
+		preselected: false,
+	},
+	{
+		id: "lights-out-by-23-00",
+		name: "Lights out by 23:00",
+		icon: "moon",
+		color: "purple",
+		direction: "break",
+		subtitle: "Break habit",
+		preselected: false,
+	},
+	{
+		id: "stretch",
+		name: "Stretch",
+		icon: "leaf",
+		color: "green",
+		direction: "build",
+		subtitle: "5 minutes",
+		preselected: false,
+	},
+	{
+		id: "three-lines-journal",
+		name: "Three lines journal",
+		icon: "heart",
+		color: "red",
+		direction: "build",
+		subtitle: "Evening",
+		preselected: false,
+	},
+];
+
+/** Maps a selected suggestion to the same shape Feature 01's create-habit path takes. */
+export function suggestionToCreateHabitInput(
+	suggestion: FirstRunSuggestion,
+): CreateHabitInput {
+	return {
+		name: suggestion.name,
+		icon: suggestion.icon,
+		color: suggestion.color,
+		category: null,
+		direction: suggestion.direction,
+		targetType: "simple",
+		frequency: { type: "daily" },
+	};
+}

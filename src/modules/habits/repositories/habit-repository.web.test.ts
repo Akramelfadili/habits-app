@@ -53,6 +53,26 @@ describe("habit-repository.web", () => {
 		expect(updated.direction).toBe("break");
 	});
 
+	it("creates a batch of habits and marks the setting", async () => {
+		const { createHabitsAndMarkSetting, useHabitsList } = loadRepository();
+		const { result } = await renderHook(() => useHabitsList());
+
+		let created: Awaited<ReturnType<typeof createHabitsAndMarkSetting>> = [];
+		await act(async () => {
+			created = await createHabitsAndMarkSetting(
+				[input, { ...input, name: "Read before bed" }],
+				{ key: "habits.seenFirstRun", value: "true" },
+			);
+		});
+
+		expect(created.map((h) => h.name)).toEqual(["Stretch", "Read before bed"]);
+		expect(result.current.map((h) => h.name)).toEqual([
+			...HABIT_FIXTURES.map((h) => h.name),
+			"Stretch",
+			"Read before bed",
+		]);
+	});
+
 	it("clears every habit", async () => {
 		const { deleteAllHabits, useHabitsList } = loadRepository();
 		const { result } = await renderHook(() => useHabitsList());

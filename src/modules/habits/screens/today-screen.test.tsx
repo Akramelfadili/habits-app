@@ -57,6 +57,27 @@ jest.mock("../hooks/use-habit-actions", () => ({
 	}),
 }));
 
+let mockHasSeenFirstRun = true;
+jest.mock("../hooks/use-first-run-queries", () => ({
+	useFirstRunQueries: () => ({
+		suggestions: [],
+		hasSeenFirstRun: mockHasSeenFirstRun,
+	}),
+}));
+const mockResetFirstRun = jest.fn();
+jest.mock("../hooks/use-first-run-actions", () => ({
+	useFirstRunActions: () => ({
+		addSuggestedHabits: jest.fn(),
+		isAdding: false,
+		addError: null,
+		skipFirstRun: jest.fn(),
+		isSkipping: false,
+		skipError: null,
+		resetFirstRun: mockResetFirstRun,
+		isResetting: false,
+	}),
+}));
+
 import { Alert } from "react-native";
 import { TodayScreen } from "./today-screen";
 
@@ -65,12 +86,14 @@ describe("TodayScreen", () => {
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset();
 		mockClearAllHabits.mockReset();
+		mockResetFirstRun.mockReset();
 		mockGroups = [];
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
 		mockViewState = "no-habits";
 		mockTomorrowPreview = [];
 		mockLastCompletedToday = null;
+		mockHasSeenFirstRun = true;
 	});
 
 	it("shows the no-habits-yet empty state when there are no habits at all", async () => {
@@ -81,6 +104,15 @@ describe("TodayScreen", () => {
 				"Add your first habit and it will show up here every morning.",
 			),
 		).toBeTruthy();
+	});
+
+	it("shows First Run instead of the empty state on a genuine first launch", async () => {
+		mockHasSeenFirstRun = false;
+
+		await render(<TodayScreen />);
+
+		expect(screen.getByText("Pick a couple to start")).toBeTruthy();
+		expect(screen.queryByText("Nothing to track yet")).toBeNull();
 	});
 
 	it("navigates to new-habit from the empty state's Add habit button", async () => {
@@ -240,6 +272,39 @@ describe("TodayScreen", () => {
 		confirmButton?.onPress?.();
 
 		expect(mockClearAllHabits).toHaveBeenCalledTimes(1);
+		alertSpy.mockRestore();
+	});
+
+	it("asks for confirmation before resetting First Run, and only resets on confirm", async () => {
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Reset First Run (dev)"));
+
+		expect(alertSpy).toHaveBeenCalledTimes(1);
+		expect(mockResetFirstRun).not.toHaveBeenCalled();
+
+		const buttons = alertSpy.mock.calls[0][2];
+		const confirmButton = buttons?.find((button) => button.text === "Reset");
+		confirmButton?.onPress?.();
+
+		expect(mockResetFirstRun).toHaveBeenCalledTimes(1);
+		alertSpy.mockRestore();
+	});
+
+	it("offers Reset First Run (dev) from the empty state too", async () => {
+		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Reset First Run (dev)"));
+
+		const buttons = alertSpy.mock.calls[0][2];
+		const confirmButton = buttons?.find((button) => button.text === "Reset");
+		confirmButton?.onPress?.();
+
+		expect(mockResetFirstRun).toHaveBeenCalledTimes(1);
 		alertSpy.mockRestore();
 	});
 });
