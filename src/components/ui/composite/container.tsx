@@ -11,11 +11,14 @@ type ContainerProps = PropsWithChildren<{
 	 * elements under one wrapper View to keep them in the same section.
 	 */
 	dividers?: boolean;
+	/** Ink border ring — a selectable card that's currently picked (First Run, HAB-06). */
+	selected?: boolean;
 }>;
 
 export function Container({
 	variant = "card",
 	dividers = false,
+	selected = false,
 	children,
 }: ContainerProps) {
 	const { colors } = useTheme();
@@ -29,6 +32,8 @@ export function Container({
 				dividers && styles.dividedBase,
 				{
 					backgroundColor: variant === "inset" ? colors.inner : colors.card,
+					borderWidth: selected ? 1.5 : 0,
+					borderColor: selected ? colors.ink : "transparent",
 				},
 			]}
 		>

@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "link";
 
 type ButtonProps = {
 	label: string;
@@ -27,7 +27,9 @@ export function Button({
 			? colors.onAccent
 			: variant === "ghost"
 				? colors.faint
-				: colors.ink;
+				: variant === "link"
+					? colors.sub
+					: colors.ink;
 
 	return (
 		<Pressable
@@ -46,6 +48,7 @@ export function Button({
 					borderColor: colors.border,
 				},
 				variant === "ghost" && { backgroundColor: "transparent" },
+				variant === "link" && styles.link,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },
 			]}
@@ -72,6 +75,11 @@ const styles = StyleSheet.create({
 	compact: {
 		paddingVertical: 10,
 		paddingHorizontal: 20,
+	},
+	link: {
+		backgroundColor: "transparent",
+		paddingVertical: 4,
+		paddingHorizontal: 0,
 	},
 	label: {
 		fontSize: 15,

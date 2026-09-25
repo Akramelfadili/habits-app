@@ -40,4 +40,19 @@ describe("Button", () => {
 		await fireEvent.press(screen.getByText("Cancel"));
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
+
+	it("calls onPress when tapped as a link", async () => {
+		const onPress = jest.fn();
+		await render(
+			<Button
+				label="Start from scratch"
+				variant="link"
+				fullWidth={false}
+				onPress={onPress}
+			/>,
+		);
+
+		await fireEvent.press(screen.getByText("Start from scratch"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
 });

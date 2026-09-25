@@ -6,6 +6,16 @@ import {
 	unique,
 } from "drizzle-orm/sqlite-core";
 
+/**
+ * Generic app-level key-value store (`lib/app-settings`) — not scoped to any
+ * one module. HAB-06's "seen first run" flag is the first consumer; future
+ * app-level preferences reuse this same table instead of inventing their own.
+ */
+export const appSettings = sqliteTable("app_settings", {
+	key: text("key").primaryKey(),
+	value: text("value").notNull(),
+});
+
 export const habits = sqliteTable("habits", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull(),

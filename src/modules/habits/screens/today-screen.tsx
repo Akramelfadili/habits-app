@@ -13,9 +13,12 @@ import { habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HabitTodayRow } from "../components/habit-today-row";
 import { TodayStatePanel } from "../components/today-state-panel";
+import { useFirstRunActions } from "../hooks/use-first-run-actions";
+import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
+import { FirstRunScreen } from "./first-run-screen";
 import { celebratoryHeadline } from "./today-screen-helpers";
 
 export function TodayScreen() {
@@ -32,6 +35,8 @@ export function TodayScreen() {
 	} = useTodayQueries();
 	const { toggleCompletion } = useTodayActions();
 	const { clearAllHabits, isClearingAll } = useHabitActions();
+	const { hasSeenFirstRun } = useFirstRunQueries();
+	const { resetFirstRun, isResetting } = useFirstRunActions();
 
 	function handleUndo() {
 		if (!lastCompletedToday) return;
@@ -54,12 +59,32 @@ export function TodayScreen() {
 		);
 	}
 
+	function handleResetFirstRun() {
+		if (!resetFirstRun) return;
+		Alert.alert(
+			"Reset First Run?",
+			"Dev-only: deletes every habit and un-sets the “seen first run” flag, so First Run shows again.",
+			[
+				{ text: "Cancel", style: "cancel" },
+				{
+					text: "Reset",
+					style: "destructive",
+					onPress: () => resetFirstRun(),
+				},
+			],
+		);
+	}
+
 	const header = (
 		<View style={styles.header}>
 			<SectionLabel>{format(today, "EEEE, d MMMM")}</SectionLabel>
 			<Text style={[styles.title, { color: colors.ink }]}>Today</Text>
 		</View>
 	);
+
+	if (viewState === "no-habits" && !hasSeenFirstRun) {
+		return <FirstRunScreen />;
+	}
 
 	if (viewState === "no-habits") {
 		return (
@@ -71,6 +96,15 @@ export function TodayScreen() {
 					subtitle="Add your first habit and it will show up here every morning."
 				>
 					<Button label="Add habit" onPress={() => router.push("/new-habit")} />
+					{resetFirstRun ? (
+						<Button
+							label="Reset First Run (dev)"
+							variant="ghost"
+							fullWidth={false}
+							disabled={isResetting}
+							onPress={handleResetFirstRun}
+						/>
+					) : null}
 				</TodayStatePanel>
 			</SafeAreaView>
 		);
@@ -211,6 +245,15 @@ export function TodayScreen() {
 						fullWidth={false}
 						disabled={isClearingAll}
 						onPress={handleClearAllHabits}
+					/>
+				) : null}
+				{resetFirstRun ? (
+					<Button
+						label="Reset First Run (dev)"
+						variant="ghost"
+						fullWidth={false}
+						disabled={isResetting}
+						onPress={handleResetFirstRun}
 					/>
 				) : null}
 			</ScrollView>

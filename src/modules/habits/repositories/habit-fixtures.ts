@@ -10,16 +10,26 @@ import type { Habit, IsoWeekday } from "../types";
  */
 const FIXTURE_DATE = new Date("2026-09-16T08:00:00Z");
 
-export type FixtureScenario = "default" | "empty" | "rest-day" | "day-closed";
+export type FixtureScenario =
+	| "default"
+	| "empty"
+	| "rest-day"
+	| "day-closed"
+	| "first-run";
 
 /**
  * `?fixtures=` on any web URL — read once here so the habit and entry
  * repositories agree on which scenario is showing (scripts/visual-check.mjs).
+ * `app-settings-repository.web.ts` reads this same param independently to
+ * decide whether "seen first run" starts seeded (see its own comment).
  */
 export function resolveFixtureScenario(): FixtureScenario {
 	const search = globalThis.location?.search ?? "";
 	const value = new URLSearchParams(search).get("fixtures");
-	return value === "empty" || value === "rest-day" || value === "day-closed"
+	return value === "empty" ||
+		value === "rest-day" ||
+		value === "day-closed" ||
+		value === "first-run"
 		? value
 		: "default";
 }
@@ -180,6 +190,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: Habit[] = [
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 	switch (scenario) {
 		case "empty":
+		case "first-run":
 			return [];
 		case "rest-day":
 			return REST_DAY_HABIT_FIXTURES.map((habit) => ({ ...habit }));
