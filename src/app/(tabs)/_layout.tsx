@@ -8,10 +8,11 @@ export default function TabsLayout() {
 	return (
 		<Tabs
 			screenOptions={{
-				headerStyle: { backgroundColor: colors.bg },
-				headerTintColor: colors.ink,
-				headerTitleStyle: { color: colors.ink },
-				headerShadowVisible: false,
+				// None of the tab screens' mockups show this navigator's own header
+				// bar (docs/mockups/today-populated.png's "Today" title is screen
+				// content, not nav chrome) — first surfaced now that HAB-03 gives
+				// the Habits tab a real mockup to check against.
+				headerShown: false,
 				tabBarStyle: {
 					backgroundColor: colors.card,
 					borderTopColor: colors.border,

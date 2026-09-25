@@ -147,6 +147,7 @@ Tapping a habit row's check control toggles it done/undone **instantly** — no 
 ### Edge cases
 - More than ~10 habits due in one day: each category group scrolls independently rather than the whole page growing without bound. (Design constraint — verify visually at high habit counts, don't just assume it'll be fine.)
 - A quantity-type habit appears in this list before Feature 07 is built: for now, treat it as a simple check (tapping toggles done/undone); Feature 07 replaces that tap behavior with the quantity sheet.
+- A Break-direction habit appears in this list before Feature 04 is built: for now, render it as a plain Build-style row — filled check style, no resistance framing/copy; Feature 04 replaces the visual and copy treatment for Break habits.
 
 ### Acceptance criteria
 - [ ] Today screen renders only habits due today per Feature 02's logic

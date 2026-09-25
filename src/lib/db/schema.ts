@@ -1,4 +1,10 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	index,
+	integer,
+	sqliteTable,
+	text,
+	unique,
+} from "drizzle-orm/sqlite-core";
 
 export const habits = sqliteTable("habits", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
@@ -24,3 +30,25 @@ export const habits = sqliteTable("habits", {
 	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
+
+/**
+ * One row = that habit was completed/resisted on that calendar day (HAB-03).
+ * Presence is the signal — un-checking (always allowed, no confirmation)
+ * deletes the row rather than flipping a boolean.
+ */
+export const entries = sqliteTable(
+	"entries",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		habitId: integer("habit_id")
+			.notNull()
+			.references(() => habits.id),
+		/** Calendar day, "yyyy-MM-dd" — not a timestamp, so timezone can't shift which day a completion lands on. */
+		date: text("date").notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		unique("entries_habit_date_unique").on(table.habitId, table.date),
+		index("entries_date_idx").on(table.date),
+	],
+);
