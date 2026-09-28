@@ -133,4 +133,42 @@ describe("entry-repository.web", () => {
 			).toBe(false);
 		});
 	});
+
+	it("starts with no notes outside the habit-detail scenarios", async () => {
+		const { useEntryNotes } = loadRepository();
+		const { result } = await renderHook(() => useEntryNotes());
+		expect(result.current).toEqual([]);
+	});
+
+	it("saveDayLog applies values and the note, and notifies live readers", async () => {
+		const { saveDayLog, useEntriesInRange, useEntryNotes } = loadRepository();
+		const { result } = await renderHook(() => ({
+			entries: useEntriesInRange(RANGE_START, RANGE_END),
+			notes: useEntryNotes(),
+		}));
+
+		await act(async () => {
+			await saveDayLog(new Date(), {
+				values: [
+					{ habitId: 1, value: true },
+					{ habitId: 3, value: false },
+				],
+				noteHabitId: 1,
+				note: " Late walk ",
+			});
+		});
+
+		const todays = result.current.entries.filter(
+			(entry) => entry.date === TODAY,
+		);
+		expect(todays.map((entry) => entry.habitId).sort()).toEqual([1, 2]);
+		expect(result.current.notes).toEqual([
+			{ habitId: 1, date: TODAY, note: "Late walk" },
+		]);
+
+		await act(async () => {
+			await saveDayLog(new Date(), { values: [], noteHabitId: 1, note: "" });
+		});
+		expect(result.current.notes).toEqual([]);
+	});
 });

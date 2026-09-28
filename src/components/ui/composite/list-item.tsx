@@ -18,6 +18,13 @@ type ListItemProps = {
 	 * background (form rows) — drop the row's own so content aligns with the card.
 	 */
 	embedded?: boolean;
+	/**
+	 * Fades the row's content (not its trailing control) — the design system's
+	 * dimmed list-item state, e.g. Retro log's not-yet-done habits (HAB-10).
+	 */
+	dimmed?: boolean;
+	/** Overrides the default accessibility label (the title). */
+	accessibilityLabel?: string;
 };
 
 export function ListItem({
@@ -29,12 +36,15 @@ export function ListItem({
 	value,
 	trailing,
 	embedded = false,
+	dimmed = false,
+	accessibilityLabel,
 }: ListItemProps) {
 	const { colors, opacity } = useTheme();
 
 	return (
 		<Pressable
 			accessibilityRole={onPress ? "button" : undefined}
+			accessibilityLabel={accessibilityLabel}
 			onPress={onPress}
 			style={({ pressed }) => [
 				styles.row,
@@ -42,18 +52,23 @@ export function ListItem({
 				pressed && onPress && { opacity: opacity.pressed },
 			]}
 		>
-			{leading}
-			<View style={styles.text}>
-				<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
-				{subtitle ? (
-					<Text style={[styles.subtitle, { color: colors.sub }]}>
-						{subtitle}
-					</Text>
+			<View
+				testID="list-item-content"
+				style={[styles.content, dimmed && { opacity: opacity.dimmed }]}
+			>
+				{leading}
+				<View style={styles.text}>
+					<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+					{subtitle ? (
+						<Text style={[styles.subtitle, { color: colors.sub }]}>
+							{subtitle}
+						</Text>
+					) : null}
+				</View>
+				{value ? (
+					<Text style={[styles.value, { color: colors.sub }]}>{value}</Text>
 				) : null}
 			</View>
-			{value ? (
-				<Text style={[styles.value, { color: colors.sub }]}>{value}</Text>
-			) : null}
 			{trailing}
 			{navigable ? (
 				<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
@@ -70,6 +85,12 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		paddingHorizontal: 16,
 		borderRadius: 14,
+	},
+	content: {
+		flex: 1,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
 	},
 	embedded: {
 		paddingVertical: 0,

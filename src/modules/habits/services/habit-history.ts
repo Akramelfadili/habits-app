@@ -14,7 +14,7 @@ import {
 import type { HeatmapLevel } from "@/theme/theme";
 import { WEEK_STARTS_ON } from "../constants";
 import { getFrequencyStrategy } from "../strategies/frequency-strategy";
-import type { Entry, Habit } from "../types";
+import type { Entry, EntryNote, Habit } from "../types";
 import { calculateCurrentStreak, isEntryComplete } from "./habit-service";
 
 /**
@@ -243,9 +243,33 @@ export function buildHeatmapWeeks({
 	);
 }
 
-/** This habit's entries, newest first — Habit Detail's "Recent entries". */
-export function recentEntries(entries: readonly Entry[], limit = 10): Entry[] {
-	return [...entries]
+/**
+ * One line of Habit Detail's "Recent entries": a day with a log, a note, or
+ * both. A note on a day that wasn't logged (HAB-10) still gets its own line —
+ * otherwise it would only ever be visible from inside the Retro log sheet.
+ */
+export type RecentEntry = {
+	/** "yyyy-MM-dd". */
+	date: string;
+	entry: Entry | null;
+	note: string | null;
+};
+
+/** This habit's logged and/or noted days, newest first — Habit Detail's "Recent entries". */
+export function recentEntries(
+	entries: readonly Entry[],
+	notes: readonly EntryNote[],
+	limit = 10,
+): RecentEntry[] {
+	const byDate = new Map<string, RecentEntry>();
+	for (const entry of entries) {
+		byDate.set(entry.date, { date: entry.date, entry, note: null });
+	}
+	for (const { date, note } of notes) {
+		const existing = byDate.get(date);
+		byDate.set(date, { date, entry: existing?.entry ?? null, note });
+	}
+	return [...byDate.values()]
 		.sort((a, b) => b.date.localeCompare(a.date))
 		.slice(0, limit);
 }

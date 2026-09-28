@@ -1,5 +1,5 @@
 import { startOfDay } from "date-fns";
-import { useAllEntries } from "../repositories/entry-repository";
+import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
 import {
@@ -10,9 +10,10 @@ import {
 	currentStreakAsOf,
 	type HeatmapDay,
 	type LongestStreak,
+	type RecentEntry,
 	recentEntries,
 } from "../services/habit-history";
-import type { Entry, Habit } from "../types";
+import type { Habit } from "../types";
 
 export type HabitDetail = {
 	habit: Habit;
@@ -21,7 +22,8 @@ export type HabitDetail = {
 	completionRate: CompletionRate;
 	/** 10 Mon→Sun columns, oldest first (HAB-09's heatmap). */
 	heatmapWeeks: HeatmapDay[][];
-	recentEntries: Entry[];
+	/** Logged and/or noted days (HAB-10), newest first. */
+	recentEntries: RecentEntry[];
 	/** Nothing has ever been logged — drives the new-habit variant's copy. */
 	hasEntries: boolean;
 	today: Date;
@@ -38,6 +40,7 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 	const habits = useHabitsList();
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
+	const notes = useEntryNotes();
 
 	const habit = habits.find((candidate) => candidate.id === habitId);
 	if (!habit) return null;
@@ -57,7 +60,10 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 		longestStreak: calculateLongestStreak(history),
 		completionRate: calculateCompletionRate(history),
 		heatmapWeeks: buildHeatmapWeeks(history),
-		recentEntries: recentEntries(entries),
+		recentEntries: recentEntries(
+			entries,
+			notes.filter((note) => note.habitId === habitId),
+		),
 		hasEntries: entries.length > 0,
 		today,
 	};

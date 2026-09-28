@@ -19,7 +19,7 @@ export const HABIT_DETAIL_FROZEN_DAYS_AGO = [38, 59];
 export function makeFrozenDayFixtures(
 	scenario: FixtureScenario = "default",
 ): FrozenDay[] {
-	if (scenario !== "habit-detail") return [];
+	if (scenario !== "habit-detail" && scenario !== "retro-log") return [];
 	return HABIT_DETAIL_FROZEN_DAYS_AGO.map((daysAgo, index) => ({
 		id: index + 1,
 		habitId: 1,

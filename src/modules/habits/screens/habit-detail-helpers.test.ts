@@ -9,6 +9,7 @@ import {
 	habitSubtitle,
 	heatmapRangeLabel,
 	longestStreakCaption,
+	notLoggedLabel,
 } from "./habit-detail-helpers";
 
 const today = new Date(2026, 8, 23, 12);
@@ -96,5 +97,14 @@ describe("heatmapRangeLabel", () => {
 	it("spans first to last month, or collapses to one", () => {
 		expect(heatmapRangeLabel(new Date(2026, 6, 20), today)).toBe("Jul — Sep");
 		expect(heatmapRangeLabel(new Date(2026, 8, 1), today)).toBe("Sep");
+	});
+});
+
+describe("notLoggedLabel", () => {
+	it("says not logged, or not resisted for a Break habit", () => {
+		expect(notLoggedLabel(makeHabit())).toBe("Not logged");
+		expect(notLoggedLabel(makeHabit({ direction: "break" }))).toBe(
+			"Not resisted",
+		);
 	});
 });

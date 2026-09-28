@@ -261,12 +261,43 @@ describe("buildHeatmapWeeks", () => {
 });
 
 describe("recentEntries", () => {
+	const note = (daysAgo: number, text: string) => ({
+		habitId: 1,
+		date: dayString(daysAgo),
+		note: text,
+	});
+
 	it("returns newest first, capped", () => {
 		const entries = [entry(5), entry(1), entry(3), entry(2)];
-		expect(recentEntries(entries, 3).map((e) => e.date)).toEqual([
+		expect(recentEntries(entries, [], 3).map((e) => e.date)).toEqual([
 			dayString(1),
 			dayString(2),
 			dayString(3),
 		]);
+	});
+
+	it("attaches a day's note to its entry", () => {
+		expect(recentEntries([entry(1, 8)], [note(1, "Easy day")])).toEqual([
+			{ date: dayString(1), entry: entry(1, 8), note: "Easy day" },
+		]);
+	});
+
+	it("lists a noted day with no entry too, in date order, so a note is never hidden", () => {
+		const result = recentEntries(
+			[entry(1), entry(3)],
+			[note(2, "Sick, skipped it")],
+		);
+		expect(
+			result.map((row) => [row.date, row.entry !== null, row.note]),
+		).toEqual([
+			[dayString(1), true, null],
+			[dayString(2), false, "Sick, skipped it"],
+			[dayString(3), true, null],
+		]);
+	});
+
+	it("counts note-only days toward the cap", () => {
+		const result = recentEntries([entry(3)], [note(1, "a"), note(2, "b")], 2);
+		expect(result.map((row) => row.date)).toEqual([dayString(1), dayString(2)]);
 	});
 });

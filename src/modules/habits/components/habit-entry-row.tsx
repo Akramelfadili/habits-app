@@ -5,32 +5,38 @@ import { useTheme } from "@/theme/use-theme";
 import {
 	entryDateLabel,
 	entryValueLabel,
+	notLoggedLabel,
 } from "../screens/habit-detail-helpers";
+import type { RecentEntry } from "../services/habit-history";
 import { isEntryComplete } from "../services/habit-service";
-import type { Entry, Habit } from "../types";
+import type { Habit } from "../types";
 
 type HabitEntryRowProps = {
 	habit: Habit;
-	entry: Entry;
+	row: RecentEntry;
 	today: Date;
 };
 
 /**
  * One line of Habit Detail's "Recent entries" (HAB-09): date, logged value,
- * and — once HAB-10 adds them — the day's note as the subtitle. A partial
- * quantity day gets a neutral badge, so only a real completion shows the check.
+ * and the day's note (HAB-10) as the subtitle. A partial quantity day gets a
+ * neutral badge, so only a real completion shows the check; a noted day with
+ * nothing logged (HAB-10) gets an empty one and says so in the value slot.
  */
-export function HabitEntryRow({ habit, entry, today }: HabitEntryRowProps) {
+export function HabitEntryRow({ habit, row, today }: HabitEntryRowProps) {
 	const { scheme } = useTheme();
-	const complete = isEntryComplete(habit, entry);
+	const { entry } = row;
 
 	return (
 		<ListItem
 			embedded
-			title={entryDateLabel(entry.date, today)}
-			value={entryValueLabel(habit, entry)}
+			title={entryDateLabel(row.date, today)}
+			subtitle={row.note ?? undefined}
+			value={entry ? entryValueLabel(habit, entry) : notLoggedLabel(habit)}
 			leading={
-				complete ? (
+				!entry ? (
+					<IconBadge symbol="circle.dashed" />
+				) : isEntryComplete(habit, entry) ? (
 					<IconBadge
 						symbol="checkmark"
 						accent={{

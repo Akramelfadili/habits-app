@@ -72,4 +72,41 @@ describe("TextField", () => {
 		await fireEvent(screen.getByDisplayValue(""), "focus");
 		expect(borderColor()).toBe(errorColor);
 	});
+
+	it("shows a character counter only near the cap", async () => {
+		const { rerender } = await render(
+			<TextField
+				label="Note"
+				value="short"
+				onChangeText={() => {}}
+				maxLength={280}
+			/>,
+		);
+		expect(screen.queryByText(/\/280$/)).toBeNull();
+
+		await rerender(
+			<TextField
+				label="Note"
+				value={"a".repeat(250)}
+				onChangeText={() => {}}
+				maxLength={280}
+			/>,
+		);
+		expect(screen.getByText("250/280")).toBeTruthy();
+	});
+
+	it("passes the cap and multiline through to the input", async () => {
+		await render(
+			<TextField
+				label="Note"
+				value=""
+				onChangeText={() => {}}
+				maxLength={280}
+				multiline
+			/>,
+		);
+		const input = screen.getByDisplayValue("");
+		expect(input.props.maxLength).toBe(280);
+		expect(input.props.multiline).toBe(true);
+	});
 });

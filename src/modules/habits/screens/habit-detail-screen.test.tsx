@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { HabitDetail } from "../hooks/use-habit-detail-queries";
+import type { RetroLogDay } from "../hooks/use-retro-log-queries";
 import { makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
@@ -14,6 +15,18 @@ jest.mock("../hooks/use-habit-detail-queries", () => ({
 	useHabitDetailQueries: () => mockDetail,
 }));
 
+// The sheet's own data is covered by use-retro-log-queries.test.ts — here it
+// only needs to echo back which day was tapped.
+const mockRetroLogQueries = jest.fn();
+const mockSaveDay = jest.fn();
+jest.mock("../hooks/use-retro-log-queries", () => ({
+	useRetroLogQueries: (habitId: number, date: Date | null) =>
+		mockRetroLogQueries(habitId, date),
+}));
+jest.mock("../hooks/use-retro-log-actions", () => ({
+	useRetroLogActions: () => ({ saveDay: mockSaveDay, isSaving: false }),
+}));
+
 import { buildHeatmapWeeks } from "../services/habit-history";
 import { HabitDetailScreen } from "./habit-detail-screen";
 
@@ -24,6 +37,16 @@ const habit = makeHabit({
 	targetAmount: 8,
 	targetUnit: "glasses",
 	createdAt: new Date(2026, 0, 1),
+});
+
+beforeEach(() => {
+	mockSaveDay.mockReset().mockResolvedValue(undefined);
+	mockRetroLogQueries
+		.mockReset()
+		.mockImplementation(
+			(_habitId: number, date: Date | null): RetroLogDay | null =>
+				date ? { date, habits: [habit], values: { 1: 0 }, note: "" } : null,
+		);
 });
 
 function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
@@ -39,8 +62,28 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 			today,
 		}),
 		recentEntries: [
-			{ id: 2, habitId: 1, date: "2026-09-23", value: 6, createdAt: today },
-			{ id: 1, habitId: 1, date: "2026-09-22", value: 8, createdAt: today },
+			{
+				date: "2026-09-23",
+				entry: {
+					id: 2,
+					habitId: 1,
+					date: "2026-09-23",
+					value: 6,
+					createdAt: today,
+				},
+				note: null,
+			},
+			{
+				date: "2026-09-22",
+				entry: {
+					id: 1,
+					habitId: 1,
+					date: "2026-09-22",
+					value: 8,
+					createdAt: today,
+				},
+				note: null,
+			},
 		],
 		hasEntries: true,
 		today,
@@ -87,5 +130,86 @@ describe("HabitDetailScreen", () => {
 		mockDetail = null;
 		await render(<HabitDetailScreen habitId={99} />);
 		expect(screen.getByText("Habit not found")).toBeTruthy();
+	});
+
+	it("shows notes under their dates, including a noted day with nothing logged", async () => {
+		mockDetail = detail({
+			recentEntries: [
+				{
+					date: "2026-09-22",
+					entry: {
+						id: 1,
+						habitId: 1,
+						date: "2026-09-22",
+						value: 8,
+						createdAt: today,
+					},
+					note: "Kept the bottle on the table",
+				},
+				{ date: "2026-09-21", entry: null, note: "Sick, skipped it" },
+			],
+		});
+		await render(<HabitDetailScreen habitId={1} />);
+		expect(screen.getByText("Kept the bottle on the table")).toBeTruthy();
+		expect(screen.getByText("Sick, skipped it")).toBeTruthy();
+		expect(screen.getByText("Not logged")).toBeTruthy();
+	});
+
+	describe("retro log (HAB-10)", () => {
+		it("tapping a past heatmap day opens the log sheet for that date", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			expect(screen.queryByText("Save changes")).toBeNull();
+
+			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
+
+			expect(mockRetroLogQueries).toHaveBeenLastCalledWith(
+				1,
+				new Date(2026, 8, 21),
+			);
+			expect(
+				screen.getByRole("header", { name: "Monday, 21 September" }),
+			).toBeTruthy();
+		});
+
+		it("future days aren't tappable", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByLabelText(/^Friday 25 September/));
+
+			expect(screen.queryByText("Save changes")).toBeNull();
+		});
+
+		it("saving writes the day with this habit as the note's owner, then closes", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
+
+			await fireEvent.press(
+				screen.getByRole("checkbox", { name: "Glass of water, done" }),
+			);
+			await fireEvent.changeText(screen.getByDisplayValue(""), "Hotel");
+			await fireEvent.press(
+				screen.getByRole("button", { name: "Save changes" }),
+			);
+
+			expect(mockSaveDay).toHaveBeenCalledWith(new Date(2026, 8, 21), {
+				values: [{ habitId: 1, value: 8 }],
+				noteHabitId: 1,
+				note: "Hotel",
+			});
+			expect(screen.queryByText("Save changes")).toBeNull();
+		});
+
+		it("Close discards the draft without saving", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
+			await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+
+			expect(mockSaveDay).not.toHaveBeenCalled();
+			expect(screen.queryByText("Save changes")).toBeNull();
+		});
 	});
 });

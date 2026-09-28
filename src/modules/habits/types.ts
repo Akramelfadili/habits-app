@@ -82,3 +82,30 @@ export type FrozenDay = {
 	date: string;
 	createdAt: Date;
 };
+
+/**
+ * A free-text note on one habit's day (HAB-10) — independent of whether that
+ * day has an entry, so a note never implies a completion.
+ */
+export type EntryNote = {
+	habitId: number;
+	/** Calendar day, "yyyy-MM-dd". */
+	date: string;
+	note: string;
+};
+
+/**
+ * One habit's value for a retro-logged day (HAB-10): `false`/`true` for a
+ * simple-check habit, a logged amount for a quantity habit (0 = nothing logged).
+ */
+export type DayLogValue = boolean | number;
+
+/** What a retro log save writes for one day, in one go. */
+export type DayLog = {
+	/** Only the habits whose value actually changed. */
+	values: { habitId: number; value: DayLogValue }[];
+	/** The note's owner — the habit the sheet was opened from. */
+	noteHabitId: number;
+	/** Empty clears the note. */
+	note: string;
+};

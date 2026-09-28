@@ -68,6 +68,8 @@ export const typeScale = {
 export const interactionOpacity = {
 	pressed: 0.7,
 	disabled: 0.4,
+	/** A row that's present but not the focus — e.g. Retro log's not-yet-done habits (HAB-10). */
+	dimmed: 0.5,
 } as const;
 
 /** The 6 confirmed habit-accent hues, in fixed pick order (design-system.md). */

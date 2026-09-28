@@ -1,6 +1,7 @@
 import { renderHook } from "@testing-library/react-native";
+import { format } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
-import type { Entry, FrozenDay } from "../types";
+import type { Entry, EntryNote, FrozenDay } from "../types";
 
 // Pinned so "today" (computed inside the hook) is deterministic.
 const TODAY = new Date(2026, 8, 23, 12); // Wednesday 23 Sep 2026
@@ -19,12 +20,14 @@ function entry(habitId: number, date: string): Entry {
 let mockHabits = [habit, otherHabit];
 let mockEntries: Entry[] = [];
 let mockFrozenDays: FrozenDay[] = [];
+let mockNotes: EntryNote[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
 	useHabitsList: () => mockHabits,
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
+	useEntryNotes: () => mockNotes,
 }));
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozenDays,
@@ -37,6 +40,7 @@ beforeEach(() => {
 	mockHabits = [habit, otherHabit];
 	mockEntries = [];
 	mockFrozenDays = [];
+	mockNotes = [];
 });
 
 afterEach(() => {
@@ -79,5 +83,48 @@ describe("useHabitDetailQueries", () => {
 			recentEntries: [],
 			hasEntries: false,
 		});
+	});
+
+	it("merges this habit's notes into recent entries — including note-only days — but not other habits'", async () => {
+		mockEntries = [entry(1, "2026-09-22")];
+		mockNotes = [
+			{ habitId: 1, date: "2026-09-22", note: "Easy day" },
+			{ habitId: 1, date: "2026-09-21", note: "Skipped, sick" },
+			{ habitId: 2, date: "2026-09-20", note: "Not mine" },
+		];
+		const { result } = await renderHook(() => useHabitDetailQueries(1));
+		expect(
+			result.current?.recentEntries.map((row) => [
+				row.date,
+				row.entry !== null,
+				row.note,
+			]),
+		).toEqual([
+			["2026-09-22", true, "Easy day"],
+			["2026-09-21", false, "Skipped, sick"],
+		]);
+	});
+
+	it("a retro-logged past day updates the heatmap and 90-day rate on the next render (HAB-10)", async () => {
+		mockEntries = [entry(1, "2026-09-22")];
+		const { result, rerender } = await renderHook(() =>
+			useHabitDetailQueries(1),
+		);
+		const cellFor = (date: string) =>
+			result.current?.heatmapWeeks
+				.flat()
+				.find((day) => format(day.date, "yyyy-MM-dd") === date);
+		const before = result.current?.completionRate;
+		expect(cellFor("2026-09-21")?.status).toBe("missed");
+
+		// What saveDayLog's write looks like to the live query.
+		mockEntries = [...mockEntries, entry(1, "2026-09-21")];
+		await rerender({});
+
+		expect(cellFor("2026-09-21")?.status).toBe("logged");
+		expect(result.current?.completionRate.completed).toBe(
+			(before?.completed ?? 0) + 1,
+		);
+		expect(result.current?.completionRate.scheduled).toBe(before?.scheduled);
 	});
 });

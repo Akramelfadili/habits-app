@@ -1,5 +1,5 @@
 import { format, subDays } from "date-fns";
-import type { Entry } from "../types";
+import type { Entry, EntryNote } from "../types";
 import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
 import {
 	DAY_CLOSED_DUE_TODAY_IDS,
@@ -52,6 +52,20 @@ export function makeEntryFixtures(
 
 	if (scenario === "habit-detail") return habitDetailEntries();
 
+	if (scenario === "retro-log") {
+		// The tapped day: Read done, Meditate and Mobility not — matching
+		// docs/mockups/retro-log.png (Glass of water's own history covers it).
+		const entries = habitDetailEntries();
+		entries.push({
+			id: entries.length + 1,
+			habitId: 3,
+			date: format(subDays(new Date(), RETRO_LOG_DAYS_AGO), "yyyy-MM-dd"),
+			value: 20,
+			createdAt: new Date(),
+		});
+		return entries;
+	}
+
 	if (scenario === "streak-at-risk") {
 		// Day -1 (yesterday) is intentionally left uncompleted — that's the miss
 		// the streak-at-risk sheet is showing. Days -2 through -25 are all
@@ -77,6 +91,42 @@ export function makeEntryFixtures(
 		{ id: 1, habitId: 2, date: today, value: 20, createdAt: new Date() },
 		{ id: 2, habitId: 3, date: today, createdAt: new Date() },
 	];
+}
+
+/** The past day the `retro-log` visual check taps — inside the 24-day run, where Glass of water is logged at exactly its target (8). */
+export const RETRO_LOG_DAYS_AGO = 3;
+
+/**
+ * Notes backing the web-only repository (HAB-10): the two Recent entries
+ * subtitles docs/mockups/habit-detail.png shows, and — for `retro-log` — the
+ * tapped day's note from docs/mockups/retro-log.png.
+ */
+export function makeEntryNoteFixtures(
+	scenario: FixtureScenario = "default",
+): EntryNote[] {
+	if (scenario !== "habit-detail" && scenario !== "retro-log") return [];
+	const daysAgo = (days: number) =>
+		format(subDays(new Date(), days), "yyyy-MM-dd");
+	const notes: EntryNote[] = [
+		{
+			habitId: 1,
+			date: daysAgo(0),
+			note: "Two before the run, rest at the desk.",
+		},
+		{
+			habitId: 1,
+			date: daysAgo(1),
+			note: "Kept the bottle on the table — easy day.",
+		},
+	];
+	if (scenario === "retro-log") {
+		notes.push({
+			habitId: 1,
+			date: daysAgo(RETRO_LOG_DAYS_AGO),
+			note: "Travel day — logged from the hotel.",
+		});
+	}
+	return notes;
 }
 
 /** The `habit-detail` scenario's current streak — docs/mockups/habit-detail.png's "24". */
