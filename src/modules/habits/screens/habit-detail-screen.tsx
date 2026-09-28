@@ -1,6 +1,8 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
+import { ListItem } from "@/components/ui/composite/list-item";
 import { StatCard } from "@/components/ui/composite/stat-card";
 import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
@@ -21,6 +23,7 @@ import {
 	habitSubtitle,
 	longestStreakCaption,
 } from "./habit-detail-helpers";
+import { remindersSummary } from "./reminders-helpers";
 
 type HabitDetailScreenProps = {
 	habitId: number;
@@ -33,6 +36,7 @@ type HabitDetailScreenProps = {
  */
 export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const { colors, scheme } = useTheme();
+	const router = useRouter();
 	const detail = useHabitDetailQueries(habitId);
 	// Heatmap taps land here; a non-null day opens the Retro log sheet (HAB-10).
 	const [retroLogDate, setRetroLogDate] = useState<Date | null>(null);
@@ -65,6 +69,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 		heatmapWeeks,
 		recentEntries,
 		hasEntries,
+		reminders,
 		today,
 	} = detail;
 
@@ -117,6 +122,14 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 				today={today}
 				hasEntries={hasEntries}
 				onSelectDay={setRetroLogDate}
+			/>
+
+			{/* No mockup shows this entry point — a plain navigable row (HAB-12). */}
+			<ListItem
+				title="Reminders"
+				subtitle={remindersSummary(reminders)}
+				navigable
+				onPress={() => router.push(`/habits/reminders/${habit.id}`)}
 			/>
 
 			<View style={styles.entries}>

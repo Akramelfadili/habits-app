@@ -1,0 +1,176 @@
+import { Stack } from "expo-router";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { AddRow } from "@/components/ui/composite/add-row";
+import { Banner } from "@/components/ui/composite/banner";
+import { Container } from "@/components/ui/composite/container";
+import { ListItem } from "@/components/ui/composite/list-item";
+import { Caption } from "@/components/ui/primitives/caption";
+import { Toggle } from "@/components/ui/primitives/toggle";
+import { typeScale } from "@/theme/theme";
+import { useTheme } from "@/theme/use-theme";
+import { ReminderCard } from "../components/reminder-card";
+import { ReminderTimeSheet } from "../components/reminder-time-sheet";
+import { TodayStatePanel } from "../components/today-state-panel";
+import { EVENING_REVIEW_TIME, REMINDER_CAP_MESSAGE } from "../constants";
+import { useReminderActions } from "../hooks/use-reminder-actions";
+import {
+	type ReminderWithConflicts,
+	useReminderQueries,
+} from "../hooks/use-reminder-queries";
+import { formatReminderTime, reminderCountLabel } from "./reminders-helpers";
+
+type RemindersScreenProps = {
+	habitId: number;
+};
+
+const NOTIFICATIONS_OFF_NOTICE =
+	"Notifications are off for this app. Times stay saved — turn them on in Settings to receive these.";
+
+/**
+ * Reminders (HAB-12): one habit's independent reminder times, each with its
+ * own days and toggle → "Add a time" (capped at 4) → the notifications-off
+ * notice when permission is denied → the app-wide Evening review toggle.
+ */
+export function RemindersScreen({ habitId }: RemindersScreenProps) {
+	const { colors } = useTheme();
+	const data = useReminderQueries(habitId);
+	const actions = useReminderActions();
+	// A card with a conflict starts open so its warning is seen; every other
+	// card starts collapsed. Tapping flips a card from that default.
+	const [flipped, setFlipped] = useState<ReadonlySet<number>>(new Set());
+	const [editingId, setEditingId] = useState<number | null>(null);
+
+	if (!data) {
+		return (
+			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
+				<TodayStatePanel
+					icon="questionmark"
+					headline="Habit not found"
+					subtitle="It may have been deleted."
+				/>
+			</View>
+		);
+	}
+
+	const {
+		habit,
+		reminders,
+		cap,
+		atCap,
+		eveningReviewEnabled,
+		notificationsDenied,
+	} = data;
+	const editing = reminders.find((reminder) => reminder.id === editingId);
+
+	function isExpanded(reminder: ReminderWithConflicts) {
+		return reminder.unscheduledDays.length > 0 !== flipped.has(reminder.id);
+	}
+
+	function flip(id: number) {
+		setFlipped((current) => {
+			const next = new Set(current);
+			if (!next.delete(id)) next.add(id);
+			return next;
+		});
+	}
+
+	async function handleAdd() {
+		const created = await actions.addReminder(habit);
+		// Straight into picking its time — the default is only a placeholder.
+		setEditingId(created.id);
+	}
+
+	return (
+		<>
+			<Stack.Screen options={{ headerBackTitle: habit.name }} />
+			<ScrollView
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+				contentContainerStyle={styles.content}
+			>
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					Reminders
+				</Text>
+
+				{reminders.map((reminder) => (
+					<ReminderCard
+						key={reminder.id}
+						reminder={reminder}
+						expanded={isExpanded(reminder)}
+						onToggleExpanded={() => flip(reminder.id)}
+						onEditTime={() => setEditingId(reminder.id)}
+						onChangeEnabled={(enabled) =>
+							actions.editReminder(habit, reminder.id, { enabled })
+						}
+						onChangeDays={(weekdays) =>
+							actions.editReminder(habit, reminder.id, { weekdays })
+						}
+						onRemove={() => actions.removeReminder(habit, reminder.id)}
+					/>
+				))}
+
+				<View style={styles.addGroup}>
+					<AddRow
+						label="Add a time"
+						count={reminderCountLabel(reminders.length, cap)}
+						onPress={handleAdd}
+						disabled={atCap || actions.isAdding}
+					/>
+					{atCap ? <Caption>{REMINDER_CAP_MESSAGE}</Caption> : null}
+				</View>
+
+				{notificationsDenied ? (
+					<Banner tone="neutral">{NOTIFICATIONS_OFF_NOTICE}</Banner>
+				) : null}
+
+				<Container>
+					<ListItem
+						embedded
+						title="Evening review"
+						subtitle={`One nudge at ${formatReminderTime(EVENING_REVIEW_TIME)} to log anything you missed.`}
+						trailing={
+							<Toggle
+								value={eveningReviewEnabled}
+								onValueChange={actions.setEveningReview}
+								accessibilityLabel="Evening review"
+							/>
+						}
+					/>
+				</Container>
+			</ScrollView>
+
+			<ReminderTimeSheet
+				time={editing ?? null}
+				onDismiss={() => setEditingId(null)}
+				onSave={async ({ hour, minute }) => {
+					if (!editing) return;
+					setEditingId(null);
+					await actions.editReminder(habit, editing.id, { hour, minute });
+				}}
+			/>
+		</>
+	);
+}
+
+const styles = StyleSheet.create({
+	screen: {
+		flex: 1,
+	},
+	content: {
+		paddingHorizontal: 16,
+		paddingTop: 8,
+		paddingBottom: 24,
+		gap: 12,
+	},
+	title: {
+		fontSize: typeScale.screenTitle,
+		fontWeight: "500",
+		marginBottom: 4,
+	},
+	addGroup: {
+		gap: 8,
+	},
+});

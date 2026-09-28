@@ -474,6 +474,7 @@ A "Manage habits" screen, reachable from the habit list:
 
 ### Edge cases
 - Archiving a habit mid-streak: the streak value is frozen at whatever it was, and resumes from that value if restored (it does not reset to 0 just for being archived).
+- Archiving or deleting a habit that has reminders (Feature 12): must cancel every scheduled OS notification for that habit (`cancelRemindersWithPrefix(habitNotificationPrefix(id))`, via `lib/notifications`) as part of the same operation — a stray notification firing for an archived/deleted habit is a user-facing bug. **Delete** must also remove the habit's `reminders` rows: the table's foreign key to `habits` doesn't cascade (`ON DELETE no action`), so either delete them explicitly in the same operation or add a cascading migration — otherwise the delete leaves orphaned rows (or fails outright if SQLite foreign-key enforcement is on). **Archive** keeps the rows (archiving is non-destructive), and restoring re-syncs them (`syncHabitReminders`) so they fire again exactly as configured.
 - Reordering habits across different categories: not supported in V1 — drag-to-reorder only works within the same category group. Moving a habit to a different category is done via Edit (Feature 01), not by dragging.
 
 ### Acceptance criteria

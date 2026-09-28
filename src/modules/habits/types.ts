@@ -109,3 +109,26 @@ export type DayLog = {
 	/** Empty clears the note. */
 	note: string;
 };
+
+/**
+ * One reminder time on a habit (HAB-12). Each owns its weekday set — there is
+ * no shared "repeat on" across a habit's reminders.
+ */
+export type Reminder = {
+	id: number;
+	habitId: number;
+	/** 0–23, local time. */
+	hour: number;
+	/** 0–59. */
+	minute: number;
+	/** Sorted Mon → Sun. */
+	weekdays: IsoWeekday[];
+	enabled: boolean;
+};
+
+export type CreateReminderInput = Omit<Reminder, "id">;
+
+/** Any subset of a reminder's editable fields. */
+export type ReminderPatch = Partial<
+	Pick<Reminder, "hour" | "minute" | "weekdays" | "enabled">
+>;

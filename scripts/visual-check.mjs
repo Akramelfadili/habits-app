@@ -104,6 +104,19 @@ const SCREENS = {
 		clock: "2026-09-13T20:00:00",
 		note: "Clock pinned to Sun 13 Sep evening. Mockup's '42 of 42' tile disagrees with its own 5/5 and 3/3 bars (36).",
 	},
+	reminders: {
+		route: "/habits/reminders/1?fixtures=reminders",
+		mockup: "docs/mockups/reminders.png",
+		note: "Cards start collapsed except a conflicting one (21:00); the other two are tapped open to match the mockup. Permission reads as denied in this scenario.",
+		async interact(page) {
+			await page.getByLabel("Reminder at 07:20, Weekdays").click();
+			await page.getByLabel("Reminder at 13:00, Mon, Wed, Fri").click();
+		},
+	},
+	"reminders-at-cap": {
+		route: "/habits/reminders/1?fixtures=reminders-at-cap",
+		mockup: "docs/mockups/reminders-at-cap.png",
+	},
 };
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.

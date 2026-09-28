@@ -108,3 +108,11 @@ describe("X-per-week frequency, looking back (wasScheduledOn)", () => {
 		).toBe(true);
 	});
 });
+
+describe("X-per-week frequency, weekday eligibility (canFallOn)", () => {
+	it("can fall on any weekday — which X days is up to the user", () => {
+		for (const weekday of [1, 2, 3, 4, 5, 6, 7] as const) {
+			expect(threePerWeek.canFallOn(weekday)).toBe(true);
+		}
+	});
+});

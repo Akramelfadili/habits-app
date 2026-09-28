@@ -2,7 +2,11 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useModalFormHeaderOptions } from "@/components/ui/composite/modal-form-header";
 import { DatabaseProvider } from "@/lib/db/database-provider";
+import { configureNotificationHandler } from "@/lib/notifications/notifications";
 import { useTheme } from "@/theme/use-theme";
+
+// Once, before anything can schedule — lets reminders (HAB-12) show while the app is open.
+configureNotificationHandler();
 
 export default function RootLayout() {
 	const { colors } = useTheme();

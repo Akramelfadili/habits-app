@@ -180,3 +180,18 @@ export function suggestionToCreateHabitInput(
  * field stops accepting input here rather than truncating on save.
  */
 export const MAX_NOTE_LENGTH = 280;
+
+/** Reminder times per habit (HAB-12) — adding a 5th is blocked with an explanation. */
+export const REMINDER_CAP = 4;
+
+/** Shown under the disabled "Add a time" row, and as the service's cap error. */
+export const REMINDER_CAP_MESSAGE = `${REMINDER_CAP} of ${REMINDER_CAP} — remove one to add another. Four times a day is the cap per habit.`;
+
+/** A newly added reminder time starts here; the user edits it right after. */
+export const DEFAULT_REMINDER_TIME = { hour: 9, minute: 0 };
+
+/** The Evening review's single, fixed daily time (HAB-12). */
+export const EVENING_REVIEW_TIME = { hour: 21, minute: 30 };
+
+/** `app_settings` key for the app-wide Evening review toggle — "true" when on. */
+export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
