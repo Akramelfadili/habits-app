@@ -2,10 +2,11 @@ import { format } from "date-fns";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/lib/db/client";
-import { entries } from "@/lib/db/schema";
-import type { Entry } from "../types";
+import { entries, entryNotes } from "@/lib/db/schema";
+import type { DayLog, Entry, EntryNote } from "../types";
 
 type EntryRow = typeof entries.$inferSelect;
+type EntryNoteRow = typeof entryNotes.$inferSelect;
 
 const DATE_FORMAT = "yyyy-MM-dd";
 
@@ -17,6 +18,10 @@ function rowToEntry(row: EntryRow): Entry {
 		value: row.value ?? undefined,
 		createdAt: row.createdAt,
 	};
+}
+
+function rowToEntryNote(row: EntryNoteRow): EntryNote {
+	return { habitId: row.habitId, date: row.date, note: row.note };
 }
 
 /** Live-query hook — entries with a date in `[start, end]`, inclusive. */
@@ -102,4 +107,76 @@ export async function setHabitQuantityOn(
 			target: [entries.habitId, entries.date],
 			set: { value },
 		});
+}
+
+/** Live-query hook — every habit's day notes (HAB-10). Same "small enough to fetch whole" reasoning as `useAllEntries`. */
+export function useEntryNotes(): EntryNote[] {
+	const { data } = useLiveQuery(
+		db.select().from(entryNotes).orderBy(asc(entryNotes.date)),
+	);
+	return (data ?? []).map(rowToEntryNote);
+}
+
+/**
+ * Saves a retro-logged day (HAB-10) — every changed value plus the note — in
+ * one transaction, so a half-applied save can't leave the day inconsistent.
+ * Values follow the same rules as the single-day writes above: `false`/`0`
+ * deletes the entry, `true` inserts a presence row, an amount upserts. An
+ * empty (after trimming) note deletes the note row.
+ *
+ * The callback is deliberately synchronous (`.run()`, no `await`): the
+ * expo-sqlite driver's `transaction()` is sync and would commit after the
+ * first `await`, leaving the rest outside the transaction. The outer `await`
+ * is a no-op there, but lets an async driver (the Jest test db) finish first.
+ */
+export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
+	const dateString = format(date, DATE_FORMAT);
+	const note = log.note.trim();
+	const now = new Date();
+
+	await db.transaction((tx) => {
+		for (const { habitId, value } of log.values) {
+			const sameDay = and(
+				eq(entries.habitId, habitId),
+				eq(entries.date, dateString),
+			);
+			if (value === false || (typeof value === "number" && value <= 0)) {
+				tx.delete(entries).where(sameDay).run();
+			} else if (value === true) {
+				tx.insert(entries)
+					.values({ habitId, date: dateString, createdAt: now })
+					.onConflictDoNothing()
+					.run();
+			} else {
+				tx.insert(entries)
+					.values({ habitId, date: dateString, value, createdAt: now })
+					.onConflictDoUpdate({
+						target: [entries.habitId, entries.date],
+						set: { value },
+					})
+					.run();
+			}
+		}
+
+		const noteOwner = and(
+			eq(entryNotes.habitId, log.noteHabitId),
+			eq(entryNotes.date, dateString),
+		);
+		if (note === "") {
+			tx.delete(entryNotes).where(noteOwner).run();
+		} else {
+			tx.insert(entryNotes)
+				.values({
+					habitId: log.noteHabitId,
+					date: dateString,
+					note,
+					updatedAt: now,
+				})
+				.onConflictDoUpdate({
+					target: [entryNotes.habitId, entryNotes.date],
+					set: { note, updatedAt: now },
+				})
+				.run();
+		}
+	});
 }

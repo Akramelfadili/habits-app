@@ -13,7 +13,12 @@ type TextFieldProps = {
 	error?: string;
 	maxLength?: number;
 	autoFocus?: boolean;
+	/** Wraps onto more lines as the text grows — for short free text like a note. */
+	multiline?: boolean;
 };
+
+/** How close to `maxLength` the remaining-characters counter starts showing. */
+export const COUNTER_THRESHOLD = 40;
 
 export function TextField({
 	label,
@@ -25,6 +30,7 @@ export function TextField({
 	error,
 	maxLength,
 	autoFocus,
+	multiline = false,
 }: TextFieldProps) {
 	const { colors } = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
@@ -34,6 +40,11 @@ export function TextField({
 		: isFocused
 			? colors.ink
 			: "transparent";
+	// Only surfaces near the cap, so a short note doesn't carry a counter;
+	// the input itself stops at `maxLength` rather than truncating later.
+	const remaining =
+		maxLength !== undefined ? maxLength - value.length : undefined;
+	const showCounter = remaining !== undefined && remaining <= COUNTER_THRESHOLD;
 
 	return (
 		<View testID="text-field" style={[styles.container, { borderColor }]}>
@@ -53,8 +64,24 @@ export function TextField({
 				placeholderTextColor={colors.faint}
 				maxLength={maxLength}
 				autoFocus={autoFocus}
-				style={[styles.input, { color: colors.ink }]}
+				multiline={multiline}
+				style={[
+					styles.input,
+					multiline && styles.multiline,
+					{ color: colors.ink },
+				]}
 			/>
+			{showCounter ? (
+				<Text
+					accessibilityLiveRegion="polite"
+					style={[
+						styles.counter,
+						{ color: remaining === 0 ? colors.ink : colors.faint },
+					]}
+				>
+					{`${value.length}/${maxLength}`}
+				</Text>
+			) : null}
 			{error ? (
 				<Text style={[styles.error, { color: colors.dangerBg }]}>{error}</Text>
 			) : null}
@@ -76,6 +103,15 @@ const styles = StyleSheet.create({
 	input: {
 		paddingVertical: 2,
 		fontSize: 15,
+	},
+	multiline: {
+		// No fixed height: grows with the text, starting at one line.
+		textAlignVertical: "top",
+	},
+	counter: {
+		alignSelf: "flex-end",
+		fontSize: 11,
+		fontVariant: ["tabular-nums"],
 	},
 	error: {
 		fontSize: 11,

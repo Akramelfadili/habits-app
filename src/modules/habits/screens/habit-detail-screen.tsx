@@ -9,8 +9,12 @@ import { useTheme } from "@/theme/use-theme";
 import { HabitEntryRow } from "../components/habit-entry-row";
 import { HabitHeatmap } from "../components/habit-heatmap";
 import { iconSymbolFor } from "../components/habit-today-row";
+import { RetroLogSheet } from "../components/retro-log-sheet";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
+import { useRetroLogActions } from "../hooks/use-retro-log-actions";
+import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
+import type { DayLog } from "../types";
 import {
 	completionRateCaption,
 	completionRateValue,
@@ -24,14 +28,22 @@ type HabitDetailScreenProps = {
 
 /**
  * Habit Detail (HAB-09): header → streak / longest / 90-day tiles → 10-week
- * heatmap → recent entries, reverse chronological.
+ * heatmap → recent entries, reverse chronological. Tapping a past (or today's)
+ * heatmap cell opens the Retro log sheet for that day (HAB-10).
  */
 export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const { colors, scheme } = useTheme();
 	const detail = useHabitDetailQueries(habitId);
-	// Heatmap taps land here — the navigation hook into retro logging. HAB-10
-	// reads the selected day back out to open its sheet for that date.
-	const [, setRetroLogDate] = useState<Date | null>(null);
+	// Heatmap taps land here; a non-null day opens the Retro log sheet (HAB-10).
+	const [retroLogDate, setRetroLogDate] = useState<Date | null>(null);
+	const retroLogDay = useRetroLogQueries(habitId, retroLogDate);
+	const { saveDay, isSaving } = useRetroLogActions();
+
+	async function handleSaveDay(values: DayLog["values"], note: string) {
+		if (!retroLogDate) return;
+		await saveDay(retroLogDate, { values, noteHabitId: habitId, note });
+		setRetroLogDate(null);
+	}
 
 	if (!detail) {
 		return (
@@ -111,11 +123,11 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 				<Caption>Recent entries</Caption>
 				{recentEntries.length > 0 ? (
 					<Container dividers compact>
-						{recentEntries.map((entry) => (
+						{recentEntries.map((row) => (
 							<HabitEntryRow
-								key={entry.id}
+								key={row.date}
 								habit={habit}
-								entry={entry}
+								row={row}
 								today={today}
 							/>
 						))}
@@ -131,6 +143,13 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 					</Container>
 				)}
 			</View>
+
+			<RetroLogSheet
+				day={retroLogDay}
+				onDismiss={() => setRetroLogDate(null)}
+				onSave={handleSaveDay}
+				isSaving={isSaving}
+			/>
 		</ScrollView>
 	);
 }

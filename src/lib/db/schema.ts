@@ -89,3 +89,25 @@ export const frozenDays = sqliteTable(
 		index("frozen_days_date_idx").on(table.date),
 	],
 );
+
+/**
+ * A free-text note on one habit's day (HAB-10). Separate from `entries` on
+ * purpose: an entry's presence *is* the completion signal, so a note on a day
+ * that wasn't completed can't live there without faking a completion.
+ */
+export const entryNotes = sqliteTable(
+	"entry_notes",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		habitId: integer("habit_id")
+			.notNull()
+			.references(() => habits.id),
+		/** Calendar day, "yyyy-MM-dd" — same keying as `entries`. */
+		date: text("date").notNull(),
+		note: text("note").notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		unique("entry_notes_habit_date_unique").on(table.habitId, table.date),
+	],
+);

@@ -1,5 +1,11 @@
 import type { PropsWithChildren } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import {
+	KeyboardAvoidingView,
+	Modal,
+	Platform,
+	Pressable,
+	StyleSheet,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/use-theme";
 import { Container } from "./container";
@@ -36,7 +42,11 @@ export function Sheet({
 			animationType="slide"
 			onRequestClose={dismissible ? onDismiss : undefined}
 		>
-			<View style={styles.root}>
+			{/* Keeps a sheet's text field (Retro log's note) above the keyboard. */}
+			<KeyboardAvoidingView
+				style={styles.root}
+				behavior={Platform.OS === "ios" ? "padding" : undefined}
+			>
 				<Pressable
 					style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
 					onPress={dismissible ? onDismiss : undefined}
@@ -49,7 +59,7 @@ export function Sheet({
 						{children}
 					</SafeAreaView>
 				</Container>
-			</View>
+			</KeyboardAvoidingView>
 		</Modal>
 	);
 }

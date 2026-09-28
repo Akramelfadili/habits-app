@@ -32,4 +32,22 @@ describe("ListItem", () => {
 		await render(<ListItem title="Direction" trailing={<Text>Build</Text>} />);
 		expect(screen.getByText("Build")).toBeTruthy();
 	});
+
+	it("dims its content, but not the trailing control, when dimmed", async () => {
+		const { Text } = require("react-native");
+		await render(
+			<ListItem title="Meditate" dimmed trailing={<Text>Check</Text>} />,
+		);
+		expect(screen.getByTestId("list-item-content")).toHaveStyle({
+			opacity: 0.5,
+		});
+		expect(screen.getByText("Check")).not.toHaveStyle({ opacity: 0.5 });
+	});
+
+	it("is fully opaque by default", async () => {
+		await render(<ListItem title="Meditate" />);
+		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({
+			opacity: 0.5,
+		});
+	});
 });

@@ -174,3 +174,9 @@ export function suggestionToCreateHabitInput(
 		frequency: { type: "daily" },
 	};
 }
+
+/**
+ * A retro-log note's cap (HAB-10) — "a short note, not a journal entry". The
+ * field stops accepting input here rather than truncating on save.
+ */
+export const MAX_NOTE_LENGTH = 280;

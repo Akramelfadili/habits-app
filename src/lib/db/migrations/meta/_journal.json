@@ -43,6 +43,13 @@
 			"when": 1790346788589,
 			"tag": "0005_sparkling_scourge",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "6",
+			"when": 1790613395042,
+			"tag": "0006_aspiring_boomer",
+			"breakpoints": true
 		}
 	]
 }

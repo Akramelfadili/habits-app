@@ -19,7 +19,8 @@ export type FixtureScenario =
 	| "quantity-log"
 	| "streak-at-risk"
 	| "habit-detail"
-	| "habit-detail-new";
+	| "habit-detail-new"
+	| "retro-log";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -30,6 +31,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"streak-at-risk",
 	"habit-detail",
 	"habit-detail-new",
+	"retro-log",
 ];
 
 /**
@@ -325,6 +327,60 @@ export function habitDetailNewFixtures(): Habit[] {
 	];
 }
 
+/**
+ * `habit-detail`'s "Glass of water" plus the three other habits
+ * docs/mockups/retro-log.png lists for the tapped day — Meditate and Read are
+ * quantity habits, Mobility a simple check — so the Retro log sheet (HAB-10)
+ * renders the mockup's four rows.
+ */
+export function retroLogFixtures(): Habit[] {
+	const created = subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS);
+	const base = {
+		direction: "build",
+		createdAt: created,
+		updatedAt: created,
+	} as const;
+	return [
+		...habitDetailFixtures(),
+		{
+			...base,
+			id: 2,
+			name: "Meditate",
+			icon: "leaf",
+			color: "purple",
+			category: "Morning",
+			targetType: "quantity",
+			targetAmount: 10,
+			targetUnit: "min",
+			frequency: { type: "daily" },
+		},
+		{
+			...base,
+			id: 3,
+			name: "Read",
+			icon: "book",
+			color: "orange",
+			category: "Evening",
+			targetType: "quantity",
+			targetAmount: 20,
+			targetUnit: "pages",
+			frequency: { type: "daily" },
+		},
+		{
+			...base,
+			id: 4,
+			name: "Mobility",
+			icon: "walk",
+			color: "green",
+			category: "Evening",
+			targetType: "simple",
+			targetAmount: null,
+			targetUnit: null,
+			frequency: { type: "daily" },
+		},
+	];
+}
+
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 	switch (scenario) {
 		case "empty":
@@ -342,6 +398,8 @@ export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 			return habitDetailFixtures();
 		case "habit-detail-new":
 			return habitDetailNewFixtures();
+		case "retro-log":
+			return retroLogFixtures();
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

@@ -1,4 +1,4 @@
-import { entries, habits } from "@/lib/db/schema";
+import { entries, entryNotes, habits } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as EntryRepository from "./entry-repository";
@@ -8,6 +8,7 @@ const mockDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 
 const {
+	saveDayLog,
 	setHabitCompletedOn,
 	setHabitQuantityOn,
 }: typeof EntryRepository = require("./entry-repository");
@@ -31,6 +32,7 @@ async function seedHabit(): Promise<number> {
 describe("entry-repository", () => {
 	beforeEach(async () => {
 		await mockDb.delete(entries);
+		await mockDb.delete(entryNotes);
 		await mockDb.delete(habits);
 	});
 
@@ -143,6 +145,122 @@ describe("entry-repository", () => {
 
 			const rows = await mockDb.select().from(entries);
 			expect(rows).toEqual([]);
+		});
+	});
+
+	describe("saveDayLog (HAB-10)", () => {
+		it("applies every value change for the day together", async () => {
+			const checkId = await seedHabit();
+			const quantityId = await seedHabit();
+			const clearedId = await seedHabit();
+			await setHabitCompletedOn(clearedId, DAY_1, true);
+
+			await saveDayLog(DAY_1, {
+				values: [
+					{ habitId: checkId, value: true },
+					{ habitId: quantityId, value: 6 },
+					{ habitId: clearedId, value: false },
+				],
+				noteHabitId: checkId,
+				note: "",
+			});
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toHaveLength(2);
+			expect(rows).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						habitId: checkId,
+						date: "2026-09-14",
+						value: null,
+					}),
+					expect.objectContaining({
+						habitId: quantityId,
+						date: "2026-09-14",
+						value: 6,
+					}),
+				]),
+			);
+		});
+
+		it("updates an existing quantity and deletes one set to 0", async () => {
+			const adjustedId = await seedHabit();
+			const zeroedId = await seedHabit();
+			await setHabitQuantityOn(adjustedId, DAY_1, 3);
+			await setHabitQuantityOn(zeroedId, DAY_1, 3);
+
+			await saveDayLog(DAY_1, {
+				values: [
+					{ habitId: adjustedId, value: 8 },
+					{ habitId: zeroedId, value: 0 },
+				],
+				noteHabitId: adjustedId,
+				note: "",
+			});
+
+			const rows = await mockDb.select().from(entries);
+			expect(rows).toEqual([
+				expect.objectContaining({ habitId: adjustedId, value: 8 }),
+			]);
+		});
+
+		it("attaches a trimmed note without touching the day's value", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 8);
+
+			await saveDayLog(DAY_1, {
+				values: [],
+				noteHabitId: habitId,
+				note: "  Travel day  ",
+			});
+
+			expect(await mockDb.select().from(entryNotes)).toEqual([
+				expect.objectContaining({
+					habitId,
+					date: "2026-09-14",
+					note: "Travel day",
+				}),
+			]);
+			expect(await mockDb.select().from(entries)).toEqual([
+				expect.objectContaining({ habitId, value: 8 }),
+			]);
+		});
+
+		it("a note on an unlogged day doesn't create an entry", async () => {
+			const habitId = await seedHabit();
+			await saveDayLog(DAY_1, {
+				values: [],
+				noteHabitId: habitId,
+				note: "Sick",
+			});
+
+			expect(await mockDb.select().from(entries)).toEqual([]);
+			expect(await mockDb.select().from(entryNotes)).toHaveLength(1);
+		});
+
+		it("replaces an existing note, and an empty note deletes it", async () => {
+			const habitId = await seedHabit();
+			await saveDayLog(DAY_1, {
+				values: [],
+				noteHabitId: habitId,
+				note: "First",
+			});
+			await saveDayLog(DAY_1, {
+				values: [],
+				noteHabitId: habitId,
+				note: "Second",
+			});
+
+			expect(await mockDb.select().from(entryNotes)).toEqual([
+				expect.objectContaining({ note: "Second" }),
+			]);
+
+			await saveDayLog(DAY_1, {
+				values: [],
+				noteHabitId: habitId,
+				note: "   ",
+			});
+			expect(await mockDb.select().from(entryNotes)).toEqual([]);
 		});
 	});
 });

@@ -71,7 +71,20 @@ const SCREENS = {
 	"habit-detail": {
 		route: "/habits/1?fixtures=habit-detail",
 		mockup: "docs/mockups/habit-detail.png",
-		note: "Entry notes (mockup's subtitles) arrive with HAB-10 — rows show date + value only for now.",
+	},
+	"retro-log": {
+		route: "/habits/1?fixtures=retro-log",
+		mockup: "docs/mockups/retro-log .png",
+		note: "Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
+		async interact(page) {
+			const day = new Date();
+			day.setDate(day.getDate() - 3);
+			const weekday = day.toLocaleDateString("en-GB", { weekday: "long" });
+			const month = day.toLocaleDateString("en-GB", { month: "long" });
+			await page
+				.getByLabel(`${weekday} ${day.getDate()} ${month}, logged`)
+				.click();
+		},
 	},
 	"habit-detail-new": {
 		route: "/habits/1?fixtures=habit-detail-new",

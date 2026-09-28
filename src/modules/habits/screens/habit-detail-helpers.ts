@@ -76,6 +76,11 @@ export function entryValueLabel(habit: Habit, entry: Entry): string {
 	return habit.direction === "break" ? "Resisted" : "Done";
 }
 
+/** A noted day with nothing logged (HAB-10) — "Not resisted" keeps a Break habit's framing. */
+export function notLoggedLabel(habit: Habit): string {
+	return habit.direction === "break" ? "Not resisted" : "Not logged";
+}
+
 /** "Jul — Sep" across the heatmap's span, or a single month when it fits in one. */
 export function heatmapRangeLabel(firstDay: Date, today: Date): string {
 	const start = format(firstDay, "MMM");

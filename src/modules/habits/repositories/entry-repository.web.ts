@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { useSyncExternalStore } from "react";
-import type { Entry } from "../types";
-import { makeEntryFixtures } from "./entry-fixtures";
+import type { DayLog, Entry, EntryNote } from "../types";
+import { makeEntryFixtures, makeEntryNoteFixtures } from "./entry-fixtures";
 import type * as NativeEntryRepository from "./entry-repository";
 import { resolveFixtureScenario } from "./habit-fixtures";
 
@@ -20,6 +20,18 @@ function getEntries(): Entry[] {
 
 function setEntries(next: Entry[]) {
 	store = next;
+	for (const listener of listeners) listener();
+}
+
+let noteStore: EntryNote[] | undefined;
+
+function getNotes(): EntryNote[] {
+	noteStore ??= makeEntryNoteFixtures(resolveFixtureScenario());
+	return noteStore;
+}
+
+function setNotes(next: EntryNote[]) {
+	noteStore = next;
 	for (const listener of listeners) listener();
 }
 
@@ -105,6 +117,34 @@ export async function setHabitQuantityOn(
 	]);
 }
 
+/** Web counterpart of the native repository's notes live query (HAB-10). */
+export function useEntryNotes(): EntryNote[] {
+	return useSyncExternalStore(subscribe, getNotes, () => [] as EntryNote[]);
+}
+
+/** Web counterpart of the native transactional day save (HAB-10). */
+export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
+	for (const { habitId, value } of log.values) {
+		if (typeof value === "boolean") {
+			await setHabitCompletedOn(habitId, date, value);
+		} else {
+			await setHabitQuantityOn(habitId, date, value);
+		}
+	}
+
+	const dateString = format(date, "yyyy-MM-dd");
+	const note = log.note.trim();
+	const others = getNotes().filter(
+		(entry) =>
+			!(entry.habitId === log.noteHabitId && entry.date === dateString),
+	);
+	setNotes(
+		note === ""
+			? others
+			: [...others, { habitId: log.noteHabitId, date: dateString, note }],
+	);
+}
+
 // Compile-time guard: this file must export exactly what the native repository
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeEntryRepository = {
@@ -112,5 +152,7 @@ const _sameShape: typeof NativeEntryRepository = {
 	useAllEntries,
 	setHabitCompletedOn,
 	setHabitQuantityOn,
+	useEntryNotes,
+	saveDayLog,
 };
 void _sameShape;
