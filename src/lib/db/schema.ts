@@ -40,6 +40,20 @@ export const habits = sqliteTable("habits", {
 	frequencyWeekdays: text("frequency_weekdays"),
 	/** 1–7; set only for "per-week". */
 	frequencyTimesPerWeek: integer("frequency_times_per_week"),
+	/**
+	 * Manual order on Manage (HAB-13) — Today respects it within each category
+	 * group. Reordering permutes a category's existing values among its habits,
+	 * so a category's first-appearance position never shifts.
+	 */
+	sortOrder: integer("sort_order").notNull().default(0),
+	/** Set while archived (HAB-13) — null for an active habit. */
+	archivedAt: integer("archived_at", { mode: "timestamp" }),
+	/**
+	 * Past archive periods, "from..to" calendar-day ranges joined by commas
+	 * ("2026-09-02..2026-09-10"). Streak math skips these days so a restored
+	 * habit resumes its streak instead of reading every archived day as missed.
+	 */
+	pausedRanges: text("paused_ranges"),
 	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

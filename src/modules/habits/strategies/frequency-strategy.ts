@@ -1,5 +1,7 @@
+import { format } from "date-fns";
 import type { Frequency, FrequencyType, Habit, IsoWeekday } from "../types";
 import { createDailyFrequency } from "./daily-frequency";
+import { OPEN_PAUSE_END, withPauses } from "./paused-schedule";
 import { createPerWeekFrequency } from "./per-week-frequency";
 import { createSpecificWeekdaysFrequency } from "./specific-weekdays-frequency";
 
@@ -47,6 +49,27 @@ export function getFrequencyStrategy(frequency: Frequency): FrequencyStrategy {
 	return factory(frequency);
 }
 
+export type SchedulableHabit = Pick<
+	Habit,
+	"frequency" | "pauses" | "archivedAt"
+>;
+
+/**
+ * The strategy for a real habit: its frequency rule, decorated with its
+ * archive periods (HAB-13) — the past ones plus, while archived, an open one
+ * from the archive day on. History, streaks and Today all go through this,
+ * so none of them count archived days as missed.
+ */
+export function getHabitStrategy(habit: SchedulableHabit): FrequencyStrategy {
+	const pauses = habit.archivedAt
+		? [
+				...habit.pauses,
+				{ from: format(habit.archivedAt, "yyyy-MM-dd"), to: OPEN_PAUSE_END },
+			]
+		: habit.pauses;
+	return withPauses(getFrequencyStrategy(habit.frequency), pauses);
+}
+
 /** Whether `habit` can ever be due on `weekday` — see `FrequencyStrategy.canFallOn`. */
 export function canHabitFallOn(
 	habit: Pick<Habit, "frequency">,
@@ -57,11 +80,11 @@ export function canHabitFallOn(
 
 /** Whether `habit` should ask for attention on `date`, given its completion history. */
 export function isHabitDueOn(
-	habit: Pick<Habit, "frequency">,
+	habit: SchedulableHabit,
 	date: Date,
 	completedDates: readonly Date[] = [],
 ): boolean {
-	return getFrequencyStrategy(habit.frequency).isDueOn(date, {
+	return getHabitStrategy(habit).isDueOn(date, {
 		completedDates,
 	});
 }

@@ -6,6 +6,7 @@ import {
 	DAY_CLOSED_DUE_TODAY_IDS,
 	type FixtureScenario,
 	HABIT_DETAIL_HISTORY_DAYS,
+	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
 
 /** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
@@ -52,6 +53,8 @@ export function makeEntryFixtures(
 	}
 
 	if (scenario === "habit-detail") return habitDetailEntries();
+
+	if (scenario === "manage-archive") return manageArchiveEntries();
 
 	if (scenario === "weekly-summary" || scenario === "perfect-week") {
 		return weeklySummaryEntries(scenario);
@@ -221,6 +224,26 @@ function weeklySummaryEntries(
 			habitId: Number(habitId),
 			date: format(addDays(weekStart, day), "yyyy-MM-dd"),
 			createdAt: addDays(weekStart, day),
+		})),
+	);
+}
+
+/**
+ * docs/mockups/manage-archive.png's "41 logs kept" (Cold shower, #6) and
+ * "96 logs kept" (No phone in bed, #7) — consecutive days up to each one's
+ * archive date.
+ */
+function manageArchiveEntries(): Entry[] {
+	const runs = [
+		{ habitId: 6, count: 41, until: MANAGE_ARCHIVE_ARCHIVED_AT.coldShower },
+		{ habitId: 7, count: 96, until: MANAGE_ARCHIVE_ARCHIVED_AT.noPhoneInBed },
+	];
+	return runs.flatMap(({ habitId, count, until }) =>
+		Array.from({ length: count }, (_, index) => ({
+			id: habitId * 1000 + index,
+			habitId,
+			date: format(subDays(until, index), "yyyy-MM-dd"),
+			createdAt: until,
 		})),
 	);
 }

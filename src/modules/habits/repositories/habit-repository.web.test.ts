@@ -108,4 +108,49 @@ describe("habit-repository.web", () => {
 			});
 		});
 	});
+
+	describe("HAB-13 lifecycle", () => {
+		it("splits active and archived habits, and moves one across on archive/restore", async () => {
+			const {
+				setHabitArchived,
+				setHabitRestored,
+				useActiveHabits,
+				useArchivedHabits,
+			} = loadRepository();
+			const active = await renderHook(() => useActiveHabits());
+			const archived = await renderHook(() => useArchivedHabits());
+			expect(archived.result.current).toEqual([]);
+
+			await act(async () => {
+				await setHabitArchived(1, new Date());
+			});
+			expect(active.result.current.map((h) => h.id)).not.toContain(1);
+			expect(archived.result.current.map((h) => h.id)).toEqual([1]);
+
+			const pauses = [{ from: "2026-09-01", to: "2026-09-02" }];
+			await act(async () => {
+				await setHabitRestored(1, pauses);
+			});
+			expect(archived.result.current).toEqual([]);
+			expect(active.result.current.find((h) => h.id === 1)?.pauses).toEqual(
+				pauses,
+			);
+		});
+
+		it("reorders by swapping the habits' own sort values", async () => {
+			const { reorderHabits, useHabitsList } = loadRepository();
+			const { result } = await renderHook(() => useHabitsList());
+
+			await act(() => reorderHabits([2, 1]));
+
+			expect(result.current.map((h) => h.id).slice(0, 2)).toEqual([2, 1]);
+		});
+
+		it("deletes one habit", async () => {
+			const { deleteHabitAndHistory, getHabit } = loadRepository();
+			await deleteHabitAndHistory(2);
+			expect(await getHabit(2)).toBeUndefined();
+			expect(await getHabit(1)).toBeDefined();
+		});
+	});
 });

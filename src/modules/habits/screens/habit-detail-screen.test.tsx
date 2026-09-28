@@ -9,8 +9,19 @@ jest.mock("expo-symbols", () => {
 });
 jest.mock("../repositories/frozen-day-repository", () => ({}));
 const mockPush = jest.fn();
+const mockBack = jest.fn();
 jest.mock("expo-router", () => ({
-	useRouter: () => ({ push: mockPush }),
+	useRouter: () => ({ push: mockPush, back: mockBack }),
+}));
+const mockArchive = jest.fn();
+const mockDelete = jest.fn();
+jest.mock("../hooks/use-habit-detail-actions", () => ({
+	useHabitDetailActions: () => ({
+		archiveHabit: mockArchive,
+		isArchiving: false,
+		deleteHabit: mockDelete,
+		isDeleting: false,
+	}),
 }));
 
 const today = new Date(2026, 8, 23, 12);
@@ -57,6 +68,7 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 	return {
 		habit,
 		currentStreak: 24,
+		loggedDays: 218,
 		longestStreak: { days: 41, endedOn: new Date(2026, 5, 30) },
 		completionRate: { completed: 78, scheduled: 90, fraction: 78 / 90 },
 		heatmapWeeks: buildHeatmapWeeks({
@@ -243,6 +255,65 @@ describe("HabitDetailScreen", () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
 			expect(screen.getByText("None set")).toBeTruthy();
+		});
+	});
+
+	describe("delete (HAB-13)", () => {
+		beforeEach(() => {
+			mockArchive.mockReset().mockResolvedValue(undefined);
+			mockDelete.mockReset().mockResolvedValue(undefined);
+			mockBack.mockReset();
+		});
+
+		it("asks for confirmation before deleting anything", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Delete habit"));
+
+			expect(screen.getByText("Delete “Glass of water”?")).toBeTruthy();
+			expect(
+				screen.getByText(
+					"This removes the habit and all 218 logged days permanently. It cannot be undone.",
+				),
+			).toBeTruthy();
+			expect(mockDelete).not.toHaveBeenCalled();
+		});
+
+		it("deletes only from the confirmation, then leaves the screen", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Delete habit"));
+			await fireEvent.press(screen.getByText("Delete permanently"));
+
+			expect(mockDelete).toHaveBeenCalledWith(1);
+			expect(mockBack).toHaveBeenCalled();
+		});
+
+		it("can archive instead", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Delete habit"));
+			await fireEvent.press(
+				screen.getByText("Archive instead — keeps history"),
+			);
+
+			expect(mockArchive).toHaveBeenCalledWith(1);
+			expect(mockDelete).not.toHaveBeenCalled();
+		});
+
+		it("keeping the habit just closes the confirmation", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Delete habit"));
+			await fireEvent.press(screen.getByText("Keep habit"));
+
+			expect(screen.queryByText("Delete “Glass of water”?")).toBeNull();
+			expect(mockDelete).not.toHaveBeenCalled();
+			expect(mockArchive).not.toHaveBeenCalled();
 		});
 	});
 });

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { surfaceColors } from "@/theme/theme";
+import { semanticColors, surfaceColors } from "@/theme/theme";
 import { Button } from "./button";
 
 describe("Button", () => {
@@ -74,5 +74,35 @@ describe("Button", () => {
 		expect(screen.getByRole("button")).toHaveStyle({ alignSelf: "flex-start" });
 		await fireEvent.press(screen.getByText("Reschedule habit →"));
 		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("renders the destructive variant as red text with no fill", async () => {
+		const onPress = jest.fn();
+		await render(
+			<Button
+				label="Delete permanently"
+				variant="destructive"
+				onPress={onPress}
+			/>,
+		);
+
+		const label = screen.getByText("Delete permanently");
+		expect(label).toHaveStyle({ color: semanticColors.light.dangerBg });
+		await fireEvent.press(label);
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("shrinks the pill and its label at the small size", async () => {
+		await render(
+			<Button
+				label="Restore"
+				variant="secondary"
+				size="small"
+				fullWidth={false}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByText("Restore")).toHaveStyle({ fontSize: 13 });
+		expect(screen.getByRole("button")).toHaveStyle({ paddingVertical: 6 });
 	});
 });

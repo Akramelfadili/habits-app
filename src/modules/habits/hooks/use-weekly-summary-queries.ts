@@ -1,6 +1,6 @@
 import { startOfDay } from "date-fns";
 import { useEntriesInRange } from "../repositories/entry-repository";
-import { useHabitsList } from "../repositories/habit-repository";
+import { useActiveHabits } from "../repositories/habit-repository";
 import {
 	buildWeeklySummary,
 	type WeeklySummary,
@@ -20,7 +20,7 @@ export type WeeklySummaryView = WeeklySummary & {
 export function useWeeklySummaryQueries(): WeeklySummaryView {
 	const today = startOfDay(new Date());
 	const week = weekWindowFor(today);
-	const habits = useHabitsList();
+	const habits = useActiveHabits();
 	const entries = useEntriesInRange(week.start, week.end);
 
 	return {

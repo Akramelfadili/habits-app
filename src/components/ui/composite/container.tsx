@@ -19,6 +19,12 @@ type ContainerProps = PropsWithChildren<{
 	compact?: boolean;
 	/** Ink border ring — a selectable card that's currently picked (First Run, HAB-06). */
 	selected?: boolean;
+	/**
+	 * A list card whose rows carry their own padding (compact `ListItem`s on
+	 * Manage & Archive, HAB-13) — a thin inset so a lifted row's highlight
+	 * sits just inside the card edge.
+	 */
+	tight?: boolean;
 }>;
 
 export function Container({
@@ -26,6 +32,7 @@ export function Container({
 	dividers = false,
 	compact = false,
 	selected = false,
+	tight = false,
 	children,
 }: ContainerProps) {
 	const { colors } = useTheme();
@@ -37,6 +44,7 @@ export function Container({
 				styles.base,
 				variant === "sheet" && styles.sheet,
 				dividers && styles.dividedBase,
+				tight && styles.tight,
 				{
 					backgroundColor: variant === "inset" ? colors.inner : colors.card,
 					borderWidth: selected ? 1.5 : 0,
@@ -79,6 +87,10 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	dividedBase: {
+		gap: 0,
+	},
+	tight: {
+		padding: 6,
 		gap: 0,
 	},
 	dividedSection: {

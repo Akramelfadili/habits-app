@@ -4,14 +4,18 @@ import { useTheme } from "@/theme/use-theme";
 /**
  * `link` is a centered, secondary-ink text action under a primary CTA ("Start
  * from scratch"); `inline` is an ink text action that sits flush-left inside a
- * card's content (Weekly Summary's "Reschedule habit →").
+ * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is the
+ * design system's text-only red link for a permanent action — always the
+ * smallest option on screen, never a filled red button (Delete confirmation,
+ * HAB-13).
  */
 export type ButtonVariant =
 	| "primary"
 	| "secondary"
 	| "ghost"
 	| "link"
-	| "inline";
+	| "inline"
+	| "destructive";
 
 type ButtonProps = {
 	label: string;
@@ -20,6 +24,8 @@ type ButtonProps = {
 	disabled?: boolean;
 	loading?: boolean;
 	fullWidth?: boolean;
+	/** "small" is a compact pill inside a list row (Manage & Archive's "Restore", HAB-13). */
+	size?: "default" | "small";
 };
 
 export function Button({
@@ -29,6 +35,7 @@ export function Button({
 	disabled = false,
 	loading = false,
 	fullWidth = true,
+	size = "default",
 }: ButtonProps) {
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
@@ -39,7 +46,9 @@ export function Button({
 				? colors.faint
 				: variant === "link"
 					? colors.sub
-					: colors.ink;
+					: variant === "destructive"
+						? colors.dangerBg
+						: colors.ink;
 
 	return (
 		<Pressable
@@ -51,6 +60,7 @@ export function Button({
 			style={({ pressed }) => [
 				styles.base,
 				fullWidth ? styles.fullWidth : styles.compact,
+				size === "small" && styles.small,
 				variant === "primary" && { backgroundColor: colors.ink },
 				variant === "secondary" && {
 					backgroundColor: colors.card,
@@ -58,7 +68,10 @@ export function Button({
 					borderColor: colors.border,
 				},
 				variant === "ghost" && { backgroundColor: "transparent" },
-				(variant === "link" || variant === "inline") && styles.link,
+				(variant === "link" ||
+					variant === "inline" ||
+					variant === "destructive") &&
+					styles.link,
 				variant === "inline" && styles.inline,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },
@@ -71,6 +84,8 @@ export function Button({
 					style={[
 						styles.label,
 						variant === "inline" && styles.inlineLabel,
+						variant === "destructive" && styles.destructiveLabel,
+						size === "small" && styles.smallLabel,
 						{ color: textColor },
 					]}
 				>
@@ -95,6 +110,10 @@ const styles = StyleSheet.create({
 		paddingVertical: 10,
 		paddingHorizontal: 20,
 	},
+	small: {
+		paddingVertical: 6,
+		paddingHorizontal: 14,
+	},
 	link: {
 		backgroundColor: "transparent",
 		paddingVertical: 4,
@@ -109,5 +128,11 @@ const styles = StyleSheet.create({
 	},
 	inlineLabel: {
 		fontWeight: "600",
+	},
+	destructiveLabel: {
+		fontSize: 13,
+	},
+	smallLabel: {
+		fontSize: 13,
 	},
 });

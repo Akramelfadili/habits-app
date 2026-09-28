@@ -11,10 +11,11 @@ export type CategoryGroup = {
  * derived, not stored: there's no separate categories table (`category` is
  * just a nullable text column on `habits`), so "creation order" means the
  * order each distinct category value first appears among habits already
- * sorted by `createdAt` ascending (the order `useHabitsList()` returns them
- * in). "Anytime" (no category) is always forced last, regardless of when it
- * would naturally fall. Within a group, input order is preserved — creation
- * order until Feature 13's manual sort exists (HAB-03 business rules).
+ * in manual order (the order `useActiveHabits()` returns them in — creation
+ * order until reordered, and a reorder only permutes slots within one
+ * category, so a category's first appearance never moves). "Anytime" (no
+ * category) is always forced last, regardless of when it would naturally
+ * fall. Within a group, input order is preserved — HAB-13's manual order.
  */
 export function groupHabitsByCategory(habits: Habit[]): CategoryGroup[] {
 	const groups = new Map<string, Habit[]>();

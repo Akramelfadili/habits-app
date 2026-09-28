@@ -12,7 +12,7 @@ import {
 	freezeHabitDay,
 	getFreezesUsedInMonth,
 } from "../repositories/frozen-day-repository";
-import { getFrequencyStrategy } from "../strategies/frequency-strategy";
+import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit } from "../types";
 
 const DATE_FORMAT = "yyyy-MM-dd";
@@ -47,7 +47,7 @@ export function calculateCurrentStreak(
 	frozenDates: ReadonlySet<string>,
 	asOf: Date,
 ): number {
-	const strategy = getFrequencyStrategy(habit.frequency);
+	const strategy = getHabitStrategy(habit);
 	const completedEntries = entries.filter((entry) =>
 		isEntryComplete(habit, entry),
 	);
@@ -99,7 +99,7 @@ export function getStreakAtRisk(
 	const yesterdayString = format(yesterday, DATE_FORMAT);
 	if (frozenDates.has(yesterdayString)) return null;
 
-	const strategy = getFrequencyStrategy(habit.frequency);
+	const strategy = getHabitStrategy(habit);
 	const completedEntries = entries.filter((entry) =>
 		isEntryComplete(habit, entry),
 	);

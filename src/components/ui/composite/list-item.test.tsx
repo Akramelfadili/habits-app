@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/react-native";
+import { surfaceColors } from "@/theme/theme";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -48,6 +54,52 @@ describe("ListItem", () => {
 		await render(<ListItem title="Meditate" />);
 		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({
 			opacity: 0.5,
+		});
+	});
+
+	it("runs a matching accessibility action", async () => {
+		const onArchive = jest.fn();
+		await render(
+			<ListItem
+				title="Meditate"
+				onPress={() => {}}
+				accessibilityActions={[{ label: "Archive", onAction: onArchive }]}
+			/>,
+		);
+
+		await fireEvent(screen.getByRole("button"), "accessibilityAction", {
+			nativeEvent: { actionName: "Archive" },
+		});
+		expect(onArchive).toHaveBeenCalledTimes(1);
+	});
+
+	it("keeps a trailing control outside the row's own button", async () => {
+		const onRowPress = jest.fn();
+		const onTrailingPress = jest.fn();
+		const { Pressable, Text } = require("react-native");
+		await render(
+			<ListItem
+				title="Cold shower"
+				onPress={onRowPress}
+				trailing={
+					<Pressable accessibilityRole="button" onPress={onTrailingPress}>
+						<Text>Restore</Text>
+					</Pressable>
+				}
+			/>,
+		);
+
+		const [row] = screen.getAllByRole("button");
+		expect(within(row).queryByText("Restore")).toBeNull();
+		await fireEvent.press(screen.getByText("Restore"));
+		expect(onTrailingPress).toHaveBeenCalledTimes(1);
+		expect(onRowPress).not.toHaveBeenCalled();
+	});
+
+	it("shows the lifted state on the recessed surface", async () => {
+		await render(<ListItem title="Meditate" lifted />);
+		expect(screen.getByTestId("list-item")).toHaveStyle({
+			backgroundColor: surfaceColors.light.inner,
 		});
 	});
 });

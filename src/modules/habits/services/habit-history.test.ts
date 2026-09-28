@@ -301,3 +301,68 @@ describe("recentEntries", () => {
 		expect(result.map((row) => row.date)).toEqual([dayString(1), dayString(2)]);
 	});
 });
+
+describe("streaks across an archive (HAB-13)", () => {
+	// Logged 10 days straight, archived 5 days ago (after that day's log),
+	// nothing logged while archived.
+	const loggedRun = Array.from({ length: 10 }, (_, index) => entry(index + 5));
+
+	it("freezes the streak at its archived value while archived", () => {
+		const archived = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: longAgo,
+			archivedAt: subDays(today, 5),
+		});
+		expect(
+			currentStreakAsOf({
+				habit: archived,
+				entries: loggedRun,
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBe(10);
+	});
+
+	it("resumes from that value once restored, and keeps growing", () => {
+		const restored = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: longAgo,
+			pauses: [{ from: dayString(5), to: dayString(1) }],
+		});
+		const history = {
+			habit: restored,
+			frozenDates: noFreezes,
+			today,
+		};
+
+		expect(currentStreakAsOf({ ...history, entries: loggedRun })).toBe(10);
+		expect(
+			currentStreakAsOf({ ...history, entries: [entry(0), ...loggedRun] }),
+		).toBe(11);
+	});
+
+	it("without the pause, the same gap would have reset it — the pause is what preserves it", () => {
+		expect(
+			currentStreakAsOf({
+				habit: daily,
+				entries: loggedRun,
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBe(0);
+	});
+
+	it("doesn't count paused days against the 90-day rate", () => {
+		const restored = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: subDays(today, 14),
+			pauses: [{ from: dayString(4), to: dayString(1) }],
+		});
+		const rate = calculateCompletionRate({
+			habit: restored,
+			entries: loggedRun,
+			today,
+		});
+		expect(rate).toMatchObject({ completed: 10, scheduled: 10 });
+	});
+});

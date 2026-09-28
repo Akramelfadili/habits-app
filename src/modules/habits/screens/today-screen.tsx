@@ -311,6 +311,13 @@ export function TodayScreen() {
 					fullWidth={false}
 					onPress={() => router.push("/habits/week")}
 				/>
+				{/* Same interim pattern: no mockup shows how Manage & Archive (HAB-13) is reached. */}
+				<Button
+					label="Manage habits"
+					variant="ghost"
+					fullWidth={false}
+					onPress={() => router.push("/habits/manage")}
+				/>
 				{clearAllHabits ? (
 					<Button
 						label="Clear all habits (dev)"

@@ -30,7 +30,12 @@ export function useRetroLogQueries(
 
 	const day = startOfDay(date);
 	const dateString = format(day, "yyyy-MM-dd");
-	const habits = habitsForDay(allHabits, entries, day, habitId);
+	// Archived habits are out of every active list (HAB-13) — except the one
+	// the sheet was opened from, whose own history stays editable.
+	const candidates = allHabits.filter(
+		(habit) => habit.id === habitId || habit.archivedAt === null,
+	);
+	const habits = habitsForDay(candidates, entries, day, habitId);
 	const values: Record<string, DayLogValue> = {};
 	for (const habit of habits) {
 		const entry = entries.find(

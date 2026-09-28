@@ -1,12 +1,19 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { db } from "@/lib/db/client";
-import { habits } from "@/lib/db/schema";
+import {
+	entries,
+	entryNotes,
+	frozenDays,
+	habits,
+	reminders,
+} from "@/lib/db/schema";
 import type { HabitAccentKey } from "@/theme/theme";
 import type { HabitIconKey } from "../constants";
 import type {
 	CreateHabitInput,
+	DayRange,
 	Frequency,
 	Habit,
 	IsoWeekday,
@@ -48,6 +55,22 @@ function frequencyToColumns(frequency: Frequency) {
 	};
 }
 
+function rowToPauses(column: string | null): DayRange[] {
+	return (column ?? "")
+		.split(",")
+		.filter(Boolean)
+		.map((range) => {
+			const [from, to] = range.split("..");
+			return { from, to };
+		});
+}
+
+function pausesToColumn(pauses: readonly DayRange[]): string | null {
+	return pauses.length > 0
+		? pauses.map((pause) => `${pause.from}..${pause.to}`).join(",")
+		: null;
+}
+
 function rowToHabit(row: HabitRow): Habit {
 	return {
 		id: row.id,
@@ -60,12 +83,25 @@ function rowToHabit(row: HabitRow): Habit {
 		targetAmount: row.targetAmount,
 		targetUnit: row.targetUnit,
 		frequency: rowToFrequency(row),
+		sortOrder: row.sortOrder,
+		archivedAt: row.archivedAt,
+		pauses: rowToPauses(row.pausedRanges),
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 	};
 }
 
-function habitInsertValues(input: CreateHabitInput, now: Date) {
+/** New habits go last in their category (HAB-13's manual order). */
+async function nextSortOrder(): Promise<number> {
+	const [row] = await db.select({ value: max(habits.sortOrder) }).from(habits);
+	return (row?.value ?? 0) + 1;
+}
+
+function habitInsertValues(
+	input: CreateHabitInput,
+	now: Date,
+	sortOrder: number,
+) {
 	return {
 		name: input.name,
 		icon: input.icon,
@@ -76,6 +112,7 @@ function habitInsertValues(input: CreateHabitInput, now: Date) {
 		targetAmount: input.targetAmount,
 		targetUnit: input.targetUnit,
 		...frequencyToColumns(input.frequency),
+		sortOrder,
 		createdAt: now,
 		updatedAt: now,
 	};
@@ -84,7 +121,7 @@ function habitInsertValues(input: CreateHabitInput, now: Date) {
 export async function createHabit(input: CreateHabitInput): Promise<Habit> {
 	const [row] = await db
 		.insert(habits)
-		.values(habitInsertValues(input, new Date()))
+		.values(habitInsertValues(input, new Date(), await nextSortOrder()))
 		.returning();
 
 	return rowToHabit(row);
@@ -114,7 +151,7 @@ export async function createHabitsAndMarkSetting(
 		for (const input of inputs) {
 			const [row] = await db
 				.insert(habits)
-				.values(habitInsertValues(input, new Date()))
+				.values(habitInsertValues(input, new Date(), await nextSortOrder()))
 				.returning();
 			created.push(rowToHabit(row));
 		}
@@ -153,12 +190,127 @@ export async function updateHabit(
 	return rowToHabit(row);
 }
 
-/** Live-query hook — the only place outside this file that ever sees habit data. */
+/**
+ * Live-query hook over every habit, archived ones included — for screens
+ * that look one habit up by id (Habit Detail, Reminders), which must keep
+ * working for an archived habit's history. Manual order (HAB-13).
+ */
 export function useHabitsList(): Habit[] {
 	const { data } = useLiveQuery(
-		db.select().from(habits).orderBy(asc(habits.createdAt)),
+		db.select().from(habits).orderBy(asc(habits.sortOrder), asc(habits.id)),
 	);
 	return (data ?? []).map(rowToHabit);
+}
+
+/** Live-query hook — habits not archived (Today, Weekly Summary, Manage), in manual order. */
+export function useActiveHabits(): Habit[] {
+	const { data } = useLiveQuery(
+		db
+			.select()
+			.from(habits)
+			.where(isNull(habits.archivedAt))
+			.orderBy(asc(habits.sortOrder), asc(habits.id)),
+	);
+	return (data ?? []).map(rowToHabit);
+}
+
+/** Live-query hook — archived habits, most recently archived first (HAB-13). */
+export function useArchivedHabits(): Habit[] {
+	const { data } = useLiveQuery(
+		db
+			.select()
+			.from(habits)
+			.where(isNotNull(habits.archivedAt))
+			.orderBy(desc(habits.archivedAt), asc(habits.id)),
+	);
+	return (data ?? []).map(rowToHabit);
+}
+
+/** A one-off (non-reactive) read — services need what's stored right now. */
+export async function getHabit(id: number): Promise<Habit | undefined> {
+	const [row] = await db.select().from(habits).where(eq(habits.id, id));
+	return row ? rowToHabit(row) : undefined;
+}
+
+/**
+ * Saves a new manual order for some habits (HAB-13): the habits' *existing*
+ * sort values are redistributed in the given order, so reordering within a
+ * category never moves that category relative to the others. One
+ * transaction, same raw-SQL reasoning as `createHabitsAndMarkSetting`.
+ */
+export async function reorderHabits(orderedIds: number[]): Promise<void> {
+	const rows = await db
+		.select({ id: habits.id, sortOrder: habits.sortOrder })
+		.from(habits);
+	const byId = new Map(rows.map((row) => [row.id, row.sortOrder]));
+	const slots = orderedIds
+		.map((id) => byId.get(id))
+		.filter((value): value is number => value !== undefined)
+		.sort((a, b) => a - b);
+	if (slots.length !== orderedIds.length) {
+		throw new Error("Cannot reorder a habit that doesn't exist");
+	}
+
+	await db.run(sql`begin`);
+	try {
+		for (const [index, id] of orderedIds.entries()) {
+			await db
+				.update(habits)
+				.set({ sortOrder: slots[index] })
+				.where(eq(habits.id, id));
+		}
+		await db.run(sql`commit`);
+	} catch (err) {
+		await db.run(sql`rollback`);
+		throw err;
+	}
+}
+
+/** Marks a habit archived — nothing else about it changes (HAB-13). */
+export async function setHabitArchived(
+	id: number,
+	archivedAt: Date,
+): Promise<Habit> {
+	const [row] = await db
+		.update(habits)
+		.set({ archivedAt })
+		.where(eq(habits.id, id))
+		.returning();
+	return rowToHabit(row);
+}
+
+/** Clears the archive flag and stores the habit's full list of past pauses. */
+export async function setHabitRestored(
+	id: number,
+	pauses: readonly DayRange[],
+): Promise<Habit> {
+	const [row] = await db
+		.update(habits)
+		.set({ archivedAt: null, pausedRanges: pausesToColumn(pauses) })
+		.where(eq(habits.id, id))
+		.returning();
+	return rowToHabit(row);
+}
+
+/**
+ * Permanently deletes a habit and everything that references it (HAB-13) —
+ * entries, notes, frozen days, reminders — in one transaction. None of those
+ * foreign keys cascade, so leaving any out would orphan rows (or fail with
+ * foreign-key enforcement on).
+ */
+export async function deleteHabitAndHistory(id: number): Promise<void> {
+	await db.run(sql`begin`);
+	try {
+		await db.delete(entries).where(eq(entries.habitId, id));
+		await db.delete(entryNotes).where(eq(entryNotes.habitId, id));
+		await db.delete(frozenDays).where(eq(frozenDays.habitId, id));
+		await db.delete(reminders).where(eq(reminders.habitId, id));
+		await db.delete(habits).where(eq(habits.id, id));
+		await db.run(sql`commit`);
+	} catch (err) {
+		await db.run(sql`rollback`);
+		throw err;
+	}
 }
 
 /** Dev-only escape hatch for clearing out test data — refuses to run outside `__DEV__`. */
@@ -185,7 +337,7 @@ export async function createHabitAt(
 	}
 	const [row] = await db
 		.insert(habits)
-		.values(habitInsertValues(input, createdAt))
+		.values(habitInsertValues(input, createdAt, await nextSortOrder()))
 		.returning();
 
 	return rowToHabit(row);

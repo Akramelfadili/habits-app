@@ -117,6 +117,19 @@ const SCREENS = {
 		route: "/habits/reminders/1?fixtures=reminders-at-cap",
 		mockup: "docs/mockups/reminders-at-cap.png",
 	},
+	"manage-habits": {
+		route: "/habits/manage?fixtures=manage-archive",
+		mockup: "docs/mockups/manage-archive.png",
+		note: "Mockup's highlighted first row is the mid-drag (lifted) state, and it stacks both toasts to show them; a static load shows neither.",
+	},
+	"delete-confirm": {
+		route: "/habits/1?fixtures=habit-detail",
+		mockup: "docs/mockups/delete-confirm.png",
+		note: "Sheet is opened by tapping 'Delete habit' at the bottom of Habit Detail.",
+		async interact(page) {
+			await page.getByText("Delete habit").click();
+		},
+	},
 };
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.

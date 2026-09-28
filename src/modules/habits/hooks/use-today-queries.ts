@@ -12,7 +12,7 @@ import {
 	useEntriesInRange,
 } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useHabitsList } from "../repositories/habit-repository";
+import { useActiveHabits } from "../repositories/habit-repository";
 import {
 	type CategoryGroup,
 	computeProgress,
@@ -27,7 +27,7 @@ import {
 	isEntryComplete,
 	type StreakAtRisk,
 } from "../services/habit-service";
-import { getFrequencyStrategy } from "../strategies/frequency-strategy";
+import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
 
 const DATE_FORMAT = "yyyy-MM-dd";
@@ -50,7 +50,7 @@ export function useTodayQueries(): {
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
 	freezesRemainingThisMonth: number;
 } {
-	const habits = useHabitsList();
+	const habits = useActiveHabits();
 	const today = startOfDay(new Date());
 	const tomorrow = addDays(today, 1);
 	const weekStart = startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
@@ -81,12 +81,12 @@ export function useTodayQueries(): {
 	}
 
 	const dueHabits = habits.filter((habit) =>
-		getFrequencyStrategy(habit.frequency).isDueOn(today, {
+		getHabitStrategy(habit).isDueOn(today, {
 			completedDates: completedDatesByHabit.get(habit.id) ?? [],
 		}),
 	);
 	const tomorrowPreview = habits.filter((habit) =>
-		getFrequencyStrategy(habit.frequency).isDueOn(tomorrow, {
+		getHabitStrategy(habit).isDueOn(tomorrow, {
 			completedDates: completedDatesByHabit.get(habit.id) ?? [],
 		}),
 	);

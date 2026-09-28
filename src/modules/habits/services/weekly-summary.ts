@@ -11,7 +11,7 @@ import {
 	startOfWeek,
 } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
-import { getFrequencyStrategy } from "../strategies/frequency-strategy";
+import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, Habit } from "../types";
 import { isEntryComplete } from "./habit-service";
 
@@ -97,7 +97,7 @@ export function buildWeeklySummary({
 	const rows: WeeklyHabitRow[] = [];
 
 	for (const habit of [...habits].sort(byCreationOrder)) {
-		const strategy = getFrequencyStrategy(habit.frequency);
+		const strategy = getHabitStrategy(habit);
 		const completedSet = new Set(
 			entries
 				.filter(
