@@ -68,6 +68,15 @@ const SCREENS = {
 			await page.getByText("Meditate").click();
 		},
 	},
+	"habit-detail": {
+		route: "/habits/1?fixtures=habit-detail",
+		mockup: "docs/mockups/habit-detail.png",
+		note: "Entry notes (mockup's subtitles) arrive with HAB-10 — rows show date + value only for now.",
+	},
+	"habit-detail-new": {
+		route: "/habits/1?fixtures=habit-detail-new",
+		mockup: "docs/mockups/habit-detail-new.png",
+	},
 };
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.

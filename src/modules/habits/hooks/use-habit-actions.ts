@@ -1,6 +1,16 @@
-import { subDays } from "date-fns";
+import { parseISO, subDays } from "date-fns";
 import { useAsyncAction } from "@/utils/use-async-action";
-import { setHabitCompletedOn } from "../repositories/entry-repository";
+import { makeEntryFixtures } from "../repositories/entry-fixtures";
+import {
+	setHabitCompletedOn,
+	setHabitQuantityOn,
+} from "../repositories/entry-repository";
+import { makeFrozenDayFixtures } from "../repositories/frozen-day-fixtures";
+import { freezeHabitDay } from "../repositories/frozen-day-repository";
+import {
+	HABIT_DETAIL_HISTORY_DAYS,
+	habitDetailFixtures,
+} from "../repositories/habit-fixtures";
 import {
 	createHabit,
 	createHabitAt,
@@ -32,11 +42,44 @@ async function seedStreakAtRiskHabit(): Promise<void> {
 	await setHabitCompletedOn(habit.id, subDays(new Date(), 3), true);
 }
 
+/**
+ * Dev-only: creates "Glass of water" backdated ~5 months with the same
+ * history the web `habit-detail` fixture uses (varied quantities, a 24-day
+ * current streak, a 41-day longest, 2 frozen days) — lets HAB-09's Habit
+ * Detail be seen full of data on a real device. Freezes are written directly,
+ * skipping the pool check: they fall in earlier months, so this month's pool
+ * is untouched.
+ */
+async function seedHabitWithHistory(): Promise<void> {
+	const [fixture] = habitDetailFixtures();
+	const habit = await createHabitAt(
+		{
+			name: fixture.name,
+			icon: fixture.icon,
+			color: fixture.color,
+			category: fixture.category,
+			direction: fixture.direction,
+			targetType: fixture.targetType,
+			targetAmount: fixture.targetAmount,
+			targetUnit: fixture.targetUnit,
+			frequency: fixture.frequency,
+		},
+		subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS),
+	);
+	for (const entry of makeEntryFixtures("habit-detail")) {
+		await setHabitQuantityOn(habit.id, parseISO(entry.date), entry.value ?? 0);
+	}
+	for (const frozenDay of makeFrozenDayFixtures("habit-detail")) {
+		await freezeHabitDay(habit.id, parseISO(frozenDay.date));
+	}
+}
+
 export function useHabitActions() {
 	const create = useAsyncAction(createHabit);
 	const update = useAsyncAction(updateHabit);
 	const clearAll = useAsyncAction(deleteAllHabits);
 	const seedStreakAtRisk = useAsyncAction(seedStreakAtRiskHabit);
+	const seedHistory = useAsyncAction(seedHabitWithHistory);
 
 	return {
 		createHabit: create.execute,
@@ -54,5 +97,8 @@ export function useHabitActions() {
 		/** Dev-only escape hatch for manually testing HAB-08 — see `seedStreakAtRiskHabit`. */
 		seedStreakAtRiskHabit: __DEV__ ? seedStreakAtRisk.execute : undefined,
 		isSeedingStreakAtRisk: seedStreakAtRisk.isLoading,
+		/** Dev-only escape hatch for seeing HAB-09 full of data — see `seedHabitWithHistory`. */
+		seedHabitWithHistory: __DEV__ ? seedHistory.execute : undefined,
+		isSeedingHistory: seedHistory.isLoading,
 	};
 }

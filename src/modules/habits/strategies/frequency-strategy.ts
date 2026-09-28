@@ -10,7 +10,15 @@ export type FrequencyContext = {
 
 /** One scheduling rule per frequency type (HAB-02) — see docs/app-architecture.md. */
 export interface FrequencyStrategy {
+	/** Whether the habit asks for attention on `date` — drives Today (HAB-02, HAB-03). */
 	isDueOn(date: Date, context: FrequencyContext): boolean;
+	/**
+	 * Looking back, whether `date` owed a completion — drives history (streaks,
+	 * the 90-day rate, the heatmap; HAB-08, HAB-09). Differs from `isDueOn`
+	 * only where a rule's forward-looking "due" isn't the same as a day that
+	 * can actually be missed (e.g. X-per-week).
+	 */
+	wasScheduledOn(date: Date, context: FrequencyContext): boolean;
 }
 
 type StrategyFactories = {

@@ -34,12 +34,12 @@ export function isEntryComplete(habit: Habit, entry: Entry): boolean {
 }
 
 /**
- * Consecutive scheduled (per the habit's FrequencyStrategy) days completed or
- * frozen, walking backward from `asOf`. Always computed from `entries`, never
- * a stored counter — so a retroactive edit (HAB-10) recalculates correctly
- * just by being read again, rather than needing special-case "fix the
- * counter" logic (per HAB-08's edge case). Non-due days are skipped — they
- * neither extend nor break the streak.
+ * Consecutive scheduled (per the habit's FrequencyStrategy's
+ * `wasScheduledOn`) days completed or frozen, walking backward from `asOf`.
+ * Always computed from `entries`, never a stored counter — so a retroactive
+ * edit (HAB-10) recalculates correctly just by being read again, rather than
+ * needing special-case "fix the counter" logic (per HAB-08's edge case).
+ * Unscheduled days are skipped — they neither extend nor break the streak.
  */
 export function calculateCurrentStreak(
 	habit: Habit,
@@ -59,7 +59,7 @@ export function calculateCurrentStreak(
 	let cursor = startOfDay(asOf);
 	while (!isBefore(cursor, floor)) {
 		const dateString = format(cursor, DATE_FORMAT);
-		if (strategy.isDueOn(cursor, { completedDates })) {
+		if (strategy.wasScheduledOn(cursor, { completedDates })) {
 			if (completedSet.has(dateString) || frozenDates.has(dateString)) {
 				streak += 1;
 			} else {

@@ -1,0 +1,272 @@
+import { addDays, format, isSameDay, subDays } from "date-fns";
+import { makeHabit } from "../test-support/habit-builder";
+import type { Entry } from "../types";
+
+// Only habit-service's pure streak helpers are used here — its freeze write
+// path (and the SQLite client behind it) never runs.
+jest.mock("../repositories/frozen-day-repository", () => ({}));
+
+import {
+	buildHeatmapWeeks,
+	calculateCompletionRate,
+	calculateLongestStreak,
+	currentStreakAsOf,
+	HEATMAP_WEEKS,
+	heatmapLevelFor,
+	recentEntries,
+} from "./habit-history";
+
+// Mid-day local, so date-only math never straddles a timezone boundary.
+const today = new Date(2026, 8, 23, 12); // Wednesday 23 Sep 2026
+const dayString = (daysAgo: number) =>
+	format(subDays(today, daysAgo), "yyyy-MM-dd");
+
+function entry(daysAgo: number, value?: number): Entry {
+	return {
+		id: daysAgo,
+		habitId: 1,
+		date: dayString(daysAgo),
+		value,
+		createdAt: subDays(today, daysAgo),
+	};
+}
+
+const longAgo = new Date(2025, 0, 1);
+const daily = makeHabit({ frequency: { type: "daily" }, createdAt: longAgo });
+const noFreezes = new Set<string>();
+
+describe("currentStreakAsOf", () => {
+	it("doesn't break the streak just because today isn't logged yet", () => {
+		const entries = [entry(1), entry(2), entry(3)];
+		expect(
+			currentStreakAsOf({
+				habit: daily,
+				entries,
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBe(3);
+	});
+
+	it("counts today once it's logged", () => {
+		const entries = [entry(0), entry(1), entry(2)];
+		expect(
+			currentStreakAsOf({
+				habit: daily,
+				entries,
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBe(3);
+	});
+
+	it("is 0 for a habit with no logs", () => {
+		expect(
+			currentStreakAsOf({
+				habit: daily,
+				entries: [],
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBe(0);
+	});
+});
+
+describe("calculateLongestStreak", () => {
+	it("finds the longest past run and the day it ended", () => {
+		// Run of 4 ending 10 days ago, gap, then the current run of 2.
+		const entries = [
+			entry(13),
+			entry(12),
+			entry(11),
+			entry(10),
+			entry(2),
+			entry(1),
+		];
+		const result = calculateLongestStreak({
+			habit: daily,
+			entries,
+			frozenDates: noFreezes,
+			today,
+		});
+		expect(result.days).toBe(4);
+		expect(
+			result.endedOn && isSameDay(result.endedOn, subDays(today, 10)),
+		).toBe(true);
+	});
+
+	it("bridges a frozen day like a completion", () => {
+		const entries = [entry(3), entry(1)];
+		const result = calculateLongestStreak({
+			habit: daily,
+			entries,
+			frozenDates: new Set([dayString(2)]),
+			today,
+		});
+		expect(result.days).toBe(3);
+	});
+
+	it("is zero with no end date when nothing was ever logged", () => {
+		expect(
+			calculateLongestStreak({
+				habit: daily,
+				entries: [],
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toEqual({ days: 0, endedOn: null });
+	});
+});
+
+describe("calculateCompletionRate", () => {
+	it("counts only scheduled days in the denominator", () => {
+		// Mon/Wed/Fri habit over the last 3 full weeks' worth of creation.
+		const monWedFri = makeHabit({
+			frequency: { type: "weekdays", days: [1, 3, 5] },
+			createdAt: subDays(today, 20), // Thu 3 Sep
+		});
+		// 3 Sep → 23 Sep scheduled: 4,7,9,11,14,16,18,21,23 — today (23rd) unlogged so excluded → 8.
+		const entries = [entry(19), entry(16), entry(14)]; // 4th, 7th, 9th
+		const rate = calculateCompletionRate({
+			habit: monWedFri,
+			entries,
+			today,
+		});
+		expect(rate).toEqual({ completed: 3, scheduled: 8, fraction: 3 / 8 });
+	});
+
+	it("uses the actual history for a habit younger than 90 days, not a padded 90", () => {
+		const young = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: subDays(today, 9),
+		});
+		const entries = [entry(9), entry(8), entry(0)];
+		expect(calculateCompletionRate({ habit: young, entries, today })).toEqual({
+			completed: 3,
+			scheduled: 10,
+			fraction: 0.3,
+		});
+	});
+
+	it("caps the window at 90 days", () => {
+		const entries = Array.from({ length: 120 }, (_, index) => entry(index + 1));
+		expect(
+			calculateCompletionRate({ habit: daily, entries, today }).scheduled,
+		).toBe(89); // 90-day window, today unlogged.
+	});
+
+	it("has no fraction for a brand-new habit with nothing scheduled yet", () => {
+		const brandNew = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: today,
+		});
+		expect(
+			calculateCompletionRate({ habit: brandNew, entries: [], today }),
+		).toEqual({ completed: 0, scheduled: 0, fraction: null });
+	});
+
+	it("doesn't count a partial quantity day as completed", () => {
+		const quantity = makeHabit({
+			targetType: "quantity",
+			targetAmount: 8,
+			createdAt: subDays(today, 1),
+		});
+		const rate = calculateCompletionRate({
+			habit: quantity,
+			entries: [entry(1, 4)],
+			today,
+		});
+		expect(rate).toEqual({ completed: 0, scheduled: 1, fraction: 0 });
+	});
+});
+
+describe("heatmapLevelFor", () => {
+	const quantity = makeHabit({ targetType: "quantity", targetAmount: 8 });
+
+	it.each([
+		[2, 1],
+		[4, 2],
+		[7, 2],
+		[8, 3],
+		[11, 3],
+	])("shades %i of 8 as level %i", (value, level) => {
+		expect(heatmapLevelFor(quantity, entry(0, value))).toBe(level);
+	});
+
+	it("gives a simple-check entry the full shade", () => {
+		expect(heatmapLevelFor(daily, entry(0))).toBe(3);
+	});
+});
+
+describe("buildHeatmapWeeks", () => {
+	const weeks = (overrides: Partial<Parameters<typeof buildHeatmapWeeks>[0]>) =>
+		buildHeatmapWeeks({
+			habit: daily,
+			entries: [],
+			frozenDates: noFreezes,
+			today,
+			...overrides,
+		});
+	const find = (grid: ReturnType<typeof weeks>, daysAgo: number) =>
+		grid.flat().find((day) => isSameDay(day.date, subDays(today, daysAgo)));
+
+	it("is 10 Mon→Sun columns ending with the current week", () => {
+		const grid = weeks({});
+		expect(grid).toHaveLength(HEATMAP_WEEKS);
+		for (const column of grid) expect(column).toHaveLength(7);
+		expect(format(grid[0][0].date, "EEE")).toBe("Mon");
+		const lastColumn = grid[HEATMAP_WEEKS - 1];
+		expect(lastColumn.some((day) => isSameDay(day.date, today))).toBe(true);
+	});
+
+	it("distinguishes logged, missed, frozen, pending, and future days", () => {
+		const grid = weeks({
+			entries: [entry(1)],
+			frozenDates: new Set([dayString(2)]),
+		});
+		expect(find(grid, 1)?.status).toBe("logged");
+		expect(find(grid, 2)?.status).toBe("frozen");
+		expect(find(grid, 3)?.status).toBe("missed");
+		expect(find(grid, 0)?.status).toBe("pending");
+		const tomorrow = grid
+			.flat()
+			.find((day) => isSameDay(day.date, addDays(today, 1)));
+		expect(tomorrow).toMatchObject({ status: "future", selectable: false });
+	});
+
+	it("leaves unscheduled days blank rather than missed", () => {
+		const weekdaysOnly = makeHabit({
+			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			createdAt: longAgo,
+		});
+		const grid = weeks({ habit: weekdaysOnly });
+		// 20 Sep 2026 was a Sunday.
+		expect(find(grid, 3)?.status).toBe("not-scheduled");
+		expect(find(grid, 2)?.status).toBe("missed");
+	});
+
+	it("renders a brand-new habit with no logs as all blank, not an error", () => {
+		const brandNew = makeHabit({ createdAt: today });
+		const grid = weeks({ habit: brandNew });
+		const statuses = new Set(grid.flat().map((day) => day.status));
+		expect([...statuses].sort()).toEqual([
+			"future",
+			"not-scheduled",
+			"pending",
+		]);
+		// Days before the habit existed aren't a way into retro logging.
+		expect(find(grid, 1)?.selectable).toBe(false);
+		expect(find(grid, 0)?.selectable).toBe(true);
+	});
+});
+
+describe("recentEntries", () => {
+	it("returns newest first, capped", () => {
+		const entries = [entry(5), entry(1), entry(3), entry(2)];
+		expect(recentEntries(entries, 3).map((e) => e.date)).toEqual([
+			dayString(1),
+			dayString(2),
+			dayString(3),
+		]);
+	});
+});

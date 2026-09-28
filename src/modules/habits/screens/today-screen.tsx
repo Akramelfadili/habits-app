@@ -48,6 +48,8 @@ export function TodayScreen() {
 		isClearingAll,
 		seedStreakAtRiskHabit,
 		isSeedingStreakAtRisk,
+		seedHabitWithHistory,
+		isSeedingHistory,
 	} = useHabitActions();
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const { resetFirstRun, isResetting } = useFirstRunActions();
@@ -142,6 +144,15 @@ export function TodayScreen() {
 							fullWidth={false}
 							disabled={isSeedingStreakAtRisk}
 							onPress={seedStreakAtRiskHabit}
+						/>
+					) : null}
+					{seedHabitWithHistory ? (
+						<Button
+							label="Seed habit with history (dev)"
+							variant="ghost"
+							fullWidth={false}
+							disabled={isSeedingHistory}
+							onPress={seedHabitWithHistory}
 						/>
 					) : null}
 					{resetFirstRun ? (
@@ -264,7 +275,7 @@ export function TodayScreen() {
 									onPress={() =>
 										atRiskByHabitId.has(habit.id)
 											? setAtRiskHabitId(habit.id)
-											: router.push(`/habit/${habit.id}`)
+											: router.push(`/habits/${habit.id}`)
 									}
 									onToggle={() =>
 										toggleCompletion(
@@ -309,6 +320,15 @@ export function TodayScreen() {
 						fullWidth={false}
 						disabled={isSeedingStreakAtRisk}
 						onPress={seedStreakAtRiskHabit}
+					/>
+				) : null}
+				{seedHabitWithHistory ? (
+					<Button
+						label="Seed habit with history (dev)"
+						variant="ghost"
+						fullWidth={false}
+						disabled={isSeedingHistory}
+						onPress={seedHabitWithHistory}
 					/>
 				) : null}
 				{resetFirstRun ? (

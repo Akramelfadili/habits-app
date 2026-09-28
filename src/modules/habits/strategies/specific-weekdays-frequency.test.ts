@@ -26,4 +26,15 @@ describe("specific weekdays frequency", () => {
 		expect(strategy.isDueOn(addDays(monday, 6), noCompletions)).toBe(true);
 		expect(strategy.isDueOn(monday, noCompletions)).toBe(false);
 	});
+
+	it("was scheduled on exactly the days it was due", () => {
+		const strategy = createSpecificWeekdaysFrequency({
+			type: "weekdays",
+			days: [1, 3, 5],
+		});
+		const scheduled = [0, 1, 2, 3, 4, 5, 6].map((offset) =>
+			strategy.wasScheduledOn(addDays(monday, offset), noCompletions),
+		);
+		expect(scheduled).toEqual([true, false, true, false, true, false, false]);
+	});
 });
