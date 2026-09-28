@@ -3,7 +3,8 @@ import { useTheme } from "@/theme/use-theme";
 
 /**
  * The Habits tab's own stack — Habit Detail (HAB-09) pushes inside the tab so
- * the tab bar stays visible, per docs/mockups/habit-detail.png. New/Edit habit
+ * the tab bar stays visible, per docs/mockups/habit-detail.png — and so does
+ * Weekly Summary (HAB-11, docs/mockups/weekly-summary.png). New/Edit habit
  * stay root-level modals (src/app/_layout.tsx).
  */
 export default function HabitsLayout() {
@@ -24,6 +25,11 @@ export default function HabitsLayout() {
 			/>
 			<Stack.Screen
 				name="[id]"
+				options={{ title: "", headerBackTitle: "Today" }}
+			/>
+			{/* "Your week" is screen content, same as Detail's header row. */}
+			<Stack.Screen
+				name="week"
 				options={{ title: "", headerBackTitle: "Today" }}
 			/>
 		</Stack>

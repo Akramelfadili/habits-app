@@ -6,6 +6,8 @@ type SectionHeaderProps = {
 	title: string;
 	/** Trailing mini-count, e.g. "2/3" — omit when there's nothing to count. */
 	count?: string;
+	/** "small" is a card's own semibold title (Weekly Summary's "Per habit") rather than a group header. */
+	size?: "default" | "small";
 };
 
 /**
@@ -13,12 +15,23 @@ type SectionHeaderProps = {
  * Summary's "Per habit") — the `section` type-scale token, normal case.
  * Distinct from `SectionLabel`, which is the all-caps form eyebrow style.
  */
-export function SectionHeader({ title, count }: SectionHeaderProps) {
+export function SectionHeader({
+	title,
+	count,
+	size = "default",
+}: SectionHeaderProps) {
 	const { colors } = useTheme();
 
 	return (
 		<View style={styles.row}>
-			<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+			<Text
+				style={[
+					size === "small" ? styles.smallTitle : styles.title,
+					{ color: colors.ink },
+				]}
+			>
+				{title}
+			</Text>
 			{count ? (
 				<Text style={[styles.count, { color: colors.sub }]}>{count}</Text>
 			) : null}
@@ -35,6 +48,10 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: typeScale.section,
 		fontWeight: "500",
+	},
+	smallTitle: {
+		fontSize: typeScale.rowLabel,
+		fontWeight: "600",
 	},
 	count: {
 		fontSize: typeScale.subtitle,

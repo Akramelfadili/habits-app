@@ -90,6 +90,20 @@ const SCREENS = {
 		route: "/habits/1?fixtures=habit-detail-new",
 		mockup: "docs/mockups/habit-detail-new.png",
 	},
+	"weekly-summary": {
+		route: "/habits/week?fixtures=weekly-summary",
+		mockup: "docs/mockups/weekly-summary.png",
+		// The summary counts up to today only, so pin "now" to the end of a
+		// week — otherwise a Monday run would show an empty week.
+		clock: "2026-09-20T20:00:00",
+		note: "Clock pinned to Sun 20 Sep evening. Mockup's '34 of 42' tile disagrees with its own bars (29).",
+	},
+	"weekly-summary-perfect": {
+		route: "/habits/week?fixtures=perfect-week",
+		mockup: "docs/mockups/perfect-week.png",
+		clock: "2026-09-13T20:00:00",
+		note: "Clock pinned to Sun 13 Sep evening. Mockup's '42 of 42' tile disagrees with its own 5/5 and 3/3 bars (36).",
+	},
 };
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.
@@ -155,6 +169,10 @@ async function capture(browser, name, screen) {
 	page.on("console", (msg) => {
 		if (msg.type() === "error") problems.push(`console.error: ${msg.text()}`);
 	});
+
+	// A screen whose content depends on the current date (e.g. the weekly
+	// summary) pins the page's clock, local time, before anything loads.
+	if (screen.clock) await page.clock.setFixedTime(new Date(screen.clock));
 
 	// The first hit on a route can wait on a Metro bundle, hence the long timeout.
 	await page.goto(`${BASE_URL}${screen.route}`, {

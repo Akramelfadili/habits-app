@@ -1,7 +1,17 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "link";
+/**
+ * `link` is a centered, secondary-ink text action under a primary CTA ("Start
+ * from scratch"); `inline` is an ink text action that sits flush-left inside a
+ * card's content (Weekly Summary's "Reschedule habit →").
+ */
+export type ButtonVariant =
+	| "primary"
+	| "secondary"
+	| "ghost"
+	| "link"
+	| "inline";
 
 type ButtonProps = {
 	label: string;
@@ -48,7 +58,8 @@ export function Button({
 					borderColor: colors.border,
 				},
 				variant === "ghost" && { backgroundColor: "transparent" },
-				variant === "link" && styles.link,
+				(variant === "link" || variant === "inline") && styles.link,
+				variant === "inline" && styles.inline,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },
 			]}
@@ -56,7 +67,15 @@ export function Button({
 			{loading ? (
 				<ActivityIndicator color={textColor} />
 			) : (
-				<Text style={[styles.label, { color: textColor }]}>{label}</Text>
+				<Text
+					style={[
+						styles.label,
+						variant === "inline" && styles.inlineLabel,
+						{ color: textColor },
+					]}
+				>
+					{label}
+				</Text>
 			)}
 		</Pressable>
 	);
@@ -81,8 +100,14 @@ const styles = StyleSheet.create({
 		paddingVertical: 4,
 		paddingHorizontal: 0,
 	},
+	inline: {
+		alignSelf: "flex-start",
+	},
 	label: {
 		fontSize: 15,
 		fontWeight: "500",
+	},
+	inlineLabel: {
+		fontWeight: "600",
 	},
 });
