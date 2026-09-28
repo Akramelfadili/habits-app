@@ -13,6 +13,12 @@ type CompletionCircleProps = {
 	/** Build = filled-black-on-done (default). Break = outline-only, never filled (HAB-04). */
 	direction?: HabitDirection;
 	/**
+	 * Streak-at-risk (HAB-08): a missed-yesterday day a freeze could still
+	 * cover. Documented only for Break (solid amber ring, no checkmark) — Build
+	 * has no at-risk circle state, so this is ignored when `direction` is "build".
+	 */
+	atRisk?: boolean;
+	/**
 	 * 0–1 fill for a quantity habit logged below its target (HAB-07) — ignored
 	 * once `completed` (done always wins, however it got there), and for Break
 	 * habits (quantity + Break is out of scope for V1).
@@ -81,10 +87,12 @@ export function CompletionCircle({
 	direction = "build",
 	progress,
 	role = "checkbox",
+	atRisk = false,
 }: CompletionCircleProps) {
 	const { colors, opacity } = useTheme();
 	const isBreak = direction === "break";
 	const showPartial = !completed && !isBreak && !!progress && progress > 0;
+	const showAtRisk = !completed && isBreak && atRisk;
 
 	return (
 		<Pressable
@@ -100,11 +108,13 @@ export function CompletionCircle({
 				isBreak
 					? completed
 						? { borderWidth: 2, borderColor: colors.ink }
-						: {
-								borderWidth: 2,
-								borderStyle: "dashed",
-								borderColor: colors.border,
-							}
+						: showAtRisk
+							? { borderWidth: 2, borderColor: colors.warnInk }
+							: {
+									borderWidth: 2,
+									borderStyle: "dashed",
+									borderColor: colors.border,
+								}
 					: completed
 						? { backgroundColor: colors.ink }
 						: showPartial

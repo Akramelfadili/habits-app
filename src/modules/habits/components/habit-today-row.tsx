@@ -17,6 +17,8 @@ type HabitTodayRowProps = {
 	onOpenQuantitySheet?: () => void;
 	/** Opens Habit Detail (HAB-09) — stubbed until that screen exists. */
 	onPress: () => void;
+	/** Streak-at-risk (HAB-08): yesterday was missed and a freeze could still cover it. */
+	atRisk?: boolean;
 };
 
 /** Shared with QuantityLogSheet (HAB-07), which needs the same icon → SF Symbol lookup. */
@@ -71,6 +73,7 @@ export function HabitTodayRow({
 	onToggle,
 	onOpenQuantitySheet,
 	onPress,
+	atRisk = false,
 }: HabitTodayRowProps) {
 	const { colors, scheme, opacity } = useTheme();
 	const showResistedCaption = habit.direction === "break" && completed;
@@ -112,6 +115,7 @@ export function HabitTodayRow({
 						: completionAccessibilityLabel(habit, completed)
 				}
 				direction={habit.direction}
+				atRisk={atRisk}
 				role={isQuantity ? "button" : "checkbox"}
 				progress={
 					isQuantity && habit.targetAmount

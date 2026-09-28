@@ -64,6 +64,9 @@ export const QUICK_ADD_STEPS = [1, 2] as const;
 /** The Quantity Log stepper's ceiling — high enough that over-logging (HAB-07) is never capped in practice. */
 export const MAX_QUANTITY_VALUE = 9999;
 
+/** Shared monthly freeze pool size (HAB-08) — across every habit, not per-habit; resets on the 1st, no rollover. */
+export const FREEZE_POOL_SIZE = 2;
+
 /** Label for a habit with no category — also its group name on Today (HAB-01, HAB-03). */
 export const NO_CATEGORY_LABEL = "Anytime";
 

@@ -90,4 +90,22 @@ describe("habit-repository.web", () => {
 		});
 		expect(result.current).toHaveLength(HABIT_FIXTURES.length);
 	});
+
+	describe("createHabitAt", () => {
+		it("stores the given createdAt instead of the current time", async () => {
+			const { createHabitAt } = loadRepository();
+			const backdate = new Date("2026-09-01T00:00:00Z");
+			const habit = await createHabitAt(input, backdate);
+			expect(habit.createdAt).toEqual(backdate);
+		});
+
+		it("refuses to run outside __DEV__", async () => {
+			const { createHabitAt } = loadRepository();
+			await inProduction(async () => {
+				await expect(
+					createHabitAt(input, new Date("2026-09-01")),
+				).rejects.toThrow("dev-only");
+			});
+		});
+	});
 });

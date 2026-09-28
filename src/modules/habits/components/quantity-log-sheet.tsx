@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { Container } from "@/components/ui/composite/container";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { Button } from "@/components/ui/primitives/button";
-import { Caption } from "@/components/ui/primitives/caption";
 import { Chip } from "@/components/ui/primitives/chip";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { Stepper } from "@/components/ui/primitives/stepper";
@@ -65,16 +65,17 @@ export function QuantityLogSheet({
 						tint: habitAccentTint(habit.color, scheme),
 						ink: habitAccentInk(habit.color, scheme),
 					}}
+					size="large"
 				/>
 				<View style={styles.headerText}>
 					<Text style={[styles.name, { color: colors.ink }]}>{habit.name}</Text>
-					<Caption>
+					<Text style={[styles.detail, { color: colors.sub }]}>
 						{`Target ${target} ${unit} · ${frequencySummary(habit.frequency)}`}
-					</Caption>
+					</Text>
 				</View>
 			</View>
 
-			<View style={styles.stepperCard}>
+			<Container>
 				<View style={styles.stepperBlock}>
 					<Stepper
 						value={draft}
@@ -82,6 +83,7 @@ export function QuantityLogSheet({
 						max={MAX_QUANTITY_VALUE}
 						accessibilityLabel={`${habit.name}, ${unit}`}
 						onChange={setDraft}
+						size="large"
 					/>
 					<Text style={[styles.ofLabel, { color: colors.sub }]}>
 						{`of ${target} ${unit}`}
@@ -113,7 +115,7 @@ export function QuantityLogSheet({
 						/>
 					))}
 				</View>
-			</View>
+			</Container>
 
 			<Button
 				label={`Save ${draft} of ${target}`}
@@ -135,15 +137,15 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	name: {
-		fontSize: typeScale.rowLabel,
-		fontWeight: "500",
+		fontSize: typeScale.section,
+		fontWeight: "600",
 	},
-	stepperCard: {
-		gap: 16,
+	detail: {
+		fontSize: typeScale.subtitle,
 	},
 	stepperBlock: {
 		alignItems: "center",
-		gap: 4,
+		gap: 2,
 	},
 	ofLabel: {
 		fontSize: typeScale.subtitle,

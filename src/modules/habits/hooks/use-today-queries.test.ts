@@ -45,14 +45,28 @@ type MockEntry = {
 	value?: number;
 };
 
+type MockFrozenDay = {
+	habitId: number;
+	date: string;
+};
+
 let mockHabits = [dailyHabit, alsoDailyHabit, perWeekHabit];
 let mockEntries: MockEntry[] = [];
+// Defaults to the full history `mockEntries` holds — most tests only care
+// about "today," so the week-bounded and unbounded reads can share one list;
+// tests that need streak history further back set this separately.
+let mockAllEntries: MockEntry[] | undefined;
+let mockFrozenDays: MockFrozenDay[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
 	useHabitsList: () => mockHabits,
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: () => mockEntries,
+	useAllEntries: () => mockAllEntries ?? mockEntries,
+}));
+jest.mock("../repositories/frozen-day-repository", () => ({
+	useFrozenDays: () => mockFrozenDays,
 }));
 
 import { useTodayQueries } from "./use-today-queries";
@@ -62,6 +76,8 @@ describe("useTodayQueries", () => {
 		jest.useFakeTimers().setSystemTime(TODAY);
 		mockHabits = [dailyHabit, alsoDailyHabit, perWeekHabit];
 		mockEntries = [];
+		mockAllEntries = undefined;
+		mockFrozenDays = [];
 	});
 
 	afterEach(() => {
@@ -249,5 +265,89 @@ describe("useTodayQueries", () => {
 		expect(result.current.tomorrowPreview.map((habit) => habit.id)).toEqual([
 			1, 4,
 		]);
+	});
+
+	describe("streak-at-risk (HAB-08)", () => {
+		it("reports the full freeze pool when nothing's been used this month", async () => {
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.freezesRemainingThisMonth).toBe(2);
+		});
+
+		it("subtracts freezes used this month, across every habit", async () => {
+			mockFrozenDays = [
+				{ habitId: 1, date: "2026-09-10" },
+				{ habitId: 2, date: "2026-09-11" },
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.freezesRemainingThisMonth).toBe(0);
+		});
+
+		it("flags a due-today habit at risk when yesterday was due and missed", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = [
+				{ habitId: 1, date: "2026-09-14", createdAt: new Date("2026-09-14") },
+				// 2026-09-15 (yesterday) intentionally missing.
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(1)).toBe(true);
+			expect(result.current.atRiskByHabitId.get(1)?.currentStreak).toBe(1);
+		});
+
+		it("does not flag a habit that completed yesterday", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = [
+				{ habitId: 1, date: YESTERDAY_STRING, createdAt: TODAY },
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+		});
+
+		it("does not flag a habit when the freeze pool is exhausted — resets silently instead", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = [
+				{ habitId: 1, date: "2026-09-14", createdAt: new Date("2026-09-14") },
+			];
+			mockFrozenDays = [
+				{ habitId: 2, date: "2026-09-01" },
+				{ habitId: 2, date: "2026-09-02" },
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+		});
+
+		it("does not flag a habit whose missed yesterday is already frozen", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = [
+				{ habitId: 1, date: "2026-09-14", createdAt: new Date("2026-09-14") },
+			];
+			mockFrozenDays = [{ habitId: 1, date: YESTERDAY_STRING }];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+		});
+
+		it("does not flag a habit with no streak standing before the miss — nothing to lose", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = []; // No history at all — yesterday was due and missed, but streak-before-miss is 0.
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+		});
+
+		it("never flags a habit that wasn't due yesterday, even if due today", async () => {
+			const wednesdayOnly = makeHabit({
+				id: 6,
+				name: "Yoga",
+				frequency: { type: "weekdays", days: [3] }, // Wednesday (TODAY) only — Tuesday (yesterday) isn't scheduled.
+			});
+			mockHabits = [wednesdayOnly];
+			mockAllEntries = [
+				{
+					habitId: 6,
+					date: "2026-09-09", // last Wednesday — a real prior streak, just not "missed yesterday."
+					createdAt: new Date("2026-09-09"),
+				},
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(6)).toBe(false);
+		});
 	});
 });

@@ -60,6 +60,14 @@ const SCREENS = {
 			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
 		},
 	},
+	"streak-at-risk": {
+		route: "/habits?fixtures=streak-at-risk",
+		mockup: "docs/mockups/streak-at-risk.png",
+		note: "Sheet is opened by tapping the at-risk habit's row, same as a real 'open this habit' interaction.",
+		async interact(page) {
+			await page.getByText("Meditate").click();
+		},
+	},
 };
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.

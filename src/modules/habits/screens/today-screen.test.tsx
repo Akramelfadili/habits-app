@@ -33,6 +33,11 @@ let mockTomorrowPreview: Habit[] = [];
 let mockLastCompletedToday: { id: number; name: string } | null = null;
 let mockQuantityValuesByHabitId = new Map<number, number>();
 const mockToday = new Date("2026-09-16T00:00:00Z");
+let mockAtRiskByHabitId = new Map<
+	number,
+	{ missedDate: Date; currentStreak: number }
+>();
+let mockFreezesRemainingThisMonth = 2;
 
 jest.mock("../hooks/use-today-queries", () => ({
 	useTodayQueries: () => ({
@@ -44,6 +49,8 @@ jest.mock("../hooks/use-today-queries", () => ({
 		viewState: mockViewState,
 		tomorrowPreview: mockTomorrowPreview,
 		lastCompletedToday: mockLastCompletedToday,
+		atRiskByHabitId: mockAtRiskByHabitId,
+		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
 	}),
 }));
 
@@ -65,11 +72,23 @@ jest.mock("../hooks/use-quantity-log-actions", () => ({
 	}),
 }));
 
+const mockApplyFreeze = jest.fn();
+jest.mock("../hooks/use-streak-actions", () => ({
+	useStreakActions: () => ({
+		applyFreeze: mockApplyFreeze,
+		isFreezing: false,
+		freezeError: null,
+	}),
+}));
+
 const mockClearAllHabits = jest.fn();
+const mockSeedStreakAtRiskHabit = jest.fn();
 jest.mock("../hooks/use-habit-actions", () => ({
 	useHabitActions: () => ({
 		clearAllHabits: mockClearAllHabits,
 		isClearingAll: false,
+		seedStreakAtRiskHabit: mockSeedStreakAtRiskHabit,
+		isSeedingStreakAtRisk: false,
 	}),
 }));
 
@@ -104,6 +123,8 @@ describe("TodayScreen", () => {
 		mockLogQuantity.mockReset();
 		mockClearAllHabits.mockReset();
 		mockResetFirstRun.mockReset();
+		mockApplyFreeze.mockReset();
+		mockSeedStreakAtRiskHabit.mockReset();
 		mockGroups = [];
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
@@ -112,6 +133,8 @@ describe("TodayScreen", () => {
 		mockTomorrowPreview = [];
 		mockLastCompletedToday = null;
 		mockHasSeenFirstRun = true;
+		mockAtRiskByHabitId = new Map();
+		mockFreezesRemainingThisMonth = 2;
 	});
 
 	it("shows the no-habits-yet empty state when there are no habits at all", async () => {
@@ -321,6 +344,84 @@ describe("TodayScreen", () => {
 		await fireEvent.press(screen.getByText("Add habit"));
 
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
+	});
+
+	it("offers the streak-at-risk dev seed button from the empty state too", async () => {
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Seed streak-at-risk habit (dev)"));
+		expect(mockSeedStreakAtRiskHabit).toHaveBeenCalledTimes(1);
+	});
+
+	it("offers the streak-at-risk dev seed button once habits already exist", async () => {
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Seed streak-at-risk habit (dev)"));
+		expect(mockSeedStreakAtRiskHabit).toHaveBeenCalledTimes(1);
+	});
+
+	describe("streak-at-risk (HAB-08)", () => {
+		it("tapping an at-risk habit's row opens the sheet instead of navigating", async () => {
+			mockViewState = "populated";
+			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockAtRiskByHabitId = new Map([
+				[1, { missedDate: new Date("2026-09-15"), currentStreak: 24 }],
+			]);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Glass of water"));
+
+			expect(mockPush).not.toHaveBeenCalled();
+			expect(screen.getByText("You missed yesterday")).toBeTruthy();
+			expect(
+				screen.getByText(
+					"Use a freeze to keep your 24-day streak, or let it reset and start again today. Either is fine.",
+				),
+			).toBeTruthy();
+		});
+
+		it("tapping a not-at-risk habit's row still navigates as before", async () => {
+			mockViewState = "populated";
+			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Glass of water"));
+
+			expect(mockPush).toHaveBeenCalledWith("/habit/1");
+		});
+
+		it("Use a freeze applies it for the missed date and closes the sheet", async () => {
+			mockViewState = "populated";
+			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			const missedDate = new Date("2026-09-15");
+			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
+			mockApplyFreeze.mockResolvedValue(undefined);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Glass of water"));
+			await fireEvent.press(screen.getByText("Use a freeze"));
+
+			expect(mockApplyFreeze).toHaveBeenCalledWith(1, missedDate);
+			await waitFor(() =>
+				expect(screen.queryByText("You missed yesterday")).toBeNull(),
+			);
+		});
+
+		it("Reset and start today closes the sheet without calling applyFreeze", async () => {
+			mockViewState = "populated";
+			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockAtRiskByHabitId = new Map([
+				[1, { missedDate: new Date("2026-09-15"), currentStreak: 24 }],
+			]);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Glass of water"));
+			await fireEvent.press(screen.getByText("Reset and start today"));
+
+			expect(mockApplyFreeze).not.toHaveBeenCalled();
+			expect(screen.queryByText("You missed yesterday")).toBeNull();
+		});
 	});
 
 	it("asks for confirmation before clearing all habits, and only clears on confirm", async () => {

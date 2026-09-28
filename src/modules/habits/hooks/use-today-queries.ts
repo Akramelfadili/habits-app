@@ -7,7 +7,11 @@ import {
 	startOfWeek,
 } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
-import { useEntriesInRange } from "../repositories/entry-repository";
+import {
+	useAllEntries,
+	useEntriesInRange,
+} from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
 import {
 	type CategoryGroup,
@@ -17,25 +21,16 @@ import {
 	resolveTodayViewState,
 	type TodayViewState,
 } from "../screens/today-screen-helpers";
+import {
+	freezesRemainingInMonth,
+	getStreakAtRisk,
+	isEntryComplete,
+	type StreakAtRisk,
+} from "../services/habit-service";
 import { getFrequencyStrategy } from "../strategies/frequency-strategy";
-import type { Entry, Habit } from "../types";
+import type { Habit } from "../types";
 
 const DATE_FORMAT = "yyyy-MM-dd";
-
-/**
- * Whether `entry` counts as an actual completion of `habit` — presence alone
- * for a simple-check habit, but `value >= targetAmount` for a quantity habit
- * (HAB-07), so a partially-logged quantity day isn't treated as done anywhere
- * completion is inferred (progress, streak scheduling, "last completed").
- */
-function isEntryComplete(habit: Habit, entry: Entry): boolean {
-	if (habit.targetType !== "quantity") return true;
-	return (
-		entry.value !== undefined &&
-		habit.targetAmount !== null &&
-		entry.value >= habit.targetAmount
-	);
-}
 
 export function useTodayQueries(): {
 	totalHabitCount: number;
@@ -50,6 +45,10 @@ export function useTodayQueries(): {
 	tomorrowPreview: Habit[];
 	/** The due-today habit completed most recently — Day closed's Undo target (HAB-05). */
 	lastCompletedToday: { id: number; name: string } | null;
+	/** Due-today habits currently showing the streak-at-risk prompt (HAB-08), keyed by habit id. */
+	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
+	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
+	freezesRemainingThisMonth: number;
 } {
 	const habits = useHabitsList();
 	const today = startOfDay(new Date());
@@ -57,6 +56,8 @@ export function useTodayQueries(): {
 	const weekStart = startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
 	const weekEnd = endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
 	const entries = useEntriesInRange(weekStart, weekEnd);
+	const allEntries = useAllEntries();
+	const frozenDays = useFrozenDays();
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 
 	const completedDatesByHabit = new Map<number, Date[]>();
@@ -92,6 +93,31 @@ export function useTodayQueries(): {
 
 	const progress = computeProgress(dueHabits, completedHabitIds);
 
+	const entriesByHabit = new Map<number, typeof allEntries>();
+	for (const entry of allEntries) {
+		const list = entriesByHabit.get(entry.habitId) ?? [];
+		list.push(entry);
+		entriesByHabit.set(entry.habitId, list);
+	}
+	const frozenDatesByHabit = new Map<number, Set<string>>();
+	for (const frozenDay of frozenDays) {
+		const set = frozenDatesByHabit.get(frozenDay.habitId) ?? new Set<string>();
+		set.add(frozenDay.date);
+		frozenDatesByHabit.set(frozenDay.habitId, set);
+	}
+	const freezesRemainingThisMonth = freezesRemainingInMonth(frozenDays, today);
+	const atRiskByHabitId = new Map<number, StreakAtRisk>();
+	for (const habit of dueHabits) {
+		const atRisk = getStreakAtRisk(
+			habit,
+			entriesByHabit.get(habit.id) ?? [],
+			frozenDatesByHabit.get(habit.id) ?? new Set<string>(),
+			freezesRemainingThisMonth,
+			today,
+		);
+		if (atRisk) atRiskByHabitId.set(habit.id, atRisk);
+	}
+
 	// The due-today entry created most recently — a real timestamp, so this
 	// survives app restarts, unlike tracking "last toggled" in screen state.
 	const dueHabitIds = new Set(dueHabits.map((habit) => habit.id));
@@ -120,5 +146,7 @@ export function useTodayQueries(): {
 		}),
 		tomorrowPreview,
 		lastCompletedToday,
+		atRiskByHabitId,
+		freezesRemainingThisMonth,
 	};
 }

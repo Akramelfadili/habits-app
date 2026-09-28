@@ -113,6 +113,25 @@ export async function deleteAllHabits(): Promise<void> {
 	setHabits([]);
 }
 
+/** Web counterpart of the native repository's backdated dev-seed helper (HAB-08). */
+export async function createHabitAt(
+	input: CreateHabitInput,
+	createdAt: Date,
+): Promise<Habit> {
+	if (!__DEV__) {
+		throw new Error("createHabitAt is dev-only");
+	}
+	const habits = getHabits();
+	const habit: Habit = {
+		...input,
+		id: Math.max(0, ...habits.map((h) => h.id)) + 1,
+		createdAt,
+		updatedAt: createdAt,
+	};
+	setHabits([...habits, habit]);
+	return habit;
+}
+
 // Compile-time guard: this file must export exactly what the native repository
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeHabitRepository = {
@@ -121,5 +140,6 @@ const _sameShape: typeof NativeHabitRepository = {
 	createHabitsAndMarkSetting,
 	useHabitsList,
 	deleteAllHabits,
+	createHabitAt,
 };
 void _sameShape;

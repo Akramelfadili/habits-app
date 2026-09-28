@@ -7,19 +7,29 @@ type IconBadgeProps = {
 	symbol: SFSymbol;
 	/** Accent tint + ink for a habit's icon; omit for the neutral grey badge (form rows). */
 	accent?: { tint: string; ink: string };
+	/** "large" is a sheet header's own icon (e.g. Quantity Log, HAB-07). */
+	size?: "default" | "large";
 };
 
 /** Non-interactive leading icon square for list rows (design-system "List row"). */
-export function IconBadge({ symbol, accent }: IconBadgeProps) {
+export function IconBadge({
+	symbol,
+	accent,
+	size = "default",
+}: IconBadgeProps) {
 	const { colors } = useTheme();
+	const isLarge = size === "large";
 
 	return (
 		<View
-			style={[styles.badge, { backgroundColor: accent?.tint ?? colors.inner }]}
+			style={[
+				isLarge ? styles.badgeLarge : styles.badge,
+				{ backgroundColor: accent?.tint ?? colors.inner },
+			]}
 		>
 			<SymbolView
 				name={symbol}
-				size={16}
+				size={isLarge ? 24 : 16}
 				tintColor={accent?.ink ?? colors.sub}
 			/>
 		</View>
@@ -31,6 +41,13 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		borderRadius: 10,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	badgeLarge: {
+		width: 48,
+		height: 48,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
 	},

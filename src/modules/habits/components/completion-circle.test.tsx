@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
+import { semanticColors } from "@/theme/theme";
 import { CompletionCircle } from "./completion-circle";
 
 jest.mock("expo-symbols", () => {
@@ -140,6 +141,55 @@ describe("CompletionCircle", () => {
 		expect(
 			screen.getByLabelText("Glass of water").props.accessibilityState,
 		).toEqual({ checked: true });
+	});
+
+	it("shows the amber at-risk ring for a Break habit that's due for the prompt", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="No phone in bed"
+				direction="break"
+				atRisk
+			/>,
+		);
+		const flatStyle = StyleSheet.flatten(
+			screen.getByLabelText("No phone in bed").props.style,
+		);
+		expect(flatStyle.borderStyle).not.toBe("dashed");
+		expect(flatStyle.borderColor).toBe(semanticColors.light.warnInk);
+	});
+
+	it("ignores atRisk once the Break habit is resisted — the ink ring wins", async () => {
+		await render(
+			<CompletionCircle
+				completed
+				onPress={jest.fn()}
+				accessibilityLabel="No phone in bed"
+				direction="break"
+				atRisk
+			/>,
+		);
+		expect(
+			screen.getByLabelText("No phone in bed").props.accessibilityState,
+		).toEqual({ checked: true });
+	});
+
+	it("has no at-risk visual for a Build habit — none is documented", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Glass of water"
+				direction="build"
+				atRisk
+			/>,
+		);
+		const flatStyle = StyleSheet.flatten(
+			screen.getByLabelText("Glass of water").props.style,
+		);
+		expect(flatStyle.backgroundColor).toBeUndefined();
+		expect(flatStyle.borderWidth).toBe(2);
 	});
 
 	it("uses a button role instead of checkbox when role is 'button'", async () => {

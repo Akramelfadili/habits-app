@@ -67,3 +67,25 @@ export const entries = sqliteTable(
 		index("entries_date_idx").on(table.date),
 	],
 );
+
+/**
+ * One row = that habit's missed day was covered by a freeze (HAB-08). The
+ * shared monthly pool is derived by counting rows here whose `date` falls in
+ * a given calendar month — across every habit, since the pool isn't per-habit.
+ */
+export const frozenDays = sqliteTable(
+	"frozen_days",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		habitId: integer("habit_id")
+			.notNull()
+			.references(() => habits.id),
+		/** The missed calendar day this freeze covers, "yyyy-MM-dd". */
+		date: text("date").notNull(),
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [
+		unique("frozen_days_habit_date_unique").on(table.habitId, table.date),
+		index("frozen_days_date_idx").on(table.date),
+	],
+);
