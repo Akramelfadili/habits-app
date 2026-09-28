@@ -3,11 +3,17 @@ import { act, renderHook } from "@testing-library/react-native";
 const mockCreateHabit = jest.fn();
 const mockUpdateHabit = jest.fn();
 const mockDeleteAllHabits = jest.fn();
+const mockCreateHabitAt = jest.fn();
+const mockSetHabitCompletedOn = jest.fn();
 
 jest.mock("../repositories/habit-repository", () => ({
 	createHabit: (...args: unknown[]) => mockCreateHabit(...args),
 	updateHabit: (...args: unknown[]) => mockUpdateHabit(...args),
 	deleteAllHabits: (...args: unknown[]) => mockDeleteAllHabits(...args),
+	createHabitAt: (...args: unknown[]) => mockCreateHabitAt(...args),
+}));
+jest.mock("../repositories/entry-repository", () => ({
+	setHabitCompletedOn: (...args: unknown[]) => mockSetHabitCompletedOn(...args),
 }));
 
 import { makeHabit, makeHabitInput } from "../test-support/habit-builder";
@@ -21,6 +27,8 @@ describe("useHabitActions", () => {
 		mockCreateHabit.mockReset();
 		mockUpdateHabit.mockReset();
 		mockDeleteAllHabits.mockReset();
+		mockCreateHabitAt.mockReset();
+		mockSetHabitCompletedOn.mockReset();
 	});
 
 	it("calls the repository's createHabit and reports loading state", async () => {
@@ -79,6 +87,30 @@ describe("useHabitActions", () => {
 		await inProduction(async () => {
 			const { result } = await renderHook(() => useHabitActions());
 			expect(result.current.clearAllHabits).toBeUndefined();
+		});
+	});
+
+	describe("seedStreakAtRiskHabit (dev-only HAB-08 test helper)", () => {
+		it("creates a backdated habit and completes days -2 and -3, skipping yesterday", async () => {
+			mockCreateHabitAt.mockResolvedValue(makeHabit({ id: 9 }));
+			const { result } = await renderHook(() => useHabitActions());
+
+			await act(() => result.current.seedStreakAtRiskHabit?.());
+
+			expect(mockCreateHabitAt).toHaveBeenCalledTimes(1);
+			expect(mockSetHabitCompletedOn).toHaveBeenCalledTimes(2);
+			expect(mockSetHabitCompletedOn).toHaveBeenCalledWith(
+				9,
+				expect.any(Date),
+				true,
+			);
+		});
+
+		it("exposes no seedStreakAtRiskHabit outside __DEV__", async () => {
+			await inProduction(async () => {
+				const { result } = await renderHook(() => useHabitActions());
+				expect(result.current.seedStreakAtRiskHabit).toBeUndefined();
+			});
 		});
 	});
 });

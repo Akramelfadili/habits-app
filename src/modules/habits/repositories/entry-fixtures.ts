@@ -1,9 +1,12 @@
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import type { Entry } from "../types";
 import {
 	DAY_CLOSED_DUE_TODAY_IDS,
 	type FixtureScenario,
 } from "./habit-fixtures";
+
+/** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
+const STREAK_AT_RISK_DAYS = 24;
 
 /**
  * Static fake entries backing the web-only repository (`entry-repository.web.ts`).
@@ -38,6 +41,21 @@ export function makeEntryFixtures(
 	}
 
 	if (scenario === "empty" || scenario === "rest-day") return [];
+
+	if (scenario === "streak-at-risk") {
+		// Day -1 (yesterday) is intentionally left uncompleted — that's the miss
+		// the streak-at-risk sheet is showing. Days -2 through -25 are all
+		// completed, giving a 24-day streak standing before that miss.
+		return Array.from({ length: STREAK_AT_RISK_DAYS }, (_, index) => {
+			const daysAgo = index + 2;
+			return {
+				id: index + 1,
+				habitId: 1,
+				date: format(subDays(new Date(), daysAgo), "yyyy-MM-dd"),
+				createdAt: new Date(),
+			};
+		});
+	}
 
 	if (scenario === "quantity-log") {
 		return [

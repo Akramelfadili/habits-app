@@ -70,3 +70,15 @@ export type Entry = {
 	value?: number;
 	createdAt: Date;
 };
+
+/**
+ * One habit's missed day covered by a freeze (HAB-08) — drawn from the
+ * shared monthly pool, not a per-habit allowance.
+ */
+export type FrozenDay = {
+	id: number;
+	habitId: number;
+	/** The missed calendar day this freeze covers, "yyyy-MM-dd". */
+	date: string;
+	createdAt: Date;
+};

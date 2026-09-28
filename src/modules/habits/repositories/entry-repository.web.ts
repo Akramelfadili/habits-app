@@ -41,6 +41,11 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	);
 }
 
+/** Web counterpart of the native repository's unbounded live query. */
+export function useAllEntries(): Entry[] {
+	return useSyncExternalStore(subscribe, getEntries, () => [] as Entry[]);
+}
+
 export async function setHabitCompletedOn(
 	habitId: number,
 	date: Date,
@@ -104,6 +109,7 @@ export async function setHabitQuantityOn(
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeEntryRepository = {
 	useEntriesInRange,
+	useAllEntries,
 	setHabitCompletedOn,
 	setHabitQuantityOn,
 };

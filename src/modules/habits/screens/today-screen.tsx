@@ -14,11 +14,13 @@ import { habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HabitTodayRow } from "../components/habit-today-row";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
+import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useQuantityLogActions } from "../hooks/use-quantity-log-actions";
+import { useStreakActions } from "../hooks/use-streak-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
 import { FirstRunScreen } from "./first-run-screen";
@@ -36,22 +38,43 @@ export function TodayScreen() {
 		viewState,
 		tomorrowPreview,
 		lastCompletedToday,
+		atRiskByHabitId,
+		freezesRemainingThisMonth,
 	} = useTodayQueries();
 	const { toggleCompletion } = useTodayActions();
 	const { logQuantity, isLogging } = useQuantityLogActions();
-	const { clearAllHabits, isClearingAll } = useHabitActions();
+	const {
+		clearAllHabits,
+		isClearingAll,
+		seedStreakAtRiskHabit,
+		isSeedingStreakAtRisk,
+	} = useHabitActions();
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const { resetFirstRun, isResetting } = useFirstRunActions();
+	const { applyFreeze, isFreezing } = useStreakActions();
 	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
+	const [atRiskHabitId, setAtRiskHabitId] = useState<number | null>(null);
 
 	const quantityHabit = groups
 		.flatMap((group) => group.habits)
 		.find((habit) => habit.id === quantityHabitId);
+	const atRiskInfo =
+		atRiskHabitId !== null ? atRiskByHabitId.get(atRiskHabitId) : undefined;
 
 	async function handleSaveQuantity(value: number) {
 		if (quantityHabitId === null) return;
 		await logQuantity(quantityHabitId, today, value);
 		setQuantityHabitId(null);
+	}
+
+	async function handleUseFreeze() {
+		if (atRiskHabitId === null || !atRiskInfo) return;
+		await applyFreeze(atRiskHabitId, atRiskInfo.missedDate);
+		setAtRiskHabitId(null);
+	}
+
+	function handleResetStreak() {
+		setAtRiskHabitId(null);
 	}
 
 	function handleUndo() {
@@ -112,6 +135,15 @@ export function TodayScreen() {
 					subtitle="Add your first habit and it will show up here every morning."
 				>
 					<Button label="Add habit" onPress={() => router.push("/new-habit")} />
+					{seedStreakAtRiskHabit ? (
+						<Button
+							label="Seed streak-at-risk habit (dev)"
+							variant="ghost"
+							fullWidth={false}
+							disabled={isSeedingStreakAtRisk}
+							onPress={seedStreakAtRiskHabit}
+						/>
+					) : null}
 					{resetFirstRun ? (
 						<Button
 							label="Reset First Run (dev)"
@@ -228,7 +260,12 @@ export function TodayScreen() {
 									habit={habit}
 									completed={completedHabitIds.has(habit.id)}
 									quantityValue={quantityValuesByHabitId.get(habit.id)}
-									onPress={() => router.push(`/habit/${habit.id}`)}
+									atRisk={atRiskByHabitId.has(habit.id)}
+									onPress={() =>
+										atRiskByHabitId.has(habit.id)
+											? setAtRiskHabitId(habit.id)
+											: router.push(`/habit/${habit.id}`)
+									}
 									onToggle={() =>
 										toggleCompletion(
 											habit.id,
@@ -265,6 +302,15 @@ export function TodayScreen() {
 						onPress={handleClearAllHabits}
 					/>
 				) : null}
+				{seedStreakAtRiskHabit ? (
+					<Button
+						label="Seed streak-at-risk habit (dev)"
+						variant="ghost"
+						fullWidth={false}
+						disabled={isSeedingStreakAtRisk}
+						onPress={seedStreakAtRiskHabit}
+					/>
+				) : null}
 				{resetFirstRun ? (
 					<Button
 						label="Reset First Run (dev)"
@@ -283,6 +329,17 @@ export function TodayScreen() {
 					onDismiss={() => setQuantityHabitId(null)}
 					onSave={handleSaveQuantity}
 					isSaving={isLogging}
+				/>
+			) : null}
+			{atRiskInfo ? (
+				<StreakAtRiskSheet
+					visible
+					currentStreak={atRiskInfo.currentStreak}
+					freezesRemaining={freezesRemainingThisMonth}
+					today={today}
+					onUseFreeze={handleUseFreeze}
+					onReset={handleResetStreak}
+					isApplyingFreeze={isFreezing}
 				/>
 			) : null}
 		</SafeAreaView>

@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { semanticColors } from "@/theme/theme";
 import { makeHabit } from "../test-support/habit-builder";
 import { HabitTodayRow } from "./habit-today-row";
 
@@ -152,6 +154,22 @@ describe("HabitTodayRow", () => {
 			/>,
 		);
 		expect(screen.getByLabelText("No phone in bed")).toBeTruthy();
+	});
+
+	it("passes atRisk through to a Break habit's completion circle (HAB-08)", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
+				completed={false}
+				atRisk
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		const flatStyle = StyleSheet.flatten(
+			screen.getByLabelText("No phone in bed").props.style,
+		);
+		expect(flatStyle.borderColor).toBe(semanticColors.light.warnInk);
 	});
 
 	describe("a quantity habit (HAB-07)", () => {

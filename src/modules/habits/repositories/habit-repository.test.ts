@@ -18,6 +18,7 @@ const {
 	updateHabit,
 	createHabitsAndMarkSetting,
 	deleteAllHabits,
+	createHabitAt,
 }: typeof HabitRepository = require("./habit-repository");
 
 const baseInput = makeHabitInput({ category: "Morning" });
@@ -175,6 +176,22 @@ describe("habit-repository", () => {
 
 			const after = await mockDb.select().from(habits);
 			expect(after).toHaveLength(before.length);
+		});
+	});
+
+	describe("createHabitAt", () => {
+		it("stores the given createdAt instead of the current time", async () => {
+			const backdate = new Date("2026-09-01T00:00:00Z");
+			const habit = await createHabitAt(baseInput, backdate);
+			expect(habit.createdAt).toEqual(backdate);
+		});
+
+		it("refuses to run outside __DEV__", async () => {
+			await inProduction(async () => {
+				await expect(
+					createHabitAt(baseInput, new Date("2026-09-01")),
+				).rejects.toThrow("dev-only");
+			});
 		});
 	});
 

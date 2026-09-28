@@ -16,7 +16,8 @@ export type FixtureScenario =
 	| "rest-day"
 	| "day-closed"
 	| "first-run"
-	| "quantity-log";
+	| "quantity-log"
+	| "streak-at-risk";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -24,6 +25,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"day-closed",
 	"first-run",
 	"quantity-log",
+	"streak-at-risk",
 ];
 
 /**
@@ -235,6 +237,37 @@ export const QUANTITY_LOG_HABIT_FIXTURES: Habit[] = [
 	},
 ];
 
+/**
+ * Created well before any streak-history date the fixtures generate, so the
+ * habit's own `createdAt` floor (see `calculateCurrentStreak`) never cuts the
+ * fixture streak short regardless of which real-world day the visual check
+ * runs on.
+ */
+export const STREAK_AT_RISK_HABIT_CREATED = new Date("2025-01-01T00:00:00Z");
+
+/**
+ * One daily Build habit matching docs/mockups/streak-at-risk.png — its
+ * matching entries (`entry-fixtures.ts`) complete every day except yesterday,
+ * so opening it shows the streak-at-risk sheet with the full freeze pool
+ * available (`frozen-day-fixtures.ts` adds none for this scenario).
+ */
+export const STREAK_AT_RISK_HABIT_FIXTURES: Habit[] = [
+	{
+		id: 1,
+		name: "Meditate",
+		icon: "leaf",
+		color: "purple",
+		category: "Morning",
+		direction: "build",
+		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
+		frequency: { type: "daily" },
+		createdAt: STREAK_AT_RISK_HABIT_CREATED,
+		updatedAt: STREAK_AT_RISK_HABIT_CREATED,
+	},
+];
+
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 	switch (scenario) {
 		case "empty":
@@ -246,6 +279,8 @@ export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 			return DAY_CLOSED_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "quantity-log":
 			return QUANTITY_LOG_HABIT_FIXTURES.map((habit) => ({ ...habit }));
+		case "streak-at-risk":
+			return STREAK_AT_RISK_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

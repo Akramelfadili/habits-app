@@ -34,6 +34,21 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 }
 
 /**
+ * Live-query hook — every entry, unbounded. Streak calculation (HAB-08) can
+ * need history arbitrarily far back (and a week-bounded range has a real gap
+ * around Sunday/Monday for a per-week habit's own week), so this fetches
+ * everything rather than trying to bound the range correctly — a personal
+ * habit tracker's total entry count stays small enough that this is simpler
+ * and cheaper than getting a tight range right.
+ */
+export function useAllEntries(): Entry[] {
+	const { data } = useLiveQuery(
+		db.select().from(entries).orderBy(asc(entries.date)),
+	);
+	return (data ?? []).map(rowToEntry);
+}
+
+/**
  * Marks `habitId` completed/resisted (or un-completed) on `date`. Un-checking
  * is always allowed with no confirmation (HAB-03), so this deletes the row
  * rather than flipping a boolean; completing twice is a no-op, not an error.
