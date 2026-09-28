@@ -346,6 +346,16 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
 
+	it("links to the Weekly Summary once habits exist", async () => {
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Weekly summary"));
+
+		expect(mockPush).toHaveBeenCalledWith("/habits/week");
+	});
+
 	it("offers the streak-at-risk dev seed button from the empty state too", async () => {
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Seed streak-at-risk habit (dev)"));

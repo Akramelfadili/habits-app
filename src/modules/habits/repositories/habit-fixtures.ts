@@ -20,7 +20,9 @@ export type FixtureScenario =
 	| "streak-at-risk"
 	| "habit-detail"
 	| "habit-detail-new"
-	| "retro-log";
+	| "retro-log"
+	| "weekly-summary"
+	| "perfect-week";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -32,6 +34,8 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"habit-detail",
 	"habit-detail-new",
 	"retro-log",
+	"weekly-summary",
+	"perfect-week",
 ];
 
 /**
@@ -381,6 +385,62 @@ export function retroLogFixtures(): Habit[] {
 	];
 }
 
+/** Created well before any week the visual check pins its clock to. */
+const WEEKLY_SUMMARY_CREATED = new Date("2025-01-01T00:00:00Z");
+
+/**
+ * docs/mockups/weekly-summary.png / perfect-week.png's six habits, ids in the
+ * creation order perfect-week.png lists them (its all-100% bars fall back to
+ * creation order). `weekly-summary` makes every habit daily, as that mockup's
+ * x/7 bars show; `perfect-week` gives Read Mon–Fri and Easy run 3×/week, as
+ * its 5/5 and 3/3 bars show. Matching entries live in `entry-fixtures.ts`.
+ */
+function weeklySummaryFixtures(perfectWeek: boolean): Habit[] {
+	const base = {
+		category: null,
+		direction: "build",
+		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
+		frequency: { type: "daily" },
+		createdAt: WEEKLY_SUMMARY_CREATED,
+		updatedAt: WEEKLY_SUMMARY_CREATED,
+	} as const;
+	return [
+		{ ...base, id: 1, name: "Glass of water", icon: "drop", color: "blue" },
+		{ ...base, id: 2, name: "Meditate", icon: "leaf", color: "purple" },
+		{
+			...base,
+			id: 3,
+			name: "Read",
+			icon: "book",
+			color: "orange",
+			frequency: perfectWeek
+				? { type: "weekdays", days: [1, 2, 3, 4, 5] }
+				: base.frequency,
+		},
+		{
+			...base,
+			id: 4,
+			name: "Easy run",
+			icon: "walk",
+			color: "red",
+			frequency: perfectWeek
+				? { type: "per-week", timesPerWeek: 3 }
+				: base.frequency,
+		},
+		{ ...base, id: 5, name: "Mobility", icon: "walk", color: "green" },
+		{
+			...base,
+			id: 6,
+			name: "No phone in bed",
+			icon: "moon",
+			color: "teal",
+			direction: "break",
+		},
+	];
+}
+
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 	switch (scenario) {
 		case "empty":
@@ -400,6 +460,10 @@ export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 			return habitDetailNewFixtures();
 		case "retro-log":
 			return retroLogFixtures();
+		case "weekly-summary":
+			return weeklySummaryFixtures(false);
+		case "perfect-week":
+			return weeklySummaryFixtures(true);
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

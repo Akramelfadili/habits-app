@@ -1,4 +1,5 @@
-import { format, subDays } from "date-fns";
+import { addDays, format, startOfWeek, subDays } from "date-fns";
+import { WEEK_STARTS_ON } from "../constants";
 import type { Entry, EntryNote } from "../types";
 import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
 import {
@@ -51,6 +52,10 @@ export function makeEntryFixtures(
 	}
 
 	if (scenario === "habit-detail") return habitDetailEntries();
+
+	if (scenario === "weekly-summary" || scenario === "perfect-week") {
+		return weeklySummaryEntries(scenario);
+	}
 
 	if (scenario === "retro-log") {
 		// The tapped day: Read done, Meditate and Mobility not — matching
@@ -175,4 +180,47 @@ function habitDetailEntries(): Entry[] {
 		});
 	}
 	return entries;
+}
+
+/**
+ * Mon→Sun (index 0–6) days each `weekly-summary` habit was done this week,
+ * matching docs/mockups/weekly-summary.png's bars (Mobility 2/7, Easy run
+ * 4/7, Read 5/7, No phone 5/7, Meditate 6/7, Water 7/7) with Tuesday the
+ * best day at 6 of 6. Every habit is logged on Sunday, so with the visual
+ * check's clock pinned to Sunday evening each bar reads out of 7. (The
+ * mockup's "34 of 42" tile doesn't match its own bars, which sum to 29.)
+ */
+const WEEKLY_SUMMARY_DONE: Record<number, number[]> = {
+	1: [0, 1, 2, 3, 4, 5, 6],
+	2: [0, 1, 2, 3, 4, 6],
+	3: [0, 1, 3, 4, 6],
+	4: [0, 1, 4, 6],
+	5: [1, 6],
+	6: [0, 1, 4, 5, 6],
+};
+
+/** docs/mockups/perfect-week.png — every scheduled day done (Read Mon–Fri, Easy run 3×). */
+const PERFECT_WEEK_DONE: Record<number, number[]> = {
+	1: [0, 1, 2, 3, 4, 5, 6],
+	2: [0, 1, 2, 3, 4, 5, 6],
+	3: [0, 1, 2, 3, 4],
+	4: [0, 2, 4],
+	5: [0, 1, 2, 3, 4, 5, 6],
+	6: [0, 1, 2, 3, 4, 5, 6],
+};
+
+function weeklySummaryEntries(
+	scenario: "weekly-summary" | "perfect-week",
+): Entry[] {
+	const weekStart = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
+	const done =
+		scenario === "perfect-week" ? PERFECT_WEEK_DONE : WEEKLY_SUMMARY_DONE;
+	return Object.entries(done).flatMap(([habitId, days]) =>
+		days.map((day) => ({
+			id: Number(habitId) * 10 + day,
+			habitId: Number(habitId),
+			date: format(addDays(weekStart, day), "yyyy-MM-dd"),
+			createdAt: addDays(weekStart, day),
+		})),
+	);
 }

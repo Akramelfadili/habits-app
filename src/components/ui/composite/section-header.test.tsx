@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
+import { typeScale } from "@/theme/theme";
 import { SectionHeader } from "./section-header";
 
 describe("SectionHeader", () => {
@@ -15,5 +16,13 @@ describe("SectionHeader", () => {
 	it("omits the count when none is given", async () => {
 		await render(<SectionHeader title="Anytime" />);
 		expect(screen.queryByText(/\//)).toBeNull();
+	});
+
+	it("uses the smaller, semibold card-title size for size small", async () => {
+		await render(<SectionHeader title="Per habit" size="small" />);
+		expect(screen.getByText("Per habit")).toHaveStyle({
+			fontSize: typeScale.rowLabel,
+			fontWeight: "600",
+		});
 	});
 });

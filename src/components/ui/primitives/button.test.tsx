@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { surfaceColors } from "@/theme/theme";
 import { Button } from "./button";
 
 describe("Button", () => {
@@ -53,6 +54,25 @@ describe("Button", () => {
 		);
 
 		await fireEvent.press(screen.getByText("Start from scratch"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("renders an inline action in ink, flush-left", async () => {
+		const onPress = jest.fn();
+		await render(
+			<Button
+				label="Reschedule habit →"
+				variant="inline"
+				fullWidth={false}
+				onPress={onPress}
+			/>,
+		);
+
+		expect(screen.getByText("Reschedule habit →")).toHaveStyle({
+			color: surfaceColors.light.ink,
+		});
+		expect(screen.getByRole("button")).toHaveStyle({ alignSelf: "flex-start" });
+		await fireEvent.press(screen.getByText("Reschedule habit →"));
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 });
