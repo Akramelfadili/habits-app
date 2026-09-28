@@ -11,6 +11,12 @@ type ContainerProps = PropsWithChildren<{
 	 * elements under one wrapper View to keep them in the same section.
 	 */
 	dividers?: boolean;
+	/**
+	 * Tighter spacing around each divider — for a list of short, uniform rows
+	 * (Habit Detail's recent entries) rather than form sections. Only applies
+	 * with `dividers`.
+	 */
+	compact?: boolean;
 	/** Ink border ring — a selectable card that's currently picked (First Run, HAB-06). */
 	selected?: boolean;
 }>;
@@ -18,6 +24,7 @@ type ContainerProps = PropsWithChildren<{
 export function Container({
 	variant = "card",
 	dividers = false,
+	compact = false,
 	selected = false,
 	children,
 }: ContainerProps) {
@@ -45,11 +52,16 @@ export function Container({
 						<View
 							// biome-ignore lint/suspicious/noArrayIndexKey: sections are a stable, order-only list of the caller's own child elements
 							key={index}
-							style={styles.dividedSection}
+							testID="container-section"
+							style={compact ? styles.compactSection : styles.dividedSection}
 						>
 							{index > 0 ? (
 								<View
-									style={[styles.divider, { backgroundColor: colors.border }]}
+									style={[
+										styles.divider,
+										compact && styles.compactDivider,
+										{ backgroundColor: colors.border },
+									]}
 								/>
 							) : null}
 							{section}
@@ -72,9 +84,15 @@ const styles = StyleSheet.create({
 	dividedSection: {
 		gap: 16,
 	},
+	compactSection: {
+		gap: 0,
+	},
 	divider: {
 		height: StyleSheet.hairlineWidth,
 		marginVertical: 12,
+	},
+	compactDivider: {
+		marginVertical: 10,
 	},
 	sheet: {
 		borderTopLeftRadius: 24,

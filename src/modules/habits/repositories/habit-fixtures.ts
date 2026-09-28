@@ -1,4 +1,4 @@
-import { getISODay } from "date-fns";
+import { getISODay, subDays } from "date-fns";
 import type { Habit, IsoWeekday } from "../types";
 
 /**
@@ -17,7 +17,9 @@ export type FixtureScenario =
 	| "day-closed"
 	| "first-run"
 	| "quantity-log"
-	| "streak-at-risk";
+	| "streak-at-risk"
+	| "habit-detail"
+	| "habit-detail-new";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -26,6 +28,8 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"first-run",
 	"quantity-log",
 	"streak-at-risk",
+	"habit-detail",
+	"habit-detail-new",
 ];
 
 /**
@@ -268,6 +272,59 @@ export const STREAK_AT_RISK_HABIT_FIXTURES: Habit[] = [
 	},
 ];
 
+/** Days before "now" the `habit-detail` fixture habit was created — room for a long-past longest streak. */
+export const HABIT_DETAIL_HISTORY_DAYS = 150;
+
+/**
+ * One daily quantity habit matching docs/mockups/habit-detail.png's "Glass of
+ * water · Morning · 8 glasses · daily" — its ~5 months of varied history
+ * (`entry-fixtures.ts`, `frozen-day-fixtures.ts`) fill every heatmap state.
+ * Created relative to now so the history lands the same way on any run.
+ */
+export function habitDetailFixtures(): Habit[] {
+	const created = subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS);
+	return [
+		{
+			id: 1,
+			name: "Glass of water",
+			icon: "drop",
+			color: "blue",
+			category: "Morning",
+			direction: "build",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+			frequency: { type: "daily" },
+			createdAt: created,
+			updatedAt: created,
+		},
+	];
+}
+
+/**
+ * A just-created habit with no history, matching
+ * docs/mockups/habit-detail-new.png ("Evening walk · Mon–Fri · added today").
+ */
+export function habitDetailNewFixtures(): Habit[] {
+	const now = new Date();
+	return [
+		{
+			id: 1,
+			name: "Evening walk",
+			icon: "walk",
+			color: "orange",
+			category: "Evening",
+			direction: "build",
+			targetType: "simple",
+			targetAmount: null,
+			targetUnit: null,
+			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			createdAt: now,
+			updatedAt: now,
+		},
+	];
+}
+
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 	switch (scenario) {
 		case "empty":
@@ -281,6 +338,10 @@ export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 			return QUANTITY_LOG_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "streak-at-risk":
 			return STREAK_AT_RISK_HABIT_FIXTURES.map((habit) => ({ ...habit }));
+		case "habit-detail":
+			return habitDetailFixtures();
+		case "habit-detail-new":
+			return habitDetailNewFixtures();
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

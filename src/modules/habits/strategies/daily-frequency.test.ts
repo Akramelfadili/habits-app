@@ -11,4 +11,11 @@ describe("daily frequency", () => {
 			expect(strategy.isDueOn(date, { completedDates: [date] })).toBe(true);
 		}
 	});
+
+	it("was scheduled on every past day too", () => {
+		const strategy = createDailyFrequency({ type: "daily" });
+		expect(
+			strategy.wasScheduledOn(new Date(2026, 8, 21), { completedDates: [] }),
+		).toBe(true);
+	});
 });

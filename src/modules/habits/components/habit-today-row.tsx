@@ -15,7 +15,7 @@ type HabitTodayRowProps = {
 	onToggle: () => void;
 	/** Opens the Quantity Log sheet (HAB-07) instead of toggling directly. */
 	onOpenQuantitySheet?: () => void;
-	/** Opens Habit Detail (HAB-09) — stubbed until that screen exists. */
+	/** Opens Habit Detail (HAB-09). */
 	onPress: () => void;
 	/** Streak-at-risk (HAB-08): yesterday was missed and a freeze could still cover it. */
 	atRisk?: boolean;

@@ -117,6 +117,31 @@ describe("calculateCurrentStreak", () => {
 		expect(streak).toBe(2);
 	});
 
+	it("doesn't break a per-week streak on days the week never owed", () => {
+		const threePerWeek = makeHabit({
+			id: 6,
+			frequency: { type: "per-week", timesPerWeek: 3 },
+			createdAt: HABIT_CREATED,
+		});
+		// Mon/Wed/Fri of two consecutive weeks (09-07 and 09-14 are Mondays) —
+		// the Tue/Thu gaps were never owed once each week's target was met.
+		const entries = [
+			"2026-09-07",
+			"2026-09-09",
+			"2026-09-11",
+			"2026-09-14",
+			"2026-09-16",
+			"2026-09-18",
+		].map((date) => entry(6, date));
+		const streak = calculateCurrentStreak(
+			threePerWeek,
+			entries,
+			new Set(),
+			new Date("2026-09-20T12:00:00"),
+		);
+		expect(streak).toBe(6);
+	});
+
 	it("never walks back before the habit's own createdAt", () => {
 		const youngHabit = makeHabit({
 			id: 5,

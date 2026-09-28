@@ -1,4 +1,9 @@
-import { HABIT_ACCENT_KEYS, habitAccentInk, habitAccentTint } from "./theme";
+import {
+	HABIT_ACCENT_KEYS,
+	habitAccentInk,
+	habitAccentTint,
+	heatmapLevelColor,
+} from "./theme";
 
 describe("habit accent colors", () => {
 	it("has exactly 6 confirmed accent keys", () => {
@@ -22,5 +27,20 @@ describe("habit accent colors", () => {
 				habitAccentInk(key, "dark"),
 			);
 		}
+	});
+});
+
+describe("heatmap ramp", () => {
+	it("gives three distinct steps per accent", () => {
+		const levels = ([1, 2, 3] as const).map((level) =>
+			heatmapLevelColor("blue", level, "light"),
+		);
+		expect(new Set(levels).size).toBe(3);
+	});
+
+	it("differs between light and dark for the same step", () => {
+		expect(heatmapLevelColor("teal", 2, "light")).not.toBe(
+			heatmapLevelColor("teal", 2, "dark"),
+		);
 	});
 });

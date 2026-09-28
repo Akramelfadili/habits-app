@@ -1,4 +1,12 @@
-import { isBefore, isSameWeek, startOfDay } from "date-fns";
+import {
+	addDays,
+	endOfWeek,
+	isAfter,
+	isBefore,
+	isSameDay,
+	isSameWeek,
+	startOfDay,
+} from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 import type { Frequency } from "../types";
 import type { FrequencyStrategy } from "./frequency-strategy";
@@ -8,6 +16,13 @@ import type { FrequencyStrategy } from "./frequency-strategy";
  * (Mon–Sun) week. Only completions *before* `date` count, so the day the target
  * is hit still shows the habit (and it can still be un-checked); from the next
  * day it's gone until Monday.
+ *
+ * Looking back, though, "due" overstates what was owed: a 3x/week habit done
+ * Mon/Wed/Fri was never really scheduled on Tuesday. So for history, a
+ * completed day was scheduled, and an uncompleted one only counts as missed
+ * once the week's remaining open days can no longer cover what's still
+ * needed — e.g. a finished week with 1 of 3 logged has exactly 2 missed days
+ * (its last two open ones), not 6.
  */
 export function createPerWeekFrequency(
 	frequency: Extract<Frequency, { type: "per-week" }>,
@@ -21,6 +36,31 @@ export function createPerWeekFrequency(
 					isBefore(completed, dayStart),
 			).length;
 			return completedEarlierThisWeek < frequency.timesPerWeek;
+		},
+		wasScheduledOn: (date, { completedDates }) => {
+			const completedThisWeek = completedDates.filter((completed) =>
+				isSameWeek(completed, date, { weekStartsOn: WEEK_STARTS_ON }),
+			);
+			const isCompleted = (day: Date) =>
+				completedThisWeek.some((completed) => isSameDay(completed, day));
+			if (isCompleted(date)) return true;
+
+			const distinctCompletions = new Set(
+				completedThisWeek.map((completed) => startOfDay(completed).getTime()),
+			).size;
+			const stillNeeded = frequency.timesPerWeek - distinctCompletions;
+			if (stillNeeded <= 0) return false;
+
+			const weekEnd = endOfWeek(date, { weekStartsOn: WEEK_STARTS_ON });
+			let openDaysAfter = 0;
+			for (
+				let day = addDays(startOfDay(date), 1);
+				!isAfter(day, weekEnd);
+				day = addDays(day, 1)
+			) {
+				if (!isCompleted(day)) openDaysAfter += 1;
+			}
+			return openDaysAfter < stillNeeded;
 		},
 	};
 }

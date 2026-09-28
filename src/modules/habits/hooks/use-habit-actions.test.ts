@@ -5,6 +5,8 @@ const mockUpdateHabit = jest.fn();
 const mockDeleteAllHabits = jest.fn();
 const mockCreateHabitAt = jest.fn();
 const mockSetHabitCompletedOn = jest.fn();
+const mockSetHabitQuantityOn = jest.fn();
+const mockFreezeHabitDay = jest.fn();
 
 jest.mock("../repositories/habit-repository", () => ({
 	createHabit: (...args: unknown[]) => mockCreateHabit(...args),
@@ -14,6 +16,10 @@ jest.mock("../repositories/habit-repository", () => ({
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	setHabitCompletedOn: (...args: unknown[]) => mockSetHabitCompletedOn(...args),
+	setHabitQuantityOn: (...args: unknown[]) => mockSetHabitQuantityOn(...args),
+}));
+jest.mock("../repositories/frozen-day-repository", () => ({
+	freezeHabitDay: (...args: unknown[]) => mockFreezeHabitDay(...args),
 }));
 
 import { makeHabit, makeHabitInput } from "../test-support/habit-builder";
@@ -29,6 +35,8 @@ describe("useHabitActions", () => {
 		mockDeleteAllHabits.mockReset();
 		mockCreateHabitAt.mockReset();
 		mockSetHabitCompletedOn.mockReset();
+		mockSetHabitQuantityOn.mockReset();
+		mockFreezeHabitDay.mockReset();
 	});
 
 	it("calls the repository's createHabit and reports loading state", async () => {
@@ -110,6 +118,38 @@ describe("useHabitActions", () => {
 			await inProduction(async () => {
 				const { result } = await renderHook(() => useHabitActions());
 				expect(result.current.seedStreakAtRiskHabit).toBeUndefined();
+			});
+		});
+	});
+
+	describe("seedHabitWithHistory (dev-only HAB-09 test helper)", () => {
+		it("creates a backdated quantity habit with months of entries and 2 freezes", async () => {
+			mockCreateHabitAt.mockResolvedValue(makeHabit({ id: 7 }));
+			const { result } = await renderHook(() => useHabitActions());
+
+			await act(() => result.current.seedHabitWithHistory?.());
+
+			expect(mockCreateHabitAt).toHaveBeenCalledWith(
+				expect.objectContaining({
+					name: "Glass of water",
+					targetType: "quantity",
+					targetAmount: 8,
+				}),
+				expect.any(Date),
+			);
+			expect(mockSetHabitQuantityOn.mock.calls.length).toBeGreaterThan(100);
+			expect(mockSetHabitQuantityOn).toHaveBeenCalledWith(
+				7,
+				expect.any(Date),
+				expect.any(Number),
+			);
+			expect(mockFreezeHabitDay).toHaveBeenCalledTimes(2);
+		});
+
+		it("exposes no seedHabitWithHistory outside __DEV__", async () => {
+			await inProduction(async () => {
+				const { result } = await renderHook(() => useHabitActions());
+				expect(result.current.seedHabitWithHistory).toBeUndefined();
 			});
 		});
 	});

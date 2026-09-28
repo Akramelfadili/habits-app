@@ -49,3 +49,62 @@ describe("X-per-week frequency", () => {
 		).toBe(true);
 	});
 });
+
+describe("X-per-week frequency, looking back (wasScheduledOn)", () => {
+	const scheduledDays = (completedDates: Date[]) =>
+		[0, 1, 2, 3, 4, 5, 6].map((offset) =>
+			threePerWeek.wasScheduledOn(day(offset), { completedDates }),
+		);
+
+	it("owes only the completed days once the week's target is met", () => {
+		expect(scheduledDays([day(0), day(2), day(4)])).toEqual([
+			true,
+			false,
+			true,
+			false,
+			true,
+			false,
+			false,
+		]);
+	});
+
+	it("marks only the week's last open days missed when it falls short", () => {
+		// 1 of 3 logged (Monday): Saturday and Sunday are the 2 that couldn't be covered.
+		expect(scheduledDays([day(0)])).toEqual([
+			true,
+			false,
+			false,
+			false,
+			false,
+			true,
+			true,
+		]);
+	});
+
+	it("doesn't count a later completion as open capacity", () => {
+		// Mon + Sun logged, 1 still needed: only Saturday — the last open day — is missed.
+		expect(scheduledDays([day(0), day(6)])).toEqual([
+			true,
+			false,
+			false,
+			false,
+			false,
+			true,
+			true,
+		]);
+	});
+
+	it("owes nothing early in the week while the target is still reachable", () => {
+		expect(scheduledDays([]).slice(0, 4)).toEqual([false, false, false, false]);
+		// Fri onward: 3 needed, fewer than 3 open days left after each.
+		expect(scheduledDays([]).slice(4)).toEqual([true, true, true]);
+	});
+
+	it("ignores completions from other weeks", () => {
+		expect(
+			threePerWeek.wasScheduledOn(day(6), {
+				completedDates: [day(-1), day(-2), day(-3)],
+			}),
+		).toBe(true);
+	});
+});

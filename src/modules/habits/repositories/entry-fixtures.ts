@@ -1,8 +1,10 @@
 import { format, subDays } from "date-fns";
 import type { Entry } from "../types";
+import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
 import {
 	DAY_CLOSED_DUE_TODAY_IDS,
 	type FixtureScenario,
+	HABIT_DETAIL_HISTORY_DAYS,
 } from "./habit-fixtures";
 
 /** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
@@ -40,7 +42,15 @@ export function makeEntryFixtures(
 		}));
 	}
 
-	if (scenario === "empty" || scenario === "rest-day") return [];
+	if (
+		scenario === "empty" ||
+		scenario === "rest-day" ||
+		scenario === "habit-detail-new"
+	) {
+		return [];
+	}
+
+	if (scenario === "habit-detail") return habitDetailEntries();
 
 	if (scenario === "streak-at-risk") {
 		// Day -1 (yesterday) is intentionally left uncompleted — that's the miss
@@ -67,4 +77,52 @@ export function makeEntryFixtures(
 		{ id: 1, habitId: 2, date: today, value: 20, createdAt: new Date() },
 		{ id: 2, habitId: 3, date: today, createdAt: new Date() },
 	];
+}
+
+/** The `habit-detail` scenario's current streak — docs/mockups/habit-detail.png's "24". */
+const HABIT_DETAIL_CURRENT_STREAK = 24;
+/** Its longest run (41, as in the mockup), ending this many days ago. */
+const HABIT_DETAIL_LONGEST = { days: 41, endedDaysAgo: 100 };
+
+/**
+ * ~5 months of "Glass of water" (target 8) history for Habit Detail: today
+ * partway (6 / 8, as the mockup's first entry), an unbroken 24-day run behind
+ * it, a 41-day run back in early summer, and a deterministic mix of full,
+ * partial, and missed days in between — so every heatmap shade shows. The
+ * frozen days (`frozen-day-fixtures.ts`) are left without an entry.
+ */
+function habitDetailEntries(): Entry[] {
+	const frozen = new Set<number>(HABIT_DETAIL_FROZEN_DAYS_AGO);
+	const longestEnd = HABIT_DETAIL_LONGEST.endedDaysAgo;
+	const longestStart = longestEnd + HABIT_DETAIL_LONGEST.days - 1;
+
+	function valueFor(daysAgo: number): number | null {
+		if (daysAgo === 0) return 6;
+		if (daysAgo <= HABIT_DETAIL_CURRENT_STREAK) return 8 + (daysAgo % 3);
+		// The misses that bound each run, so neither grows past its target length.
+		if (daysAgo === HABIT_DETAIL_CURRENT_STREAK + 1) return null;
+		if (daysAgo === longestEnd - 1 || daysAgo === longestStart + 1) return null;
+		if (daysAgo >= longestEnd && daysAgo <= longestStart) return 8;
+		if (frozen.has(daysAgo)) return null;
+		// Deterministic scatter: mostly full, some partial, a few misses.
+		const bucket = (daysAgo * 7) % 25;
+		if (bucket < 21) return 8 + (daysAgo % 2);
+		if (bucket < 23) return 5;
+		if (bucket < 24) return 3;
+		return null;
+	}
+
+	const entries: Entry[] = [];
+	for (let daysAgo = 0; daysAgo < HABIT_DETAIL_HISTORY_DAYS; daysAgo++) {
+		const value = valueFor(daysAgo);
+		if (value === null) continue;
+		entries.push({
+			id: entries.length + 1,
+			habitId: 1,
+			date: format(subDays(new Date(), daysAgo), "yyyy-MM-dd"),
+			value,
+			createdAt: subDays(new Date(), daysAgo),
+		});
+	}
+	return entries;
 }

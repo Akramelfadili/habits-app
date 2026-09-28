@@ -103,3 +103,21 @@ export function habitAccentTint(
 	const hue = HABIT_ACCENT_HUES[key];
 	return scheme === "light" ? oklch(0.93, 0.045, hue) : oklch(0.3, 0.085, hue);
 }
+
+/** Heatmap shading steps for a completed/partial day — level 0 is the neutral `track`, not a hue. */
+export type HeatmapLevel = 1 | 2 | 3;
+
+const HEATMAP_RAMP = {
+	light: { l: [0.88, 0.76, 0.6], c: [0.05, 0.09, 0.15] },
+	dark: { l: [0.4, 0.52, 0.66], c: [0.09, 0.12, 0.16] },
+} as const;
+
+/** One step of an accent's 3-level heatmap ramp (design-system.md). */
+export function heatmapLevelColor(
+	key: HabitAccentKey,
+	level: HeatmapLevel,
+	scheme: ColorScheme,
+): string {
+	const ramp = HEATMAP_RAMP[scheme];
+	return oklch(ramp.l[level - 1], ramp.c[level - 1], HABIT_ACCENT_HUES[key]);
+}

@@ -284,7 +284,7 @@ describe("TodayScreen", () => {
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Glass of water"));
 
-		expect(mockPush).toHaveBeenCalledWith("/habit/1");
+		expect(mockPush).toHaveBeenCalledWith("/habits/1");
 	});
 
 	it("tapping a quantity habit's row opens the Quantity Log sheet instead of toggling", async () => {
@@ -388,7 +388,7 @@ describe("TodayScreen", () => {
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Glass of water"));
 
-			expect(mockPush).toHaveBeenCalledWith("/habit/1");
+			expect(mockPush).toHaveBeenCalledWith("/habits/1");
 		});
 
 		it("Use a freeze applies it for the missed date and closes the sheet", async () => {
