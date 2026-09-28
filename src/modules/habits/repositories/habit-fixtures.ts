@@ -22,7 +22,9 @@ export type FixtureScenario =
 	| "habit-detail-new"
 	| "retro-log"
 	| "weekly-summary"
-	| "perfect-week";
+	| "perfect-week"
+	| "reminders"
+	| "reminders-at-cap";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -36,6 +38,8 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"retro-log",
 	"weekly-summary",
 	"perfect-week",
+	"reminders",
+	"reminders-at-cap",
 ];
 
 /**
@@ -441,6 +445,31 @@ function weeklySummaryFixtures(perfectWeek: boolean): Habit[] {
 	];
 }
 
+/**
+ * docs/mockups/reminders.png / reminders-at-cap.png's "Meditate" — Mon–Fri
+ * for `reminders`, so its Sat/Sun reminder shows the unscheduled-day warning;
+ * daily for `reminders-at-cap`, which shows no warning on any of its four.
+ * Matching reminders live in `reminder-fixtures.ts`.
+ */
+function remindersHabitFixtures(frequency: Habit["frequency"]): Habit[] {
+	return [
+		{
+			id: 1,
+			name: "Meditate",
+			icon: "leaf",
+			color: "purple",
+			category: "Morning",
+			direction: "build",
+			targetType: "simple",
+			targetAmount: null,
+			targetUnit: null,
+			frequency,
+			createdAt: FIXTURE_DATE,
+			updatedAt: FIXTURE_DATE,
+		},
+	];
+}
+
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 	switch (scenario) {
 		case "empty":
@@ -464,6 +493,13 @@ export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
 			return weeklySummaryFixtures(false);
 		case "perfect-week":
 			return weeklySummaryFixtures(true);
+		case "reminders":
+			return remindersHabitFixtures({
+				type: "weekdays",
+				days: [1, 2, 3, 4, 5],
+			});
+		case "reminders-at-cap":
+			return remindersHabitFixtures({ type: "daily" });
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

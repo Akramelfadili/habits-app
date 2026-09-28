@@ -50,6 +50,13 @@
 			"when": 1790613395042,
 			"tag": "0006_aspiring_boomer",
 			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "6",
+			"when": 1790617144000,
+			"tag": "0007_nebulous_nightcrawler",
+			"breakpoints": true
 		}
 	]
 }

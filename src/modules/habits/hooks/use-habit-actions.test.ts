@@ -10,9 +10,11 @@ const mockFreezeHabitDay = jest.fn();
 
 jest.mock("../repositories/habit-repository", () => ({
 	createHabit: (...args: unknown[]) => mockCreateHabit(...args),
-	updateHabit: (...args: unknown[]) => mockUpdateHabit(...args),
 	deleteAllHabits: (...args: unknown[]) => mockDeleteAllHabits(...args),
 	createHabitAt: (...args: unknown[]) => mockCreateHabitAt(...args),
+}));
+jest.mock("../services/reminder-service", () => ({
+	updateHabitAndSyncReminders: (...args: unknown[]) => mockUpdateHabit(...args),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	setHabitCompletedOn: (...args: unknown[]) => mockSetHabitCompletedOn(...args),
@@ -52,7 +54,7 @@ describe("useHabitActions", () => {
 		expect(result.current.isCreating).toBe(false);
 	});
 
-	it("calls the repository's updateHabit with the habit id and input", async () => {
+	it("saves an edit through the reminder-syncing update, with the habit id and input", async () => {
 		mockUpdateHabit.mockResolvedValue({ ...habit, name: "Read more" });
 		const { result } = await renderHook(() => useHabitActions());
 

@@ -111,3 +111,27 @@ export const entryNotes = sqliteTable(
 		unique("entry_notes_habit_date_unique").on(table.habitId, table.date),
 	],
 );
+
+/**
+ * One reminder time on a habit (HAB-12) — up to 4 per habit, each with its
+ * own weekday set and on/off toggle. Purely a notification layer: nothing
+ * here affects whether a habit is due or counts on Today.
+ */
+export const reminders = sqliteTable(
+	"reminders",
+	{
+		id: integer("id").primaryKey({ autoIncrement: true }),
+		habitId: integer("habit_id")
+			.notNull()
+			.references(() => habits.id),
+		/** 0–23, local time. */
+		hour: integer("hour").notNull(),
+		/** 0–59. */
+		minute: integer("minute").notNull(),
+		/** Comma-separated ISO weekdays ("1,2,3,4,5") — this reminder's own days, never shared. */
+		weekdays: text("weekdays").notNull(),
+		enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+	},
+	(table) => [index("reminders_habit_idx").on(table.habitId)],
+);

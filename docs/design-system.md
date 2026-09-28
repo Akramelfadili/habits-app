@@ -147,7 +147,7 @@ Each entry: layout structure, and where the primary action sits.
 
 **Retro log (HAB-10):** Bottom sheet triggered from tapping a heatmap cell — date header, list of that day's habits with their toggles/values, an optional note field at the bottom, primary "Save changes" pinned bottom.
 
-**Reminders (HAB-12):** List of independent time rows, each showing its time, its own inline weekday-chip row, and a toggle — plus a conflict warning banner inline under any time that doesn't match the habit's schedule. Below the list: "Add a time" (disabled + explanatory caption once 4/4 reached), then a separate "Evening review" toggle row, then the notification-permission banner if applicable.
+**Reminders (HAB-12):** List of independent time rows, each showing its time, its own inline weekday-chip row, and a toggle — plus a conflict warning banner inline under any time that doesn't match the habit's schedule. Below the list: "Add a time" (disabled + explanatory caption once 4/4 reached), then the notification-permission banner if applicable, then a separate "Evening review" toggle row — the banner sits directly under "Add a time", as in the Reminders mockup.
 
 **Manage & Archive (HAB-13):** Active habits list with drag handles, grouped above an "Archived" section (dimmed rows + "Restore" text action). No destructive action lives here.
 

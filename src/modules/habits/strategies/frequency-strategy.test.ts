@@ -1,5 +1,9 @@
 import type { Frequency } from "../types";
-import { getFrequencyStrategy, isHabitDueOn } from "./frequency-strategy";
+import {
+	canHabitFallOn,
+	getFrequencyStrategy,
+	isHabitDueOn,
+} from "./frequency-strategy";
 
 // 2026-09-21 is a Monday.
 const monday = new Date(2026, 8, 21, 9);
@@ -22,5 +26,12 @@ describe("frequency-strategy", () => {
 				monday,
 			),
 		).toBe(true);
+	});
+
+	it("canHabitFallOn delegates to the habit's strategy", () => {
+		expect(canHabitFallOn({ frequency: { type: "daily" } }, 6)).toBe(true);
+		expect(
+			canHabitFallOn({ frequency: { type: "weekdays", days: [1] } }, 6),
+		).toBe(false);
 	});
 });

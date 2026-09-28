@@ -1,4 +1,4 @@
-import type { Frequency, FrequencyType, Habit } from "../types";
+import type { Frequency, FrequencyType, Habit, IsoWeekday } from "../types";
 import { createDailyFrequency } from "./daily-frequency";
 import { createPerWeekFrequency } from "./per-week-frequency";
 import { createSpecificWeekdaysFrequency } from "./specific-weekdays-frequency";
@@ -19,6 +19,12 @@ export interface FrequencyStrategy {
 	 * can actually be missed (e.g. X-per-week).
 	 */
 	wasScheduledOn(date: Date, context: FrequencyContext): boolean;
+	/**
+	 * Whether the habit can ever be due on this weekday, independent of any
+	 * completion history — a reminder (HAB-12) set for a weekday where this is
+	 * false would fire for nothing, so it's flagged and never scheduled.
+	 */
+	canFallOn(weekday: IsoWeekday): boolean;
 }
 
 type StrategyFactories = {
@@ -39,6 +45,14 @@ export function getFrequencyStrategy(frequency: Frequency): FrequencyStrategy {
 		frequency: Frequency,
 	) => FrequencyStrategy;
 	return factory(frequency);
+}
+
+/** Whether `habit` can ever be due on `weekday` — see `FrequencyStrategy.canFallOn`. */
+export function canHabitFallOn(
+	habit: Pick<Habit, "frequency">,
+	weekday: IsoWeekday,
+): boolean {
+	return getFrequencyStrategy(habit.frequency).canFallOn(weekday);
 }
 
 /** Whether `habit` should ask for attention on `date`, given its completion history. */

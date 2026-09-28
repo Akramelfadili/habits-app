@@ -2,6 +2,7 @@ import { startOfDay } from "date-fns";
 import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
+import { useHabitReminders } from "../repositories/reminder-repository";
 import {
 	buildHeatmapWeeks,
 	type CompletionRate,
@@ -13,7 +14,7 @@ import {
 	type RecentEntry,
 	recentEntries,
 } from "../services/habit-history";
-import type { Habit } from "../types";
+import type { Habit, Reminder } from "../types";
 
 export type HabitDetail = {
 	habit: Habit;
@@ -26,6 +27,8 @@ export type HabitDetail = {
 	recentEntries: RecentEntry[];
 	/** Nothing has ever been logged — drives the new-habit variant's copy. */
 	hasEntries: boolean;
+	/** For the Reminders row's summary (HAB-12). */
+	reminders: Reminder[];
 	today: Date;
 };
 
@@ -41,6 +44,7 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
 	const notes = useEntryNotes();
+	const reminders = useHabitReminders(habitId);
 
 	const habit = habits.find((candidate) => candidate.id === habitId);
 	if (!habit) return null;
@@ -65,6 +69,7 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 			notes.filter((note) => note.habitId === habitId),
 		),
 		hasEntries: entries.length > 0,
+		reminders,
 		today,
 	};
 }

@@ -15,8 +15,8 @@ import {
 	createHabit,
 	createHabitAt,
 	deleteAllHabits,
-	updateHabit,
 } from "../repositories/habit-repository";
+import { updateHabitAndSyncReminders } from "../services/reminder-service";
 
 /**
  * Dev-only: creates a habit backdated 10 days, with days -2 and -3 completed
@@ -76,7 +76,9 @@ async function seedHabitWithHistory(): Promise<void> {
 
 export function useHabitActions() {
 	const create = useAsyncAction(createHabit);
-	const update = useAsyncAction(updateHabit);
+	// A schedule change moves which reminder days are real (HAB-12), so an
+	// edit re-syncs the habit's notifications along with the write.
+	const update = useAsyncAction(updateHabitAndSyncReminders);
 	const clearAll = useAsyncAction(deleteAllHabits);
 	const seedStreakAtRisk = useAsyncAction(seedStreakAtRiskHabit);
 	const seedHistory = useAsyncAction(seedHabitWithHistory);

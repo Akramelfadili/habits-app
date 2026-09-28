@@ -8,5 +8,9 @@ export function createSpecificWeekdaysFrequency(
 ): FrequencyStrategy {
 	const days = new Set<number>(frequency.days);
 	const isDueOn = (date: Date) => days.has(getISODay(date));
-	return { isDueOn, wasScheduledOn: isDueOn };
+	return {
+		isDueOn,
+		wasScheduledOn: isDueOn,
+		canFallOn: (weekday) => days.has(weekday),
+	};
 }

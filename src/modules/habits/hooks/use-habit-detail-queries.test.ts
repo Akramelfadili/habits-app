@@ -29,6 +29,9 @@ jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
 	useEntryNotes: () => mockNotes,
 }));
+jest.mock("../repositories/reminder-repository", () => ({
+	useHabitReminders: () => [],
+}));
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozenDays,
 }));

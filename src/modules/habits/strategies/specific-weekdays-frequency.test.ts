@@ -37,4 +37,13 @@ describe("specific weekdays frequency", () => {
 		);
 		expect(scheduled).toEqual([true, false, true, false, true, false, false]);
 	});
+
+	it("can fall only on its selected weekdays", () => {
+		const strategy = createSpecificWeekdaysFrequency({
+			type: "weekdays",
+			days: [1, 3, 5],
+		});
+		expect(strategy.canFallOn(3)).toBe(true);
+		expect(strategy.canFallOn(6)).toBe(false);
+	});
 });

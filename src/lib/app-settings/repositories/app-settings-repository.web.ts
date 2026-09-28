@@ -7,8 +7,11 @@ import type * as NativeAppSettingsRepository from "./app-settings-repository";
  * an in-memory store instead. Seeded as "already seen" by default so the
  * existing `today-empty` visual check still renders HAB-05's plain empty
  * state; `?fixtures=first-run` clears the seed so HAB-06 shows instead.
+ * `?fixtures=reminders-at-cap` turns the Evening review on, as
+ * docs/mockups/reminders-at-cap.png shows it (HAB-12).
  */
 const SEEN_FIRST_RUN_SEED_KEY = "habits.seenFirstRun";
+const EVENING_REVIEW_SEED_KEY = "habits.eveningReview";
 
 function initialSettings(): Map<string, string> {
 	const search = globalThis.location?.search ?? "";
@@ -16,6 +19,9 @@ function initialSettings(): Map<string, string> {
 	const settings = new Map<string, string>();
 	if (scenario !== "first-run") {
 		settings.set(SEEN_FIRST_RUN_SEED_KEY, "true");
+	}
+	if (scenario === "reminders-at-cap") {
+		settings.set(EVENING_REVIEW_SEED_KEY, "true");
 	}
 	return settings;
 }

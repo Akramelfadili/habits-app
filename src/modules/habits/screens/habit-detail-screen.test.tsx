@@ -8,6 +8,10 @@ jest.mock("expo-symbols", () => {
 	return { SymbolView: View };
 });
 jest.mock("../repositories/frozen-day-repository", () => ({}));
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({
+	useRouter: () => ({ push: mockPush }),
+}));
 
 const today = new Date(2026, 8, 23, 12);
 let mockDetail: HabitDetail | null = null;
@@ -86,6 +90,7 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 			},
 		],
 		hasEntries: true,
+		reminders: [],
 		today,
 		...overrides,
 	};
@@ -210,6 +215,34 @@ describe("HabitDetailScreen", () => {
 
 			expect(mockSaveDay).not.toHaveBeenCalled();
 			expect(screen.queryByText("Save changes")).toBeNull();
+		});
+	});
+
+	describe("Reminders row (HAB-12)", () => {
+		it("summarizes the habit's reminders and opens the Reminders screen", async () => {
+			mockDetail = detail({
+				reminders: [
+					{
+						id: 1,
+						habitId: 1,
+						hour: 7,
+						minute: 20,
+						weekdays: [1, 2, 3, 4, 5],
+						enabled: true,
+					},
+				],
+			});
+			await render(<HabitDetailScreen habitId={1} />);
+
+			expect(screen.getByText("1 on · 07:20")).toBeTruthy();
+			await fireEvent.press(screen.getByText("Reminders"));
+			expect(mockPush).toHaveBeenCalledWith("/habits/reminders/1");
+		});
+
+		it("says so when none are set", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			expect(screen.getByText("None set")).toBeTruthy();
 		});
 	});
 });

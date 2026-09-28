@@ -28,6 +28,8 @@ export function createPerWeekFrequency(
 	frequency: Extract<Frequency, { type: "per-week" }>,
 ): FrequencyStrategy {
 	return {
+		// Any day of the week can be one of the X — which ones is up to the user.
+		canFallOn: () => true,
 		isDueOn: (date, { completedDates }) => {
 			const dayStart = startOfDay(date);
 			const completedEarlierThisWeek = completedDates.filter(

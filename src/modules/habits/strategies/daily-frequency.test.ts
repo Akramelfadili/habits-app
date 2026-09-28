@@ -18,4 +18,11 @@ describe("daily frequency", () => {
 			strategy.wasScheduledOn(new Date(2026, 8, 21), { completedDates: [] }),
 		).toBe(true);
 	});
+
+	it("can fall on any weekday", () => {
+		const strategy = createDailyFrequency({ type: "daily" });
+		for (const weekday of [1, 2, 3, 4, 5, 6, 7] as const) {
+			expect(strategy.canFallOn(weekday)).toBe(true);
+		}
+	});
 });
