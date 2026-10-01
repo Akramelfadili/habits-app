@@ -114,6 +114,22 @@ describe("RemindersScreen", () => {
 		});
 	});
 
+	it("keeps an opened card open when a day change gives it a conflict, so its warning shows", async () => {
+		const view = await render(<RemindersScreen habitId={1} />);
+		await fireEvent.press(screen.getByLabelText("Reminder at 07:00, Weekdays"));
+
+		// The edit lands: 07:00 now includes Saturday, an unscheduled day.
+		mockData = data({
+			reminders: [
+				reminder(1, 7, [1, 2, 3, 4, 5, 6], { unscheduledDays: [6] }),
+				reminder(2, 21, [6, 7], { unscheduledDays: [6, 7] }),
+			],
+		});
+		await view.rerender(<RemindersScreen habitId={1} />);
+
+		expect(screen.getByText(/^Saturday is not a scheduled day/)).toBeTruthy();
+	});
+
 	it("toggles one reminder independently", async () => {
 		await render(<RemindersScreen habitId={1} />);
 		await fireEvent(

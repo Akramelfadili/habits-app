@@ -45,3 +45,6 @@ example
 
 # visual-check screenshots (scripts/visual-check.mjs)
 .visual-checks/
+
+# Maestro journey output (scripts/e2e.mjs)
+.e2e-output/

@@ -2,6 +2,7 @@ import {
 	addDays,
 	endOfWeek,
 	format,
+	getISODay,
 	isAfter,
 	isBefore,
 	isSameDay,
@@ -9,6 +10,7 @@ import {
 	parseISO,
 	startOfDay,
 	startOfWeek,
+	subWeeks,
 } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
@@ -24,7 +26,8 @@ import { isEntryComplete } from "./habit-service";
  *
  * Counts run up to today only: future days aren't owed yet, and today joins
  * once it's logged (same rule as Habit Detail's 90-day rate). Mid-week, a
- * habit is judged on the days that have actually happened.
+ * habit is judged on the days that have actually happened; a finished week
+ * (last week) counts all seven.
  */
 
 const DATE_FORMAT = "yyyy-MM-dd";
@@ -40,6 +43,25 @@ export function weekWindowFor(today: Date): WeekWindow {
 		start: startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON }),
 		end: startOfDay(endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON })),
 	};
+}
+
+export type SummaryWeek = "this" | "last";
+
+/**
+ * The first ISO weekday (Wednesday) the summary opens on this week. Before
+ * it, this week has at most two days in it — nothing can have been due three
+ * times — so the summary opens on the week that just finished instead: the
+ * Sunday-night/Monday-morning review is exactly when people look.
+ */
+export const THIS_WEEK_FROM_ISO_DAY = 3;
+
+export function defaultSummaryWeek(today: Date): SummaryWeek {
+	return getISODay(today) < THIS_WEEK_FROM_ISO_DAY ? "last" : "this";
+}
+
+/** The Mon–Sun window `which` refers to, relative to `today`. */
+export function summaryWeekWindow(today: Date, which: SummaryWeek): WeekWindow {
+	return weekWindowFor(which === "last" ? subWeeks(today, 1) : today);
 }
 
 export type WeeklyHabitRow = {
@@ -76,9 +98,11 @@ export type WeeklySummary = {
 
 type WeeklySummaryInput = {
 	habits: readonly Habit[];
-	/** This week's entries, any habit. */
+	/** The summarised week's entries, any habit. */
 	entries: readonly Entry[];
 	today: Date;
+	/** Which week to summarise — defaults to the one containing `today`. */
+	week?: SummaryWeek;
 };
 
 function byCreationOrder(a: Habit, b: Habit): number {
@@ -89,9 +113,10 @@ export function buildWeeklySummary({
 	habits,
 	entries,
 	today,
+	week: which = "this",
 }: WeeklySummaryInput): WeeklySummary {
 	const todayStart = startOfDay(today);
-	const week = weekWindowFor(todayStart);
+	const week = summaryWeekWindow(todayStart, which);
 	const lastCountedDay = min([todayStart, week.end]);
 	const perDay = new Map<string, { completed: number; scheduled: number }>();
 	const rows: WeeklyHabitRow[] = [];
@@ -174,14 +199,23 @@ function bestDayOf(
 	return best;
 }
 
-/** The single worst eligible habit — `rows` is already worst-first, ties in creation order. */
+/**
+ * One verdict for the week, behind one gate: until some habit has been due
+ * SLIPPING_MIN_SCHEDULED_DAYS times, it's too early to call *either way* — a
+ * single perfect Monday isn't a perfect week any more than one missed Monday
+ * is a slipping habit. Past the gate: perfect if everything's done, otherwise
+ * the single worst eligible habit (`rows` is already worst-first, ties in
+ * creation order).
+ */
 function insightFor(
 	rows: readonly WeeklyHabitRow[],
 	isPerfect: boolean,
 ): WeeklyInsight {
-	if (isPerfect) return { type: "perfect" };
-	const worst = rows.find(
-		(row) => row.scheduled >= SLIPPING_MIN_SCHEDULED_DAYS && row.fraction < 1,
+	const eligible = rows.filter(
+		(row) => row.scheduled >= SLIPPING_MIN_SCHEDULED_DAYS,
 	);
+	if (eligible.length === 0) return { type: "too-early" };
+	if (isPerfect) return { type: "perfect" };
+	const worst = eligible.find((row) => row.fraction < 1);
 	return worst ? { type: "slipping", row: worst } : { type: "too-early" };
 }

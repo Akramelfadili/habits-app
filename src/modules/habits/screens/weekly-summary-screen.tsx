@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { InsightCard } from "@/components/ui/composite/insight-card";
@@ -7,11 +8,16 @@ import { SectionHeader } from "@/components/ui/composite/section-header";
 import { StatCard } from "@/components/ui/composite/stat-card";
 import { Caption } from "@/components/ui/primitives/caption";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
+import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useWeeklySummaryQueries } from "../hooks/use-weekly-summary-queries";
-import type { WeeklyInsight } from "../services/weekly-summary";
+import {
+	defaultSummaryWeek,
+	type SummaryWeek,
+	type WeeklyInsight,
+} from "../services/weekly-summary";
 import {
 	bestDayTile,
 	slippingBody,
@@ -21,21 +27,39 @@ import {
 } from "./weekly-summary-helpers";
 
 /**
- * Weekly Summary (HAB-11): week range header → Completed / Best day tiles →
- * per-habit bars, worst first → one insight card (slipping habit, perfect
- * week, or too early to call — the slot is never empty).
+ * Weekly Summary (HAB-11): week range header with a Last week / This week
+ * switch → Completed / Best day tiles → per-habit bars, worst first → one
+ * insight card (slipping habit, perfect week, or too early to call — the slot
+ * is never empty). Opens on last week early in the week, when this one has
+ * too little in it to say anything (`defaultSummaryWeek`).
  */
 export function WeeklySummaryScreen() {
 	const router = useRouter();
 	const { colors } = useTheme();
-	const summary = useWeeklySummaryQueries();
+	const [which, setWhich] = useState<SummaryWeek>(() =>
+		defaultSummaryWeek(new Date()),
+	);
+	const summary = useWeeklySummaryQueries(which);
 	const { week, completed, scheduled, rows, bestDay, isPerfect, insight } =
 		summary;
 
 	const header = (
 		<View style={styles.header}>
 			<SectionLabel>{weekRangeLabel(week)}</SectionLabel>
-			<Text style={[styles.title, { color: colors.ink }]}>Your week</Text>
+			<View style={styles.titleRow}>
+				<Text style={[styles.title, { color: colors.ink }]}>Your week</Text>
+				{summary.hasHabits ? (
+					<SegmentedControl
+						size="compact"
+						options={[
+							{ value: "last", label: "Last week" },
+							{ value: "this", label: "This week" },
+						]}
+						value={which}
+						onChange={setWhich}
+					/>
+				) : null}
+			</View>
 		</View>
 	);
 
@@ -91,23 +115,31 @@ export function WeeklySummaryScreen() {
 						/>
 					))
 				) : (
-					<Caption>Nothing has been due yet this week.</Caption>
+					<Caption>{`Nothing has been due yet ${weekPhrase(which)}.`}</Caption>
 				)}
 			</Container>
 
 			<Insight
 				insight={insight}
+				which={which}
 				onReschedule={(habitId) => router.push(`/edit-habit/${habitId}`)}
 			/>
 		</ScrollView>
 	);
 }
 
+/** "this week" / "last week" — for copy that names the week being shown. */
+function weekPhrase(which: SummaryWeek): string {
+	return which === "last" ? "last week" : "this week";
+}
+
 function Insight({
 	insight,
+	which,
 	onReschedule,
 }: {
 	insight: WeeklyInsight;
+	which: SummaryWeek;
 	onReschedule: (habitId: number) => void;
 }) {
 	switch (insight.type) {
@@ -130,7 +162,7 @@ function Insight({
 					tone="success"
 					symbol="checkmark"
 					title="Perfect week"
-					body="Every habit, every scheduled day. Nothing to fix this week."
+					body={`Every habit, every scheduled day. Nothing to fix ${weekPhrase(which)}.`}
 				/>
 			);
 		default:
@@ -138,7 +170,7 @@ function Insight({
 				<InsightCard
 					symbol="clock"
 					title="Too early to call"
-					body="No habit has been due three times yet this week."
+					body={`No habit has been due three times yet ${weekPhrase(which)}.`}
 				/>
 			);
 	}
@@ -160,6 +192,12 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		gap: 4,
+	},
+	titleRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		gap: 12,
 	},
 	title: {
 		fontSize: typeScale.screenTitle,

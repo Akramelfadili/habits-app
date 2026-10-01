@@ -8,13 +8,20 @@ export function manageRowSubtitle(habit: Habit): string {
 	return `${habit.category ?? NO_CATEGORY_LABEL} · ${frequencyLabel(habit.frequency)}`;
 }
 
-/** "Archived 2 Sep · 41 logs kept". */
+/**
+ * "2 Sep · 41 days logged" ("nothing logged" for a habit with no history).
+ * No "Archived" prefix — the row already sits under the "Archived · N"
+ * heading, and the repeat made it wrap beside Restore.
+ */
 export function archivedRowSubtitle(
 	archivedAt: Date,
 	logsKept: number,
 ): string {
-	const logs = `${logsKept} ${logsKept === 1 ? "log" : "logs"} kept`;
-	return `Archived ${format(archivedAt, "d MMM")} · ${logs}`;
+	const logs =
+		logsKept === 0
+			? "nothing logged"
+			: `${logsKept} ${logsKept === 1 ? "day" : "days"} logged`;
+	return `${format(archivedAt, "d MMM")} · ${logs}`;
 }
 
 /** "Archived · 2". */
@@ -23,4 +30,4 @@ export function archivedSectionTitle(count: number): string {
 }
 
 export const MANAGE_FOOTNOTE =
-	"Archiving keeps every past log and streak. Deleting is only offered from the habit detail screen.";
+	"Archiving keeps every logged day and streak. Deleting is only offered from the habit detail screen.";

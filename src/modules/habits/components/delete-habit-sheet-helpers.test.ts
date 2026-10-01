@@ -9,12 +9,12 @@ describe("delete-habit-sheet-helpers", () => {
 		expect(deleteHeadline("Glass of water")).toBe("Delete “Glass of water”?");
 	});
 
-	it("spells out how many logged days go with it", () => {
+	it("spells out how many days logged go with it", () => {
 		expect(deleteConsequence(218)).toBe(
-			"This removes the habit and all 218 logged days permanently. It cannot be undone.",
+			"This removes the habit and all 218 days logged permanently. It cannot be undone.",
 		);
 		expect(deleteConsequence(1)).toBe(
-			"This removes the habit and its 1 logged day permanently. It cannot be undone.",
+			"This removes the habit and its 1 day logged permanently. It cannot be undone.",
 		);
 		expect(deleteConsequence(0)).toBe(
 			"This removes the habit permanently. It cannot be undone.",
@@ -23,10 +23,10 @@ describe("delete-habit-sheet-helpers", () => {
 
 	it("mentions the streak archiving would keep, when there is one", () => {
 		expect(archiveInsteadBody(24)).toBe(
-			"Hides it from Today, keeps every log and the 24-day streak. Reversible any time.",
+			"Hides it from Today, keeps every logged day and the 24-day streak. Reversible any time.",
 		);
 		expect(archiveInsteadBody(0)).toBe(
-			"Hides it from Today, keeps every log. Reversible any time.",
+			"Hides it from Today, keeps every logged day. Reversible any time.",
 		);
 	});
 });

@@ -34,10 +34,12 @@ export type FixtureScenario =
 	| "first-run"
 	| "quantity-log"
 	| "streak-at-risk"
+	| "no-freezes"
 	| "habit-detail"
 	| "habit-detail-new"
 	| "retro-log"
 	| "weekly-summary"
+	| "weekly-summary-last-week"
 	| "perfect-week"
 	| "reminders"
 	| "reminders-at-cap"
@@ -50,10 +52,12 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"first-run",
 	"quantity-log",
 	"streak-at-risk",
+	"no-freezes",
 	"habit-detail",
 	"habit-detail-new",
 	"retro-log",
 	"weekly-summary",
+	"weekly-summary-last-week",
 	"perfect-week",
 	"reminders",
 	"reminders-at-cap",
@@ -289,6 +293,44 @@ export const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
 		name: "Meditate",
 		icon: "leaf",
 		color: "purple",
+		category: "Morning",
+		direction: "build",
+		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
+		frequency: { type: "daily" },
+		createdAt: STREAK_AT_RISK_HABIT_CREATED,
+		updatedAt: STREAK_AT_RISK_HABIT_CREATED,
+	},
+];
+
+/**
+ * docs/mockups/streak-reset-no-freezes.png's "Meditate · Morning · 10 min ·
+ * daily" — a 24-day run that ended two days ago, yesterday missed, today
+ * done (current 1). "Glass of water" is only there to own the two frozen
+ * days (`frozen-day-fixtures.ts`) that empty this month's shared pool, so
+ * the miss resets the streak with no prompt (HAB-08).
+ */
+export const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
+	{
+		id: 1,
+		name: "Meditate",
+		icon: "leaf",
+		color: "purple",
+		category: "Morning",
+		direction: "build",
+		targetType: "quantity",
+		targetAmount: 10,
+		targetUnit: "min",
+		frequency: { type: "daily" },
+		createdAt: STREAK_AT_RISK_HABIT_CREATED,
+		updatedAt: STREAK_AT_RISK_HABIT_CREATED,
+	},
+	{
+		id: 2,
+		name: "Glass of water",
+		icon: "drop",
+		color: "blue",
 		category: "Morning",
 		direction: "build",
 		targetType: "simple",
@@ -591,6 +633,8 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return QUANTITY_LOG_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "streak-at-risk":
 			return STREAK_AT_RISK_HABIT_FIXTURES.map((habit) => ({ ...habit }));
+		case "no-freezes":
+			return NO_FREEZES_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "habit-detail":
 			return habitDetailFixtures();
 		case "habit-detail-new":
@@ -598,6 +642,7 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 		case "retro-log":
 			return retroLogFixtures();
 		case "weekly-summary":
+		case "weekly-summary-last-week":
 			return weeklySummaryFixtures(false);
 		case "perfect-week":
 			return weeklySummaryFixtures(true);

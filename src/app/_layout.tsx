@@ -4,8 +4,12 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useModalFormHeaderOptions } from "@/components/ui/composite/modal-form-header";
 import { DatabaseProvider } from "@/lib/db/database-provider";
+import { pinClockFromUrl } from "@/lib/dev-clock/pin-clock";
 import { configureNotificationHandler } from "@/lib/notifications/notifications";
 import { useTheme } from "@/theme/use-theme";
+
+// Web fixture runs only (`?clock=`, dev) — before any screen reads "now".
+pinClockFromUrl();
 
 // Once, before anything can schedule — lets reminders (HAB-12) show while the app is open.
 configureNotificationHandler();

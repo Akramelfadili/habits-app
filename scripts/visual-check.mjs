@@ -1,194 +1,77 @@
 #!/usr/bin/env node
 /**
- * Screenshots app screens on the web target so UI can be compared against
- * docs/mockups/ without a phone. Web swaps repositories for in-memory fixtures
- * (see `*.web.ts` in modules' repositories/), so screens render realistic data.
+ * Renders every screen and state on the web target (in-memory fixtures, see
+ * `*.web.ts` in the repositories/) in one run, diffs each against its approved
+ * baseline, and writes one report putting mockup, current render, baseline
+ * and diff side by side for every state across all features.
  *
- *   node scripts/visual-check.mjs                 # all screens
- *   node scripts/visual-check.mjs new-habit       # one (or several) screens
- *   node scripts/visual-check.mjs --list          # show screen names + mockups
+ *   npm run visual-check                          # every state, diff + report
+ *   npm run visual-check -- new-habit reminders   # just these
+ *   npm run visual-check -- --update-baseline     # accept current renders
+ *   npm run visual-check -- --list                # state names + mockups
+ *
+ * Two different comparisons, on purpose:
+ * - **Baseline (automated, pass/fail).** docs/visual-baseline/<state>.png is
+ *   the last render someone looked at and approved. Any state that drifts
+ *   from it fails the run — so a shared component change (the Container fix
+ *   in HAB-12, say) surfaces on every screen it touched, not only on the one
+ *   feature it was made for. Intended changes: review them in the report,
+ *   then `--update-baseline` and commit the new PNGs with the change.
+ * - **Mockup (by eye, in the report).** docs/mockups/ are design drawings —
+ *   device frame, SF Symbols, SF Pro — so a pixel diff against them is
+ *   meaningless. The report puts each one next to its render instead.
  *
  * Reuses a dev server already running at VISUAL_CHECK_URL (default
  * http://localhost:8081); otherwise starts `npx expo start --web` and stops it
- * afterwards. Screenshots land in .visual-checks/<screen>.png (gitignored).
+ * afterwards. Output lands in .visual-checks/ (gitignored): current/, diff/,
+ * report.html.
  */
-import { spawn } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import pixelmatch from "pixelmatch";
+import { PNG } from "pngjs";
+import {
+	BASE_URL,
+	ensureServer,
+	libraryPath,
+	ROOT,
+	stopServer,
+	warmBundle,
+} from "./lib/dev-server.mjs";
+import { DEFAULT_CLOCK, SCREENS } from "./visual-check/screens.mjs";
 
-const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.join(ROOT, ".visual-checks");
-const BASE_URL = process.env.VISUAL_CHECK_URL ?? "http://localhost:8081";
-
-/** Screen name → route (with fixture query) and the mockup it's checked against. */
-const SCREENS = {
-	today: {
-		route: "/habits",
-		mockup: "docs/mockups/today-populated.png",
-	},
-	"today-empty": {
-		route: "/habits?fixtures=empty",
-		mockup: "docs/mockups/today-empty-state.png",
-	},
-	"first-run": {
-		route: "/habits?fixtures=first-run",
-		mockup: "docs/mockups/first-run.png",
-	},
-	"today-rest-day": {
-		route: "/habits?fixtures=rest-day",
-		mockup: "docs/mockups/rest-day.png",
-	},
-	"today-day-closed": {
-		route: "/habits?fixtures=day-closed",
-		mockup: "docs/mockups/day-closed.png",
-	},
-	"new-habit": {
-		route: "/new-habit",
-		mockup: "docs/mockups/new-habit-form.png",
-	},
-	"edit-habit": {
-		route: "/edit-habit/1",
-		mockup: "docs/mockups/new-habit-form.png",
-		note: "Mockup shows create mode; edit mode should match except Direction is locked.",
-	},
-	"quantity-log": {
-		route: "/habits?fixtures=quantity-log",
-		mockup: "docs/mockups/quantity-log.png",
-		note: "Sheet is opened by simulating the tap the mockup can't capture from a static route load.",
-		async interact(page) {
-			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
-		},
-	},
-	"streak-at-risk": {
-		route: "/habits?fixtures=streak-at-risk",
-		mockup: "docs/mockups/streak-at-risk.png",
-		note: "Sheet is opened by tapping the at-risk habit's row, same as a real 'open this habit' interaction.",
-		async interact(page) {
-			await page.getByText("Meditate").click();
-		},
-	},
-	"habit-detail": {
-		route: "/habits/1?fixtures=habit-detail",
-		mockup: "docs/mockups/habit-detail.png",
-	},
-	"retro-log": {
-		route: "/habits/1?fixtures=retro-log",
-		mockup: "docs/mockups/retro-log .png",
-		note: "Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
-		async interact(page) {
-			const day = new Date();
-			day.setDate(day.getDate() - 3);
-			const weekday = day.toLocaleDateString("en-GB", { weekday: "long" });
-			const month = day.toLocaleDateString("en-GB", { month: "long" });
-			await page
-				.getByLabel(`${weekday} ${day.getDate()} ${month}, logged`)
-				.click();
-		},
-	},
-	"habit-detail-new": {
-		route: "/habits/1?fixtures=habit-detail-new",
-		mockup: "docs/mockups/habit-detail-new.png",
-	},
-	"weekly-summary": {
-		route: "/habits/week?fixtures=weekly-summary",
-		mockup: "docs/mockups/weekly-summary.png",
-		// The summary counts up to today only, so pin "now" to the end of a
-		// week — otherwise a Monday run would show an empty week.
-		clock: "2026-09-20T20:00:00",
-		note: "Clock pinned to Sun 20 Sep evening. Mockup's '34 of 42' tile disagrees with its own bars (29).",
-	},
-	"weekly-summary-perfect": {
-		route: "/habits/week?fixtures=perfect-week",
-		mockup: "docs/mockups/perfect-week.png",
-		clock: "2026-09-13T20:00:00",
-		note: "Clock pinned to Sun 13 Sep evening. Mockup's '42 of 42' tile disagrees with its own 5/5 and 3/3 bars (36).",
-	},
-	reminders: {
-		route: "/habits/reminders/1?fixtures=reminders",
-		mockup: "docs/mockups/reminders.png",
-		note: "Cards start collapsed except a conflicting one (21:00); the other two are tapped open to match the mockup. Permission reads as denied in this scenario.",
-		async interact(page) {
-			await page.getByLabel("Reminder at 07:20, Weekdays").click();
-			await page.getByLabel("Reminder at 13:00, Mon, Wed, Fri").click();
-		},
-	},
-	"reminders-at-cap": {
-		route: "/habits/reminders/1?fixtures=reminders-at-cap",
-		mockup: "docs/mockups/reminders-at-cap.png",
-	},
-	"manage-habits": {
-		route: "/habits/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/manage-archive.png",
-		note: "Mockup's highlighted first row is the mid-drag (lifted) state, and it stacks both toasts to show them; a static load shows neither.",
-	},
-	"delete-confirm": {
-		route: "/habits/1?fixtures=habit-detail",
-		mockup: "docs/mockups/delete-confirm.png",
-		note: "Sheet is opened by tapping 'Delete habit' at the bottom of Habit Detail.",
-		async interact(page) {
-			await page.getByText("Delete habit").click();
-		},
-	},
-};
+const CURRENT_DIR = path.join(OUT_DIR, "current");
+const DIFF_DIR = path.join(OUT_DIR, "diff");
+const BASELINE_DIR = path.join(ROOT, "docs/visual-baseline");
+const REPORT = path.join(OUT_DIR, "report.html");
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.
 const VIEWPORT = { width: 393, height: 852 };
+const CONCURRENCY = 4;
 
-// Chromium's system deps unpacked without root (no sudo in WSL here) — see
-// the visual-check notes in .claude/skills/implement-feature/SKILL.md.
-const EXTRA_LIBS = path.join(
-	os.homedir(),
-	".cache/ms-playwright/extra-libs/usr/lib/x86_64-linux-gnu",
-);
-
-async function isServerUp() {
-	try {
-		const res = await fetch(BASE_URL, { signal: AbortSignal.timeout(3000) });
-		return res.ok;
-	} catch {
-		return false;
-	}
-}
-
-async function ensureServer() {
-	if (await isServerUp()) {
-		console.log(`Using dev server already running at ${BASE_URL}`);
-		return null;
-	}
-
-	const port = new URL(BASE_URL).port || "8081";
-	console.log(`Starting npx expo start --web on port ${port}…`);
-	const child = spawn("npx", ["expo", "start", "--web", "--port", port], {
-		cwd: ROOT,
-		env: { ...process.env, CI: "1", BROWSER: "none" },
-		stdio: "ignore",
-		detached: true,
-	});
-
-	const deadline = Date.now() + 180_000;
-	while (Date.now() < deadline) {
-		if (await isServerUp()) return child;
-		await new Promise((resolve) => setTimeout(resolve, 2000));
-	}
-	stopServer(child);
-	throw new Error(`Dev server didn't come up at ${BASE_URL} within 3 minutes`);
-}
-
-function stopServer(child) {
-	if (!child) return;
-	try {
-		process.kill(-child.pid);
-	} catch {
-		// already exited
-	}
-}
+/**
+ * Per-pixel colour tolerance (pixelmatch's 0–1 scale). Deliberately far below
+ * pixelmatch's 0.1 default: cards are white on a #F4F3F1 background, a ~4%
+ * contrast step the default treats as "same colour" — so a card's radius or
+ * padding could change without a single pixel counting. Repeat renders are
+ * pixel-identical, so there's no noise to absorb here.
+ */
+const PIXEL_THRESHOLD = 0.02;
+/**
+ * Differing pixels a state may have and still pass. Repeat runs of an
+ * unchanged app diff at exactly 0; the smallest real change seen (one card's
+ * corner radius, 16 → 12, on the retro-log sheet) was 127px.
+ */
+const MAX_DIFF_PIXELS = 10;
 
 async function capture(browser, name, screen) {
+	const clock = screen.clock ?? DEFAULT_CLOCK;
 	const page = await browser.newPage({
 		viewport: VIEWPORT,
 		deviceScaleFactor: 2,
 		colorScheme: "light",
+		hasTouch: Boolean(screen.touch),
 	});
 	const problems = [];
 	page.on("pageerror", (err) => problems.push(`pageerror: ${err.message}`));
@@ -196,38 +79,180 @@ async function capture(browser, name, screen) {
 		if (msg.type() === "error") problems.push(`console.error: ${msg.text()}`);
 	});
 
-	// A screen whose content depends on the current date (e.g. the weekly
-	// summary) pins the page's clock, local time, before anything loads.
-	if (screen.clock) await page.clock.setFixedTime(new Date(screen.clock));
+	try {
+		// Pin the page's clock (local time) before anything loads — fixtures and
+		// screens compute "today" from it.
+		await page.clock.setFixedTime(new Date(clock));
 
-	// The first hit on a route can wait on a Metro bundle, hence the long timeout.
-	await page.goto(`${BASE_URL}${screen.route}`, {
-		waitUntil: "networkidle",
-		timeout: 180_000,
-	});
-	await page.waitForFunction(
-		() => document.querySelector("#root")?.childElementCount > 0,
-	);
-	await page.evaluate(() => document.fonts.ready);
-	// Let hydration + fixture-driven re-renders and screen transitions settle.
-	await page.waitForTimeout(800);
+		// The first hit on a route can wait on a Metro bundle, hence the long timeout.
+		await page.goto(`${BASE_URL}${screen.route}`, {
+			waitUntil: "networkidle",
+			timeout: 180_000,
+		});
+		await page.waitForFunction(
+			() => document.querySelector("#root")?.childElementCount > 0,
+		);
+		await page.evaluate(() => document.fonts.ready);
+		// Let hydration + fixture-driven re-renders and screen transitions settle.
+		await page.waitForTimeout(800);
 
-	// A screen that's only reachable by tapping into it (e.g. a bottom sheet) —
-	// a static route load can't show that state, so simulate the tap first.
-	if (screen.interact) {
-		await screen.interact(page);
-		await page.waitForTimeout(400);
+		// A state only reachable by a tap or gesture (a sheet, a toast, a
+		// mid-drag row) — a static route load can't show it, so simulate it.
+		if (screen.interact) {
+			await screen.interact(page, { clock });
+			await page.waitForTimeout(500);
+		}
+
+		await page.screenshot({
+			path: path.join(CURRENT_DIR, `${name}.png`),
+			caret: "hide",
+			animations: "disabled",
+		});
+	} catch (err) {
+		problems.push(`capture failed: ${err.message.split("\n")[0]}`);
+	} finally {
+		await page.close();
 	}
+	return problems;
+}
 
-	const file = path.join(OUT_DIR, `${name}.png`);
-	await page.screenshot({ path: file });
-	await page.close();
+function readPng(file) {
+	return PNG.sync.read(fs.readFileSync(file));
+}
 
-	console.log(`\n${name}  →  ${path.relative(ROOT, file)}`);
-	console.log(`  mockup: ${screen.mockup ?? "(none)"}`);
-	if (screen.note) console.log(`  note:   ${screen.note}`);
-	for (const problem of problems) console.log(`  ${problem}`);
-	return problems.length === 0;
+/** Compares a state's current render with its baseline; writes a diff image when they differ. */
+function compare(name) {
+	const current = path.join(CURRENT_DIR, `${name}.png`);
+	const baseline = path.join(BASELINE_DIR, `${name}.png`);
+	if (!fs.existsSync(current)) return { status: "error" };
+	if (!fs.existsSync(baseline)) return { status: "new" };
+
+	const a = readPng(baseline);
+	const b = readPng(current);
+	if (a.width !== b.width || a.height !== b.height) {
+		return {
+			status: "changed",
+			detail: `size ${a.width}×${a.height} → ${b.width}×${b.height}`,
+		};
+	}
+	const diff = new PNG({ width: a.width, height: a.height });
+	const pixels = pixelmatch(a.data, b.data, diff.data, a.width, a.height, {
+		threshold: PIXEL_THRESHOLD,
+	});
+	if (pixels <= MAX_DIFF_PIXELS) return { status: "same", pixels };
+	fs.writeFileSync(path.join(DIFF_DIR, `${name}.png`), PNG.sync.write(diff));
+	const percent = ((pixels / (a.width * a.height)) * 100).toFixed(2);
+	return {
+		status: "changed",
+		pixels,
+		detail: `${pixels} px differ (${percent}%)`,
+	};
+}
+
+async function runPool(items, worker) {
+	const queue = [...items];
+	await Promise.all(
+		Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+			while (queue.length > 0) await worker(queue.shift());
+		}),
+	);
+}
+
+function escapeHtml(text) {
+	return String(text)
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;");
+}
+
+/** Relative URL from the report to a repo file (handles "retro-log .png"). */
+function fromReport(file) {
+	return path
+		.relative(OUT_DIR, file)
+		.split(path.sep)
+		.map(encodeURIComponent)
+		.join("/");
+}
+
+function writeReport(results) {
+	const label = {
+		same: "matches baseline",
+		changed: "changed",
+		new: "no baseline",
+		error: "failed",
+	};
+	const counts = Object.groupBy(results, (result) => result.status);
+	const cell = (file, caption) =>
+		file && fs.existsSync(file)
+			? `<figure><a href="${fromReport(file)}"><img loading="lazy" src="${fromReport(file)}" alt="${escapeHtml(caption)}"></a><figcaption>${escapeHtml(caption)}</figcaption></figure>`
+			: `<figure class="empty"><div>—</div><figcaption>${escapeHtml(caption)}</figcaption></figure>`;
+
+	const groups = Object.groupBy(results, (result) => result.screen.feature);
+	const sections = Object.entries(groups)
+		.map(
+			([feature, items]) => `
+<section><h2>${escapeHtml(feature)}</h2>
+${items
+	.map(
+		({ name, screen, status, detail, problems }) => `
+<article class="${status}">
+  <header><h3>${escapeHtml(name)}</h3><span class="badge">${label[status]}</span>
+  ${detail ? `<span class="detail">${escapeHtml(detail)}</span>` : ""}</header>
+  <p class="meta"><code>${escapeHtml(screen.route)}</code> · clock ${escapeHtml(screen.clock ?? DEFAULT_CLOCK)}${screen.note ? ` — ${escapeHtml(screen.note)}` : ""}</p>
+  ${problems.length ? `<ul class="problems">${problems.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ul>` : ""}
+  <div class="row">
+    ${cell(screen.mockup && path.join(ROOT, screen.mockup), screen.mockup ? `Mockup · ${path.basename(screen.mockup)}` : "No mockup for this state")}
+    ${cell(path.join(CURRENT_DIR, `${name}.png`), "Current")}
+    ${cell(path.join(BASELINE_DIR, `${name}.png`), "Baseline")}
+    ${status === "changed" ? cell(path.join(DIFF_DIR, `${name}.png`), "Diff (red = changed)") : ""}
+  </div>
+</article>`,
+	)
+	.join("")}
+</section>`,
+		)
+		.join("");
+
+	const summary = Object.entries(label)
+		.filter(([status]) => counts[status])
+		.map(
+			([status, text]) =>
+				`<span class="badge ${status}">${counts[status].length} ${text}</span>`,
+		)
+		.join(" ");
+
+	fs.writeFileSync(
+		REPORT,
+		`<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Visual check</title>
+<style>
+  :root { --bg:#f4f3f1; --card:#fff; --ink:#1b1b1a; --sub:#6b6a66; --line:#e2e1de; --ok:#1f7a4a; --warn:#a15c00; --bad:#b3261e; }
+  body { margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui,sans-serif; }
+  h1 { font-size:22px; margin:0 0 8px; } h2 { font-size:16px; margin:32px 0 12px; }
+  h3 { font-size:15px; margin:0; }
+  article { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
+  article.changed, article.error { border-color:var(--bad); } article.new { border-color:var(--warn); }
+  header { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:999px; background:var(--line); }
+  .same .badge, .badge.same { background:#dcefe3; color:var(--ok); }
+  .changed .badge, .error .badge, .badge.changed, .badge.error { background:#f7dcda; color:var(--bad); }
+  .new .badge, .badge.new { background:#f8e7cc; color:var(--warn); }
+  .detail, .meta { color:var(--sub); font-size:12px; } .meta { margin:6px 0 12px; }
+  .problems { color:var(--bad); font-size:12px; }
+  .row { display:flex; gap:12px; overflow-x:auto; align-items:flex-start; }
+  figure { margin:0; flex:0 0 auto; } figure img { height:420px; border:1px solid var(--line); border-radius:8px; display:block; }
+  figure.empty div { height:420px; width:120px; display:grid; place-items:center; color:var(--sub); border:1px dashed var(--line); border-radius:8px; }
+  figcaption { font-size:12px; color:var(--sub); margin-top:4px; max-width:260px; }
+</style></head><body>
+<h1>Visual check — ${results.length} states</h1>
+<p>${summary}</p>
+<p class="meta">Baseline diff is the pass/fail signal. Mockups are for judging by eye — they're drawings, not renders.</p>
+${sections}
+</body></html>
+`,
+	);
 }
 
 async function main() {
@@ -236,43 +261,86 @@ async function main() {
 	if (args.includes("--list")) {
 		for (const [name, screen] of Object.entries(SCREENS)) {
 			console.log(
-				`${name.padEnd(18)} ${screen.route.padEnd(24)} ${screen.mockup ?? "-"}`,
+				`${screen.feature.padEnd(7)} ${name.padEnd(30)} ${screen.route.padEnd(44)} ${screen.mockup ?? "-"}`,
 			);
 		}
 		return;
 	}
 
-	const names = args.length > 0 ? args : Object.keys(SCREENS);
-	const unknown = names.filter((name) => !(name in SCREENS));
+	const updateBaseline = args.includes("--update-baseline");
+	const names = args.filter((arg) => !arg.startsWith("--"));
+	const selected = names.length > 0 ? names : Object.keys(SCREENS);
+	const unknown = selected.filter((name) => !(name in SCREENS));
 	if (unknown.length > 0) {
 		console.error(`Unknown screen(s): ${unknown.join(", ")}. Try --list.`);
 		process.exit(1);
 	}
 
-	if (fs.existsSync(EXTRA_LIBS)) {
-		process.env.LD_LIBRARY_PATH = [EXTRA_LIBS, process.env.LD_LIBRARY_PATH]
-			.filter(Boolean)
-			.join(":");
-	}
+	process.env.LD_LIBRARY_PATH = libraryPath();
 	const { chromium } = await import("playwright");
 
-	fs.mkdirSync(OUT_DIR, { recursive: true });
+	fs.rmSync(CURRENT_DIR, { recursive: true, force: true });
+	fs.rmSync(DIFF_DIR, { recursive: true, force: true });
+	for (const dir of [CURRENT_DIR, DIFF_DIR, BASELINE_DIR]) {
+		fs.mkdirSync(dir, { recursive: true });
+	}
+
 	const server = await ensureServer();
-	const browser = await chromium.launch();
-	let clean = true;
+	const problemsByName = new Map();
 	try {
-		for (const name of names) {
-			clean = (await capture(browser, name, SCREENS[name])) && clean;
+		await warmBundle();
+		const browser = await chromium.launch();
+		try {
+			await runPool(selected, async (name) => {
+				problemsByName.set(name, await capture(browser, name, SCREENS[name]));
+			});
+		} finally {
+			await browser.close();
 		}
 	} finally {
-		await browser.close();
 		stopServer(server);
 	}
 
-	if (!clean) {
-		console.log("\nSome screens logged errors — see above.");
-		process.exitCode = 1;
+	if (updateBaseline) {
+		for (const name of selected) {
+			const current = path.join(CURRENT_DIR, `${name}.png`);
+			if (problemsByName.get(name).length === 0 && fs.existsSync(current)) {
+				fs.copyFileSync(current, path.join(BASELINE_DIR, `${name}.png`));
+			}
+		}
+		console.log(`Baseline updated for ${selected.length} state(s).`);
 	}
+
+	const results = selected.map((name) => {
+		const problems = problemsByName.get(name);
+		const comparison = compare(name);
+		return {
+			name,
+			screen: SCREENS[name],
+			problems,
+			...comparison,
+			status: problems.length > 0 ? "error" : comparison.status,
+		};
+	});
+	writeReport(results);
+
+	for (const { name, status, detail, problems } of results) {
+		const mark = { same: "✓", changed: "✗", new: "?", error: "!" }[status];
+		console.log(
+			`${mark} ${name.padEnd(30)} ${status}${detail ? ` — ${detail}` : ""}`,
+		);
+		for (const problem of problems) console.log(`    ${problem}`);
+	}
+	const failing = results.filter((result) => result.status !== "same");
+	console.log(
+		`\n${results.length - failing.length}/${results.length} match baseline. Report: ${path.relative(ROOT, REPORT)}`,
+	);
+	if (failing.some((result) => result.status === "new")) {
+		console.log(
+			"States with no baseline: review them in the report, then run with --update-baseline.",
+		);
+	}
+	if (failing.length > 0) process.exitCode = 1;
 }
 
 main().catch((err) => {

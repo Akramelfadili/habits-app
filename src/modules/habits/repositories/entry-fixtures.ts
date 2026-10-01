@@ -1,4 +1,4 @@
-import { addDays, format, startOfWeek, subDays } from "date-fns";
+import { addDays, format, startOfWeek, subDays, subWeeks } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 import type { Entry, EntryNote } from "../types";
 import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
@@ -56,7 +56,11 @@ export function makeEntryFixtures(
 
 	if (scenario === "manage-archive") return manageArchiveEntries();
 
-	if (scenario === "weekly-summary" || scenario === "perfect-week") {
+	if (
+		scenario === "weekly-summary" ||
+		scenario === "weekly-summary-last-week" ||
+		scenario === "perfect-week"
+	) {
 		return weeklySummaryEntries(scenario);
 	}
 
@@ -87,6 +91,19 @@ export function makeEntryFixtures(
 				createdAt: new Date(),
 			};
 		});
+	}
+
+	if (scenario === "no-freezes") {
+		// Today done, yesterday missed, then the 24-day run before it.
+		const dayOf = (daysAgo: number) => ({
+			habitId: 1,
+			date: format(subDays(new Date(), daysAgo), "yyyy-MM-dd"),
+			value: 10,
+			createdAt: new Date(),
+		});
+		return [0, ...Array.from({ length: STREAK_AT_RISK_DAYS }, (_, i) => i + 2)]
+			.map(dayOf)
+			.map((entry, index) => ({ ...entry, id: index + 1 }));
 	}
 
 	if (scenario === "quantity-log") {
@@ -213,9 +230,14 @@ const PERFECT_WEEK_DONE: Record<number, number[]> = {
 };
 
 function weeklySummaryEntries(
-	scenario: "weekly-summary" | "perfect-week",
+	scenario: "weekly-summary" | "weekly-summary-last-week" | "perfect-week",
 ): Entry[] {
-	const weekStart = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
+	// `weekly-summary-last-week` is the same mockup week, one week back — the
+	// summary opens on last week on a Monday, so the visual check can compare
+	// that default against docs/mockups/weekly-summary.png too.
+	const thisWeek = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
+	const weekStart =
+		scenario === "weekly-summary-last-week" ? subWeeks(thisWeek, 1) : thisWeek;
 	const done =
 		scenario === "perfect-week" ? PERFECT_WEEK_DONE : WEEKLY_SUMMARY_DONE;
 	return Object.entries(done).flatMap(([habitId, days]) =>

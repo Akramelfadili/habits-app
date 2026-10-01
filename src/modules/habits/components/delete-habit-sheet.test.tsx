@@ -24,12 +24,12 @@ describe("DeleteHabitSheet", () => {
 		expect(screen.getByText("Delete “Glass of water”?")).toBeTruthy();
 		expect(
 			screen.getByText(
-				"This removes the habit and all 218 logged days permanently. It cannot be undone.",
+				"This removes the habit and all 218 days logged permanently. It cannot be undone.",
 			),
 		).toBeTruthy();
 		expect(
 			screen.getByText(
-				"Hides it from Today, keeps every log and the 24-day streak. Reversible any time.",
+				"Hides it from Today, keeps every logged day and the 24-day streak. Reversible any time.",
 			),
 		).toBeTruthy();
 	});

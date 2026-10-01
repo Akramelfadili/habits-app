@@ -12,15 +12,22 @@ const mockPush = jest.fn();
 const mockBack = jest.fn();
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: mockPush, back: mockBack }),
+	// Renders the header's right-hand action inline, so tests can press it.
+	Stack: {
+		Screen: ({ options }: { options?: { headerRight?: () => unknown } }) =>
+			options?.headerRight?.() ?? null,
+	},
 }));
 const mockArchive = jest.fn();
 const mockDelete = jest.fn();
+const mockRestore = jest.fn();
 jest.mock("../hooks/use-habit-detail-actions", () => ({
 	useHabitDetailActions: () => ({
 		archiveHabit: mockArchive,
 		isArchiving: false,
 		deleteHabit: mockDelete,
 		isDeleting: false,
+		restoreHabit: mockRestore,
 	}),
 }));
 
@@ -42,6 +49,7 @@ jest.mock("../hooks/use-retro-log-actions", () => ({
 	useRetroLogActions: () => ({ saveDay: mockSaveDay, isSaving: false }),
 }));
 
+import { useToastStore } from "@/store/toast-store";
 import { buildHeatmapWeeks } from "../services/habit-history";
 import { HabitDetailScreen } from "./habit-detail-screen";
 
@@ -116,8 +124,8 @@ describe("HabitDetailScreen", () => {
 		expect(screen.getByText("Glass of water")).toBeTruthy();
 		expect(screen.getByText("Morning · 8 glasses · daily")).toBeTruthy();
 		expect(screen.getByLabelText("Current: 24, day streak")).toBeTruthy();
-		expect(screen.getByLabelText("Longest: 41, days, in June")).toBeTruthy();
-		expect(screen.getByLabelText("90 days: 87%, 78 of 90 due")).toBeTruthy();
+		expect(screen.getByLabelText("Longest: 41, days, in Jun")).toBeTruthy();
+		expect(screen.getByLabelText("90 days: 87%, 78 of 90 days")).toBeTruthy();
 		expect(screen.getByText("Last 10 weeks")).toBeTruthy();
 
 		const dates = screen
@@ -138,7 +146,7 @@ describe("HabitDetailScreen", () => {
 		await render(<HabitDetailScreen habitId={1} />);
 
 		expect(screen.getByLabelText("Longest: 0, no streak yet")).toBeTruthy();
-		expect(screen.getByLabelText("90 days: —, 0 of 0 due")).toBeTruthy();
+		expect(screen.getByLabelText("90 days: —, nothing yet")).toBeTruthy();
 		expect(screen.getByText("Nothing logged yet")).toBeTruthy();
 		expect(screen.getByText("No entries yet")).toBeTruthy();
 	});
@@ -219,11 +227,11 @@ describe("HabitDetailScreen", () => {
 			expect(screen.queryByText("Save changes")).toBeNull();
 		});
 
-		it("Close discards the draft without saving", async () => {
+		it("Cancel discards the draft without saving", async () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
 			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
-			await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+			await fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
 
 			expect(mockSaveDay).not.toHaveBeenCalled();
 			expect(screen.queryByText("Save changes")).toBeNull();
@@ -258,6 +266,59 @@ describe("HabitDetailScreen", () => {
 		});
 	});
 
+	it("opens Edit from the header (HAB-01)", async () => {
+		mockDetail = detail();
+		await render(<HabitDetailScreen habitId={1} />);
+
+		await fireEvent.press(screen.getByText("Edit"));
+
+		expect(mockPush).toHaveBeenCalledWith(`/edit-habit/${habit.id}`);
+	});
+
+	describe("archive (HAB-13)", () => {
+		beforeEach(() => {
+			mockArchive.mockReset().mockResolvedValue(undefined);
+			mockBack.mockReset();
+		});
+
+		it("archives in one tap, without the delete confirmation, then leaves", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Archive habit"));
+
+			expect(mockArchive).toHaveBeenCalledWith(1);
+			expect(screen.queryByText("Delete “Glass of water”?")).toBeNull();
+			expect(mockBack).toHaveBeenCalled();
+		});
+
+		it("confirms on the screen it returns to, with an Undo that restores", async () => {
+			useToastStore.setState({ toast: null });
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Archive habit"));
+
+			const toast = useToastStore.getState().toast;
+			expect(toast).toMatchObject({
+				message: "Archived 'Glass of water'",
+				actionLabel: "Undo",
+			});
+			toast?.onAction?.();
+			expect(mockRestore).toHaveBeenCalledWith(1);
+		});
+
+		it("isn't offered for a habit that's already archived", async () => {
+			mockDetail = detail({
+				habit: { ...habit, archivedAt: new Date(2026, 8, 1) },
+			});
+			await render(<HabitDetailScreen habitId={1} />);
+
+			expect(screen.queryByText("Archive habit")).toBeNull();
+			expect(screen.getByText("Delete habit")).toBeTruthy();
+		});
+	});
+
 	describe("delete (HAB-13)", () => {
 		beforeEach(() => {
 			mockArchive.mockReset().mockResolvedValue(undefined);
@@ -274,7 +335,7 @@ describe("HabitDetailScreen", () => {
 			expect(screen.getByText("Delete “Glass of water”?")).toBeTruthy();
 			expect(
 				screen.getByText(
-					"This removes the habit and all 218 logged days permanently. It cannot be undone.",
+					"This removes the habit and all 218 days logged permanently. It cannot be undone.",
 				),
 			).toBeTruthy();
 			expect(mockDelete).not.toHaveBeenCalled();
@@ -289,6 +350,11 @@ describe("HabitDetailScreen", () => {
 
 			expect(mockDelete).toHaveBeenCalledWith(1);
 			expect(mockBack).toHaveBeenCalled();
+			// Unrecoverable, so it's confirmed without an Undo.
+			expect(useToastStore.getState().toast).toMatchObject({
+				message: "Deleted 'Glass of water'",
+			});
+			expect(useToastStore.getState().toast?.actionLabel).toBeUndefined();
 		});
 
 		it("can archive instead", async () => {

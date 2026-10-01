@@ -8,7 +8,7 @@ import type { Habit } from "../types";
 
 export type ArchivedHabitRow = {
 	habit: Habit;
-	/** Every logged day, still there — "41 logs kept". */
+	/** Every logged day, still there — "41 days logged". */
 	logsKept: number;
 };
 

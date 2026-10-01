@@ -182,7 +182,7 @@ This is a **visual and copy variant** of the Today row for any habit whose Direc
 
 ### Acceptance criteria
 - [ ] Break-habit rows use outline check style
-- [ ] Break-habit completion copy reads as resistance, distinct per habit name (not a single generic string)
+- [ ] Break-habit completion copy reads as resistance and is tied to the habit it belongs to: on the row, the caption ("Resisted") sits directly under the habit's own name rather than repeating it; where the name isn't on screen (the completion toast), the copy names it ("Resisted 'No phone in bed'"). Never "did the thing" phrasing. *(Amended after the Sep 2026 UX audit, #8 — previously "distinct per habit name (not a single generic string)", which made the row repeat the name in its own caption.)*
 - [ ] Quantity target option is unavailable when Direction = Break
 - [ ] Visually distinguishable from Build habits at a glance, verified by looking at a Today screen with both types present
 
@@ -244,7 +244,7 @@ Primary button reads **"Add N habits"**, N updating live as rows are toggled. Se
 ### Business rules
 - **Shown once per install, gated on a persisted flag** — not just "zero habits exist," since deleting all habits later must show Feature 05's empty state, not this screen again.
 - Tapping a suggestion row toggles its checkbox; no limit on how many can be selected.
-- Tapping "Add N habits" creates one real habit per selected suggestion (via the same create-habit path as Feature 01), using each suggestion's fixed name/icon/color/direction, and a default **Daily** frequency (Feature 02 already exists by this point in the build order).
+- Tapping "Add N habits" creates one real habit per selected suggestion (via the same create-habit path as Feature 01), using each suggestion's fixed name/icon/color/direction, the category and target its subtitle promises (e.g. "Read before bed · Evening · 10 pages" is created as a 10-page quantity habit in Evening), and a default **Daily** frequency (Feature 02 already exists by this point in the build order). A subtitle never promises a detail the created habit doesn't have. *(Added after the Sep 2026 UX audit, #6 — previously every suggestion was created as an uncategorised simple check.)*
 - Tapping "Start from scratch" creates nothing and dismisses straight to Feature 05's normal empty state.
 - Either path sets the persisted "seen first run" flag so this screen never shows again.
 

@@ -1,0 +1,68 @@
+# Journey: Today → Habit Detail → Reminders → add a time, adjust its days
+# (triggering the unscheduled-day warning), add a second and switch it off →
+# back on Detail the summary reflects it, and Today is unaffected.
+# Covers HAB-09 (entry point), HAB-12 (reminders).
+#
+# MANUAL-ONLY: whether the OS notification actually fires at 09:00 on the
+# right days can't be checked here — web stubs expo-notifications, and even
+# on a simulator Maestro can't wait for or inspect a delivered notification.
+# Verify on a real device (dev-client build): set a reminder 1–2 min ahead,
+# lock the phone, confirm it arrives; switch it off and confirm it doesn't.
+# See e2e/README.md.
+#
+# Seed (default fixtures, clock pinned to Thu 1 Oct): "Evening walk" is
+# scheduled Mon–Fri and has no reminders.
+url: ${APP_URL}/habits?clock=2026-10-01T09:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+- tapOn: "Evening walk"
+- assertVisible: "None set"
+- tapOn: "Reminders"
+- assertVisible:
+    id: "Add a time, 0 of 4"
+
+# A new reminder starts at 09:00 on the habit's own scheduled days and opens
+# straight into the time picker. (Web's time wheel is a static read-out, so
+# the time itself isn't changed here.)
+- tapOn:
+    id: "Add a time, 0 of 4"
+- assertVisible: "Save time"
+- tapOn: "Save time"
+- assertVisible:
+    id: "Reminder at 09:00, Weekdays"
+
+# Adding a day the habit isn't scheduled on flags it; removing it clears the flag.
+- tapOn:
+    id: "Reminder at 09:00, Weekdays"
+- tapOn:
+    id: "Saturday"
+- assertVisible:
+    id: "Reminder at 09:00, Mon, Tue, Wed, Thu, Fri, Sat"
+- assertVisible: "Saturday is not a scheduled day for this habit — this reminder would fire for nothing."
+- takeScreenshot: hab-12-unscheduled-warning
+- tapOn:
+    id: "Saturday"
+- assertNotVisible: "Saturday is not a scheduled day for this habit — this reminder would fire for nothing."
+
+# A second time, switched off — each reminder owns its own toggle.
+- tapOn:
+    id: "Add a time, 1 of 4"
+- tapOn: "Save time"
+- tapOn:
+    id: "Reminder at 09:00 on"
+    index: 1
+- assertVisible:
+    id: "Add a time, 2 of 4"
+- takeScreenshot: hab-12-two-reminders
+
+# Detail summarises only the reminders that are on.
+- back
+- assertVisible: "1 on · 09:00"
+
+# Reminders never gate Today.
+- back
+- assertVisible: "Evening walk"

@@ -1,0 +1,50 @@
+# Journey: first run → pick suggestions → add a habit of my own → log it on Today.
+# Covers HAB-06 (first run), HAB-01/02 (create + frequency, edit from Detail), HAB-03 (Today completion).
+url: ${APP_URL}/habits?fixtures=first-run&clock=2026-10-01T09:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+
+# HAB-06: two suggestions pre-selected; toggling one updates the count live.
+- assertVisible: "Add 2 habits"
+- tapOn: "Stretch"
+- assertVisible: "Add 3 habits"
+- tapOn: "Add 3 habits"
+
+# Lands on Today with the three suggestions, none done yet.
+- assertVisible: "Thursday, 1 October"
+- assertVisible: "Glass of water"
+- assertVisible: "Walk 20 minutes"
+- assertVisible: "Stretch"
+# …created as their subtitles promised: grouped (Water in Morning), and
+# Stretch as a 5-minute quantity habit, which Today's row says.
+- assertVisible: "Morning"
+- assertVisible: "5 min"
+
+# HAB-01: add a habit of my own, daily by default.
+- tapOn: "Add habit"
+- assertVisible: "New habit"
+- tapOn:
+    id: "Name"
+- inputText: "Floss"
+- tapOn: "Save habit"
+
+# HAB-03: it shows on Today and can be ticked off.
+- assertVisible: "Floss"
+- tapOn:
+    id: "Floss"
+- assertVisible:
+    id: "Floss, done"
+- assertVisible: "Marked 'Floss' complete"
+- takeScreenshot: hab-06-01-03-logged
+
+# HAB-01: the habit can be edited later from its Detail header.
+- tapOn: "Floss"
+- tapOn: "Edit"
+- assertVisible: "Edit habit"
+- tapOn: "Cancel"
+- assertVisible:
+    id: "Current: 1, day streak"

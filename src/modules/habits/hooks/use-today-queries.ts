@@ -39,12 +39,12 @@ export function useTodayQueries(): {
 	completedHabitIds: ReadonlySet<number>;
 	/** Today's logged quantity value per habit — only set for quantity habits with an entry today. */
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
+	/** Days completed so far this Mon–Sun week, today included — per-week habits' "2 of 5". */
+	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	today: Date;
 	viewState: TodayViewState;
 	/** Habits due tomorrow — only meaningful for the Day closed preview (HAB-05). */
 	tomorrowPreview: Habit[];
-	/** The due-today habit completed most recently — Day closed's Undo target (HAB-05). */
-	lastCompletedToday: { id: number; name: string } | null;
 	/** Due-today habits currently showing the streak-at-risk prompt (HAB-08), keyed by habit id. */
 	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
@@ -92,6 +92,12 @@ export function useTodayQueries(): {
 	);
 
 	const progress = computeProgress(dueHabits, completedHabitIds);
+	const completedThisWeekByHabitId = new Map(
+		[...completedDatesByHabit].map(([habitId, dates]) => [
+			habitId,
+			new Set(dates.map((date) => date.getTime())).size,
+		]),
+	);
 
 	const entriesByHabit = new Map<number, typeof allEntries>();
 	for (const entry of allEntries) {
@@ -118,34 +124,19 @@ export function useTodayQueries(): {
 		if (atRisk) atRiskByHabitId.set(habit.id, atRisk);
 	}
 
-	// The due-today entry created most recently — a real timestamp, so this
-	// survives app restarts, unlike tracking "last toggled" in screen state.
-	const dueHabitIds = new Set(dueHabits.map((habit) => habit.id));
-	let lastCompletedToday: { id: number; name: string } | null = null;
-	let latestCreatedAt = -Infinity;
-	for (const entry of entries) {
-		if (entry.date !== todayString || !dueHabitIds.has(entry.habitId)) continue;
-		const habit = habitsById.get(entry.habitId);
-		if (!habit || !isEntryComplete(habit, entry)) continue;
-		const createdAtTime = entry.createdAt.getTime();
-		if (createdAtTime <= latestCreatedAt) continue;
-		latestCreatedAt = createdAtTime;
-		lastCompletedToday = { id: habit.id, name: habit.name };
-	}
-
 	return {
 		totalHabitCount: habits.length,
 		groups: groupHabitsByCategory(dueHabits),
 		progress,
 		completedHabitIds,
 		quantityValuesByHabitId,
+		completedThisWeekByHabitId,
 		today,
 		viewState: resolveTodayViewState({
 			totalHabitCount: habits.length,
 			progress,
 		}),
 		tomorrowPreview,
-		lastCompletedToday,
 		atRiskByHabitId,
 		freezesRemainingThisMonth,
 	};

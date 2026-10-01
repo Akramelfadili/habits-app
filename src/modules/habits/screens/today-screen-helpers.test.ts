@@ -4,6 +4,7 @@ import {
 	computeProgress,
 	groupHabitsByCategory,
 	resolveTodayViewState,
+	todayRowSubtitle,
 } from "./today-screen-helpers";
 
 describe("groupHabitsByCategory", () => {
@@ -125,5 +126,45 @@ describe("celebratoryHeadline", () => {
 
 	it("falls back to digits past the word list", () => {
 		expect(celebratoryHeadline(13)).toBe("All 13 done");
+	});
+});
+
+describe("todayRowSubtitle", () => {
+	it("is a quantity habit's target", () => {
+		const habit = makeHabit({
+			targetType: "quantity",
+			targetAmount: 20,
+			targetUnit: "pages",
+		});
+		expect(todayRowSubtitle(habit, 0)).toBe("20 pages");
+	});
+
+	it("is a per-week habit's standing this week", () => {
+		const habit = makeHabit({
+			frequency: { type: "per-week", timesPerWeek: 5 },
+		});
+		expect(todayRowSubtitle(habit, 2)).toBe("2 of 5 this week");
+	});
+
+	it("joins both for a per-week quantity habit", () => {
+		const habit = makeHabit({
+			targetType: "quantity",
+			targetAmount: 5,
+			targetUnit: "km",
+			frequency: { type: "per-week", timesPerWeek: 3 },
+		});
+		expect(todayRowSubtitle(habit, 1)).toBe("5 km · 1 of 3 this week");
+	});
+
+	it("is empty for a plain daily or weekday check", () => {
+		expect(
+			todayRowSubtitle(makeHabit({ frequency: { type: "daily" } }), 3),
+		).toBeUndefined();
+		expect(
+			todayRowSubtitle(
+				makeHabit({ frequency: { type: "weekdays", days: [1, 3, 5] } }),
+				2,
+			),
+		).toBeUndefined();
 	});
 });

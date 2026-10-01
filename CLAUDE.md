@@ -17,6 +17,8 @@ The complete, authoritative specs live in `docs/`. Read the relevant one before 
 - `npx expo start` — dev server (scan QR with Expo Go on the phone)
 - `npx expo install <package>` — **always use this instead of `npm install`** for any Expo/RN package; it resolves the version compatible with this project's SDK, plain `npm install` does not
 - `npm test` — Jest + React Native Testing Library
+- `npm run visual-check` — renders every screen/state on web, diffs against `docs/visual-baseline/`, writes `.visual-checks/report.html` (mockup | current | baseline | diff); `-- --update-baseline` to accept intended changes
+- `npm run e2e` — Maestro journeys in `/e2e` against the web build (see `e2e/README.md` for setup and what web can't cover)
 - `npx biome check --write .` — lint + format
 - `npx tsc --noEmit` — typecheck
 - `npx expo-doctor` — diagnose dependency/config issues

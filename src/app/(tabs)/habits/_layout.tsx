@@ -1,4 +1,6 @@
 import { Stack } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -8,39 +10,51 @@ import { useTheme } from "@/theme/use-theme";
  * Reminders (HAB-12, docs/mockups/reminders.png), and so does Manage &
  * Archive (HAB-13, docs/mockups/manage-archive.png). New/Edit habit
  * stay root-level modals (src/app/_layout.tsx).
+ *
+ * One toast slot for the whole stack, above the tab bar — so a confirmation
+ * outlives the screen that caused it (archive on Detail → toast on Today).
  */
 export default function HabitsLayout() {
 	const { colors } = useTheme();
 
 	return (
-		<Stack
-			screenOptions={{
-				headerStyle: { backgroundColor: colors.bg },
-				headerTintColor: colors.ink,
-				headerShadowVisible: false,
-			}}
-		>
-			{/* Today draws its own title as screen content; "Today" here is what Detail's back button reads. */}
-			<Stack.Screen
-				name="index"
-				options={{ title: "Today", headerShown: false }}
-			/>
-			<Stack.Screen
-				name="[id]"
-				options={{ title: "", headerBackTitle: "Today" }}
-			/>
-			{/* "Your week" is screen content, same as Detail's header row. */}
-			<Stack.Screen
-				name="week"
-				options={{ title: "", headerBackTitle: "Today" }}
-			/>
-			{/* Pushed from Habit Detail; the screen sets the back title to the habit's name. */}
-			<Stack.Screen name="reminders/[id]" options={{ title: "" }} />
-			{/* Draws its own "Habits" title and "Done" on one line, as in the mockup. */}
-			<Stack.Screen
-				name="manage"
-				options={{ title: "Manage", headerShown: false }}
-			/>
-		</Stack>
+		<View style={styles.root}>
+			<Stack
+				screenOptions={{
+					headerStyle: { backgroundColor: colors.bg },
+					headerTintColor: colors.ink,
+					headerShadowVisible: false,
+				}}
+			>
+				{/* Today draws its own title as screen content; "Today" here is what Detail's back button reads. */}
+				<Stack.Screen
+					name="index"
+					options={{ title: "Today", headerShown: false }}
+				/>
+				<Stack.Screen
+					name="[id]"
+					options={{ title: "", headerBackTitle: "Today" }}
+				/>
+				{/* "Your week" is screen content, same as Detail's header row. */}
+				<Stack.Screen
+					name="week"
+					options={{ title: "", headerBackTitle: "Today" }}
+				/>
+				{/* Pushed from Habit Detail; the screen sets the back title to the habit's name. */}
+				<Stack.Screen name="reminders/[id]" options={{ title: "" }} />
+				{/* Same as Weekly Summary: back to Today, the large title is screen content. */}
+				<Stack.Screen
+					name="manage"
+					options={{ title: "", headerBackTitle: "Today" }}
+				/>
+			</Stack>
+			<ToastHost />
+		</View>
 	);
 }
+
+const styles = StyleSheet.create({
+	root: {
+		flex: 1,
+	},
+});

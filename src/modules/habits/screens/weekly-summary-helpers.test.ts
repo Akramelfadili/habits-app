@@ -28,12 +28,12 @@ describe("weekRangeLabel", () => {
 });
 
 describe("weeklyRowLabel", () => {
-	it("marks a Break habit's count as resisted days", () => {
+	it("is the habit's name alone — never a suffix, for either direction", () => {
 		expect(
 			weeklyRowLabel(
 				makeHabit({ name: "No phone in bed", direction: "break" }),
 			),
-		).toBe("No phone in bed · resisted");
+		).toBe("No phone in bed");
 		expect(weeklyRowLabel(makeHabit({ name: "Read" }))).toBe("Read");
 	});
 });
@@ -47,6 +47,16 @@ describe("weeklyRowCount", () => {
 			fraction: 2 / 7,
 		};
 		expect(weeklyRowCount(row)).toBe("2/7");
+	});
+
+	it("says a Break habit's days were resisted", () => {
+		const row = {
+			habit: makeHabit({ direction: "break" }),
+			completed: 5,
+			scheduled: 7,
+			fraction: 5 / 7,
+		};
+		expect(weeklyRowCount(row)).toBe("5/7 resisted");
 	});
 });
 

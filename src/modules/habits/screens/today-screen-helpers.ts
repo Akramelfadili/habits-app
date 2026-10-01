@@ -105,3 +105,26 @@ export function celebratoryHeadline(total: number): string {
 		total < NUMBER_WORDS.length ? NUMBER_WORDS[total] : String(total);
 	return `All ${count} done`;
 }
+
+/**
+ * What a Today row asks of you, under its name (docs/mockups/today-populated.png):
+ * a quantity habit's target ("20 pages"), and a per-week habit's standing this
+ * week ("2 of 5 this week") — otherwise a 5×/week habit gives no hint whether
+ * today is the first or the last it needs. Nothing for a plain daily check:
+ * a subtitle that only restates the schedule is noise.
+ */
+export function todayRowSubtitle(
+	habit: Habit,
+	completedThisWeek: number,
+): string | undefined {
+	const parts: string[] = [];
+	if (habit.targetType === "quantity" && habit.targetAmount !== null) {
+		parts.push(`${habit.targetAmount} ${habit.targetUnit ?? ""}`.trim());
+	}
+	if (habit.frequency.type === "per-week") {
+		parts.push(
+			`${completedThisWeek} of ${habit.frequency.timesPerWeek} this week`,
+		);
+	}
+	return parts.length > 0 ? parts.join(" · ") : undefined;
+}

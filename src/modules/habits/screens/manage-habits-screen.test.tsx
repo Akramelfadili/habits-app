@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { ManageHabitsView } from "../hooks/use-manage-habits-queries";
 import { makeHabit } from "../test-support/habit-builder";
 
@@ -28,7 +28,8 @@ jest.mock("../hooks/use-manage-habits-actions", () => ({
 	}),
 }));
 
-import { MANAGE_TOAST_MS, ManageHabitsScreen } from "./manage-habits-screen";
+import { useToastStore } from "@/store/toast-store";
+import { ManageHabitsScreen } from "./manage-habits-screen";
 
 const water = makeHabit({ id: 1, name: "Glass of water", category: "Morning" });
 const meditate = makeHabit({ id: 2, name: "Meditate", category: "Morning" });
@@ -46,6 +47,7 @@ const coldShower = makeHabit({
 
 beforeEach(() => {
 	jest.clearAllMocks();
+	useToastStore.setState({ toast: null });
 	mockArchive.mockResolvedValue(undefined);
 	mockRestore.mockResolvedValue(undefined);
 	mockReorder.mockResolvedValue(undefined);
@@ -59,12 +61,12 @@ describe("ManageHabitsScreen", () => {
 	it("lists active habits with grips, and archived ones with Restore", async () => {
 		await render(<ManageHabitsScreen />);
 
-		expect(screen.getByText("Habits")).toBeTruthy();
+		expect(screen.getByText("Manage habits")).toBeTruthy();
 		expect(screen.getAllByText("Morning · daily")).toHaveLength(2);
 		expect(screen.getByText("Evening · 5× a week")).toBeTruthy();
 		expect(screen.getAllByTestId("drag-handle")).toHaveLength(3);
 		expect(screen.getByText("Archived · 1")).toBeTruthy();
-		expect(screen.getByText("Archived 2 Sep · 41 logs kept")).toBeTruthy();
+		expect(screen.getByText("2 Sep · 41 days logged")).toBeTruthy();
 		expect(screen.getByText("Restore")).toBeTruthy();
 	});
 
@@ -93,8 +95,12 @@ describe("ManageHabitsScreen", () => {
 		await fireEvent.press(screen.getAllByText("Archive")[0]);
 
 		expect(mockArchive).toHaveBeenCalledWith(1);
-		expect(screen.getByText("Habit archived")).toBeTruthy();
-		await fireEvent.press(screen.getByText("Undo"));
+		const toast = useToastStore.getState().toast;
+		expect(toast).toMatchObject({
+			message: "Archived 'Glass of water'",
+			actionLabel: "Undo",
+		});
+		toast?.onAction?.();
 		expect(mockRestore).toHaveBeenCalledWith(1);
 	});
 
@@ -104,22 +110,9 @@ describe("ManageHabitsScreen", () => {
 		await fireEvent.press(screen.getByText("Restore"));
 
 		expect(mockRestore).toHaveBeenCalledWith(6);
-		expect(screen.getByText("Habit restored — back on Today")).toBeTruthy();
-	});
-
-	it("hides the toast after a few seconds", async () => {
-		jest.useFakeTimers();
-		try {
-			await render(<ManageHabitsScreen />);
-			await fireEvent.press(screen.getByText("Restore"));
-			expect(screen.getByText("Habit restored — back on Today")).toBeTruthy();
-
-			await act(() => jest.advanceTimersByTime(MANAGE_TOAST_MS));
-
-			expect(screen.queryByText("Habit restored — back on Today")).toBeNull();
-		} finally {
-			jest.useRealTimers();
-		}
+		expect(useToastStore.getState().toast?.message).toBe(
+			"Restored 'Cold shower' — back on Today",
+		);
 	});
 
 	it("opens a habit's detail — including an archived one's history", async () => {
@@ -130,10 +123,10 @@ describe("ManageHabitsScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/habits/6");
 	});
 
-	it("leaves with Done", async () => {
+	it("is a pushed screen titled after its link — back in the header, no Done (audit #10)", async () => {
 		await render(<ManageHabitsScreen />);
-		await fireEvent.press(screen.getByText("Done"));
-		expect(mockBack).toHaveBeenCalled();
+		expect(screen.getByRole("header", { name: "Manage habits" })).toBeTruthy();
+		expect(screen.queryByText("Done")).toBeNull();
 	});
 
 	it("hides the Archived section when nothing is archived", async () => {

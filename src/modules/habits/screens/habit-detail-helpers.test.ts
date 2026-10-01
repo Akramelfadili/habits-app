@@ -57,9 +57,9 @@ describe("stat tile copy", () => {
 	it("describes the longest streak by the month it ended", () => {
 		expect(
 			longestStreakCaption({ days: 41, endedOn: new Date(2026, 5, 30) }),
-		).toBe("days, in June");
+		).toBe("days, in Jun");
 		expect(longestStreakCaption({ days: 1, endedOn: today })).toBe(
-			"day, in September",
+			"day, in Sep",
 		);
 		expect(longestStreakCaption({ days: 0, endedOn: null })).toBe(
 			"no streak yet",
@@ -69,7 +69,7 @@ describe("stat tile copy", () => {
 	it("shows a percentage, or a dash when nothing's been scheduled", () => {
 		const rate = { completed: 78, scheduled: 90, fraction: 78 / 90 };
 		expect(completionRateValue(rate)).toBe("87%");
-		expect(completionRateCaption(rate)).toBe("78 of 90 due");
+		expect(completionRateCaption(rate)).toBe("78 of 90 days");
 		expect(
 			completionRateValue({ completed: 0, scheduled: 0, fraction: null }),
 		).toBe("—");

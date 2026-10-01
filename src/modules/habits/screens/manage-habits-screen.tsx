@@ -1,16 +1,14 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { ReorderableList } from "@/components/ui/composite/reorderable-list";
 import { SwipeableRow } from "@/components/ui/composite/swipeable-row";
-import { Toast } from "@/components/ui/composite/toast";
 import { Button } from "@/components/ui/primitives/button";
 import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
+import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { iconSymbolFor } from "../components/habit-today-row";
@@ -25,15 +23,10 @@ import {
 	manageRowSubtitle,
 } from "./manage-habits-helpers";
 
-/** How long the archive/restore toast stays up. */
-export const MANAGE_TOAST_MS = 4000;
-
-type ToastState = { message: string; onUndo?: () => void };
-
 /**
  * Manage & Archive (HAB-13): active habits with drag grips (reorder within a
  * category; swipe left to archive), above an "Archived" section of dimmed
- * rows with Restore. No destructive action lives here — delete is only on
+ * rows with Restore. Confirmations go to the Habits stack's shared toast. No destructive action lives here — delete is only on
  * Habit Detail, which every row opens.
  */
 export function ManageHabitsScreen() {
@@ -42,45 +35,32 @@ export function ManageHabitsScreen() {
 	const { active, archived } = useManageHabitsQueries();
 	const { reorderHabits, archiveHabit, restoreHabit, isRestoring } =
 		useManageHabitsActions();
-	const [toast, setToast] = useState<ToastState | null>(null);
-
-	useEffect(() => {
-		if (!toast) return;
-		const timer = setTimeout(() => setToast(null), MANAGE_TOAST_MS);
-		return () => clearTimeout(timer);
-	}, [toast]);
-
+	// Same wording as archiving from Habit Detail — one toast rule app-wide.
 	async function handleArchive(habit: Habit) {
 		await archiveHabit(habit.id);
-		setToast({
-			message: "Habit archived",
-			onUndo: () => {
-				setToast(null);
-				restoreHabit(habit.id);
-			},
+		showToast({
+			message: `Archived '${habit.name}'`,
+			actionLabel: "Undo",
+			onAction: () => restoreHabit(habit.id),
 		});
 	}
 
 	async function handleRestore(habit: Habit) {
 		await restoreHabit(habit.id);
-		setToast({ message: "Habit restored — back on Today" });
+		showToast({ message: `Restored '${habit.name}' — back on Today` });
 	}
 
 	return (
-		<SafeAreaView
-			edges={["top"]}
-			style={[styles.screen, { backgroundColor: colors.bg }]}
-		>
+		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.header}>
-					<Text style={[styles.title, { color: colors.ink }]}>Habits</Text>
-					<Button
-						label="Done"
-						variant="inline"
-						fullWidth={false}
-						onPress={() => router.back()}
-					/>
-				</View>
+				{/* A pushed screen: back in the header, a large title matching the
+				    "Manage habits" link that opened it (audit #10). */}
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					Manage habits
+				</Text>
 
 				<Container tight>
 					{active.length > 0 ? (
@@ -163,16 +143,7 @@ export function ManageHabitsScreen() {
 
 				<Caption>{MANAGE_FOOTNOTE}</Caption>
 			</ScrollView>
-			{toast ? (
-				<View style={styles.footer}>
-					<Toast
-						message={toast.message}
-						actionLabel={toast.onUndo ? "Undo" : undefined}
-						onAction={toast.onUndo}
-					/>
-				</View>
-			) : null}
-		</SafeAreaView>
+		</View>
 	);
 }
 
@@ -186,21 +157,11 @@ const styles = StyleSheet.create({
 		paddingBottom: 24,
 		gap: 16,
 	},
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
 	title: {
 		fontSize: typeScale.screenTitle,
 		fontWeight: "500",
 	},
 	section: {
 		gap: 8,
-	},
-	footer: {
-		paddingHorizontal: 16,
-		paddingBottom: 16,
-		paddingTop: 8,
 	},
 });

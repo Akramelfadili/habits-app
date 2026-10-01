@@ -32,14 +32,15 @@ export function weekRangeLabel({ start, end }: WeekWindow): string {
 		: `${format(start, "d MMMM")} — ${format(end, "d MMMM")}`;
 }
 
-/** A Break habit's bar says what was counted: "No phone in bed · resisted". */
+/** A row is labelled by the habit's name alone — never a suffix on it (HAB-04, audit #8). */
 export function weeklyRowLabel(habit: Habit): string {
-	return habit.direction === "break" ? `${habit.name} · resisted` : habit.name;
+	return habit.name;
 }
 
-/** "2/7". */
+/** "2/7"; a Break habit's count says what was counted — "5/7 resisted". */
 export function weeklyRowCount(row: WeeklyHabitRow): string {
-	return `${row.completed}/${row.scheduled}`;
+	const count = `${row.completed}/${row.scheduled}`;
+	return row.habit.direction === "break" ? `${count} resisted` : count;
 }
 
 /** Best day tile — the weekday and "6 of 6 done"; "All" for a perfect week; a dash before anything's done. */
