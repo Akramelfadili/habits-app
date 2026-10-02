@@ -50,7 +50,7 @@ export function TextField({
 	warning,
 	onSubmitEditing,
 }: TextFieldProps) {
-	const { colors } = useTheme();
+	const { colors, scheme } = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
 	// Error outranks warning outranks focus: a field being corrected keeps its outline.
 	const borderColor = error
@@ -76,6 +76,8 @@ export function TextField({
 				// The visible label is a sibling Text, not associated with the input —
 				// without this, VoiceOver announces an unnamed text field.
 				accessibilityLabel={label}
+				// The on-screen keyboard follows the app's Appearance choice, not just iOS's.
+				keyboardAppearance={scheme}
 				value={value}
 				// `maxLength` stops typing; slicing too covers a paste that arrives
 				// over the limit, so it's trimmed to fit rather than rejected.

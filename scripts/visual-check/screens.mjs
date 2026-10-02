@@ -8,8 +8,10 @@
  * `?fixtures=` scenario, see habit-fixtures.ts), `mockup` (the docs/mockups/
  * file it's judged against, or null when no mockup covers that state),
  * optional `clock` (overrides DEFAULT_CLOCK), `note`, `touch` (render in a
- * touch-enabled page, for swipe gestures), and `interact(page, ctx)` for
- * states only reachable by a tap or gesture.
+ * touch-enabled page, for swipe gestures), `colorScheme` ("light" default, or
+ * "dark" — the emulated OS scheme, which the Appearance setting's default
+ * "System" follows, HAB-15), and `interact(page, ctx)` for states only
+ * reachable by a tap or gesture.
  */
 import { format, subDays } from "date-fns";
 
@@ -516,6 +518,113 @@ export const SCREENS = {
 		},
 	},
 
+	// HAB-15 — Settings & local data export (B1–B6)
+	settings: {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/hab-15-b1.png",
+		note: "B1 light — Light picked, Evening review on, never exported. Adds a plain Categories row (no mockup — proposal, HAB-25's expected home). Chevrons are SF Symbols (blank on web).",
+	},
+	"settings-dark": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=dark",
+		mockup: "docs/mockups/hab-15-b1.png",
+		colorScheme: "dark",
+		note: "B1 dark column — Dark picked (OS emulated dark).",
+	},
+	"settings-explicit-over-os": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=dark",
+		mockup: null,
+		colorScheme: "light",
+		note: "Explicit Dark while the emulated OS is light: the app must draw dark.",
+	},
+	"settings-system-notifications-off": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings-notifications-off",
+		mockup: "docs/mockups/hab-15-b2.png",
+		note: "B2 — System (resolves light), Evening review on but iOS notifications off: neutral notice with 'Open iOS Settings →'; Last export 2 August.",
+	},
+	"settings-system-dark": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings-notifications-off",
+		mockup: "docs/mockups/hab-15-b2.png",
+		colorScheme: "dark",
+		note: "B2 dark — System follows the emulated dark OS; caption says 'currently dark'.",
+	},
+	"export-confirm": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/hab-15-b3.png",
+		note: "B3 — confirm sheet: counts, range, CSV/JSON, archived toggle, 'Export N entries'. Fixture data differs from the mockup's numbers.",
+		async interact(page) {
+			await page.getByText("Export all data", { exact: true }).click();
+			await page.getByText("Export your data").waitFor();
+		},
+	},
+	"export-confirm-archived-off": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/hab-15-b3.png",
+		note: "B3 with 'Include archived habits' off — counts and the button shrink.",
+		async interact(page) {
+			await page.getByText("Export all data", { exact: true }).click();
+			await page.getByText("Export your data").waitFor();
+			await page.getByLabel("Include archived habits").click();
+		},
+	},
+	"export-progress": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/hab-15-b4.png",
+		note: "B4 — determinate progress. The page slows setTimeout(0) so the ~1s export is still running when captured.",
+		async interact(page) {
+			await page.getByText("Export all data", { exact: true }).click();
+			await page.evaluate(() => {
+				const original = window.setTimeout;
+				window.setTimeout = (fn, ms, ...args) =>
+					original(fn, ms === 0 ? 900 : ms, ...args);
+			});
+			await page.getByText(/^Export \d+ entr/).click();
+			await page.getByText("Exporting…").waitFor();
+			await page.waitForTimeout(1200);
+		},
+	},
+	"export-ready": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/hab-15-b5.png",
+		note: "B5 — Export ready: file card, Share file…, Save to Files, Done.",
+		async interact(page) {
+			await page.getByText("Export all data", { exact: true }).click();
+			await page.getByText(/^Export \d+ entr/).click();
+			await page.getByText("Export ready").waitFor();
+		},
+	},
+	"export-failed": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=export-fails&theme=light",
+		mockup: "docs/mockups/hab-15-b6.png",
+		note: "B6 — failed on storage: reason, what's needed, 'nothing was changed', Try again / Close.",
+		async interact(page) {
+			await page.getByText("Export all data", { exact: true }).click();
+			await page.getByText(/^Export \d+ entr/).click();
+			await page.getByText("Export didn't finish").waitFor();
+		},
+	},
+	"export-ready-dark": {
+		feature: "HAB-15",
+		route: "/habits/settings?fixtures=settings&theme=dark",
+		mockup: "docs/mockups/hab-15-b5.png",
+		colorScheme: "dark",
+		note: "B5 dark column.",
+		async interact(page) {
+			await page.getByText("Export all data", { exact: true }).click();
+			await page.getByText(/^Export \d+ entr/).click();
+			await page.getByText("Export ready").waitFor();
+		},
+	},
+
 	// Shell — placeholder tabs for the future modules
 	"tab-todos": {
 		feature: "Shell",
@@ -528,3 +637,29 @@ export const SCREENS = {
 		mockup: null,
 	},
 };
+
+/**
+ * Dark twins of the screens that carry the most chrome (HAB-15's dark mode):
+ * the same route and interaction, rendered with the emulated OS in dark and
+ * the Appearance setting left on its default, System. Only the dark mockup in
+ * B1/B2 exists, so these are judged against the light baselines for layout
+ * and by eye for colour.
+ */
+const DARK_TWINS = [
+	"today",
+	"today-menu-open",
+	"habit-detail",
+	"manage-habits",
+	"category-picker-selected",
+	"add-category-empty",
+	"manage-categories-in-use",
+];
+for (const name of DARK_TWINS) {
+	const light = SCREENS[name];
+	SCREENS[`${name}-dark`] = {
+		...light,
+		mockup: null,
+		colorScheme: "dark",
+		note: `Dark twin of ${name} (HAB-15): OS emulated dark, Appearance on System.`,
+	};
+}

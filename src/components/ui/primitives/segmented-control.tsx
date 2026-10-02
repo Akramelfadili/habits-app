@@ -7,7 +7,14 @@ type SegmentedControlOption<T extends string> = {
 };
 
 type SegmentedControlProps<T extends string> = {
-	options: [SegmentedControlOption<T>, SegmentedControlOption<T>];
+	/** Two options (Direction, Week) or three (Appearance, HAB-15). */
+	options:
+		| [SegmentedControlOption<T>, SegmentedControlOption<T>]
+		| [
+				SegmentedControlOption<T>,
+				SegmentedControlOption<T>,
+				SegmentedControlOption<T>,
+		  ];
 	value: T;
 	onChange: (value: T) => void;
 	disabled?: boolean;

@@ -5,6 +5,8 @@ import { useTheme } from "@/theme/use-theme";
 type ListItemProps = {
 	title: string;
 	subtitle?: string;
+	/** Sits right after the title on the same line — a scope chip ("All habits", HAB-15). */
+	titleAccessory?: React.ReactNode;
 	onPress?: () => void;
 	/** Renders a trailing chevron — used when the row navigates elsewhere. */
 	navigable?: boolean;
@@ -45,6 +47,7 @@ type ListItemProps = {
 export function ListItem({
 	title,
 	subtitle,
+	titleAccessory,
 	onPress,
 	navigable = false,
 	leading,
@@ -101,7 +104,16 @@ export function ListItem({
 				>
 					{leading}
 					<View style={styles.text}>
-						<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+						{titleAccessory ? (
+							<View style={styles.titleRow}>
+								<Text style={[styles.title, { color: colors.ink }]}>
+									{title}
+								</Text>
+								{titleAccessory}
+							</View>
+						) : (
+							<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+						)}
 						{subtitle ? (
 							<Text style={[styles.subtitle, { color: colors.sub }]}>
 								{subtitle}
@@ -176,6 +188,11 @@ const styles = StyleSheet.create({
 	text: {
 		flex: 1,
 		gap: 2,
+	},
+	titleRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
 	},
 	title: {
 		fontSize: 15,

@@ -16,7 +16,7 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 	const router = useRouter();
 	const menu = useTodayMenuQueries();
 
-	function go(href: "/habits/week" | "/habits/manage") {
+	function go(href: "/habits/week" | "/habits/manage" | "/habits/settings") {
 		onClose();
 		router.push(href);
 	}
@@ -53,13 +53,11 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 				subline={menu.manage.subline}
 				onPress={() => go("/habits/manage")}
 			/>
-			{/* TODO(HAB-15): navigate to Settings once it exists. */}
 			<MenuRow
 				symbol="gearshape"
 				title="Settings"
 				subline={menu.settings.subline}
-				disabledReason={menu.settings.disabledReason}
-				onPress={onClose}
+				onPress={() => go("/habits/settings")}
 			/>
 		</NavMenu>
 	);

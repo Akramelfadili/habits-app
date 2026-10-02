@@ -24,6 +24,10 @@ jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: () => mockEntries,
 }));
 jest.mock("../repositories/frozen-day-repository", () => ({}));
+let mockLastExport: string | null = null;
+jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
+	useAppSetting: () => mockLastExport,
+}));
 
 import { WeeklySummaryScreen } from "../screens/weekly-summary-screen";
 import { useTodayMenuQueries } from "./use-today-menu-queries";
@@ -39,6 +43,7 @@ beforeEach(() => {
 		makeHabit({ id: 2, name: "Read", createdAt: new Date(2026, 0, 1) }),
 	];
 	mockArchived = [];
+	mockLastExport = null;
 	mockEntries = [
 		entry(1, "2026-09-14"),
 		entry(1, "2026-09-15"),
@@ -69,12 +74,30 @@ describe("useTodayMenuQueries (HAB-14)", () => {
 		expect(result.current.manage.subline).toBe("2 active · 2 archived");
 	});
 
-	it("keeps Month/Year/Settings as 'Coming soon' placeholders once habits exist", async () => {
+	it("keeps Month/Year as 'Coming soon' placeholders once habits exist", async () => {
 		const { result } = await renderHook(() => useTodayMenuQueries());
 		expect(result.current.monthly.disabledReason).toBe("Coming soon");
 		expect(result.current.yearly.disabledReason).toBe("Coming soon");
-		expect(result.current.settings.disabledReason).toBe("Coming soon");
 		expect(result.current.weekly.disabledReason).toBeUndefined();
+	});
+
+	it("keeps Settings usable and describes it statically until a first export (HAB-15)", async () => {
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.settings).toEqual({
+			subline: "Appearance, evening review, export",
+		});
+	});
+
+	it("shows the last export date on Settings once one has happened (HAB-15)", async () => {
+		mockLastExport = "2026-08-02";
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.settings.subline).toBe("Last export: 2 August");
+	});
+
+	it("says 'Today' for a same-day export (HAB-15)", async () => {
+		mockLastExport = "2026-09-16";
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.settings.subline).toBe("Last export: Today");
 	});
 
 	it("gives the empty state the spec's reasons, with Manage still usable", async () => {
@@ -89,6 +112,8 @@ describe("useTodayMenuQueries (HAB-14)", () => {
 		);
 		expect(result.current.yearly.disabledReason).toBe("After three months");
 		expect(result.current.manage).toEqual({ subline: "No habits yet" });
+		// Settings must be usable before the first habit exists (HAB-14/15).
+		expect(result.current.settings.disabledReason).toBeUndefined();
 	});
 
 	it("still counts archived habits when nothing is active", async () => {

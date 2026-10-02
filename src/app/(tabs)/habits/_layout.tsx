@@ -51,9 +51,10 @@ export default function HabitsLayout() {
 				<Stack.Screen name="reminders/[id]" options={backTo("")} />
 				{/* Same as Weekly Summary: back to Today, the large title is screen content. */}
 				<Stack.Screen name="manage" options={backTo("Today")} />
-				{/* Manage Categories (HAB-25). Its home is Settings → Categories; until
-				    Settings exists (HAB-15) it's pushed from Manage habits. */}
-				<Stack.Screen name="categories" options={backTo("Manage")} />
+				{/* Settings (HAB-15): back to Today, the large title is screen content. */}
+				<Stack.Screen name="settings" options={backTo("Today")} />
+				{/* Manage Categories (HAB-25), pushed from Settings → Categories. */}
+				<Stack.Screen name="categories" options={backTo("Settings")} />
 			</Stack>
 			<ToastHost />
 		</View>

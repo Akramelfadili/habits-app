@@ -265,3 +265,6 @@ export const EVENING_REVIEW_TIME = { hour: 21, minute: 30 };
 
 /** `app_settings` key for the app-wide Evening review toggle — "true" when on. */
 export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
+
+/** `app_settings` key for the day of the last successful data export (HAB-15), "yyyy-MM-dd". */
+export const LAST_EXPORT_SETTING_KEY = "habits.lastExport";

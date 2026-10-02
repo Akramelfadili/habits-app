@@ -1,15 +1,23 @@
+import { useColorScheme } from "react-native";
 import {
-	type ColorScheme,
 	interactionOpacity,
 	semanticColors,
 	surfaceColors,
 	typeScale,
 } from "./theme";
+import {
+	resolveScheme,
+	useThemePreferenceStore,
+} from "./theme-preference-store";
 
-// Forced to light for now — a manual dark-mode toggle is a future feature.
-// The "dark" tokens above stay intact and unused until that toggle exists.
+/**
+ * The active tokens. The scheme is the Appearance setting (HAB-15) resolved
+ * against the OS: an explicit Light/Dark wins, "system" follows iOS.
+ */
 export function useTheme() {
-	const scheme: ColorScheme = "light";
+	const preference = useThemePreferenceStore((state) => state.preference);
+	const systemScheme = useColorScheme();
+	const scheme = resolveScheme(preference, systemScheme);
 
 	return {
 		scheme,

@@ -70,7 +70,7 @@ async function capture(browser, name, screen) {
 	const page = await browser.newPage({
 		viewport: VIEWPORT,
 		deviceScaleFactor: 2,
-		colorScheme: "light",
+		colorScheme: screen.colorScheme ?? "light",
 		hasTouch: Boolean(screen.touch),
 	});
 	const problems = [];

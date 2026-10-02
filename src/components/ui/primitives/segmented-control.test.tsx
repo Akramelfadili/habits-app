@@ -46,4 +46,22 @@ describe("SegmentedControl", () => {
 		await fireEvent.press(screen.getByText("Break"));
 		expect(onChange).not.toHaveBeenCalled();
 	});
+
+	it("supports three options and reports the tapped one (Appearance, HAB-15)", async () => {
+		const onChange = jest.fn();
+		await render(
+			<SegmentedControl
+				options={[
+					{ value: "light", label: "Light" },
+					{ value: "dark", label: "Dark" },
+					{ value: "system", label: "System" },
+				]}
+				value="system"
+				onChange={onChange}
+			/>,
+		);
+		await fireEvent.press(screen.getByText("Dark"));
+		expect(onChange).toHaveBeenCalledWith("dark");
+		expect(screen.getAllByRole("button")).toHaveLength(3);
+	});
 });

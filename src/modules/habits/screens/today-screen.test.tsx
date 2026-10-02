@@ -579,10 +579,18 @@ describe("TodayScreen", () => {
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByLabelText("More"));
 			await fireEvent.press(screen.getByLabelText("Monthly, Coming soon"));
-			await fireEvent.press(screen.getByLabelText("Settings, Coming soon"));
 
 			expect(mockPush).not.toHaveBeenCalled();
 			expect(screen.getByText("Monthly")).toBeTruthy();
+		});
+
+		it("opens Settings from the menu (HAB-15)", async () => {
+			mockViewState = "populated";
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("More"));
+			await fireEvent.press(screen.getByText("Settings"));
+
+			expect(mockPush).toHaveBeenCalledWith("/habits/settings");
 		});
 
 		it("shows each row's live context", async () => {
