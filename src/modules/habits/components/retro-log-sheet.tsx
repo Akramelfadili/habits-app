@@ -1,16 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { format } from "date-fns";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, StyleSheet } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
 import { Button } from "@/components/ui/primitives/button";
+import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { TextField } from "@/components/ui/primitives/text-field";
 import { MAX_NOTE_LENGTH } from "../constants";
 import type { RetroLogDay } from "../hooks/use-retro-log-queries";
 import { diffDayLog } from "../services/retro-log";
-import type { DayLog } from "../types";
+import type { DayLog, Habit } from "../types";
 import { RetroLogRow } from "./retro-log-row";
 import {
 	type RetroLogFormValues,
@@ -28,8 +29,10 @@ type RetroLogSheetProps = {
 };
 
 /**
- * Retro log (HAB-10), per docs/mockups/retro-log.png: date header with Cancel,
- * the day's habits with their checks, a note, "Save changes" pinned bottom.
+ * Retro log (HAB-10, HAB-18 D4): date header with Cancel (the mockup says
+ * "Close", but the sheet holds an unsaved draft — audit #10), the origin habit
+ * pinned first in a selected card, "Also on <weekday>" for the rest, a note,
+ * "Save changes" pinned bottom.
  * Edits stay a local draft until Save — Cancel or a scrim tap discards them,
  * same as the Quantity log sheet.
  */
@@ -61,7 +64,6 @@ function RetroLogForm({
 	onSave,
 	isSaving,
 }: RetroLogSheetProps & { day: RetroLogDay }) {
-	const [expandedHabitId, setExpandedHabitId] = useState<number | null>(null);
 	const {
 		control,
 		handleSubmit,
@@ -75,6 +77,24 @@ function RetroLogForm({
 		onSave(diffDayLog(day.values, values), note),
 	);
 
+	// `habitsForDay` puts the habit the sheet was opened from first.
+	const [origin, ...others] = day.habits;
+	const renderRow = (habit: Habit, isOrigin: boolean) => (
+		<Controller
+			key={habit.id}
+			control={control}
+			name={`values.${habit.id}`}
+			render={({ field }) => (
+				<RetroLogRow
+					habit={habit}
+					value={field.value}
+					onChange={field.onChange}
+					origin={isOrigin}
+				/>
+			)}
+		/>
+	);
+
 	return (
 		<>
 			<SheetHeader
@@ -85,29 +105,21 @@ function RetroLogForm({
 			/>
 
 			{/* Capped so a long day's list scrolls instead of pushing Save off-screen. */}
-			<ScrollView style={styles.list} bounces={false}>
-				<Container>
-					{day.habits.map((habit) => (
-						<Controller
-							key={habit.id}
-							control={control}
-							name={`values.${habit.id}`}
-							render={({ field }) => (
-								<RetroLogRow
-									habit={habit}
-									value={field.value}
-									onChange={field.onChange}
-									expanded={expandedHabitId === habit.id}
-									onToggleExpanded={() =>
-										setExpandedHabitId((current) =>
-											current === habit.id ? null : habit.id,
-										)
-									}
-								/>
-							)}
-						/>
-					))}
-				</Container>
+			<ScrollView
+				style={styles.list}
+				contentContainerStyle={styles.listContent}
+				bounces={false}
+			>
+				{origin ? (
+					// The pinned origin card: the Container's selected (ink ring) state.
+					<Container selected>{renderRow(origin, true)}</Container>
+				) : null}
+				{others.length > 0 ? (
+					<Container>
+						<SectionLabel>{`Also on ${format(day.date, "EEEE")}`}</SectionLabel>
+						{others.map((habit) => renderRow(habit, false))}
+					</Container>
+				) : null}
 			</ScrollView>
 
 			<Container>
@@ -120,7 +132,7 @@ function RetroLogForm({
 							value={field.value}
 							onChangeText={field.onChange}
 							onBlur={field.onBlur}
-							placeholder="Anything worth remembering about this day"
+							placeholder="Add a note for this day"
 							maxLength={MAX_NOTE_LENGTH}
 							multiline
 							error={fieldState.error?.message}
@@ -143,5 +155,8 @@ const styles = StyleSheet.create({
 	list: {
 		flexGrow: 0,
 		maxHeight: 360,
+	},
+	listContent: {
+		gap: 12,
 	},
 });

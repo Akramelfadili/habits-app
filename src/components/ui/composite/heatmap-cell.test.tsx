@@ -25,6 +25,16 @@ describe("HeatmapCell", () => {
 		});
 	});
 
+	it("draws a bonus day (off-schedule log) as a blank cell with a centred dot", async () => {
+		await render(
+			<HeatmapCell state={{ kind: "bonus" }} accent={195} size={18} />,
+		);
+		expect(screen.getByTestId("heatmap-cell-bonus")).toHaveStyle({
+			backgroundColor: surfaceColors.light.card,
+		});
+		expect(screen.getByTestId("heatmap-cell-bonus-dot")).toBeTruthy();
+	});
+
 	it("renders missed as the neutral track and not-scheduled as blank", async () => {
 		await render(
 			<>

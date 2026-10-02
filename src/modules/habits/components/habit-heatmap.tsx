@@ -27,6 +27,7 @@ const STATUS_LABEL: Record<HeatmapDay["status"], string> = {
 	missed: "missed",
 	frozen: "frozen",
 	logged: "logged",
+	bonus: "logged off-schedule",
 	pending: "not logged yet",
 	future: "upcoming",
 };
@@ -35,6 +36,8 @@ function cellStateFor(day: HeatmapDay): HeatmapCellState {
 	switch (day.status) {
 		case "logged":
 			return { kind: "level", level: day.level ?? 3 };
+		case "bonus":
+			return { kind: "bonus" };
 		case "missed":
 			return { kind: "missed" };
 		case "frozen":

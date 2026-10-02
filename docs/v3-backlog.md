@@ -51,3 +51,16 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 ## Monthly vs Yearly: archived habits in insights
 
 - **Inconsistent today.** Monthly insights (slipping, improved, weekend pattern) can still name or link an archived habit, while Yearly insights now exclude archived habits (HAB-17). **V3: make Monthly consistent** — compute its insights (and their action targets) from active habits only, keeping archived habits' history in the tiles, calendar and rows as now.
+
+## HAB-18 — Logging mechanics: off-schedule log & retro-log pinning
+
+- **Retro log keeps "Cancel", D4 says "Close".** The sheet holds an unsaved draft (audit #10), so the label stays "Cancel".
+- **D4's origin card is simpler than the mockup.** The mockup repeats the habit under a "Glasses · Target 8" sub-row with "of 8" under the stepper; the built card has one row (name, "The habit you opened this day from", inline stepper), so the target isn't shown for the origin habit. Quantity rows elsewhere in the sheet show their target/amount in the subtitle.
+- **Picker rows have no per-row frequency polish.** The subtitle is the weekday list or range ("Mon–Fri", "Tue, Thu", "Every day", "3× per week") plus the target; the mockup's "5× per week · 4 done" progress isn't shown.
+- **Picker is a sheet over the rest day, not a separate screen**, and quantity rows show "Amount" with an SF-Symbol chevron (blank on web).
+- **D2 time:** uses the entry's `createdAt`. No column was added. An entry's time doesn't move when a quantity is re-logged later.
+- **D2's compact row** (`OffScheduleRow`) opens Habit Detail on tap; its trailing check is not a toggle. Removing a bonus log is the toast's Undo (while it shows) or Detail / retro log.
+- **No mockup for the bonus dot or the Detail legend.** NEW-16's bonus state is drawn as a blank cell with an accent dot; the Detail legend has no entry for it, so it is unexplained on screen. Add a legend item with the next Detail polish.
+- **Retro log still lists habits by "due that day or has a log"**, so a rest-day bonus entry for another habit appears there as a normal row; it is not labelled "bonus".
+- **Visual baselines:** `retro-log` re-captured against D4; `rest-day-picker`, `rest-day-picker-empty`, `rest-day-logged`, `habit-detail-bonus` added. The `today-menu-open*` baselines were not touched (known popover flake above).
+

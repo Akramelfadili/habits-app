@@ -16,6 +16,7 @@ import { WEEK_STARTS_ON } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, EntryNote, Habit } from "../types";
 import { calculateCurrentStreak, isEntryComplete } from "./habit-service";
+import { isOffScheduleEntry } from "./off-schedule";
 
 /**
  * Habit Detail's history math (HAB-09) — pure functions over a habit's own
@@ -159,6 +160,8 @@ export type HeatmapDayStatus =
 	| "missed"
 	| "frozen"
 	| "logged"
+	/** Logged on a day that wasn't scheduled (HAB-18) — informational, never counted. */
+	| "bonus"
 	| "pending"
 	| "future";
 
@@ -214,10 +217,14 @@ export function buildHeatmapWeeks({
 		if (isFuture) return { date, status: "future", selectable };
 		if (entry) {
 			// A real log always shows, even on an off-schedule day — hiding it
-			// would misreport what happened; the rate still ignores it.
+			// would misreport what happened; the rate still ignores it. A frozen
+			// day is never a bonus: the freeze says it was owed.
+			const bonus =
+				!frozenDates.has(dateString) &&
+				isOffScheduleEntry(habit, entry, entries);
 			return {
 				date,
-				status: "logged",
+				status: bonus ? "bonus" : "logged",
 				level: heatmapLevelFor(habit, entry),
 				selectable,
 			};

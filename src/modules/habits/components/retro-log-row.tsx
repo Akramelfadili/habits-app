@@ -1,4 +1,3 @@
-import { StyleSheet, View } from "react-native";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { Checkbox } from "@/components/ui/primitives/checkbox";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
@@ -15,62 +14,57 @@ type RetroLogRowProps = {
 	habit: Habit;
 	value: DayLogValue;
 	onChange: (value: DayLogValue) => void;
-	/** Quantity habits only: the exact-amount stepper is showing under the row. */
-	expanded: boolean;
-	onToggleExpanded: () => void;
+	/** The habit the sheet was opened from (HAB-18, VAR-06 · origin) — explains itself in the subtitle. */
+	origin?: boolean;
 };
 
 /**
- * One habit in the Retro log sheet (HAB-10): icon, name, subtitle, and the
- * round check on the right; dimmed until done. The check flips a check habit
- * and takes a quantity habit between nothing and its full target — tapping a
- * quantity row itself opens a stepper for an exact amount.
+ * One habit in the Retro log sheet (HAB-10, HAB-18): icon, name, subtitle, and
+ * the control on the right. A check habit gets the round check; a quantity
+ * habit gets the inline stepper (VAR-07) instead — no checkbox. Rows are never
+ * dimmed: an unlogged day is a normal state, not a disabled one.
  */
 export function RetroLogRow({
 	habit,
 	value,
 	onChange,
-	expanded,
-	onToggleExpanded,
+	origin = false,
 }: RetroLogRowProps) {
 	const { scheme } = useTheme();
 	const isQuantity = habit.targetType === "quantity";
 	const done = isDayLogValueDone(habit, value);
-	const toggle = () => onChange(toggledDayLogValue(habit, value));
 	const doneWord = habit.direction === "break" ? "resisted" : "done";
 
 	return (
-		<View style={styles.block}>
-			<ListItem
-				embedded
-				dimmed={!done}
-				title={habit.name}
-				subtitle={retroLogRowSubtitle(habit, value)}
-				onPress={isQuantity ? onToggleExpanded : toggle}
-				accessibilityLabel={
-					isQuantity
-						? `${habit.name}, set an exact amount`
-						: `${habit.name}, ${done ? doneWord : `not ${doneWord}`}`
-				}
-				leading={
-					<IconBadge
-						symbol={categorySymbol(habit.category)}
-						accent={{
-							tint: habitAccentTint(habit.category.hue, scheme),
-							ink: habitAccentInk(habit.category.hue, scheme),
-						}}
-					/>
-				}
-				trailing={
-					<Checkbox
-						checked={done}
-						onPress={toggle}
-						accessibilityLabel={`${habit.name}, ${doneWord}`}
-					/>
-				}
-			/>
-			{isQuantity && expanded ? (
-				<View style={styles.stepper}>
+		<ListItem
+			embedded
+			title={habit.name}
+			subtitle={
+				origin
+					? "The habit you opened this day from"
+					: retroLogRowSubtitle(habit, value)
+			}
+			onPress={
+				isQuantity
+					? undefined
+					: () => onChange(toggledDayLogValue(habit, value))
+			}
+			accessibilityLabel={
+				isQuantity
+					? undefined
+					: `${habit.name}, ${done ? doneWord : `not ${doneWord}`}`
+			}
+			leading={
+				<IconBadge
+					symbol={categorySymbol(habit.category)}
+					accent={{
+						tint: habitAccentTint(habit.category.hue, scheme),
+						ink: habitAccentInk(habit.category.hue, scheme),
+					}}
+				/>
+			}
+			trailing={
+				isQuantity ? (
 					<Stepper
 						value={typeof value === "number" ? value : 0}
 						min={0}
@@ -78,17 +72,14 @@ export function RetroLogRow({
 						onChange={onChange}
 						accessibilityLabel={`${habit.name}, ${habit.targetUnit ?? ""}`.trim()}
 					/>
-				</View>
-			) : null}
-		</View>
+				) : (
+					<Checkbox
+						checked={done}
+						onPress={() => onChange(toggledDayLogValue(habit, value))}
+						accessibilityLabel={`${habit.name}, ${doneWord}`}
+					/>
+				)
+			}
+		/>
 	);
 }
-
-const styles = StyleSheet.create({
-	block: {
-		gap: 10,
-	},
-	stepper: {
-		alignItems: "center",
-	},
-});
