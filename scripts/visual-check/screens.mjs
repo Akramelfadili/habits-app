@@ -463,17 +463,17 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-13 — Manage, archive, delete
+	// HAB-13 — Manage, archive, delete (reworked by HAB-19; judged against D3)
 	"manage-habits": {
 		feature: "HAB-13",
 		route: "/habits/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/manage-archive.png",
+		mockup: "docs/mockups/hab-19-d3.png",
 		note: "Resting state; the mockup's lifted row and toasts are the next two states.",
 	},
 	"manage-habits-dragging": {
 		feature: "HAB-13",
 		route: "/habits/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/manage-archive.png",
+		mockup: "docs/mockups/hab-19-d3.png",
 		note: "Meditate's grip held mid-drag, not yet released — the mockup's lifted row.",
 		async interact(page) {
 			await drag(page, page.getByLabel("Reorder Meditate"), {
@@ -485,7 +485,7 @@ export const SCREENS = {
 	"manage-habits-swipe-open": {
 		feature: "HAB-13",
 		route: "/habits/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/manage-archive.png",
+		mockup: "docs/mockups/hab-19-d3.png",
 		touch: true,
 		note: "Read swiped left, Archive action revealed — no mockup draws this state.",
 		async interact(page) {
@@ -507,6 +507,24 @@ export const SCREENS = {
 			// Read's was just revealed, at the row's trailing edge.
 			await page.touchscreen.tap(page.viewportSize().width - 60, y);
 		},
+	},
+	"manage-habits-no-active": {
+		feature: "HAB-19",
+		route: "/habits/manage?fixtures=manage-all-archived",
+		mockup: "docs/mockups/hab-19-e2.png",
+		note: "E2 — everything archived: category sections gone, empty card with Add habit, Restore below.",
+	},
+	"manage-habits-nothing-archived": {
+		feature: "HAB-19",
+		route: "/habits/manage?fixtures=manage-nothing-archived",
+		mockup: "docs/mockups/hab-19-e3.png",
+		note: "E3 — Archived header stays over a dashed placeholder.",
+	},
+	"manage-habits-no-habits": {
+		feature: "HAB-19",
+		route: "/habits/manage?fixtures=empty",
+		mockup: null,
+		note: "No habits at all: E2 card with copy that doesn't claim anything was archived, plus the E3 placeholder. No mockup draws this combination.",
 	},
 	"delete-confirm": {
 		feature: "HAB-13",
@@ -650,6 +668,10 @@ const DARK_TWINS = [
 	"today-menu-open",
 	"habit-detail",
 	"manage-habits",
+	"manage-habits-dragging",
+	"manage-habits-no-active",
+	"manage-habits-nothing-archived",
+	"manage-habits-no-habits",
 	"category-picker-selected",
 	"add-category-empty",
 	"manage-categories-in-use",

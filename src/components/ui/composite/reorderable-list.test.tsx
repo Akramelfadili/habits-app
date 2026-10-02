@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/react-native";
 import { Text, View } from "react-native";
 import { ReorderableList } from "./reorderable-list";
 
@@ -62,5 +67,49 @@ describe("ReorderableList", () => {
 		await moveAction("Reorder read", "moveUp");
 
 		expect(onReorder).not.toHaveBeenCalled();
+	});
+
+	describe("renderGroup", () => {
+		async function renderGrouped() {
+			const onReorder = jest.fn();
+			await render(
+				<ReorderableList
+					items={rows}
+					keyOf={(row) => row.id}
+					groupOf={(row) => row.group}
+					handleLabel={(row) => `Reorder ${row.id}`}
+					onReorder={onReorder}
+					renderGroup={(key, children, { isDragging }) => (
+						<View testID={`group-${key}`}>
+							<Text>{isDragging ? `lifted ${key}` : key}</Text>
+							{children}
+						</View>
+					)}
+					renderItem={(row, handle) => (
+						<View>
+							<Text>{row.id}</Text>
+							{handle}
+						</View>
+					)}
+				/>,
+			);
+			return onReorder;
+		}
+
+		it("wraps each run of equal groups once, rows inside", async () => {
+			await renderGrouped();
+			const morning = screen.getByTestId("group-Morning");
+			expect(within(morning).getByText("water")).toBeTruthy();
+			expect(within(morning).getByText("meditate")).toBeTruthy();
+			expect(within(morning).queryByText("read")).toBeNull();
+			expect(
+				within(screen.getByTestId("group-Evening")).getByText("read"),
+			).toBeTruthy();
+		});
+
+		it("reports no group as dragging at rest", async () => {
+			await renderGrouped();
+			expect(screen.queryByText(/^lifted/)).toBeNull();
+		});
 	});
 });

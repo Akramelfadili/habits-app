@@ -8,9 +8,8 @@ export function manageRowSubtitle(habit: Habit): string {
 }
 
 /**
- * "2 Sep · 41 days logged" ("nothing logged" for a habit with no history).
- * No "Archived" prefix — the row already sits under the "Archived · N"
- * heading, and the repeat made it wrap beside Restore.
+ * "Archived 2 Sep · 41 logs kept" ("no logs" for a habit with no
+ * history) — the mockups' wording (HAB-19).
  */
 export function archivedRowSubtitle(
 	archivedAt: Date,
@@ -18,9 +17,9 @@ export function archivedRowSubtitle(
 ): string {
 	const logs =
 		logsKept === 0
-			? "nothing logged"
-			: `${logsKept} ${logsKept === 1 ? "day" : "days"} logged`;
-	return `${format(archivedAt, "d MMM")} · ${logs}`;
+			? "no logs"
+			: `${logsKept} ${logsKept === 1 ? "log" : "logs"} kept`;
+	return `Archived ${format(archivedAt, "d MMM")} · ${logs}`;
 }
 
 /** "Archived · 2". */
@@ -29,4 +28,22 @@ export function archivedSectionTitle(count: number): string {
 }
 
 export const MANAGE_FOOTNOTE =
-	"Archiving keeps every logged day and streak. Deleting is only offered from the habit detail screen.";
+	"Order is set per category and matches Today. To move a habit to another category, edit it.";
+
+/** "Reordering within Training" — the lifted group's header note. */
+export function reorderingTag(categoryName: string): string {
+	return `Reordering within ${categoryName}`;
+}
+
+/**
+ * Why there's nothing active. Everything archived (E2) points at Restore;
+ * with no habits at all there's nothing to restore, so it doesn't say so.
+ */
+export function noActiveMessage(archivedCount: number): string {
+	return archivedCount > 0
+		? "Everything is archived, so Today is empty. Restore one below or start something new."
+		: "You haven't added a habit yet, so Today is empty. Start something new.";
+}
+
+export const NOTHING_ARCHIVED_MESSAGE =
+	"Archive a habit from Edit habit to hide it from Today and keep its history.";

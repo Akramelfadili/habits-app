@@ -130,6 +130,13 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Depends on:** HAB-14, HAB-24 (categories).
 
+**As built (HAB-19)**
+- **Grouping:** one card per category with a `SectionHeader` (name + habit count), in Today's order — both call `groupHabitsByCategory`, so they can't drift. A category with no active habit has no section (archiving the last habit in one removes it live). One `ReorderableList` with a `renderGroup` wrapper; drag stays scoped to its category by `groupOf`. While a row is held, its card gets an ink outline (`Container lifted`) and its header the tag "Reordering within <category>"; both clear on release. VoiceOver "Move up / Move down" actions are kept (they stop at the card's edge).
+- **E2 / E3 / zero habits:** no active habits → `EmptyStateCard` ("No active habits", Add habit → New Habit), no category cards and no footnote, Archived below. Its copy depends on whether anything is archived: "Everything is archived…" vs "You haven't added a habit yet…". Nothing archived → the Archived header stays (no count) over a dashed `PlaceholderCard`. With no habits at all both show (no mockup for the combination).
+- **Copy:** footnote is the mockup's ("Order is set per category and matches Today…"); archived rows read "Archived 2 Sep · 41 logs kept" ("· no logs" for a habit with none).
+- **Deviations:** title "Habits" on the pushed screen, no "Done" — see `docs/v3-backlog.md`. The Jest suite can't drive the drag gesture (gesture handlers don't register under the mock), so the lifted outline/tag is covered by the `manage-habits-dragging` visual-check state, not a unit test.
+- The temporary Categories row stays removed (Settings → Categories, HAB-15).
+
 ---
 
 ## HAB-20 — Detail: archived, restored, streak reset

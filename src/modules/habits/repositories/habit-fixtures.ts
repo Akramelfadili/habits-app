@@ -53,6 +53,8 @@ export type FixtureScenario =
 	| "reminders"
 	| "reminders-at-cap"
 	| "manage-archive"
+	| "manage-all-archived"
+	| "manage-nothing-archived"
 	| "many-categories"
 	| "categories-built-in-only"
 	| "categories-one-custom"
@@ -75,6 +77,8 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"reminders",
 	"reminders-at-cap",
 	"manage-archive",
+	"manage-all-archived",
+	"manage-nothing-archived",
 	"many-categories",
 	"categories-built-in-only",
 	"categories-one-custom",
@@ -540,7 +544,7 @@ function manageArchiveFixtures(): FixtureHabit[] {
 			...base,
 			id: 3,
 			name: "Read",
-			category: EVENING_FIXTURE,
+			category: MORNING_FIXTURE,
 			frequency: { type: "per-week", timesPerWeek: 5 },
 		},
 		{
@@ -555,7 +559,14 @@ function manageArchiveFixtures(): FixtureHabit[] {
 			id: 5,
 			name: "Mobility",
 			category: TRAINING_FIXTURE,
-			frequency: { type: "daily" },
+			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+		},
+		{
+			...base,
+			id: 8,
+			name: "Upper body",
+			category: TRAINING_FIXTURE,
+			frequency: { type: "weekdays", days: [2, 4] },
 		},
 		{
 			...base,
@@ -684,6 +695,10 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return remindersHabitFixtures({ type: "daily" });
 		case "manage-archive":
 			return manageArchiveFixtures();
+		case "manage-all-archived":
+			return manageArchiveFixtures().filter((habit) => habit.archivedAt);
+		case "manage-nothing-archived":
+			return manageArchiveFixtures().filter((habit) => !habit.archivedAt);
 		case "categories-built-in-only":
 		case "categories-one-custom":
 			return manageCategoriesFixtures(false);

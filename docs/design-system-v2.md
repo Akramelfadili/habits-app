@@ -96,6 +96,7 @@ Each entry: layout structure and the components it's built from (IDs from `habit
 **Logging — off-schedule & retro (HAB-18):** Habit picker (`NEW-12`) with `NEW-19` rows (check or quantity). Retro-log sheet pins the origin habit (`VAR-06 · origin`) ahead of `VAR-07` inline steppers for quantity rows.
 
 **Manage & archive (HAB-19):** `V1-20` category group headers, `VAR-05` drag rows scoped to their own card when lifted. Empty variants: no-active (`V1-21`) and nothing-archived (`V1-22 · placeholder`).
+Built as: `EmptyStateCard` and `PlaceholderCard` (`components/ui/composite/`) for the two empty variants; `Container` gained `lifted` (ink outline with padding compensated, so rows don't shift) and `dashed` (transparent card, dashed hairline); `SectionHeader` (`size="group"`) gained `tag` for the "Reordering within <category>" note while a row is held.
 
 **Detail — archived/restored/reset (HAB-20):** `NEW-13` banner (default/dismissed states) for archived/restored. `NEW-16 · paused` for the archived date range; `NEW-16 · streak reset` + `VAR-09` carrying the live freeze count for the reset case.
 

@@ -35,4 +35,19 @@ describe("SectionHeader", () => {
 			justifyContent: "flex-start",
 		});
 	});
+
+	it("group: a tag sits at the far edge, only when given (HAB-19)", async () => {
+		const view = await render(<SectionHeader size="group" title="Training" />);
+		expect(screen.queryByText(/Reordering/)).toBeNull();
+		await view.rerender(
+			<SectionHeader
+				size="group"
+				title="Training"
+				tag="Reordering within Training"
+			/>,
+		);
+		expect(screen.getByText("Reordering within Training")).toHaveStyle({
+			marginLeft: "auto",
+		});
+	});
 });

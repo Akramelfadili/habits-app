@@ -54,7 +54,13 @@ export function makeEntryFixtures(
 
 	if (scenario === "habit-detail") return habitDetailEntries();
 
-	if (scenario === "manage-archive") return manageArchiveEntries();
+	if (
+		scenario === "manage-archive" ||
+		scenario === "manage-all-archived" ||
+		scenario === "manage-nothing-archived"
+	) {
+		return manageArchiveEntries();
+	}
 
 	if (
 		scenario === "weekly-summary" ||
