@@ -27,6 +27,7 @@ import {
 	deleteHabit,
 	pausesAfterRestore,
 	restoreHabit,
+	undoRestoreHabit,
 } from "./habit-lifecycle-service";
 
 describe("habit-lifecycle-service", () => {
@@ -80,7 +81,7 @@ describe("habit-lifecycle-service", () => {
 		);
 	});
 
-	it("restores with the closed pause and re-syncs reminders from what's stored", async () => {
+	it("restores with the closed pause — the days read as paused, and the streak starts fresh (HAB-20)", async () => {
 		const archived = makeHabit({ id: 3, archivedAt: new Date(2000, 0, 1) });
 		const restored = makeHabit({ id: 3 });
 		mockGetHabit.mockResolvedValue(archived);
@@ -92,6 +93,23 @@ describe("habit-lifecycle-service", () => {
 			{ from: "2000-01-01", to: expect.any(String) },
 		]);
 		expect(mockSync).toHaveBeenCalledWith(restored);
+	});
+
+	it("undoes a restore by re-archiving with the original date and pauses, then silencing reminders", async () => {
+		const archivedAt = new Date(2026, 8, 2, 20, 15);
+		const pauses = [{ from: "2026-08-01", to: "2026-08-03" }];
+
+		await undoRestoreHabit(3, { archivedAt, pauses });
+
+		expect(mockSetArchived).toHaveBeenCalledWith(3, archivedAt, pauses);
+		expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+	});
+
+	it("refuses to undo a restore that has no archive date to put back", async () => {
+		await expect(
+			undoRestoreHabit(3, { archivedAt: null, pauses: [] }),
+		).rejects.toThrow();
+		expect(mockSetArchived).not.toHaveBeenCalled();
 	});
 
 	it("refuses to restore a habit that doesn't exist", async () => {

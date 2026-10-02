@@ -89,6 +89,15 @@ describe("reminder-service", () => {
 		});
 	});
 
+	describe("syncHabitReminders — archived (HAB-20)", () => {
+		it("cancels but schedules nothing for an archived habit, so editing its reminders can't make it fire", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders({ ...weekdayHabit, archivedAt: new Date() });
+			expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+			expect(mockSchedule).not.toHaveBeenCalled();
+		});
+	});
+
 	describe("syncHabitReminders", () => {
 		it("cancels everything the habit owns, then schedules only enabled reminders on schedulable days", async () => {
 			mockGetHabitReminders.mockResolvedValue([

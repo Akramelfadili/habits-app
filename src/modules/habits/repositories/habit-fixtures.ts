@@ -52,6 +52,7 @@ export type FixtureScenario =
 	| "habit-detail"
 	| "habit-detail-new"
 	| "habit-detail-bonus"
+	| "habit-detail-archived"
 	| "retro-log"
 	| "weekly-summary"
 	| "weekly-summary-last-week"
@@ -83,6 +84,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"habit-detail",
 	"habit-detail-new",
 	"habit-detail-bonus",
+	"habit-detail-archived",
 	"retro-log",
 	"weekly-summary",
 	"weekly-summary-last-week",
@@ -421,6 +423,26 @@ export function habitDetailFixtures(): FixtureHabit[] {
 	];
 }
 
+/** Days before "now" the `habit-detail-archived` habit was archived (HAB-20 D5/E1) — a few weeks in, so the heatmap shows a paused stretch. */
+export const HABIT_DETAIL_ARCHIVED_DAYS_AGO = 17;
+
+/**
+ * docs/mockups/hab-20-d5.png's "Cold shower · Morning · daily · archived":
+ * `habit-detail`'s history (`entry-fixtures.ts` drops everything after the
+ * archive day), a simple check, and a 07:00 daily reminder
+ * (`reminder-fixtures.ts`) so Restore shows E1's "07:00 · daily" row.
+ */
+export function habitDetailArchivedFixtures(): FixtureHabit[] {
+	return habitDetailFixtures().map((habit) => ({
+		...habit,
+		name: "Cold shower",
+		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
+		archivedAt: subDays(new Date(), HABIT_DETAIL_ARCHIVED_DAYS_AGO),
+	}));
+}
+
 /**
  * A just-created habit with no history, matching
  * docs/mockups/habit-detail-new.png ("Evening walk · Mon–Fri · added today").
@@ -750,6 +772,8 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 					? { ...habit, frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] } }
 					: habit,
 			);
+		case "habit-detail-archived":
+			return habitDetailArchivedFixtures();
 		case "retro-log":
 			return retroLogFixtures();
 		case "weekly-summary":

@@ -7,7 +7,6 @@ import { HeatmapLegend } from "@/components/ui/composite/heatmap-legend";
 import { Caption } from "@/components/ui/primitives/caption";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { heatmapRangeLabel } from "../screens/habit-detail-helpers";
 import type { HeatmapDay } from "../services/habit-history";
 import type { Habit } from "../types";
 
@@ -15,9 +14,12 @@ type HabitHeatmapProps = {
 	habit: Habit;
 	/** Week columns, oldest first, each Monday → Sunday. */
 	weeks: HeatmapDay[][];
-	today: Date;
 	/** Nothing logged yet — swaps the range and legend for first-run copy. */
 	hasEntries: boolean;
+	/** The range line's text — "Jul — Sep · ended 2 Sep" while archived, "· paused 2 · 15 Sep" once restored (HAB-20). */
+	rangeLabel: string;
+	/** The legend's frozen swatch text — "2 freezes left" (HAB-20); omitted while archived, so plain "Frozen". */
+	frozenLabel?: string;
 	/** A past (or today's) cell was tapped — the entry point into retro logging (HAB-10). */
 	onSelectDay: (date: Date) => void;
 };
@@ -28,6 +30,8 @@ const STATUS_LABEL: Record<HeatmapDay["status"], string> = {
 	frozen: "frozen",
 	logged: "logged",
 	bonus: "logged off-schedule",
+	paused: "paused",
+	reset: "missed, streak reset",
 	pending: "not logged yet",
 	future: "upcoming",
 };
@@ -42,6 +46,10 @@ function cellStateFor(day: HeatmapDay): HeatmapCellState {
 			return { kind: "missed" };
 		case "frozen":
 			return { kind: "frozen" };
+		case "paused":
+			return { kind: "paused" };
+		case "reset":
+			return { kind: "reset" };
 		default:
 			// Pending today and future days can't have been missed yet — they
 			// read as blank, same as a day that was never scheduled.
@@ -53,12 +61,12 @@ function cellStateFor(day: HeatmapDay): HeatmapCellState {
 export function HabitHeatmap({
 	habit,
 	weeks,
-	today,
 	hasEntries,
+	rangeLabel,
+	frozenLabel,
 	onSelectDay,
 }: HabitHeatmapProps) {
 	const { colors } = useTheme();
-	const firstDay = weeks[0]?.[0]?.date ?? today;
 	const weekdayRows = Array.from({ length: 7 }, (_, weekday) =>
 		weeks.map((week) => week[weekday]),
 	);
@@ -68,9 +76,7 @@ export function HabitHeatmap({
 			<View style={styles.header}>
 				<Text style={[styles.title, { color: colors.ink }]}>Last 10 weeks</Text>
 				<Text style={[styles.range, { color: colors.sub }]}>
-					{hasEntries
-						? heatmapRangeLabel(firstDay, today)
-						: "Nothing logged yet"}
+					{hasEntries ? rangeLabel : "Nothing logged yet"}
 				</Text>
 			</View>
 			<CompletionGrid
@@ -86,7 +92,7 @@ export function HabitHeatmap({
 				)}
 			/>
 			{hasEntries ? (
-				<HeatmapLegend accent={habit.category.hue} />
+				<HeatmapLegend accent={habit.category.hue} frozenLabel={frozenLabel} />
 			) : (
 				<Caption>Cells fill in as you log — the first one is today.</Caption>
 			)}

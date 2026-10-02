@@ -1,5 +1,10 @@
 import { createDailyFrequency } from "./daily-frequency";
-import { OPEN_PAUSE_END, withPauses } from "./paused-schedule";
+import {
+	isPausedOn,
+	OPEN_PAUSE_END,
+	restartDays,
+	withPauses,
+} from "./paused-schedule";
 import { createSpecificWeekdaysFrequency } from "./specific-weekdays-frequency";
 
 const daily = createDailyFrequency({ type: "daily" });
@@ -52,5 +57,35 @@ describe("withPauses", () => {
 		);
 		expect(strategy.canFallOn(1)).toBe(true);
 		expect(strategy.canFallOn(2)).toBe(false);
+	});
+});
+
+describe("restartDays (HAB-20)", () => {
+	it("is the day after each pause ends — the restore day — in order", () => {
+		expect(
+			restartDays([
+				{ from: "2026-09-10", to: "2026-09-12" },
+				{ from: "2026-08-01", to: "2026-08-31" },
+			]),
+		).toEqual(["2026-09-01", "2026-09-13"]);
+	});
+
+	it("is empty with no pauses, so an unpaused habit's streak is untouched", () => {
+		expect(restartDays([])).toEqual([]);
+	});
+
+	it("doesn't make the pause itself bridge a streak: paused days stay unscheduled", () => {
+		const strategy = withPauses(daily, pauses);
+		expect(
+			strategy.wasScheduledOn(new Date(2026, 8, 11), { completedDates: [] }),
+		).toBe(false);
+	});
+});
+
+describe("isPausedOn", () => {
+	it("is inclusive at both ends", () => {
+		expect(isPausedOn(new Date(2026, 8, 10), pauses)).toBe(true);
+		expect(isPausedOn(new Date(2026, 8, 12, 23), pauses)).toBe(true);
+		expect(isPausedOn(new Date(2026, 8, 13), pauses)).toBe(false);
 	});
 });

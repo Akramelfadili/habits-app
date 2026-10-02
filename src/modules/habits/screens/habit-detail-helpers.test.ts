@@ -1,15 +1,23 @@
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import type { Entry, Frequency } from "../types";
 import {
+	archivedBannerDetail,
+	archivedBannerTitle,
 	completionRateCaption,
+	completionRateLabel,
 	completionRateValue,
+	currentStreakTile,
 	entryDateLabel,
 	entryValueLabel,
 	frequencyLabel,
 	habitSubtitle,
 	heatmapRangeLabel,
+	heatmapRangeLabelFor,
+	legendFrozenLabel,
 	longestStreakCaption,
 	notLoggedLabel,
+	restoredToastMessage,
+	streakResetNote,
 } from "./habit-detail-helpers";
 
 const today = new Date(2026, 8, 23, 12);
@@ -67,11 +75,21 @@ describe("stat tile copy", () => {
 	});
 
 	it("shows a percentage, or a dash when nothing's been scheduled", () => {
-		const rate = { completed: 78, scheduled: 90, fraction: 78 / 90 };
+		const rate = {
+			completed: 78,
+			scheduled: 90,
+			fraction: 78 / 90,
+			skippedPaused: false,
+		};
 		expect(completionRateValue(rate)).toBe("87%");
 		expect(completionRateCaption(rate)).toBe("78 of 90 days");
 		expect(
-			completionRateValue({ completed: 0, scheduled: 0, fraction: null }),
+			completionRateValue({
+				completed: 0,
+				scheduled: 0,
+				fraction: null,
+				skippedPaused: false,
+			}),
 		).toBe("—");
 	});
 });
@@ -105,6 +123,94 @@ describe("notLoggedLabel", () => {
 		expect(notLoggedLabel(makeHabit())).toBe("Not logged");
 		expect(notLoggedLabel(makeHabit({ direction: "break" }))).toBe(
 			"Not resisted",
+		);
+	});
+});
+
+describe("archive and restore copy (HAB-20)", () => {
+	const archived = makeHabit({ archivedAt: new Date(2026, 8, 2, 20) });
+
+	it("words the banner from the archive date and the log count", () => {
+		expect(archivedBannerTitle(archived.archivedAt as Date)).toBe(
+			"Archived on 2 September",
+		);
+		expect(archivedBannerDetail(41)).toBe(
+			"Hidden from Today. All 41 logs kept.",
+		);
+		expect(archivedBannerDetail(1)).toBe("Hidden from Today. All 1 log kept.");
+		expect(archivedBannerDetail(0)).toBe("Hidden from Today. No logs yet.");
+	});
+
+	it("names the habit in the restore toast", () => {
+		expect(restoredToastMessage("Cold shower")).toBe(
+			"Cold shower is back on Today",
+		);
+	});
+
+	it("reads the Current tile as paused while archived, and fresh after a restore", () => {
+		expect(currentStreakTile(archived, 12)).toEqual({
+			value: "—",
+			caption: "paused",
+			muted: true,
+		});
+		const restored = makeHabit({
+			pauses: [{ from: "2026-09-02", to: "2026-09-14" }],
+		});
+		expect(currentStreakTile(restored, 0).value).toBe("0");
+		expect(currentStreakTile(restored, 0).caption).toBe(
+			"next log starts a streak",
+		);
+		expect(currentStreakTile(restored, 3)).toMatchObject({
+			value: "3",
+			caption: "day streak",
+			muted: false,
+		});
+		expect(currentStreakTile(makeHabit(), 0).caption).toBe("day streak");
+		// Once something's been logged since the restore, a 0 is an ordinary miss.
+		expect(currentStreakTile(restored, 0, true).caption).toBe("day streak");
+	});
+
+	it("relabels the 90-day tile before archive, and says paused days were skipped", () => {
+		expect(completionRateLabel(archived)).toBe("Before archive");
+		expect(completionRateLabel(makeHabit())).toBe("90 days");
+		expect(
+			completionRateCaption({
+				completed: 20,
+				scheduled: 30,
+				fraction: 2 / 3,
+				skippedPaused: true,
+			}),
+		).toBe("paused days skipped");
+	});
+
+	it("marks where the heatmap's history ended or paused", () => {
+		const first = new Date(2026, 6, 20);
+		const today = new Date(2026, 8, 23);
+		expect(heatmapRangeLabelFor(makeHabit(), first, today)).toBe("Jul — Sep");
+		expect(heatmapRangeLabelFor(archived, first, today)).toBe(
+			"Jul — Sep · ended 2 Sep",
+		);
+		const restored = makeHabit({
+			pauses: [{ from: "2026-09-02", to: "2026-09-14" }],
+		});
+		expect(heatmapRangeLabelFor(restored, first, today)).toBe(
+			"Jul — Sep · paused 2 – 15 Sep",
+		);
+		const old = makeHabit({
+			pauses: [{ from: "2026-01-02", to: "2026-01-14" }],
+		});
+		expect(heatmapRangeLabelFor(old, first, today)).toBe("Jul — Sep");
+	});
+
+	it("carries the live freeze count in the legend, and no count once archived (VAR-09)", () => {
+		expect(legendFrozenLabel(makeHabit(), 0)).toBe("0 freezes left");
+		expect(legendFrozenLabel(makeHabit(), 1)).toBe("1 freeze left");
+		expect(legendFrozenLabel(archived, 2)).toBeUndefined();
+	});
+
+	it("explains a streak reset with the refill date", () => {
+		expect(streakResetNote(new Date(2026, 9, 1))).toBe(
+			"Streak reset — no freezes left this month. Pool refills on 1 October.",
 		);
 	});
 });

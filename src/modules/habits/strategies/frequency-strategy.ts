@@ -1,5 +1,11 @@
 import { format } from "date-fns";
-import type { Frequency, FrequencyType, Habit, IsoWeekday } from "../types";
+import type {
+	DayRange,
+	Frequency,
+	FrequencyType,
+	Habit,
+	IsoWeekday,
+} from "../types";
 import { createDailyFrequency } from "./daily-frequency";
 import { OPEN_PAUSE_END, withPauses } from "./paused-schedule";
 import { createPerWeekFrequency } from "./per-week-frequency";
@@ -61,13 +67,17 @@ export type SchedulableHabit = Pick<
  * so none of them count archived days as missed.
  */
 export function getHabitStrategy(habit: SchedulableHabit): FrequencyStrategy {
-	const pauses = habit.archivedAt
+	return withPauses(getFrequencyStrategy(habit.frequency), habitPauses(habit));
+}
+
+/** Every paused period of `habit`: the closed ones, plus an open one from the archive day while archived. */
+export function habitPauses(habit: SchedulableHabit): DayRange[] {
+	return habit.archivedAt
 		? [
 				...habit.pauses,
 				{ from: format(habit.archivedAt, "yyyy-MM-dd"), to: OPEN_PAUSE_END },
 			]
 		: habit.pauses;
-	return withPauses(getFrequencyStrategy(habit.frequency), pauses);
 }
 
 /** Whether `habit` can ever be due on `weekday` — see `FrequencyStrategy.canFallOn`. */

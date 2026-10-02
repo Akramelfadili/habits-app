@@ -19,6 +19,10 @@ export type HeatmapCellState =
 	| { kind: "frozen" }
 	/** Logged on a day that wasn't scheduled — a "bonus dot" (NEW-16, HAB-18); never counts toward anything. */
 	| { kind: "bonus" }
+	/** Inside an archive period (NEW-16 · paused, HAB-20) — dotted and empty: skipped, never missed. */
+	| { kind: "paused" }
+	/** The missed day that reset a streak with no freezes left (NEW-16 · streak reset, HAB-20) — a missed cell with an ink outline. */
+	| { kind: "reset" }
 	/** Not part of the history yet or no more — before a habit's start, or still ahead (month calendar, HAB-16). */
 	| { kind: "outside" }
 	| { kind: "level"; level: HeatmapLevel };
@@ -63,6 +67,16 @@ export function HeatmapCell({
 		missed: {
 			backgroundColor: colors.track,
 			borderColor: colors.track,
+			borderStyle: "solid" as const,
+		},
+		paused: {
+			backgroundColor: "transparent",
+			borderColor: colors.border,
+			borderStyle: "dotted" as const,
+		},
+		reset: {
+			backgroundColor: colors.track,
+			borderColor: colors.ink,
 			borderStyle: "solid" as const,
 		},
 		bonus: {

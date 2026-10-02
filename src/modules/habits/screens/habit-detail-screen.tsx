@@ -1,6 +1,8 @@
+import { addDays, format, parseISO } from "date-fns";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ArchivedBanner } from "@/components/ui/composite/archived-banner";
 import { Container } from "@/components/ui/composite/container";
 import { headerActionOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
@@ -23,10 +25,18 @@ import { useRetroLogActions } from "../hooks/use-retro-log-actions";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
 import type { DayLog } from "../types";
 import {
+	archivedBannerDetail,
+	archivedBannerTitle,
 	completionRateCaption,
+	completionRateLabel,
 	completionRateValue,
+	currentStreakTile,
 	habitSubtitle,
+	heatmapRangeLabelFor,
+	legendFrozenLabel,
 	longestStreakCaption,
+	restoredToastMessage,
+	streakResetNote,
 } from "./habit-detail-helpers";
 import { remindersSummary } from "./reminders-helpers";
 
@@ -50,8 +60,15 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const [retroLogDate, setRetroLogDate] = useState<Date | null>(null);
 	const retroLogDay = useRetroLogQueries(habitId, retroLogDate);
 	const { saveDay, isSaving } = useRetroLogActions();
-	const { archiveHabit, isArchiving, deleteHabit, isDeleting, restoreHabit } =
-		useHabitDetailActions();
+	const {
+		archiveHabit,
+		isArchiving,
+		deleteHabit,
+		isDeleting,
+		restoreHabit,
+		isRestoring,
+		undoRestoreHabit,
+	} = useHabitDetailActions();
 	const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
 	async function handleSaveDay(values: DayLog["values"], note: string) {
@@ -74,6 +91,21 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 			onAction: () => restoreHabit(habitId),
 		});
 		router.back();
+	}
+
+	// Instant, no confirmation — it's fully reversible (HAB-20). The user stays
+	// on Detail: the banner collapses in place as the habit goes live again.
+	// Undo puts back the archive date and pauses captured here, not a new
+	// archive dated today.
+	async function handleRestore() {
+		if (!detail) return;
+		const { name, archivedAt, pauses } = detail.habit;
+		await restoreHabit(habitId);
+		showToast({
+			message: restoredToastMessage(name),
+			actionLabel: "Undo",
+			onAction: () => undoRestoreHabit(habitId, { archivedAt, pauses }),
+		});
 	}
 
 	// Unrecoverable by design (HAB-13), so the toast confirms with no Undo.
@@ -108,8 +140,20 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 		hasEntries,
 		loggedDays,
 		reminders,
+		freezesRemaining,
+		streakReset,
 		today,
 	} = detail;
+	const lastPause = habit.pauses.at(-1);
+	const restoredOn = lastPause
+		? format(addDays(parseISO(lastPause.to), 1), "yyyy-MM-dd")
+		: null;
+	const currentTile = currentStreakTile(
+		habit,
+		currentStreak,
+		restoredOn !== null && (recentEntries[0]?.date ?? "") >= restoredOn,
+	);
+	const firstDay = heatmapWeeks[0]?.[0]?.date ?? today;
 
 	return (
 		<ScrollView
@@ -139,12 +183,22 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 				</View>
 			</View>
 
+			{habit.archivedAt ? (
+				<ArchivedBanner
+					title={archivedBannerTitle(habit.archivedAt)}
+					detail={archivedBannerDetail(loggedDays)}
+					state={isRestoring ? "dismissed" : "default"}
+					disabled={isRestoring}
+					onRestore={handleRestore}
+				/>
+			) : null}
+
 			<View style={styles.stats}>
 				<StatCard
 					label="Current"
-					value={String(currentStreak)}
-					caption="day streak"
-					muted={currentStreak === 0}
+					value={currentTile.value}
+					caption={currentTile.caption}
+					muted={currentTile.muted}
 				/>
 				<StatCard
 					label="Longest"
@@ -153,25 +207,34 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 					muted={longestStreak.days === 0}
 				/>
 				<StatCard
-					label="90 days"
+					label={completionRateLabel(habit)}
 					value={completionRateValue(completionRate)}
 					caption={completionRateCaption(completionRate)}
 					muted={completionRate.fraction === null}
 				/>
 			</View>
 
+			{streakReset ? (
+				<Caption>{streakResetNote(streakReset.poolRefillsOn)}</Caption>
+			) : null}
+
 			<HabitHeatmap
 				habit={habit}
 				weeks={heatmapWeeks}
-				today={today}
 				hasEntries={hasEntries}
+				rangeLabel={heatmapRangeLabelFor(habit, firstDay, today)}
+				frozenLabel={legendFrozenLabel(habit, freezesRemaining)}
 				onSelectDay={setRetroLogDate}
 			/>
 
 			{/* No mockup shows this entry point — a plain navigable row (HAB-12). */}
 			<ListItem
 				title="Reminders"
-				subtitle={remindersSummary(reminders)}
+				subtitle={
+					habit.archivedAt
+						? "Paused while archived"
+						: remindersSummary(reminders)
+				}
 				navigable
 				onPress={() => router.push(`/habits/reminders/${habit.id}`)}
 			/>

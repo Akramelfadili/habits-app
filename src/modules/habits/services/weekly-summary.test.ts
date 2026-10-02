@@ -304,6 +304,36 @@ describe("buildWeeklySummary", () => {
 	});
 });
 
+describe("archive pauses (HAB-20)", () => {
+	it("reads a restored habit's paused days as paused — not owed, so not missed", () => {
+		// Archived Wed 16 → restored Sat 19: the pause covers Wed–Fri.
+		const habit = daily(1, {
+			pauses: [{ from: "2026-09-16", to: "2026-09-18" }],
+		});
+		const summary = buildWeeklySummary({
+			habits: [habit],
+			entries: doneOn(1, [0, 1, 5, 6]),
+			today: sunday,
+		});
+		expect(summary.scheduled).toBe(4);
+		expect(summary.completed).toBe(4);
+		expect(summary.isPerfect).toBe(true);
+	});
+
+	it("still counts a log made during the pause", () => {
+		const habit = daily(1, {
+			pauses: [{ from: "2026-09-16", to: "2026-09-18" }],
+		});
+		const summary = buildWeeklySummary({
+			habits: [habit],
+			entries: doneOn(1, [0, 1, 2, 5, 6]),
+			today: sunday,
+		});
+		expect(summary.scheduled).toBe(5);
+		expect(summary.completed).toBe(5);
+	});
+});
+
 describe("last week", () => {
 	const nextMonday = addDays(monday, 7);
 

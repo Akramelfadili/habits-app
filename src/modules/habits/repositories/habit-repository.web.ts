@@ -232,8 +232,12 @@ export async function reorderHabits(orderedIds: number[]): Promise<void> {
 export async function setHabitArchived(
 	id: number,
 	archivedAt: Date,
+	pauses?: readonly DayRange[],
 ): Promise<Habit> {
-	return updateOne(id, { archivedAt });
+	return updateOne(
+		id,
+		pauses ? { archivedAt, pauses: [...pauses] } : { archivedAt },
+	);
 }
 
 export async function setHabitRestored(

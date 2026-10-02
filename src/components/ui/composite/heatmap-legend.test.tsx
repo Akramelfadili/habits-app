@@ -10,4 +10,10 @@ describe("HeatmapLegend", () => {
 		expect(screen.getAllByTestId("heatmap-cell-level")).toHaveLength(3);
 		expect(screen.getByTestId("heatmap-cell-frozen")).toBeTruthy();
 	});
+
+	it("carries a live count on the frozen key when given one (VAR-09)", async () => {
+		await render(<HeatmapLegend accent={230} frozenLabel="0 freezes left" />);
+		expect(screen.getByText("0 freezes left")).toBeTruthy();
+		expect(screen.queryByText("Frozen")).toBeNull();
+	});
 });

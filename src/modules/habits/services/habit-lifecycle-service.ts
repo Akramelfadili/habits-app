@@ -43,7 +43,14 @@ export async function archiveHabit(habitId: number): Promise<void> {
 	await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
 }
 
-/** Back exactly as it was — streak included — with its reminders firing again. */
+/**
+ * Back on Today, with its reminders firing again from their next scheduled
+ * occurrence (`syncHabitReminders` rebuilds rather than appends, so repeated
+ * restores never stack notifications). The archive period becomes a pause, so
+ * its days read as paused rather than missed — but the streak starts fresh
+ * from the restore day (HAB-20, superseding HAB-13's "resume"): nothing is
+ * counted across the gap. Longest streak is untouched.
+ */
 export async function restoreHabit(habitId: number): Promise<void> {
 	const habit = await getHabit(habitId);
 	if (!habit) throw new Error(`Habit ${habitId} not found`);
@@ -52,6 +59,21 @@ export async function restoreHabit(habitId: number): Promise<void> {
 		pausesAfterRestore(habit, new Date()),
 	);
 	await syncHabitReminders(restored);
+}
+
+/**
+ * Undo for Restore (HAB-20): re-archives with the archive date and pauses the
+ * habit had before the restore, so the banner, heatmap and Reminders row come
+ * back exactly as they were — not a fresh archive dated today.
+ */
+export async function undoRestoreHabit(
+	habitId: number,
+	before: Pick<Habit, "archivedAt" | "pauses">,
+): Promise<void> {
+	if (!before.archivedAt)
+		throw new Error("Nothing to undo: habit wasn't archived");
+	await setHabitArchived(habitId, before.archivedAt, before.pauses);
+	await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
 }
 
 /** The one unrecoverable action in the module — only reachable from Habit Detail, behind a confirmation. */

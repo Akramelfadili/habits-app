@@ -21,8 +21,9 @@ function renderHeatmap({
 		<HabitHeatmap
 			habit={habit}
 			weeks={weeks}
-			today={today}
 			hasEntries={hasEntries}
+			rangeLabel="Jul — Sep"
+			frozenLabel="2 freezes left"
 			onSelectDay={onSelectDay}
 		/>,
 	);
@@ -43,7 +44,7 @@ describe("HabitHeatmap", () => {
 	it("shows the month range and legend once there's history", async () => {
 		await renderHeatmap();
 		expect(screen.getByText("Jul — Sep")).toBeTruthy();
-		expect(screen.getByText("Frozen")).toBeTruthy();
+		expect(screen.getByText("2 freezes left")).toBeTruthy();
 	});
 
 	it("hands a tapped past day to onSelectDay (the retro-log hook, HAB-10)", async () => {

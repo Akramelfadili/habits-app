@@ -13,6 +13,7 @@ import {
 	getFreezesUsedInMonth,
 } from "../repositories/frozen-day-repository";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
+import { restartDays } from "../strategies/paused-schedule";
 import type { Entry, FrozenDay, Habit } from "../types";
 
 const DATE_FORMAT = "yyyy-MM-dd";
@@ -40,6 +41,8 @@ export function isEntryComplete(habit: Habit, entry: Entry): boolean {
  * edit (HAB-10) recalculates correctly just by being read again, rather than
  * needing special-case "fix the counter" logic (per HAB-08's edge case).
  * Unscheduled days are skipped — they neither extend nor break the streak.
+ * The count stops at the habit's latest restore day (HAB-20): the streak
+ * starts fresh from the next completed log, never across the archived gap.
  */
 export function calculateCurrentStreak(
 	habit: Habit,
@@ -53,7 +56,13 @@ export function calculateCurrentStreak(
 	);
 	const completedDates = completedEntries.map((entry) => parseISO(entry.date));
 	const completedSet = new Set(completedEntries.map((entry) => entry.date));
-	const floor = startOfDay(habit.createdAt);
+	// A restore starts the streak over (HAB-20): never count back past it.
+	const lastRestart = restartDays(habit.pauses).at(-1);
+	const floor = startOfDay(
+		lastRestart && lastRestart > format(habit.createdAt, DATE_FORMAT)
+			? parseISO(lastRestart)
+			: habit.createdAt,
+	);
 
 	let streak = 0;
 	let cursor = startOfDay(asOf);
