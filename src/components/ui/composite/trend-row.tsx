@@ -10,24 +10,25 @@ type TrendRowProps = {
 	badge: ReactNode;
 	/** The sparkline slot (ColumnBars). */
 	trend: ReactNode;
-	/** The period's headline figure, e.g. "97%". */
-	value: string;
-	/** Percentage points vs the previous period; null shows nothing (no data to compare). */
-	deltaPoints: number | null;
+	/** The period's headline figure, e.g. "97%"; omitted on Yearly's strip rows, which are all trend. */
+	value?: string;
+	/** Percentage points vs the previous period; null or omitted shows nothing (no data to compare). */
+	deltaPoints?: number | null;
 	/** Spoken summary — the row reads as one element. */
 	accessibilityLabel: string;
 };
 
 /**
  * One habit's row on Monthly (NEW-21, sparkline slot): badge, name, weekly
- * trend, rate and delta vs the previous month (NEW-20).
+ * trend, rate and delta vs the previous month (NEW-20). On Yearly (strip
+ * slot) it is just badge, name and the month strip.
  */
 export function TrendRow({
 	label,
 	badge,
 	trend,
 	value,
-	deltaPoints,
+	deltaPoints = null,
 	accessibilityLabel,
 }: TrendRowProps) {
 	const { colors } = useTheme();
@@ -39,10 +40,14 @@ export function TrendRow({
 				{label}
 			</Text>
 			{trend}
-			<Text style={[styles.value, { color: colors.ink }]}>{value}</Text>
-			<View style={styles.delta}>
-				{deltaPoints !== null ? <DeltaLabel points={deltaPoints} /> : null}
-			</View>
+			{value !== undefined ? (
+				<>
+					<Text style={[styles.value, { color: colors.ink }]}>{value}</Text>
+					<View style={styles.delta}>
+						{deltaPoints !== null ? <DeltaLabel points={deltaPoints} /> : null}
+					</View>
+				</>
+			) : null}
 		</View>
 	);
 }

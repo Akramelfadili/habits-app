@@ -251,11 +251,11 @@ export function outcomesFor({
 	return outcomes;
 }
 
-function rateOf(completed: number, scheduled: number): number | null {
+export function rateOf(completed: number, scheduled: number): number | null {
 	return scheduled > 0 ? completed / scheduled : null;
 }
 
-function counts(outcomes: readonly DayOutcome[]) {
+export function counts(outcomes: readonly DayOutcome[]) {
 	let completed = 0;
 	let scheduled = 0;
 	for (const { outcome } of outcomes) {

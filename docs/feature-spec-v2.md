@@ -24,7 +24,7 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 **Out of scope:** the summary screens themselves (HAB-16, HAB-17), Manage itself (HAB-19), Settings itself (HAB-15).
 
 **As built (HAB-14), deviations until the dependencies land**
-- ~~Settings is a temporary deviation~~ — **resolved by HAB-15:** the Settings row is enabled and navigates, in every Today state including the empty one, so "Settings must be usable before the first habit exists" is now met. Its subline reads "Last export: <date>" after the first export, otherwise "Appearance, evening review, export". Month is live since HAB-16 (a live subline, or "Unlocks <date>" under a month of history); Year (HAB-17) is still "Coming soon" once habits exist, marked `TODO(HAB-17)` in `today-nav-menu.tsx` and `use-today-menu-queries.ts`.
+- ~~Settings is a temporary deviation~~ — **resolved by HAB-15:** the Settings row is enabled and navigates, in every Today state including the empty one, so "Settings must be usable before the first habit exists" is now met. Its subline reads "Last export: <date>" after the first export, otherwise "Appearance, evening review, export". Month is live since HAB-16 (a live subline, or "Unlocks <date>" under a month of history); Year is live since HAB-17 ("<year> so far · since <date>", or "Unlocks <date>" under three months of history).
 - **Rest day's "Log something anyway" still opens New Habit.** The spec wants the HAB-18 habit picker (D1); it is marked `TODO(HAB-18)` in `today-screen.tsx` and flips when HAB-18 is built.
 - The weekly row's subline reuses the Weekly screen's hook and shows the week it opens on; tomorrow rows show the earliest *enabled* reminder that fires on tomorrow's weekday.
 
@@ -94,6 +94,16 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 - Under three months of history (C7): all 12 slots still render (dashed for pre-history), but insights wait and the screen says so plainly rather than showing a locked overlay over the whole thing.
 
 **Depends on:** HAB-14, HAB-16 (shares the range switcher and the Monthly screen's "too early" pattern).
+
+**As built (HAB-17)**
+- **Year is the current calendar year, "so far"** (title "2026 so far", range "3 March — 16 September"). All twelve slots always render: before the history began and still-ahead months are dashed, the running month is a lighter bar/cell. A habit created mid-year gets its own dashed leading months in the strips. Yearly does not offer last year (early January shows a nearly-empty "<year> so far" with an "early" card instead).
+- **Unlock** is three calendar months (`addMonths`) from `historyStart` (shared with Monthly, whose own unlock is first day + 30), so 4 Sep → 4 Dec and 31 Aug → 30 Nov. Progress reads "12 of 91 days" (the real span; C7 says 90 and "from 3 December").
+- **Insights** judge only *finished months that had scheduled days*: before-start months, all-frozen/rest months and the month still running never count, and a skipped month also breaks a run. Thresholds are one block in `services/yearly-insights.ts`: **stuck** = 85%+ for 4 months in a row, **never stuck** = under 50% in 5 months (not necessarily consecutive), **seasonal dip** = 2+ months in a row at least 8 points under the best month; **best month** needs two finished months. Gate order: too-early (screen) → "early" (no finished month) → perfect → the rest. Card order is best → stuck → never stuck → seasonal, capped at three. Only **never stuck** is tappable (→ `/edit-habit/<id>`).
+- **Archived habits** stay in the tiles, chart and strips (Monthly's rule: their pre-archive days are history) but are left out of every insight, so none is named or linked.
+- **Longest** is the year's longest streak, via Detail's own `calculateLongestStreak` clipped to 1 January (a December run doesn't carry into January).
+- **Menu subline** is computed from the habits alone (no year of entries): "2026 so far · since 3 March" (the "since" is dropped when history began in an earlier year).
+- **Switcher:** Year is enabled on Week, Month and Year; switching replaces the screen, so Back still reads "Today".
+- Deviations from the mockups are listed in `docs/v3-backlog.md`.
 
 ---
 

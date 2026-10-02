@@ -9,7 +9,7 @@ import { RangeSwitcher } from "./range-switcher";
 
 beforeEach(() => mockReplace.mockClear());
 
-describe("RangeSwitcher (HAB-16)", () => {
+describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 	it("marks the screen being shown", async () => {
 		await render(<RangeSwitcher value="month" />);
 		expect(
@@ -38,12 +38,30 @@ describe("RangeSwitcher (HAB-16)", () => {
 		expect(mockReplace).not.toHaveBeenCalled();
 	});
 
-	it("shows Year disabled until HAB-17 builds it", async () => {
-		await render(<RangeSwitcher value="week" />);
-		await fireEvent.press(screen.getByText("Year"));
-		expect(mockReplace).not.toHaveBeenCalled();
-		expect(
-			screen.getByText("Year").parent?.props.accessibilityState.disabled,
-		).toBe(true);
+	it("replaces the screen with Yearly from Week, Month and Year alike", async () => {
+		for (const value of ["week", "month"] as const) {
+			mockReplace.mockClear();
+			const { unmount } = await render(<RangeSwitcher value={value} />);
+			await fireEvent.press(screen.getByText("Year"));
+			expect(mockReplace).toHaveBeenCalledWith("/habits/year");
+			await unmount();
+		}
+	});
+
+	it("enables Year and marks it when Yearly is shown", async () => {
+		await render(<RangeSwitcher value="year" />);
+		const year = screen.getByText("Year").parent?.props.accessibilityState;
+		expect(year.selected).toBe(true);
+		expect(year.disabled).toBeFalsy();
+		await fireEvent.press(screen.getByText("Month"));
+		expect(mockReplace).toHaveBeenCalledWith("/habits/month");
+		await fireEvent.press(screen.getByText("Week"));
+		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
+	});
+
+	it("never pushes — switching replaces, so Back keeps reading Today", async () => {
+		await render(<RangeSwitcher value="year" />);
+		await fireEvent.press(screen.getByText("Month"));
+		expect(mockReplace).toHaveBeenCalledTimes(1);
 	});
 });

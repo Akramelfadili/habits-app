@@ -21,8 +21,12 @@ jest.mock("../repositories/habit-repository", () => ({
 	useArchivedHabits: () => mockArchived,
 	useHabitsList: () => [...mockActive, ...mockArchived],
 }));
+const mockUseEntriesInRange = jest.fn(
+	(_start: Date, _end: Date) => mockEntries,
+);
 jest.mock("../repositories/entry-repository", () => ({
-	useEntriesInRange: () => mockEntries,
+	useEntriesInRange: (start: Date, end: Date) =>
+		mockUseEntriesInRange(start, end),
 }));
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => [],
@@ -98,10 +102,46 @@ describe("useTodayMenuQueries (HAB-14)", () => {
 		});
 	});
 
-	it("keeps Year as a 'Coming soon' placeholder once habits exist", async () => {
+	it("describes Yearly with the year so far once three months of history are in (HAB-17)", async () => {
 		const { result } = await renderHook(() => useTodayMenuQueries());
-		expect(result.current.yearly.disabledReason).toBe("Coming soon");
+		expect(result.current.yearly).toEqual({
+			subline: "2026 so far · since 1 January",
+		});
 		expect(result.current.weekly.disabledReason).toBeUndefined();
+	});
+
+	it("adds where history began when it began this year (HAB-17)", async () => {
+		mockActive = [makeHabit({ id: 1, createdAt: new Date(2026, 2, 3, 8) })];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.yearly).toEqual({
+			subline: "2026 so far · since 3 March",
+		});
+	});
+
+	it("locks Yearly until three calendar months of history, saying when (HAB-17)", async () => {
+		mockActive = [makeHabit({ id: 1, createdAt: new Date(2026, 8, 4, 8) })];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.yearly).toEqual({
+			subline: "",
+			disabledReason: "Unlocks 4 December",
+		});
+	});
+
+	it("unlocks Yearly on the unlock date itself (HAB-17)", async () => {
+		jest.setSystemTime(new Date(2026, 11, 4, 9));
+		mockActive = [makeHabit({ id: 1, createdAt: new Date(2026, 8, 4, 8) })];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.yearly.disabledReason).toBeUndefined();
+	});
+
+	it("builds Yearly's subline without reading the year's entries — only the Weekly/Monthly ranges are read (HAB-17)", async () => {
+		mockUseEntriesInRange.mockClear();
+		await renderHook(() => useTodayMenuQueries());
+		// Weekly and Monthly ask for their own spans; nothing asks for a whole year.
+		for (const [start, end] of mockUseEntriesInRange.mock.calls) {
+			const days = (end.getTime() - start.getTime()) / 86_400_000;
+			expect(days).toBeLessThan(120);
+		}
 	});
 
 	it("keeps Settings usable and describes it statically until a first export (HAB-15)", async () => {

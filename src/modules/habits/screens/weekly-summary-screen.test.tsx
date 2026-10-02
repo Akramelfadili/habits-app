@@ -183,14 +183,16 @@ describe("WeeklySummaryScreen", () => {
 	});
 
 	describe("range switcher (HAB-16)", () => {
-		it("sits under the title with Week selected and Year disabled", async () => {
+		it("sits under the title with Week selected and Year enabled (HAB-17)", async () => {
 			await render(<WeeklySummaryScreen />);
 			expect(
 				screen.getByText("Week").parent?.props.accessibilityState.selected,
 			).toBe(true);
 			expect(
 				screen.getByText("Year").parent?.props.accessibilityState.disabled,
-			).toBe(true);
+			).toBeFalsy();
+			await fireEvent.press(screen.getByText("Year"));
+			expect(mockReplace).toHaveBeenCalledWith("/habits/year");
 		});
 
 		it("goes to Monthly, keeping the Last week / This week switch where it was", async () => {

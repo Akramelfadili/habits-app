@@ -24,10 +24,10 @@ jest.mock("expo-router", () => ({
 	},
 }));
 
-const mockMenu = {
+const mockMenu: Record<string, { subline: string; disabledReason?: string }> = {
 	weekly: { subline: "14 — 20 September · 34 of 42 done" },
 	monthly: { subline: "1 — 31 August · 80% done" },
-	yearly: { subline: "", disabledReason: "Coming soon" },
+	yearly: { subline: "2026 so far · since 3 March" },
 	manage: { subline: "7 active · 2 archived" },
 	settings: { subline: "Appearance", disabledReason: "Coming soon" },
 };
@@ -565,6 +565,7 @@ describe("TodayScreen", () => {
 		it.each([
 			["Weekly summary", "/habits/week"],
 			["Monthly", "/habits/month"],
+			["Yearly", "/habits/year"],
 			["Manage & archive", "/habits/manage"],
 		])("%s navigates and closes the menu", async (title, href) => {
 			mockViewState = "populated";
@@ -578,12 +579,19 @@ describe("TodayScreen", () => {
 
 		it("disabled rows do nothing but close nothing either", async () => {
 			mockViewState = "populated";
+			mockUseTodayMenuQueries.mockReturnValue({
+				...mockMenu,
+				yearly: { subline: "", disabledReason: "Unlocks 4 December" },
+			});
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(screen.getByLabelText("Yearly, Coming soon"));
+			await fireEvent.press(
+				screen.getByLabelText("Yearly, Unlocks 4 December"),
+			);
 
 			expect(mockPush).not.toHaveBeenCalled();
 			expect(screen.getByText("Yearly")).toBeTruthy();
+			mockUseTodayMenuQueries.mockReturnValue(mockMenu);
 		});
 
 		it("computes the rows' live context only while the menu is open (HAB-16)", async () => {
@@ -595,6 +603,7 @@ describe("TodayScreen", () => {
 			await fireEvent.press(screen.getByLabelText("More"));
 			expect(mockUseTodayMenuQueries).toHaveBeenCalled();
 			expect(screen.getByText("1 — 31 August · 80% done")).toBeTruthy();
+			expect(screen.getByText("2026 so far · since 3 March")).toBeTruthy();
 		});
 
 		it("opens Settings from the menu (HAB-15)", async () => {

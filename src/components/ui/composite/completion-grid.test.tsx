@@ -59,4 +59,28 @@ describe("CompletionGrid", () => {
 		expect(onPress).toHaveBeenCalledTimes(1);
 		expect(screen.getAllByRole("button")).toHaveLength(1);
 	});
+
+	it("draws Yearly's strip as one row of 11px month cells with no axis", async () => {
+		await render(
+			<CompletionGrid
+				layout="year"
+				accent={150}
+				rows={[
+					[
+						cell("jan", { kind: "outside" }),
+						cell("feb", { kind: "level", level: 3 }),
+						cell("mar", { kind: "level", level: 1 }),
+					],
+				]}
+			/>,
+		);
+		expect(screen.getByTestId("completion-grid-year")).toBeTruthy();
+		expect(screen.queryByText("M")).toBeNull();
+		expect(screen.getByTestId("heatmap-cell-outside")).toHaveStyle({
+			width: 11,
+			height: 11,
+			borderRadius: 3,
+		});
+		expect(screen.getAllByTestId("heatmap-cell-level")).toHaveLength(2);
+	});
 });

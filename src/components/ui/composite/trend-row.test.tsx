@@ -27,4 +27,17 @@ describe("TrendRow", () => {
 		await render(<TrendRow {...props} deltaPoints={null} />);
 		expect(screen.queryByText(/^[+−0]/)).toBeNull();
 	});
+
+	it("is just badge, name and trend when it has no figure (Yearly's strip slot)", async () => {
+		await render(
+			<TrendRow
+				label="Read"
+				badge={<Text>badge</Text>}
+				trend={<Text>strip</Text>}
+				accessibilityLabel="Read by month"
+			/>,
+		);
+		expect(screen.getByText("strip")).toBeTruthy();
+		expect(screen.queryByText(/%/)).toBeNull();
+	});
 });

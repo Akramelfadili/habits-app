@@ -20,6 +20,7 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 		href:
 			| "/habits/week"
 			| "/habits/month"
+			| "/habits/year"
 			| "/habits/manage"
 			| "/habits/settings",
 	) {
@@ -43,13 +44,12 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 				disabledReason={menu.monthly.disabledReason}
 				onPress={() => go("/habits/month")}
 			/>
-			{/* TODO(HAB-17): navigate to the Yearly summary once it exists. */}
 			<MenuRow
 				symbol="circle"
 				title="Yearly"
 				subline={menu.yearly.subline}
 				disabledReason={menu.yearly.disabledReason}
-				onPress={onClose}
+				onPress={() => go("/habits/year")}
 			/>
 			<NavMenuDivider />
 			<MenuRow

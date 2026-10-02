@@ -131,7 +131,7 @@ export const SCREENS = {
 		feature: "HAB-14",
 		route: "/habits",
 		mockup: "docs/mockups/hab-14-a2.png",
-		note: "Populated Today with the ⋯ menu open. Monthly/Yearly/Settings are 'Coming soon' placeholders until HAB-15/16/17 (a deliberate deviation from the mockup's sublines).",
+		note: "Populated Today with the ⋯ menu open. Monthly and Yearly are live (HAB-16/17), so their sublines follow the default fixtures' history.",
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
@@ -480,6 +480,53 @@ export const SCREENS = {
 			await page.waitForTimeout(400);
 		},
 	},
+	"today-menu-open-yearly": {
+		feature: "HAB-17",
+		route: "/habits?fixtures=yearly-summary",
+		mockup: "docs/mockups/hab-14-a2.png",
+		clock: "2026-09-16T09:00:00",
+		note: "Menu with Yearly live: '2026 so far · since 3 March'.",
+		async interact(page) {
+			await page.getByLabel("More", { exact: true }).click();
+			await page.getByText("Weekly summary", { exact: true }).waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+
+	// HAB-17 — Yearly summary (C4, C5, C7)
+	"yearly-summary": {
+		feature: "HAB-17",
+		route: "/habits/year?fixtures=yearly-summary",
+		mockup: "docs/mockups/hab-17-c4.png",
+		clock: "2026-09-16T09:00:00",
+		note: "3 March — 16 September 2026. Fixture numbers differ from the mockup's tiles (1,612 / 81%); the insights are tuned to C5. Strips use the 11px year layout; the chart's current month (September) is the lighter bar.",
+	},
+	"yearly-insights": {
+		feature: "HAB-17",
+		route: "/habits/year?fixtures=yearly-summary",
+		mockup: "docs/mockups/hab-17-c5.png",
+		clock: "2026-09-16T09:00:00",
+		note: "Scrolled to the insights: best month → stuck → never stuck (the only tappable one). The mockup's fourth card (Summer dip) is cut by the max-three rule; copy omits clauses that aren't derivable ('through two schedule changes', 'Travel weeks show up as gaps').",
+		async interact(page) {
+			await page.getByText("What 2026 says", { exact: true }).evaluate((el) => {
+				el.scrollIntoView({ block: "start" });
+			});
+			await page.waitForTimeout(300);
+		},
+	},
+	"yearly-too-early": {
+		feature: "HAB-17",
+		route: "/habits/year?fixtures=monthly-too-early",
+		mockup: "docs/mockups/hab-17-c7.png",
+		clock: "2026-09-16T09:00:00",
+		note: "12 days of history (since 4 Sep): unlock card ('12 of 91 days' — the real 4 Sep → 4 Dec span; the mockup says 90 and 'from 3 December'), one bar in progress and eleven dashed slots, the week one tap away.",
+	},
+	"yearly-empty": {
+		feature: "HAB-17",
+		route: "/habits/year?fixtures=empty",
+		mockup: null,
+		note: "No habits at all.",
+	},
 	"edit-habit-focus-frequency": {
 		feature: "HAB-16",
 		route: "/edit-habit/1?focus=frequency",
@@ -725,6 +772,9 @@ const DARK_TWINS = [
 	"monthly-summary",
 	"monthly-insights",
 	"monthly-too-early",
+	"yearly-summary",
+	"yearly-insights",
+	"yearly-too-early",
 	"habit-detail",
 	"manage-habits",
 	"manage-habits-dragging",
