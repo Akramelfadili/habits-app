@@ -65,6 +65,16 @@ async function swipeLeft(page, locator, distance = 160) {
 	return { y };
 }
 
+/** The New habit form's own Name field (the add-category sheet has its own). */
+async function typeHabitName(page, name) {
+	await page.getByLabel("Name", { exact: true }).first().fill(name);
+}
+
+/** A category picker chip by its label (HAB-24). */
+function categoryChip(page, name) {
+	return page.getByRole("button", { name, exact: true }).first();
+}
+
 export const SCREENS = {
 	// HAB-06 — First run
 	"first-run": {
@@ -120,15 +130,6 @@ export const SCREENS = {
 		route: "/new-habit",
 		mockup: "docs/mockups/new-habit-form.png",
 	},
-	"new-habit-category-sheet": {
-		feature: "HAB-01",
-		route: "/new-habit",
-		mockup: null,
-		note: "Category picker sheet — no mockup; judge against the other sheets.",
-		async interact(page) {
-			await page.getByText("Category", { exact: true }).click();
-		},
-	},
 	"new-habit-weekdays": {
 		feature: "HAB-02",
 		route: "/new-habit",
@@ -154,6 +155,85 @@ export const SCREENS = {
 		route: "/edit-habit/1",
 		mockup: "docs/mockups/new-habit-form.png",
 		note: "Mockup shows create mode; edit mode should match except Direction is locked.",
+	},
+
+	// HAB-24 — Categories: pick & add (the New habit form's category card + add sheet)
+	"category-picker-empty": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-24-f1a.png",
+		note: "F1a — nothing selected: built-ins only, Save blocked with the category reason. Mockup's sheet shows only Name/Category/Frequency; the real form keeps Direction and Target type.",
+		async interact(page) {
+			await typeHabitName(page, "Write three lines");
+		},
+	},
+	"category-picker-selected": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-24-f1b.png",
+		note: "F1b — Learning picked: filled chip with check, header badge, Save enabled.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 pages");
+			await categoryChip(page, "Learning").click();
+		},
+	},
+	"category-picker-many": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=many-categories",
+		mockup: "docs/mockups/hab-24-f1c.png",
+		note: "F1c — eight customs, Music picked, scrolled: hairline above the pinned Save.",
+		async interact(page) {
+			await typeHabitName(page, "Practice scales");
+			await categoryChip(page, "Music").click();
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 140);
+			await page.waitForTimeout(300);
+		},
+	},
+	"add-category-empty": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-24-f2a.png",
+		note: "F2a — add sheet stacked over the picker: empty name, placeholder preview, Add blocked.",
+		async interact(page) {
+			await typeHabitName(page, "Write three lines");
+			await categoryChip(page, "Add category").click();
+		},
+	},
+	"add-category-typing": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-24-f2b.png",
+		note: "F2b — name typed: live preview on rotation slot 1, Add enabled.",
+		async interact(page) {
+			await typeHabitName(page, "Write three lines");
+			await categoryChip(page, "Add category").click();
+			await page.getByPlaceholder("e.g. Journaling").fill("Journaling");
+		},
+	},
+	"add-category-duplicate": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-24-f2c.png",
+		note: "F2c — duplicate of a built-in: amber field + helper, preview hidden, Add blocked.",
+		async interact(page) {
+			await typeHabitName(page, "Write three lines");
+			await categoryChip(page, "Add category").click();
+			await page.getByPlaceholder("e.g. Journaling").fill("Fitness");
+		},
+	},
+	"category-picker-new-selected": {
+		feature: "HAB-24",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-24-f2d.png",
+		note: "F2d — after Add: sheet closed, new chip in its creation-order slot, auto-selected, no toast.",
+		async interact(page) {
+			await typeHabitName(page, "Write three lines");
+			await categoryChip(page, "Add category").click();
+			await page.getByPlaceholder("e.g. Journaling").fill("Journaling");
+			await page.getByRole("button", { name: "Add category" }).last().click();
+			await page.waitForTimeout(500);
+		},
 	},
 
 	// HAB-07 / HAB-08 — Sheets over Today

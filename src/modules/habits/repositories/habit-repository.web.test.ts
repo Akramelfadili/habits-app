@@ -19,8 +19,7 @@ function loadRepository(): typeof WebHabitRepository {
 
 const input = makeHabitInput({
 	name: "Stretch",
-	icon: "leaf",
-	color: "green",
+	categoryId: 2,
 });
 
 describe("habit-repository.web", () => {

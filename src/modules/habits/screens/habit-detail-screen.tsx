@@ -11,10 +11,10 @@ import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { categorySymbol } from "../components/category-symbol";
 import { DeleteHabitSheet } from "../components/delete-habit-sheet";
 import { HabitEntryRow } from "../components/habit-entry-row";
 import { HabitHeatmap } from "../components/habit-heatmap";
-import { iconSymbolFor } from "../components/habit-today-row";
 import { RetroLogSheet } from "../components/retro-log-sheet";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
@@ -125,10 +125,10 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 			<View style={styles.header}>
 				<IconBadge
 					size="large"
-					symbol={iconSymbolFor(habit.icon)}
+					symbol={categorySymbol(habit.category)}
 					accent={{
-						tint: habitAccentTint(habit.color, scheme),
-						ink: habitAccentInk(habit.color, scheme),
+						tint: habitAccentTint(habit.category.hue, scheme),
+						ink: habitAccentInk(habit.category.hue, scheme),
 					}}
 				/>
 				<View style={styles.headerText}>

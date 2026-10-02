@@ -7,7 +7,7 @@ import {
 	reminders,
 } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
-import { makeHabitInput } from "../test-support/habit-builder";
+import { builtInCategory, makeHabitInput } from "../test-support/habit-builder";
 import { inProduction } from "../test-support/in-production";
 import type { Frequency } from "../types";
 import type * as HabitRepository from "./habit-repository";
@@ -32,7 +32,10 @@ const {
 	deleteHabitAndHistory,
 }: typeof HabitRepository = require("./habit-repository");
 
-const baseInput = makeHabitInput({ category: "Morning" });
+// Fresh-database ids: built-ins are seeded 1–10 in BUILT_IN_CATEGORIES order.
+const LEARNING = builtInCategory("Learning");
+const FITNESS = builtInCategory("Fitness");
+const baseInput = makeHabitInput({ categoryId: LEARNING.id });
 
 describe("habit-repository", () => {
 	it("creates a habit and returns the mapped domain type", async () => {
@@ -40,9 +43,7 @@ describe("habit-repository", () => {
 
 		expect(habit).toMatchObject({
 			name: "Read",
-			icon: "book",
-			color: "blue",
-			category: "Morning",
+			category: LEARNING,
 			direction: "build",
 			targetType: "simple",
 			frequency: { type: "daily" },
@@ -52,9 +53,19 @@ describe("habit-repository", () => {
 		expect(habit.updatedAt).toBeInstanceOf(Date);
 	});
 
-	it("persists a null category as null, not an empty string", async () => {
-		const habit = await createHabit({ ...baseInput, category: null });
-		expect(habit.category).toBeNull();
+	it("maps the habit's category — its icon and color come from there (HAB-24)", async () => {
+		const habit = await createHabit({ ...baseInput, categoryId: FITNESS.id });
+		expect(habit.category).toEqual(FITNESS);
+		expect((await getHabit(habit.id))?.category).toEqual(FITNESS);
+	});
+
+	it("writes nothing to the legacy icon/color/category columns", async () => {
+		const habit = await createHabit(baseInput);
+		const [row] = await mockDb
+			.select()
+			.from(habits)
+			.where(eq(habits.id, habit.id));
+		expect(row).toMatchObject({ icon: null, color: null, category: null });
 	});
 
 	it("updates a habit's editable fields but leaves direction unchanged", async () => {
@@ -62,9 +73,7 @@ describe("habit-repository", () => {
 
 		const updated = await updateHabit(created.id, {
 			name: "Read more",
-			icon: "leaf",
-			color: "green",
-			category: null,
+			categoryId: FITNESS.id,
 			targetType: "quantity",
 			targetAmount: 8,
 			targetUnit: "glasses",
@@ -74,9 +83,7 @@ describe("habit-repository", () => {
 		expect(updated).toMatchObject({
 			id: created.id,
 			name: "Read more",
-			icon: "leaf",
-			color: "green",
-			category: null,
+			category: FITNESS,
 			targetType: "quantity",
 			targetAmount: 8,
 			targetUnit: "glasses",
@@ -125,20 +132,11 @@ describe("habit-repository", () => {
 			frequency: { type: "weekdays", days: [1, 3, 5] },
 		});
 
-		const {
-			name,
-			icon,
-			color,
-			category,
-			targetType,
-			targetAmount,
-			targetUnit,
-		} = baseInput;
+		const { name, categoryId, targetType, targetAmount, targetUnit } =
+			baseInput;
 		const updated = await updateHabit(created.id, {
 			name,
-			icon,
-			color,
-			category,
+			categoryId,
 			targetType,
 			targetAmount,
 			targetUnit,
@@ -227,7 +225,7 @@ describe("habit-repository", () => {
 
 		it("redistributes the reordered habits' own sort values", async () => {
 			const a = await createHabit(baseInput);
-			const other = await createHabit({ ...baseInput, category: "Evening" });
+			const other = await createHabit({ ...baseInput, categoryId: FITNESS.id });
 			const b = await createHabit(baseInput);
 
 			await reorderHabits([b.id, a.id]);

@@ -11,8 +11,7 @@ import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { iconSymbolFor } from "../components/habit-today-row";
-import { NO_CATEGORY_LABEL } from "../constants";
+import { categorySymbol } from "../components/category-symbol";
 import { useManageHabitsActions } from "../hooks/use-manage-habits-actions";
 import { useManageHabitsQueries } from "../hooks/use-manage-habits-queries";
 import type { Habit } from "../types";
@@ -67,7 +66,7 @@ export function ManageHabitsScreen() {
 						<ReorderableList
 							items={active}
 							keyOf={(habit) => String(habit.id)}
-							groupOf={(habit) => habit.category ?? NO_CATEGORY_LABEL}
+							groupOf={(habit) => String(habit.category.id)}
 							handleLabel={(habit) => `Reorder ${habit.name}`}
 							onReorder={(ids) => reorderHabits(ids.map(Number))}
 							renderItem={(habit, handle, isDragging) => (
@@ -82,10 +81,10 @@ export function ManageHabitsScreen() {
 										lifted={isDragging}
 										leading={
 											<IconBadge
-												symbol={iconSymbolFor(habit.icon)}
+												symbol={categorySymbol(habit.category)}
 												accent={{
-													tint: habitAccentTint(habit.color, scheme),
-													ink: habitAccentInk(habit.color, scheme),
+													tint: habitAccentTint(habit.category.hue, scheme),
+													ink: habitAccentInk(habit.category.hue, scheme),
 												}}
 											/>
 										}
@@ -123,7 +122,9 @@ export function ManageHabitsScreen() {
 											? archivedRowSubtitle(habit.archivedAt, logsKept)
 											: undefined
 									}
-									leading={<IconBadge symbol={iconSymbolFor(habit.icon)} />}
+									leading={
+										<IconBadge symbol={categorySymbol(habit.category)} />
+									}
 									trailing={
 										<Button
 											label="Restore"

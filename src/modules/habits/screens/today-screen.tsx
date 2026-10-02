@@ -244,7 +244,10 @@ export function TodayScreen() {
 											style={[
 												styles.previewDot,
 												{
-													backgroundColor: habitAccentTint(habit.color, scheme),
+													backgroundColor: habitAccentTint(
+														habit.category.hue,
+														scheme,
+													),
 												},
 											]}
 										/>
@@ -282,9 +285,9 @@ export function TodayScreen() {
 					).length;
 
 					return (
-						<Container key={group.category}>
+						<Container key={group.category.id}>
 							<SectionHeader
-								title={group.category}
+								title={group.category.name}
 								count={`${completedInGroup}/${group.habits.length}`}
 							/>
 							{group.habits.map((habit) => (

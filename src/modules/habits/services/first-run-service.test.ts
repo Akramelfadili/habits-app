@@ -5,10 +5,18 @@ jest.mock("../repositories/habit-repository", () => ({
 		mockCreateHabitsAndMarkSetting(...args),
 }));
 
+jest.mock("../repositories/category-repository", () => ({
+	getCategories: async () =>
+		jest.requireActual("../test-support/habit-builder")
+			.TEST_BUILT_IN_CATEGORIES,
+}));
+
 import {
+	type BuiltInCategoryName,
 	FIRST_RUN_SUGGESTIONS,
 	SEEN_FIRST_RUN_SETTING_KEY,
 } from "../constants";
+import { builtInCategory } from "../test-support/habit-builder";
 import { addSuggestedHabits } from "./first-run-service";
 
 describe("first-run-service", () => {
@@ -43,8 +51,9 @@ describe("first-run-service", () => {
 		const byName = Object.fromEntries(
 			inputs.map((input: { name: string }) => [input.name, input]),
 		);
+		const idOf = (name: BuiltInCategoryName) => builtInCategory(name).id;
 		expect(byName["Read before bed"]).toMatchObject({
-			category: "Evening",
+			categoryId: idOf("Learning"),
 			targetType: "quantity",
 			targetAmount: 10,
 			targetUnit: "pages",
@@ -55,13 +64,15 @@ describe("first-run-service", () => {
 			targetUnit: "min",
 		});
 		expect(byName["Glass of water"]).toMatchObject({
-			category: "Morning",
+			categoryId: idOf("Health"),
 			targetType: "simple",
 		});
 		expect(byName["Three lines journal"]).toMatchObject({
-			category: "Evening",
+			categoryId: idOf("Mindfulness"),
 		});
-		expect(byName["Walk 20 minutes"]).toMatchObject({ category: null });
+		expect(byName["Walk 20 minutes"]).toMatchObject({
+			categoryId: idOf("Fitness"),
+		});
 		// Every one still starts Daily (HAB-06).
 		for (const input of inputs) {
 			expect(input.frequency).toEqual({ type: "daily" });

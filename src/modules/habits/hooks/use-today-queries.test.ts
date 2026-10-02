@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react-native";
 import { formatISO } from "date-fns";
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
 // Pinned to a Wednesday (matches docs/mockups/today-populated.png's "WEDNESDAY,
 // 16 SEPTEMBER") so week-boundary math (per-week frequency) is deterministic —
@@ -13,25 +13,25 @@ const YESTERDAY_STRING = "2026-09-15"; // Tuesday — same ISO week as TODAY.
 const dailyHabit = makeHabit({
 	id: 1,
 	name: "Glass of water",
-	category: "Morning",
+	category: categoryNamed("Morning"),
 	frequency: { type: "daily" },
 });
 const alsoDailyHabit = makeHabit({
 	id: 2,
 	name: "Read",
-	category: "Evening",
+	category: categoryNamed("Evening"),
 	frequency: { type: "daily" },
 });
 const perWeekHabit = makeHabit({
 	id: 3,
 	name: "Gym",
-	category: null,
+	category: categoryNamed("Other"),
 	frequency: { type: "per-week", timesPerWeek: 1 },
 });
 const quantityHabit = makeHabit({
 	id: 4,
 	name: "Push-ups",
-	category: null,
+	category: categoryNamed("Other"),
 	targetType: "quantity",
 	targetAmount: 20,
 	targetUnit: "reps",
@@ -84,13 +84,13 @@ describe("useTodayQueries", () => {
 		jest.useRealTimers();
 	});
 
-	it("groups due-today habits by category, Anytime last", async () => {
+	it("groups due-today habits by category, Other last", async () => {
 		const { result } = await renderHook(() => useTodayQueries());
 
-		expect(result.current.groups.map((group) => group.category)).toEqual([
+		expect(result.current.groups.map((group) => group.category.name)).toEqual([
 			"Morning",
 			"Evening",
-			"Anytime",
+			"Other",
 		]);
 	});
 

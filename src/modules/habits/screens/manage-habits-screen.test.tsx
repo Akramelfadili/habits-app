@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { ManageHabitsView } from "../hooks/use-manage-habits-queries";
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -31,12 +31,20 @@ jest.mock("../hooks/use-manage-habits-actions", () => ({
 import { useToastStore } from "@/store/toast-store";
 import { ManageHabitsScreen } from "./manage-habits-screen";
 
-const water = makeHabit({ id: 1, name: "Glass of water", category: "Morning" });
-const meditate = makeHabit({ id: 2, name: "Meditate", category: "Morning" });
+const water = makeHabit({
+	id: 1,
+	name: "Glass of water",
+	category: categoryNamed("Morning"),
+});
+const meditate = makeHabit({
+	id: 2,
+	name: "Meditate",
+	category: categoryNamed("Morning"),
+});
 const read = makeHabit({
 	id: 3,
 	name: "Read",
-	category: "Evening",
+	category: categoryNamed("Evening"),
 	frequency: { type: "per-week", timesPerWeek: 5 },
 });
 const coldShower = makeHabit({

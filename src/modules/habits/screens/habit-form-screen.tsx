@@ -1,47 +1,42 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
-import { Sheet } from "@/components/ui/composite/sheet";
 import { WeekdayPicker } from "@/components/ui/composite/weekday-picker";
 import { Button } from "@/components/ui/primitives/button";
 import { Caption } from "@/components/ui/primitives/caption";
 import { Chip } from "@/components/ui/primitives/chip";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { IconSquare } from "@/components/ui/primitives/icon-square";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { Stepper } from "@/components/ui/primitives/stepper";
 import { TextField } from "@/components/ui/primitives/text-field";
-import { habitAccentInk, habitAccentTint } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { AddCategorySheet } from "../components/add-category-sheet";
+import { CategoryPicker } from "../components/category-picker";
 import {
-	DEFAULT_HABIT_ICON,
 	DEFAULT_TARGET_AMOUNT,
 	DIRECTION_CAPTIONS,
-	HABIT_COLORS,
-	HABIT_ICONS,
 	MAX_TARGET_AMOUNT,
 	MAX_TIMES_PER_WEEK,
 	MIN_TARGET_AMOUNT,
 	MIN_TIMES_PER_WEEK,
-	NO_CATEGORY_LABEL,
 	QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION,
 	WEEKDAY_SHORTCUT,
 	WEEKDAYS,
 } from "../constants";
+import { useCategoryActions } from "../hooks/use-category-actions";
+import { useCategoryQueries } from "../hooks/use-category-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useHabitQueries } from "../hooks/use-habit-queries";
 import type { FrequencyType } from "../types";
-import {
-	filterCategorySuggestions,
-	pickDefaultColor,
-} from "./habit-form-helpers";
+import { saveBlockedReason } from "./habit-form-helpers";
 import {
 	DEFAULT_FREQUENCY_FORM_VALUES,
+	type HabitFormInput,
 	type HabitFormValues,
 	habitFormSchema,
 	NO_WEEKDAYS_MESSAGE,
@@ -62,33 +57,31 @@ type HabitFormScreenProps = {
 
 export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	const router = useRouter();
-	const { colors, scheme } = useTheme();
-	const { habits, categories, getHabitById } = useHabitQueries();
+	const { colors } = useTheme();
+	const { getHabitById } = useHabitQueries();
+	const { categories } = useCategoryQueries();
 	const { createHabit, updateHabit, isCreating, isUpdating } =
 		useHabitActions();
+	const { createCategory, isCreating: isCreatingCategory } =
+		useCategoryActions();
 
 	const mode = habitId === undefined ? "create" : "edit";
 	const habit = habitId === undefined ? undefined : getHabitById(habitId);
 	const hasLoadedEditValues = useRef(false);
-	const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
+	const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+	// F1c: a hairline above Save once content scrolls under the pinned header.
+	const [isScrolled, setIsScrolled] = useState(false);
 
-	const defaultColor = useMemo(() => pickDefaultColor(habits), [habits]);
-
-	const {
-		control,
-		handleSubmit,
-		watch,
-		setValue,
-		reset,
-		formState: { dirtyFields },
-	} = useForm<HabitFormValues>({
+	const { control, handleSubmit, watch, setValue, reset } = useForm<
+		HabitFormInput,
+		unknown,
+		HabitFormValues
+	>({
 		resolver: zodResolver(habitFormSchema),
 		mode: "onBlur",
 		defaultValues: {
 			name: "",
-			icon: DEFAULT_HABIT_ICON,
-			color: defaultColor,
-			category: "",
+			categoryId: null,
 			direction: "build",
 			targetType: "simple",
 			targetAmount: DEFAULT_TARGET_AMOUNT,
@@ -98,18 +91,10 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	});
 
 	useEffect(() => {
-		if (mode === "create" && !dirtyFields.color) {
-			setValue("color", defaultColor);
-		}
-	}, [mode, defaultColor, dirtyFields.color, setValue]);
-
-	useEffect(() => {
 		if (mode === "edit" && habit && !hasLoadedEditValues.current) {
 			reset({
 				name: habit.name,
-				icon: habit.icon,
-				color: habit.color,
-				category: habit.category ?? "",
+				categoryId: habit.category.id,
 				direction: habit.direction,
 				targetType: habit.targetType,
 				targetAmount: habit.targetAmount ?? DEFAULT_TARGET_AMOUNT,
@@ -121,9 +106,7 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	}, [mode, habit, reset]);
 
 	const nameValue = watch("name");
-	const iconValue = watch("icon");
-	const colorValue = watch("color");
-	const categoryValue = watch("category");
+	const categoryIdValue = watch("categoryId");
 	const directionValue = watch("direction");
 	const targetTypeValue = watch("targetType");
 	const targetAmountValue = watch("targetAmount");
@@ -137,8 +120,12 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	const hasNoTargetUnit =
 		targetTypeValue === "quantity" && targetUnitValue.trim().length === 0;
 	const isSubmitting = isCreating || isUpdating;
+	const blockedReason = saveBlockedReason({
+		name: nameValue,
+		categoryId: categoryIdValue,
+	});
 	const isSaveDisabled =
-		nameValue.trim().length === 0 ||
+		blockedReason !== undefined ||
 		hasNoWeekdays ||
 		hasNoTargetUnit ||
 		isSubmitting;
@@ -150,13 +137,9 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 		}
 	}, [isTargetTypeLockedToSimple, targetTypeValue, setValue]);
 
-	const categorySuggestions = isCategorySheetOpen
-		? filterCategorySuggestions(categories, categoryValue)
-		: [];
-
 	async function onSubmit(values: HabitFormValues) {
-		const category =
-			values.category.trim() === "" ? null : values.category.trim();
+		// The schema refuses a null category, so its output is always an id.
+		const { categoryId } = values;
 		const frequency = toFrequency(values);
 		// Stale Amount/Unit input never leaks in if Quantity was picked, then
 		// switched back to Simple check — a simple-check habit always has null.
@@ -168,9 +151,7 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 		if (mode === "create") {
 			await createHabit({
 				name: values.name,
-				icon: values.icon,
-				color: values.color,
-				category,
+				categoryId,
 				direction: values.direction,
 				targetType: values.targetType,
 				targetAmount,
@@ -180,9 +161,7 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 		} else if (habitId !== undefined) {
 			await updateHabit(habitId, {
 				name: values.name,
-				icon: values.icon,
-				color: values.color,
-				category,
+				categoryId,
 				targetType: values.targetType,
 				targetAmount,
 				targetUnit,
@@ -203,7 +182,14 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
-			<ScrollView contentContainerStyle={styles.scrollContent}>
+			<ScrollView
+				testID="habit-form-scroll"
+				contentContainerStyle={styles.scrollContent}
+				scrollEventThrottle={16}
+				onScroll={(event) =>
+					setIsScrolled(event.nativeEvent.contentOffset.y > 0)
+				}
+			>
 				<Container>
 					<Controller
 						control={control}
@@ -221,53 +207,14 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 					/>
 				</Container>
 
+				<CategoryPicker
+					categories={categories}
+					selectedId={categoryIdValue}
+					onSelect={(id) => setValue("categoryId", id, { shouldDirty: true })}
+					onAdd={() => setIsAddCategoryOpen(true)}
+				/>
+
 				<Container>
-					<SectionLabel>Icon & color</SectionLabel>
-					<View style={styles.iconGrid}>
-						{HABIT_ICONS.map((entry) => (
-							<IconSquare
-								key={entry.key}
-								variant="icon"
-								symbol={entry.symbol}
-								accent={{
-									tint: habitAccentTint(colorValue, scheme),
-									ink: habitAccentInk(colorValue, scheme),
-								}}
-								selected={iconValue === entry.key}
-								accessibilityLabel={entry.key}
-								onPress={() =>
-									setValue("icon", entry.key, { shouldDirty: true })
-								}
-							/>
-						))}
-					</View>
-
-					<View style={styles.iconGrid}>
-						{HABIT_COLORS.map((key) => (
-							<IconSquare
-								key={key}
-								variant="color"
-								color={habitAccentInk(key, scheme)}
-								selected={colorValue === key}
-								accessibilityLabel={key}
-								onPress={() => setValue("color", key, { shouldDirty: true })}
-							/>
-						))}
-					</View>
-				</Container>
-
-				<Container dividers>
-					<ListItem
-						embedded
-						title="Category"
-						leading={<IconBadge symbol="tag" />}
-						value={
-							categoryValue.trim() === "" ? NO_CATEGORY_LABEL : categoryValue
-						}
-						navigable
-						onPress={() => setIsCategorySheetOpen(true)}
-					/>
-
 					<View style={styles.directionSection}>
 						<ListItem
 							embedded
@@ -408,51 +355,37 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 				</Container>
 			</ScrollView>
 
-			<View style={styles.footer}>
+			<View
+				testID="habit-form-footer"
+				style={[
+					styles.footer,
+					isScrolled && {
+						borderTopWidth: StyleSheet.hairlineWidth,
+						borderTopColor: colors.border,
+					},
+				]}
+			>
 				<Button
 					label="Save habit"
 					onPress={handleSubmit(onSubmit)}
 					disabled={isSaveDisabled}
+					disabledReason={blockedReason}
 					loading={isSubmitting}
 				/>
 			</View>
 
-			<Sheet
-				visible={isCategorySheetOpen}
-				onDismiss={() => setIsCategorySheetOpen(false)}
-			>
-				<Controller
-					control={control}
-					name="category"
-					render={({ field, fieldState }) => (
-						<TextField
-							label="Category"
-							placeholder={NO_CATEGORY_LABEL}
-							value={field.value}
-							onChangeText={field.onChange}
-							onBlur={field.onBlur}
-							error={fieldState.error?.message}
-							maxLength={40}
-							autoFocus
-						/>
-					)}
-				/>
-				{categorySuggestions.length > 0 ? (
-					<Container variant="inset">
-						{categorySuggestions.map((suggestion) => (
-							<ListItem
-								key={suggestion}
-								title={suggestion}
-								onPress={() => {
-									setValue("category", suggestion, { shouldDirty: true });
-									setIsCategorySheetOpen(false);
-								}}
-							/>
-						))}
-					</Container>
-				) : null}
-				<Button label="Done" onPress={() => setIsCategorySheetOpen(false)} />
-			</Sheet>
+			<AddCategorySheet
+				visible={isAddCategoryOpen}
+				categories={categories}
+				onDismiss={() => setIsAddCategoryOpen(false)}
+				onCreate={createCategory}
+				onCreated={(category) => {
+					// F2d: back to the picker with the new chip already selected.
+					setValue("categoryId", category.id, { shouldDirty: true });
+					setIsAddCategoryOpen(false);
+				}}
+				isCreating={isCreatingCategory}
+			/>
 		</View>
 	);
 }
@@ -469,11 +402,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
-	},
-	iconGrid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 10,
 	},
 	directionSection: {
 		gap: 12,

@@ -9,15 +9,15 @@ import { HeatmapCell } from "./heatmap-cell";
 describe("HeatmapCell", () => {
 	it("fills a level with the accent's ramp step", async () => {
 		await render(
-			<HeatmapCell state={{ kind: "level", level: 2 }} accent="teal" />,
+			<HeatmapCell state={{ kind: "level", level: 2 }} accent={195} />,
 		);
 		expect(screen.getByTestId("heatmap-cell-level")).toHaveStyle({
-			backgroundColor: heatmapLevelColor("teal", 2, "light"),
+			backgroundColor: heatmapLevelColor(195, 2, "light"),
 		});
 	});
 
 	it("gives a frozen day its own dashed treatment, not a completion shade", async () => {
-		await render(<HeatmapCell state={{ kind: "frozen" }} accent="teal" />);
+		await render(<HeatmapCell state={{ kind: "frozen" }} accent={195} />);
 		expect(screen.getByTestId("heatmap-cell-frozen")).toHaveStyle({
 			backgroundColor: semanticColors.light.frozenBg,
 			borderStyle: "dashed",
@@ -27,8 +27,8 @@ describe("HeatmapCell", () => {
 	it("renders missed as the neutral track and not-scheduled as blank", async () => {
 		await render(
 			<>
-				<HeatmapCell state={{ kind: "missed" }} accent="teal" />
-				<HeatmapCell state={{ kind: "not-scheduled" }} accent="teal" />
+				<HeatmapCell state={{ kind: "missed" }} accent={195} />
+				<HeatmapCell state={{ kind: "not-scheduled" }} accent={195} />
 			</>,
 		);
 		expect(screen.getByTestId("heatmap-cell-missed")).toHaveStyle({
@@ -45,11 +45,11 @@ describe("HeatmapCell", () => {
 			<>
 				<HeatmapCell
 					state={{ kind: "missed" }}
-					accent="teal"
+					accent={195}
 					onPress={onPress}
 					accessibilityLabel="Monday 21 September"
 				/>
-				<HeatmapCell state={{ kind: "not-scheduled" }} accent="teal" />
+				<HeatmapCell state={{ kind: "not-scheduled" }} accent={195} />
 			</>,
 		);
 		expect(screen.getAllByRole("button")).toHaveLength(1);

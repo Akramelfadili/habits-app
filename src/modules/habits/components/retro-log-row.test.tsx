@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -15,7 +15,7 @@ const water = makeHabit({
 	targetAmount: 8,
 	targetUnit: "glasses",
 });
-const walk = makeHabit({ name: "Walk", category: "Evening" });
+const walk = makeHabit({ name: "Walk", category: categoryNamed("Evening") });
 
 async function renderRow(
 	props: Partial<React.ComponentProps<typeof RetroLogRow>> = {},

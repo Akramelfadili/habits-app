@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react-native";
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import type { Entry, Habit } from "../types";
 
 let mockActive: Habit[] = [];
@@ -23,10 +23,10 @@ function entry(habitId: number, date: string): Entry {
 describe("useManageHabitsQueries", () => {
 	it("lists active habits category by category, manual order within each", async () => {
 		mockActive = [
-			makeHabit({ id: 1, category: "Morning" }),
-			makeHabit({ id: 2, category: "Evening" }),
-			makeHabit({ id: 3, category: null }),
-			makeHabit({ id: 4, category: "Morning" }),
+			makeHabit({ id: 1, category: categoryNamed("Morning") }),
+			makeHabit({ id: 2, category: categoryNamed("Evening") }),
+			makeHabit({ id: 3, category: categoryNamed("Other") }),
+			makeHabit({ id: 4, category: categoryNamed("Morning") }),
 		];
 		mockArchived = [];
 

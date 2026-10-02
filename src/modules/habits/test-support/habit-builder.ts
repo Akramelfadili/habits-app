@@ -1,4 +1,5 @@
-import type { CreateHabitInput, Habit } from "../types";
+import { BUILT_IN_CATEGORIES, type BuiltInCategoryName } from "../constants";
+import type { Category, CreateHabitInput, Habit } from "../types";
 
 /**
  * Shared test builders — every test that needs a habit starts from these and
@@ -7,14 +8,45 @@ import type { CreateHabitInput, Habit } from "../types";
  */
 const BUILDER_DATE = new Date("2026-01-01");
 
+/**
+ * The built-ins as a freshly migrated database stores them — autoincrement
+ * ids 1–10 in BUILT_IN_CATEGORIES order — so repository tests against the
+ * real test db and plain unit tests agree on ids.
+ */
+export const TEST_BUILT_IN_CATEGORIES: Category[] = BUILT_IN_CATEGORIES.map(
+	(builtIn, index) => ({
+		id: index + 1,
+		name: builtIn.name,
+		shape: builtIn.shape,
+		hue: builtIn.hue,
+		builtIn: true,
+	}),
+);
+
+export function builtInCategory(name: BuiltInCategoryName): Category {
+	const category = TEST_BUILT_IN_CATEGORIES.find((c) => c.name === name);
+	if (!category) throw new Error(`No built-in "${name}"`);
+	return category;
+}
+
+/** A custom category — rotation slot 1's look unless overridden. */
+export function makeCategory(overrides: Partial<Category> = {}): Category {
+	return {
+		id: 11,
+		name: "Morning",
+		shape: "diamond",
+		hue: 175,
+		builtIn: false,
+		...overrides,
+	};
+}
+
 export function makeHabitInput(
 	overrides: Partial<CreateHabitInput> = {},
 ): CreateHabitInput {
 	return {
 		name: "Read",
-		icon: "book",
-		color: "blue",
-		category: null,
+		categoryId: builtInCategory("Other").id,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -25,9 +57,11 @@ export function makeHabitInput(
 }
 
 export function makeHabit(overrides: Partial<Habit> = {}): Habit {
+	const { categoryId: _categoryId, ...input } = makeHabitInput();
 	return {
 		id: 1,
-		...makeHabitInput(),
+		...input,
+		category: builtInCategory("Other"),
 		sortOrder: 1,
 		archivedAt: null,
 		pauses: [],
@@ -35,4 +69,21 @@ export function makeHabit(overrides: Partial<Habit> = {}): Habit {
 		updatedAt: BUILDER_DATE,
 		...overrides,
 	};
+}
+
+const namedCustoms = new Map<string, Category>();
+
+/**
+ * A category by name — the built-in if it is one, otherwise a custom with an
+ * id stable for that name across a test file, so grouping by id behaves.
+ */
+export function categoryNamed(name: string): Category {
+	const builtIn = TEST_BUILT_IN_CATEGORIES.find((c) => c.name === name);
+	if (builtIn) return builtIn;
+	let custom = namedCustoms.get(name);
+	if (!custom) {
+		custom = makeCategory({ id: 11 + namedCustoms.size, name });
+		namedCustoms.set(name, custom);
+	}
+	return custom;
 }

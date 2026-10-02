@@ -1,4 +1,8 @@
-import { makeHabit } from "../test-support/habit-builder";
+import {
+	categoryNamed,
+	makeCategory,
+	makeHabit,
+} from "../test-support/habit-builder";
 import {
 	celebratoryHeadline,
 	computeProgress,
@@ -9,38 +13,65 @@ import {
 
 describe("groupHabitsByCategory", () => {
 	it("groups habits under the category they share", () => {
-		const morningHabit = makeHabit({ id: 1, category: "Morning" });
-		const anotherMorningHabit = makeHabit({ id: 2, category: "Morning" });
+		const morningHabit = makeHabit({
+			id: 1,
+			category: categoryNamed("Morning"),
+		});
+		const anotherMorningHabit = makeHabit({
+			id: 2,
+			category: categoryNamed("Morning"),
+		});
 
 		const groups = groupHabitsByCategory([morningHabit, anotherMorningHabit]);
 
 		expect(groups).toEqual([
-			{ category: "Morning", habits: [morningHabit, anotherMorningHabit] },
+			{
+				category: categoryNamed("Morning"),
+				habits: [morningHabit, anotherMorningHabit],
+			},
 		]);
 	});
 
 	it("orders groups by first-appearance in the given (creation-ordered) list", () => {
-		const evening = makeHabit({ id: 1, category: "Evening" });
-		const morning = makeHabit({ id: 2, category: "Morning" });
-		const secondEvening = makeHabit({ id: 3, category: "Evening" });
+		const evening = makeHabit({ id: 1, category: categoryNamed("Evening") });
+		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
+		const secondEvening = makeHabit({
+			id: 3,
+			category: categoryNamed("Evening"),
+		});
 
 		const groups = groupHabitsByCategory([evening, morning, secondEvening]);
 
-		expect(groups.map((group) => group.category)).toEqual([
+		expect(groups.map((group) => group.category.name)).toEqual([
 			"Evening",
 			"Morning",
 		]);
 	});
 
-	it("puts no-category habits under Anytime, last, regardless of creation order", () => {
-		const noCategory = makeHabit({ id: 1, category: null });
-		const morning = makeHabit({ id: 2, category: "Morning" });
+	it("puts Other (V1's Anytime) last, regardless of creation order", () => {
+		const noCategory = makeHabit({ id: 1, category: categoryNamed("Other") });
+		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
 
 		const groups = groupHabitsByCategory([noCategory, morning]);
 
-		expect(groups.map((group) => group.category)).toEqual([
+		expect(groups.map((group) => group.category.name)).toEqual([
 			"Morning",
-			"Anytime",
+			"Other",
+		]);
+	});
+
+	it("groups by category identity, not name — and only the built-in Other goes last", () => {
+		// A custom that happens to be called "Other" can't exist (duplicate
+		// check), but grouping must still key on id, not the display name.
+		const customOther = makeCategory({ id: 50, name: "Other" });
+		const custom = makeHabit({ id: 1, category: customOther });
+		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
+
+		const groups = groupHabitsByCategory([custom, morning]);
+
+		expect(groups.map((group) => group.category.id)).toEqual([
+			50,
+			categoryNamed("Morning").id,
 		]);
 	});
 

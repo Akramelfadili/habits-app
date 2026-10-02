@@ -2,8 +2,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { HABIT_ICONS } from "../constants";
 import type { Habit } from "../types";
+import { categorySymbol } from "./category-symbol";
 import { CompletionCircle } from "./completion-circle";
 
 type HabitTodayRowProps = {
@@ -22,13 +22,6 @@ type HabitTodayRowProps = {
 	/** Streak-at-risk (HAB-08): yesterday was missed and a freeze could still cover it. */
 	atRisk?: boolean;
 };
-
-/** Shared with QuantityLogSheet (HAB-07), which needs the same icon → SF Symbol lookup. */
-export function iconSymbolFor(icon: Habit["icon"]) {
-	return (
-		HABIT_ICONS.find((entry) => entry.key === icon)?.symbol ?? "circle.fill"
-	);
-}
 
 /**
  * Resistance-framed caption for a resisted Break habit (HAB-04). It sits
@@ -96,10 +89,10 @@ export function HabitTodayRow({
 				]}
 			>
 				<IconBadge
-					symbol={iconSymbolFor(habit.icon)}
+					symbol={categorySymbol(habit.category)}
 					accent={{
-						tint: habitAccentTint(habit.color, scheme),
-						ink: habitAccentInk(habit.color, scheme),
+						tint: habitAccentTint(habit.category.hue, scheme),
+						ink: habitAccentInk(habit.category.hue, scheme),
 					}}
 				/>
 				<View style={styles.nameColumn}>

@@ -9,9 +9,8 @@ import {
 	habits,
 	reminders,
 } from "@/lib/db/schema";
-import type { HabitAccentKey } from "@/theme/theme";
-import type { HabitIconKey } from "../constants";
 import type {
+	Category,
 	CreateHabitInput,
 	DayRange,
 	Frequency,
@@ -19,6 +18,11 @@ import type {
 	IsoWeekday,
 	UpdateHabitInput,
 } from "../types";
+import {
+	allCategoriesQuery,
+	resolveHabitCategory,
+	rowToCategory,
+} from "./category-rows";
 
 type HabitRow = typeof habits.$inferSelect;
 
@@ -71,13 +75,11 @@ function pausesToColumn(pauses: readonly DayRange[]): string | null {
 		: null;
 }
 
-function rowToHabit(row: HabitRow): Habit {
+function rowToHabit(row: HabitRow, category: Category): Habit {
 	return {
 		id: row.id,
 		name: row.name,
-		icon: row.icon as HabitIconKey,
-		color: row.color as HabitAccentKey,
-		category: row.category,
+		category,
 		direction: row.direction,
 		targetType: row.targetType,
 		targetAmount: row.targetAmount,
@@ -90,6 +92,52 @@ function rowToHabit(row: HabitRow): Habit {
 		updatedAt: row.updatedAt,
 	};
 }
+
+async function loadCategoriesById(): Promise<Map<number, Category>> {
+	const rows = await allCategoriesQuery();
+	return new Map(rows.map((row) => [row.id, rowToCategory(row)]));
+}
+
+/**
+ * A row back to the domain type — reads the (small, fixed-ish) category set so
+ * a dangling `category_id` falls back to Other, same as the live hooks.
+ */
+async function toHabit(row: HabitRow): Promise<Habit> {
+	return rowToHabit(
+		row,
+		resolveHabitCategory(row.categoryId, await loadCategoriesById()),
+	);
+}
+
+/**
+ * Habit rows + every category, mapped together. Two live subscriptions rather
+ * than one joined query: Drizzle's `useLiveQuery` only re-runs when its `from`
+ * table changes, so a join would leave habits showing a renamed or deleted
+ * category's stale name/icon/color (HAB-25).
+ */
+function useHabitsWithCategories(
+	query: Parameters<typeof useLiveQuery>[0],
+): Habit[] {
+	const habitsResult = useLiveQuery(query);
+	const categoriesResult = useLiveQuery(allCategoriesQuery());
+	// The two queries resolve independently. Until both have, report what an
+	// unresolved live query always reports — nothing yet — rather than a
+	// partial list missing whichever habits' categories haven't arrived.
+	const isLoaded =
+		habitsResult.updatedAt !== undefined &&
+		categoriesResult.updatedAt !== undefined;
+	if (!isLoaded) return NOT_LOADED;
+
+	const byId = new Map(
+		(categoriesResult.data ?? []).map((row) => [row.id, rowToCategory(row)]),
+	);
+	return ((habitsResult.data ?? []) as HabitRow[]).map((row) =>
+		rowToHabit(row, resolveHabitCategory(row.categoryId, byId)),
+	);
+}
+
+/** Stable empty result while loading, so consumers' memo deps don't churn. */
+const NOT_LOADED: Habit[] = [];
 
 /** New habits go last in their category (HAB-13's manual order). */
 async function nextSortOrder(): Promise<number> {
@@ -104,9 +152,7 @@ function habitInsertValues(
 ) {
 	return {
 		name: input.name,
-		icon: input.icon,
-		color: input.color,
-		category: input.category,
+		categoryId: input.categoryId,
 		direction: input.direction,
 		targetType: input.targetType,
 		targetAmount: input.targetAmount,
@@ -124,7 +170,7 @@ export async function createHabit(input: CreateHabitInput): Promise<Habit> {
 		.values(habitInsertValues(input, new Date(), await nextSortOrder()))
 		.returning();
 
-	return rowToHabit(row);
+	return toHabit(row);
 }
 
 /**
@@ -153,7 +199,7 @@ export async function createHabitsAndMarkSetting(
 				.insert(habits)
 				.values(habitInsertValues(input, new Date(), await nextSortOrder()))
 				.returning();
-			created.push(rowToHabit(row));
+			created.push(await toHabit(row));
 		}
 		// Same `db` connection, still inside the open transaction above — calling
 		// the generic settings repository's own write here (rather than
@@ -175,9 +221,7 @@ export async function updateHabit(
 		.update(habits)
 		.set({
 			name: input.name,
-			icon: input.icon,
-			color: input.color,
-			category: input.category,
+			categoryId: input.categoryId,
 			targetType: input.targetType,
 			targetAmount: input.targetAmount,
 			targetUnit: input.targetUnit,
@@ -187,7 +231,7 @@ export async function updateHabit(
 		.where(eq(habits.id, id))
 		.returning();
 
-	return rowToHabit(row);
+	return toHabit(row);
 }
 
 /**
@@ -196,40 +240,37 @@ export async function updateHabit(
  * working for an archived habit's history. Manual order (HAB-13).
  */
 export function useHabitsList(): Habit[] {
-	const { data } = useLiveQuery(
+	return useHabitsWithCategories(
 		db.select().from(habits).orderBy(asc(habits.sortOrder), asc(habits.id)),
 	);
-	return (data ?? []).map(rowToHabit);
 }
 
 /** Live-query hook — habits not archived (Today, Weekly Summary, Manage), in manual order. */
 export function useActiveHabits(): Habit[] {
-	const { data } = useLiveQuery(
+	return useHabitsWithCategories(
 		db
 			.select()
 			.from(habits)
 			.where(isNull(habits.archivedAt))
 			.orderBy(asc(habits.sortOrder), asc(habits.id)),
 	);
-	return (data ?? []).map(rowToHabit);
 }
 
 /** Live-query hook — archived habits, most recently archived first (HAB-13). */
 export function useArchivedHabits(): Habit[] {
-	const { data } = useLiveQuery(
+	return useHabitsWithCategories(
 		db
 			.select()
 			.from(habits)
 			.where(isNotNull(habits.archivedAt))
 			.orderBy(desc(habits.archivedAt), asc(habits.id)),
 	);
-	return (data ?? []).map(rowToHabit);
 }
 
 /** A one-off (non-reactive) read — services need what's stored right now. */
 export async function getHabit(id: number): Promise<Habit | undefined> {
 	const [row] = await db.select().from(habits).where(eq(habits.id, id));
-	return row ? rowToHabit(row) : undefined;
+	return row ? toHabit(row) : undefined;
 }
 
 /**
@@ -276,7 +317,7 @@ export async function setHabitArchived(
 		.set({ archivedAt })
 		.where(eq(habits.id, id))
 		.returning();
-	return rowToHabit(row);
+	return toHabit(row);
 }
 
 /** Clears the archive flag and stores the habit's full list of past pauses. */
@@ -289,7 +330,7 @@ export async function setHabitRestored(
 		.set({ archivedAt: null, pausedRanges: pausesToColumn(pauses) })
 		.where(eq(habits.id, id))
 		.returning();
-	return rowToHabit(row);
+	return toHabit(row);
 }
 
 /**
@@ -340,5 +381,5 @@ export async function createHabitAt(
 		.values(habitInsertValues(input, createdAt, await nextSortOrder()))
 		.returning();
 
-	return rowToHabit(row);
+	return toHabit(row);
 }

@@ -1,54 +1,26 @@
-import { HABIT_COLORS } from "../constants";
-import { makeHabit } from "../test-support/habit-builder";
-import {
-	filterCategorySuggestions,
-	pickDefaultColor,
-} from "./habit-form-helpers";
+import { NO_NAME_MESSAGE, saveBlockedReason } from "./habit-form-helpers";
+import { NO_CATEGORY_MESSAGE } from "./habit-form-schema";
 
-describe("pickDefaultColor", () => {
-	it("picks the first color when there are no habits", () => {
-		expect(pickDefaultColor([])).toBe(HABIT_COLORS[0]);
-	});
-
-	it("skips colors already used by another habit", () => {
-		const habits = [
-			makeHabit({ id: 1, color: "blue" }),
-			makeHabit({ id: 2, color: "purple" }),
-		];
-		// HABIT_COLORS order is blue, purple, orange, ... — orange is first free.
-		expect(pickDefaultColor(habits)).toBe("orange");
-	});
-
-	it("falls back to the first color once every color is taken", () => {
-		const habits = HABIT_COLORS.map((color, index) =>
-			makeHabit({ id: index + 1, color }),
+describe("saveBlockedReason", () => {
+	it("shows only the name reason when both name and category are missing", () => {
+		expect(saveBlockedReason({ name: "", categoryId: null })).toBe(
+			NO_NAME_MESSAGE,
 		);
-		expect(pickDefaultColor(habits)).toBe(HABIT_COLORS[0]);
-	});
-});
-
-describe("filterCategorySuggestions", () => {
-	const categories = ["Morning", "Evening", "Mornings out", "Work"];
-
-	it("returns every category for an empty query", () => {
-		expect(filterCategorySuggestions(categories, "  ")).toEqual(categories);
 	});
 
-	it("matches case-insensitively on a trimmed query", () => {
-		expect(filterCategorySuggestions(categories, " MORN ")).toEqual([
-			"Morning",
-			"Mornings out",
-		]);
+	it("treats a whitespace-only name as missing", () => {
+		expect(saveBlockedReason({ name: "   ", categoryId: 3 })).toBe(
+			NO_NAME_MESSAGE,
+		);
 	});
 
-	it("excludes an exact match of the current value", () => {
-		expect(filterCategorySuggestions(categories, "Morning ")).toEqual([
-			"Mornings out",
-		]);
+	it("shows the category reason once a name exists", () => {
+		expect(saveBlockedReason({ name: "Read", categoryId: null })).toBe(
+			NO_CATEGORY_MESSAGE,
+		);
 	});
 
-	it("caps the list at five suggestions", () => {
-		const many = ["a1", "a2", "a3", "a4", "a5", "a6"];
-		expect(filterCategorySuggestions(many, "a")).toHaveLength(5);
+	it("gives no reason when both are present", () => {
+		expect(saveBlockedReason({ name: "Read", categoryId: 3 })).toBeUndefined();
 	});
 });

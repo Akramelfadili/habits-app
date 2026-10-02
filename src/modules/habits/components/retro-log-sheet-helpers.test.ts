@@ -1,4 +1,4 @@
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
 jest.mock("../repositories/frozen-day-repository", () => ({}));
 
@@ -28,14 +28,20 @@ describe("retroLogRowSubtitle", () => {
 	});
 
 	it("frames a resisted Break habit as resisted", () => {
-		const breakHabit = makeHabit({ direction: "break", category: "Evening" });
+		const breakHabit = makeHabit({
+			direction: "break",
+			category: categoryNamed("Evening"),
+		});
 		expect(retroLogRowSubtitle(breakHabit, true)).toBe("Resisted");
 		expect(retroLogRowSubtitle(breakHabit, false)).toBe("Evening");
 	});
 
-	it("falls back to the cadence for an uncategorised check habit", () => {
-		expect(retroLogRowSubtitle(makeHabit({ category: null }), false)).toBe(
-			"daily",
-		);
+	it("shows Other like any category — every habit has one (HAB-24)", () => {
+		expect(
+			retroLogRowSubtitle(
+				makeHabit({ category: categoryNamed("Other") }),
+				false,
+			),
+		).toBe("Other");
 	});
 });

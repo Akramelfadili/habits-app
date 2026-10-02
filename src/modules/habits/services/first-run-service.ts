@@ -3,6 +3,7 @@ import {
 	SEEN_FIRST_RUN_SETTING_KEY,
 	suggestionToCreateHabitInput,
 } from "../constants";
+import { getCategories } from "../repositories/category-repository";
 import { createHabitsAndMarkSetting } from "../repositories/habit-repository";
 import type { Habit } from "../types";
 
@@ -14,8 +15,11 @@ import type { Habit } from "../types";
 export async function addSuggestedHabits(
 	suggestions: FirstRunSuggestion[],
 ): Promise<Habit[]> {
+	const categories = await getCategories();
 	return createHabitsAndMarkSetting(
-		suggestions.map(suggestionToCreateHabitInput),
+		suggestions.map((suggestion) =>
+			suggestionToCreateHabitInput(suggestion, categories),
+		),
 		{ key: SEEN_FIRST_RUN_SETTING_KEY, value: "true" },
 	);
 }

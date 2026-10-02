@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
+import { CharacterCounter } from "./character-counter";
+import { FieldHelper } from "./field-helper";
 import { SectionLabel } from "./section-label";
 
 type TextFieldProps = {
@@ -15,6 +17,17 @@ type TextFieldProps = {
 	autoFocus?: boolean;
 	/** Wraps onto more lines as the text grows — for short free text like a note. */
 	multiline?: boolean;
+	/**
+	 * VAR-12 name-field behavior (HAB-22/HAB-24): the NEW-23 counter from 80%
+	 * of `maxLength`, amber at the limit — instead of the remaining-characters
+	 * counter below.
+	 */
+	nearLimitCounter?: boolean;
+	/**
+	 * Input that can't be used as-is but isn't a hard error (a duplicate name):
+	 * amber outline plus a NEW-24 helper under the field.
+	 */
+	warning?: string;
 };
 
 /** How close to `maxLength` the remaining-characters counter starts showing. */
@@ -31,22 +44,29 @@ export function TextField({
 	maxLength,
 	autoFocus,
 	multiline = false,
+	nearLimitCounter = false,
+	warning,
 }: TextFieldProps) {
 	const { colors } = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
-	// Error outranks focus: a field being corrected keeps its red outline.
+	// Error outranks warning outranks focus: a field being corrected keeps its outline.
 	const borderColor = error
 		? colors.dangerBg
-		: isFocused
-			? colors.ink
-			: "transparent";
+		: warning
+			? colors.warnInk
+			: isFocused
+				? colors.ink
+				: "transparent";
 	// Only surfaces near the cap, so a short note doesn't carry a counter;
 	// the input itself stops at `maxLength` rather than truncating later.
 	const remaining =
 		maxLength !== undefined ? maxLength - value.length : undefined;
-	const showCounter = remaining !== undefined && remaining <= COUNTER_THRESHOLD;
+	const showCounter =
+		!nearLimitCounter &&
+		remaining !== undefined &&
+		remaining <= COUNTER_THRESHOLD;
 
-	return (
+	const field = (
 		<View testID="text-field" style={[styles.container, { borderColor }]}>
 			<SectionLabel>{label}</SectionLabel>
 			<TextInput
@@ -54,7 +74,13 @@ export function TextField({
 				// without this, VoiceOver announces an unnamed text field.
 				accessibilityLabel={label}
 				value={value}
-				onChangeText={onChangeText}
+				// `maxLength` stops typing; slicing too covers a paste that arrives
+				// over the limit, so it's trimmed to fit rather than rejected.
+				onChangeText={(text) =>
+					onChangeText(
+						maxLength !== undefined ? text.slice(0, maxLength) : text,
+					)
+				}
 				onFocus={() => {
 					setIsFocused(true);
 					onFocus?.();
@@ -85,9 +111,22 @@ export function TextField({
 					{`${value.length}/${maxLength}`}
 				</Text>
 			) : null}
+			{nearLimitCounter && maxLength !== undefined ? (
+				<View style={styles.nearLimitCounter}>
+					<CharacterCounter length={value.length} limit={maxLength} />
+				</View>
+			) : null}
 			{error ? (
 				<Text style={[styles.error, { color: colors.dangerBg }]}>{error}</Text>
 			) : null}
+		</View>
+	);
+
+	if (!warning) return field;
+	return (
+		<View style={styles.withWarning}>
+			{field}
+			<FieldHelper tone="error">{warning}</FieldHelper>
 		</View>
 	);
 }
@@ -118,5 +157,12 @@ const styles = StyleSheet.create({
 	},
 	error: {
 		fontSize: 11,
+	},
+	nearLimitCounter: {
+		alignSelf: "flex-end",
+	},
+	withWarning: {
+		// Clears the field's -10 outline margin so the helper sits under the box.
+		gap: 18,
 	},
 });

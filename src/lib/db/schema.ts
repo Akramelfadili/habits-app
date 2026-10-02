@@ -16,12 +16,51 @@ export const appSettings = sqliteTable("app_settings", {
 	value: text("value").notNull(),
 });
 
+/**
+ * The managed category set (HAB-24): the ten built-ins, seeded by migration
+ * in their fixed order, then the user's custom ones. Autoincrement ids give
+ * that order for free — built-ins first, customs in creation order. A
+ * category supplies its habits' icon (`shape`) and color (`hue`).
+ */
+export const categories = sqliteTable("categories", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	name: text("name").notNull(),
+	shape: text("shape", {
+		enum: [
+			"plus",
+			"bars",
+			"diamond",
+			"square",
+			"lines",
+			"grid",
+			"half",
+			"archive",
+			"dot",
+			"ring",
+		],
+	}).notNull(),
+	/** OKLCH hue; null only for the neutral built-in "Other". */
+	hue: integer("hue"),
+	builtIn: integer("built_in", { mode: "boolean" }).notNull().default(false),
+	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
 export const habits = sqliteTable("habits", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull(),
-	icon: text("icon").notNull(),
-	color: text("color").notNull(),
+	/**
+	 * Legacy (V1, pre-HAB-24) — no longer read or written. A habit's icon and
+	 * color now come from its category; kept nullable for one release so the
+	 * HAB-24 migration stays reversible, dropped by a later cleanup migration.
+	 */
+	icon: text("icon"),
+	/** Legacy (V1) — see `icon`. */
+	color: text("color"),
+	/** Legacy (V1) free-text category — see `icon`; replaced by `categoryId`. */
 	category: text("category"),
+	categoryId: integer("category_id")
+		.notNull()
+		.references(() => categories.id),
 	direction: text("direction", { enum: ["build", "break"] })
 		.notNull()
 		.default("build"),

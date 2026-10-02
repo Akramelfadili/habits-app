@@ -1,46 +1,58 @@
 import {
-	HABIT_ACCENT_KEYS,
 	habitAccentInk,
 	habitAccentTint,
 	heatmapLevelColor,
+	surfaceColors,
 } from "./theme";
 
+const HUES = [25, 150, 300, 255, 75];
+
 describe("habit accent colors", () => {
-	it("has exactly 6 confirmed accent keys", () => {
-		expect(HABIT_ACCENT_KEYS).toHaveLength(6);
+	it("produces a distinct ink color per hue, per scheme", () => {
+		const light = HUES.map((hue) => habitAccentInk(hue, "light"));
+		expect(new Set(light).size).toBe(HUES.length);
+
+		const dark = HUES.map((hue) => habitAccentInk(hue, "dark"));
+		expect(new Set(dark).size).toBe(HUES.length);
 	});
 
-	it("produces a distinct ink color per accent, per scheme", () => {
-		const light = HABIT_ACCENT_KEYS.map((key) => habitAccentInk(key, "light"));
-		expect(new Set(light).size).toBe(HABIT_ACCENT_KEYS.length);
-
-		const dark = HABIT_ACCENT_KEYS.map((key) => habitAccentInk(key, "dark"));
-		expect(new Set(dark).size).toBe(HABIT_ACCENT_KEYS.length);
-	});
-
-	it("produces a tint distinct from the base ink for the same accent", () => {
-		for (const key of HABIT_ACCENT_KEYS) {
-			expect(habitAccentTint(key, "light")).not.toBe(
-				habitAccentInk(key, "light"),
+	it("produces a tint distinct from the base ink for the same hue", () => {
+		for (const hue of HUES) {
+			expect(habitAccentTint(hue, "light")).not.toBe(
+				habitAccentInk(hue, "light"),
 			);
-			expect(habitAccentTint(key, "dark")).not.toBe(
-				habitAccentInk(key, "dark"),
+			expect(habitAccentTint(hue, "dark")).not.toBe(
+				habitAccentInk(hue, "dark"),
 			);
 		}
+	});
+
+	it("renders the null hue (Other) with the neutral chrome tokens", () => {
+		expect(habitAccentInk(null, "light")).toBe(surfaceColors.light.sub);
+		expect(habitAccentTint(null, "light")).toBe(surfaceColors.light.inner);
+		expect(habitAccentInk(null, "dark")).toBe(surfaceColors.dark.sub);
+		expect(habitAccentTint(null, "dark")).toBe(surfaceColors.dark.inner);
 	});
 });
 
 describe("heatmap ramp", () => {
-	it("gives three distinct steps per accent", () => {
+	it("gives three distinct steps per hue", () => {
 		const levels = ([1, 2, 3] as const).map((level) =>
-			heatmapLevelColor("blue", level, "light"),
+			heatmapLevelColor(230, level, "light"),
 		);
 		expect(new Set(levels).size).toBe(3);
 	});
 
 	it("differs between light and dark for the same step", () => {
-		expect(heatmapLevelColor("teal", 2, "light")).not.toBe(
-			heatmapLevelColor("teal", 2, "dark"),
+		expect(heatmapLevelColor(195, 2, "light")).not.toBe(
+			heatmapLevelColor(195, 2, "dark"),
 		);
+	});
+
+	it("gives the neutral hue three distinct grey steps", () => {
+		const levels = ([1, 2, 3] as const).map((level) =>
+			heatmapLevelColor(null, level, "light"),
+		);
+		expect(new Set(levels).size).toBe(3);
 	});
 });

@@ -1,22 +1,10 @@
 import { renderHook } from "@testing-library/react-native";
-import { makeHabit } from "../test-support/habit-builder";
+import { makeCategory, makeHabit } from "../test-support/habit-builder";
 
 const mockHabits = [
-	makeHabit({ id: 1, name: "Read", category: "Morning" }),
-	makeHabit({
-		id: 2,
-		name: "Gym",
-		icon: "flame",
-		color: "orange",
-		category: "Morning",
-	}),
-	makeHabit({
-		id: 3,
-		name: "No phone in bed",
-		icon: "moon",
-		color: "purple",
-		direction: "break",
-	}),
+	makeHabit({ id: 1, name: "Read", category: makeCategory() }),
+	makeHabit({ id: 2, name: "Gym", category: makeCategory() }),
+	makeHabit({ id: 3, name: "No phone in bed", direction: "break" }),
 ];
 
 jest.mock("../repositories/habit-repository", () => ({
@@ -29,11 +17,6 @@ describe("useHabitQueries", () => {
 	it("returns all habits", async () => {
 		const { result } = await renderHook(() => useHabitQueries());
 		expect(result.current.habits).toEqual(mockHabits);
-	});
-
-	it("derives distinct, non-null categories", async () => {
-		const { result } = await renderHook(() => useHabitQueries());
-		expect(result.current.categories).toEqual(["Morning"]);
 	});
 
 	it("finds a habit by id", async () => {

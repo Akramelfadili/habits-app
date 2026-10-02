@@ -1,32 +1,18 @@
-import type { HabitAccentKey } from "@/theme/theme";
-import { HABIT_COLORS } from "../constants";
-import type { Habit } from "../types";
+import { NO_CATEGORY_MESSAGE } from "./habit-form-schema";
 
-const MAX_CATEGORY_SUGGESTIONS = 5;
-
-/**
- * The first habit color (in HABIT_COLORS pick order) no existing habit uses —
- * falling back to the first color once all six are taken.
- */
-export function pickDefaultColor(habits: Habit[]): HabitAccentKey {
-	const usedColors = new Set(habits.map((habit) => habit.color));
-	return HABIT_COLORS.find((key) => !usedColors.has(key)) ?? HABIT_COLORS[0];
-}
+/** Save's blocking reason with no name yet — outranks the category reason. */
+export const NO_NAME_MESSAGE = "Add a name to save this habit";
 
 /**
- * Previously-used categories matching what's typed (case-insensitive), minus
- * an exact match of the current value — suggesting that would be a no-op.
+ * Why Save is disabled, for the helper line above it (HAB-24, VAR-13) — one
+ * reason at a time: a missing name outranks a missing category, so both are
+ * never shown together. Undefined when neither blocks.
  */
-export function filterCategorySuggestions(
-	categories: string[],
-	value: string,
-): string[] {
-	const trimmed = value.trim();
-	const query = trimmed.toLowerCase();
-	return categories
-		.filter(
-			(category) =>
-				category.toLowerCase().includes(query) && category !== trimmed,
-		)
-		.slice(0, MAX_CATEGORY_SUGGESTIONS);
+export function saveBlockedReason(values: {
+	name: string;
+	categoryId: number | null;
+}): string | undefined {
+	if (values.name.trim() === "") return NO_NAME_MESSAGE;
+	if (values.categoryId === null) return NO_CATEGORY_MESSAGE;
+	return undefined;
 }

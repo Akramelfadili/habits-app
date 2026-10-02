@@ -8,7 +8,7 @@ import { useTheme } from "@/theme/use-theme";
 import { MAX_QUANTITY_VALUE } from "../constants";
 import { isDayLogValueDone, toggledDayLogValue } from "../services/retro-log";
 import type { DayLogValue, Habit } from "../types";
-import { iconSymbolFor } from "./habit-today-row";
+import { categorySymbol } from "./category-symbol";
 import { retroLogRowSubtitle } from "./retro-log-sheet-helpers";
 
 type RetroLogRowProps = {
@@ -54,10 +54,10 @@ export function RetroLogRow({
 				}
 				leading={
 					<IconBadge
-						symbol={iconSymbolFor(habit.icon)}
+						symbol={categorySymbol(habit.category)}
 						accent={{
-							tint: habitAccentTint(habit.color, scheme),
-							ink: habitAccentInk(habit.color, scheme),
+							tint: habitAccentTint(habit.category.hue, scheme),
+							ink: habitAccentInk(habit.category.hue, scheme),
 						}}
 					/>
 				}

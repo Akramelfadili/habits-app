@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/primitives/button";
 import { Checkbox } from "@/components/ui/primitives/checkbox";
 import { habitAccentInk, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import type { FirstRunSuggestion } from "../constants";
+import { builtInAppearance, type FirstRunSuggestion } from "../constants";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 
@@ -76,7 +76,7 @@ export function FirstRunScreen() {
 											styles.dot,
 											{
 												backgroundColor: habitAccentInk(
-													suggestion.color,
+													builtInAppearance(suggestion.category).hue,
 													scheme,
 												),
 											},

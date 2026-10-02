@@ -1,33 +1,82 @@
 import type { SFSymbol } from "sf-symbols-typescript";
-import { HABIT_ACCENT_KEYS, type HabitAccentKey } from "@/theme/theme";
-import type { CreateHabitInput, HabitDirection, IsoWeekday } from "./types";
+import type {
+	Category,
+	CategoryAppearance,
+	CategoryShape,
+	CreateHabitInput,
+	HabitDirection,
+	IsoWeekday,
+} from "./types";
 
-export type HabitIconKey =
-	| "dot"
-	| "flame"
-	| "book"
-	| "walk"
-	| "drop"
-	| "moon"
-	| "heart"
-	| "leaf";
+/**
+ * The ten built-in categories (HAB-24), in their fixed display order. The
+ * HAB-24 migration seeds exactly these rows (a test keeps the two in step).
+ * "Other" has no hue on purpose — it's the neutral catch-all, not an identity.
+ */
+export const BUILT_IN_CATEGORIES = [
+	{ name: "Health", shape: "plus", hue: 25 },
+	{ name: "Fitness", shape: "bars", hue: 150 },
+	{ name: "Mindfulness", shape: "diamond", hue: 300 },
+	{ name: "Productivity", shape: "square", hue: 255 },
+	{ name: "Learning", shape: "lines", hue: 75 },
+	{ name: "Finance", shape: "grid", hue: 110 },
+	{ name: "Social", shape: "half", hue: 345 },
+	{ name: "Home", shape: "archive", hue: 45 },
+	{ name: "Creativity", shape: "dot", hue: 200 },
+	{ name: "Other", shape: "ring", hue: null },
+] as const satisfies readonly (CategoryAppearance & { name: string })[];
 
-/** The fixed set of 8 selectable habit icons (HAB-01). "dot" is the default. */
-export const HABIT_ICONS: { key: HabitIconKey; symbol: SFSymbol }[] = [
-	{ key: "dot", symbol: "circle.fill" },
-	{ key: "flame", symbol: "flame.fill" },
-	{ key: "book", symbol: "book.fill" },
-	{ key: "walk", symbol: "figure.walk" },
-	{ key: "drop", symbol: "drop.fill" },
-	{ key: "moon", symbol: "moon.stars.fill" },
-	{ key: "heart", symbol: "heart.fill" },
-	{ key: "leaf", symbol: "leaf.fill" },
+export type BuiltInCategoryName = (typeof BUILT_IN_CATEGORIES)[number]["name"];
+
+/** A built-in's fixed look — static, so it's known without reading the database. */
+export function builtInAppearance(
+	name: BuiltInCategoryName,
+): CategoryAppearance {
+	const builtIn = BUILT_IN_CATEGORIES.find((entry) => entry.name === name);
+	if (!builtIn) throw new Error(`No built-in category "${name}"`);
+	return { shape: builtIn.shape, hue: builtIn.hue };
+}
+
+export const OTHER_CATEGORY_NAME: BuiltInCategoryName = "Other";
+
+/**
+ * Custom categories' icon/color, never user-chosen (HAB-24): each new one takes
+ * the slot with the fewest custom categories already on it, ties going to the
+ * lowest slot — see `nextCategoryAppearance`. Every pair is unique.
+ */
+export const CATEGORY_ROTATION: readonly CategoryAppearance[] = [
+	{ shape: "diamond", hue: 175 },
+	{ shape: "ring", hue: 330 },
+	{ shape: "square", hue: 95 },
+	{ shape: "bars", hue: 220 },
+	{ shape: "dot", hue: 15 },
+	{ shape: "plus", hue: 265 },
+	{ shape: "half", hue: 130 },
+	{ shape: "lines", hue: 350 },
+	{ shape: "grid", hue: 230 },
+	{ shape: "archive", hue: 290 },
 ];
 
-export const DEFAULT_HABIT_ICON: HabitIconKey = "dot";
+/**
+ * The one place a category shape becomes an icon. SF Symbols are the closest
+ * system glyphs, not the mockup's hand-drawn shapes — a known, accepted
+ * deviation (design-system-v2.md draws its own).
+ */
+export const CATEGORY_SHAPE_SYMBOLS: Record<CategoryShape, SFSymbol> = {
+	plus: "plus",
+	bars: "chart.bar.fill",
+	diamond: "diamond.fill",
+	square: "square",
+	lines: "line.3.horizontal",
+	grid: "square.grid.2x2.fill",
+	half: "circle.lefthalf.filled",
+	archive: "archivebox",
+	dot: "circle.fill",
+	ring: "circle",
+};
 
-/** The fixed set of 6 selectable habit colors (HAB-01), in default-pick order. */
-export const HABIT_COLORS: HabitAccentKey[] = HABIT_ACCENT_KEYS;
+/** Category-name field cap (HAB-24) — counter shows from 80% (16/20). */
+export const MAX_CATEGORY_NAME_LENGTH = 20;
 
 /**
  * Weeks run Monday → Sunday (HAB-02). The Weekly Summary (HAB-11) must use this
@@ -67,9 +116,6 @@ export const MAX_QUANTITY_VALUE = 9999;
 /** Shared monthly freeze pool size (HAB-08) — across every habit, not per-habit; resets on the 1st, no rollover. */
 export const FREEZE_POOL_SIZE = 2;
 
-/** Label for a habit with no category — also its group name on Today (HAB-01, HAB-03). */
-export const NO_CATEGORY_LABEL = "Anytime";
-
 const DIRECTION_LOCK_NOTE =
 	"This is the only moment you can choose — it is locked after saving, because a build streak and a break streak mean opposite things.";
 
@@ -93,11 +139,9 @@ export const SEEN_FIRST_RUN_SETTING_KEY = "habits.seenFirstRun";
 export type FirstRunSuggestion = {
 	id: string;
 	name: string;
-	icon: HabitIconKey;
-	color: HabitAccentKey;
 	direction: HabitDirection;
-	/** Category the habit is created in — null for Anytime. */
-	category: string | null;
+	/** The built-in category it's created in — which also gives it its icon and color. */
+	category: BuiltInCategoryName;
 	/** A quantity target (HAB-07), or null for a simple check. */
 	target: { amount: number; unit: string } | null;
 	/**
@@ -113,43 +157,35 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 	{
 		id: "glass-of-water",
 		name: "Glass of water",
-		icon: "drop",
-		color: "teal",
 		direction: "build",
-		category: "Morning",
+		category: "Health",
 		target: null,
-		subtitle: "Right after waking",
+		subtitle: "Health",
 		preselected: true,
 	},
 	{
 		id: "walk-20-minutes",
 		name: "Walk 20 minutes",
-		icon: "walk",
-		color: "blue",
 		direction: "build",
-		category: null,
+		category: "Fitness",
 		target: null,
-		subtitle: "Any time of day",
+		subtitle: "Fitness",
 		preselected: true,
 	},
 	{
 		id: "read-before-bed",
 		name: "Read before bed",
-		icon: "book",
-		color: "orange",
 		direction: "build",
-		category: "Evening",
+		category: "Learning",
 		target: { amount: 10, unit: "pages" },
-		subtitle: "Evening · 10 pages",
+		subtitle: "Learning · 10 pages",
 		preselected: false,
 	},
 	{
 		id: "lights-out-by-23-00",
 		name: "Lights out by 23:00",
-		icon: "moon",
-		color: "purple",
 		direction: "break",
-		category: null,
+		category: "Health",
 		target: null,
 		subtitle: "Break habit",
 		preselected: false,
@@ -157,10 +193,8 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 	{
 		id: "stretch",
 		name: "Stretch",
-		icon: "leaf",
-		color: "green",
 		direction: "build",
-		category: null,
+		category: "Fitness",
 		target: { amount: 5, unit: "min" },
 		subtitle: "5 minutes",
 		preselected: false,
@@ -168,29 +202,41 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 	{
 		id: "three-lines-journal",
 		name: "Three lines journal",
-		icon: "heart",
-		color: "red",
 		direction: "build",
-		category: "Evening",
+		category: "Mindfulness",
 		target: null,
-		subtitle: "Evening",
+		subtitle: "Mindfulness",
 		preselected: false,
 	},
 ];
 
+/** A built-in's stored row, by name — built-ins are always present (seeded by migration). */
+export function findBuiltInCategory(
+	categories: readonly Category[],
+	name: BuiltInCategoryName,
+): Category | undefined {
+	return categories.find(
+		(category) => category.builtIn && category.name === name,
+	);
+}
+
 /**
  * Maps a selected suggestion to the same shape Feature 01's create-habit path
  * takes — with the category and target its subtitle promises, so the first
- * Today is grouped and "10 pages" really is 10 pages.
+ * Today is grouped and "10 pages" really is 10 pages. Built-in ids come from
+ * the database (autoincrement), so they're resolved by name here.
  */
 export function suggestionToCreateHabitInput(
 	suggestion: FirstRunSuggestion,
+	categories: readonly Category[],
 ): CreateHabitInput {
+	const category = findBuiltInCategory(categories, suggestion.category);
+	if (!category) {
+		throw new Error(`Built-in category "${suggestion.category}" is missing`);
+	}
 	return {
 		name: suggestion.name,
-		icon: suggestion.icon,
-		color: suggestion.color,
-		category: suggestion.category,
+		categoryId: category.id,
 		direction: suggestion.direction,
 		targetType: suggestion.target ? "quantity" : "simple",
 		targetAmount: suggestion.target?.amount ?? null,

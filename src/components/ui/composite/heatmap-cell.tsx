@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import {
-	type HabitAccentKey,
+	type AccentHue,
 	type HeatmapLevel,
 	heatmapLevelColor,
 } from "@/theme/theme";
@@ -19,7 +19,8 @@ export type HeatmapCellState =
 
 type HeatmapCellProps = {
 	state: HeatmapCellState;
-	accent: HabitAccentKey;
+	/** The habit's accent hue; null is the neutral accent (category "Other"). */
+	accent: AccentHue;
 	/** Fixed edge length (legend swatches); omitted, the cell fills its grid slot. */
 	size?: number;
 	onPress?: () => void;

@@ -21,3 +21,11 @@ describe("IconBadge", () => {
 		expect(screen.getByTestId("symbol").props.name).toBe("tag");
 	});
 });
+
+describe("IconBadge — small (VAR-02)", () => {
+	it("draws the 22px inline badge", async () => {
+		await render(<IconBadge size="small" symbol="line.3.horizontal" />);
+		expect(screen.getByTestId("symbol").props.size).toBe(11);
+		expect(screen.toJSON()).toHaveStyle({ width: 22, height: 22 });
+	});
+});

@@ -1,5 +1,12 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import {
+	ActivityIndicator,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { useTheme } from "@/theme/use-theme";
+import { FieldHelper } from "./field-helper";
 
 /**
  * `link` is a centered, secondary-ink text action under a primary CTA ("Start
@@ -26,6 +33,11 @@ type ButtonProps = {
 	fullWidth?: boolean;
 	/** "small" is a compact pill inside a list row (Manage & Archive's "Restore", HAB-13). */
 	size?: "default" | "small";
+	/**
+	 * VAR-13 "disabled with reason": why the action is unavailable, shown as a
+	 * NEW-24 helper line above the button — only while it's actually disabled.
+	 */
+	disabledReason?: string;
 };
 
 export function Button({
@@ -36,6 +48,7 @@ export function Button({
 	loading = false,
 	fullWidth = true,
 	size = "default",
+	disabledReason,
 }: ButtonProps) {
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
@@ -50,7 +63,7 @@ export function Button({
 						? colors.dangerBg
 						: colors.ink;
 
-	return (
+	const button = (
 		<Pressable
 			accessibilityRole="button"
 			accessibilityState={{ disabled: isDisabled, busy: loading }}
@@ -94,9 +107,20 @@ export function Button({
 			)}
 		</Pressable>
 	);
+
+	if (!disabled || !disabledReason) return button;
+	return (
+		<View style={styles.withReason}>
+			<FieldHelper align="center">{disabledReason}</FieldHelper>
+			{button}
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
+	withReason: {
+		gap: 12,
+	},
 	base: {
 		borderRadius: 999,
 		alignItems: "center",
