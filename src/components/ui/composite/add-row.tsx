@@ -1,7 +1,7 @@
-import { typeScale } from "@/theme/theme";
-import { useTheme } from "@/theme/use-theme";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { typeScale } from "@/theme/theme";
+import { useTheme } from "@/theme/use-theme";
 
 type AddRowProps = {
 	label: string;
