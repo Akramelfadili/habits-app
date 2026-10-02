@@ -172,6 +172,8 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Edge cases:** none beyond the layout consolidation — no behavior change to archive or delete themselves.
 
+**Implementation note (from HAB-25):** the shared `NEW-33` sheet already exists as `components/ui/composite/destructive-confirm-sheet.tsx`. This ticket must rebuild `DeleteHabitSheet` on top of it (its "with archive action" state), not draw a second delete sheet.
+
 **Depends on:** none.
 
 ---
@@ -215,6 +217,7 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Edge cases**
 - Deleting a custom category that's also pinned/relied on elsewhere in the UI (none currently exists — categories don't gate anything beyond Manage grouping and the New/Edit habit picker) — confirm no other screen holds a stale reference to a deleted `categoryId` before marking this done.
+  - **Confirmed (HAB-25 implementation):** no stale `categoryId` reference can exist. Today, Habit Detail, Manage and Weekly Summary resolve each habit's category live from the categories table by id (with Other as the fallback for an unknown id), so a delete or rename shows immediately. Reminders and notifications never read the category. The only place a category id is held is the New/Edit habit form's selected category, and that form is a separate modal route that can't be open while Manage Categories is deleting.
 - Renaming a custom category to match an existing built-in or another custom category's name: same duplicate-check rules as creation (HAB-24) apply here too.
 
 **Depends on:** HAB-24 (the category model itself must exist first).

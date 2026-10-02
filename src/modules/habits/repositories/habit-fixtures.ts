@@ -1,8 +1,11 @@
 import { getISODay, subDays } from "date-fns";
 import type { Habit, IsoWeekday } from "../types";
 import {
+	builtInFixture,
 	EVENING_FIXTURE,
+	LANGUAGE_FIXTURE,
 	MORNING_FIXTURE,
+	MUSIC_FIXTURE,
 	OTHER_FIXTURE,
 	TRAINING_FIXTURE,
 } from "./category-fixtures";
@@ -50,7 +53,10 @@ export type FixtureScenario =
 	| "reminders"
 	| "reminders-at-cap"
 	| "manage-archive"
-	| "many-categories";
+	| "many-categories"
+	| "categories-built-in-only"
+	| "categories-one-custom"
+	| "categories-in-use";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -70,6 +76,9 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"reminders-at-cap",
 	"manage-archive",
 	"many-categories",
+	"categories-built-in-only",
+	"categories-one-custom",
+	"categories-in-use",
 ];
 
 /**
@@ -568,6 +577,77 @@ function manageArchiveFixtures(): FixtureHabit[] {
 	];
 }
 
+/**
+ * Manage Categories (HAB-25, docs/mockups/hab-25-f3a–f3c.png): the built-in
+ * counts every frame shows (Health 1, Fitness 2, Mindfulness 1, Productivity
+ * 1, Learning 1), plus — with customs in use — Music's three habits (one
+ * archived, so the count proves archived habits are included) and
+ * Language's one.
+ */
+function manageCategoriesFixtures(withCustomsInUse: boolean): FixtureHabit[] {
+	const base = {
+		direction: "build",
+		targetType: "simple",
+		targetAmount: null,
+		targetUnit: null,
+		frequency: { type: "daily" },
+		createdAt: FIXTURE_DATE,
+		updatedAt: FIXTURE_DATE,
+	} as const;
+	const builtIns: FixtureHabit[] = [
+		{
+			...base,
+			id: 1,
+			name: "Take vitamins",
+			category: builtInFixture("Health"),
+		},
+		{
+			...base,
+			id: 2,
+			name: "Morning run",
+			category: builtInFixture("Fitness"),
+		},
+		{ ...base, id: 3, name: "Stretch", category: builtInFixture("Fitness") },
+		{
+			...base,
+			id: 4,
+			name: "Meditate",
+			category: builtInFixture("Mindfulness"),
+		},
+		{
+			...base,
+			id: 5,
+			name: "Plan the day",
+			category: builtInFixture("Productivity"),
+		},
+		{
+			...base,
+			id: 6,
+			name: "Read 20 pages",
+			category: builtInFixture("Learning"),
+		},
+	];
+	if (!withCustomsInUse) return builtIns;
+	return [
+		...builtIns,
+		{ ...base, id: 7, name: "Piano practice", category: MUSIC_FIXTURE },
+		{ ...base, id: 8, name: "Guitar scales", category: MUSIC_FIXTURE },
+		{
+			...base,
+			id: 9,
+			name: "Ear training",
+			category: MUSIC_FIXTURE,
+			archivedAt: new Date("2026-09-10T09:00:00"),
+		},
+		{
+			...base,
+			id: 10,
+			name: "Spanish flashcards",
+			category: LANGUAGE_FIXTURE,
+		},
+	];
+}
+
 function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 	switch (scenario) {
 		case "empty":
@@ -604,6 +684,11 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return remindersHabitFixtures({ type: "daily" });
 		case "manage-archive":
 			return manageArchiveFixtures();
+		case "categories-built-in-only":
+		case "categories-one-custom":
+			return manageCategoriesFixtures(false);
+		case "categories-in-use":
+			return manageCategoriesFixtures(true);
 		default:
 			return HABIT_FIXTURES.map((habit) => ({ ...habit }));
 	}

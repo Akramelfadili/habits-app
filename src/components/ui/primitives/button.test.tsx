@@ -128,4 +128,15 @@ describe("Button — disabled with reason (VAR-13)", () => {
 		);
 		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
 	});
+
+	it("takes an accessibility label when the visible one is ambiguous", async () => {
+		await render(
+			<Button
+				label="Rename"
+				accessibilityLabel="Rename Music"
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByRole("button", { name: "Rename Music" })).toBeTruthy();
+	});
 });

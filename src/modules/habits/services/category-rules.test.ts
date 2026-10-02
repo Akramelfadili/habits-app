@@ -1,6 +1,8 @@
 import { BUILT_IN_CATEGORIES, CATEGORY_ROTATION } from "../constants";
+import { makeHabit } from "../test-support/habit-builder";
 import type { Category } from "../types";
 import {
+	categoryUsage,
 	findDuplicateCategory,
 	nextCategoryAppearance,
 } from "./category-rules";
@@ -104,5 +106,28 @@ describe("nextCategoryAppearance", () => {
 		expect(nextCategoryAppearance([...builtIns, lookalike])).toEqual(
 			CATEGORY_ROTATION[0],
 		);
+	});
+});
+
+describe("categoryUsage (HAB-25)", () => {
+	const [music, garden] = customsOn([0, 1]);
+
+	it("lists each category's habits — archived ones included — in category order", () => {
+		const usage = categoryUsage(
+			[music, garden],
+			[
+				makeHabit({ id: 1, name: "Piano", category: music }),
+				makeHabit({
+					id: 2,
+					name: "Scales",
+					category: music,
+					archivedAt: new Date(2026, 8, 1),
+				}),
+			],
+		);
+		expect(usage).toEqual([
+			{ category: music, habitNames: ["Piano", "Scales"] },
+			{ category: garden, habitNames: [] },
+		]);
 	});
 });

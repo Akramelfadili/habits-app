@@ -38,6 +38,8 @@ type ButtonProps = {
 	 * NEW-24 helper line above the button — only while it's actually disabled.
 	 */
 	disabledReason?: string;
+	/** When the visible label alone is ambiguous — e.g. a row's "Rename" → "Rename Music". */
+	accessibilityLabel?: string;
 };
 
 export function Button({
@@ -49,6 +51,7 @@ export function Button({
 	fullWidth = true,
 	size = "default",
 	disabledReason,
+	accessibilityLabel,
 }: ButtonProps) {
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
@@ -66,6 +69,7 @@ export function Button({
 	const button = (
 		<Pressable
 			accessibilityRole="button"
+			accessibilityLabel={accessibilityLabel}
 			accessibilityState={{ disabled: isDisabled, busy: loading }}
 			onPress={onPress}
 			disabled={isDisabled}

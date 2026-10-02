@@ -96,4 +96,50 @@ describe("CategoryChip", () => {
 		expect(label.props.numberOfLines).toBe(1);
 		expect(label.props.ellipsizeMode).toBe("tail");
 	});
+
+	it("locked (HAB-25): tinted with the category's own color, not a button", async () => {
+		await render(
+			<CategoryChip
+				label="Health"
+				state="locked"
+				symbol="plus"
+				accent={accent}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.queryByRole("button")).toBeNull();
+		expect(screen.getByTestId("category-chip")).toHaveStyle({
+			backgroundColor: "#EEF",
+			borderColor: "#EEF",
+		});
+		expect(screen.getByLabelText("Health")).toBeTruthy();
+	});
+
+	it("without onPress: a label only — hugs its text and isn't announced as a button", async () => {
+		await render(
+			<CategoryChip
+				label="Music"
+				state="unselected"
+				symbol="diamond.fill"
+				accent={accent}
+			/>,
+		);
+		expect(screen.queryByRole("button")).toBeNull();
+		expect(screen.getByTestId("category-chip")).toHaveStyle({
+			alignSelf: "flex-start",
+		});
+	});
+
+	it("compact: the shorter list-row size", async () => {
+		await render(
+			<CategoryChip
+				label="Music"
+				state="unselected"
+				size="compact"
+				symbol="diamond.fill"
+				accent={accent}
+			/>,
+		);
+		expect(screen.getByTestId("category-chip")).toHaveStyle({ minHeight: 28 });
+	});
 });

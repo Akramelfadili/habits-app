@@ -4,10 +4,15 @@ import type { SFSymbol } from "sf-symbols-typescript";
 import { useTheme } from "@/theme/use-theme";
 
 /**
- * NEW-28 states (design-system-v2.md). `locked` (Manage Categories' built-ins)
- * arrives with HAB-25.
+ * NEW-28 states (design-system-v2.md). `locked` is Manage Categories'
+ * built-ins (HAB-25): tinted with the category's own color, never interactive.
  */
-export type CategoryChipState = "unselected" | "selected" | "add" | "preview";
+export type CategoryChipState =
+	| "unselected"
+	| "selected"
+	| "add"
+	| "preview"
+	| "locked";
 
 type CategoryChipProps = {
 	label: string;
@@ -15,7 +20,14 @@ type CategoryChipProps = {
 	/** The category's own icon + colors; the add chip ignores both. */
 	symbol?: SFSymbol;
 	accent?: { tint: string; ink: string };
+	/**
+	 * Omit for a chip that only labels something (Manage Categories' custom
+	 * rows): it then hugs its text and isn't announced as a button. `preview`
+	 * and `locked` ignore it — they're never interactive.
+	 */
 	onPress?: () => void;
+	/** "compact" is a list row's chip (Manage Categories, HAB-25) — smaller than the picker grid's. */
+	size?: "default" | "compact";
 };
 
 /**
@@ -23,6 +35,7 @@ type CategoryChipProps = {
  * which fills with the app accent (kept separate on purpose, per
  * design-system-v2). Selected fills with the category's ink and gains a
  * check; long labels truncate rather than wrap, so a 2-up grid stays aligned.
+ * Locked fills with the category's tint instead of an outline.
  */
 export function CategoryChip({
 	label,
@@ -30,10 +43,14 @@ export function CategoryChip({
 	symbol,
 	accent,
 	onPress,
+	size = "default",
 }: CategoryChipProps) {
 	const { colors, opacity } = useTheme();
 	const isSelected = state === "selected";
 	const isAdd = state === "add";
+	const isLocked = state === "locked";
+	const isStatic = state === "preview" || isLocked || onPress === undefined;
+	const isCompact = size === "compact";
 	const ink = accent?.ink ?? colors.sub;
 	const tint = accent?.tint ?? colors.inner;
 
@@ -41,7 +58,9 @@ export function CategoryChip({
 		? "rgba(255,255,255,0.22)"
 		: isAdd
 			? colors.inner
-			: tint;
+			: isLocked
+				? "transparent"
+				: tint;
 	const iconColor = isSelected ? colors.onAccent : isAdd ? colors.sub : ink;
 	const labelColor = isSelected
 		? colors.onAccent
@@ -51,10 +70,16 @@ export function CategoryChip({
 
 	const content = (
 		<>
-			<View style={[styles.icon, { backgroundColor: iconBackground }]}>
+			<View
+				style={[
+					styles.icon,
+					isCompact && styles.compactIcon,
+					{ backgroundColor: iconBackground },
+				]}
+			>
 				<SymbolView
 					name={isAdd ? "plus" : (symbol ?? "circle")}
-					size={11}
+					size={isCompact ? 10 : 11}
 					tintColor={iconColor}
 				/>
 			</View>
@@ -63,9 +88,10 @@ export function CategoryChip({
 				ellipsizeMode="tail"
 				style={[
 					styles.label,
-					// A preview hugs its text; grid chips stretch the label so the
-					// selected check sits at the far edge.
-					state === "preview" ? styles.labelHug : styles.labelFill,
+					isCompact && styles.compactLabel,
+					// A static chip hugs its text; grid chips stretch the label so
+					// the selected check sits at the far edge.
+					isStatic ? styles.labelHug : styles.labelFill,
 					{ color: labelColor },
 				]}
 			>
@@ -79,15 +105,22 @@ export function CategoryChip({
 
 	const chipStyle = [
 		styles.chip,
+		isCompact && styles.compactChip,
 		{ backgroundColor: colors.card, borderColor: colors.border },
 		isSelected && { backgroundColor: ink, borderColor: ink },
 		isAdd && styles.add,
 		isAdd && { backgroundColor: "transparent" },
+		isLocked && { backgroundColor: tint, borderColor: tint },
 	];
 
-	if (state === "preview") {
+	if (isStatic) {
 		return (
-			<View testID="category-chip" style={[chipStyle, styles.preview]}>
+			<View
+				testID="category-chip"
+				accessible
+				accessibilityLabel={label}
+				style={[chipStyle, styles.hug]}
+			>
 				{content}
 			</View>
 		);
@@ -122,10 +155,17 @@ const styles = StyleSheet.create({
 		paddingRight: 12,
 		paddingVertical: 5,
 	},
+	compactChip: {
+		minHeight: 28,
+		gap: 6,
+		paddingLeft: 4,
+		paddingRight: 10,
+		paddingVertical: 2,
+	},
 	add: {
 		borderStyle: "dashed",
 	},
-	preview: {
+	hug: {
 		alignSelf: "flex-start",
 	},
 	icon: {
@@ -135,9 +175,17 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 	},
+	compactIcon: {
+		width: 20,
+		height: 20,
+		borderRadius: 10,
+	},
 	label: {
 		fontSize: 13.5,
 		fontWeight: "500",
+	},
+	compactLabel: {
+		fontSize: 13,
 	},
 	labelFill: {
 		flex: 1,

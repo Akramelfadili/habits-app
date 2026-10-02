@@ -2,8 +2,12 @@ import { act, renderHook } from "@testing-library/react-native";
 import { makeCategory } from "../test-support/habit-builder";
 
 const mockCreateCategory = jest.fn();
+const mockRenameCategory = jest.fn();
+const mockDeleteCategory = jest.fn();
 jest.mock("../repositories/category-repository", () => ({
 	createCategory: (...args: unknown[]) => mockCreateCategory(...args),
+	renameCategory: (...args: unknown[]) => mockRenameCategory(...args),
+	deleteCategory: (...args: unknown[]) => mockDeleteCategory(...args),
 }));
 
 import { useCategoryActions } from "./use-category-actions";
@@ -29,5 +33,39 @@ describe("useCategoryActions", () => {
 			hue: 175,
 		});
 		expect(returned).toBe(created);
+	});
+
+	it("renames through the repository (HAB-25)", async () => {
+		mockRenameCategory.mockResolvedValue(makeCategory({ name: "Piano" }));
+		const { result } = await renderHook(() => useCategoryActions());
+
+		await act(async () => {
+			await result.current.renameCategory(11, "Piano");
+		});
+
+		expect(mockRenameCategory).toHaveBeenCalledWith(11, "Piano");
+	});
+
+	it("reports isDeleting while a delete is in flight (HAB-25)", async () => {
+		let finish!: () => void;
+		mockDeleteCategory.mockReturnValue(
+			new Promise<void>((resolve) => {
+				finish = resolve;
+			}),
+		);
+		const { result } = await renderHook(() => useCategoryActions());
+
+		let pending!: Promise<void>;
+		await act(async () => {
+			pending = result.current.deleteCategory(11);
+		});
+		expect(result.current.isDeleting).toBe(true);
+		expect(mockDeleteCategory).toHaveBeenCalledWith(11);
+
+		await act(async () => {
+			finish();
+			await pending;
+		});
+		expect(result.current.isDeleting).toBe(false);
 	});
 });

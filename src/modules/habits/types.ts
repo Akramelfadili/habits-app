@@ -45,6 +45,16 @@ export type Category = CategoryAppearance & {
 	builtIn: boolean;
 };
 
+/**
+ * A category with the habits in it (HAB-25's Manage Categories) — archived
+ * habits included, since deleting the category moves those too.
+ */
+export type CategoryUsage = {
+	category: Category;
+	/** Every habit in the category, in manual order. */
+	habitNames: string[];
+};
+
 /** Icon and color are never user-chosen — the caller passes the rotation's pick. */
 export type CreateCategoryInput = CategoryAppearance & { name: string };
 

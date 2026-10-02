@@ -142,4 +142,10 @@ describe("ManageHabitsScreen", () => {
 		await render(<ManageHabitsScreen />);
 		expect(screen.queryByText(/^Archived ·/)).toBeNull();
 	});
+
+	it("links to Manage Categories until Settings exists (HAB-25)", async () => {
+		await render(<ManageHabitsScreen />);
+		await fireEvent.press(screen.getByText("Categories"));
+		expect(mockPush).toHaveBeenCalledWith("/habits/categories");
+	});
 });

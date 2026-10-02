@@ -103,11 +103,17 @@ Each entry: layout structure and the components it's built from (IDs from `habit
 
 **New habit — name polish (HAB-22):** `VAR-12` text field with `NEW-23` counter and `NEW-24` helper, `VAR-13` disabled-with-reason button — the same trio reused by categories.
 
-**Delete sheet (HAB-23):** `NEW-33 · with archive action`, with `NEW-25` making the archive card itself the button.
+**Delete sheet (HAB-23):** `NEW-33 · with archive action`, with `NEW-25` making the archive card itself the button. `NEW-33` already exists from HAB-25 (`destructive-confirm-sheet.tsx`) — HAB-23 moves `DeleteHabitSheet` onto it rather than adding a second sheet.
 
 **Categories — pick & add (HAB-24):** `NEW-28` chip grid inside `V1-16` sheet chrome; add-category sheet stacks a second `V1-16` over it with `VAR-12` + live `NEW-28 · preview`.
 
 **Categories — manage & delete (HAB-25):** `NEW-29` rows (`NEW-28 · locked` for built-ins, unselected-chip style for custom). Delete sheets are `NEW-33 · plain` (unused) or `NEW-33 · with move preview` (in use, shows `NEW-28` old → `NEW-28 · locked` Other).
+
+> [!note] HAB-25 implementation notes
+> - **Inline rename has no mockup.** F3a–F3c and F4a/F4b don't draw it. The built state (visual-check `rename-category-editing` / `rename-category-duplicate`) is a **proposal**: the row is replaced in place by the `VAR-12` name field (add-category rules: counter from 16/20, paste trimmed, case/space-insensitive duplicate check including built-ins, own name in a different case allowed), with Cancel / Save text actions under it. Replace it if a mockup is drawn.
+> - Built: `NEW-29` → `components/ui/composite/category-row.tsx`; `NEW-33` → `components/ui/composite/destructive-confirm-sheet.tsx` (plain + with-preview states; the copy/preview area scrolls so a long affected-habit list is never truncated). `NEW-28` gained `locked` and a `compact` list-row size.
+> - **HAB-23 must move `DeleteHabitSheet` onto `DestructiveConfirmSheet`** (as its "with archive action" state) — it's still its own V1 layout until then, so the app briefly has two delete-sheet implementations.
+> - Entry point is temporary: a "Categories" row on Manage habits (back reads "Manage") until Settings → Categories exists (HAB-15); flagged `TODO(HAB-15, HAB-19)` in `manage-habits-screen.tsx`.
 
 ## Notes for whoever builds from this file
 

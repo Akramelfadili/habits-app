@@ -1,5 +1,10 @@
 import { CATEGORY_ROTATION } from "../constants";
-import type { Category, CategoryAppearance } from "../types";
+import type {
+	Category,
+	CategoryAppearance,
+	CategoryUsage,
+	Habit,
+} from "../types";
 
 /** The comparison key for category names: surrounding whitespace and case don't count. */
 function nameKey(name: string): string {
@@ -52,4 +57,21 @@ export function nextCategoryAppearance(
 	);
 	const fewest = Math.min(...uses);
 	return CATEGORY_ROTATION[uses.indexOf(fewest)];
+}
+
+/**
+ * Each category with the habits in it (HAB-25), in the categories' own order.
+ * Pass every habit, archived ones included — a delete moves those too, so
+ * counting only active habits would undercount what's affected.
+ */
+export function categoryUsage(
+	categories: readonly Category[],
+	habits: readonly Habit[],
+): CategoryUsage[] {
+	return categories.map((category) => ({
+		category,
+		habitNames: habits
+			.filter((habit) => habit.category.id === category.id)
+			.map((habit) => habit.name),
+	}));
 }

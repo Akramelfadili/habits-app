@@ -171,4 +171,18 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 			),
 		).toBeTruthy();
 	});
+
+	it("calls onSubmitEditing on the return key", async () => {
+		const onSubmitEditing = jest.fn();
+		await render(
+			<TextField
+				label="Name"
+				value="Piano"
+				onChangeText={jest.fn()}
+				onSubmitEditing={onSubmitEditing}
+			/>,
+		);
+		await fireEvent(screen.getByLabelText("Name"), "submitEditing");
+		expect(onSubmitEditing).toHaveBeenCalled();
+	});
 });

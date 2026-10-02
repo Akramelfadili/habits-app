@@ -10,6 +10,11 @@ type AddRowProps = {
 	count?: string;
 	/** At a cap — faded and inert. Pair with a caption saying why. */
 	disabled?: boolean;
+	/**
+	 * Closes out a list *inside* a card (Manage Categories' "Add category",
+	 * HAB-25) — no dashed outline of its own, the card is the boundary.
+	 */
+	embedded?: boolean;
 };
 
 /**
@@ -21,6 +26,7 @@ export function AddRow({
 	onPress,
 	count,
 	disabled = false,
+	embedded = false,
 }: AddRowProps) {
 	const { colors, opacity } = useTheme();
 
@@ -34,6 +40,7 @@ export function AddRow({
 			style={({ pressed }) => [
 				styles.row,
 				{ borderColor: colors.border },
+				embedded && styles.embedded,
 				disabled && { opacity: opacity.disabled },
 				pressed && !disabled && { opacity: opacity.pressed },
 			]}
@@ -59,6 +66,11 @@ const styles = StyleSheet.create({
 		paddingVertical: 14,
 		paddingHorizontal: 16,
 		gap: 12,
+	},
+	embedded: {
+		borderWidth: 0,
+		paddingVertical: 8,
+		paddingHorizontal: 8,
 	},
 	badge: {
 		width: 30,

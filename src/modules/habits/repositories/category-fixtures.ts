@@ -26,7 +26,7 @@ function customFixtures(names: string[]): Category[] {
 	}));
 }
 
-function builtInFixture(name: string): Category {
+export function builtInFixture(name: string): Category {
 	const category = FIXTURE_BUILT_IN_CATEGORIES.find((c) => c.name === name);
 	if (!category) throw new Error(`No built-in fixture "${name}"`);
 	return category;
@@ -52,6 +52,14 @@ const MANY_CUSTOM_FIXTURES = customFixtures([
 ]);
 
 /**
+ * docs/mockups/hab-25-f3c.png's customs (HAB-25): Music (3 habits, one
+ * archived), Language (1) and Garden (unused). F3b shows only Music.
+ */
+export const [MUSIC_FIXTURE, LANGUAGE_FIXTURE, GARDEN_FIXTURE] = customFixtures(
+	["Music", "Language", "Garden"],
+);
+
+/**
  * The picker's rows per `?fixtures=` scenario: no customs where nothing exists
  * yet (the picker mockups F1a/F2a start with built-ins only), many for F1c.
  */
@@ -59,7 +67,17 @@ export function categoryFixturesFor(scenario: FixtureScenario): Category[] {
 	switch (scenario) {
 		case "empty":
 		case "first-run":
+		case "categories-built-in-only":
 			return [...FIXTURE_BUILT_IN_CATEGORIES];
+		case "categories-one-custom":
+			return [...FIXTURE_BUILT_IN_CATEGORIES, MUSIC_FIXTURE];
+		case "categories-in-use":
+			return [
+				...FIXTURE_BUILT_IN_CATEGORIES,
+				MUSIC_FIXTURE,
+				LANGUAGE_FIXTURE,
+				GARDEN_FIXTURE,
+			];
 		case "many-categories":
 			return [...FIXTURE_BUILT_IN_CATEGORIES, ...MANY_CUSTOM_FIXTURES];
 		default:
