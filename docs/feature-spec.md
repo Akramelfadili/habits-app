@@ -8,6 +8,8 @@ tags: [spec, habits, v1, personal-app]
 
 # Habits — Feature Spec
 
+V2 specs: see feature-spec-v2.md
+
 > [!info] How to use this file
 > Features are ordered by **build sequence**, not by importance — each one only needs what came before it. Build straight down the list: get Feature 01 fully working end to end before starting 02. Every feature has an **Acceptance criteria** checklist at the end — check items off as you implement them in Claude Code, so this file doubles as your build tracker.
 
