@@ -16,7 +16,13 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 	const router = useRouter();
 	const menu = useTodayMenuQueries();
 
-	function go(href: "/habits/week" | "/habits/manage" | "/habits/settings") {
+	function go(
+		href:
+			| "/habits/week"
+			| "/habits/month"
+			| "/habits/manage"
+			| "/habits/settings",
+	) {
 		onClose();
 		router.push(href);
 	}
@@ -30,13 +36,12 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 				disabledReason={menu.weekly.disabledReason}
 				onPress={() => go("/habits/week")}
 			/>
-			{/* TODO(HAB-16): navigate to the Monthly summary once it exists. */}
 			<MenuRow
 				symbol="calendar"
 				title="Monthly"
 				subline={menu.monthly.subline}
 				disabledReason={menu.monthly.disabledReason}
-				onPress={onClose}
+				onPress={() => go("/habits/month")}
 			/>
 			{/* TODO(HAB-17): navigate to the Yearly summary once it exists. */}
 			<MenuRow

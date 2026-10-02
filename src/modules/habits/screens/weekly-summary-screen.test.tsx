@@ -14,8 +14,9 @@ jest.mock("expo-symbols", () => {
 });
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock("expo-router", () => ({
-	useRouter: () => ({ push: mockPush }),
+	useRouter: () => ({ push: mockPush, replace: mockReplace }),
 }));
 
 let mockSummary: WeeklySummaryView;
@@ -73,6 +74,7 @@ beforeEach(() => {
 	mockDefaultWeek = "this";
 	mockUseWeeklySummaryQueries.mockClear();
 	mockPush.mockReset();
+	mockReplace.mockReset();
 	mockSummary = summary();
 });
 
@@ -117,7 +119,7 @@ describe("WeeklySummaryScreen", () => {
 		expect(screen.getByText("Mobility is slipping")).toBeTruthy();
 		expect(screen.getByText(/^Two of seven days\./)).toBeTruthy();
 		await fireEvent.press(screen.getByText("Reschedule habit →"));
-		expect(mockPush).toHaveBeenCalledWith("/edit-habit/6");
+		expect(mockPush).toHaveBeenCalledWith("/edit-habit/6?focus=frequency");
 	});
 
 	it("replaces the insight with a congratulatory card for a perfect week", async () => {
@@ -178,5 +180,30 @@ describe("WeeklySummaryScreen", () => {
 		await render(<WeeklySummaryScreen />);
 		expect(screen.getByText("Nothing to summarize yet")).toBeTruthy();
 		expect(screen.queryByText("Per habit")).toBeNull();
+	});
+
+	describe("range switcher (HAB-16)", () => {
+		it("sits under the title with Week selected and Year disabled", async () => {
+			await render(<WeeklySummaryScreen />);
+			expect(
+				screen.getByText("Week").parent?.props.accessibilityState.selected,
+			).toBe(true);
+			expect(
+				screen.getByText("Year").parent?.props.accessibilityState.disabled,
+			).toBe(true);
+		});
+
+		it("goes to Monthly, keeping the Last week / This week switch where it was", async () => {
+			await render(<WeeklySummaryScreen />);
+			expect(screen.getByText("Last week")).toBeTruthy();
+			await fireEvent.press(screen.getByText("Month"));
+			expect(mockReplace).toHaveBeenCalledWith("/habits/month");
+		});
+
+		it("is hidden in the empty state", async () => {
+			mockSummary = { ...mockSummary, hasHabits: false };
+			await render(<WeeklySummaryScreen />);
+			expect(screen.queryByText("Month")).toBeNull();
+		});
 	});
 });

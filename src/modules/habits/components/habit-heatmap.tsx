@@ -1,10 +1,8 @@
 import { format } from "date-fns";
 import { StyleSheet, Text, View } from "react-native";
+import { CompletionGrid } from "@/components/ui/composite/completion-grid";
 import { Container } from "@/components/ui/composite/container";
-import {
-	HeatmapCell,
-	type HeatmapCellState,
-} from "@/components/ui/composite/heatmap-cell";
+import type { HeatmapCellState } from "@/components/ui/composite/heatmap-cell";
 import { HeatmapLegend } from "@/components/ui/composite/heatmap-legend";
 import { Caption } from "@/components/ui/primitives/caption";
 import { typeScale } from "@/theme/theme";
@@ -72,27 +70,18 @@ export function HabitHeatmap({
 						: "Nothing logged yet"}
 				</Text>
 			</View>
-			<View style={styles.grid}>
-				{weekdayRows.map((row, weekday) => (
-					<View
-						// biome-ignore lint/suspicious/noArrayIndexKey: rows are the fixed Mon→Sun order
-						key={weekday}
-						style={styles.row}
-					>
-						{row.map((day) => (
-							<HeatmapCell
-								key={day.date.toISOString()}
-								state={cellStateFor(day)}
-								accent={habit.category.hue}
-								accessibilityLabel={`${format(day.date, "EEEE d MMMM")}, ${STATUS_LABEL[day.status]}`}
-								onPress={
-									day.selectable ? () => onSelectDay(day.date) : undefined
-								}
-							/>
-						))}
-					</View>
-				))}
-			</View>
+			<CompletionGrid
+				layout="detail"
+				accent={habit.category.hue}
+				rows={weekdayRows.map((row) =>
+					row.map((day) => ({
+						key: day.date.toISOString(),
+						state: cellStateFor(day),
+						accessibilityLabel: `${format(day.date, "EEEE d MMMM")}, ${STATUS_LABEL[day.status]}`,
+						onPress: day.selectable ? () => onSelectDay(day.date) : undefined,
+					})),
+				)}
+			/>
 			{hasEntries ? (
 				<HeatmapLegend accent={habit.category.hue} />
 			) : (
@@ -114,12 +103,5 @@ const styles = StyleSheet.create({
 	},
 	range: {
 		fontSize: typeScale.caption,
-	},
-	grid: {
-		gap: 5,
-	},
-	row: {
-		flexDirection: "row",
-		gap: 5,
 	},
 });

@@ -9,9 +9,10 @@ type IconBadgeProps = {
 	accent?: { tint: string; ink: string };
 	/**
 	 * "large" is a sheet header's own icon (e.g. Quantity Log, HAB-07);
-	 * "small" is the 22px inline badge (VAR-02) — the category picker's header.
+	 * "small" is the 22px inline badge (VAR-02) — the category picker's header;
+	 * "compact" the 28px habit badge on a summary's per-habit rows (NEW-21).
 	 */
-	size?: "small" | "default" | "large";
+	size?: "small" | "compact" | "default" | "large";
 };
 
 /** Non-interactive leading icon square for list rows (design-system "List row"). */
@@ -37,13 +38,25 @@ export function IconBadge({
 	);
 }
 
-const SYMBOL_SIZES = { small: 11, default: 16, large: 24 } as const;
+const SYMBOL_SIZES = {
+	small: 11,
+	compact: 14,
+	default: 16,
+	large: 24,
+} as const;
 
 const styles = StyleSheet.create({
 	badgeSmall: {
 		width: 22,
 		height: 22,
 		borderRadius: 7,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	badgeCompact: {
+		width: 28,
+		height: 28,
+		borderRadius: 9,
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -65,6 +78,7 @@ const styles = StyleSheet.create({
 
 const BADGE_STYLES = {
 	small: styles.badgeSmall,
+	compact: styles.badgeCompact,
 	default: styles.badge,
 	large: styles.badgeLarge,
 } as const;

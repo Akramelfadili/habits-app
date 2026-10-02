@@ -4,9 +4,17 @@ import {
 	useActiveHabits,
 	useArchivedHabits,
 } from "../repositories/habit-repository";
+import {
+	monthlyMenuLockedReason,
+	monthlyMenuSubline,
+} from "../screens/monthly-summary-helpers";
 import { settingsMenuSubline } from "../screens/settings-helpers";
 import { weeklyMenuSubline } from "../screens/weekly-summary-helpers";
 import { defaultSummaryWeek } from "../services/weekly-summary";
+import {
+	type MonthlySummaryView,
+	useMonthlySummaryQueries,
+} from "./use-monthly-summary-queries";
 import { useWeeklySummaryQueries } from "./use-weekly-summary-queries";
 
 export type TodayMenuRow = {
@@ -23,9 +31,22 @@ export type TodayMenuView = {
 	settings: TodayMenuRow;
 };
 
-// TODO(HAB-16): Monthly summary.
 // TODO(HAB-17): Yearly summary.
 const COMING_SOON = "Coming soon";
+
+function monthlyRow(monthly: MonthlySummaryView): TodayMenuRow {
+	switch (monthly.state) {
+		case "ready":
+			return { subline: monthlyMenuSubline(monthly.summary) };
+		case "too-early":
+			return {
+				subline: "",
+				disabledReason: monthlyMenuLockedReason(monthly.unlock),
+			};
+		default:
+			return { subline: "", disabledReason: "After your first month" };
+	}
+}
 
 /**
  * What Today's navigation menu (HAB-14) shows on each row. Mount it only while
@@ -34,6 +55,7 @@ const COMING_SOON = "Coming soon";
  */
 export function useTodayMenuQueries(): TodayMenuView {
 	const weekly = useWeeklySummaryQueries(defaultSummaryWeek(new Date()));
+	const monthly = useMonthlySummaryQueries();
 	const activeCount = useActiveHabits().length;
 	const archivedCount = useArchivedHabits().length;
 	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
@@ -43,9 +65,7 @@ export function useTodayMenuQueries(): TodayMenuView {
 		weekly: hasHabits
 			? { subline: weeklyMenuSubline(weekly) }
 			: { subline: "", disabledReason: "After your first full week" },
-		monthly: hasHabits
-			? { subline: "", disabledReason: COMING_SOON }
-			: { subline: "", disabledReason: "After your first month" },
+		monthly: monthlyRow(monthly),
 		yearly: hasHabits
 			? { subline: "", disabledReason: COMING_SOON }
 			: { subline: "", disabledReason: "After three months" },

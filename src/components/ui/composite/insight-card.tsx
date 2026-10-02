@@ -15,6 +15,11 @@ type InsightCardProps = {
 	 * "neutral" a plain informational note.
 	 */
 	tone?: "warning" | "success" | "neutral";
+	/**
+	 * A habit's own tint + ink for the icon square (Monthly's "improved" card)
+	 * — replaces the tone's colours, never adds a tap target.
+	 */
+	accent?: { tint: string; ink: string };
 	/** Optional inline text action under the body ("Reschedule habit →"). */
 	action?: { label: string; onPress: () => void };
 };
@@ -25,6 +30,7 @@ export function InsightCard({
 	title,
 	body,
 	tone = "neutral",
+	accent,
 	action,
 }: InsightCardProps) {
 	const { colors } = useTheme();
@@ -33,14 +39,16 @@ export function InsightCard({
 		success: { background: colors.ink, glyph: colors.onAccent },
 		neutral: { background: colors.inner, glyph: colors.faint },
 	}[tone];
+	const iconBackground = accent?.tint ?? iconColors.background;
+	const iconGlyph = accent?.ink ?? iconColors.glyph;
 
 	return (
 		<View style={[styles.card, { backgroundColor: colors.card }]}>
 			<View
 				testID="insight-card-icon"
-				style={[styles.icon, { backgroundColor: iconColors.background }]}
+				style={[styles.icon, { backgroundColor: iconBackground }]}
 			>
-				<SymbolView name={symbol} size={16} tintColor={iconColors.glyph} />
+				<SymbolView name={symbol} size={16} tintColor={iconGlyph} />
 			</View>
 			<View style={styles.text}>
 				<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>

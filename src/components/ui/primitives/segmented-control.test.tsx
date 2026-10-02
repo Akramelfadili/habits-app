@@ -65,3 +65,30 @@ describe("SegmentedControl", () => {
 		expect(screen.getAllByRole("button")).toHaveLength(3);
 	});
 });
+
+describe("SegmentedControl — one segment disabled (range switcher, HAB-16)", () => {
+	const three: [
+		{ value: "week"; label: string },
+		{ value: "month"; label: string },
+		{ value: "year"; label: string; disabled: true },
+	] = [
+		{ value: "week", label: "Week" },
+		{ value: "month", label: "Month" },
+		{ value: "year", label: "Year", disabled: true },
+	];
+
+	it("blocks just the disabled segment and leaves the others live", async () => {
+		const onChange = jest.fn();
+		await render(
+			<SegmentedControl options={three} value="week" onChange={onChange} />,
+		);
+		await fireEvent.press(screen.getByText("Year"));
+		expect(onChange).not.toHaveBeenCalled();
+		expect(
+			screen.getByText("Year").parent?.props.accessibilityState.disabled,
+		).toBe(true);
+
+		await fireEvent.press(screen.getByText("Month"));
+		expect(onChange).toHaveBeenCalledWith("month");
+	});
+});

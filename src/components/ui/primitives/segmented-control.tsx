@@ -4,10 +4,12 @@ import { useTheme } from "@/theme/use-theme";
 type SegmentedControlOption<T extends string> = {
 	value: T;
 	label: string;
+	/** Just this segment is unavailable (Year, until HAB-17) — the others stay live. */
+	disabled?: boolean;
 };
 
 type SegmentedControlProps<T extends string> = {
-	/** Two options (Direction, Week) or three (Appearance, HAB-15). */
+	/** Two options (Direction, Week), three (Appearance, HAB-15; the summaries' range switcher, HAB-16). */
 	options:
 		| [SegmentedControlOption<T>, SegmentedControlOption<T>]
 		| [
@@ -41,18 +43,19 @@ export function SegmentedControl<T extends string>({
 		>
 			{options.map((option) => {
 				const isActive = option.value === value;
+				const isDisabled = disabled || option.disabled === true;
 				return (
 					<Pressable
 						key={option.value}
 						accessibilityRole="button"
-						accessibilityState={{ selected: isActive, disabled }}
-						disabled={disabled}
+						accessibilityState={{ selected: isActive, disabled: isDisabled }}
+						disabled={isDisabled}
 						onPress={() => onChange(option.value)}
 						style={[
 							styles.segment,
 							size === "compact" ? styles.segmentCompact : styles.segmentFull,
 							isActive && { backgroundColor: colors.ink },
-							disabled && { opacity: opacity.disabled },
+							isDisabled && { opacity: opacity.disabled },
 						]}
 					>
 						<Text

@@ -549,3 +549,44 @@ describe("HabitFormScreen — edit mode", () => {
 		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 });
+
+describe("HabitFormScreen — focus=frequency (HAB-16)", () => {
+	function scrollSpy() {
+		const spy = jest.fn();
+		const { ScrollView } = require("react-native");
+		jest
+			.spyOn(ScrollView.prototype, "scrollTo")
+			.mockImplementation(spy as never);
+		return spy;
+	}
+
+	beforeEach(() => {
+		mockCategories = TEST_BUILT_IN_CATEGORIES;
+		mockHabits = [existingHabit];
+	});
+	afterEach(() => jest.restoreAllMocks());
+
+	it("scrolls to the Frequency section once, when it lays out", async () => {
+		const spy = scrollSpy();
+		await render(<HabitFormScreen habitId={1} focus="frequency" />);
+		const frequency = screen.getByTestId("habit-form-frequency");
+		await fireEvent(frequency, "layout", {
+			nativeEvent: { layout: { x: 0, y: 420, width: 300, height: 120 } },
+		});
+		expect(spy).toHaveBeenCalledWith({ y: 412, animated: false });
+
+		await fireEvent(frequency, "layout", {
+			nativeEvent: { layout: { x: 0, y: 500, width: 300, height: 120 } },
+		});
+		expect(spy).toHaveBeenCalledTimes(1);
+	});
+
+	it("stays at the top without a focus", async () => {
+		const spy = scrollSpy();
+		await render(<HabitFormScreen habitId={1} />);
+		await fireEvent(screen.getByTestId("habit-form-frequency"), "layout", {
+			nativeEvent: { layout: { x: 0, y: 420, width: 300, height: 120 } },
+		});
+		expect(spy).not.toHaveBeenCalled();
+	});
+});

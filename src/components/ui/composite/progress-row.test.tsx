@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
+import { Text } from "react-native";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { ProgressRow } from "./progress-row";
 
@@ -27,5 +28,18 @@ describe("ProgressRow", () => {
 		});
 		const fill = screen.getByTestId("progress-bar").children[0];
 		expect(fill).toHaveStyle({ backgroundColor: semanticColors.light.warnInk });
+	});
+
+	it("leads with a badge when given one (NEW-21)", async () => {
+		await render(
+			<ProgressRow
+				label="Read"
+				count="5/7"
+				value={0.7}
+				badge={<Text>badge</Text>}
+			/>,
+		);
+		expect(screen.getByText("badge")).toBeTruthy();
+		expect(screen.getByText("Read")).toBeTruthy();
 	});
 });

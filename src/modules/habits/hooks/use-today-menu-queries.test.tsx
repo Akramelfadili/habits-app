@@ -19,11 +19,14 @@ let mockEntries: Entry[] = [];
 jest.mock("../repositories/habit-repository", () => ({
 	useActiveHabits: () => mockActive,
 	useArchivedHabits: () => mockArchived,
+	useHabitsList: () => [...mockActive, ...mockArchived],
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: () => mockEntries,
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
+jest.mock("../repositories/frozen-day-repository", () => ({
+	useFrozenDays: () => [],
+}));
 let mockLastExport: string | null = null;
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 	useAppSetting: () => mockLastExport,
@@ -74,9 +77,29 @@ describe("useTodayMenuQueries (HAB-14)", () => {
 		expect(result.current.manage.subline).toBe("2 active · 2 archived");
 	});
 
-	it("keeps Month/Year as 'Coming soon' placeholders once habits exist", async () => {
+	it("describes Monthly with the last complete month once there's a month of history (HAB-16)", async () => {
+		mockEntries = [entry(1, "2026-08-03"), entry(1, "2026-08-04")];
 		const { result } = await renderHook(() => useTodayMenuQueries());
-		expect(result.current.monthly.disabledReason).toBe("Coming soon");
+		expect(result.current.monthly.disabledReason).toBeUndefined();
+		expect(result.current.monthly.subline).toMatch(
+			/^1 — 31 August · \d+% done$/,
+		);
+	});
+
+	it("locks Monthly until the first month of history is in, saying when (HAB-16)", async () => {
+		mockActive = [
+			makeHabit({ id: 1, createdAt: new Date(2026, 8, 4, 8) }),
+			makeHabit({ id: 2, name: "Read", createdAt: new Date(2026, 8, 6, 8) }),
+		];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.monthly).toEqual({
+			subline: "",
+			disabledReason: "Unlocks 4 October",
+		});
+	});
+
+	it("keeps Year as a 'Coming soon' placeholder once habits exist", async () => {
+		const { result } = await renderHook(() => useTodayMenuQueries());
 		expect(result.current.yearly.disabledReason).toBe("Coming soon");
 		expect(result.current.weekly.disabledReason).toBeUndefined();
 	});

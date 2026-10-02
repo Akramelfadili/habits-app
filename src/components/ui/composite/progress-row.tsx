@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -11,14 +12,17 @@ type ProgressRowProps = {
 	value: number;
 	/** "warning" is the flagged/slipping treatment — the bar only, the label stays ink. */
 	tone?: "default" | "warning";
+	/** NEW-21's leading 28px habit badge; omitted, the row is label-and-bar only. */
+	badge?: ReactNode;
 };
 
-/** Label + trailing count over a ProgressBar — Weekly Summary's per-habit list (HAB-11). */
+/** Label + trailing count over a ProgressBar, optionally badged — Weekly Summary's per-habit list (HAB-11, NEW-21 progress slot). */
 export function ProgressRow({
 	label,
 	count,
 	value,
 	tone = "default",
+	badge,
 }: ProgressRowProps) {
 	const { colors } = useTheme();
 
@@ -28,19 +32,28 @@ export function ProgressRow({
 			accessibilityLabel={`${label}: ${count}`}
 			style={styles.row}
 		>
-			<View style={styles.labels}>
-				<Text numberOfLines={1} style={[styles.label, { color: colors.ink }]}>
-					{label}
-				</Text>
-				<Text style={[styles.count, { color: colors.sub }]}>{count}</Text>
+			{badge}
+			<View style={styles.body}>
+				<View style={styles.labels}>
+					<Text numberOfLines={1} style={[styles.label, { color: colors.ink }]}>
+						{label}
+					</Text>
+					<Text style={[styles.count, { color: colors.sub }]}>{count}</Text>
+				</View>
+				<ProgressBar value={value} tone={tone} />
 			</View>
-			<ProgressBar value={value} tone={tone} />
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
 	row: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+	},
+	body: {
+		flex: 1,
 		gap: 8,
 	},
 	labels: {
