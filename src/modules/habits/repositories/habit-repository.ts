@@ -311,10 +311,16 @@ export async function reorderHabits(orderedIds: number[]): Promise<void> {
 export async function setHabitArchived(
 	id: number,
 	archivedAt: Date,
+	/** Also rewrites the past pauses — only for undoing a restore (HAB-20), which puts them back as they were. */
+	pauses?: readonly DayRange[],
 ): Promise<Habit> {
 	const [row] = await db
 		.update(habits)
-		.set({ archivedAt })
+		.set(
+			pauses
+				? { archivedAt, pausedRanges: pausesToColumn(pauses) }
+				: { archivedAt },
+		)
 		.where(eq(habits.id, id))
 		.returning();
 	return toHabit(row);

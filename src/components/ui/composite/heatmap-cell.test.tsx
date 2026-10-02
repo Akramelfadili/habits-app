@@ -35,6 +35,22 @@ describe("HeatmapCell", () => {
 		expect(screen.getByTestId("heatmap-cell-bonus-dot")).toBeTruthy();
 	});
 
+	it("draws a paused day dotted and empty — skipped, not missed (HAB-20)", async () => {
+		await render(<HeatmapCell state={{ kind: "paused" }} accent={195} />);
+		expect(screen.getByTestId("heatmap-cell-paused")).toHaveStyle({
+			backgroundColor: "transparent",
+			borderStyle: "dotted",
+		});
+	});
+
+	it("outlines the reset day in ink on the missed track (HAB-20)", async () => {
+		await render(<HeatmapCell state={{ kind: "reset" }} accent={195} />);
+		expect(screen.getByTestId("heatmap-cell-reset")).toHaveStyle({
+			backgroundColor: surfaceColors.light.track,
+			borderColor: surfaceColors.light.ink,
+		});
+	});
+
 	it("renders missed as the neutral track and not-scheduled as blank", async () => {
 		await render(
 			<>

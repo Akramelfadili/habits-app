@@ -47,6 +47,9 @@ export function StatCard({
 			]}
 		>
 			<Text
+				numberOfLines={1}
+				adjustsFontSizeToFit
+				minimumFontScale={0.8}
 				style={[
 					styles.label,
 					{ color: isWarning ? colors.warnInk : colors.sub },

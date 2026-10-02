@@ -269,6 +269,28 @@ describe("buildYearlySummary — month slots (HAB-17)", () => {
 		expect(summary.rows[0].cells[4].rate).toBeNull();
 	});
 
+	it("reads a restored habit's closed pause as paused, not missed (HAB-20)", () => {
+		const today = day(2026, 9, 16);
+		const habit = makeHabit({
+			id: 1,
+			createdAt: day(2026, 1, 1),
+			frequency: { type: "daily" },
+			pauses: [{ from: "2026-03-01", to: "2026-03-31" }],
+		});
+		const entries = [
+			...dailyEntries(1, day(2026, 1, 1), day(2026, 2, 28)),
+			...dailyEntries(1, day(2026, 4, 1), day(2026, 9, 15)),
+		];
+		const summary = build([habit], entries, today);
+		// March's 31 blank days are neither owed nor missed...
+		expect(summary.scheduled).toBe(summary.logged);
+		expect(summary.rate).toBe(1);
+		// ...and no streak is joined across the gap.
+		expect(summary.longest.days).toBe(
+			dailyEntries(1, day(2026, 4, 1), day(2026, 9, 15)).length,
+		);
+	});
+
 	it("drops a habit with nothing counted this year", () => {
 		const today = day(2026, 9, 16);
 		const archived = makeHabit({

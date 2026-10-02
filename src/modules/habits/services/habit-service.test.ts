@@ -237,6 +237,55 @@ describe("getStreakAtRisk", () => {
 	});
 });
 
+describe("after a restore (HAB-20)", () => {
+	// Logged 1–10 Sep, archived 11 Sep, restored 21 Sep (pause 11–20 Sep).
+	const restored = makeHabit({
+		id: 1,
+		frequency: { type: "daily" },
+		createdAt: HABIT_CREATED,
+		pauses: [{ from: "2026-09-11", to: "2026-09-20" }],
+	});
+	const before = Array.from({ length: 10 }, (_, index) =>
+		entry(1, `2026-09-${String(index + 1).padStart(2, "0")}`),
+	);
+	const noFreezes = new Set<string>();
+
+	it("calculateCurrentStreak counts from the restore day, never across the gap", () => {
+		const asOf = new Date(2026, 8, 22);
+		expect(calculateCurrentStreak(restored, before, noFreezes, asOf)).toBe(0);
+		expect(
+			calculateCurrentStreak(
+				restored,
+				[...before, entry(1, "2026-09-21"), entry(1, "2026-09-22")],
+				noFreezes,
+				asOf,
+			),
+		).toBe(2);
+	});
+
+	// Today's at-risk prompt is the one live caller besides Detail and Export:
+	// a restored habit has no streak at stake, so it must stay silent.
+	it("getStreakAtRisk raises no prompt for a restored habit with no new streak", () => {
+		expect(
+			getStreakAtRisk(restored, before, noFreezes, 2, new Date(2026, 8, 22)),
+		).toBeNull();
+	});
+
+	it("getStreakAtRisk is silent the morning after the restore too — yesterday was paused", () => {
+		expect(
+			getStreakAtRisk(restored, before, noFreezes, 2, new Date(2026, 8, 21)),
+		).toBeNull();
+	});
+
+	it("getStreakAtRisk works normally once a new streak exists", () => {
+		const entries = [...before, entry(1, "2026-09-21")];
+		// Yesterday (22nd) missed after a one-day new streak: a freeze can save it.
+		expect(
+			getStreakAtRisk(restored, entries, noFreezes, 2, new Date(2026, 8, 23)),
+		).toMatchObject({ currentStreak: 1 });
+	});
+});
+
 describe("freezesRemainingInMonth", () => {
 	it("returns the full pool when nothing's been used", () => {
 		expect(freezesRemainingInMonth([], new Date("2026-09-16"))).toBe(2);

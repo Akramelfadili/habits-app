@@ -29,6 +29,7 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 - **Suspects:** the popover measures its anchor (the ⋯ button) before layout has settled, or the harness screenshots before layout finishes. Look at the anchor-measurement path in `nav-menu.tsx` / `today-nav-menu.tsx` and add a wait for layout (or re-measure on layout) in the `interact` step in `scripts/visual-check/screens.mjs`.
 - **Status:** baseline deliberately untouched by HAB-19; fix separately.
 - **Also seen on `today-empty-menu-open`** (HAB-16): the same intermittent 74px popover offset (~9.6% of pixels) — it passed on a solo run and failed in the full run on identical code. Its baseline was deliberately not re-committed in HAB-16; investigate with the anchor-measurement fix above.
+- **Also seen on `today-menu-open-yearly`** (HAB-20 full run): the same intermittent popover offset (~10.8% of pixels), on code that doesn't touch Today. Its baseline was not touched.
 
 ## HAB-17 — Summaries: Yearly
 
@@ -64,3 +65,13 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 - **Retro log still lists habits by "due that day or has a log"**, so a rest-day bonus entry for another habit appears there as a normal row; it is not labelled "bonus".
 - **Visual baselines:** `retro-log` re-captured against D4; `rest-day-picker`, `rest-day-picker-empty`, `rest-day-logged`, `habit-detail-bonus` added. The `today-menu-open*` baselines were not touched (known popover flake above).
 
+## HAB-20 — Detail: archived, restored, streak reset
+
+- **Mockup rows not built.** D5/D6/E1 draw Reminders and "Edit habit" as two icon rows in one card with the reminder value right-aligned ("07:00 · daily"). The built Detail keeps HAB-12's single Reminders row (summary as a subtitle, no icon) and Edit in the header, as before.
+- **D5 "41 of 55 due"** reads "N of M days" (audit #9 retired "due"); the restored tile's "paused days…" is the tile's real caption truncated by the third-width card, as drawn.
+- **"BEFORE ARCHIVE" label** is too wide for a third-width tile at 10px; `StatCard` labels now shrink to fit on one line (`adjustsFontSizeToFit`). Web truncates instead — check on device.
+- **Paused / reset cell treatments are interpretations.** NEW-16 · paused is dotted and empty, NEW-16 · streak reset is the missed track with an ink outline; the mockups are too small to read the exact strokes. E1's outlined restore-day cell is not drawn.
+- **The reset note only shows for the current month** (Detail has no month navigation), so a reset in the last days of a month is invisible from the 1st — by design of the spec's "only in the month it happened", but easy to miss.
+- **`no-freezes` fixture** draws a mostly-grey grid (history starts weeks before the habit's first logs); D6's grid is dense. The fixture is tuned for HAB-08's sheet, not this layout.
+- **Existing archived-banner:** none existed on Detail before — the archive state was only an absent "Archive habit" button — so NEW-13 is new there rather than a replacement. Manage's archived rows (HAB-19) keep their own Restore.
+- **Visual baselines:** `habit-detail` and its dark twin changed only in the legend label ("2 freezes left"); `habit-detail-no-freezes` re-captured against D6. The `today-menu-open*` baselines were not touched.

@@ -32,6 +32,10 @@ export function makeReminderFixtures(
 			{ ...reminder(3, 23, 0, everyDay), habitId: 3 },
 		];
 	}
+	// Archived/restored Detail (HAB-20): the schedule Restore brings back.
+	if (scenario === "habit-detail-archived") {
+		return [reminder(1, 7, 0, [1, 2, 3, 4, 5, 6, 7])];
+	}
 	if (scenario === "reminders") {
 		return [
 			reminder(1, 7, 20, [1, 2, 3, 4, 5]),

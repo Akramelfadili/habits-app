@@ -21,6 +21,7 @@ jest.mock("expo-router", () => ({
 const mockArchive = jest.fn();
 const mockDelete = jest.fn();
 const mockRestore = jest.fn();
+const mockUndoRestore = jest.fn();
 jest.mock("../hooks/use-habit-detail-actions", () => ({
 	useHabitDetailActions: () => ({
 		archiveHabit: mockArchive,
@@ -28,6 +29,8 @@ jest.mock("../hooks/use-habit-detail-actions", () => ({
 		deleteHabit: mockDelete,
 		isDeleting: false,
 		restoreHabit: mockRestore,
+		isRestoring: false,
+		undoRestoreHabit: mockUndoRestore,
 	}),
 }));
 
@@ -78,7 +81,12 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 		currentStreak: 24,
 		loggedDays: 218,
 		longestStreak: { days: 41, endedOn: new Date(2026, 5, 30) },
-		completionRate: { completed: 78, scheduled: 90, fraction: 78 / 90 },
+		completionRate: {
+			completed: 78,
+			scheduled: 90,
+			fraction: 78 / 90,
+			skippedPaused: false,
+		},
 		heatmapWeeks: buildHeatmapWeeks({
 			habit,
 			entries: [],
@@ -111,6 +119,8 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 		],
 		hasEntries: true,
 		reminders: [],
+		freezesRemaining: 2,
+		streakReset: null,
 		today,
 		...overrides,
 	};
@@ -139,7 +149,12 @@ describe("HabitDetailScreen", () => {
 		mockDetail = detail({
 			currentStreak: 0,
 			longestStreak: { days: 0, endedOn: null },
-			completionRate: { completed: 0, scheduled: 0, fraction: null },
+			completionRate: {
+				completed: 0,
+				scheduled: 0,
+				fraction: null,
+				skippedPaused: false,
+			},
 			recentEntries: [],
 			hasEntries: false,
 		});
@@ -318,6 +333,9 @@ describe("HabitDetailScreen", () => {
 			await render(<HabitDetailScreen habitId={1} />);
 
 			expect(screen.queryByText("Archive habit")).toBeNull();
+			// VAR-09 archived: the legend keeps the plain "Frozen" key, no count.
+			expect(screen.getByText("Frozen")).toBeTruthy();
+			expect(screen.queryByText(/freezes? left/)).toBeNull();
 			expect(screen.getByText("Delete habit")).toBeTruthy();
 		});
 	});
@@ -383,6 +401,84 @@ describe("HabitDetailScreen", () => {
 			expect(screen.queryByText("Delete “Glass of water”?")).toBeNull();
 			expect(mockDelete).not.toHaveBeenCalled();
 			expect(mockArchive).not.toHaveBeenCalled();
+		});
+	});
+	describe("archived (HAB-20 / D5)", () => {
+		const archivedHabit = makeHabit({
+			...habit,
+			name: "Cold shower",
+			archivedAt: new Date(2026, 8, 2, 20),
+		});
+
+		it("states the archive date, keeps Restore at the top, and pauses the tiles and Reminders row", async () => {
+			mockDetail = detail({ habit: archivedHabit, loggedDays: 41 });
+			await render(<HabitDetailScreen habitId={1} />);
+
+			expect(screen.getByText("Archived on 2 September")).toBeTruthy();
+			expect(
+				screen.getByText("Hidden from Today. All 41 logs kept."),
+			).toBeTruthy();
+			expect(screen.getByLabelText("Current: —, paused")).toBeTruthy();
+			expect(screen.getByText("BEFORE ARCHIVE")).toBeTruthy();
+			expect(screen.getByText("Paused while archived")).toBeTruthy();
+			// Archive is already done — only Restore (in the banner) and Delete remain.
+			expect(screen.queryByText("Archive habit")).toBeNull();
+			// VAR-09 archived: the legend keeps the plain "Frozen" key, no count.
+			expect(screen.getByText("Frozen")).toBeTruthy();
+			expect(screen.queryByText(/freezes? left/)).toBeNull();
+		});
+
+		it("shows no banner for an active habit", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			expect(screen.queryByTestId("archived-banner")).toBeNull();
+		});
+
+		it("restores instantly — no sheet, no navigation — and toasts with an Undo that re-archives as it was", async () => {
+			mockRestore.mockResolvedValue(undefined);
+			mockUndoRestore.mockResolvedValue(undefined);
+			mockDetail = detail({ habit: archivedHabit });
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Restore"));
+
+			expect(mockRestore).toHaveBeenCalledWith(1);
+			expect(mockBack).not.toHaveBeenCalled();
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Cold shower is back on Today");
+			expect(toast?.actionLabel).toBe("Undo");
+
+			toast?.onAction?.();
+			expect(mockUndoRestore).toHaveBeenCalledWith(1, {
+				archivedAt: archivedHabit.archivedAt,
+				pauses: [],
+			});
+		});
+	});
+
+	describe("streak reset (HAB-20 / D6)", () => {
+		it("explains the reset and the pool refill only when detail reports one", async () => {
+			mockDetail = detail({
+				freezesRemaining: 0,
+				streakReset: {
+					missedDate: new Date(2026, 8, 22),
+					poolRefillsOn: new Date(2026, 9, 1),
+				},
+			});
+			await render(<HabitDetailScreen habitId={1} />);
+			expect(
+				screen.getByText(
+					"Streak reset — no freezes left this month. Pool refills on 1 October.",
+				),
+			).toBeTruthy();
+			expect(screen.getByText("0 freezes left")).toBeTruthy();
+		});
+
+		it("shows no reset note otherwise, and the legend carries the live count", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			expect(screen.queryByText(/Streak reset/)).toBeNull();
+			expect(screen.getByText("2 freezes left")).toBeTruthy();
 		});
 	});
 });

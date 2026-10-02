@@ -1,5 +1,6 @@
 import {
 	addDays,
+	addMonths,
 	addWeeks,
 	format,
 	isAfter,
@@ -8,12 +9,17 @@ import {
 	max,
 	parseISO,
 	startOfDay,
+	startOfMonth,
 	startOfWeek,
 	subDays,
 } from "date-fns";
 import type { HeatmapLevel } from "@/theme/theme";
 import { WEEK_STARTS_ON } from "../constants";
-import { getHabitStrategy } from "../strategies/frequency-strategy";
+import {
+	getHabitStrategy,
+	habitPauses,
+} from "../strategies/frequency-strategy";
+import { isPausedOn, restartDays } from "../strategies/paused-schedule";
 import type { Entry, EntryNote, Habit } from "../types";
 import { calculateCurrentStreak, isEntryComplete } from "./habit-service";
 import { isOffScheduleEntry } from "./off-schedule";
@@ -83,6 +89,8 @@ export function calculateLongestStreak({
 	const context = { completedDates: completed.dates };
 	const todayStart = startOfDay(today);
 
+	// A restore starts a fresh run (HAB-20) — nothing carries over the gap.
+	const restarts = new Set(restartDays(habit.pauses));
 	let best: LongestStreak = { days: 0, endedOn: null };
 	let run = 0;
 	for (
@@ -90,8 +98,9 @@ export function calculateLongestStreak({
 		!isAfter(cursor, todayStart);
 		cursor = addDays(cursor, 1)
 	) {
-		if (!strategy.wasScheduledOn(cursor, context)) continue;
 		const dateString = format(cursor, DATE_FORMAT);
+		if (restarts.has(dateString)) run = 0;
+		if (!strategy.wasScheduledOn(cursor, context)) continue;
 		if (completed.set.has(dateString) || frozenDates.has(dateString)) {
 			run += 1;
 			if (run > best.days) best = { days: run, endedOn: cursor };
@@ -107,6 +116,8 @@ export type CompletionRate = {
 	scheduled: number;
 	/** 0–1, or null when nothing has been scheduled yet (a brand-new habit). */
 	fraction: number | null;
+	/** An archive pause falls inside the window — its days were skipped, not missed (HAB-20). */
+	skippedPaused: boolean;
 };
 
 /**
@@ -114,7 +125,9 @@ export type CompletionRate = {
  * clipped to the habit's own creation date rather than padded to 90 (HAB-09
  * edge case). Today joins the denominator only once it's logged, since it
  * can't have been missed yet. A frozen day stays in the denominator but isn't
- * a completion — a freeze protects the streak, not the rate.
+ * a completion — a freeze protects the streak, not the rate. An archived
+ * habit's window ends the day before it was archived, so the rate reads
+ * "before archive" rather than decaying over days it was never asked of.
  */
 export function calculateCompletionRate({
 	habit,
@@ -125,18 +138,24 @@ export function calculateCompletionRate({
 	const completed = completedDatesOf(habit, entries);
 	const context = { completedDates: completed.dates };
 	const todayStart = startOfDay(today);
+	const windowEnd = habit.archivedAt
+		? subDays(startOfDay(habit.archivedAt), 1)
+		: todayStart;
 	const windowStart = max([
-		subDays(todayStart, COMPLETION_RATE_WINDOW_DAYS - 1),
+		subDays(windowEnd, COMPLETION_RATE_WINDOW_DAYS - 1),
 		startOfDay(habit.createdAt),
 	]);
+	const closedPauses = habit.pauses;
 
 	let scheduled = 0;
 	let done = 0;
+	let skippedPaused = false;
 	for (
 		let cursor = windowStart;
-		!isAfter(cursor, todayStart);
+		!isAfter(cursor, windowEnd);
 		cursor = addDays(cursor, 1)
 	) {
+		if (isPausedOn(cursor, closedPauses)) skippedPaused = true;
 		if (!strategy.wasScheduledOn(cursor, context)) continue;
 		const isDone = completed.set.has(format(cursor, DATE_FORMAT));
 		if (isSameDay(cursor, todayStart) && !isDone) continue;
@@ -148,6 +167,7 @@ export function calculateCompletionRate({
 		completed: done,
 		scheduled,
 		fraction: scheduled === 0 ? null : done / scheduled,
+		skippedPaused,
 	};
 }
 
@@ -162,6 +182,10 @@ export type HeatmapDayStatus =
 	| "logged"
 	/** Logged on a day that wasn't scheduled (HAB-18) — informational, never counted. */
 	| "bonus"
+	/** Inside an archive period (HAB-20) — read as paused, never as missed. */
+	| "paused"
+	/** The unfrozen missed day that reset a streak with no freezes left (HAB-20). */
+	| "reset"
 	| "pending"
 	| "future";
 
@@ -190,13 +214,13 @@ export function heatmapLevelFor(habit: Habit, entry: Entry): HeatmapLevel {
  * The last 10 Mon–Sun weeks ending with the current one — one column per
  * week, oldest first, each with 7 days Monday → Sunday.
  */
-export function buildHeatmapWeeks({
-	habit,
-	entries,
-	frozenDates,
-	today,
-}: History): HeatmapDay[][] {
+export function buildHeatmapWeeks(
+	{ habit, entries, frozenDates, today }: History,
+	/** The day a streak reset on (`streakResetInfo`) — outlined in the grid (HAB-20). */
+	resetOn: Date | null = null,
+): HeatmapDay[][] {
 	const strategy = getHabitStrategy(habit);
+	const pauses = habitPauses(habit);
 	const completed = completedDatesOf(habit, entries);
 	const context = { completedDates: completed.dates };
 	const entriesByDate = new Map(entries.map((entry) => [entry.date, entry]));
@@ -234,11 +258,18 @@ export function buildHeatmapWeeks({
 		if (frozenDates.has(dateString)) {
 			return { date, status: "frozen", selectable };
 		}
+		// Archived days are paused, not "not scheduled" — and never missed.
+		if (!beforeCreation && isPausedOn(date, pauses)) {
+			return { date, status: "paused", selectable };
+		}
 		if (beforeCreation || !strategy.wasScheduledOn(date, context)) {
 			return { date, status: "not-scheduled", selectable };
 		}
 		if (isSameDay(date, todayStart)) {
 			return { date, status: "pending", selectable };
+		}
+		if (resetOn && isSameDay(date, resetOn)) {
+			return { date, status: "reset", selectable };
 		}
 		return { date, status: "missed", selectable };
 	}
@@ -279,4 +310,60 @@ export function recentEntries(
 	return [...byDate.values()]
 		.sort((a, b) => b.date.localeCompare(a.date))
 		.slice(0, limit);
+}
+
+export type StreakReset = {
+	/** The missed day that ended the streak. */
+	missedDate: Date;
+	/** First day of next month, when the freeze pool refills. */
+	poolRefillsOn: Date;
+};
+
+/**
+ * Whether Detail should explain a streak reset (HAB-20 / D6): this month, a
+ * streak was standing, a scheduled day went unlogged, and the shared pool had
+ * nothing left to cover it. A historical note, not a badge — only the month
+ * it happened in, and only while the pool is still empty. Scans back from
+ * yesterday, so a run of misses reports the first one (the day it broke).
+ */
+export function streakResetInfo(
+	{ habit, entries, frozenDates, today }: History,
+	freezesRemaining: number,
+): StreakReset | null {
+	if (freezesRemaining > 0 || habit.archivedAt) return null;
+
+	const strategy = getHabitStrategy(habit);
+	const completed = completedDatesOf(habit, entries);
+	const context = { completedDates: completed.dates };
+	const todayStart = startOfDay(today);
+	const monthStart = startOfMonth(todayStart);
+	const earliest = max([monthStart, startOfDay(habit.createdAt)]);
+
+	for (
+		let cursor = subDays(todayStart, 1);
+		!isBefore(cursor, earliest);
+		cursor = subDays(cursor, 1)
+	) {
+		const dateString = format(cursor, DATE_FORMAT);
+		if (
+			!strategy.wasScheduledOn(cursor, context) ||
+			completed.set.has(dateString) ||
+			frozenDates.has(dateString)
+		) {
+			continue;
+		}
+		const standing = calculateCurrentStreak(
+			habit,
+			entries,
+			frozenDates,
+			subDays(cursor, 1),
+		);
+		if (standing > 0) {
+			return {
+				missedDate: cursor,
+				poolRefillsOn: startOfMonth(addMonths(todayStart, 1)),
+			};
+		}
+	}
+	return null;
 }

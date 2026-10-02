@@ -1,4 +1,4 @@
-import { format, isSameDay } from "date-fns";
+import { addDays, format, isSameDay, parseISO } from "date-fns";
 import type { DayRange } from "../types";
 import type { FrequencyStrategy } from "./frequency-strategy";
 
@@ -7,18 +7,31 @@ const DATE_FORMAT = "yyyy-MM-dd";
 /** Far enough ahead that an open pause (still archived) covers every real day. */
 export const OPEN_PAUSE_END = "9999-12-31";
 
-function isPaused(date: Date, pauses: readonly DayRange[]): boolean {
+export function isPausedOn(date: Date, pauses: readonly DayRange[]): boolean {
 	const day = format(date, DATE_FORMAT);
 	return pauses.some((pause) => day >= pause.from && day <= pause.to);
+}
+
+/**
+ * The days a streak starts over (HAB-20): the day after each closed pause —
+ * i.e. each restore day. A streak never counts back past one, and the longest
+ * streak's run resets there, so no streak is invented across an archived gap.
+ * Sorted ascending, "yyyy-MM-dd".
+ */
+export function restartDays(pauses: readonly DayRange[]): string[] {
+	return pauses
+		.map((pause) => format(addDays(parseISO(pause.to), 1), DATE_FORMAT))
+		.sort();
 }
 
 /**
  * Decorates any frequency strategy with a habit's archive periods (HAB-13):
  * a paused day is never due, and looking back it only "was scheduled" if it
  * was actually completed. So a day logged before archiving still extends the
- * streak, while the blank days in between neither extend nor break it — a
- * restored habit resumes from the streak it was archived with. Outside a
- * pause, the wrapped strategy decides everything.
+ * streak, while the blank days in between are never read as missed. The
+ * streak itself does *not* bridge the gap (HAB-20, which supersedes HAB-13's
+ * "resume") — see `restartDays`. Outside a pause, the wrapped strategy
+ * decides everything.
  */
 export function withPauses(
 	strategy: FrequencyStrategy,
@@ -28,9 +41,9 @@ export function withPauses(
 	return {
 		canFallOn: (weekday) => strategy.canFallOn(weekday),
 		isDueOn: (date, context) =>
-			!isPaused(date, pauses) && strategy.isDueOn(date, context),
+			!isPausedOn(date, pauses) && strategy.isDueOn(date, context),
 		wasScheduledOn: (date, context) =>
-			isPaused(date, pauses)
+			isPausedOn(date, pauses)
 				? context.completedDates.some((completed) => isSameDay(completed, date))
 				: strategy.wasScheduledOn(date, context),
 	};

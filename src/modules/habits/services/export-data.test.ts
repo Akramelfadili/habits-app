@@ -2,6 +2,7 @@ import {
 	EXPORT_TODAY,
 	makeExportSource,
 } from "../test-support/export-fixtures";
+import { makeHabit } from "../test-support/habit-builder";
 import { buildExportModel, summarizeExport } from "./export-data";
 
 // Only the pure streak helpers are used — habit-service's freeze write path (and
@@ -44,6 +45,36 @@ describe("buildExportModel", () => {
 			currentStreak: 0,
 			longestStreak: 0,
 			logs: [],
+		});
+	});
+
+	it("exports a restored habit's streak as fresh while its longest run is kept (HAB-20)", () => {
+		const restored = makeHabit({
+			id: 9,
+			frequency: { type: "daily" },
+			createdAt: new Date(2026, 7, 1),
+			pauses: [{ from: "2026-09-05", to: "2026-09-14" }],
+		});
+		const logs = ["01", "02", "03", "04"].map((day, index) => ({
+			id: index,
+			habitId: 9,
+			date: `2026-09-${day}`,
+			createdAt: EXPORT_TODAY,
+		}));
+		const model = buildExportModel(
+			{
+				...source,
+				habits: [restored],
+				entries: logs,
+				notes: [],
+				frozenDays: [],
+			},
+			{ format: "json", includeArchived: true },
+			EXPORT_TODAY,
+		);
+		expect(model.habits[0]).toMatchObject({
+			currentStreak: 0,
+			longestStreak: 4,
 		});
 	});
 

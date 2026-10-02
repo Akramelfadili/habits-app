@@ -35,7 +35,13 @@ export function makeFrozenDayFixtures(
 		}));
 	}
 	if (scenario === "monthly-summary") return monthlyFrozenDays();
-	if (scenario !== "habit-detail" && scenario !== "retro-log") return [];
+	if (
+		scenario !== "habit-detail" &&
+		scenario !== "habit-detail-archived" &&
+		scenario !== "retro-log"
+	) {
+		return [];
+	}
 	return HABIT_DETAIL_FROZEN_DAYS_AGO.map((daysAgo, index) => ({
 		id: index + 1,
 		habitId: 1,

@@ -189,6 +189,21 @@ describe("totals", () => {
 		expect(summary.rate).toBe(1);
 	});
 
+	it("reads a restored habit's closed pause as paused, not missed (HAB-20)", () => {
+		// Paused 11–20 Aug, restored the 21st: those ten blank days aren't owed.
+		const habits = [
+			daily(1, { pauses: [{ from: "2026-08-11", to: "2026-08-20" }] }),
+		];
+		const entries = [
+			...doneBetween(1, AUGUST.start, new Date(2026, 7, 10)),
+			...doneBetween(1, new Date(2026, 7, 21), AUGUST.end),
+		];
+		const summary = summarise(habits, entries, new Date(2026, 8, 5));
+		expect(summary.scheduled).toBe(21);
+		expect(summary.completed).toBe(21);
+		expect(summary.rate).toBe(1);
+	});
+
 	it("counts today only once it is done, and never counts the future", () => {
 		const midAugust = new Date(2026, 7, 10, 9);
 		const habits = [daily(1)];

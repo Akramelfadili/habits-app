@@ -470,21 +470,21 @@ A "Manage habits" screen, reachable from the habit list:
 - **Delete** — **only available from the habit's own Detail screen** (Feature 09), never from this list. Requires a confirmation step. This is the only unrecoverable, destructive action in the entire Habits module.
 
 ### Business rules
-- Archiving preserves **every** past log, note, and streak value exactly as it was — archiving is non-destructive by definition. Restoring brings a habit back exactly as it was, including its streak, as if it had just been paused.
+- Archiving preserves **every** past log, note, and streak value exactly as it was — archiving is non-destructive by definition. Restoring brings a habit back with every log, note and reminder intact, and its archived days stay read as paused (not missed). **Superseded by HAB-20:** the streak does *not* resume — it starts fresh from the next completed log after the restore; the longest streak is unchanged.
 - An archived habit does not count toward the Weekly Summary (Feature 11) or the Today view for any day after its archive date, but its historical days remain in its own detail history.
 - Deleting is intentionally buried one level deeper (habit detail, not the management list) and gated by a confirmation — this friction is deliberate, not an oversight to smooth out later.
 
 ### Edge cases
-- Archiving a habit mid-streak: the streak value is frozen at whatever it was, and resumes from that value if restored (it does not reset to 0 just for being archived).
+- Archiving a habit mid-streak: the logs and longest streak are preserved exactly, and the archived period reads as paused rather than missed. **Superseded by HAB-20:** the current streak shows "—" (paused) while archived and does **not** resume on restore — it counts from the next completed log, not across the archived gap.
 - Archiving or deleting a habit that has reminders (Feature 12): must cancel every scheduled OS notification for that habit (`cancelRemindersWithPrefix(habitNotificationPrefix(id))`, via `lib/notifications`) as part of the same operation — a stray notification firing for an archived/deleted habit is a user-facing bug. **Delete** must also remove the habit's `reminders` rows: the table's foreign key to `habits` doesn't cascade (`ON DELETE no action`), so either delete them explicitly in the same operation or add a cascading migration — otherwise the delete leaves orphaned rows (or fails outright if SQLite foreign-key enforcement is on). **Archive** keeps the rows (archiving is non-destructive), and restoring re-syncs them (`syncHabitReminders`) so they fire again exactly as configured.
 - Reordering habits across different categories: not supported in V1 — drag-to-reorder only works within the same category group. Moving a habit to a different category is done via Edit (Feature 01), not by dragging.
 
 ### Acceptance criteria
 - [ ] Drag-to-reorder works within a category and persists
 - [ ] Archive removes a habit from Today/Weekly Summary but keeps it restorable with full history intact
-- [ ] Restore brings back the exact prior state, including streak
+- [ ] Restore brings back the habit with all history intact, its archived days paused (not missed) — the streak starts fresh after restore (HAB-20, superseding "including streak")
 - [ ] Delete is only reachable from Habit Detail, not from the Manage screen, and requires confirmation
-- [ ] Archiving mid-streak preserves the streak value rather than resetting it
+- [ ] Archiving mid-streak preserves the logs and longest streak (and doesn't mark the archived days missed); the current streak starts fresh on restore (HAB-20)
 
 ---
 

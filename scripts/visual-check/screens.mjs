@@ -389,10 +389,10 @@ export const SCREENS = {
 		},
 	},
 	"habit-detail-no-freezes": {
-		feature: "HAB-08",
+		feature: "HAB-20",
 		route: "/habits/1?fixtures=no-freezes",
-		mockup: "docs/mockups/streak-reset-no-freezes.png",
-		note: "Pool spent, yesterday missed, today done: streak reset silently to 1. The mockup's 'no freezes left' line and legend aren't implemented.",
+		mockup: "docs/mockups/hab-20-d6.png",
+		note: "D6: pool spent, yesterday missed, today done — streak reset to 1. The month's reset note, the legend's '0 freezes left' and the outlined missed day (HAB-20). Supersedes streak-reset-no-freezes.png.",
 	},
 
 	// HAB-09 / HAB-10 — Habit detail + retro log
@@ -415,6 +415,34 @@ export const SCREENS = {
 		feature: "HAB-09",
 		route: "/habits/1?fixtures=habit-detail-new",
 		mockup: "docs/mockups/habit-detail-new.png",
+	},
+	"habit-detail-archived": {
+		feature: "HAB-20",
+		route: "/habits/1?fixtures=habit-detail-archived",
+		mockup: "docs/mockups/hab-20-d5.png",
+		note: "D5: banner with the archive date and Restore, Current '—' paused, 'Before archive' rate, dotted paused cells, 'Paused while archived' on Reminders. The mockup's Edit-habit row isn't built (Edit lives in the header).",
+	},
+	"habit-detail-restored": {
+		feature: "HAB-20",
+		route: "/habits/1?fixtures=habit-detail-archived",
+		mockup: "docs/mockups/hab-20-e1.png",
+		note: "E1: Restore tapped — banner collapses in place, toast 'Cold shower is back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
+		async interact(page) {
+			await page.getByText("Restore", { exact: true }).click();
+			await page.getByText("Cold shower is back on Today").waitFor();
+		},
+	},
+	"habit-detail-restore-undone": {
+		feature: "HAB-20",
+		route: "/habits/1?fixtures=habit-detail-archived",
+		mockup: "docs/mockups/hab-20-d5.png",
+		note: "Restore then Undo: must be pixel-identical to habit-detail-archived (same archive date, same paused cells).",
+		async interact(page) {
+			await page.getByText("Restore", { exact: true }).click();
+			await page.getByText("Cold shower is back on Today").waitFor();
+			await page.getByText("Undo", { exact: true }).click();
+			await page.getByText("Archived on", { exact: false }).waitFor();
+		},
 	},
 	"habit-detail-bonus": {
 		feature: "HAB-18",
@@ -818,6 +846,8 @@ const DARK_TWINS = [
 	"yearly-insights",
 	"yearly-too-early",
 	"habit-detail",
+	"habit-detail-archived",
+	"habit-detail-restored",
 	"manage-habits",
 	"manage-habits-dragging",
 	"manage-habits-no-active",

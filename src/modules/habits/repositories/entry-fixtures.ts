@@ -5,6 +5,7 @@ import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
 import {
 	DAY_CLOSED_DUE_TODAY_IDS,
 	type FixtureScenario,
+	HABIT_DETAIL_ARCHIVED_DAYS_AGO,
 	HABIT_DETAIL_HISTORY_DAYS,
 	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
@@ -73,6 +74,17 @@ export function makeEntryFixtures(
 
 	if (scenario === "habit-detail" || scenario === "habit-detail-bonus") {
 		return habitDetailEntries();
+	}
+
+	if (scenario === "habit-detail-archived") {
+		// Nothing after the archive day (HAB-20 D5); a simple check, so no values.
+		const archivedOn = format(
+			subDays(new Date(), HABIT_DETAIL_ARCHIVED_DAYS_AGO),
+			"yyyy-MM-dd",
+		);
+		return habitDetailEntries()
+			.filter((entry) => entry.date < archivedOn)
+			.map(({ value: _value, ...entry }) => entry);
 	}
 
 	if (

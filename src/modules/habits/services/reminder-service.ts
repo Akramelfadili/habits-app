@@ -76,9 +76,13 @@ function notificationBody(habit: Habit): string {
  * reminders: cancel everything it owns, then schedule each enabled reminder
  * on the days it's set for *and* the habit can fall on. Idempotent — safe to
  * call after any change, including a schedule edit on the habit itself.
+ * Schedules nothing for an archived habit.
  */
 export async function syncHabitReminders(habit: Habit): Promise<void> {
 	await cancelRemindersWithPrefix(habitNotificationPrefix(habit.id));
+	// Paused while archived (HAB-20): rows are kept, but nothing is scheduled —
+	// editing an archived habit's reminders must not make it fire.
+	if (habit.archivedAt) return;
 
 	for (const reminder of await getHabitReminders(habit.id)) {
 		if (!reminder.enabled) continue;

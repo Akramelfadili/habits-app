@@ -13,7 +13,10 @@ import {
 	type LongestStreak,
 	type RecentEntry,
 	recentEntries,
+	type StreakReset,
+	streakResetInfo,
 } from "../services/habit-history";
+import { freezesRemainingInMonth } from "../services/habit-service";
 import type { Habit, Reminder } from "../types";
 
 export type HabitDetail = {
@@ -31,6 +34,10 @@ export type HabitDetail = {
 	loggedDays: number;
 	/** For the Reminders row's summary (HAB-12). */
 	reminders: Reminder[];
+	/** The shared pool's remaining freezes this month — the legend's "N freezes left" (HAB-20). */
+	freezesRemaining: number;
+	/** Set only in the month a streak reset with the pool empty (HAB-20 / D6). */
+	streakReset: StreakReset | null;
 	today: Date;
 };
 
@@ -59,13 +66,15 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 			.map((frozenDay) => frozenDay.date),
 	);
 	const history = { habit, entries, frozenDates, today };
+	const freezesRemaining = freezesRemainingInMonth(frozenDays, today);
+	const streakReset = streakResetInfo(history, freezesRemaining);
 
 	return {
 		habit,
 		currentStreak: currentStreakAsOf(history),
 		longestStreak: calculateLongestStreak(history),
 		completionRate: calculateCompletionRate(history),
-		heatmapWeeks: buildHeatmapWeeks(history),
+		heatmapWeeks: buildHeatmapWeeks(history, streakReset?.missedDate ?? null),
 		recentEntries: recentEntries(
 			entries,
 			notes.filter((note) => note.habitId === habitId),
@@ -73,6 +82,8 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 		hasEntries: entries.length > 0,
 		loggedDays: entries.length,
 		reminders,
+		freezesRemaining,
+		streakReset,
 		today,
 	};
 }
