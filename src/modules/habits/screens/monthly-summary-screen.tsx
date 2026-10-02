@@ -209,22 +209,27 @@ function Ready({ summary }: { summary: MonthlySummary }) {
 				</View>
 			</Container>
 
-			<SectionHeader
-				title={`What ${monthName} says`}
-				size="small"
-				count={insightCountLabel(summary.insights.length)}
-			/>
-			{summary.insights.map((insight) => (
-				<Insight
-					key={insight.type}
-					insight={insight}
-					summary={summary}
-					onEditFrequency={(id) =>
-						router.push(`/edit-habit/${id}?focus=frequency`)
-					}
-					onOpenReminders={(id) => router.push(`/habits/reminders/${id}`)}
-				/>
-			))}
+			{/* A month with nothing counted (all frozen) has no insights — no header over nothing. */}
+			{summary.insights.length > 0 ? (
+				<>
+					<SectionHeader
+						title={`What ${monthName} says`}
+						size="small"
+						count={insightCountLabel(summary.insights.length)}
+					/>
+					{summary.insights.map((insight) => (
+						<Insight
+							key={insight.type}
+							insight={insight}
+							summary={summary}
+							onEditFrequency={(id) =>
+								router.push(`/edit-habit/${id}?focus=frequency`)
+							}
+							onOpenReminders={(id) => router.push(`/habits/reminders/${id}`)}
+						/>
+					))}
+				</>
+			) : null}
 			{freeze ? (
 				<FreezePoolCard
 					poolSize={FREEZE_POOL_SIZE}

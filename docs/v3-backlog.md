@@ -18,6 +18,10 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 - **Frozen days** leave both sides of the rate (an excused miss), so the tile can differ slightly from a "scheduled" count that includes them.
 - **Detail heatmap is left-aligned inside its card.** This matches the mockup (NEW-07's detail layout is a fixed 18px grid with no stretch), so it isn't a bug — but consider centering or filling the width as polish.
 
+- **`PATTERN_CAUSE_SHARE = 0.25` is weaker than the spec's "explains most of the pattern".** Kept to match C3's "a third" copy; revisit with real data.
+- **The Today menu computes the full monthly summary only for the subline.** Consider a lighter selector.
+- **Frozen days on the Monthly calendar hide that day's completions** (a freeze marks the whole day). Revisit after real use.
+
 ## Visual-check: `today-menu-open` is flaky
 
 - **Symptom:** `npm run visual-check -- today-menu-open` alternates between "same" and "changed — 144149 px differ (10.76%)" on identical code (seen on a clean stash and with HAB-19 applied). `today-empty-menu-open` and `today-menu-open-dark` showed the same intermittent diff in one full run.

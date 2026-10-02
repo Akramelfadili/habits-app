@@ -170,6 +170,24 @@ describe("MonthlySummaryScreen — ready (C2, C3)", () => {
 		expect(screen.queryByText(/reminder →$/)).toBeNull();
 	});
 
+	it("hides the whole insights section for a month with nothing counted, keeping the freeze card", async () => {
+		if (mockView.state !== "ready") throw new Error("fixture");
+		mockView = {
+			...mockView,
+			summary: {
+				...mockView.summary,
+				completed: 0,
+				scheduled: 0,
+				rate: null,
+				insights: [],
+			},
+		};
+		await render(<MonthlySummaryScreen />);
+		expect(screen.queryByText("What August says")).toBeNull();
+		expect(screen.queryByText(/insights?$/)).toBeNull();
+		expect(screen.getByText("Both freezes used")).toBeTruthy();
+	});
+
 	it("shows no freeze card when no freeze was used", async () => {
 		if (mockView.state !== "ready") throw new Error("fixture");
 		mockView = {
