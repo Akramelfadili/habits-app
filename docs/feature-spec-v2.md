@@ -23,6 +23,11 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Out of scope:** the summary screens themselves (HAB-16, HAB-17), Manage itself (HAB-19), Settings itself (HAB-15).
 
+**As built (HAB-14), deviations until the dependencies land**
+- **Settings is a temporary deviation from the rule above.** The Settings screen doesn't exist until HAB-15, so its row ships disabled with "Coming soon" — "Settings must be usable before the first habit exists" is **not yet met**. Month and Year (HAB-16/17) are likewise "Coming soon" once habits exist. Each is marked `TODO(HAB-15)` / `TODO(HAB-16)` / `TODO(HAB-17)` in `today-nav-menu.tsx` and `use-today-menu-queries.ts`.
+- **Rest day's "Log something anyway" still opens New Habit.** The spec wants the HAB-18 habit picker (D1); it is marked `TODO(HAB-18)` in `today-screen.tsx` and flips when HAB-18 is built.
+- The weekly row's subline reuses the Weekly screen's hook and shows the week it opens on; tomorrow rows show the earliest *enabled* reminder that fires on tomorrow's weekday.
+
 ---
 
 ## HAB-15 — Settings & local data export

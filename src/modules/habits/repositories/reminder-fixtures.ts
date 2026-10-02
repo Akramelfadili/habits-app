@@ -22,6 +22,16 @@ export function makeReminderFixtures(
 		enabled = true,
 	): Reminder => ({ id, habitId: 1, hour, minute, weekdays, enabled });
 
+	// Day closed (HAB-14, docs/mockups/hab-14-a6.png): tomorrow rows carry their
+	// first reminder time; "Read before bed" (#2) has none and shows no time.
+	if (scenario === "day-closed") {
+		const everyDay: Reminder["weekdays"] = [1, 2, 3, 4, 5, 6, 7];
+		return [
+			{ ...reminder(1, 7, 0, everyDay), habitId: 1 },
+			{ ...reminder(2, 7, 20, everyDay), habitId: 4 },
+			{ ...reminder(3, 23, 0, everyDay), habitId: 3 },
+		];
+	}
 	if (scenario === "reminders") {
 		return [
 			reminder(1, 7, 20, [1, 2, 3, 4, 5]),

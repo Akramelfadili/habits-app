@@ -13,6 +13,8 @@ import {
 } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
+import { useAllReminders } from "../repositories/reminder-repository";
+import { earliestReminderTimeOn } from "../screens/reminders-helpers";
 import {
 	type CategoryGroup,
 	computeProgress,
@@ -45,6 +47,8 @@ export function useTodayQueries(): {
 	viewState: TodayViewState;
 	/** Habits due tomorrow — only meaningful for the Day closed preview (HAB-05). */
 	tomorrowPreview: Habit[];
+	/** Each tomorrow habit's earliest enabled reminder time ("07:20"); habits with none are absent. */
+	tomorrowReminderTimeByHabitId: ReadonlyMap<number, string>;
 	/** Due-today habits currently showing the streak-at-risk prompt (HAB-08), keyed by habit id. */
 	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
@@ -58,6 +62,7 @@ export function useTodayQueries(): {
 	const entries = useEntriesInRange(weekStart, weekEnd);
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
+	const allReminders = useAllReminders();
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 
 	const completedDatesByHabit = new Map<number, Date[]>();
@@ -90,6 +95,15 @@ export function useTodayQueries(): {
 			completedDates: completedDatesByHabit.get(habit.id) ?? [],
 		}),
 	);
+
+	const tomorrowReminderTimeByHabitId = new Map<number, string>();
+	for (const habit of tomorrowPreview) {
+		const time = earliestReminderTimeOn(
+			allReminders.filter((reminder) => reminder.habitId === habit.id),
+			tomorrow,
+		);
+		if (time) tomorrowReminderTimeByHabitId.set(habit.id, time);
+	}
 
 	const progress = computeProgress(dueHabits, completedHabitIds);
 	const completedThisWeekByHabitId = new Map(
@@ -137,6 +151,7 @@ export function useTodayQueries(): {
 			progress,
 		}),
 		tomorrowPreview,
+		tomorrowReminderTimeByHabitId,
 		atRiskByHabitId,
 		freezesRemainingThisMonth,
 	};

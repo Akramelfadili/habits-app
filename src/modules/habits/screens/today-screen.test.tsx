@@ -14,8 +14,25 @@ jest.mock("expo-symbols", () => {
 });
 
 const mockPush = jest.fn();
+// Mirrors the real hook closely enough: the callback runs on focus, its
+// cleanup on blur (here: unmount).
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: mockPush }),
+	useFocusEffect: (callback: () => undefined | (() => void)) => {
+		const { useEffect } = require("react");
+		useEffect(callback, [callback]);
+	},
+}));
+
+const mockMenu = {
+	weekly: { subline: "14 — 20 September · 34 of 42 done" },
+	monthly: { subline: "", disabledReason: "Coming soon" },
+	yearly: { subline: "", disabledReason: "Coming soon" },
+	manage: { subline: "7 active · 2 archived" },
+	settings: { subline: "Appearance", disabledReason: "Coming soon" },
+};
+jest.mock("../hooks/use-today-menu-queries", () => ({
+	useTodayMenuQueries: () => mockMenu,
 }));
 
 const morningHabit = makeHabit({
@@ -35,6 +52,7 @@ let mockCompletedHabitIds = new Set<number>();
 let mockViewState: "no-habits" | "rest-day" | "day-closed" | "populated" =
 	"no-habits";
 let mockTomorrowPreview: Habit[] = [];
+let mockTomorrowReminderTimes = new Map<number, string>();
 let mockCompletedThisWeekByHabitId: Map<number, number> = new Map();
 let mockQuantityValuesByHabitId = new Map<number, number>();
 const mockToday = new Date("2026-09-16T00:00:00Z");
@@ -54,6 +72,7 @@ jest.mock("../hooks/use-today-queries", () => ({
 		today: mockToday,
 		viewState: mockViewState,
 		tomorrowPreview: mockTomorrowPreview,
+		tomorrowReminderTimeByHabitId: mockTomorrowReminderTimes,
 		atRiskByHabitId: mockAtRiskByHabitId,
 		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
 	}),
@@ -138,6 +157,7 @@ describe("TodayScreen", () => {
 		mockCompletedThisWeekByHabitId = new Map();
 		mockViewState = "no-habits";
 		mockTomorrowPreview = [];
+		mockTomorrowReminderTimes = new Map();
 		useToastStore.setState({ toast: null });
 		mockHasSeenFirstRun = true;
 		mockAtRiskByHabitId = new Map();
@@ -454,35 +474,127 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
 
-	it("links to the Weekly Summary once habits exist", async () => {
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [morningHabit] },
-		];
+	it("shows each tomorrow habit's reminder time, and nothing for one without a reminder", async () => {
+		mockViewState = "day-closed";
+		mockProgress = { completed: 3, total: 3, fraction: 1 };
+		mockTomorrowPreview = [morningHabit, eveningHabit];
+		mockTomorrowReminderTimes = new Map([[1, "07:00"]]);
 
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Weekly summary"));
 
-		expect(mockPush).toHaveBeenCalledWith("/habits/week");
+		expect(screen.getByText("07:00")).toBeTruthy();
+		expect(screen.queryAllByText(/^\d\d:\d\d$/)).toHaveLength(1);
 	});
 
-	it.each(["no-habits", "rest-day", "day-closed", "populated"] as const)(
-		"reaches Weekly Summary and Manage from the %s state",
-		async (state) => {
-			mockViewState = state;
+	describe("navigation menu (HAB-14)", () => {
+		const states = [
+			"no-habits",
+			"rest-day",
+			"day-closed",
+			"populated",
+		] as const;
+
+		beforeEach(() => {
 			mockGroups = [
 				{ category: categoryNamed("Morning"), habits: [morningHabit] },
 			];
+		});
 
+		it("no longer shows the temporary Weekly summary / Manage habits buttons", async () => {
+			mockViewState = "populated";
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Weekly summary"));
-			await fireEvent.press(screen.getByText("Manage habits"));
+			expect(screen.queryByText("Weekly summary")).toBeNull();
+			expect(screen.queryByText("Manage habits")).toBeNull();
+		});
 
-			// Every habit archived lands on "no-habits" — Manage is the only way back.
-			expect(mockPush).toHaveBeenCalledWith("/habits/week");
-			expect(mockPush).toHaveBeenCalledWith("/habits/manage");
-		},
-	);
+		it.each(states)("offers the ⋯ button in the %s state", async (state) => {
+			mockViewState = state;
+			await render(<TodayScreen />);
+			const button = screen.getByLabelText("More");
+			expect(button.props.accessibilityState).toMatchObject({
+				expanded: false,
+			});
+		});
+
+		it.each(states)(
+			"opens the menu with its five rows from the %s state",
+			async (state) => {
+				mockViewState = state;
+				await render(<TodayScreen />);
+				await fireEvent.press(screen.getByLabelText("More"));
+
+				// The open menu is a modal view, so the button behind it leaves the a11y tree.
+				expect(
+					screen.getByLabelText("More", { includeHiddenElements: true }).props
+						.accessibilityState,
+				).toMatchObject({
+					expanded: true,
+				});
+				for (const title of [
+					"Weekly summary",
+					"Monthly",
+					"Yearly",
+					"Manage & archive",
+					"Settings",
+				]) {
+					expect(screen.getByText(title)).toBeTruthy();
+				}
+				expect(screen.getByLabelText("Close menu")).toBeTruthy();
+			},
+		);
+
+		it("closes on the scrim", async () => {
+			mockViewState = "populated";
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("More"));
+			await fireEvent.press(screen.getByLabelText("Close menu"));
+			expect(screen.queryByText("Weekly summary")).toBeNull();
+		});
+
+		it("closes when ⋯ is pressed again", async () => {
+			mockViewState = "populated";
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("More"));
+			await fireEvent.press(
+				screen.getByLabelText("More", { includeHiddenElements: true }),
+			);
+			expect(screen.queryByText("Weekly summary")).toBeNull();
+		});
+
+		it.each([
+			["Weekly summary", "/habits/week"],
+			["Manage & archive", "/habits/manage"],
+		])("%s navigates and closes the menu", async (title, href) => {
+			mockViewState = "populated";
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("More"));
+			await fireEvent.press(screen.getByText(title));
+
+			expect(mockPush).toHaveBeenCalledWith(href);
+			expect(screen.queryByText(title)).toBeNull();
+		});
+
+		it("disabled rows do nothing but close nothing either", async () => {
+			mockViewState = "populated";
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("More"));
+			await fireEvent.press(screen.getByLabelText("Monthly, Coming soon"));
+			await fireEvent.press(screen.getByLabelText("Settings, Coming soon"));
+
+			expect(mockPush).not.toHaveBeenCalled();
+			expect(screen.getByText("Monthly")).toBeTruthy();
+		});
+
+		it("shows each row's live context", async () => {
+			mockViewState = "populated";
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("More"));
+			expect(
+				screen.getByText("14 — 20 September · 34 of 42 done"),
+			).toBeTruthy();
+			expect(screen.getByText("7 active · 2 archived")).toBeTruthy();
+		});
+	});
 
 	it("offers the streak-at-risk dev seed button from the empty state too", async () => {
 		await render(<TodayScreen />);

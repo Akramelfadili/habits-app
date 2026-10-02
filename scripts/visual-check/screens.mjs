@@ -124,6 +124,43 @@ export const SCREENS = {
 		mockup: "docs/mockups/day-closed.png",
 	},
 
+	// HAB-14 — Today's ⋯ navigation menu (A1–A6)
+	"today-menu-open": {
+		feature: "HAB-14",
+		route: "/habits",
+		mockup: "docs/mockups/hab-14-a2.png",
+		note: "Populated Today with the ⋯ menu open. Monthly/Yearly/Settings are 'Coming soon' placeholders until HAB-15/16/17 (a deliberate deviation from the mockup's sublines).",
+		async interact(page) {
+			await page.getByLabel("More", { exact: true }).click();
+			await page.getByText("Weekly summary", { exact: true }).waitFor();
+			// The popover re-anchors under the button once the button is measured.
+			await page.waitForTimeout(400);
+		},
+	},
+	"today-empty-menu-open": {
+		feature: "HAB-14",
+		route: "/habits?fixtures=empty",
+		mockup: "docs/mockups/hab-14-a4.png",
+		note: "Empty Today, menu open: summaries disabled with the spec's reasons, Manage enabled. Settings is 'Coming soon' until HAB-15.",
+		async interact(page) {
+			await page.getByLabel("More", { exact: true }).click();
+			await page.getByText("After your first month").waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"today-rest-day-menu": {
+		feature: "HAB-14",
+		route: "/habits?fixtures=rest-day",
+		mockup: "docs/mockups/hab-14-a5.png",
+		note: "Rest day with ⋯ closed. 'Log something anyway' still opens New habit until HAB-18.",
+	},
+	"today-day-closed-reminders": {
+		feature: "HAB-14",
+		route: "/habits?fixtures=day-closed",
+		mockup: "docs/mockups/hab-14-a6.png",
+		note: "Day closed: tomorrow rows carry their earliest reminder time; 'Read before bed' has no reminder and no trailing text.",
+	},
+
 	// HAB-01 / HAB-02 / HAB-07 — New / Edit habit
 	"new-habit": {
 		feature: "HAB-01",

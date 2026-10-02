@@ -38,7 +38,9 @@ tags:
 - assertVisible: "1 on · 09:00"
 - back
 
-- tapOn: "Manage habits"
+- tapOn:
+    id: "More"
+- tapOn: "Manage & archive"
 - assertVisible: "Archived · 2"
 - assertVisible: "Manage habits"
 - assertVisible: "Archiving keeps every logged day and streak. Deleting is only offered from the habit detail screen."

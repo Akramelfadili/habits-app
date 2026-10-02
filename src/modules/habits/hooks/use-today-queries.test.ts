@@ -68,7 +68,12 @@ jest.mock("../repositories/entry-repository", () => ({
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozenDays,
 }));
+let mockReminders: Reminder[] = [];
+jest.mock("../repositories/reminder-repository", () => ({
+	useAllReminders: () => mockReminders,
+}));
 
+import type { Reminder } from "../types";
 import { useTodayQueries } from "./use-today-queries";
 
 describe("useTodayQueries", () => {
@@ -261,6 +266,45 @@ describe("useTodayQueries", () => {
 		expect(result.current.tomorrowPreview.map((habit) => habit.id)).toEqual([
 			1, 4,
 		]);
+	});
+
+	describe("tomorrow's reminder times (HAB-14)", () => {
+		const reminder = (
+			overrides: Partial<Reminder> & Pick<Reminder, "habitId">,
+		): Reminder => ({
+			id: 1,
+			hour: 7,
+			minute: 20,
+			weekdays: [1, 2, 3, 4, 5, 6, 7],
+			enabled: true,
+			...overrides,
+		});
+
+		beforeEach(() => {
+			mockReminders = [];
+		});
+
+		it("maps a habit to its earliest enabled reminder that fires tomorrow (Thursday)", async () => {
+			mockReminders = [
+				reminder({ id: 1, habitId: 1, hour: 21, minute: 0 }),
+				reminder({ id: 2, habitId: 1, hour: 7, minute: 5 }),
+				// Not on Thursday — ignored even though it's earlier.
+				reminder({ id: 3, habitId: 1, hour: 6, minute: 0, weekdays: [1, 2] }),
+				// Disabled — ignored even though it's earlier.
+				reminder({ id: 4, habitId: 1, hour: 5, minute: 0, enabled: false }),
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.tomorrowReminderTimeByHabitId.get(1)).toBe("07:05");
+		});
+
+		it("leaves a habit with no applicable reminder out of the map", async () => {
+			mockReminders = [
+				reminder({ habitId: 2, weekdays: [1] }),
+				reminder({ id: 2, habitId: 3, enabled: false }),
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.tomorrowReminderTimeByHabitId.size).toBe(0);
+		});
 	});
 
 	describe("streak-at-risk (HAB-08)", () => {
