@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { THEME_PREFERENCE_SETTING_KEY } from "../keys";
 import type * as NativeAppSettingsRepository from "./app-settings-repository";
 
 /**
@@ -8,7 +9,9 @@ import type * as NativeAppSettingsRepository from "./app-settings-repository";
  * existing `today-empty` visual check still renders HAB-05's plain empty
  * state; `?fixtures=first-run` clears the seed so HAB-06 shows instead.
  * `?fixtures=reminders-at-cap` turns the Evening review on, as
- * docs/mockups/reminders-at-cap.png shows it (HAB-12).
+ * docs/mockups/reminders-at-cap.png shows it (HAB-12). `?theme=light|dark`
+ * seeds the Appearance choice (HAB-15) — "system" when absent;
+ * `?fixtures=settings` / `settings-notifications-off` / `export-fails` seed the Settings screen's states (HAB-15).
  */
 const SEEN_FIRST_RUN_SEED_KEY = "habits.seenFirstRun";
 const EVENING_REVIEW_SEED_KEY = "habits.eveningReview";
@@ -22,6 +25,15 @@ function initialSettings(): Map<string, string> {
 	}
 	if (scenario === "reminders-at-cap") {
 		settings.set(EVENING_REVIEW_SEED_KEY, "true");
+	}
+	const theme = new URLSearchParams(search).get("theme");
+	if (theme) settings.set(THEME_PREFERENCE_SETTING_KEY, theme);
+	if (scenario === "settings" || scenario === "export-fails") {
+		settings.set(EVENING_REVIEW_SEED_KEY, "true");
+	}
+	if (scenario === "settings-notifications-off") {
+		settings.set(EVENING_REVIEW_SEED_KEY, "true");
+		settings.set("habits.lastExport", "2026-08-02");
 	}
 	return settings;
 }

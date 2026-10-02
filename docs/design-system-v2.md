@@ -89,7 +89,7 @@ Each entry: layout structure and the components it's built from (IDs from `habit
 
 **Today — nav entry point (HAB-14):** Same four Today states as V1, now all carrying `NEW-01` (⋯ button) in the title row. Menu (`NEW-02`) is an anchored popover: `NEW-14` rows for Week/Month/Year/Manage/Settings, each with a live-context subline. Empty-state menu keeps the same five rows but with summaries as `NEW-14 · disabled with reason` rather than hidden.
 
-**Settings (HAB-15):** `NEW-04` grouped settings cards — Appearance (`NEW-03`, `VAR-01` 3-up), Evening review (`VAR-03` with `NEW-26` scope chip), Export row. Export flow is a stacked sheet (`NEW-05`) through confirm → progress (`V1-11` determinate) → ready (`NEW-06` file card, share/save actions) → failed (`V1-19` warning notice).
+**Settings (HAB-15):** `NEW-04` grouped settings cards — Appearance (`NEW-03`, `VAR-01` 3-up), Evening review (`VAR-03` with `NEW-26` scope chip), Export row. Settings also carries a plain Categories row (no mockup, a proposal). Appearance is a real app-wide theme (dark tokens in `theme.ts` are live). Export flow is a stacked sheet (`NEW-05`) through confirm → progress (`V1-11` determinate) → ready (`NEW-06` file card, share/save actions) → failed (`V1-19` warning notice).
 
 **Summaries — Week/Month/Year (HAB-16, HAB-17):** Shared chrome: `VAR-01` 3-up range switcher, `VAR-14` stat tiles, `NEW-32` chart card. Week reuses V1's per-habit rows as `NEW-21 · progress slot`. Month adds `NEW-07 · month calendar` + `NEW-21 · sparkline slot` (`NEW-08`+`NEW-20`). Year adds `NEW-09` month-by-month chart + `NEW-21 · strip slot` (`NEW-07 · year strip`). Insights at both scales are `VAR-04` cards, ranked, max three, tone-coded (warning/positive/neutral). Too-early states (`NEW-11`) still render the partial grid/chart rather than a locked wall.
 
@@ -113,7 +113,7 @@ Each entry: layout structure and the components it's built from (IDs from `habit
 > - **Inline rename has no mockup.** F3a–F3c and F4a/F4b don't draw it. The built state (visual-check `rename-category-editing` / `rename-category-duplicate`) is a **proposal**: the row is replaced in place by the `VAR-12` name field (add-category rules: counter from 16/20, paste trimmed, case/space-insensitive duplicate check including built-ins, own name in a different case allowed), with Cancel / Save text actions under it. Replace it if a mockup is drawn.
 > - Built: `NEW-29` → `components/ui/composite/category-row.tsx`; `NEW-33` → `components/ui/composite/destructive-confirm-sheet.tsx` (plain + with-preview states; the copy/preview area scrolls so a long affected-habit list is never truncated). `NEW-28` gained `locked` and a `compact` list-row size.
 > - **HAB-23 must move `DeleteHabitSheet` onto `DestructiveConfirmSheet`** (as its "with archive action" state) — it's still its own V1 layout until then, so the app briefly has two delete-sheet implementations.
-> - Entry point is temporary: a "Categories" row on Manage habits (back reads "Manage") until Settings → Categories exists (HAB-15); flagged `TODO(HAB-15, HAB-19)` in `manage-habits-screen.tsx`.
+> - Entry point: Settings → Categories (HAB-15; a plain navigable row with no mockup — a proposal, back reads "Settings"). The temporary row on Manage habits has been removed.
 
 ## Notes for whoever builds from this file
 

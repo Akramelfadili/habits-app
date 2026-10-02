@@ -28,7 +28,7 @@ async function editTime(
 	return editReminder(habit, reminderId, patch);
 }
 
-async function toggleEveningReview(enabled: boolean) {
+export async function toggleEveningReview(enabled: boolean) {
 	if (enabled) await ensureNotificationPermission();
 	return setEveningReview(enabled);
 }

@@ -143,19 +143,6 @@ export function ManageHabitsScreen() {
 				) : null}
 
 				<Caption>{MANAGE_FOOTNOTE}</Caption>
-
-				{/* TODO(HAB-15, HAB-19): temporary entry to Manage Categories (HAB-25)
-				    — its real home is Settings → Categories (HAB-15). Remove this
-				    row when Settings ships; HAB-19's Manage rework shouldn't keep it. */}
-				<Container tight>
-					<ListItem
-						compact
-						title="Categories"
-						subtitle="Rename or delete your own"
-						navigable
-						onPress={() => router.push("/habits/categories")}
-					/>
-				</Container>
 			</ScrollView>
 		</View>
 	);

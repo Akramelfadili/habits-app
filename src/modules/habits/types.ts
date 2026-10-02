@@ -182,3 +182,12 @@ export type CreateReminderInput = Omit<Reminder, "id">;
 export type ReminderPatch = Partial<
 	Pick<Reminder, "hour" | "minute" | "weekdays" | "enabled">
 >;
+
+/** The file format of a data export (HAB-15). */
+export type ExportFormat = "csv" | "json";
+
+/** What the export confirm sheet lets the person choose. */
+export type ExportOptions = {
+	format: ExportFormat;
+	includeArchived: boolean;
+};

@@ -1,7 +1,10 @@
+import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
+import { LAST_EXPORT_SETTING_KEY } from "../constants";
 import {
 	useActiveHabits,
 	useArchivedHabits,
 } from "../repositories/habit-repository";
+import { settingsMenuSubline } from "../screens/settings-helpers";
 import { weeklyMenuSubline } from "../screens/weekly-summary-helpers";
 import { defaultSummaryWeek } from "../services/weekly-summary";
 import { useWeeklySummaryQueries } from "./use-weekly-summary-queries";
@@ -20,7 +23,6 @@ export type TodayMenuView = {
 	settings: TodayMenuRow;
 };
 
-// TODO(HAB-15): Settings (the screen, and its real subline) doesn't exist yet.
 // TODO(HAB-16): Monthly summary.
 // TODO(HAB-17): Yearly summary.
 const COMING_SOON = "Coming soon";
@@ -34,6 +36,7 @@ export function useTodayMenuQueries(): TodayMenuView {
 	const weekly = useWeeklySummaryQueries(defaultSummaryWeek(new Date()));
 	const activeCount = useActiveHabits().length;
 	const archivedCount = useArchivedHabits().length;
+	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
 	const hasHabits = weekly.hasHabits;
 
 	return {
@@ -52,9 +55,6 @@ export function useTodayMenuQueries(): TodayMenuView {
 					? "No habits yet"
 					: `${activeCount} active · ${archivedCount} archived`,
 		},
-		settings: {
-			subline: "Appearance, evening review, export",
-			disabledReason: COMING_SOON,
-		},
+		settings: { subline: settingsMenuSubline(lastExport ?? null, new Date()) },
 	};
 }

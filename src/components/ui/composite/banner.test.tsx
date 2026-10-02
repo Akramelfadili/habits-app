@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { Banner } from "./banner";
 
@@ -22,5 +22,21 @@ describe("Banner", () => {
 		expect(screen.getByTestId("banner-marker")).toHaveStyle({
 			borderColor: surfaceColors.light.faint,
 		});
+	});
+
+	it("shows an action link under the message and fires it (HAB-15)", async () => {
+		const onPress = jest.fn();
+		await render(
+			<Banner tone="neutral" action={{ label: "Open iOS Settings →", onPress }}>
+				Notifications are off.
+			</Banner>,
+		);
+		await fireEvent.press(screen.getByText("Open iOS Settings →"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("has no link without an action", async () => {
+		await render(<Banner>Plain.</Banner>);
+		expect(screen.queryByRole("link")).toBeNull();
 	});
 });
