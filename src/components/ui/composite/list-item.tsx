@@ -23,8 +23,23 @@ type ListItemProps = {
 	 * dimmed list-item state, e.g. Retro log's not-yet-done habits (HAB-10).
 	 */
 	dimmed?: boolean;
+	/**
+	 * Denser padding for rows stacked in a `tight` list card (Manage &
+	 * Archive's reorder and archived rows, HAB-13).
+	 */
+	compact?: boolean;
+	/**
+	 * Held mid-drag in a reorderable list (design-system "List item —
+	 * reorder", HAB-13) — shown on the recessed surface, lifted off the card.
+	 */
+	lifted?: boolean;
 	/** Overrides the default accessibility label (the title). */
 	accessibilityLabel?: string;
+	/**
+	 * Extra VoiceOver actions on the row — the accessible route to anything a
+	 * gesture does (e.g. swipe-to-archive, HAB-13).
+	 */
+	accessibilityActions?: { label: string; onAction: () => void }[];
 };
 
 export function ListItem({
@@ -37,43 +52,81 @@ export function ListItem({
 	trailing,
 	embedded = false,
 	dimmed = false,
+	compact = false,
+	lifted = false,
 	accessibilityLabel,
+	accessibilityActions,
 }: ListItemProps) {
 	const { colors, opacity } = useTheme();
 
+	const chevron = navigable ? (
+		<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
+	) : null;
+
+	// `trailing` sits beside the pressable area, not inside it — a trailing
+	// control (Restore, a drag grip, a toggle) is its own touch target, and
+	// nesting it in the row's button is invalid on web.
 	return (
-		<Pressable
-			accessibilityRole={onPress ? "button" : undefined}
-			accessibilityLabel={accessibilityLabel}
-			onPress={onPress}
-			style={({ pressed }) => [
+		<View
+			testID="list-item"
+			style={[
 				styles.row,
 				embedded ? styles.embedded : { backgroundColor: colors.card },
-				pressed && onPress && { opacity: opacity.pressed },
+				lifted && { backgroundColor: colors.inner },
 			]}
 		>
-			<View
-				testID="list-item-content"
-				style={[styles.content, dimmed && { opacity: opacity.dimmed }]}
+			<Pressable
+				accessibilityRole={onPress ? "button" : undefined}
+				accessibilityLabel={accessibilityLabel}
+				accessibilityActions={accessibilityActions?.map(({ label }) => ({
+					name: label,
+					label,
+				}))}
+				onAccessibilityAction={(event) =>
+					accessibilityActions
+						?.find(({ label }) => label === event.nativeEvent.actionName)
+						?.onAction()
+				}
+				onPress={onPress}
+				style={({ pressed }) => [
+					styles.pressable,
+					!embedded && (compact ? styles.compactPadded : styles.padded),
+					trailing ? styles.paddedBeforeTrailing : null,
+					pressed && onPress && { opacity: opacity.pressed },
+				]}
 			>
-				{leading}
-				<View style={styles.text}>
-					<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
-					{subtitle ? (
-						<Text style={[styles.subtitle, { color: colors.sub }]}>
-							{subtitle}
-						</Text>
+				<View
+					testID="list-item-content"
+					style={[styles.content, dimmed && { opacity: opacity.dimmed }]}
+				>
+					{leading}
+					<View style={styles.text}>
+						<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+						{subtitle ? (
+							<Text style={[styles.subtitle, { color: colors.sub }]}>
+								{subtitle}
+							</Text>
+						) : null}
+					</View>
+					{value ? (
+						<Text style={[styles.value, { color: colors.sub }]}>{value}</Text>
 					) : null}
 				</View>
-				{value ? (
-					<Text style={[styles.value, { color: colors.sub }]}>{value}</Text>
-				) : null}
-			</View>
-			{trailing}
-			{navigable ? (
-				<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
+				{trailing ? null : chevron}
+			</Pressable>
+			{trailing ? (
+				<View
+					style={[
+						styles.trailing,
+						!embedded &&
+							(compact ? styles.compactTrailingPadded : styles.trailingPadded),
+					]}
+				>
+					{trailing}
+					{chevron}
+				</View>
 			) : null}
-		</Pressable>
+		</View>
 	);
 }
 
@@ -81,10 +134,24 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: "row",
 		alignItems: "center",
+		borderRadius: 14,
+	},
+	pressable: {
+		flex: 1,
+		flexDirection: "row",
+		alignItems: "center",
 		gap: 12,
+	},
+	padded: {
 		paddingVertical: 12,
 		paddingHorizontal: 16,
-		borderRadius: 14,
+	},
+	compactPadded: {
+		paddingVertical: 8,
+		paddingHorizontal: 10,
+	},
+	paddedBeforeTrailing: {
+		paddingRight: 12,
 	},
 	content: {
 		flex: 1,
@@ -93,9 +160,18 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	embedded: {
-		paddingVertical: 0,
-		paddingHorizontal: 0,
 		borderRadius: 0,
+	},
+	trailing: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+	},
+	trailingPadded: {
+		paddingRight: 16,
+	},
+	compactTrailingPadded: {
+		paddingRight: 10,
 	},
 	text: {
 		flex: 1,

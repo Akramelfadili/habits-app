@@ -13,7 +13,7 @@ import {
 } from "date-fns";
 import type { HeatmapLevel } from "@/theme/theme";
 import { WEEK_STARTS_ON } from "../constants";
-import { getFrequencyStrategy } from "../strategies/frequency-strategy";
+import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, EntryNote, Habit } from "../types";
 import { calculateCurrentStreak, isEntryComplete } from "./habit-service";
 
@@ -77,7 +77,7 @@ export function calculateLongestStreak({
 	frozenDates,
 	today,
 }: History): LongestStreak {
-	const strategy = getFrequencyStrategy(habit.frequency);
+	const strategy = getHabitStrategy(habit);
 	const completed = completedDatesOf(habit, entries);
 	const context = { completedDates: completed.dates };
 	const todayStart = startOfDay(today);
@@ -120,7 +120,7 @@ export function calculateCompletionRate({
 	entries,
 	today,
 }: Omit<History, "frozenDates">): CompletionRate {
-	const strategy = getFrequencyStrategy(habit.frequency);
+	const strategy = getHabitStrategy(habit);
 	const completed = completedDatesOf(habit, entries);
 	const context = { completedDates: completed.dates };
 	const todayStart = startOfDay(today);
@@ -193,7 +193,7 @@ export function buildHeatmapWeeks({
 	frozenDates,
 	today,
 }: History): HeatmapDay[][] {
-	const strategy = getFrequencyStrategy(habit.frequency);
+	const strategy = getHabitStrategy(habit);
 	const completed = completedDatesOf(habit, entries);
 	const context = { completedDates: completed.dates };
 	const entriesByDate = new Map(entries.map((entry) => [entry.date, entry]));

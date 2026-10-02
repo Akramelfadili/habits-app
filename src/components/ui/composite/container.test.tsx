@@ -48,4 +48,13 @@ describe("Container", () => {
 			gap: 16,
 		});
 	});
+
+	it("uses a thin inset for a tight list card", async () => {
+		await render(
+			<Container tight>
+				<Text>Row</Text>
+			</Container>,
+		);
+		expect(screen.getByText("Row").parent).toHaveStyle({ padding: 6 });
+	});
 });

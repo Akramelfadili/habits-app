@@ -8,6 +8,7 @@ jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import {
 	buildWeeklySummary,
+	defaultSummaryWeek,
 	SLIPPING_MIN_SCHEDULED_DAYS,
 	weekWindowFor,
 } from "./weekly-summary";
@@ -264,6 +265,28 @@ describe("buildWeeklySummary", () => {
 			expect(summary.insight).toEqual({ type: "perfect" });
 		});
 
+		it("isn't a perfect week after one perfect Monday — same gate as slipping", () => {
+			const summary = buildWeeklySummary({
+				habits: [daily(1), daily(2)],
+				entries: [...doneOn(1, [0]), ...doneOn(2, [0])],
+				today: monday,
+			});
+			// The numbers are still honest — every owed day so far was done…
+			expect(summary.isPerfect).toBe(true);
+			// …but one day isn't a week to judge, either way.
+			expect(summary.insight).toEqual({ type: "too-early" });
+		});
+
+		it(`is a perfect week once a habit has been due ${SLIPPING_MIN_SCHEDULED_DAYS} times, all done`, () => {
+			const wednesday = addDays(monday, 2);
+			const summary = buildWeeklySummary({
+				habits: [daily(1)],
+				entries: doneOn(1, [0, 1, 2]),
+				today: wednesday,
+			});
+			expect(summary.insight).toEqual({ type: "perfect" });
+		});
+
 		it("picks the earlier-created habit when two tie for worst", () => {
 			const summary = buildWeeklySummary({
 				habits: [
@@ -278,5 +301,42 @@ describe("buildWeeklySummary", () => {
 				row: { habit: { id: 1 } },
 			});
 		});
+	});
+});
+
+describe("last week", () => {
+	const nextMonday = addDays(monday, 7);
+
+	it("summarises the previous Mon–Sun week", () => {
+		const summary = buildWeeklySummary({
+			habits: [daily(1)],
+			entries: doneOn(1, [0, 1, 2, 3, 4]),
+			today: nextMonday,
+			week: "last",
+		});
+		expect(format(summary.week.start, "yyyy-MM-dd")).toBe("2026-09-14");
+		expect(format(summary.week.end, "yyyy-MM-dd")).toBe("2026-09-20");
+	});
+
+	it("counts all seven days — a finished Sunday is owed even if it wasn't logged", () => {
+		const summary = buildWeeklySummary({
+			habits: [daily(1)],
+			entries: doneOn(1, [0, 1, 2, 3, 4]),
+			today: nextMonday,
+			week: "last",
+		});
+		expect(summary.rows[0]).toMatchObject({ completed: 5, scheduled: 7 });
+		expect(summary.insight).toMatchObject({ type: "slipping" });
+	});
+});
+
+describe("defaultSummaryWeek", () => {
+	it.each([
+		["Monday", 0, "last"],
+		["Tuesday", 1, "last"],
+		["Wednesday", 2, "this"],
+		["Sunday", 6, "this"],
+	] as const)("opens on %s with %s", (_day, offset, expected) => {
+		expect(defaultSummaryWeek(addDays(monday, offset))).toBe(expected);
 	});
 });

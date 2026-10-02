@@ -50,6 +50,9 @@ export function TextField({
 		<View testID="text-field" style={[styles.container, { borderColor }]}>
 			<SectionLabel>{label}</SectionLabel>
 			<TextInput
+				// The visible label is a sibling Text, not associated with the input —
+				// without this, VoiceOver announces an unnamed text field.
+				accessibilityLabel={label}
 				value={value}
 				onChangeText={onChangeText}
 				onFocus={() => {

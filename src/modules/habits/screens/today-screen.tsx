@@ -7,9 +7,9 @@ import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
-import { Toast } from "@/components/ui/composite/toast";
 import { Button } from "@/components/ui/primitives/button";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
+import { showToast } from "@/store/toast-store";
 import { habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HabitTodayRow } from "../components/habit-today-row";
@@ -23,8 +23,9 @@ import { useQuantityLogActions } from "../hooks/use-quantity-log-actions";
 import { useStreakActions } from "../hooks/use-streak-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
+import type { Habit } from "../types";
 import { FirstRunScreen } from "./first-run-screen";
-import { celebratoryHeadline } from "./today-screen-helpers";
+import { celebratoryHeadline, todayRowSubtitle } from "./today-screen-helpers";
 
 export function TodayScreen() {
 	const router = useRouter();
@@ -34,10 +35,10 @@ export function TodayScreen() {
 		progress,
 		completedHabitIds,
 		quantityValuesByHabitId,
+		completedThisWeekByHabitId,
 		today,
 		viewState,
 		tomorrowPreview,
-		lastCompletedToday,
 		atRiskByHabitId,
 		freezesRemainingThisMonth,
 	} = useTodayQueries();
@@ -63,10 +64,42 @@ export function TodayScreen() {
 	const atRiskInfo =
 		atRiskHabitId !== null ? atRiskByHabitId.get(atRiskHabitId) : undefined;
 
+	// Every completion confirms itself with a short-lived Undo (design system,
+	// "Feedback"). The toast lives in the Habits stack's shared slot, so when
+	// the last tick flips Today to Day closed, the same toast carries over —
+	// Day closed never invents one from an old entry on a later visit.
+	function confirmCompletion(habit: Habit, undo: () => unknown) {
+		showToast({
+			// A Break habit is resisted, never "complete" (HAB-04).
+			message:
+				habit.direction === "break"
+					? `Resisted '${habit.name}'`
+					: `Marked '${habit.name}' complete`,
+			actionLabel: "Undo",
+			onAction: undo,
+		});
+	}
+
+	async function handleToggle(habit: Habit) {
+		const completing = !completedHabitIds.has(habit.id);
+		await toggleCompletion(habit.id, today, completing);
+		if (completing) {
+			confirmCompletion(habit, () => toggleCompletion(habit.id, today, false));
+		}
+	}
+
 	async function handleSaveQuantity(value: number) {
-		if (quantityHabitId === null) return;
-		await logQuantity(quantityHabitId, today, value);
+		if (!quantityHabit) return;
+		const habit = quantityHabit;
+		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
+		const target = habit.targetAmount ?? 0;
+		await logQuantity(habit.id, today, value);
 		setQuantityHabitId(null);
+		// Only the save that crosses the target counts as "completing" it;
+		// Undo restores the exact amount logged before.
+		if (previous < target && value >= target) {
+			confirmCompletion(habit, () => logQuantity(habit.id, today, previous));
+		}
 	}
 
 	async function handleUseFreeze() {
@@ -77,11 +110,6 @@ export function TodayScreen() {
 
 	function handleResetStreak() {
 		setAtRiskHabitId(null);
-	}
-
-	function handleUndo() {
-		if (!lastCompletedToday) return;
-		toggleCompletion(lastCompletedToday.id, today, false);
 	}
 
 	function handleClearAllHabits() {
@@ -137,6 +165,7 @@ export function TodayScreen() {
 					subtitle="Add your first habit and it will show up here every morning."
 				>
 					<Button label="Add habit" onPress={() => router.push("/new-habit")} />
+					<SecondaryScreenLinks />
 					{seedStreakAtRiskHabit ? (
 						<Button
 							label="Seed streak-at-risk habit (dev)"
@@ -184,6 +213,7 @@ export function TodayScreen() {
 						fullWidth={false}
 						onPress={() => router.push("/new-habit")}
 					/>
+					<SecondaryScreenLinks />
 				</TodayStatePanel>
 			</SafeAreaView>
 		);
@@ -223,16 +253,8 @@ export function TodayScreen() {
 							))}
 						</Container>
 					) : null}
+					<SecondaryScreenLinks />
 				</ScrollView>
-				{lastCompletedToday ? (
-					<View style={styles.footer}>
-						<Toast
-							message={`Marked '${lastCompletedToday.name}' complete`}
-							actionLabel="Undo"
-							onAction={handleUndo}
-						/>
-					</View>
-				) : null}
 			</SafeAreaView>
 		);
 	}
@@ -271,19 +293,17 @@ export function TodayScreen() {
 									habit={habit}
 									completed={completedHabitIds.has(habit.id)}
 									quantityValue={quantityValuesByHabitId.get(habit.id)}
+									subtitle={todayRowSubtitle(
+										habit,
+										completedThisWeekByHabitId.get(habit.id) ?? 0,
+									)}
 									atRisk={atRiskByHabitId.has(habit.id)}
 									onPress={() =>
 										atRiskByHabitId.has(habit.id)
 											? setAtRiskHabitId(habit.id)
 											: router.push(`/habits/${habit.id}`)
 									}
-									onToggle={() =>
-										toggleCompletion(
-											habit.id,
-											today,
-											!completedHabitIds.has(habit.id),
-										)
-									}
+									onToggle={() => handleToggle(habit)}
 									onOpenQuantitySheet={() => setQuantityHabitId(habit.id)}
 								/>
 							))}
@@ -304,13 +324,7 @@ export function TodayScreen() {
 					fullWidth={false}
 					onPress={() => router.push("/new-habit")}
 				/>
-				{/* Same interim pattern: no mockup shows how Weekly Summary (HAB-11) is reached. */}
-				<Button
-					label="Weekly summary"
-					variant="ghost"
-					fullWidth={false}
-					onPress={() => router.push("/habits/week")}
-				/>
+				<SecondaryScreenLinks />
 				{clearAllHabits ? (
 					<Button
 						label="Clear all habits (dev)"
@@ -373,6 +387,33 @@ export function TodayScreen() {
 	);
 }
 
+/**
+ * Interim entry points (no mockup shows how Weekly Summary, HAB-11, or Manage
+ * & Archive, HAB-13, are reached). Rendered in every Today state, not only
+ * the populated one — otherwise archiving every habit lands on the empty
+ * state with no way back to Manage to restore anything. To be replaced by
+ * one header entry point (docs/feature-spec.md, "Out of scope for V1").
+ */
+function SecondaryScreenLinks() {
+	const router = useRouter();
+	return (
+		<>
+			<Button
+				label="Weekly summary"
+				variant="ghost"
+				fullWidth={false}
+				onPress={() => router.push("/habits/week")}
+			/>
+			<Button
+				label="Manage habits"
+				variant="ghost"
+				fullWidth={false}
+				onPress={() => router.push("/habits/manage")}
+			/>
+		</>
+	);
+}
+
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
@@ -405,10 +446,5 @@ const styles = StyleSheet.create({
 		width: 12,
 		height: 12,
 		borderRadius: 6,
-	},
-	footer: {
-		paddingHorizontal: 16,
-		paddingBottom: 16,
-		paddingTop: 8,
 	},
 });

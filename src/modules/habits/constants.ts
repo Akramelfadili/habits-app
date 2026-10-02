@@ -96,6 +96,14 @@ export type FirstRunSuggestion = {
 	icon: HabitIconKey;
 	color: HabitAccentKey;
 	direction: HabitDirection;
+	/** Category the habit is created in — null for Anytime. */
+	category: string | null;
+	/** A quantity target (HAB-07), or null for a simple check. */
+	target: { amount: number; unit: string } | null;
+	/**
+	 * The row's promise. Must describe what's actually created — its category
+	 * or its target — never a detail the created habit doesn't have.
+	 */
 	subtitle: string;
 	preselected: boolean;
 };
@@ -108,6 +116,8 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 		icon: "drop",
 		color: "teal",
 		direction: "build",
+		category: "Morning",
+		target: null,
 		subtitle: "Right after waking",
 		preselected: true,
 	},
@@ -117,6 +127,8 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 		icon: "walk",
 		color: "blue",
 		direction: "build",
+		category: null,
+		target: null,
 		subtitle: "Any time of day",
 		preselected: true,
 	},
@@ -126,7 +138,9 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 		icon: "book",
 		color: "orange",
 		direction: "build",
-		subtitle: "10 pages",
+		category: "Evening",
+		target: { amount: 10, unit: "pages" },
+		subtitle: "Evening · 10 pages",
 		preselected: false,
 	},
 	{
@@ -135,6 +149,8 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 		icon: "moon",
 		color: "purple",
 		direction: "break",
+		category: null,
+		target: null,
 		subtitle: "Break habit",
 		preselected: false,
 	},
@@ -144,6 +160,8 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 		icon: "leaf",
 		color: "green",
 		direction: "build",
+		category: null,
+		target: { amount: 5, unit: "min" },
 		subtitle: "5 minutes",
 		preselected: false,
 	},
@@ -153,12 +171,18 @@ export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
 		icon: "heart",
 		color: "red",
 		direction: "build",
+		category: "Evening",
+		target: null,
 		subtitle: "Evening",
 		preselected: false,
 	},
 ];
 
-/** Maps a selected suggestion to the same shape Feature 01's create-habit path takes. */
+/**
+ * Maps a selected suggestion to the same shape Feature 01's create-habit path
+ * takes — with the category and target its subtitle promises, so the first
+ * Today is grouped and "10 pages" really is 10 pages.
+ */
 export function suggestionToCreateHabitInput(
 	suggestion: FirstRunSuggestion,
 ): CreateHabitInput {
@@ -166,11 +190,11 @@ export function suggestionToCreateHabitInput(
 		name: suggestion.name,
 		icon: suggestion.icon,
 		color: suggestion.color,
-		category: null,
+		category: suggestion.category,
 		direction: suggestion.direction,
-		targetType: "simple",
-		targetAmount: null,
-		targetUnit: null,
+		targetType: suggestion.target ? "quantity" : "simple",
+		targetAmount: suggestion.target?.amount ?? null,
+		targetUnit: suggestion.target?.unit ?? null,
 		frequency: { type: "daily" },
 	};
 }

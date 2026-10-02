@@ -28,9 +28,9 @@ type RetroLogSheetProps = {
 };
 
 /**
- * Retro log (HAB-10), per docs/mockups/retro-log.png: date header with Close,
+ * Retro log (HAB-10), per docs/mockups/retro-log.png: date header with Cancel,
  * the day's habits with their checks, a note, "Save changes" pinned bottom.
- * Edits stay a local draft until Save — Close or a scrim tap discards them,
+ * Edits stay a local draft until Save — Cancel or a scrim tap discards them,
  * same as the Quantity log sheet.
  */
 export function RetroLogSheet({
@@ -79,7 +79,8 @@ function RetroLogForm({
 		<>
 			<SheetHeader
 				title={retroLogTitle(day.date)}
-				actionLabel="Close"
+				// "Cancel", not "Close": the sheet holds an unsaved draft (audit #10).
+				actionLabel="Cancel"
 				onAction={onDismiss}
 			/>
 

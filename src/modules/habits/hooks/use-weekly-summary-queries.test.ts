@@ -15,7 +15,7 @@ let mockEntries: Entry[] = [];
 const mockRange = jest.fn();
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useActiveHabits: () => mockHabits,
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) => {

@@ -1,4 +1,4 @@
-import { addDays, format, startOfWeek, subDays } from "date-fns";
+import { addDays, format, startOfWeek, subDays, subWeeks } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 import type { Entry, EntryNote } from "../types";
 import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
@@ -6,6 +6,7 @@ import {
 	DAY_CLOSED_DUE_TODAY_IDS,
 	type FixtureScenario,
 	HABIT_DETAIL_HISTORY_DAYS,
+	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
 
 /** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
@@ -53,7 +54,13 @@ export function makeEntryFixtures(
 
 	if (scenario === "habit-detail") return habitDetailEntries();
 
-	if (scenario === "weekly-summary" || scenario === "perfect-week") {
+	if (scenario === "manage-archive") return manageArchiveEntries();
+
+	if (
+		scenario === "weekly-summary" ||
+		scenario === "weekly-summary-last-week" ||
+		scenario === "perfect-week"
+	) {
 		return weeklySummaryEntries(scenario);
 	}
 
@@ -84,6 +91,19 @@ export function makeEntryFixtures(
 				createdAt: new Date(),
 			};
 		});
+	}
+
+	if (scenario === "no-freezes") {
+		// Today done, yesterday missed, then the 24-day run before it.
+		const dayOf = (daysAgo: number) => ({
+			habitId: 1,
+			date: format(subDays(new Date(), daysAgo), "yyyy-MM-dd"),
+			value: 10,
+			createdAt: new Date(),
+		});
+		return [0, ...Array.from({ length: STREAK_AT_RISK_DAYS }, (_, i) => i + 2)]
+			.map(dayOf)
+			.map((entry, index) => ({ ...entry, id: index + 1 }));
 	}
 
 	if (scenario === "quantity-log") {
@@ -210,9 +230,14 @@ const PERFECT_WEEK_DONE: Record<number, number[]> = {
 };
 
 function weeklySummaryEntries(
-	scenario: "weekly-summary" | "perfect-week",
+	scenario: "weekly-summary" | "weekly-summary-last-week" | "perfect-week",
 ): Entry[] {
-	const weekStart = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
+	// `weekly-summary-last-week` is the same mockup week, one week back — the
+	// summary opens on last week on a Monday, so the visual check can compare
+	// that default against docs/mockups/weekly-summary.png too.
+	const thisWeek = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
+	const weekStart =
+		scenario === "weekly-summary-last-week" ? subWeeks(thisWeek, 1) : thisWeek;
 	const done =
 		scenario === "perfect-week" ? PERFECT_WEEK_DONE : WEEKLY_SUMMARY_DONE;
 	return Object.entries(done).flatMap(([habitId, days]) =>
@@ -221,6 +246,26 @@ function weeklySummaryEntries(
 			habitId: Number(habitId),
 			date: format(addDays(weekStart, day), "yyyy-MM-dd"),
 			createdAt: addDays(weekStart, day),
+		})),
+	);
+}
+
+/**
+ * docs/mockups/manage-archive.png's "41 logs kept" (Cold shower, #6) and
+ * "96 logs kept" (No phone in bed, #7) — consecutive days up to each one's
+ * archive date.
+ */
+function manageArchiveEntries(): Entry[] {
+	const runs = [
+		{ habitId: 6, count: 41, until: MANAGE_ARCHIVE_ARCHIVED_AT.coldShower },
+		{ habitId: 7, count: 96, until: MANAGE_ARCHIVE_ARCHIVED_AT.noPhoneInBed },
+	];
+	return runs.flatMap(({ habitId, count, until }) =>
+		Array.from({ length: count }, (_, index) => ({
+			id: habitId * 1000 + index,
+			habitId,
+			date: format(subDays(until, index), "yyyy-MM-dd"),
+			createdAt: until,
 		})),
 	);
 }

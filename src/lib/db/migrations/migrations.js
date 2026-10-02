@@ -8,6 +8,7 @@ import m0004 from "./0004_lush_groot.sql";
 import m0005 from "./0005_sparkling_scourge.sql";
 import m0006 from "./0006_aspiring_boomer.sql";
 import m0007 from "./0007_nebulous_nightcrawler.sql";
+import m0008 from "./0008_friendly_exiles.sql";
 import journal from "./meta/_journal.json";
 
 export default {
@@ -21,5 +22,6 @@ export default {
 		m0005,
 		m0006,
 		m0007,
+		m0008,
 	},
 };

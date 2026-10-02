@@ -7,7 +7,7 @@ type StatCardProps = {
 	label: string;
 	/** The large numeral ("24", "87%", "—"). */
 	value: string;
-	/** One short line under the numeral ("day streak", "78 of 90 due"). */
+	/** One short line under the numeral ("day streak", "78 of 90 days"). */
 	caption: string;
 	/** "warning" is the amber-tinted flagged variant (e.g. an at-risk count). */
 	tone?: "default" | "warning";

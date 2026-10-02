@@ -59,7 +59,7 @@ let mockAllEntries: MockEntry[] | undefined;
 let mockFrozenDays: MockFrozenDay[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useActiveHabits: () => mockHabits,
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: () => mockEntries,
@@ -160,26 +160,6 @@ describe("useTodayQueries", () => {
 		expect(result.current.viewState).toBe("day-closed");
 	});
 
-	it("names the due-today habit completed most recently as lastCompletedToday", async () => {
-		const earlier = new Date("2026-09-16T08:00:00Z");
-		const later = new Date("2026-09-16T09:00:00Z");
-		mockEntries = [
-			{ habitId: 1, date: TODAY_STRING, createdAt: later },
-			{ habitId: 2, date: TODAY_STRING, createdAt: earlier },
-			{ habitId: 3, date: TODAY_STRING, createdAt: earlier },
-		];
-		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.lastCompletedToday).toEqual({
-			id: 1,
-			name: "Glass of water",
-		});
-	});
-
-	it("is null for lastCompletedToday when nothing due today is completed", async () => {
-		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.lastCompletedToday).toBeNull();
-	});
-
 	it("ignores an off-schedule entry for a habit that isn't due today", async () => {
 		mockHabits = [
 			makeHabit({
@@ -190,7 +170,32 @@ describe("useTodayQueries", () => {
 		];
 		mockEntries = [{ habitId: 1, date: TODAY_STRING, createdAt: TODAY }];
 		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.lastCompletedToday).toBeNull();
+		expect(result.current.progress.completed).toBe(0);
+	});
+
+	it("counts each habit's completed days so far this week, today included", async () => {
+		const habit = makeHabit({
+			id: 5,
+			name: "Run",
+			frequency: { type: "per-week", timesPerWeek: 5 },
+		});
+		mockHabits = [habit];
+		mockEntries = [
+			{ habitId: 5, date: "2026-09-14", createdAt: TODAY },
+			{ habitId: 5, date: "2026-09-15", createdAt: TODAY },
+			{ habitId: 5, date: TODAY_STRING, createdAt: TODAY },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.completedThisWeekByHabitId.get(5)).toBe(3);
+	});
+
+	it("doesn't count a below-target quantity day toward this week", async () => {
+		mockHabits = [quantityHabit];
+		mockEntries = [
+			{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 5 },
+		];
+		const { result } = await renderHook(() => useTodayQueries());
+		expect(result.current.completedThisWeekByHabitId.get(4)).toBeUndefined();
 	});
 
 	it("does not count a quantity habit's entry as complete when below target", async () => {
@@ -218,15 +223,6 @@ describe("useTodayQueries", () => {
 		];
 		const { result } = await renderHook(() => useTodayQueries());
 		expect(result.current.quantityValuesByHabitId.get(4)).toBe(5);
-	});
-
-	it("does not treat a below-target quantity entry as lastCompletedToday", async () => {
-		mockHabits = [quantityHabit];
-		mockEntries = [
-			{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 5 },
-		];
-		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.lastCompletedToday).toBeNull();
 	});
 
 	it("only counts a fully-reached quantity day toward a per-week habit's weekly target", async () => {

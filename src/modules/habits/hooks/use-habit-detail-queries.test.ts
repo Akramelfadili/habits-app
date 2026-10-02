@@ -74,6 +74,7 @@ describe("useHabitDetailQueries", () => {
 			"2026-09-21",
 		]);
 		expect(result.current?.hasEntries).toBe(true);
+		expect(result.current?.loggedDays).toBe(2); // habit 2's entry isn't counted
 		const statuses = result.current?.heatmapWeeks.flat().map((d) => d.status);
 		expect(statuses?.filter((s) => s === "frozen")).toHaveLength(1);
 	});
@@ -85,6 +86,7 @@ describe("useHabitDetailQueries", () => {
 			longestStreak: { days: 0, endedOn: null },
 			recentEntries: [],
 			hasEntries: false,
+			loggedDays: 0,
 		});
 	});
 

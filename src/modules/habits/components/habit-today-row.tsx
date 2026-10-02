@@ -11,6 +11,8 @@ type HabitTodayRowProps = {
 	completed: boolean;
 	/** Today's logged amount — only meaningful for a quantity habit (HAB-07). */
 	quantityValue?: number;
+	/** What the habit asks of you — target, weekly standing (see `todayRowSubtitle`). */
+	subtitle?: string;
 	/** Toggles done/undone instantly — no confirmation (HAB-03). Simple/Break habits only. */
 	onToggle: () => void;
 	/** Opens the Quantity Log sheet (HAB-07) instead of toggling directly. */
@@ -29,13 +31,12 @@ export function iconSymbolFor(icon: Habit["icon"]) {
 }
 
 /**
- * Resistance-framed completion copy for a resisted Break habit (HAB-04) —
- * interpolates the real habit name so it's never a single generic string
- * across different habits, per the feature-spec.md acceptance criterion.
+ * Resistance-framed caption for a resisted Break habit (HAB-04). It sits
+ * directly under the habit's own name, so it doesn't repeat it — the name
+ * above is what makes it this habit's copy (spec amended after the Sep 2026
+ * UX audit, #8). The completion toast names the habit instead.
  */
-function breakCompletionCopy(habitName: string): string {
-	return `${habitName} — resisted`;
-}
+const RESISTED_CAPTION = "Resisted";
 
 /**
  * The completion circle's accessibility label. Native checked/unchecked
@@ -70,6 +71,7 @@ export function HabitTodayRow({
 	habit,
 	completed,
 	quantityValue,
+	subtitle,
 	onToggle,
 	onOpenQuantitySheet,
 	onPress,
@@ -77,6 +79,9 @@ export function HabitTodayRow({
 }: HabitTodayRowProps) {
 	const { colors, scheme, opacity } = useTheme();
 	const showResistedCaption = habit.direction === "break" && completed;
+	const caption = [showResistedCaption ? RESISTED_CAPTION : null, subtitle]
+		.filter(Boolean)
+		.join(" · ");
 	const isQuantity = habit.targetType === "quantity";
 	const value = quantityValue ?? 0;
 
@@ -99,9 +104,9 @@ export function HabitTodayRow({
 				/>
 				<View style={styles.nameColumn}>
 					<Text style={[styles.name, { color: colors.ink }]}>{habit.name}</Text>
-					{showResistedCaption ? (
+					{caption ? (
 						<Text style={[styles.caption, { color: colors.sub }]}>
-							{breakCompletionCopy(habit.name)}
+							{caption}
 						</Text>
 					) : null}
 				</View>

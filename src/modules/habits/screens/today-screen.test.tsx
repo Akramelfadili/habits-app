@@ -30,7 +30,7 @@ let mockCompletedHabitIds = new Set<number>();
 let mockViewState: "no-habits" | "rest-day" | "day-closed" | "populated" =
 	"no-habits";
 let mockTomorrowPreview: Habit[] = [];
-let mockLastCompletedToday: { id: number; name: string } | null = null;
+let mockCompletedThisWeekByHabitId: Map<number, number> = new Map();
 let mockQuantityValuesByHabitId = new Map<number, number>();
 const mockToday = new Date("2026-09-16T00:00:00Z");
 let mockAtRiskByHabitId = new Map<
@@ -45,10 +45,10 @@ jest.mock("../hooks/use-today-queries", () => ({
 		progress: mockProgress,
 		completedHabitIds: mockCompletedHabitIds,
 		quantityValuesByHabitId: mockQuantityValuesByHabitId,
+		completedThisWeekByHabitId: mockCompletedThisWeekByHabitId,
 		today: mockToday,
 		viewState: mockViewState,
 		tomorrowPreview: mockTomorrowPreview,
-		lastCompletedToday: mockLastCompletedToday,
 		atRiskByHabitId: mockAtRiskByHabitId,
 		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
 	}),
@@ -114,6 +114,7 @@ jest.mock("../hooks/use-first-run-actions", () => ({
 }));
 
 import { Alert } from "react-native";
+import { useToastStore } from "@/store/toast-store";
 import { TodayScreen } from "./today-screen";
 
 describe("TodayScreen", () => {
@@ -129,9 +130,10 @@ describe("TodayScreen", () => {
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
 		mockQuantityValuesByHabitId = new Map();
+		mockCompletedThisWeekByHabitId = new Map();
 		mockViewState = "no-habits";
 		mockTomorrowPreview = [];
-		mockLastCompletedToday = null;
+		useToastStore.setState({ toast: null });
 		mockHasSeenFirstRun = true;
 		mockAtRiskByHabitId = new Map();
 		mockFreezesRemainingThisMonth = 2;
@@ -206,25 +208,13 @@ describe("TodayScreen", () => {
 		expect(screen.queryByText("TOMORROW")).toBeNull();
 	});
 
-	it("shows an Undo toast naming the habit completed most recently, and reverses it", async () => {
+	it("Day closed doesn't conjure an Undo from an earlier visit's entries", async () => {
 		mockViewState = "day-closed";
 		mockProgress = { completed: 1, total: 1, fraction: 1 };
-		mockLastCompletedToday = { id: 1, name: "Glass of water" };
 
 		await render(<TodayScreen />);
-		expect(screen.getByText("Marked 'Glass of water' complete")).toBeTruthy();
 
-		await fireEvent.press(screen.getByText("Undo"));
-		expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, false);
-	});
-
-	it("omits the toast when there's no known last-completed habit", async () => {
-		mockViewState = "day-closed";
-		mockProgress = { completed: 1, total: 1, fraction: 1 };
-		mockLastCompletedToday = null;
-
-		await render(<TodayScreen />);
-		expect(screen.queryByText("Undo")).toBeNull();
+		expect(useToastStore.getState().toast).toBeNull();
 	});
 
 	it("renders category groups with their mini-counts", async () => {
@@ -266,6 +256,40 @@ describe("TodayScreen", () => {
 		expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, true);
 	});
 
+	it("completing confirms with an Undo toast that reverses it", async () => {
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByLabelText("Glass of water"));
+
+		const toast = useToastStore.getState().toast;
+		expect(toast).toMatchObject({
+			message: "Marked 'Glass of water' complete",
+			actionLabel: "Undo",
+		});
+		toast?.onAction?.();
+		expect(mockToggleCompletion).toHaveBeenLastCalledWith(1, mockToday, false);
+	});
+
+	it("confirms a Break habit as resisted, never as complete (HAB-04)", async () => {
+		const breakHabit = makeHabit({
+			id: 7,
+			name: "No phone in bed",
+			category: "Morning",
+			direction: "break",
+		});
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [breakHabit] }];
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByLabelText("No phone in bed"));
+
+		expect(useToastStore.getState().toast?.message).toBe(
+			"Resisted 'No phone in bed'",
+		);
+	});
+
 	it("un-completing toggles back to false, with no confirmation", async () => {
 		mockViewState = "populated";
 		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
@@ -285,6 +309,36 @@ describe("TodayScreen", () => {
 		await fireEvent.press(screen.getByText("Glass of water"));
 
 		expect(mockPush).toHaveBeenCalledWith("/habits/1");
+	});
+
+	it("subtitles a row with what it asks: a quantity target, or a per-week habit's standing", async () => {
+		const readHabit = makeHabit({
+			id: 3,
+			name: "Read",
+			category: "Evening",
+			targetType: "quantity",
+			targetAmount: 20,
+			targetUnit: "pages",
+		});
+		const runHabit = makeHabit({
+			id: 4,
+			name: "Easy run",
+			category: "Evening",
+			frequency: { type: "per-week", timesPerWeek: 3 },
+		});
+		mockViewState = "populated";
+		mockGroups = [
+			{ category: "Evening", habits: [readHabit, runHabit] },
+			{ category: "Morning", habits: [morningHabit] },
+		];
+		mockCompletedThisWeekByHabitId = new Map([[4, 2]]);
+
+		await render(<TodayScreen />);
+
+		expect(screen.getByText("20 pages")).toBeTruthy();
+		expect(screen.getByText("2 of 3 this week")).toBeTruthy();
+		// A plain daily check has nothing to add under its name.
+		expect(screen.queryByText(/daily/i)).toBeNull();
 	});
 
 	it("tapping a quantity habit's row opens the Quantity Log sheet instead of toggling", async () => {
@@ -334,6 +388,37 @@ describe("TodayScreen", () => {
 
 		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 4);
 		await waitFor(() => expect(screen.queryByText("Save 4 of 8")).toBeNull());
+		// Still short of the target — nothing completed, so nothing to confirm.
+		expect(useToastStore.getState().toast).toBeNull();
+	});
+
+	it("a quantity save that reaches the target confirms it; Undo restores the previous amount", async () => {
+		const quantityHabit = makeHabit({
+			id: 3,
+			name: "Glass of water",
+			category: "Morning",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+		mockViewState = "populated";
+		mockGroups = [{ category: "Morning", habits: [quantityHabit] }];
+		mockQuantityValuesByHabitId = new Map([[3, 7]]);
+		mockLogQuantity.mockResolvedValue(undefined);
+
+		await render(<TodayScreen />);
+		await fireEvent.press(
+			screen.getByLabelText("Log Glass of water, 7 of 8 glasses"),
+		);
+		await fireEvent.press(
+			screen.getByLabelText("Increase Glass of water, glasses"),
+		);
+		await fireEvent.press(screen.getByText("Save 8 of 8"));
+
+		const toast = useToastStore.getState().toast;
+		expect(toast?.message).toBe("Marked 'Glass of water' complete");
+		toast?.onAction?.();
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 7);
 	});
 
 	it("still offers a way to add a habit once habits already exist", async () => {
@@ -355,6 +440,22 @@ describe("TodayScreen", () => {
 
 		expect(mockPush).toHaveBeenCalledWith("/habits/week");
 	});
+
+	it.each(["no-habits", "rest-day", "day-closed", "populated"] as const)(
+		"reaches Weekly Summary and Manage from the %s state",
+		async (state) => {
+			mockViewState = state;
+			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Weekly summary"));
+			await fireEvent.press(screen.getByText("Manage habits"));
+
+			// Every habit archived lands on "no-habits" — Manage is the only way back.
+			expect(mockPush).toHaveBeenCalledWith("/habits/week");
+			expect(mockPush).toHaveBeenCalledWith("/habits/manage");
+		},
+	);
 
 	it("offers the streak-at-risk dev seed button from the empty state too", async () => {
 		await render(<TodayScreen />);

@@ -47,7 +47,8 @@ export function habitSubtitle(habit: Habit, today: Date): string {
 export function longestStreakCaption(longest: LongestStreak): string {
 	if (longest.days === 0 || !longest.endedOn) return "no streak yet";
 	const unit = longest.days === 1 ? "day" : "days";
-	return `${unit}, in ${format(longest.endedOn, "MMMM")}`;
+	// Short month: "days, in September" overflows the third-width stat tile.
+	return `${unit}, in ${format(longest.endedOn, "MMM")}`;
 }
 
 /** "87%" / "—" for the 90-day tile's numeral. */
@@ -55,9 +56,16 @@ export function completionRateValue(rate: CompletionRate): string {
 	return rate.fraction === null ? "—" : `${Math.round(rate.fraction * 100)}%`;
 }
 
-/** "78 of 90 due". */
+/**
+ * "78 of 90 days" — the 90-day rate's scheduled days, done/resisted of them.
+ * Not "due" (audit #9 retired it), and not "scheduled" or "resisted" either:
+ * the caption is one line in a third-width tile, which fits about 13
+ * characters, and "days" reads right for Build and Break habits alike.
+ */
 export function completionRateCaption(rate: CompletionRate): string {
-	return `${rate.completed} of ${rate.scheduled} due`;
+	return rate.scheduled === 0
+		? "nothing yet"
+		: `${rate.completed} of ${rate.scheduled} days`;
 }
 
 /** "Today", "Yesterday", else "Mon 21 Sep". */

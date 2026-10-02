@@ -1,0 +1,120 @@
+# Journey: give a habit a reminder → Manage habits → reorder within a
+# category → archive the habit with the reminder → its history and reminder
+# survive → restore it → delete a different habit through Detail's confirm
+# sheet → Today reflects all of it.
+# Covers HAB-13 (reorder, archive, restore, delete), HAB-12 (reminders kept
+# across archive), HAB-09 (Detail as the only place delete lives), HAB-03.
+#
+# Seed (`manage-archive` fixtures, clock pinned to Thu 1 Oct): active Glass of
+# water + Meditate (Morning), Read (Evening), Easy run + Mobility (Training);
+# archived Cold shower and No phone in bed.
+#
+# Drag-to-reorder and swipe-to-archive are gesture-handler pans. Maestro's web
+# driver moves the pointer in a single jump, which never activates them (a
+# stepped drag in Playwright does — the gestures themselves work on web), so:
+#   - iOS: reorders by dragging the grip and archives by swiping the row.
+#     UNVERIFIED until the flows run against a dev-client build — see README.
+#   - Web: skips the reorder and archives through the other real path,
+#     Detail's one-tap "Archive habit". The reorder's persistence is
+#     covered by reorderable-list / habit-repository unit tests, and its lifted
+#     mid-drag state by `npm run visual-check -- manage-habits-dragging`.
+url: ${APP_URL}/habits?fixtures=manage-archive&clock=2026-10-01T09:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+
+# Give Meditate an active reminder first.
+- tapOn: "Meditate"
+- tapOn: "Reminders"
+- tapOn:
+    id: "Add a time, 0 of 4"
+- tapOn: "Save time"
+- assertVisible:
+    id: "Reminder at 09:00, Every day"
+- back
+- assertVisible: "1 on · 09:00"
+- back
+
+- tapOn: "Manage habits"
+- assertVisible: "Archived · 2"
+- assertVisible: "Manage habits"
+- assertVisible: "Archiving keeps every logged day and streak. Deleting is only offered from the habit detail screen."
+# No destructive action on this screen.
+- assertNotVisible: "Delete habit"
+
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      # Reorder: drag Meditate's grip above Glass of water (same Morning group).
+      - assertVisible:
+          text: "Meditate"
+          below: "Glass of water"
+      - swipe:
+          from:
+            text: "Reorder Meditate"
+          direction: UP
+          duration: 1500
+      - assertVisible:
+          text: "Glass of water"
+          below: "Meditate"
+      # Archive: swipe the row left and tap the revealed action.
+      - swipe:
+          from:
+            text: "Meditate"
+          direction: LEFT
+      - tapOn: "Archive"
+      - assertVisible: "Archived 'Meditate'"
+
+- runFlow:
+    when:
+      platform: Web
+    commands:
+      # One tap on Detail, no confirmation — returns straight to Manage,
+      # which confirms it with an Undo.
+      - tapOn: "Meditate"
+      - tapOn: "Archive habit"
+      - assertVisible: "Archived 'Meditate'"
+
+- assertVisible: "Archived · 3"
+- takeScreenshot: hab-13-archived
+
+# Archiving is non-destructive: the reminder row is still there on Detail
+# (and an archived habit isn't offered Archive again).
+- tapOn: "Meditate"
+- assertVisible: "1 on · 09:00"
+- assertNotVisible: "Archive habit"
+- back
+
+# Restore it — archived rows are newest first, so Meditate's Restore is the first.
+- tapOn:
+    text: "Restore"
+    index: 0
+- assertVisible: "Restored 'Meditate' — back on Today"
+- assertVisible: "Archived · 2"
+
+# Delete a different habit — only offered on its Detail, behind a confirm sheet.
+- tapOn: "Mobility"
+- tapOn: "Delete habit"
+- assertVisible: "Keep habit"
+- takeScreenshot: hab-13-delete-confirm
+- tapOn: "Delete permanently"
+- assertVisible: "Deleted 'Mobility'"
+- assertNotVisible: "Mobility"
+
+# Today: restored Meditate is back; Mobility is gone.
+- back
+- assertVisible: "Today"
+- assertVisible: "Meditate"
+- assertNotVisible: "Mobility"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertVisible:
+          text: "Glass of water"
+          below: "Meditate"
+- takeScreenshot: hab-13-today

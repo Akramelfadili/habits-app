@@ -37,8 +37,12 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const data = useReminderQueries(habitId);
 	const actions = useReminderActions();
 	// A card with a conflict starts open so its warning is seen; every other
-	// card starts collapsed. Tapping flips a card from that default.
-	const [flipped, setFlipped] = useState<ReadonlySet<number>>(new Set());
+	// card starts collapsed. Once tapped, a card keeps the state it was left
+	// in — so adding an unscheduled day to an open card can't collapse it
+	// and hide the warning it just caused.
+	const [expandedById, setExpandedById] = useState<
+		ReadonlyMap<number, boolean>
+	>(new Map());
 	const [editingId, setEditingId] = useState<number | null>(null);
 
 	if (!data) {
@@ -64,15 +68,12 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const editing = reminders.find((reminder) => reminder.id === editingId);
 
 	function isExpanded(reminder: ReminderWithConflicts) {
-		return reminder.unscheduledDays.length > 0 !== flipped.has(reminder.id);
+		return expandedById.get(reminder.id) ?? reminder.unscheduledDays.length > 0;
 	}
 
-	function flip(id: number) {
-		setFlipped((current) => {
-			const next = new Set(current);
-			if (!next.delete(id)) next.add(id);
-			return next;
-		});
+	function flip(reminder: ReminderWithConflicts) {
+		const next = !isExpanded(reminder);
+		setExpandedById((current) => new Map(current).set(reminder.id, next));
 	}
 
 	async function handleAdd() {
@@ -100,7 +101,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 						key={reminder.id}
 						reminder={reminder}
 						expanded={isExpanded(reminder)}
-						onToggleExpanded={() => flip(reminder.id)}
+						onToggleExpanded={() => flip(reminder)}
 						onEditTime={() => setEditingId(reminder.id)}
 						onChangeEnabled={(enabled) =>
 							actions.editReminder(habit, reminder.id, { enabled })

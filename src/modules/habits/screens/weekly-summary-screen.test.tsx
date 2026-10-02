@@ -19,8 +19,22 @@ jest.mock("expo-router", () => ({
 }));
 
 let mockSummary: WeeklySummaryView;
+const mockUseWeeklySummaryQueries = jest.fn(() => mockSummary);
 jest.mock("../hooks/use-weekly-summary-queries", () => ({
-	useWeeklySummaryQueries: () => mockSummary,
+	useWeeklySummaryQueries: (...args: unknown[]) =>
+		mockUseWeeklySummaryQueries(...(args as [])),
+}));
+
+// Which week the screen opens on depends on today's weekday — pinned here so
+// these tests don't change verdict on Mondays (the rule itself is tested in
+// weekly-summary.test.ts).
+let mockDefaultWeek: "this" | "last" = "this";
+// The real service module imports habit-service, whose freeze write path
+// would otherwise open the SQLite client — only its pure helpers run here.
+jest.mock("../repositories/frozen-day-repository", () => ({}));
+jest.mock("../services/weekly-summary", () => ({
+	...jest.requireActual("../services/weekly-summary"),
+	defaultSummaryWeek: () => mockDefaultWeek,
 }));
 
 import { WeeklySummaryScreen } from "./weekly-summary-screen";
@@ -56,6 +70,8 @@ function summary(
 }
 
 beforeEach(() => {
+	mockDefaultWeek = "this";
+	mockUseWeeklySummaryQueries.mockClear();
 	mockPush.mockReset();
 	mockSummary = summary();
 });
@@ -79,13 +95,11 @@ describe("WeeklySummaryScreen", () => {
 	it("lists every habit in the order given, worst first, labelling Break habits", async () => {
 		await render(<WeeklySummaryScreen />);
 		const labels = screen
-			.getAllByText(/^(Mobility|No phone in bed · resisted|Glass of water)$/)
+			.getAllByText(/^(Mobility|No phone in bed|Glass of water)$/)
 			.map((node) => node.props.children);
-		expect(labels).toEqual([
-			"Mobility",
-			"No phone in bed · resisted",
-			"Glass of water",
-		]);
+		expect(labels).toEqual(["Mobility", "No phone in bed", "Glass of water"]);
+		// A Break habit's count says what was counted.
+		expect(screen.getByText(/^\d+\/\d+ resisted$/)).toBeTruthy();
 	});
 
 	it("tints only the flagged habit's bar amber", async () => {
@@ -135,6 +149,28 @@ describe("WeeklySummaryScreen", () => {
 			screen.getByText("Nothing has been due yet this week."),
 		).toBeTruthy();
 		expect(screen.getByLabelText("Best day: —, nothing done yet")).toBeTruthy();
+	});
+
+	it("opens on last week early in the week, and says so in its copy", async () => {
+		mockDefaultWeek = "last";
+		mockSummary = summary({ insight: { type: "too-early" } });
+		await render(<WeeklySummaryScreen />);
+
+		expect(mockUseWeeklySummaryQueries).toHaveBeenLastCalledWith("last");
+		expect(
+			screen.getByText("No habit has been due three times yet last week."),
+		).toBeTruthy();
+	});
+
+	it("switches between last week and this week", async () => {
+		await render(<WeeklySummaryScreen />);
+		expect(mockUseWeeklySummaryQueries).toHaveBeenLastCalledWith("this");
+
+		await fireEvent.press(screen.getByText("Last week"));
+		expect(mockUseWeeklySummaryQueries).toHaveBeenLastCalledWith("last");
+
+		await fireEvent.press(screen.getByText("This week"));
+		expect(mockUseWeeklySummaryQueries).toHaveBeenLastCalledWith("this");
 	});
 
 	it("shows an empty state when there are no habits", async () => {

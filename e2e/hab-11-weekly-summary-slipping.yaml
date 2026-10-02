@@ -1,0 +1,70 @@
+# Journey: Weekly Summary flags the worst habit → backfill the week so a
+# different habit falls behind → the insight moves to it → "Reschedule
+# habit" opens that habit's Edit screen.
+# Covers HAB-11 (summary + slipping insight), HAB-10 (retro-log as the way
+# to log past days), HAB-02 (Edit/reschedule as the insight's destination).
+#
+# Seed (default fixtures, clock pinned to Thu 1 Oct 20:00): four habits,
+# nothing logged Mon–Wed; today Read before bed and Glass of water are done.
+# So before logging, Evening walk (0 of 3) is the worst habit. Backfilling
+# Mon–Wed for everything except Read before bed leaves Read as the only one
+# behind (1 of 4; today's still-open habits don't count against the week yet) — the insight needs ≥3 scheduled days, which is why the
+# clock is pinned to Thursday rather than left on the real weekday.
+url: ${APP_URL}/habits?clock=2026-10-01T20:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+- tapOn: "Weekly summary"
+- assertVisible: "Your week"
+- assertVisible: "Evening walk is slipping"
+- takeScreenshot: hab-11-before
+- back
+
+# Backfill Mon–Wed from a habit's heatmap: one retro-log sheet per day lists
+# every habit due that day, so several can be ticked at once.
+- tapOn: "Glass of water"
+- tapOn:
+    id: "Monday 28 September, missed"
+- tapOn:
+    id: "Glass of water, done"
+- tapOn:
+    id: "Evening walk, done"
+- tapOn:
+    id: "No phone after 23:00, resisted"
+- tapOn: "Save changes"
+- tapOn:
+    id: "Tuesday 29 September, missed"
+- tapOn:
+    id: "Glass of water, done"
+- tapOn:
+    id: "Evening walk, done"
+- tapOn:
+    id: "No phone after 23:00, resisted"
+- tapOn: "Save changes"
+- tapOn:
+    id: "Wednesday 30 September, missed"
+- tapOn:
+    id: "Glass of water, done"
+- tapOn:
+    id: "Evening walk, done"
+- tapOn:
+    id: "No phone after 23:00, resisted"
+- tapOn: "Save changes"
+- assertVisible:
+    id: "Wednesday 30 September, logged"
+- back
+
+- tapOn: "Weekly summary"
+- assertVisible: "Read before bed is slipping"
+- assertNotVisible: "Evening walk is slipping"
+- takeScreenshot: hab-11-after
+
+# The insight's link opens that habit's Edit screen to reschedule it.
+- tapOn: "Reschedule habit →"
+- assertVisible: "Edit habit"
+- assertVisible: "Save habit"
+- assertVisible: "20"
+- takeScreenshot: hab-11-edit

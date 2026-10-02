@@ -122,12 +122,12 @@ describe("RetroLogSheet", () => {
 		expect(screen.getByDisplayValue("").props.maxLength).toBe(MAX_NOTE_LENGTH);
 	});
 
-	it("Close dismisses without saving", async () => {
+	it("Cancel dismisses without saving", async () => {
 		const { onSave, onDismiss } = await renderSheet();
 		await fireEvent.press(
 			screen.getByRole("checkbox", { name: "Meditate, done" }),
 		);
-		await fireEvent.press(screen.getByRole("button", { name: "Close" }));
+		await fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
 
 		expect(onDismiss).toHaveBeenCalledTimes(1);
 		expect(onSave).not.toHaveBeenCalled();

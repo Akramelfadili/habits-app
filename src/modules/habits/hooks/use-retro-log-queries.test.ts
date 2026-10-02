@@ -14,12 +14,18 @@ const mockWeekendOnly = makeHabit({
 	id: 3,
 	frequency: { type: "weekdays", days: [6, 7] },
 });
+// Daily, so it'd show on any day if it weren't archived.
+const mockArchived = makeHabit({
+	id: 4,
+	name: "Cold shower",
+	archivedAt: new Date(2026, 8, 1),
+});
 
 let mockEntries: Entry[] = [];
 let mockNotes: EntryNote[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => [mockWalk, mockWater, mockWeekendOnly],
+	useHabitsList: () => [mockWalk, mockWater, mockWeekendOnly, mockArchived],
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
@@ -69,5 +75,15 @@ describe("useRetroLogQueries", () => {
 	it("an unnoted day starts with an empty note", async () => {
 		const { result } = await renderHook(() => useRetroLogQueries(2, TUESDAY));
 		expect(result.current?.note).toBe("");
+	});
+
+	it("leaves archived habits out of another habit's day (HAB-13)", async () => {
+		const { result } = await renderHook(() => useRetroLogQueries(1, TUESDAY));
+		expect(result.current?.habits.map((habit) => habit.id)).not.toContain(4);
+	});
+
+	it("still opens on an archived habit's own history", async () => {
+		const { result } = await renderHook(() => useRetroLogQueries(4, TUESDAY));
+		expect(result.current?.habits[0]?.id).toBe(4);
 	});
 });

@@ -28,6 +28,9 @@ export function makeHabit(overrides: Partial<Habit> = {}): Habit {
 	return {
 		id: 1,
 		...makeHabitInput(),
+		sortOrder: 1,
+		archivedAt: null,
+		pauses: [],
 		createdAt: BUILDER_DATE,
 		updatedAt: BUILDER_DATE,
 		...overrides,

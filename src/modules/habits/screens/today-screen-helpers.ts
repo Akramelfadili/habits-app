@@ -11,10 +11,11 @@ export type CategoryGroup = {
  * derived, not stored: there's no separate categories table (`category` is
  * just a nullable text column on `habits`), so "creation order" means the
  * order each distinct category value first appears among habits already
- * sorted by `createdAt` ascending (the order `useHabitsList()` returns them
- * in). "Anytime" (no category) is always forced last, regardless of when it
- * would naturally fall. Within a group, input order is preserved — creation
- * order until Feature 13's manual sort exists (HAB-03 business rules).
+ * in manual order (the order `useActiveHabits()` returns them in — creation
+ * order until reordered, and a reorder only permutes slots within one
+ * category, so a category's first appearance never moves). "Anytime" (no
+ * category) is always forced last, regardless of when it would naturally
+ * fall. Within a group, input order is preserved — HAB-13's manual order.
  */
 export function groupHabitsByCategory(habits: Habit[]): CategoryGroup[] {
 	const groups = new Map<string, Habit[]>();
@@ -103,4 +104,27 @@ export function celebratoryHeadline(total: number): string {
 	const count =
 		total < NUMBER_WORDS.length ? NUMBER_WORDS[total] : String(total);
 	return `All ${count} done`;
+}
+
+/**
+ * What a Today row asks of you, under its name (docs/mockups/today-populated.png):
+ * a quantity habit's target ("20 pages"), and a per-week habit's standing this
+ * week ("2 of 5 this week") — otherwise a 5×/week habit gives no hint whether
+ * today is the first or the last it needs. Nothing for a plain daily check:
+ * a subtitle that only restates the schedule is noise.
+ */
+export function todayRowSubtitle(
+	habit: Habit,
+	completedThisWeek: number,
+): string | undefined {
+	const parts: string[] = [];
+	if (habit.targetType === "quantity" && habit.targetAmount !== null) {
+		parts.push(`${habit.targetAmount} ${habit.targetUnit ?? ""}`.trim());
+	}
+	if (habit.frequency.type === "per-week") {
+		parts.push(
+			`${completedThisWeek} of ${habit.frequency.timesPerWeek} this week`,
+		);
+	}
+	return parts.length > 0 ? parts.join(" · ") : undefined;
 }

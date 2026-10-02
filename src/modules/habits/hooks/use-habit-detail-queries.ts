@@ -27,6 +27,8 @@ export type HabitDetail = {
 	recentEntries: RecentEntry[];
 	/** Nothing has ever been logged — drives the new-habit variant's copy. */
 	hasEntries: boolean;
+	/** Every logged day — what a delete would erase (HAB-13). */
+	loggedDays: number;
 	/** For the Reminders row's summary (HAB-12). */
 	reminders: Reminder[];
 	today: Date;
@@ -69,6 +71,7 @@ export function useHabitDetailQueries(habitId: number): HabitDetail | null {
 			notes.filter((note) => note.habitId === habitId),
 		),
 		hasEntries: entries.length > 0,
+		loggedDays: entries.length,
 		reminders,
 		today,
 	};

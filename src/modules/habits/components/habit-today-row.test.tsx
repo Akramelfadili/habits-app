@@ -80,7 +80,7 @@ describe("HabitTodayRow", () => {
 				onPress={jest.fn()}
 			/>,
 		);
-		expect(screen.getByText("No phone in bed — resisted")).toBeTruthy();
+		expect(screen.getByText("Resisted")).toBeTruthy();
 	});
 
 	it("never shows a resistance caption for a completed Build habit", async () => {
@@ -95,19 +95,7 @@ describe("HabitTodayRow", () => {
 		expect(screen.queryByText(/resisted/i)).toBeNull();
 	});
 
-	it("gives a resisted Break habit completion copy built from its own name", async () => {
-		await render(
-			<HabitTodayRow
-				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
-				completed
-				onToggle={jest.fn()}
-				onPress={jest.fn()}
-			/>,
-		);
-		expect(screen.getByText("No phone in bed — resisted")).toBeTruthy();
-	});
-
-	it("gives a different resisted Break habit different completion copy, not a generic string", async () => {
+	it("ties the caption to the habit by sitting under its own name, not by repeating it (HAB-04, audit #8)", async () => {
 		await render(
 			<HabitTodayRow
 				habit={makeHabit({ name: "Junk food", direction: "break" })}
@@ -116,7 +104,22 @@ describe("HabitTodayRow", () => {
 				onPress={jest.fn()}
 			/>,
 		);
-		expect(screen.getByText("Junk food — resisted")).toBeTruthy();
+		expect(screen.getByText("Junk food")).toBeTruthy();
+		expect(screen.getByText("Resisted")).toBeTruthy();
+		expect(screen.queryByText(/Junk food.*resisted/i)).toBeNull();
+	});
+
+	it("joins the resisted caption with the row's subtitle", async () => {
+		await render(
+			<HabitTodayRow
+				habit={makeHabit({ name: "No phone in bed", direction: "break" })}
+				completed
+				subtitle="1 of 5 this week"
+				onToggle={jest.fn()}
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByText("Resisted · 1 of 5 this week")).toBeTruthy();
 	});
 
 	it("announces a completed Build habit as done, not just checked", async () => {

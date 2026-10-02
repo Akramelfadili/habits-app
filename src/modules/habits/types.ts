@@ -27,8 +27,20 @@ export type Habit = {
 	targetAmount: number | null;
 	targetUnit: string | null;
 	frequency: Frequency;
+	/** Manual order within its category group (HAB-13) — lower first. */
+	sortOrder: number;
+	/** Set while archived (HAB-13); null for an active habit. */
+	archivedAt: Date | null;
+	/** Past archive periods — days streak math skips rather than counts as missed. */
+	pauses: DayRange[];
 	createdAt: Date;
 	updatedAt: Date;
+};
+
+/** An inclusive run of calendar days, both ends "yyyy-MM-dd". */
+export type DayRange = {
+	from: string;
+	to: string;
 };
 
 export type CreateHabitInput = {

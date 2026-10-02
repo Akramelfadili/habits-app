@@ -1,5 +1,11 @@
 import { eq } from "drizzle-orm";
-import { habits } from "@/lib/db/schema";
+import {
+	entries,
+	entryNotes,
+	frozenDays,
+	habits,
+	reminders,
+} from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { makeHabitInput } from "../test-support/habit-builder";
 import { inProduction } from "../test-support/in-production";
@@ -19,6 +25,11 @@ const {
 	createHabitsAndMarkSetting,
 	deleteAllHabits,
 	createHabitAt,
+	getHabit,
+	reorderHabits,
+	setHabitArchived,
+	setHabitRestored,
+	deleteHabitAndHistory,
 }: typeof HabitRepository = require("./habit-repository");
 
 const baseInput = makeHabitInput({ category: "Morning" });
@@ -205,5 +216,107 @@ describe("habit-repository", () => {
 
 		const after = await mockDb.select().from(habits);
 		expect(after).toHaveLength(before.length);
+	});
+
+	describe("manual order (HAB-13)", () => {
+		it("puts each new habit after every existing one", async () => {
+			const first = await createHabit(baseInput);
+			const second = await createHabit({ ...baseInput, name: "Stretch" });
+			expect(second.sortOrder).toBeGreaterThan(first.sortOrder);
+		});
+
+		it("redistributes the reordered habits' own sort values", async () => {
+			const a = await createHabit(baseInput);
+			const other = await createHabit({ ...baseInput, category: "Evening" });
+			const b = await createHabit(baseInput);
+
+			await reorderHabits([b.id, a.id]);
+
+			expect((await getHabit(b.id))?.sortOrder).toBe(a.sortOrder);
+			expect((await getHabit(a.id))?.sortOrder).toBe(b.sortOrder);
+			// A habit outside the reordered set keeps its slot, so category
+			// groups never shift relative to each other.
+			expect((await getHabit(other.id))?.sortOrder).toBe(other.sortOrder);
+		});
+
+		it("rejects a reorder naming a habit that doesn't exist", async () => {
+			const a = await createHabit(baseInput);
+			await expect(reorderHabits([a.id, 999_999])).rejects.toThrow();
+		});
+	});
+
+	describe("archive and restore (HAB-13)", () => {
+		it("starts active with no pauses", async () => {
+			const habit = await createHabit(baseInput);
+			expect(habit.archivedAt).toBeNull();
+			expect(habit.pauses).toEqual([]);
+		});
+
+		it("archives without touching anything else", async () => {
+			const habit = await createHabit(baseInput);
+			const archivedAt = new Date("2026-09-02T09:00:00Z");
+
+			const archived = await setHabitArchived(habit.id, archivedAt);
+
+			expect(archived).toEqual({ ...habit, archivedAt });
+		});
+
+		it("restores with the given pauses, round-tripped", async () => {
+			const habit = await createHabit(baseInput);
+			await setHabitArchived(habit.id, new Date());
+			const pauses = [
+				{ from: "2026-08-01", to: "2026-08-03" },
+				{ from: "2026-09-02", to: "2026-09-09" },
+			];
+
+			const restored = await setHabitRestored(habit.id, pauses);
+
+			expect(restored.archivedAt).toBeNull();
+			expect(restored.pauses).toEqual(pauses);
+			expect((await getHabit(habit.id))?.pauses).toEqual(pauses);
+		});
+	});
+
+	describe("deleteHabitAndHistory (HAB-13)", () => {
+		it("deletes the habit and every row that references it, leaving others alone", async () => {
+			const habit = await createHabit(baseInput);
+			const other = await createHabit({ ...baseInput, name: "Keep me" });
+			const now = new Date();
+			for (const habitId of [habit.id, other.id]) {
+				await mockDb
+					.insert(entries)
+					.values({ habitId, date: "2026-09-01", createdAt: now });
+				await mockDb
+					.insert(entryNotes)
+					.values({ habitId, date: "2026-09-01", note: "n", updatedAt: now });
+				await mockDb
+					.insert(frozenDays)
+					.values({ habitId, date: "2026-09-02", createdAt: now });
+				await mockDb.insert(reminders).values({
+					habitId,
+					hour: 7,
+					minute: 0,
+					weekdays: "1",
+					createdAt: now,
+				});
+			}
+
+			await deleteHabitAndHistory(habit.id);
+
+			expect(await getHabit(habit.id)).toBeUndefined();
+			for (const table of [entries, entryNotes, frozenDays, reminders]) {
+				const rows = await mockDb
+					.select()
+					.from(table)
+					.where(eq(table.habitId, habit.id));
+				expect(rows).toHaveLength(0);
+				const kept = await mockDb
+					.select()
+					.from(table)
+					.where(eq(table.habitId, other.id));
+				expect(kept).toHaveLength(1);
+			}
+			expect(await getHabit(other.id)).toBeDefined();
+		});
 	});
 });
