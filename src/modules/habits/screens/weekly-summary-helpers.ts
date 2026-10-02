@@ -2,6 +2,7 @@ import { format, isSameMonth } from "date-fns";
 import type {
 	WeeklyBestDay,
 	WeeklyHabitRow,
+	WeeklySummary,
 	WeekWindow,
 } from "../services/weekly-summary";
 import type { Habit } from "../types";
@@ -60,4 +61,13 @@ export function bestDayTile(
 export function slippingBody(row: WeeklyHabitRow): string {
 	const count = `${capitalize(numberWord(row.completed))} of ${numberWord(row.scheduled)} days`;
 	return `${count}. Try moving it to a day or time that fits better.`;
+}
+
+/** Today's menu row for this screen — "14 — 20 September · 34 of 42 done" (HAB-14). */
+export function weeklyMenuSubline({
+	week,
+	completed,
+	scheduled,
+}: Pick<WeeklySummary, "week" | "completed" | "scheduled">): string {
+	return `${weekRangeLabel(week)} · ${completed} of ${scheduled} done`;
 }

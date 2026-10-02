@@ -17,6 +17,8 @@ tags:
   - journey
 ---
 - launchApp
+- tapOn:
+    id: "More"
 - tapOn: "Weekly summary"
 - assertVisible: "Your week"
 - assertVisible: "Evening walk is slipping"
@@ -57,6 +59,8 @@ tags:
     id: "Wednesday 30 September, logged"
 - back
 
+- tapOn:
+    id: "More"
 - tapOn: "Weekly summary"
 - assertVisible: "Read before bed is slipping"
 - assertNotVisible: "Evening walk is slipping"

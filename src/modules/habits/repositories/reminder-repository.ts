@@ -44,6 +44,17 @@ export function useHabitReminders(habitId: number): Reminder[] {
 	return (data ?? []).map(rowToReminder);
 }
 
+/** Live-query hook — every habit's reminders (Today's tomorrow preview, HAB-14). */
+export function useAllReminders(): Reminder[] {
+	const { data } = useLiveQuery(
+		db
+			.select()
+			.from(reminders)
+			.orderBy(asc(reminders.hour), asc(reminders.minute), asc(reminders.id)),
+	);
+	return (data ?? []).map(rowToReminder);
+}
+
 /**
  * A one-off (non-reactive) read of one habit's reminders — the service's
  * cap check and notification re-sync need what's stored right now, not what

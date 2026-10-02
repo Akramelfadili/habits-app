@@ -1,0 +1,100 @@
+import { render, renderHook, screen } from "@testing-library/react-native";
+import { makeHabit } from "../test-support/habit-builder";
+import type { Entry, Habit } from "../types";
+
+jest.mock("expo-symbols", () => {
+	const { View } = require("react-native");
+	return { SymbolView: View };
+});
+jest.mock("expo-router", () => ({
+	useRouter: () => ({ push: jest.fn() }),
+}));
+
+// Wednesday 16 Sep 2026 — the Weekly screen opens on "this week" from here on.
+const TODAY = new Date(2026, 8, 16, 12);
+
+let mockActive: Habit[] = [];
+let mockArchived: Habit[] = [];
+let mockEntries: Entry[] = [];
+jest.mock("../repositories/habit-repository", () => ({
+	useActiveHabits: () => mockActive,
+	useArchivedHabits: () => mockArchived,
+}));
+jest.mock("../repositories/entry-repository", () => ({
+	useEntriesInRange: () => mockEntries,
+}));
+jest.mock("../repositories/frozen-day-repository", () => ({}));
+
+import { WeeklySummaryScreen } from "../screens/weekly-summary-screen";
+import { useTodayMenuQueries } from "./use-today-menu-queries";
+
+function entry(habitId: number, date: string): Entry {
+	return { id: 0, habitId, date, createdAt: new Date(date) };
+}
+
+beforeEach(() => {
+	jest.useFakeTimers().setSystemTime(TODAY);
+	mockActive = [
+		makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) }),
+		makeHabit({ id: 2, name: "Read", createdAt: new Date(2026, 0, 1) }),
+	];
+	mockArchived = [];
+	mockEntries = [
+		entry(1, "2026-09-14"),
+		entry(1, "2026-09-15"),
+		entry(2, "2026-09-16"),
+	];
+});
+
+afterEach(() => {
+	jest.useRealTimers();
+});
+
+describe("useTodayMenuQueries (HAB-14)", () => {
+	it("summarizes the week with the Weekly screen's own numbers", async () => {
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		const [, completed, scheduled] =
+			result.current.weekly.subline.match(/· (\d+) of (\d+) done$/) ?? [];
+		expect(result.current.weekly.subline).toMatch(/^14 — 20 September · /);
+
+		// Same fixture on the Weekly screen: its Completed tile says the same.
+		await render(<WeeklySummaryScreen />);
+		expect(screen.getByText(completed)).toBeTruthy();
+		expect(screen.getByText(`of ${scheduled} scheduled`)).toBeTruthy();
+	});
+
+	it("reports active and archived counts for Manage", async () => {
+		mockArchived = [makeHabit({ id: 9 }), makeHabit({ id: 10 })];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.manage.subline).toBe("2 active · 2 archived");
+	});
+
+	it("keeps Month/Year/Settings as 'Coming soon' placeholders once habits exist", async () => {
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.monthly.disabledReason).toBe("Coming soon");
+		expect(result.current.yearly.disabledReason).toBe("Coming soon");
+		expect(result.current.settings.disabledReason).toBe("Coming soon");
+		expect(result.current.weekly.disabledReason).toBeUndefined();
+	});
+
+	it("gives the empty state the spec's reasons, with Manage still usable", async () => {
+		mockActive = [];
+		mockEntries = [];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.weekly.disabledReason).toBe(
+			"After your first full week",
+		);
+		expect(result.current.monthly.disabledReason).toBe(
+			"After your first month",
+		);
+		expect(result.current.yearly.disabledReason).toBe("After three months");
+		expect(result.current.manage).toEqual({ subline: "No habits yet" });
+	});
+
+	it("still counts archived habits when nothing is active", async () => {
+		mockActive = [];
+		mockArchived = [makeHabit({ id: 9 })];
+		const { result } = await renderHook(() => useTodayMenuQueries());
+		expect(result.current.manage.subline).toBe("0 active · 1 archived");
+	});
+});

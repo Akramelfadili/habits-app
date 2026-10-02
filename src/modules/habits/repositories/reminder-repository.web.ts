@@ -51,6 +51,10 @@ export function useHabitReminders(habitId: number): Reminder[] {
 	return useMemo(() => forHabit(all, habitId), [all, habitId]);
 }
 
+export function useAllReminders(): Reminder[] {
+	return useSyncExternalStore(subscribe, getReminders, () => [] as Reminder[]);
+}
+
 export async function getHabitReminders(habitId: number): Promise<Reminder[]> {
 	return forHabit(getReminders(), habitId);
 }
@@ -98,6 +102,7 @@ export async function deleteReminder(id: number): Promise<void> {
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeReminderRepository = {
 	useHabitReminders,
+	useAllReminders,
 	getHabitReminders,
 	createReminder,
 	updateReminder,

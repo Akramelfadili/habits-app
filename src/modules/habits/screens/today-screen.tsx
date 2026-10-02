@@ -1,6 +1,6 @@
 import { format } from "date-fns";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
@@ -8,13 +8,17 @@ import { ListItem } from "@/components/ui/composite/list-item";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
 import { Button } from "@/components/ui/primitives/button";
+import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { showToast } from "@/store/toast-store";
-import { habitAccentTint, typeScale } from "@/theme/theme";
+import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { categorySymbol } from "../components/category-symbol";
 import { HabitTodayRow } from "../components/habit-today-row";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
+import { TodayHeader } from "../components/today-header";
+import { TodayNavMenu } from "../components/today-nav-menu";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
@@ -39,6 +43,7 @@ export function TodayScreen() {
 		today,
 		viewState,
 		tomorrowPreview,
+		tomorrowReminderTimeByHabitId,
 		atRiskByHabitId,
 		freezesRemainingThisMonth,
 	} = useTodayQueries();
@@ -57,6 +62,18 @@ export function TodayScreen() {
 	const { applyFreeze, isFreezing } = useStreakActions();
 	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
 	const [atRiskHabitId, setAtRiskHabitId] = useState<number | null>(null);
+
+	const [menuOpen, setMenuOpen] = useState(false);
+	// Until the button is measured, roughly under a one-line header.
+	const [menuAnchorBottom, setMenuAnchorBottom] = useState(110);
+
+	// Leaving Today (a menu row, or any push over it) closes the menu, so it
+	// never greets the person on the way back.
+	useFocusEffect(
+		useCallback(() => {
+			return () => setMenuOpen(false);
+		}, []),
+	);
 
 	const quantityHabit = groups
 		.flatMap((group) => group.habits)
@@ -145,11 +162,19 @@ export function TodayScreen() {
 	}
 
 	const header = (
-		<View style={styles.header}>
-			<SectionLabel>{format(today, "EEEE, d MMMM")}</SectionLabel>
-			<Text style={[styles.title, { color: colors.ink }]}>Today</Text>
-		</View>
+		<TodayHeader
+			today={today}
+			menuOpen={menuOpen}
+			onToggleMenu={() => setMenuOpen((open) => !open)}
+			onAnchorMeasured={setMenuAnchorBottom}
+		/>
 	);
+	const navMenu = menuOpen ? (
+		<TodayNavMenu
+			anchorBottom={menuAnchorBottom}
+			onClose={() => setMenuOpen(false)}
+		/>
+	) : null;
 
 	if (viewState === "no-habits" && !hasSeenFirstRun) {
 		return <FirstRunScreen />;
@@ -165,7 +190,6 @@ export function TodayScreen() {
 					subtitle="Add your first habit and it will show up here every morning."
 				>
 					<Button label="Add habit" onPress={() => router.push("/new-habit")} />
-					<SecondaryScreenLinks />
 					{seedStreakAtRiskHabit ? (
 						<Button
 							label="Seed streak-at-risk habit (dev)"
@@ -194,6 +218,7 @@ export function TodayScreen() {
 						/>
 					) : null}
 				</TodayStatePanel>
+				{navMenu}
 			</SafeAreaView>
 		);
 	}
@@ -207,14 +232,15 @@ export function TodayScreen() {
 					headline="Rest day"
 					subtitle={`Nothing is scheduled for ${format(today, "EEEE")}. Streaks stay intact.`}
 				>
+					{/* TODO(HAB-18): the spec wants the habit picker here, not New habit — HAB-18 builds it. */}
 					<Button
 						label="Log something anyway"
 						variant="secondary"
 						fullWidth={false}
 						onPress={() => router.push("/new-habit")}
 					/>
-					<SecondaryScreenLinks />
 				</TodayStatePanel>
+				{navMenu}
 			</SafeAreaView>
 		);
 	}
@@ -240,24 +266,22 @@ export function TodayScreen() {
 									embedded
 									title={habit.name}
 									leading={
-										<View
-											style={[
-												styles.previewDot,
-												{
-													backgroundColor: habitAccentTint(
-														habit.category.hue,
-														scheme,
-													),
-												},
-											]}
+										<IconBadge
+											symbol={categorySymbol(habit.category)}
+											accent={{
+												tint: habitAccentTint(habit.category.hue, scheme),
+												ink: habitAccentInk(habit.category.hue, scheme),
+											}}
 										/>
 									}
+									// No reminder → no trailing text at all (no dash, no "none").
+									value={tomorrowReminderTimeByHabitId.get(habit.id)}
 								/>
 							))}
 						</Container>
 					) : null}
-					<SecondaryScreenLinks />
 				</ScrollView>
+				{navMenu}
 			</SafeAreaView>
 		);
 	}
@@ -327,7 +351,6 @@ export function TodayScreen() {
 					fullWidth={false}
 					onPress={() => router.push("/new-habit")}
 				/>
-				<SecondaryScreenLinks />
 				{clearAllHabits ? (
 					<Button
 						label="Clear all habits (dev)"
@@ -386,34 +409,8 @@ export function TodayScreen() {
 					isApplyingFreeze={isFreezing}
 				/>
 			) : null}
+			{navMenu}
 		</SafeAreaView>
-	);
-}
-
-/**
- * Interim entry points (no mockup shows how Weekly Summary, HAB-11, or Manage
- * & Archive, HAB-13, are reached). Rendered in every Today state, not only
- * the populated one — otherwise archiving every habit lands on the empty
- * state with no way back to Manage to restore anything. To be replaced by
- * one header entry point (docs/feature-spec.md, "Out of scope for V1").
- */
-function SecondaryScreenLinks() {
-	const router = useRouter();
-	return (
-		<>
-			<Button
-				label="Weekly summary"
-				variant="ghost"
-				fullWidth={false}
-				onPress={() => router.push("/habits/week")}
-			/>
-			<Button
-				label="Manage habits"
-				variant="ghost"
-				fullWidth={false}
-				onPress={() => router.push("/habits/manage")}
-			/>
-		</>
 	);
 }
 
@@ -431,23 +428,11 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingTop: 12,
 	},
-	header: {
-		gap: 4,
-	},
-	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
-	},
 	progressLabelRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 	},
 	progressLabel: {
 		fontSize: typeScale.rowLabel,
-	},
-	previewDot: {
-		width: 12,
-		height: 12,
-		borderRadius: 6,
 	},
 });
