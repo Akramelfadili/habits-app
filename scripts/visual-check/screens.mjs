@@ -188,6 +188,16 @@ export const SCREENS = {
 		route: "/habits/1?fixtures=habit-detail",
 		mockup: "docs/mockups/habit-detail.png",
 	},
+	"habit-detail-pushed-header": {
+		feature: "Header buttons",
+		route: "/habits?fixtures=habit-detail",
+		mockup: "docs/mockups/habit-detail.png",
+		note: "Pushed from Today, so there's history: the plain '‹ Today' back button (header-buttons.tsx) and Edit. Web can't show the iOS 26 Liquid Glass capsule this guards against — that's device-only; the chevron is an SF Symbol (blank on web).",
+		async interact(page) {
+			await page.getByText("Glass of water", { exact: true }).click();
+			await page.getByText("Last 10 weeks").waitFor();
+		},
+	},
 	"habit-detail-new": {
 		feature: "HAB-09",
 		route: "/habits/1?fixtures=habit-detail-new",
