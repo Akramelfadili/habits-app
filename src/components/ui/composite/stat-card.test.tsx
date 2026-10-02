@@ -33,4 +33,13 @@ describe("StatCard", () => {
 			color: semanticColors.light.warnInk,
 		});
 	});
+
+	it("uses the one V2 size everywhere: 14px padding, 10px label, 26px numeral (VAR-14)", async () => {
+		await render(<StatCard label="Current" value="24" caption="day streak" />);
+		expect(screen.getByText("CURRENT")).toHaveStyle({ fontSize: 10 });
+		expect(screen.getByText("24")).toHaveStyle({ fontSize: 26 });
+		expect(screen.getByLabelText("Current: 24, day streak")).toHaveStyle({
+			padding: 14,
+		});
+	});
 });

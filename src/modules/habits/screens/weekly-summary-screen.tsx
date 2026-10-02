@@ -11,6 +11,8 @@ import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { HabitBadge } from "../components/habit-badge";
+import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useWeeklySummaryQueries } from "../hooks/use-weekly-summary-queries";
 import {
@@ -28,7 +30,8 @@ import {
 
 /**
  * Weekly Summary (HAB-11): week range header with a Last week / This week
- * switch → Completed / Best day tiles → per-habit bars, worst first → one
+ * switch and, under the title, the Week / Month / Year range switcher
+ * (HAB-16) → Completed / Best day tiles → per-habit bars, worst first → one
  * insight card (slipping habit, perfect week, or too early to call — the slot
  * is never empty). Opens on last week early in the week, when this one has
  * too little in it to say anything (`defaultSummaryWeek`).
@@ -60,6 +63,11 @@ export function WeeklySummaryScreen() {
 					/>
 				) : null}
 			</View>
+			{summary.hasHabits ? (
+				<View style={styles.switcher}>
+					<RangeSwitcher value="week" />
+				</View>
+			) : null}
 		</View>
 	);
 
@@ -105,15 +113,18 @@ export function WeeklySummaryScreen() {
 			<Container>
 				<SectionHeader title="Per habit" size="small" />
 				{rows.length > 0 ? (
-					rows.map((row) => (
-						<ProgressRow
-							key={row.habit.id}
-							label={weeklyRowLabel(row.habit)}
-							count={weeklyRowCount(row)}
-							value={row.fraction}
-							tone={row.habit.id === flaggedHabitId ? "warning" : "default"}
-						/>
-					))
+					<View style={styles.rows}>
+						{rows.map((row) => (
+							<ProgressRow
+								key={row.habit.id}
+								badge={<HabitBadge habit={row.habit} />}
+								label={weeklyRowLabel(row.habit)}
+								count={weeklyRowCount(row)}
+								value={row.fraction}
+								tone={row.habit.id === flaggedHabitId ? "warning" : "default"}
+							/>
+						))}
+					</View>
 				) : (
 					<Caption>{`Nothing has been due yet ${weekPhrase(which)}.`}</Caption>
 				)}
@@ -122,7 +133,9 @@ export function WeeklySummaryScreen() {
 			<Insight
 				insight={insight}
 				which={which}
-				onReschedule={(habitId) => router.push(`/edit-habit/${habitId}`)}
+				onReschedule={(habitId) =>
+					router.push(`/edit-habit/${habitId}?focus=frequency`)
+				}
 			/>
 		</ScrollView>
 	);
@@ -192,6 +205,12 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		gap: 4,
+	},
+	switcher: {
+		marginTop: 8,
+	},
+	rows: {
+		gap: 12,
 	},
 	titleRow: {
 		flexDirection: "row",

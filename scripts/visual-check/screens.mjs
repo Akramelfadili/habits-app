@@ -431,6 +431,62 @@ export const SCREENS = {
 		note: "No habits at all.",
 	},
 
+	// HAB-16 — Monthly summary (C2, C3, C6) + the range switcher on Weekly (C1)
+	"monthly-summary": {
+		feature: "HAB-16",
+		route: "/habits/month?fixtures=monthly-summary",
+		mockup: "docs/mockups/hab-16-c2.png",
+		// 2 Sep → the last complete month is August (1 Aug is a Saturday).
+		clock: "2026-09-02T09:00:00",
+		note: "Last complete month (August 2026). Fixture numbers differ from the mockup's (it's tuned to the insights, not the tiles); freezes are on 7 and 22 Aug.",
+	},
+	"monthly-insights": {
+		feature: "HAB-16",
+		route: "/habits/month?fixtures=monthly-summary",
+		mockup: "docs/mockups/hab-16-c3.png",
+		clock: "2026-09-02T09:00:00",
+		note: "Scrolled to the insights: slipping → improved → pattern, then the freeze card. The slipping body omits the mockup's 'started when Easy run moved' clause (not derivable).",
+		async interact(page) {
+			await page
+				.getByText("What August says", { exact: true })
+				.evaluate((el) => {
+					el.scrollIntoView({ block: "start" });
+				});
+			await page.waitForTimeout(300);
+		},
+	},
+	"monthly-too-early": {
+		feature: "HAB-16",
+		route: "/habits/month?fixtures=monthly-too-early",
+		mockup: "docs/mockups/hab-16-c6.png",
+		clock: "2026-09-16T09:00:00",
+		note: "12 days of history (since 4 Sep): unlock card, partial September calendar, the week one tap away.",
+	},
+	"monthly-empty": {
+		feature: "HAB-16",
+		route: "/habits/month?fixtures=empty",
+		mockup: null,
+		note: "No habits at all.",
+	},
+	"today-menu-open-monthly": {
+		feature: "HAB-16",
+		route: "/habits?fixtures=monthly-summary",
+		mockup: "docs/mockups/hab-14-a2.png",
+		clock: "2026-09-02T09:00:00",
+		note: "Menu with Monthly live: '1 — 31 August · N% done'.",
+		async interact(page) {
+			await page.getByLabel("More", { exact: true }).click();
+			await page.getByText("Weekly summary", { exact: true }).waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"edit-habit-focus-frequency": {
+		feature: "HAB-16",
+		route: "/edit-habit/1?focus=frequency",
+		mockup: null,
+		note: "Opened from an insight's 'Reschedule habit →': scrolled so Frequency is at the top.",
+	},
+
 	// HAB-12 — Reminders
 	reminders: {
 		feature: "HAB-12",
@@ -666,6 +722,9 @@ export const SCREENS = {
 const DARK_TWINS = [
 	"today",
 	"today-menu-open",
+	"monthly-summary",
+	"monthly-insights",
+	"monthly-too-early",
 	"habit-detail",
 	"manage-habits",
 	"manage-habits-dragging",

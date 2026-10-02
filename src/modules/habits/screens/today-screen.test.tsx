@@ -26,13 +26,14 @@ jest.mock("expo-router", () => ({
 
 const mockMenu = {
 	weekly: { subline: "14 — 20 September · 34 of 42 done" },
-	monthly: { subline: "", disabledReason: "Coming soon" },
+	monthly: { subline: "1 — 31 August · 80% done" },
 	yearly: { subline: "", disabledReason: "Coming soon" },
 	manage: { subline: "7 active · 2 archived" },
 	settings: { subline: "Appearance", disabledReason: "Coming soon" },
 };
+const mockUseTodayMenuQueries = jest.fn(() => mockMenu);
 jest.mock("../hooks/use-today-menu-queries", () => ({
-	useTodayMenuQueries: () => mockMenu,
+	useTodayMenuQueries: () => mockUseTodayMenuQueries(),
 }));
 
 const morningHabit = makeHabit({
@@ -563,6 +564,7 @@ describe("TodayScreen", () => {
 
 		it.each([
 			["Weekly summary", "/habits/week"],
+			["Monthly", "/habits/month"],
 			["Manage & archive", "/habits/manage"],
 		])("%s navigates and closes the menu", async (title, href) => {
 			mockViewState = "populated";
@@ -578,10 +580,21 @@ describe("TodayScreen", () => {
 			mockViewState = "populated";
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(screen.getByLabelText("Monthly, Coming soon"));
+			await fireEvent.press(screen.getByLabelText("Yearly, Coming soon"));
 
 			expect(mockPush).not.toHaveBeenCalled();
-			expect(screen.getByText("Monthly")).toBeTruthy();
+			expect(screen.getByText("Yearly")).toBeTruthy();
+		});
+
+		it("computes the rows' live context only while the menu is open (HAB-16)", async () => {
+			mockViewState = "populated";
+			mockUseTodayMenuQueries.mockClear();
+			await render(<TodayScreen />);
+			expect(mockUseTodayMenuQueries).not.toHaveBeenCalled();
+
+			await fireEvent.press(screen.getByLabelText("More"));
+			expect(mockUseTodayMenuQueries).toHaveBeenCalled();
+			expect(screen.getByText("1 — 31 August · 80% done")).toBeTruthy();
 		});
 
 		it("opens Settings from the menu (HAB-15)", async () => {

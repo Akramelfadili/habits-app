@@ -15,7 +15,11 @@ type StatCardProps = {
 	muted?: boolean;
 };
 
-/** Large-numeral stat tile (design-system "Stat card") — streaks, rates, week totals. */
+/**
+ * Large-numeral stat tile (design-system "Stat card") — streaks, rates, week
+ * and month totals. One size everywhere (VAR-14, V2): 14px padding, 10px
+ * label, 26px numeral.
+ */
 export function StatCard({
 	label,
 	value,
@@ -69,17 +73,16 @@ const styles = StyleSheet.create({
 		flex: 1,
 		borderRadius: 16,
 		borderWidth: StyleSheet.hairlineWidth,
-		paddingHorizontal: 12,
-		paddingVertical: 14,
+		padding: 14,
 		gap: 6,
 	},
 	label: {
-		fontSize: typeScale.caption,
+		fontSize: typeScale.micro,
 		fontWeight: "500",
 		letterSpacing: 0.8,
 	},
 	value: {
-		fontSize: typeScale.stat,
+		fontSize: typeScale.statCompact,
 		fontWeight: "500",
 	},
 	caption: {

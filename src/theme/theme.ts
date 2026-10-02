@@ -54,6 +54,10 @@ export const semanticColors = {
 
 export const typeScale = {
 	stat: 30,
+	/** VAR-14's single stat-card numeral (V2 consolidated V1's 28/30 sizes). */
+	statCompact: 26,
+	/** The 10px eyebrow label on a stat card. */
+	micro: 10,
 	screenTitle: 24,
 	section: 17,
 	rowLabel: 15,
@@ -98,6 +102,23 @@ const HEATMAP_RAMP = {
 	light: { l: [0.88, 0.76, 0.6], c: [0.05, 0.09, 0.15] },
 	dark: { l: [0.4, 0.52, 0.66], c: [0.09, 0.12, 0.16] },
 } as const;
+
+const INK_RAMP = {
+	light: [0.8, 0.62, 0.2],
+	dark: [0.38, 0.55, 0.95],
+} as const;
+
+/**
+ * The monochrome ramp for grids that aren't one habit's (the Monthly
+ * calendar, HAB-16): light grey → near-ink, so a perfect day is the darkest
+ * (lightest in dark mode) cell on the page.
+ */
+export function inkLevelColor(
+	level: HeatmapLevel,
+	scheme: ColorScheme,
+): string {
+	return oklch(INK_RAMP[scheme][level - 1], 0, 0);
+}
 
 /** One step of an accent's 3-level heatmap ramp (design-system.md). */
 export function heatmapLevelColor(

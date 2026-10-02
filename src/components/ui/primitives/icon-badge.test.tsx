@@ -29,3 +29,11 @@ describe("IconBadge — small (VAR-02)", () => {
 		expect(screen.toJSON()).toHaveStyle({ width: 22, height: 22 });
 	});
 });
+
+describe("IconBadge — compact (NEW-21)", () => {
+	it("draws the 28px habit badge on summary rows", async () => {
+		await render(<IconBadge size="compact" symbol="book.fill" />);
+		expect(screen.getByTestId("symbol").props.size).toBe(14);
+		expect(screen.toJSON()).toHaveStyle({ width: 28, height: 28 });
+	});
+});

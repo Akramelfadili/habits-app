@@ -53,9 +53,13 @@ const FREQUENCY_MODES: { value: FrequencyType; label: string }[] = [
 type HabitFormScreenProps = {
 	/** Present in edit mode; absent when creating a new habit. */
 	habitId?: number;
+	/** Opens scrolled to this section — "frequency", from an insight's "Reschedule habit" action (HAB-16). */
+	focus?: "frequency";
 };
 
-export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
+export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
+	const scrollRef = useRef<ScrollView>(null);
+	const hasFocused = useRef(false);
 	const router = useRouter();
 	const { colors } = useTheme();
 	const { getHabitById } = useHabitQueries();
@@ -183,6 +187,7 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView
+				ref={scrollRef}
 				testID="habit-form-scroll"
 				contentContainerStyle={styles.scrollContent}
 				scrollEventThrottle={16}
@@ -239,68 +244,80 @@ export function HabitFormScreen({ habitId }: HabitFormScreenProps) {
 					</View>
 				</Container>
 
-				<Container>
-					<SectionLabel>Frequency</SectionLabel>
-					<View style={styles.chipRow}>
-						{FREQUENCY_MODES.map((frequencyMode) => (
-							<Chip
-								key={frequencyMode.value}
-								label={frequencyMode.label}
-								selected={frequencyTypeValue === frequencyMode.value}
-								onPress={() =>
-									setValue("frequencyType", frequencyMode.value, {
-										shouldDirty: true,
-									})
-								}
-							/>
-						))}
-					</View>
-
-					{frequencyTypeValue === "weekdays" ? (
-						<>
-							<View style={styles.shortcutRow}>
+				<View
+					testID="habit-form-frequency"
+					onLayout={(event) => {
+						if (focus !== "frequency" || hasFocused.current) return;
+						hasFocused.current = true;
+						scrollRef.current?.scrollTo({
+							y: Math.max(0, event.nativeEvent.layout.y - 8),
+							animated: false,
+						});
+					}}
+				>
+					<Container>
+						<SectionLabel>Frequency</SectionLabel>
+						<View style={styles.chipRow}>
+							{FREQUENCY_MODES.map((frequencyMode) => (
 								<Chip
-									variant="outline"
-									label="Weekdays shortcut"
+									key={frequencyMode.value}
+									label={frequencyMode.label}
+									selected={frequencyTypeValue === frequencyMode.value}
 									onPress={() =>
-										setValue("weekdays", [...WEEKDAY_SHORTCUT], {
+										setValue("frequencyType", frequencyMode.value, {
 											shouldDirty: true,
 										})
 									}
 								/>
-								<Caption>pre-fills Mon–Fri</Caption>
-							</View>
-							<WeekdayPicker
-								days={WEEKDAYS}
-								selected={weekdaysValue}
-								onChange={(days) =>
-									setValue("weekdays", days, { shouldDirty: true })
-								}
-							/>
-							{hasNoWeekdays ? (
-								<Caption tone="error">{NO_WEEKDAYS_MESSAGE}</Caption>
-							) : null}
-						</>
-					) : null}
+							))}
+						</View>
 
-					{frequencyTypeValue === "per-week" ? (
-						<ListItem
-							embedded
-							title="Times per week"
-							trailing={
-								<Stepper
-									value={timesPerWeekValue}
-									min={MIN_TIMES_PER_WEEK}
-									max={MAX_TIMES_PER_WEEK}
-									accessibilityLabel="times per week"
-									onChange={(value) =>
-										setValue("timesPerWeek", value, { shouldDirty: true })
+						{frequencyTypeValue === "weekdays" ? (
+							<>
+								<View style={styles.shortcutRow}>
+									<Chip
+										variant="outline"
+										label="Weekdays shortcut"
+										onPress={() =>
+											setValue("weekdays", [...WEEKDAY_SHORTCUT], {
+												shouldDirty: true,
+											})
+										}
+									/>
+									<Caption>pre-fills Mon–Fri</Caption>
+								</View>
+								<WeekdayPicker
+									days={WEEKDAYS}
+									selected={weekdaysValue}
+									onChange={(days) =>
+										setValue("weekdays", days, { shouldDirty: true })
 									}
 								/>
-							}
-						/>
-					) : null}
-				</Container>
+								{hasNoWeekdays ? (
+									<Caption tone="error">{NO_WEEKDAYS_MESSAGE}</Caption>
+								) : null}
+							</>
+						) : null}
+
+						{frequencyTypeValue === "per-week" ? (
+							<ListItem
+								embedded
+								title="Times per week"
+								trailing={
+									<Stepper
+										value={timesPerWeekValue}
+										min={MIN_TIMES_PER_WEEK}
+										max={MAX_TIMES_PER_WEEK}
+										accessibilityLabel="times per week"
+										onChange={(value) =>
+											setValue("timesPerWeek", value, { shouldDirty: true })
+										}
+									/>
+								}
+							/>
+						) : null}
+					</Container>
+				</View>
 
 				<Container>
 					<SectionLabel>Target type</SectionLabel>

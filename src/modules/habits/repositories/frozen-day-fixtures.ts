@@ -1,6 +1,7 @@
 import { format, subDays } from "date-fns";
 import type { FrozenDay } from "../types";
 import type { FixtureScenario } from "./habit-fixtures";
+import { monthlyFrozenDays } from "./monthly-fixtures";
 
 /**
  * Missed days the `habit-detail` scenario covered with a freeze — two, like
@@ -33,6 +34,7 @@ export function makeFrozenDayFixtures(
 			createdAt: new Date(),
 		}));
 	}
+	if (scenario === "monthly-summary") return monthlyFrozenDays();
 	if (scenario !== "habit-detail" && scenario !== "retro-log") return [];
 	return HABIT_DETAIL_FROZEN_DAYS_AGO.map((daysAgo, index) => ({
 		id: index + 1,

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import {
 	heatmapLevelColor,
+	inkLevelColor,
 	semanticColors,
 	surfaceColors,
 } from "@/theme/theme";
@@ -55,5 +56,43 @@ describe("HeatmapCell", () => {
 		expect(screen.getAllByRole("button")).toHaveLength(1);
 		fireEvent.press(screen.getByLabelText("Monday 21 September"));
 		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("draws an outside day as a dashed outline with no fill (HAB-16)", async () => {
+		await render(<HeatmapCell state={{ kind: "outside" }} accent={null} />);
+		expect(screen.getByTestId("heatmap-cell-outside")).toHaveStyle({
+			backgroundColor: "transparent",
+			borderStyle: "dashed",
+		});
+	});
+
+	it.each([
+		[11, 3],
+		[12, 4],
+		[16, 5],
+		[18, 6],
+		[30, 10],
+	])("rounds a %ipx cell by a third of its edge (%i)", async (size, radius) => {
+		await render(
+			<HeatmapCell state={{ kind: "missed" }} accent={null} size={size} />,
+		);
+		expect(screen.getByTestId("heatmap-cell-missed")).toHaveStyle({
+			width: size,
+			height: size,
+			borderRadius: radius,
+		});
+	});
+
+	it("shades levels on the ink ramp for a grid across habits (HAB-16)", async () => {
+		await render(
+			<HeatmapCell
+				state={{ kind: "level", level: 3 }}
+				accent={195}
+				ramp="ink"
+			/>,
+		);
+		expect(screen.getByTestId("heatmap-cell-level")).toHaveStyle({
+			backgroundColor: inkLevelColor(3, "light"),
+		});
 	});
 });

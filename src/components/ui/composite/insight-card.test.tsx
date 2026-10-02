@@ -48,4 +48,19 @@ describe("InsightCard", () => {
 			backgroundColor: surfaceColors.light.ink,
 		});
 	});
+
+	it("takes a habit's own colours for the icon square without gaining a tap target (HAB-16)", async () => {
+		await render(
+			<InsightCard
+				symbol="book"
+				title="Read is sticking"
+				body="82%, up 11 points on July."
+				accent={{ tint: "#ffe0c8", ink: "#b55300" }}
+			/>,
+		);
+		expect(screen.getByTestId("insight-card-icon")).toHaveStyle({
+			backgroundColor: "#ffe0c8",
+		});
+		expect(screen.queryAllByRole("button")).toHaveLength(0);
+	});
 });
