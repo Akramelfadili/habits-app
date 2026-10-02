@@ -40,8 +40,8 @@ export function HabitEntryRow({ habit, row, today }: HabitEntryRowProps) {
 					<IconBadge
 						symbol="checkmark"
 						accent={{
-							tint: habitAccentTint(habit.color, scheme),
-							ink: habitAccentInk(habit.color, scheme),
+							tint: habitAccentTint(habit.category.hue, scheme),
+							ink: habitAccentInk(habit.category.hue, scheme),
 						}}
 					/>
 				) : (

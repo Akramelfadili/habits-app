@@ -195,6 +195,7 @@ describe("reminder-service", () => {
 
 		const saved = await updateHabitAndSyncReminders(3, {
 			...weekdayHabit,
+			categoryId: weekdayHabit.category.id,
 			frequency: { type: "daily" },
 		});
 

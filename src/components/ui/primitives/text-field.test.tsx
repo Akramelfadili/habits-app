@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
+import { semanticColors } from "@/theme/theme";
 import { TextField } from "./text-field";
 
 const borderColor = () =>
@@ -108,5 +109,66 @@ describe("TextField", () => {
 		const input = screen.getByDisplayValue("");
 		expect(input.props.maxLength).toBe(280);
 		expect(input.props.multiline).toBe(true);
+	});
+});
+
+describe("TextField — near-limit name field (VAR-12)", () => {
+	it("trims pasted text to the limit instead of rejecting it", async () => {
+		const onChangeText = jest.fn();
+		await render(
+			<TextField
+				label="Name"
+				value=""
+				onChangeText={onChangeText}
+				maxLength={20}
+				nearLimitCounter
+			/>,
+		);
+		await fireEvent.changeText(
+			screen.getByDisplayValue(""),
+			"A pasted name that is far too long",
+		);
+		expect(onChangeText).toHaveBeenCalledWith("A pasted name that i");
+	});
+
+	it("shows the NEW-23 counter from 80% only, never the legacy one", async () => {
+		const { rerender } = await render(
+			<TextField
+				label="Name"
+				value={"x".repeat(15)}
+				onChangeText={jest.fn()}
+				maxLength={20}
+				nearLimitCounter
+			/>,
+		);
+		expect(screen.queryByText(/\/20$/)).toBeNull();
+
+		await rerender(
+			<TextField
+				label="Name"
+				value={"x".repeat(16)}
+				onChangeText={jest.fn()}
+				maxLength={20}
+				nearLimitCounter
+			/>,
+		);
+		expect(screen.getByText("16/20")).toBeTruthy();
+	});
+
+	it("outlines a warning in amber with the helper under the field", async () => {
+		await render(
+			<TextField
+				label="Name"
+				value="Fitness"
+				onChangeText={jest.fn()}
+				warning="You already have Fitness. Pick it from the list instead."
+			/>,
+		);
+		expect(borderColor()).toBe(semanticColors.light.warnInk);
+		expect(
+			screen.getByText(
+				"You already have Fitness. Pick it from the list instead.",
+			),
+		).toBeTruthy();
 	});
 });

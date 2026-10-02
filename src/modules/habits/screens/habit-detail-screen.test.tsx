@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { HabitDetail } from "../hooks/use-habit-detail-queries";
 import type { RetroLogDay } from "../hooks/use-retro-log-queries";
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -55,7 +55,7 @@ import { HabitDetailScreen } from "./habit-detail-screen";
 
 const habit = makeHabit({
 	name: "Glass of water",
-	category: "Morning",
+	category: categoryNamed("Morning"),
 	targetType: "quantity",
 	targetAmount: 8,
 	targetUnit: "glasses",

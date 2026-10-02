@@ -13,6 +13,11 @@ jest.mock("../repositories/habit-repository", () => ({
 	deleteAllHabits: (...args: unknown[]) => mockDeleteAllHabits(...args),
 	createHabitAt: (...args: unknown[]) => mockCreateHabitAt(...args),
 }));
+jest.mock("../repositories/category-repository", () => ({
+	getCategories: async () =>
+		jest.requireActual("../test-support/habit-builder")
+			.TEST_BUILT_IN_CATEGORIES,
+}));
 jest.mock("../services/reminder-service", () => ({
 	updateHabitAndSyncReminders: (...args: unknown[]) => mockUpdateHabit(...args),
 }));
@@ -61,9 +66,7 @@ describe("useHabitActions", () => {
 		await act(() =>
 			result.current.updateHabit(1, {
 				name: "Read more",
-				icon: "book",
-				color: "blue",
-				category: null,
+				categoryId: 10,
 				targetType: "simple",
 				targetAmount: null,
 				targetUnit: null,
@@ -73,9 +76,7 @@ describe("useHabitActions", () => {
 
 		expect(mockUpdateHabit).toHaveBeenCalledWith(1, {
 			name: "Read more",
-			icon: "book",
-			color: "blue",
-			category: null,
+			categoryId: 10,
 			targetType: "simple",
 			targetAmount: null,
 			targetUnit: null,

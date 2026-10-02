@@ -3,7 +3,7 @@ import { HeatmapLegend } from "./heatmap-legend";
 
 describe("HeatmapLegend", () => {
 	it("shows the Less→More ramp plus a distinct Frozen key", async () => {
-		await render(<HeatmapLegend accent="blue" />);
+		await render(<HeatmapLegend accent={230} />);
 		expect(screen.getByText("Less")).toBeTruthy();
 		expect(screen.getByText("More")).toBeTruthy();
 		expect(screen.getByText("Frozen")).toBeTruthy();

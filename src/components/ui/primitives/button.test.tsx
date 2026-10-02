@@ -106,3 +106,26 @@ describe("Button", () => {
 		expect(screen.getByRole("button")).toHaveStyle({ paddingVertical: 6 });
 	});
 });
+
+describe("Button — disabled with reason (VAR-13)", () => {
+	it("shows the reason above the button only while disabled", async () => {
+		const { rerender } = await render(
+			<Button
+				label="Save habit"
+				onPress={jest.fn()}
+				disabled
+				disabledReason="Pick a category to save this habit"
+			/>,
+		);
+		expect(screen.getByText("Pick a category to save this habit")).toBeTruthy();
+
+		await rerender(
+			<Button
+				label="Save habit"
+				onPress={jest.fn()}
+				disabledReason="Pick a category to save this habit"
+			/>,
+		);
+		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
+	});
+});

@@ -1,6 +1,3 @@
-import type { HabitAccentKey } from "@/theme/theme";
-import type { HabitIconKey } from "./constants";
-
 export type HabitDirection = "build" | "break";
 export type HabitTargetType = "simple" | "quantity";
 
@@ -15,12 +12,47 @@ export type Frequency =
 
 export type FrequencyType = Frequency["type"];
 
+/**
+ * A category's icon (HAB-24). Drawn as SF Symbols via `CATEGORY_SHAPE_SYMBOLS`
+ * — a known approximation of the mockup's hand-drawn shapes.
+ */
+export type CategoryShape =
+	| "plus"
+	| "bars"
+	| "diamond"
+	| "square"
+	| "lines"
+	| "grid"
+	| "half"
+	| "archive"
+	| "dot"
+	| "ring";
+
+/** What a category looks like — and so what every habit in it looks like. */
+export type CategoryAppearance = {
+	shape: CategoryShape;
+	/** OKLCH hue; null only for the neutral built-in "Other". */
+	hue: number | null;
+};
+
+/**
+ * One of the managed set (HAB-24): ten fixed built-ins, then the user's own in
+ * creation order. Supplies its habits' icon and color.
+ */
+export type Category = CategoryAppearance & {
+	id: number;
+	name: string;
+	builtIn: boolean;
+};
+
+/** Icon and color are never user-chosen — the caller passes the rotation's pick. */
+export type CreateCategoryInput = CategoryAppearance & { name: string };
+
 export type Habit = {
 	id: number;
 	name: string;
-	icon: HabitIconKey;
-	color: HabitAccentKey;
-	category: string | null;
+	/** Always exactly one (HAB-24) — also the source of the habit's icon and color. */
+	category: Category;
 	direction: HabitDirection;
 	targetType: HabitTargetType;
 	/** Set only when targetType is "quantity" (HAB-07) — null for simple-check habits. */
@@ -45,9 +77,7 @@ export type DayRange = {
 
 export type CreateHabitInput = {
 	name: string;
-	icon: HabitIconKey;
-	color: HabitAccentKey;
-	category: string | null;
+	categoryId: number;
 	direction: HabitDirection;
 	targetType: HabitTargetType;
 	targetAmount: number | null;
@@ -57,9 +87,7 @@ export type CreateHabitInput = {
 
 export type UpdateHabitInput = {
 	name: string;
-	icon: HabitIconKey;
-	color: HabitAccentKey;
-	category: string | null;
+	categoryId: number;
 	targetType: HabitTargetType;
 	targetAmount: number | null;
 	targetUnit: string | null;

@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { StyleSheet, View } from "react-native";
+import { headerBackOptions } from "@/components/ui/composite/header-buttons";
 import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useTheme } from "@/theme/use-theme";
 
@@ -14,6 +15,18 @@ import { useTheme } from "@/theme/use-theme";
  * One toast slot for the whole stack, above the tab bar — so a confirmation
  * outlives the screen that caused it (archive on Detail → toast on Today).
  */
+/**
+ * Pushed screens' back button — plain, via the shared header helper. Set here
+ * (not only in the screen) so it's never the system glass button, even for
+ * the frame before a screen's own options arrive.
+ */
+const backTo =
+	(title: string) =>
+	({ navigation }: { navigation: { goBack: () => void } }) => ({
+		title: "",
+		...headerBackOptions({ title, onPress: () => navigation.goBack() }),
+	});
+
 export default function HabitsLayout() {
 	const { colors } = useTheme();
 
@@ -31,22 +44,13 @@ export default function HabitsLayout() {
 					name="index"
 					options={{ title: "Today", headerShown: false }}
 				/>
-				<Stack.Screen
-					name="[id]"
-					options={{ title: "", headerBackTitle: "Today" }}
-				/>
+				<Stack.Screen name="[id]" options={backTo("Today")} />
 				{/* "Your week" is screen content, same as Detail's header row. */}
-				<Stack.Screen
-					name="week"
-					options={{ title: "", headerBackTitle: "Today" }}
-				/>
-				{/* Pushed from Habit Detail; the screen sets the back title to the habit's name. */}
-				<Stack.Screen name="reminders/[id]" options={{ title: "" }} />
+				<Stack.Screen name="week" options={backTo("Today")} />
+				{/* Pushed from Habit Detail; a bare chevron until the screen relabels it with the habit's name. */}
+				<Stack.Screen name="reminders/[id]" options={backTo("")} />
 				{/* Same as Weekly Summary: back to Today, the large title is screen content. */}
-				<Stack.Screen
-					name="manage"
-					options={{ title: "", headerBackTitle: "Today" }}
-				/>
+				<Stack.Screen name="manage" options={backTo("Today")} />
 			</Stack>
 			<ToastHost />
 		</View>

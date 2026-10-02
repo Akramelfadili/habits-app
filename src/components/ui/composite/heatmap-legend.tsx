@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { type HabitAccentKey, typeScale } from "@/theme/theme";
+import { type AccentHue, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HeatmapCell } from "./heatmap-cell";
 
@@ -9,7 +9,7 @@ const SWATCH = 12;
  * "Less ▢▢▢▢ More | ▢ Frozen" — always shown alongside a heatmap, per the
  * design system, so a frozen cell is never guessed at.
  */
-export function HeatmapLegend({ accent }: { accent: HabitAccentKey }) {
+export function HeatmapLegend({ accent }: { accent: AccentHue }) {
 	const { colors } = useTheme();
 	const label = [styles.label, { color: colors.sub }];
 

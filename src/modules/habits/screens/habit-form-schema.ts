@@ -1,10 +1,6 @@
 import { z } from "zod";
-import type { HabitAccentKey } from "@/theme/theme";
 import {
 	DEFAULT_TIMES_PER_WEEK,
-	HABIT_COLORS,
-	HABIT_ICONS,
-	type HabitIconKey,
 	MAX_TARGET_AMOUNT,
 	MAX_TARGET_UNIT_LENGTH,
 	MAX_TIMES_PER_WEEK,
@@ -13,11 +9,8 @@ import {
 } from "../constants";
 import type { Frequency, IsoWeekday } from "../types";
 
-const iconKeys = HABIT_ICONS.map((entry) => entry.key) as [
-	HabitIconKey,
-	...HabitIconKey[],
-];
-const colorKeys = HABIT_COLORS as [HabitAccentKey, ...HabitAccentKey[]];
+/** Save's blocking reason with no category picked (HAB-24) — see `saveBlockedReason`. */
+export const NO_CATEGORY_MESSAGE = "Pick a category to save this habit";
 
 export const NO_WEEKDAYS_MESSAGE = "Pick at least one day.";
 export const NO_TARGET_UNIT_MESSAGE =
@@ -35,12 +28,12 @@ export const habitFormSchema = z
 			.trim()
 			.min(1, "Give this habit a name.")
 			.max(40, "Keep the name under 40 characters."),
-		icon: z.enum(iconKeys),
-		color: z.enum(colorKeys),
-		category: z
-			.string()
-			.trim()
-			.max(40, "Keep the category under 40 characters."),
+		/** Null until picked — and a habit can't be saved without one (HAB-24). */
+		categoryId: z
+			.number()
+			.int()
+			.nullable()
+			.refine((id) => id !== null, NO_CATEGORY_MESSAGE),
 		direction: z.enum(["build", "break"]),
 		targetType: z.enum(["simple", "quantity"]),
 		targetAmount: z
@@ -80,7 +73,10 @@ export const habitFormSchema = z
 		}
 	});
 
-export type HabitFormValues = z.infer<typeof habitFormSchema>;
+/** What the form holds while editing — `categoryId` may still be null. */
+export type HabitFormInput = z.input<typeof habitFormSchema>;
+/** What a valid submit produces — `categoryId` narrowed to an id. */
+export type HabitFormValues = z.output<typeof habitFormSchema>;
 
 type FrequencyFormValues = Pick<
 	HabitFormValues,

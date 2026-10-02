@@ -31,9 +31,9 @@ export default function RootLayout() {
 						headerTintColor: colors.ink,
 						headerTitleStyle: { color: colors.ink },
 						headerShadowVisible: false,
-						// Prevents the back button from falling back to the previous route's
-						// filename (e.g. "index") when that screen has no title set.
-						headerBackButtonDisplayMode: "minimal",
+						// No back-button config here: every header button, back
+						// included, comes from components/ui/composite/header-buttons
+						// (the system back button is never shown — iOS 26 glass).
 					}}
 				>
 					<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -43,8 +43,8 @@ export default function RootLayout() {
 					 * <Stack.Screen> rendered inside the route — the navigator resolves
 					 * presentation/back-button chrome for the push transition before
 					 * the screen mounts, so a dynamically-registered override arrives
-					 * too late and the default back chevron (headerBackButtonDisplayMode:
-					 * "minimal" above) briefly or persistently shows instead.
+					 * too late and the system back chevron briefly or persistently
+					 * shows instead.
 					 */}
 					<Stack.Screen name="new-habit" options={newHabitHeaderOptions} />
 					<Stack.Screen

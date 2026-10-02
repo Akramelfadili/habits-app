@@ -1,4 +1,4 @@
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import type { Entry, Frequency } from "../types";
 import {
 	completionRateCaption,
@@ -34,7 +34,7 @@ describe("frequencyLabel", () => {
 describe("habitSubtitle", () => {
 	it("joins category, quantity target, and cadence", () => {
 		const habit = makeHabit({
-			category: "Morning",
+			category: categoryNamed("Morning"),
 			targetType: "quantity",
 			targetAmount: 8,
 			targetUnit: "glasses",
@@ -43,13 +43,13 @@ describe("habitSubtitle", () => {
 		expect(habitSubtitle(habit, today)).toBe("Morning · 8 glasses · daily");
 	});
 
-	it("notes a habit added today and falls back to the no-category label", () => {
+	it("notes a habit added today, under Other like any category", () => {
 		const habit = makeHabit({
-			category: null,
+			category: categoryNamed("Other"),
 			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
 			createdAt: today,
 		});
-		expect(habitSubtitle(habit, today)).toBe("Anytime · Mon–Fri · added today");
+		expect(habitSubtitle(habit, today)).toBe("Other · Mon–Fri · added today");
 	});
 });
 

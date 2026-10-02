@@ -83,7 +83,7 @@ export function HabitHeatmap({
 							<HeatmapCell
 								key={day.date.toISOString()}
 								state={cellStateFor(day)}
-								accent={habit.color}
+								accent={habit.category.hue}
 								accessibilityLabel={`${format(day.date, "EEEE d MMMM")}, ${STATUS_LABEL[day.status]}`}
 								onPress={
 									day.selectable ? () => onSelectDay(day.date) : undefined
@@ -94,7 +94,7 @@ export function HabitHeatmap({
 				))}
 			</View>
 			{hasEntries ? (
-				<HeatmapLegend accent={habit.color} />
+				<HeatmapLegend accent={habit.category.hue} />
 			) : (
 				<Caption>Cells fill in as you log — the first one is today.</Caption>
 			)}

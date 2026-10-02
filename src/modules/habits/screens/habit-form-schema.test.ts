@@ -1,5 +1,6 @@
 import {
 	habitFormSchema,
+	NO_CATEGORY_MESSAGE,
 	NO_TARGET_UNIT_MESSAGE,
 	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
@@ -8,9 +9,7 @@ import {
 
 const validInput = {
 	name: "Read",
-	icon: "book",
-	color: "blue",
-	category: "Morning",
+	categoryId: 5,
 	direction: "build",
 	targetType: "simple",
 	targetAmount: 8,
@@ -61,36 +60,18 @@ describe("habitFormSchema", () => {
 		expect(result.success).toBe(true);
 	});
 
-	it("accepts a blank category (converted to null at submit time, not by the schema)", () => {
-		const result = habitFormSchema.safeParse({ ...validInput, category: "" });
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.category).toBe("");
-		}
-	});
-
-	it("trims category whitespace", () => {
+	it("blocks a habit with no category picked (HAB-24)", () => {
 		const result = habitFormSchema.safeParse({
 			...validInput,
-			category: "  Morning  ",
+			categoryId: null,
 		});
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.category).toBe("Morning");
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0]).toMatchObject({
+				path: ["categoryId"],
+				message: NO_CATEGORY_MESSAGE,
+			});
 		}
-	});
-
-	it("rejects an icon outside the fixed set", () => {
-		const result = habitFormSchema.safeParse({ ...validInput, icon: "rocket" });
-		expect(result.success).toBe(false);
-	});
-
-	it("rejects a color outside the fixed set", () => {
-		const result = habitFormSchema.safeParse({
-			...validInput,
-			color: "magenta",
-		});
-		expect(result.success).toBe(false);
 	});
 
 	it("rejects Specific weekdays with no days picked", () => {

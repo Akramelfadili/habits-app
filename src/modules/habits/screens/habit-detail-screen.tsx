@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
+import { headerActionOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { StatCard } from "@/components/ui/composite/stat-card";
 import { Button } from "@/components/ui/primitives/button";
@@ -10,10 +11,10 @@ import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { categorySymbol } from "../components/category-symbol";
 import { DeleteHabitSheet } from "../components/delete-habit-sheet";
 import { HabitEntryRow } from "../components/habit-entry-row";
 import { HabitHeatmap } from "../components/habit-heatmap";
-import { iconSymbolFor } from "../components/habit-today-row";
 import { RetroLogSheet } from "../components/retro-log-sheet";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
@@ -116,25 +117,18 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 			contentContainerStyle={styles.content}
 		>
 			<Stack.Screen
-				options={{
-					headerRight: () => (
-						<Button
-							label="Edit"
-							// Same header-action style as the modal forms' "Cancel".
-							variant="ghost"
-							fullWidth={false}
-							onPress={() => router.push(`/edit-habit/${habit.id}`)}
-						/>
-					),
-				}}
+				options={headerActionOptions({
+					label: "Edit",
+					onPress: () => router.push(`/edit-habit/${habit.id}`),
+				})}
 			/>
 			<View style={styles.header}>
 				<IconBadge
 					size="large"
-					symbol={iconSymbolFor(habit.icon)}
+					symbol={categorySymbol(habit.category)}
 					accent={{
-						tint: habitAccentTint(habit.color, scheme),
-						ink: habitAccentInk(habit.color, scheme),
+						tint: habitAccentTint(habit.category.hue, scheme),
+						ink: habitAccentInk(habit.category.hue, scheme),
 					}}
 				/>
 				<View style={styles.headerText}>

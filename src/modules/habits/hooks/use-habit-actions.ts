@@ -1,5 +1,7 @@
 import { parseISO, subDays } from "date-fns";
 import { useAsyncAction } from "@/utils/use-async-action";
+import { type BuiltInCategoryName, findBuiltInCategory } from "../constants";
+import { getCategories } from "../repositories/category-repository";
 import { makeEntryFixtures } from "../repositories/entry-fixtures";
 import {
 	setHabitCompletedOn,
@@ -18,6 +20,13 @@ import {
 } from "../repositories/habit-repository";
 import { updateHabitAndSyncReminders } from "../services/reminder-service";
 
+/** Dev seeds file their habits under a built-in — the only categories every device has. */
+async function builtInCategoryId(name: BuiltInCategoryName): Promise<number> {
+	const category = findBuiltInCategory(await getCategories(), name);
+	if (!category) throw new Error(`Built-in category "${name}" is missing`);
+	return category.id;
+}
+
 /**
  * Dev-only: creates a habit backdated 10 days, with days -2 and -3 completed
  * and yesterday (-1) left missing — lets HAB-08's streak-at-risk prompt be
@@ -27,9 +36,7 @@ async function seedStreakAtRiskHabit(): Promise<void> {
 	const habit = await createHabitAt(
 		{
 			name: "Meditate",
-			icon: "leaf",
-			color: "purple",
-			category: "Morning",
+			categoryId: await builtInCategoryId("Mindfulness"),
 			direction: "build",
 			targetType: "simple",
 			targetAmount: null,
@@ -55,9 +62,7 @@ async function seedHabitWithHistory(): Promise<void> {
 	const habit = await createHabitAt(
 		{
 			name: fixture.name,
-			icon: fixture.icon,
-			color: fixture.color,
-			category: fixture.category,
+			categoryId: await builtInCategoryId("Health"),
 			direction: fixture.direction,
 			targetType: fixture.targetType,
 			targetAmount: fixture.targetAmount,

@@ -1,46 +1,43 @@
-import { NO_CATEGORY_LABEL } from "../constants";
-import type { Habit } from "../types";
+import { OTHER_CATEGORY_NAME } from "../constants";
+import type { Category, Habit } from "../types";
 
 export type CategoryGroup = {
-	category: string;
+	category: Category;
 	habits: Habit[];
 };
 
 /**
- * Groups habits by category in the order each category was first created —
- * derived, not stored: there's no separate categories table (`category` is
- * just a nullable text column on `habits`), so "creation order" means the
- * order each distinct category value first appears among habits already
- * in manual order (the order `useActiveHabits()` returns them in — creation
- * order until reordered, and a reorder only permutes slots within one
- * category, so a category's first appearance never moves). "Anytime" (no
- * category) is always forced last, regardless of when it would naturally
+ * Groups habits by category in the order each category first appears among
+ * habits already in manual order (the order `useActiveHabits()` returns them
+ * in — creation order until reordered, and a reorder only permutes slots
+ * within one category, so a category's first appearance never moves). The
+ * built-in "Other" — V1's "Anytime", and where uncategorised habits migrated
+ * to (HAB-24) — is always forced last, regardless of when it would naturally
  * fall. Within a group, input order is preserved — HAB-13's manual order.
+ * (HAB-19 reworks Manage's grouping; Today keeps this V1 rule.)
  */
 export function groupHabitsByCategory(habits: Habit[]): CategoryGroup[] {
-	const groups = new Map<string, Habit[]>();
+	const groups = new Map<number, CategoryGroup>();
 
 	for (const habit of habits) {
-		const key = habit.category ?? NO_CATEGORY_LABEL;
-		const existing = groups.get(key);
+		const existing = groups.get(habit.category.id);
 		if (existing) {
-			existing.push(habit);
+			existing.habits.push(habit);
 		} else {
-			groups.set(key, [habit]);
+			groups.set(habit.category.id, {
+				category: habit.category,
+				habits: [habit],
+			});
 		}
 	}
 
-	const anytime = groups.get(NO_CATEGORY_LABEL);
-	groups.delete(NO_CATEGORY_LABEL);
-
-	const ordered = Array.from(groups, ([category, habits]) => ({
-		category,
-		habits,
-	}));
-	if (anytime) {
-		ordered.push({ category: NO_CATEGORY_LABEL, habits: anytime });
-	}
-	return ordered;
+	const ordered = Array.from(groups.values());
+	const isOther = (group: CategoryGroup) =>
+		group.category.builtIn && group.category.name === OTHER_CATEGORY_NAME;
+	return [
+		...ordered.filter((group) => !isOther(group)),
+		...ordered.filter(isOther),
+	];
 }
 
 export type Progress = {

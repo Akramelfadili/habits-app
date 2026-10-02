@@ -4,8 +4,9 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import type { Habit } from "../types";
+import type { CategoryGroup } from "./today-screen-helpers";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -20,11 +21,15 @@ jest.mock("expo-router", () => ({
 const morningHabit = makeHabit({
 	id: 1,
 	name: "Glass of water",
-	category: "Morning",
+	category: categoryNamed("Morning"),
 });
-const eveningHabit = makeHabit({ id: 2, name: "Read", category: "Evening" });
+const eveningHabit = makeHabit({
+	id: 2,
+	name: "Read",
+	category: categoryNamed("Evening"),
+});
 
-let mockGroups: { category: string; habits: Habit[] }[] = [];
+let mockGroups: CategoryGroup[] = [];
 let mockProgress = { completed: 0, total: 0, fraction: 0 };
 let mockCompletedHabitIds = new Set<number>();
 let mockViewState: "no-habits" | "rest-day" | "day-closed" | "populated" =
@@ -220,8 +225,8 @@ describe("TodayScreen", () => {
 	it("renders category groups with their mini-counts", async () => {
 		mockViewState = "populated";
 		mockGroups = [
-			{ category: "Morning", habits: [morningHabit] },
-			{ category: "Evening", habits: [eveningHabit] },
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			{ category: categoryNamed("Evening"), habits: [eveningHabit] },
 		];
 		mockCompletedHabitIds = new Set([1]);
 
@@ -237,7 +242,9 @@ describe("TodayScreen", () => {
 
 	it("renders the overall progress line", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 		mockProgress = { completed: 1, total: 2, fraction: 0.5 };
 
 		await render(<TodayScreen />);
@@ -248,7 +255,9 @@ describe("TodayScreen", () => {
 
 	it("tapping a row's completion circle toggles it for today", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByLabelText("Glass of water"));
@@ -258,7 +267,9 @@ describe("TodayScreen", () => {
 
 	it("completing confirms with an Undo toast that reverses it", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByLabelText("Glass of water"));
@@ -276,11 +287,11 @@ describe("TodayScreen", () => {
 		const breakHabit = makeHabit({
 			id: 7,
 			name: "No phone in bed",
-			category: "Morning",
+			category: categoryNamed("Morning"),
 			direction: "break",
 		});
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [breakHabit] }];
+		mockGroups = [{ category: categoryNamed("Morning"), habits: [breakHabit] }];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByLabelText("No phone in bed"));
@@ -292,7 +303,9 @@ describe("TodayScreen", () => {
 
 	it("un-completing toggles back to false, with no confirmation", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 		mockCompletedHabitIds = new Set([1]);
 
 		await render(<TodayScreen />);
@@ -303,7 +316,9 @@ describe("TodayScreen", () => {
 
 	it("tapping a habit's name navigates toward Habit Detail without crashing", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Glass of water"));
@@ -315,7 +330,7 @@ describe("TodayScreen", () => {
 		const readHabit = makeHabit({
 			id: 3,
 			name: "Read",
-			category: "Evening",
+			category: categoryNamed("Evening"),
 			targetType: "quantity",
 			targetAmount: 20,
 			targetUnit: "pages",
@@ -323,13 +338,13 @@ describe("TodayScreen", () => {
 		const runHabit = makeHabit({
 			id: 4,
 			name: "Easy run",
-			category: "Evening",
+			category: categoryNamed("Evening"),
 			frequency: { type: "per-week", timesPerWeek: 3 },
 		});
 		mockViewState = "populated";
 		mockGroups = [
-			{ category: "Evening", habits: [readHabit, runHabit] },
-			{ category: "Morning", habits: [morningHabit] },
+			{ category: categoryNamed("Evening"), habits: [readHabit, runHabit] },
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
 		];
 		mockCompletedThisWeekByHabitId = new Map([[4, 2]]);
 
@@ -345,13 +360,15 @@ describe("TodayScreen", () => {
 		const quantityHabit = makeHabit({
 			id: 3,
 			name: "Glass of water",
-			category: "Morning",
+			category: categoryNamed("Morning"),
 			targetType: "quantity",
 			targetAmount: 8,
 			targetUnit: "glasses",
 		});
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [quantityHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
+		];
 		mockQuantityValuesByHabitId = new Map([[3, 3]]);
 
 		await render(<TodayScreen />);
@@ -367,13 +384,15 @@ describe("TodayScreen", () => {
 		const quantityHabit = makeHabit({
 			id: 3,
 			name: "Glass of water",
-			category: "Morning",
+			category: categoryNamed("Morning"),
 			targetType: "quantity",
 			targetAmount: 8,
 			targetUnit: "glasses",
 		});
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [quantityHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
+		];
 		mockQuantityValuesByHabitId = new Map([[3, 3]]);
 		mockLogQuantity.mockResolvedValue(undefined);
 
@@ -396,13 +415,15 @@ describe("TodayScreen", () => {
 		const quantityHabit = makeHabit({
 			id: 3,
 			name: "Glass of water",
-			category: "Morning",
+			category: categoryNamed("Morning"),
 			targetType: "quantity",
 			targetAmount: 8,
 			targetUnit: "glasses",
 		});
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [quantityHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
+		];
 		mockQuantityValuesByHabitId = new Map([[3, 7]]);
 		mockLogQuantity.mockResolvedValue(undefined);
 
@@ -423,7 +444,9 @@ describe("TodayScreen", () => {
 
 	it("still offers a way to add a habit once habits already exist", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Add habit"));
@@ -433,7 +456,9 @@ describe("TodayScreen", () => {
 
 	it("links to the Weekly Summary once habits exist", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Weekly summary"));
@@ -445,7 +470,9 @@ describe("TodayScreen", () => {
 		"reaches Weekly Summary and Manage from the %s state",
 		async (state) => {
 			mockViewState = state;
-			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
 
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Weekly summary"));
@@ -465,7 +492,9 @@ describe("TodayScreen", () => {
 
 	it("offers the streak-at-risk dev seed button once habits already exist", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Seed streak-at-risk habit (dev)"));
@@ -475,7 +504,9 @@ describe("TodayScreen", () => {
 	describe("streak-at-risk (HAB-08)", () => {
 		it("tapping an at-risk habit's row opens the sheet instead of navigating", async () => {
 			mockViewState = "populated";
-			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
 			mockAtRiskByHabitId = new Map([
 				[1, { missedDate: new Date("2026-09-15"), currentStreak: 24 }],
 			]);
@@ -494,7 +525,9 @@ describe("TodayScreen", () => {
 
 		it("tapping a not-at-risk habit's row still navigates as before", async () => {
 			mockViewState = "populated";
-			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
 
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Glass of water"));
@@ -504,7 +537,9 @@ describe("TodayScreen", () => {
 
 		it("Use a freeze applies it for the missed date and closes the sheet", async () => {
 			mockViewState = "populated";
-			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
 			const missedDate = new Date("2026-09-15");
 			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
 			mockApplyFreeze.mockResolvedValue(undefined);
@@ -521,7 +556,9 @@ describe("TodayScreen", () => {
 
 		it("Reset and start today closes the sheet without calling applyFreeze", async () => {
 			mockViewState = "populated";
-			mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
 			mockAtRiskByHabitId = new Map([
 				[1, { missedDate: new Date("2026-09-15"), currentStreak: 24 }],
 			]);
@@ -537,7 +574,9 @@ describe("TodayScreen", () => {
 
 	it("asks for confirmation before clearing all habits, and only clears on confirm", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
 
 		await render(<TodayScreen />);
@@ -556,7 +595,9 @@ describe("TodayScreen", () => {
 
 	it("asks for confirmation before resetting First Run, and only resets on confirm", async () => {
 		mockViewState = "populated";
-		mockGroups = [{ category: "Morning", habits: [morningHabit] }];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
 		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
 
 		await render(<TodayScreen />);

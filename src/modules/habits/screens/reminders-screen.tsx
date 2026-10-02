@@ -1,9 +1,10 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AddRow } from "@/components/ui/composite/add-row";
 import { Banner } from "@/components/ui/composite/banner";
 import { Container } from "@/components/ui/composite/container";
+import { headerBackOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { Caption } from "@/components/ui/primitives/caption";
 import { Toggle } from "@/components/ui/primitives/toggle";
@@ -33,6 +34,7 @@ const NOTIFICATIONS_OFF_NOTICE =
  * notice when permission is denied → the app-wide Evening review toggle.
  */
 export function RemindersScreen({ habitId }: RemindersScreenProps) {
+	const router = useRouter();
 	const { colors } = useTheme();
 	const data = useReminderQueries(habitId);
 	const actions = useReminderActions();
@@ -84,7 +86,12 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 
 	return (
 		<>
-			<Stack.Screen options={{ headerBackTitle: habit.name }} />
+			<Stack.Screen
+				options={headerBackOptions({
+					title: habit.name,
+					onPress: () => router.back(),
+				})}
+			/>
 			<ScrollView
 				style={[styles.screen, { backgroundColor: colors.bg }]}
 				contentContainerStyle={styles.content}

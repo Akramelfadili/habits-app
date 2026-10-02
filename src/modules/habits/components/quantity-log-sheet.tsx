@@ -11,7 +11,7 @@ import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { MAX_QUANTITY_VALUE } from "../constants";
 import type { Habit } from "../types";
-import { iconSymbolFor } from "./habit-today-row";
+import { categorySymbol } from "./category-symbol";
 import { frequencySummary, quickAddChips } from "./quantity-log-sheet-helpers";
 
 type QuantityLogSheetProps = {
@@ -60,10 +60,10 @@ export function QuantityLogSheet({
 		<Sheet visible={visible} onDismiss={onDismiss}>
 			<View style={styles.header}>
 				<IconBadge
-					symbol={iconSymbolFor(habit.icon)}
+					symbol={categorySymbol(habit.category)}
 					accent={{
-						tint: habitAccentTint(habit.color, scheme),
-						ink: habitAccentInk(habit.color, scheme),
+						tint: habitAccentTint(habit.category.hue, scheme),
+						ink: habitAccentInk(habit.category.hue, scheme),
 					}}
 					size="large"
 				/>

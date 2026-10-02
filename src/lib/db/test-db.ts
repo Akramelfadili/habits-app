@@ -15,17 +15,68 @@ import * as schema from "./schema";
  */
 export function createTestDb() {
 	const sqlite = new DatabaseSync(":memory:");
+	applyMigrations(sqlite, migrationTags());
+	return wrap(sqlite);
+}
 
-	const migrationsDir = path.join(__dirname, "migrations");
+/**
+ * A raw in-memory database migrated only up to (not including) `stopBefore` —
+ * for testing a data migration against rows written in the old shape.
+ * `migrateRest()` then applies every remaining migration.
+ */
+export function createPartiallyMigratedTestDb(
+	stopBefore: string,
+	{ foreignKeys = true }: { foreignKeys?: boolean } = {},
+) {
+	const sqlite = new DatabaseSync(":memory:", {
+		enableForeignKeyConstraints: foreignKeys,
+	});
+	const tags = migrationTags();
+	const stopAt = tags.findIndex((tag) => tag.startsWith(stopBefore));
+	if (stopAt === -1) throw new Error(`No migration "${stopBefore}"`);
+	applyMigrations(sqlite, tags.slice(0, stopAt));
+	return {
+		sqlite,
+		migrateRest: () => applyMigrations(sqlite, tags.slice(stopAt)),
+	};
+}
+
+const migrationsDir = path.join(__dirname, "migrations");
+
+function migrationTags(): string[] {
 	const journal = JSON.parse(
 		fs.readFileSync(path.join(migrationsDir, "meta/_journal.json"), "utf8"),
 	);
-	for (const entry of journal.entries) {
-		sqlite.exec(
-			fs.readFileSync(path.join(migrationsDir, `${entry.tag}.sql`), "utf8"),
-		);
-	}
+	return journal.entries.map((entry: { tag: string }) => entry.tag);
+}
 
+/**
+ * Applies migrations the way drizzle's expo migrator does on device: every
+ * pending one inside a single BEGIN…COMMIT, statement by statement. That
+ * matters — inside a transaction `PRAGMA foreign_keys` is a no-op, so a
+ * migration relying on it would only pass here if run outside one.
+ * (node:sqlite enforces foreign keys by default; expo-sqlite doesn't.)
+ */
+function applyMigrations(sqlite: DatabaseSync, tags: string[]) {
+	sqlite.exec("BEGIN");
+	try {
+		for (const tag of tags) {
+			const file = fs.readFileSync(
+				path.join(migrationsDir, `${tag}.sql`),
+				"utf8",
+			);
+			for (const statement of file.split("--> statement-breakpoint")) {
+				if (statement.trim()) sqlite.exec(statement);
+			}
+		}
+		sqlite.exec("COMMIT");
+	} catch (err) {
+		sqlite.exec("ROLLBACK");
+		throw err;
+	}
+}
+
+function wrap(sqlite: DatabaseSync) {
 	return drizzle(
 		async (sqlText, params, method) => {
 			const statement = sqlite.prepare(sqlText);
@@ -35,15 +86,17 @@ export function createTestDb() {
 				return { rows: [] };
 			}
 
+			// Positional rows, as the sqlite-proxy driver expects — keyed objects
+			// would collapse a join's same-named columns (both tables' `id`).
+			statement.setReturnArrays(true);
+
 			if (method === "get") {
-				const row = statement.get(...params);
-				return { rows: row ? Object.values(row) : [] };
+				return {
+					rows: (statement.get(...params) as unknown as unknown[]) ?? [],
+				};
 			}
 
-			const rows = statement.all(...params);
-			return {
-				rows: rows.map((row) => Object.values(row as Record<string, unknown>)),
-			};
+			return { rows: statement.all(...params) as unknown as unknown[][] };
 		},
 		{ schema },
 	);

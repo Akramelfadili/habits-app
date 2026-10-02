@@ -1,4 +1,4 @@
-import { makeHabit } from "../test-support/habit-builder";
+import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import {
 	archivedRowSubtitle,
 	archivedSectionTitle,
@@ -10,14 +10,14 @@ describe("manage-habits-helpers", () => {
 		expect(
 			manageRowSubtitle(
 				makeHabit({
-					category: "Training",
+					category: categoryNamed("Training"),
 					frequency: { type: "weekdays", days: [1, 3, 5] },
 				}),
 			),
 		).toBe("Training · Mon, Wed, Fri");
-		expect(manageRowSubtitle(makeHabit({ category: null }))).toBe(
-			"Anytime · daily",
-		);
+		expect(
+			manageRowSubtitle(makeHabit({ category: categoryNamed("Other") })),
+		).toBe("Other · daily");
 	});
 
 	it("labels an archived row with its archive date and days logged", () => {

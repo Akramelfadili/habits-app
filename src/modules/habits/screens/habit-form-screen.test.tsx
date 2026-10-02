@@ -4,8 +4,14 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
-import { makeHabit } from "../test-support/habit-builder";
-import type { Habit } from "../types";
+import { StyleSheet } from "react-native";
+import {
+	categoryNamed,
+	makeCategory,
+	makeHabit,
+	TEST_BUILT_IN_CATEGORIES,
+} from "../test-support/habit-builder";
+import type { Category, Habit } from "../types";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -34,8 +40,21 @@ let mockHabits: Habit[] = [];
 jest.mock("../hooks/use-habit-queries", () => ({
 	useHabitQueries: () => ({
 		habits: mockHabits,
-		categories: ["Morning", "Evening"],
 		getHabitById: (id: number) => mockHabits.find((habit) => habit.id === id),
+	}),
+}));
+
+let mockCategories: Category[] = [];
+jest.mock("../hooks/use-category-queries", () => ({
+	useCategoryQueries: () => ({ categories: mockCategories }),
+}));
+
+const mockCreateCategory = jest.fn();
+jest.mock("../hooks/use-category-actions", () => ({
+	useCategoryActions: () => ({
+		createCategory: (...args: unknown[]) => mockCreateCategory(...args),
+		isCreating: false,
+		createError: null,
 	}),
 }));
 
@@ -43,15 +62,25 @@ import { HabitFormScreen } from "./habit-form-screen";
 
 const existingHabit = makeHabit({
 	name: "Gym",
-	icon: "flame",
-	category: "Morning",
+	category: categoryNamed("Morning"),
 	frequency: { type: "weekdays", days: [1, 3, 5] },
 });
+
+const MORNING = categoryNamed("Morning");
 
 const isSaveDisabled = () =>
 	screen.getByText("Save habit").parent?.props.accessibilityState.disabled;
 const isSelected = (label: string) =>
 	screen.getByLabelText(label).props.accessibilityState.selected;
+
+async function pickCategory(name: string) {
+	await fireEvent.press(screen.getByLabelText(name));
+}
+
+beforeEach(() => {
+	mockCategories = [...TEST_BUILT_IN_CATEGORIES, MORNING];
+	mockCreateCategory.mockReset();
+});
 
 describe("HabitFormScreen — create mode", () => {
 	beforeEach(() => {
@@ -61,60 +90,74 @@ describe("HabitFormScreen — create mode", () => {
 		mockHabits = [];
 	});
 
-	it("disables Save until a name is entered", async () => {
+	it("disables Save until a name and a category are both set", async () => {
 		await render(<HabitFormScreen />);
-
-		expect(
-			screen.getByText("Save habit").parent?.props.accessibilityState.disabled,
-		).toBe(true);
+		expect(isSaveDisabled()).toBe(true);
 
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Read");
-		expect(
-			screen.getByText("Save habit").parent?.props.accessibilityState.disabled,
-		).toBe(false);
+		expect(isSaveDisabled()).toBe(true);
+
+		await pickCategory("Learning");
+		expect(isSaveDisabled()).toBe(false);
 	});
 
-	it("defaults to the first color not already used by another habit", async () => {
-		mockHabits = [
-			{ ...existingHabit, id: 1, color: "blue" },
-			{ ...existingHabit, id: 2, color: "purple" },
-		];
+	it("explains one blocking reason at a time — the name's first (HAB-24)", async () => {
 		await render(<HabitFormScreen />);
+		expect(screen.getByText("Add a name to save this habit")).toBeTruthy();
+		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
 
-		// HABIT_COLORS order is blue, purple, orange, green, red, teal — orange is first free.
-		await waitFor(() =>
-			expect(
-				screen.getByLabelText("orange").props.accessibilityState.selected,
-			).toBe(true),
-		);
-		expect(
-			screen.getByLabelText("blue").props.accessibilityState.selected,
-		).toBe(false);
+		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Read");
+		expect(screen.queryByText("Add a name to save this habit")).toBeNull();
+		expect(screen.getByText("Pick a category to save this habit")).toBeTruthy();
+
+		await pickCategory("Learning");
+		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
 	});
 
-	it("selects an icon when tapped", async () => {
+	it("lists built-ins in their fixed order, then customs, then Add category last", async () => {
 		await render(<HabitFormScreen />);
-
-		await fireEvent.press(screen.getByLabelText("flame"));
-		expect(
-			screen.getByLabelText("flame").props.accessibilityState.selected,
-		).toBe(true);
-		expect(screen.getByLabelText("dot").props.accessibilityState.selected).toBe(
-			false,
-		);
+		const chips = screen
+			.getAllByTestId("category-chip")
+			.map((chip) => chip.props.accessibilityLabel);
+		expect(chips).toEqual([
+			...TEST_BUILT_IN_CATEGORIES.map((c) => c.name),
+			"Morning",
+			"Add category",
+		]);
 	});
 
-	it("creates the habit with a trimmed name and null category when submitted", async () => {
+	it("selects one category at a time and shows it in the card header", async () => {
+		await render(<HabitFormScreen />);
+		expect(screen.getByText("Sets the habit's icon & colour")).toBeTruthy();
+
+		await pickCategory("Learning");
+		expect(isSelected("Learning")).toBe(true);
+		expect(screen.queryByText("Sets the habit's icon & colour")).toBeNull();
+
+		await pickCategory("Fitness");
+		expect(isSelected("Fitness")).toBe(true);
+		expect(isSelected("Learning")).toBe(false);
+	});
+
+	it("keeps the category selected when its chip is tapped again", async () => {
+		await render(<HabitFormScreen />);
+		await pickCategory("Learning");
+		await pickCategory("Learning");
+		expect(isSelected("Learning")).toBe(true);
+	});
+
+	it("creates the habit with a trimmed name and the picked category's id", async () => {
 		await render(<HabitFormScreen />);
 
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "  Read  ");
+		await pickCategory("Morning");
 		await fireEvent.press(screen.getByText("Save habit"));
 
 		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
 		expect(mockCreateHabit).toHaveBeenCalledWith(
 			expect.objectContaining({
 				name: "Read",
-				category: null,
+				categoryId: MORNING.id,
 				direction: "build",
 				targetType: "simple",
 				frequency: { type: "daily" },
@@ -123,27 +166,100 @@ describe("HabitFormScreen — create mode", () => {
 		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 
-	it("shows Anytime as the category row's value when none is set", async () => {
+	it("draws a hairline above Save only once the form is scrolled (F1c)", async () => {
 		await render(<HabitFormScreen />);
-		expect(screen.getByText("Anytime")).toBeTruthy();
+		const footerBorder = () =>
+			StyleSheet.flatten(screen.getByTestId("habit-form-footer").props.style)
+				.borderTopWidth;
+		const scrollTo = (y: number) =>
+			fireEvent.scroll(screen.getByTestId("habit-form-scroll"), {
+				nativeEvent: { contentOffset: { x: 0, y } },
+			});
+
+		expect(footerBorder()).toBeUndefined();
+		await scrollTo(120);
+		expect(footerBorder()).toBe(StyleSheet.hairlineWidth);
+		await scrollTo(0);
+		expect(footerBorder()).toBeUndefined();
 	});
 
-	it("opens a sheet with suggestions when the Category row is tapped", async () => {
-		await render(<HabitFormScreen />);
+	describe("add category sheet", () => {
+		const nameField = () => screen.getByPlaceholderText("e.g. Journaling");
 
-		await fireEvent.press(screen.getByText("Category"));
-		expect(screen.getByText("Morning")).toBeTruthy();
-		expect(screen.getByText("Evening")).toBeTruthy();
-	});
+		it("opens with Add disabled, explaining a name is needed, and a placeholder preview", async () => {
+			await render(<HabitFormScreen />);
+			await fireEvent.press(screen.getByLabelText("Add category"));
 
-	it("fills the category from a tapped suggestion and closes the sheet", async () => {
-		await render(<HabitFormScreen />);
+			expect(nameField()).toBeTruthy();
+			expect(
+				screen.getByText("Add a name to create this category"),
+			).toBeTruthy();
+			expect(screen.getByText("Your category")).toBeTruthy();
+			expect(
+				screen.getAllByText("Add category").at(-1)?.parent?.props
+					.accessibilityState.disabled,
+			).toBe(true);
+		});
 
-		await fireEvent.press(screen.getByText("Category"));
-		await fireEvent.press(screen.getByText("Morning"));
+		it("previews the typed name live", async () => {
+			await render(<HabitFormScreen />);
+			await fireEvent.press(screen.getByLabelText("Add category"));
+			await fireEvent.changeText(nameField(), "Journaling");
 
-		expect(screen.getByText("Morning")).toBeTruthy();
-		expect(screen.queryByText("Evening")).toBeNull();
+			expect(screen.getByTestId("category-preview")).toBeTruthy();
+			expect(screen.getByText("Journaling")).toBeTruthy();
+			expect(
+				screen.queryByText("Add a name to create this category"),
+			).toBeNull();
+		});
+
+		it("flags a duplicate of a built-in (any case/spacing), hides the preview, blocks Add", async () => {
+			await render(<HabitFormScreen />);
+			await fireEvent.press(screen.getByLabelText("Add category"));
+			await fireEvent.changeText(nameField(), " fitness ");
+
+			expect(
+				screen.getByText(
+					"You already have Fitness. Pick it from the list instead.",
+				),
+			).toBeTruthy();
+			expect(screen.queryByTestId("category-preview")).toBeNull();
+			expect(
+				screen.getAllByText("Add category").at(-1)?.parent?.props
+					.accessibilityState.disabled,
+			).toBe(true);
+		});
+
+		it("creates with the previewed rotation pick, closes, and auto-selects the new chip", async () => {
+			const journaling = makeCategory({
+				id: 12,
+				name: "Journaling",
+				shape: "ring",
+				hue: 330,
+			});
+			mockCreateCategory.mockImplementation(async () => {
+				mockCategories = [...mockCategories, journaling];
+				return journaling;
+			});
+			await render(<HabitFormScreen />);
+			await fireEvent.press(screen.getByLabelText("Add category"));
+			await fireEvent.changeText(nameField(), "Journaling");
+			const [, addButton] = screen.getAllByText("Add category");
+			await fireEvent.press(addButton);
+
+			// Morning already sits on slot 1, so the next pick is slot 2.
+			await waitFor(() =>
+				expect(mockCreateCategory).toHaveBeenCalledWith({
+					name: "Journaling",
+					shape: "ring",
+					hue: 330,
+				}),
+			);
+			await waitFor(() =>
+				expect(screen.queryByPlaceholderText("e.g. Journaling")).toBeNull(),
+			);
+			expect(isSelected("Journaling")).toBe(true);
+		});
 	});
 
 	it("shows the direction explanation caption in create mode too", async () => {
@@ -179,6 +295,7 @@ describe("HabitFormScreen — create mode", () => {
 		await render(<HabitFormScreen />);
 
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "No phone");
+		await pickCategory("Health");
 		await fireEvent.press(screen.getByText("Quantity"));
 		await fireEvent.press(screen.getByText("Break"));
 		await waitFor(() =>
@@ -208,6 +325,7 @@ describe("HabitFormScreen — create mode", () => {
 		await render(<HabitFormScreen />);
 
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
+		await pickCategory("Health");
 		expect(isSaveDisabled()).toBe(false);
 
 		await fireEvent.press(screen.getByText("Quantity"));
@@ -224,6 +342,7 @@ describe("HabitFormScreen — create mode", () => {
 		await render(<HabitFormScreen />);
 
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
+		await pickCategory("Health");
 		await fireEvent.press(screen.getByText("Quantity"));
 		await fireEvent.changeText(
 			screen.getByPlaceholderText("glasses"),
@@ -246,6 +365,7 @@ describe("HabitFormScreen — create mode", () => {
 		await render(<HabitFormScreen />);
 
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
+		await pickCategory("Health");
 		await fireEvent.press(screen.getByText("Quantity"));
 		await fireEvent.changeText(
 			screen.getByPlaceholderText("glasses"),
@@ -275,6 +395,7 @@ describe("HabitFormScreen — frequency", () => {
 	async function renderNamed() {
 		await render(<HabitFormScreen />);
 		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Gym");
+		await pickCategory("Fitness");
 	}
 
 	it("offers all three modes, defaulting to Daily with no day picker", async () => {
@@ -357,7 +478,7 @@ describe("HabitFormScreen — edit mode", () => {
 	it("pre-fills the form from the existing habit", async () => {
 		await render(<HabitFormScreen habitId={1} />);
 		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-		expect(screen.getByText("Morning")).toBeTruthy();
+		expect(isSelected("Morning")).toBe(true);
 		expect(
 			screen.getByText("Specific weekdays").parent?.props.accessibilityState
 				.selected,
@@ -421,7 +542,7 @@ describe("HabitFormScreen — edit mode", () => {
 			1,
 			expect.objectContaining({
 				name: "Gym session",
-				category: "Morning",
+				categoryId: MORNING.id,
 				targetType: "simple",
 			}),
 		);

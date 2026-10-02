@@ -72,37 +72,22 @@ export const interactionOpacity = {
 	dimmed: 0.5,
 } as const;
 
-/** The 6 confirmed habit-accent hues, in fixed pick order (design-system.md). */
-export const HABIT_ACCENT_HUES = {
-	blue: 230,
-	purple: 300,
-	orange: 60,
-	green: 150,
-	red: 25,
-	teal: 195,
-} as const;
-
-export type HabitAccentKey = keyof typeof HABIT_ACCENT_HUES;
-
-export const HABIT_ACCENT_KEYS = Object.keys(
-	HABIT_ACCENT_HUES,
-) as HabitAccentKey[];
+/**
+ * A habit's accent hue — its category's (HAB-24). `null` is the neutral
+ * accent (built-in "Other"): it renders with the monochrome chrome tokens
+ * (`sub`/`inner`), deliberately outside the color system.
+ */
+export type AccentHue = number | null;
 
 /** Base accent color (icon/dot fill) — `ink(hue)` from design-system.md. */
-export function habitAccentInk(
-	key: HabitAccentKey,
-	scheme: ColorScheme,
-): string {
-	const hue = HABIT_ACCENT_HUES[key];
+export function habitAccentInk(hue: AccentHue, scheme: ColorScheme): string {
+	if (hue === null) return surfaceColors[scheme].sub;
 	return scheme === "light" ? oklch(0.56, 0.18, hue) : oklch(0.78, 0.15, hue);
 }
 
 /** Soft tint behind an accent icon — `tint(hue)` from design-system.md. */
-export function habitAccentTint(
-	key: HabitAccentKey,
-	scheme: ColorScheme,
-): string {
-	const hue = HABIT_ACCENT_HUES[key];
+export function habitAccentTint(hue: AccentHue, scheme: ColorScheme): string {
+	if (hue === null) return surfaceColors[scheme].inner;
 	return scheme === "light" ? oklch(0.93, 0.045, hue) : oklch(0.3, 0.085, hue);
 }
 
@@ -116,10 +101,12 @@ const HEATMAP_RAMP = {
 
 /** One step of an accent's 3-level heatmap ramp (design-system.md). */
 export function heatmapLevelColor(
-	key: HabitAccentKey,
+	hue: AccentHue,
 	level: HeatmapLevel,
 	scheme: ColorScheme,
 ): string {
 	const ramp = HEATMAP_RAMP[scheme];
-	return oklch(ramp.l[level - 1], ramp.c[level - 1], HABIT_ACCENT_HUES[key]);
+	// The neutral accent keeps the same lightness steps with no chroma — grey.
+	const chroma = hue === null ? 0 : ramp.c[level - 1];
+	return oklch(ramp.l[level - 1], chroma, hue ?? 0);
 }

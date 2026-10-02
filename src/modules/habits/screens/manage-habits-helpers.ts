@@ -1,11 +1,10 @@
 import { format } from "date-fns";
-import { NO_CATEGORY_LABEL } from "../constants";
 import type { Habit } from "../types";
 import { frequencyLabel } from "./habit-detail-helpers";
 
 /** "Morning · daily" / "Training · Mon, Wed, Fri" — an active row on Manage (HAB-13). */
 export function manageRowSubtitle(habit: Habit): string {
-	return `${habit.category ?? NO_CATEGORY_LABEL} · ${frequencyLabel(habit.frequency)}`;
+	return `${habit.category.name} · ${frequencyLabel(habit.frequency)}`;
 }
 
 /**

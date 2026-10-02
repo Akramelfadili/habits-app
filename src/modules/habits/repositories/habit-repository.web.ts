@@ -5,11 +5,13 @@ import { useSyncExternalStore } from "react";
 // loaded explicitly for a web test.
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository.web";
 import type {
+	Category,
 	CreateHabitInput,
 	DayRange,
 	Habit,
 	UpdateHabitInput,
 } from "../types";
+import { getCategories } from "./category-repository.web";
 import {
 	DEFAULT_HABITS,
 	habitFixturesFor,
@@ -58,13 +60,21 @@ function nextSortOrder(habits: Habit[]): number {
 	return Math.max(0, ...habits.map((h) => h.sortOrder)) + 1;
 }
 
+async function categoryById(id: number): Promise<Category> {
+	const category = (await getCategories()).find((c) => c.id === id);
+	if (!category) throw new Error(`Category ${id} not found`);
+	return category;
+}
+
 function newHabit(
-	input: CreateHabitInput,
+	{ categoryId: _categoryId, ...input }: CreateHabitInput,
+	category: Category,
 	habits: Habit[],
 	createdAt: Date,
 ): Habit {
 	return {
 		...input,
+		category,
 		id: nextId(habits),
 		sortOrder: nextSortOrder(habits),
 		archivedAt: null,
@@ -117,8 +127,9 @@ function updateOne(id: number, patch: Partial<Habit>): Habit {
 }
 
 export async function createHabit(input: CreateHabitInput): Promise<Habit> {
+	const category = await categoryById(input.categoryId);
 	const habits = getHabits();
-	const habit = newHabit(input, habits, new Date());
+	const habit = newHabit(input, category, habits, new Date());
 	setHabits([...habits, habit]);
 	return habit;
 }
@@ -129,15 +140,14 @@ export async function updateHabit(
 ): Promise<Habit> {
 	const existing = getHabits().find((h) => h.id === id);
 	if (!existing) throw new Error(`Habit ${id} not found`);
+	const category = await categoryById(input.categoryId);
 
 	// Field-by-field like the native repository — direction stays locked (HAB-01)
 	// even if a caller passes a wider object at runtime.
 	const habit: Habit = {
 		...existing,
 		name: input.name,
-		icon: input.icon,
-		color: input.color,
-		category: input.category,
+		category,
 		targetType: input.targetType,
 		targetAmount: input.targetAmount,
 		targetUnit: input.targetUnit,
@@ -157,7 +167,12 @@ export async function createHabitsAndMarkSetting(
 	let habits = getHabits();
 	const created: Habit[] = [];
 	for (const input of inputs) {
-		const habit = newHabit(input, habits, now);
+		const habit = newHabit(
+			input,
+			await categoryById(input.categoryId),
+			habits,
+			now,
+		);
 		created.push(habit);
 		habits = [...habits, habit];
 	}
@@ -248,8 +263,9 @@ export async function createHabitAt(
 	if (!__DEV__) {
 		throw new Error("createHabitAt is dev-only");
 	}
+	const category = await categoryById(input.categoryId);
 	const habits = getHabits();
-	const habit = newHabit(input, habits, createdAt);
+	const habit = newHabit(input, category, habits, createdAt);
 	setHabits([...habits, habit]);
 	return habit;
 }

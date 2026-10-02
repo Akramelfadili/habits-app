@@ -1,5 +1,11 @@
 import { getISODay, subDays } from "date-fns";
 import type { Habit, IsoWeekday } from "../types";
+import {
+	EVENING_FIXTURE,
+	MORNING_FIXTURE,
+	OTHER_FIXTURE,
+	TRAINING_FIXTURE,
+} from "./category-fixtures";
 
 /**
  * A fixture habit before its HAB-13 lifecycle fields — `habitFixturesFor`
@@ -20,8 +26,8 @@ function withLifecycle(habit: FixtureHabit): Habit {
 /**
  * Static fake habits backing the web-only repository (`habit-repository.web.ts`).
  * Web exists purely for visual checks against docs/mockups/, so this covers the
- * variety a screen needs to render: build + break, with and without category,
- * several accents and icons, and every frequency type (#1 matches the mockup's
+ * variety a screen needs to render: build + break, custom categories and
+ * Other (V1's no-category habits, as the HAB-24 migration maps them), and every frequency type (#1 matches the mockup's
  * Mon–Fri specific-weekdays selection). Ids are stable so `/edit-habit/1` always resolves.
  */
 const FIXTURE_DATE = new Date("2026-09-16T08:00:00Z");
@@ -43,7 +49,8 @@ export type FixtureScenario =
 	| "perfect-week"
 	| "reminders"
 	| "reminders-at-cap"
-	| "manage-archive";
+	| "manage-archive"
+	| "many-categories";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
@@ -62,6 +69,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"reminders",
 	"reminders-at-cap",
 	"manage-archive",
+	"many-categories",
 ];
 
 /**
@@ -82,9 +90,7 @@ export const HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Evening walk",
-		icon: "walk",
-		color: "blue",
-		category: "Evening",
+		category: EVENING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -96,9 +102,7 @@ export const HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 2,
 		name: "Read before bed",
-		icon: "book",
-		color: "orange",
-		category: "Evening",
+		category: EVENING_FIXTURE,
 		direction: "build",
 		targetType: "quantity",
 		targetAmount: 20,
@@ -110,9 +114,7 @@ export const HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 3,
 		name: "Glass of water",
-		icon: "drop",
-		color: "teal",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -124,9 +126,7 @@ export const HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 4,
 		name: "No phone after 23:00",
-		icon: "moon",
-		color: "purple",
-		category: null,
+		category: OTHER_FIXTURE,
 		direction: "break",
 		targetType: "simple",
 		targetAmount: null,
@@ -146,9 +146,7 @@ export const REST_DAY_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Evening walk",
-		icon: "walk",
-		color: "blue",
-		category: "Evening",
+		category: EVENING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -176,9 +174,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Glass of water",
-		icon: "drop",
-		color: "teal",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -190,9 +186,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 2,
 		name: "Read before bed",
-		icon: "book",
-		color: "orange",
-		category: "Evening",
+		category: EVENING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -204,9 +198,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 3,
 		name: "No phone after 23:00",
-		icon: "moon",
-		color: "purple",
-		category: null,
+		category: OTHER_FIXTURE,
 		direction: "break",
 		targetType: "simple",
 		targetAmount: null,
@@ -218,9 +210,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 4,
 		name: "Meditate",
-		icon: "leaf",
-		color: "green",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -235,9 +225,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 5,
 		name: "Easy run",
-		icon: "walk",
-		color: "red",
-		category: "Evening",
+		category: EVENING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -260,9 +248,7 @@ export const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Glass of water",
-		icon: "drop",
-		color: "blue",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "quantity",
 		targetAmount: 8,
@@ -291,9 +277,7 @@ export const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Meditate",
-		icon: "leaf",
-		color: "purple",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -315,9 +299,7 @@ export const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Meditate",
-		icon: "leaf",
-		color: "purple",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "quantity",
 		targetAmount: 10,
@@ -329,9 +311,7 @@ export const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 2,
 		name: "Glass of water",
-		icon: "drop",
-		color: "blue",
-		category: "Morning",
+		category: MORNING_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -357,9 +337,7 @@ export function habitDetailFixtures(): FixtureHabit[] {
 		{
 			id: 1,
 			name: "Glass of water",
-			icon: "drop",
-			color: "blue",
-			category: "Morning",
+			category: MORNING_FIXTURE,
 			direction: "build",
 			targetType: "quantity",
 			targetAmount: 8,
@@ -381,9 +359,7 @@ export function habitDetailNewFixtures(): FixtureHabit[] {
 		{
 			id: 1,
 			name: "Evening walk",
-			icon: "walk",
-			color: "orange",
-			category: "Evening",
+			category: EVENING_FIXTURE,
 			direction: "build",
 			targetType: "simple",
 			targetAmount: null,
@@ -414,9 +390,7 @@ export function retroLogFixtures(): FixtureHabit[] {
 			...base,
 			id: 2,
 			name: "Meditate",
-			icon: "leaf",
-			color: "purple",
-			category: "Morning",
+			category: MORNING_FIXTURE,
 			targetType: "quantity",
 			targetAmount: 10,
 			targetUnit: "min",
@@ -426,9 +400,7 @@ export function retroLogFixtures(): FixtureHabit[] {
 			...base,
 			id: 3,
 			name: "Read",
-			icon: "book",
-			color: "orange",
-			category: "Evening",
+			category: EVENING_FIXTURE,
 			targetType: "quantity",
 			targetAmount: 20,
 			targetUnit: "pages",
@@ -438,9 +410,7 @@ export function retroLogFixtures(): FixtureHabit[] {
 			...base,
 			id: 4,
 			name: "Mobility",
-			icon: "walk",
-			color: "green",
-			category: "Evening",
+			category: EVENING_FIXTURE,
 			targetType: "simple",
 			targetAmount: null,
 			targetUnit: null,
@@ -461,7 +431,7 @@ const WEEKLY_SUMMARY_CREATED = new Date("2025-01-01T00:00:00Z");
  */
 function weeklySummaryFixtures(perfectWeek: boolean): FixtureHabit[] {
 	const base = {
-		category: null,
+		category: OTHER_FIXTURE,
 		direction: "build",
 		targetType: "simple",
 		targetAmount: null,
@@ -471,14 +441,12 @@ function weeklySummaryFixtures(perfectWeek: boolean): FixtureHabit[] {
 		updatedAt: WEEKLY_SUMMARY_CREATED,
 	} as const;
 	return [
-		{ ...base, id: 1, name: "Glass of water", icon: "drop", color: "blue" },
-		{ ...base, id: 2, name: "Meditate", icon: "leaf", color: "purple" },
+		{ ...base, id: 1, name: "Glass of water" },
+		{ ...base, id: 2, name: "Meditate" },
 		{
 			...base,
 			id: 3,
 			name: "Read",
-			icon: "book",
-			color: "orange",
 			frequency: perfectWeek
 				? { type: "weekdays", days: [1, 2, 3, 4, 5] }
 				: base.frequency,
@@ -487,19 +455,15 @@ function weeklySummaryFixtures(perfectWeek: boolean): FixtureHabit[] {
 			...base,
 			id: 4,
 			name: "Easy run",
-			icon: "walk",
-			color: "red",
 			frequency: perfectWeek
 				? { type: "per-week", timesPerWeek: 3 }
 				: base.frequency,
 		},
-		{ ...base, id: 5, name: "Mobility", icon: "walk", color: "green" },
+		{ ...base, id: 5, name: "Mobility" },
 		{
 			...base,
 			id: 6,
 			name: "No phone in bed",
-			icon: "moon",
-			color: "teal",
 			direction: "break",
 		},
 	];
@@ -516,9 +480,7 @@ function remindersHabitFixtures(frequency: Habit["frequency"]): FixtureHabit[] {
 		{
 			id: 1,
 			name: "Meditate",
-			icon: "leaf",
-			color: "purple",
-			category: "Morning",
+			category: MORNING_FIXTURE,
 			direction: "build",
 			targetType: "simple",
 			targetAmount: null,
@@ -555,54 +517,42 @@ function manageArchiveFixtures(): FixtureHabit[] {
 			...base,
 			id: 1,
 			name: "Glass of water",
-			icon: "drop",
-			color: "blue",
-			category: "Morning",
+			category: MORNING_FIXTURE,
 			frequency: { type: "daily" },
 		},
 		{
 			...base,
 			id: 2,
 			name: "Meditate",
-			icon: "leaf",
-			color: "purple",
-			category: "Morning",
+			category: MORNING_FIXTURE,
 			frequency: { type: "daily" },
 		},
 		{
 			...base,
 			id: 3,
 			name: "Read",
-			icon: "book",
-			color: "orange",
-			category: "Evening",
+			category: EVENING_FIXTURE,
 			frequency: { type: "per-week", timesPerWeek: 5 },
 		},
 		{
 			...base,
 			id: 4,
 			name: "Easy run",
-			icon: "walk",
-			color: "red",
-			category: "Training",
+			category: TRAINING_FIXTURE,
 			frequency: { type: "weekdays", days: [1, 3, 5] },
 		},
 		{
 			...base,
 			id: 5,
 			name: "Mobility",
-			icon: "walk",
-			color: "green",
-			category: "Training",
+			category: TRAINING_FIXTURE,
 			frequency: { type: "daily" },
 		},
 		{
 			...base,
 			id: 6,
 			name: "Cold shower",
-			icon: "drop",
-			color: "teal",
-			category: "Morning",
+			category: MORNING_FIXTURE,
 			frequency: { type: "daily" },
 			archivedAt: MANAGE_ARCHIVE_ARCHIVED_AT.coldShower,
 		},
@@ -610,9 +560,7 @@ function manageArchiveFixtures(): FixtureHabit[] {
 			...base,
 			id: 7,
 			name: "No phone in bed",
-			icon: "moon",
-			color: "purple",
-			category: null,
+			category: OTHER_FIXTURE,
 			direction: "break",
 			frequency: { type: "daily" },
 			archivedAt: MANAGE_ARCHIVE_ARCHIVED_AT.noPhoneInBed,
@@ -624,6 +572,7 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 	switch (scenario) {
 		case "empty":
 		case "first-run":
+		case "many-categories":
 			return [];
 		case "rest-day":
 			return REST_DAY_HABIT_FIXTURES.map((habit) => ({ ...habit }));

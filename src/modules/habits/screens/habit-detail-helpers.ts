@@ -1,5 +1,5 @@
 import { format, isSameDay, parseISO, subDays } from "date-fns";
-import { NO_CATEGORY_LABEL, WEEKDAYS } from "../constants";
+import { WEEKDAYS } from "../constants";
 import type { CompletionRate, LongestStreak } from "../services/habit-history";
 import type { Entry, Frequency, Habit, IsoWeekday } from "../types";
 
@@ -34,7 +34,7 @@ export function frequencyLabel(frequency: Frequency): string {
 
 /** "Morning · 8 glasses · daily" / "Evening · Mon–Fri · added today". */
 export function habitSubtitle(habit: Habit, today: Date): string {
-	const parts = [habit.category ?? NO_CATEGORY_LABEL];
+	const parts = [habit.category.name];
 	if (habit.targetType === "quantity" && habit.targetAmount) {
 		parts.push(`${habit.targetAmount} ${habit.targetUnit ?? ""}`.trim());
 	}

@@ -10,8 +10,23 @@ jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
+const mockBack = jest.fn();
 jest.mock("expo-router", () => ({
-	Stack: { Screen: () => null },
+	// Renders the iOS back item, so the test exercises what reaches the nav bar.
+	Stack: {
+		Screen: ({
+			options,
+		}: {
+			options?: {
+				unstable_headerLeftItems?: (props: {
+					canGoBack: boolean;
+				}) => { element?: unknown }[];
+			};
+		}) =>
+			options?.unstable_headerLeftItems?.({ canGoBack: true })[0]?.element ??
+			null,
+	},
+	useRouter: () => ({ back: mockBack }),
 }));
 jest.mock("@/components/ui/primitives/time-wheel", () => ({
 	TimeWheel: () => null,
@@ -82,6 +97,15 @@ describe("RemindersScreen", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		mockData = data();
+	});
+
+	it("labels the plain back button with the habit's name, and goes back through it", async () => {
+		mockBack.mockReset();
+		await render(<RemindersScreen habitId={1} />);
+		const back = screen.getByLabelText(`Back to ${habit.name}`);
+		expect(screen.getByText(habit.name)).toBeTruthy();
+		await fireEvent.press(back);
+		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 
 	it("says so when the habit doesn't exist", async () => {
