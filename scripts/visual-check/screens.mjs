@@ -154,7 +154,43 @@ export const SCREENS = {
 		feature: "HAB-14",
 		route: "/habits?fixtures=rest-day",
 		mockup: "docs/mockups/hab-14-a5.png",
-		note: "Rest day with ⋯ closed. 'Log something anyway' still opens New habit until HAB-18.",
+		note: "Rest day with ⋯ closed. 'Log something anyway' opens the off-schedule picker (HAB-18).",
+	},
+
+	// HAB-18 — off-schedule log (D1, D2) and retro-log pinning (D4)
+	"rest-day-picker": {
+		feature: "HAB-18",
+		route: "/habits?fixtures=rest-day-picker",
+		mockup: "docs/mockups/hab-18-d1.png",
+		note: "Picker over the rest day: Glass of water (Amount ›) and checks; the Break habit is left out.",
+		async interact(page) {
+			await page.getByText("Log something anyway", { exact: true }).click();
+			await page.getByText("Log off-schedule", { exact: true }).waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"rest-day-picker-empty": {
+		feature: "HAB-18",
+		route: "/habits?fixtures=rest-day-ineligible",
+		mockup: null,
+		note: "Only a Break habit exists: the picker says nothing is eligible instead of listing nothing.",
+		async interact(page) {
+			await page.getByText("Log something anyway", { exact: true }).click();
+			await page.getByText("Nothing to log here", { exact: true }).waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"rest-day-logged": {
+		feature: "HAB-18",
+		route: "/habits?fixtures=rest-day-picker",
+		mockup: "docs/mockups/hab-18-d2.png",
+		note: "Read logged off-schedule: toast with Undo over the rest day, which now lists it. 'Logged 10:42' becomes the real time of day.",
+		async interact(page) {
+			await page.getByText("Log something anyway", { exact: true }).click();
+			await page.getByLabel("Log Read off-schedule").first().click();
+			await page.getByText("Read logged · off-schedule").waitFor();
+			await page.waitForTimeout(400);
+		},
 	},
 	"today-day-closed-reminders": {
 		feature: "HAB-14",
@@ -380,11 +416,17 @@ export const SCREENS = {
 		route: "/habits/1?fixtures=habit-detail-new",
 		mockup: "docs/mockups/habit-detail-new.png",
 	},
+	"habit-detail-bonus": {
+		feature: "HAB-18",
+		route: "/habits/1?fixtures=habit-detail-bonus",
+		mockup: null,
+		note: "Glass of water scheduled Mon–Fri only, so the weekend logs in its history draw as NEW-16 bonus dots (no mockup — the dot has none).",
+	},
 	"retro-log": {
 		feature: "HAB-10",
 		route: "/habits/1?fixtures=retro-log",
-		mockup: "docs/mockups/retro-log .png",
-		note: "Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
+		mockup: "docs/mockups/hab-18-d4.png",
+		note: "Origin habit pinned first in the ringed card (HAB-18 D4), the rest under 'Also on <weekday>'. Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
 		async interact(page, { clock }) {
 			await page.getByLabel(heatmapCellLabel(clock, 3, "logged")).click();
 		},

@@ -211,9 +211,12 @@ describe("HabitDetailScreen", () => {
 			await render(<HabitDetailScreen habitId={1} />);
 			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
 
-			await fireEvent.press(
-				screen.getByRole("checkbox", { name: "Glass of water, done" }),
-			);
+			// A quantity habit steps up to its amount — here, 8 glasses.
+			for (let step = 0; step < 8; step++) {
+				await fireEvent.press(
+					screen.getByRole("button", { name: /^Increase/ }),
+				);
+			}
 			await fireEvent.changeText(screen.getByDisplayValue(""), "Hotel");
 			await fireEvent.press(
 				screen.getByRole("button", { name: "Save changes" }),

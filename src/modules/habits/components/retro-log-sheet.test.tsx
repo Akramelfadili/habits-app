@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/react-native";
 import type { RetroLogDay } from "../hooks/use-retro-log-queries";
 import { makeHabit } from "../test-support/habit-builder";
 
@@ -47,9 +52,11 @@ describe("RetroLogSheet", () => {
 		expect(
 			screen.getByRole("header", { name: "Tuesday, 8 September" }),
 		).toBeTruthy();
+		// A quantity habit has its stepper, not a checkbox.
+		expect(screen.getByText("8")).toBeTruthy();
 		expect(
-			screen.getByRole("checkbox", { name: "Glass of water, done" }),
-		).toBeChecked();
+			screen.queryByRole("checkbox", { name: /Glass of water/ }),
+		).toBeNull();
 		expect(
 			screen.getByRole("checkbox", { name: "Meditate, done" }),
 		).not.toBeChecked();
@@ -78,9 +85,14 @@ describe("RetroLogSheet", () => {
 		await fireEvent.press(
 			screen.getByRole("checkbox", { name: "Meditate, done" }),
 		);
-		await fireEvent.press(
-			screen.getByRole("checkbox", { name: "Glass of water, done" }),
-		);
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
 		await fireEvent.changeText(screen.getByDisplayValue(""), "Hotel");
 		await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
 
@@ -102,19 +114,34 @@ describe("RetroLogSheet", () => {
 		expect(onSave).toHaveBeenCalledWith([], "Easy day");
 	});
 
-	it("sets an exact amount through the quantity row's stepper", async () => {
+	it("sets an exact amount through the quantity row's inline stepper", async () => {
 		const { onSave } = await renderSheet();
 
-		await fireEvent.press(
-			screen.getByRole("button", {
-				name: "Glass of water, set an exact amount",
-			}),
-		);
 		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
 		await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
 
-		expect(screen.getByText("7 of 8 glasses")).toBeTruthy();
 		expect(onSave).toHaveBeenCalledWith([{ habitId: 1, value: 7 }], "");
+	});
+
+	it("pins the opened-from habit first, in the selected card, ahead of 'Also on Tuesday'", async () => {
+		await renderSheet(day({ habits: [meditate, water, read] }));
+
+		const rows = screen.getAllByTestId("list-item");
+		expect(within(rows[0]).getByText("Meditate")).toBeTruthy();
+		expect(within(rows[1]).getByText("Glass of water")).toBeTruthy();
+		expect(within(rows[2]).getByText("Read")).toBeTruthy();
+		// Only the origin sits in the ink-ringed (selected) card.
+		expect(rows[0].parent).toHaveStyle({ borderWidth: 1.5 });
+		expect(rows[1].parent).not.toHaveStyle({ borderWidth: 1.5 });
+		expect(screen.getByText("The habit you opened this day from")).toBeTruthy();
+		expect(screen.getByText("ALSO ON TUESDAY")).toBeTruthy();
+	});
+
+	it("keeps unchecked rows at full strength — never dimmed", async () => {
+		await renderSheet();
+		for (const content of screen.getAllByTestId("list-item-content")) {
+			expect(content).not.toHaveStyle({ opacity: 0.5 });
+		}
 	});
 
 	it("caps the note input at the soft limit", async () => {

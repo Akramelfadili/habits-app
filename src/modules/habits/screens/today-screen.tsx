@@ -14,7 +14,9 @@ import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
+import { HabitPickerSheet } from "../components/habit-picker-sheet";
 import { HabitTodayRow } from "../components/habit-today-row";
+import { OffScheduleRow } from "../components/off-schedule-row";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { TodayHeader } from "../components/today-header";
@@ -23,6 +25,7 @@ import { TodayStatePanel } from "../components/today-state-panel";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
+import { useOffScheduleQueries } from "../hooks/use-off-schedule-queries";
 import { useQuantityLogActions } from "../hooks/use-quantity-log-actions";
 import { useStreakActions } from "../hooks/use-streak-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
@@ -62,6 +65,10 @@ export function TodayScreen() {
 	const { applyFreeze, isFreezing } = useStreakActions();
 	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
 	const [atRiskHabitId, setAtRiskHabitId] = useState<number | null>(null);
+	const { eligibleHabits, loggedToday } = useOffScheduleQueries();
+	// Rest day's picker (HAB-18); a quantity pick closes it and opens the log sheet.
+	const [pickerOpen, setPickerOpen] = useState(false);
+	const [quantityIsOffSchedule, setQuantityIsOffSchedule] = useState(false);
 
 	const [menuOpen, setMenuOpen] = useState(false);
 	// Until the button is measured, roughly under a one-line header.
@@ -75,9 +82,10 @@ export function TodayScreen() {
 		}, []),
 	);
 
-	const quantityHabit = groups
-		.flatMap((group) => group.habits)
-		.find((habit) => habit.id === quantityHabitId);
+	const quantityHabit = [
+		...groups.flatMap((group) => group.habits),
+		...eligibleHabits,
+	].find((habit) => habit.id === quantityHabitId);
 	const atRiskInfo =
 		atRiskHabitId !== null ? atRiskByHabitId.get(atRiskHabitId) : undefined;
 
@@ -105,13 +113,46 @@ export function TodayScreen() {
 		}
 	}
 
+	// A bonus log confirms itself the same way; Undo removes exactly that entry
+	// (nothing was applied to streaks, so there is nothing else to reverse).
+	function confirmOffSchedule(habit: Habit, undo: () => unknown) {
+		showToast({
+			message: `${habit.name} logged · off-schedule`,
+			actionLabel: "Undo",
+			onAction: undo,
+		});
+	}
+
+	async function handlePickHabit(habit: Habit) {
+		setPickerOpen(false);
+		if (habit.targetType === "quantity") {
+			setQuantityIsOffSchedule(true);
+			setQuantityHabitId(habit.id);
+			return;
+		}
+		await toggleCompletion(habit.id, today, true);
+		confirmOffSchedule(habit, () => toggleCompletion(habit.id, today, false));
+	}
+
+	function dismissQuantitySheet() {
+		setQuantityHabitId(null);
+		setQuantityIsOffSchedule(false);
+	}
+
 	async function handleSaveQuantity(value: number) {
 		if (!quantityHabit) return;
 		const habit = quantityHabit;
 		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
 		const target = habit.targetAmount ?? 0;
 		await logQuantity(habit.id, today, value);
-		setQuantityHabitId(null);
+		dismissQuantitySheet();
+		if (quantityIsOffSchedule) {
+			// Undo restores the amount from before — or removes the entry if none.
+			if (value > 0) {
+				confirmOffSchedule(habit, () => logQuantity(habit.id, today, previous));
+			}
+			return;
+		}
 		// Only the save that crosses the target counts as "completing" it;
 		// Undo restores the exact amount logged before.
 		if (previous < target && value >= target) {
@@ -232,14 +273,43 @@ export function TodayScreen() {
 					headline="Rest day"
 					subtitle={`Nothing is scheduled for ${format(today, "EEEE")}. Streaks stay intact.`}
 				>
-					{/* TODO(HAB-18): the spec wants the habit picker here, not New habit — HAB-18 builds it. */}
+					{loggedToday.length > 0 ? (
+						<Container>
+							<SectionLabel>Logged today · off-schedule</SectionLabel>
+							{loggedToday.map(({ habit, entry }) => (
+								<OffScheduleRow
+									key={habit.id}
+									habit={habit}
+									entry={entry}
+									onPress={() => router.push(`/habits/${habit.id}`)}
+								/>
+							))}
+						</Container>
+					) : null}
 					<Button
 						label="Log something anyway"
 						variant="secondary"
 						fullWidth={false}
-						onPress={() => router.push("/new-habit")}
+						onPress={() => setPickerOpen(true)}
 					/>
 				</TodayStatePanel>
+				<HabitPickerSheet
+					visible={pickerOpen}
+					habits={eligibleHabits}
+					loggedHabitIds={new Set(loggedToday.map(({ habit }) => habit.id))}
+					onSelect={handlePickHabit}
+					onDismiss={() => setPickerOpen(false)}
+				/>
+				{quantityHabit ? (
+					<QuantityLogSheet
+						visible
+						habit={quantityHabit}
+						value={quantityValuesByHabitId.get(quantityHabit.id) ?? 0}
+						onDismiss={dismissQuantitySheet}
+						onSave={handleSaveQuantity}
+						isSaving={isLogging}
+					/>
+				) : null}
 				{navMenu}
 			</SafeAreaView>
 		);
@@ -393,7 +463,7 @@ export function TodayScreen() {
 					visible
 					habit={quantityHabit}
 					value={quantityValuesByHabitId.get(quantityHabit.id) ?? 0}
-					onDismiss={() => setQuantityHabitId(null)}
+					onDismiss={dismissQuantitySheet}
 					onSave={handleSaveQuantity}
 					isSaving={isLogging}
 				/>

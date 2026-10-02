@@ -54,13 +54,26 @@ export function makeEntryFixtures(
 		return [];
 	}
 
+	if (scenario === "rest-day-picker" || scenario === "rest-day-ineligible") {
+		return [];
+	}
+
+	if (scenario === "rest-day-logged") {
+		// Read, logged off-schedule at 10:42 today (D2).
+		const loggedAt = new Date();
+		loggedAt.setHours(10, 42, 0, 0);
+		return [{ id: 1, habitId: 3, date: today, createdAt: loggedAt }];
+	}
+
 	if (scenario === "monthly-summary" || scenario === "monthly-too-early") {
 		return monthlyEntries(scenario === "monthly-too-early");
 	}
 
 	if (scenario === "yearly-summary") return yearlyEntries();
 
-	if (scenario === "habit-detail") return habitDetailEntries();
+	if (scenario === "habit-detail" || scenario === "habit-detail-bonus") {
+		return habitDetailEntries();
+	}
 
 	if (
 		scenario === "manage-archive" ||

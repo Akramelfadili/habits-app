@@ -41,6 +41,9 @@ export type FixtureScenario =
 	| "default"
 	| "empty"
 	| "rest-day"
+	| "rest-day-picker"
+	| "rest-day-logged"
+	| "rest-day-ineligible"
 	| "day-closed"
 	| "first-run"
 	| "quantity-log"
@@ -48,6 +51,7 @@ export type FixtureScenario =
 	| "no-freezes"
 	| "habit-detail"
 	| "habit-detail-new"
+	| "habit-detail-bonus"
 	| "retro-log"
 	| "weekly-summary"
 	| "weekly-summary-last-week"
@@ -68,6 +72,9 @@ export type FixtureScenario =
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"empty",
 	"rest-day",
+	"rest-day-picker",
+	"rest-day-logged",
+	"rest-day-ineligible",
 	"day-closed",
 	"first-run",
 	"quantity-log",
@@ -75,6 +82,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"no-freezes",
 	"habit-detail",
 	"habit-detail-new",
+	"habit-detail-bonus",
 	"retro-log",
 	"weekly-summary",
 	"weekly-summary-last-week",
@@ -182,6 +190,49 @@ export const REST_DAY_HABIT_FIXTURES: FixtureHabit[] = [
 		updatedAt: FIXTURE_DATE,
 	},
 ];
+
+/**
+ * HAB-18's picker scenarios (D1/D2): every habit is due every day except
+ * today, so Today is on a rest day. `Read` (id 3) is the one the logged
+ * scenario logs off-schedule; "No phone after 23:00" is a Break habit the
+ * picker must leave out. `ineligible` keeps only that Break habit.
+ */
+function restDayPickerFixtures(onlyBreak: boolean): FixtureHabit[] {
+	const notToday = ([1, 2, 3, 4, 5, 6, 7] as IsoWeekday[]).filter(
+		(day) => day !== getISODay(new Date()),
+	);
+	const base = {
+		direction: "build" as const,
+		targetType: "simple" as const,
+		targetAmount: null,
+		targetUnit: null,
+		frequency: { type: "weekdays" as const, days: notToday },
+		createdAt: FIXTURE_DATE,
+		updatedAt: FIXTURE_DATE,
+	};
+	const habits: FixtureHabit[] = [
+		{
+			...base,
+			id: 1,
+			name: "Glass of water",
+			category: MORNING_FIXTURE,
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		},
+		{ ...base, id: 2, name: "Meditate", category: MORNING_FIXTURE },
+		{ ...base, id: 3, name: "Read", category: EVENING_FIXTURE },
+		{ ...base, id: 4, name: "Easy run", category: TRAINING_FIXTURE },
+		{
+			...base,
+			id: 5,
+			name: "No phone after 23:00",
+			category: OTHER_FIXTURE,
+			direction: "break",
+		},
+	];
+	return onlyBreak ? habits.filter((habit) => habit.id === 5) : habits;
+}
 
 /** Habit ids due today, all completed, for the Day closed scenario. */
 export const DAY_CLOSED_DUE_TODAY_IDS = [1, 2, 3];
@@ -675,6 +726,11 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return [];
 		case "rest-day":
 			return REST_DAY_HABIT_FIXTURES.map((habit) => ({ ...habit }));
+		case "rest-day-picker":
+		case "rest-day-logged":
+			return restDayPickerFixtures(false);
+		case "rest-day-ineligible":
+			return restDayPickerFixtures(true);
 		case "day-closed":
 			return DAY_CLOSED_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "quantity-log":
@@ -687,6 +743,13 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return habitDetailFixtures();
 		case "habit-detail-new":
 			return habitDetailNewFixtures();
+		case "habit-detail-bonus":
+			// Same history, but Mon–Fri only: the weekend logs become bonus dots (HAB-18).
+			return habitDetailFixtures().map((habit) =>
+				habit.id === 1
+					? { ...habit, frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] } }
+					: habit,
+			);
 		case "retro-log":
 			return retroLogFixtures();
 		case "weekly-summary":

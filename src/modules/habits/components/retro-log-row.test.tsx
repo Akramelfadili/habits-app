@@ -21,18 +21,10 @@ async function renderRow(
 	props: Partial<React.ComponentProps<typeof RetroLogRow>> = {},
 ) {
 	const onChange = jest.fn();
-	const onToggleExpanded = jest.fn();
 	const view = await render(
-		<RetroLogRow
-			habit={walk}
-			value={false}
-			onChange={onChange}
-			expanded={false}
-			onToggleExpanded={onToggleExpanded}
-			{...props}
-		/>,
+		<RetroLogRow habit={walk} value={false} onChange={onChange} {...props} />,
 	);
-	return { ...view, onChange, onToggleExpanded };
+	return { ...view, onChange };
 }
 
 describe("RetroLogRow", () => {
@@ -43,11 +35,16 @@ describe("RetroLogRow", () => {
 		expect(screen.getByRole("checkbox", { name: "Walk, done" })).toBeChecked();
 	});
 
-	it("dims a not-done row", async () => {
+	it("never dims a not-done row (HAB-18)", async () => {
 		await renderRow({ value: false });
-		expect(screen.getByTestId("list-item-content")).toHaveStyle({
+		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({
 			opacity: 0.5,
 		});
+	});
+
+	it("says why the origin habit is pinned", async () => {
+		await renderRow({ origin: true });
+		expect(screen.getByText("The habit you opened this day from")).toBeTruthy();
 	});
 
 	it("flips a check habit from the check or the row", async () => {
@@ -70,37 +67,12 @@ describe("RetroLogRow", () => {
 		).toBeTruthy();
 	});
 
-	it("checks a quantity habit up to its full target, and clears it back to nothing", async () => {
-		const partial = await renderRow({ habit: water, value: 6 });
+	it("gives a quantity habit an inline stepper instead of a checkbox", async () => {
+		const { onChange } = await renderRow({ habit: water, value: 6 });
+		expect(screen.queryByRole("checkbox")).toBeNull();
 		expect(screen.getByText("6 of 8 glasses")).toBeTruthy();
-		expect(screen.getByRole("checkbox")).not.toBeChecked();
-		await fireEvent.press(screen.getByRole("checkbox"));
-		expect(partial.onChange).toHaveBeenCalledWith(8);
-		await partial.unmount();
-
-		const full = await renderRow({ habit: water, value: 8 });
-		expect(screen.getByText("8 glasses")).toBeTruthy();
-		await fireEvent.press(screen.getByRole("checkbox"));
-		expect(full.onChange).toHaveBeenCalledWith(0);
-	});
-
-	it("tapping a quantity row asks to expand its stepper, which sets an exact amount", async () => {
-		const collapsed = await renderRow({ habit: water, value: 6 });
-		await fireEvent.press(
-			screen.getByRole("button", {
-				name: "Glass of water, set an exact amount",
-			}),
-		);
-		expect(collapsed.onToggleExpanded).toHaveBeenCalledTimes(1);
-		expect(collapsed.onChange).not.toHaveBeenCalled();
-		await collapsed.unmount();
-
-		const expanded = await renderRow({
-			habit: water,
-			value: 6,
-			expanded: true,
-		});
-		await fireEvent.press(screen.getByRole("button", { name: /increase/i }));
-		expect(expanded.onChange).toHaveBeenCalledWith(7);
+		await fireEvent.press(screen.getByRole("button", { name: /^Increase/ }));
+		await fireEvent.press(screen.getByRole("button", { name: /^Decrease/ }));
+		expect(onChange.mock.calls).toEqual([[7], [5]]);
 	});
 });

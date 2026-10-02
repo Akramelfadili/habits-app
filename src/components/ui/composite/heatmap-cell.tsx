@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import {
 	type AccentHue,
 	type HeatmapLevel,
+	habitAccentInk,
 	heatmapLevelColor,
 	inkLevelColor,
 } from "@/theme/theme";
@@ -16,6 +17,8 @@ export type HeatmapCellState =
 	| { kind: "not-scheduled" }
 	| { kind: "missed" }
 	| { kind: "frozen" }
+	/** Logged on a day that wasn't scheduled — a "bonus dot" (NEW-16, HAB-18); never counts toward anything. */
+	| { kind: "bonus" }
 	/** Not part of the history yet or no more — before a habit's start, or still ahead (month calendar, HAB-16). */
 	| { kind: "outside" }
 	| { kind: "level"; level: HeatmapLevel };
@@ -62,6 +65,11 @@ export function HeatmapCell({
 			borderColor: colors.track,
 			borderStyle: "solid" as const,
 		},
+		bonus: {
+			backgroundColor: colors.card,
+			borderColor: colors.border,
+			borderStyle: "solid" as const,
+		},
 		outside: {
 			backgroundColor: "transparent",
 			borderColor: colors.border,
@@ -91,6 +99,20 @@ export function HeatmapCell({
 			? { flex: 1, height, borderRadius: Math.floor(height / 3) }
 			: styles.fill;
 	const shape = [sized, styles.base, fill];
+	// The bonus dot: a quarter of the edge (min 3px), in the accent's ink.
+	const dotSize = Math.max(3, Math.round((size ?? height ?? 18) / 4));
+	const dot =
+		state.kind === "bonus" ? (
+			<View
+				testID="heatmap-cell-bonus-dot"
+				style={{
+					width: dotSize,
+					height: dotSize,
+					borderRadius: dotSize / 2,
+					backgroundColor: habitAccentInk(accent, scheme),
+				}}
+			/>
+		) : null;
 
 	if (!onPress) {
 		return (
@@ -98,7 +120,9 @@ export function HeatmapCell({
 				testID={`heatmap-cell-${state.kind}`}
 				accessibilityLabel={accessibilityLabel}
 				style={shape}
-			/>
+			>
+				{dot}
+			</View>
 		);
 	}
 
@@ -112,13 +136,17 @@ export function HeatmapCell({
 				...shape,
 				pressed && { opacity: opacity.pressed },
 			]}
-		/>
+		>
+			{dot}
+		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
 	base: {
 		borderWidth: 1,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	fill: {
 		flex: 1,

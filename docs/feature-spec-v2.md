@@ -25,7 +25,6 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **As built (HAB-14), deviations until the dependencies land**
 - ~~Settings is a temporary deviation~~ — **resolved by HAB-15:** the Settings row is enabled and navigates, in every Today state including the empty one, so "Settings must be usable before the first habit exists" is now met. Its subline reads "Last export: <date>" after the first export, otherwise "Appearance, evening review, export". Month is live since HAB-16 (a live subline, or "Unlocks <date>" under a month of history); Year is live since HAB-17 ("<year> so far · since <date>", or "Unlocks <date>" under three months of history).
-- **Rest day's "Log something anyway" still opens New Habit.** The spec wants the HAB-18 habit picker (D1); it is marked `TODO(HAB-18)` in `today-screen.tsx` and flips when HAB-18 is built.
 - The weekly row's subline reuses the Weekly screen's hook and shows the week it opens on; tomorrow rows show the earliest *enabled* reminder that fires on tomorrow's weekday.
 
 ---
@@ -122,6 +121,13 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 - Undo after an off-schedule log: must remove exactly that log entry, no streak side effects to reverse since none were applied.
 
 **Depends on:** HAB-14.
+
+**As built (HAB-18)**
+- **"Off-schedule" is derived, not stored** (`services/off-schedule.ts`): an entry on a day the habit's strategy didn't schedule. Streaks, rates and perfect days only walk *scheduled* days, so nothing needed to change there, and `services/off-schedule.test.ts` pins that no Weekly/Monthly/Yearly/Detail figure changes and no rate passes 100%. A per-week habit is scheduled on any day, so its extra completions in a week are never off-schedule (and, as before, count in both its completed and scheduled totals).
+- **Picker** lists active Build habits only. A habit already logged today shows checked and does nothing when tapped; removal is the toast's Undo, or Detail / retro log. Quantity habits hand off to the Quantity log, then the picker closes. Undo restores the amount from before (writing 0 deletes the entry).
+- **D2:** "Logged 10:42" is the entry's own `createdAt` (a quantity habit's time is its first log's). Rows open Habit Detail.
+- **NEW-16 bonus dot:** `HeatmapCell` state `bonus`; Detail's heatmap draws off-schedule logs with it (`habit-detail-bonus` visual-check state).
+- **D4:** origin habit in the ringed (`Container selected`) card, the rest under "Also on <weekday>"; no row is dimmed; quantity rows have the inline stepper and no checkbox.
 
 ---
 

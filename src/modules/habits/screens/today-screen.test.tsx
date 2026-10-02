@@ -5,7 +5,7 @@ import {
 	waitFor,
 } from "@testing-library/react-native";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
-import type { Habit } from "../types";
+import type { Entry, Habit } from "../types";
 import type { CategoryGroup } from "./today-screen-helpers";
 
 jest.mock("expo-symbols", () => {
@@ -76,6 +76,15 @@ jest.mock("../hooks/use-today-queries", () => ({
 		tomorrowReminderTimeByHabitId: mockTomorrowReminderTimes,
 		atRiskByHabitId: mockAtRiskByHabitId,
 		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
+	}),
+}));
+
+let mockEligibleHabits: Habit[] = [];
+let mockLoggedToday: { habit: Habit; entry: Entry }[] = [];
+jest.mock("../hooks/use-off-schedule-queries", () => ({
+	useOffScheduleQueries: () => ({
+		eligibleHabits: mockEligibleHabits,
+		loggedToday: mockLoggedToday,
 	}),
 }));
 
@@ -163,6 +172,8 @@ describe("TodayScreen", () => {
 		mockHasSeenFirstRun = true;
 		mockAtRiskByHabitId = new Map();
 		mockFreezesRemainingThisMonth = 2;
+		mockEligibleHabits = [];
+		mockLoggedToday = [];
 	});
 
 	it("shows the no-habits-yet empty state when there are no habits at all", async () => {
@@ -202,13 +213,136 @@ describe("TodayScreen", () => {
 		expect(screen.queryByText("Nothing to track yet")).toBeNull();
 	});
 
-	it("opens the add-habit flow from rest day's Log something anyway", async () => {
-		mockViewState = "rest-day";
+	describe("rest day: Log something anyway (HAB-18)", () => {
+		const read = makeHabit({ id: 5, name: "Read" });
+		const water = makeHabit({
+			id: 6,
+			name: "Glass of water",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
 
-		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Log something anyway"));
+		beforeEach(() => {
+			mockViewState = "rest-day";
+			mockToggleCompletion.mockResolvedValue(undefined);
+			mockLogQuantity.mockResolvedValue(undefined);
+		});
 
-		expect(mockPush).toHaveBeenCalledWith("/new-habit");
+		it("opens the habit picker, not New habit", async () => {
+			mockEligibleHabits = [read];
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Log something anyway"));
+
+			expect(screen.getByText("Log off-schedule")).toBeTruthy();
+			expect(screen.getByText("Read")).toBeTruthy();
+			expect(mockPush).not.toHaveBeenCalled();
+		});
+
+		it("shows the 'nothing eligible' state when no habit can be logged", async () => {
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Log something anyway"));
+			expect(screen.getByText("Nothing to log here")).toBeTruthy();
+		});
+
+		it("logs a check habit, confirms with a toast, and Undo removes exactly that entry", async () => {
+			mockEligibleHabits = [read];
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(
+				screen.getByRole("checkbox", { name: "Log Read off-schedule" }),
+			);
+
+			expect(mockToggleCompletion).toHaveBeenCalledWith(5, mockToday, true);
+			const toast = useToastStore.getState().toast;
+			expect(toast).toMatchObject({
+				message: "Read logged · off-schedule",
+				actionLabel: "Undo",
+			});
+			toast?.onAction?.();
+			expect(mockToggleCompletion).toHaveBeenLastCalledWith(
+				5,
+				mockToday,
+				false,
+			);
+			expect(mockToggleCompletion).toHaveBeenCalledTimes(2);
+			// The picker closed.
+			await waitFor(() =>
+				expect(screen.queryByText("Log off-schedule")).toBeNull(),
+			);
+		});
+
+		it("hands a quantity habit off to the Quantity log, closes the picker, and Undo restores the prior amount", async () => {
+			mockEligibleHabits = [water];
+			mockQuantityValuesByHabitId = new Map();
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(
+				screen.getByRole("button", {
+					name: "Log Glass of water, set an amount",
+				}),
+			);
+
+			expect(screen.queryByText("Log off-schedule")).toBeNull();
+			await fireEvent.press(
+				screen.getByLabelText("Increase Glass of water, glasses"),
+			);
+			await fireEvent.press(screen.getByText("Save 1 of 8"));
+
+			expect(mockLogQuantity).toHaveBeenCalledWith(6, mockToday, 1);
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Glass of water logged · off-schedule");
+			toast?.onAction?.();
+			// Nothing was logged before, so Undo writes 0 — which deletes the entry.
+			expect(mockLogQuantity).toHaveBeenLastCalledWith(6, mockToday, 0);
+		});
+
+		it("Undo after a quantity log restores the amount that was there before", async () => {
+			mockEligibleHabits = [water];
+			mockQuantityValuesByHabitId = new Map([[6, 2]]);
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(
+				screen.getByRole("button", {
+					name: "Log Glass of water, set an amount",
+				}),
+			);
+			await fireEvent.press(
+				screen.getByLabelText("Increase Glass of water, glasses"),
+			);
+			await fireEvent.press(screen.getByText("Save 3 of 8"));
+
+			useToastStore.getState().toast?.onAction?.();
+			expect(mockLogQuantity).toHaveBeenLastCalledWith(6, mockToday, 2);
+		});
+
+		it("lists what was logged today with its time, and a logged row in the picker does nothing", async () => {
+			mockEligibleHabits = [read];
+			mockLoggedToday = [
+				{
+					habit: read,
+					entry: {
+						id: 1,
+						habitId: 5,
+						date: "2026-09-16",
+						createdAt: new Date(2026, 8, 16, 10, 42),
+					},
+				},
+			];
+			await render(<TodayScreen />);
+
+			expect(screen.getByText("LOGGED TODAY · OFF-SCHEDULE")).toBeTruthy();
+			expect(
+				screen.getByText("Logged 10:42 · bonus, streak unchanged"),
+			).toBeTruthy();
+
+			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(
+				screen.getByRole("checkbox", { name: "Read, logged off-schedule" }),
+			);
+			expect(mockToggleCompletion).not.toHaveBeenCalled();
+			expect(useToastStore.getState().toast).toBeNull();
+		});
 	});
 
 	it("shows the day-closed celebratory state with tomorrow's preview", async () => {
