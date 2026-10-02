@@ -3,6 +3,7 @@ import { LAST_EXPORT_SETTING_KEY } from "../constants";
 import {
 	useActiveHabits,
 	useArchivedHabits,
+	useHabitsList,
 } from "../repositories/habit-repository";
 import {
 	monthlyMenuLockedReason,
@@ -10,7 +11,14 @@ import {
 } from "../screens/monthly-summary-helpers";
 import { settingsMenuSubline } from "../screens/settings-helpers";
 import { weeklyMenuSubline } from "../screens/weekly-summary-helpers";
+import {
+	yearlyMenuLockedReason,
+	yearlyMenuSubline,
+} from "../screens/yearly-summary-helpers";
+import { historyStart } from "../services/monthly-summary";
 import { defaultSummaryWeek } from "../services/weekly-summary";
+import { yearUnlock } from "../services/yearly-summary";
+import type { Habit } from "../types";
 import {
 	type MonthlySummaryView,
 	useMonthlySummaryQueries,
@@ -31,9 +39,6 @@ export type TodayMenuView = {
 	settings: TodayMenuRow;
 };
 
-// TODO(HAB-17): Yearly summary.
-const COMING_SOON = "Coming soon";
-
 function monthlyRow(monthly: MonthlySummaryView): TodayMenuRow {
 	switch (monthly.state) {
 		case "ready":
@@ -49,6 +54,19 @@ function monthlyRow(monthly: MonthlySummaryView): TodayMenuRow {
 }
 
 /**
+ * Yearly's row from the habits alone — the year's entries are never read for a
+ * subline (the full summary is the screen's job, not the menu's).
+ */
+function yearlyRow(habits: readonly Habit[], today: Date): TodayMenuRow {
+	const firstDay = historyStart(habits);
+	if (!firstDay) return { subline: "", disabledReason: "After three months" };
+	const unlock = yearUnlock(firstDay, today);
+	return unlock.isUnlocked
+		? { subline: yearlyMenuSubline(firstDay, today) }
+		: { subline: "", disabledReason: yearlyMenuLockedReason(unlock) };
+}
+
+/**
  * What Today's navigation menu (HAB-14) shows on each row. Mount it only while
  * the menu is open — the weekly numbers come from the Weekly screen's own
  * hook and shouldn't be computed for a closed menu.
@@ -59,6 +77,7 @@ export function useTodayMenuQueries(): TodayMenuView {
 	const activeCount = useActiveHabits().length;
 	const archivedCount = useArchivedHabits().length;
 	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
+	const habits = useHabitsList();
 	const hasHabits = weekly.hasHabits;
 
 	return {
@@ -66,9 +85,7 @@ export function useTodayMenuQueries(): TodayMenuView {
 			? { subline: weeklyMenuSubline(weekly) }
 			: { subline: "", disabledReason: "After your first full week" },
 		monthly: monthlyRow(monthly),
-		yearly: hasHabits
-			? { subline: "", disabledReason: COMING_SOON }
-			: { subline: "", disabledReason: "After three months" },
+		yearly: yearlyRow(habits, new Date()),
 		manage: {
 			subline:
 				activeCount === 0 && archivedCount === 0

@@ -9,6 +9,7 @@ import {
 	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
 import { monthlyEntries } from "./monthly-fixtures";
+import { yearlyEntries } from "./yearly-fixtures";
 
 /** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
 const STREAK_AT_RISK_DAYS = 24;
@@ -56,6 +57,8 @@ export function makeEntryFixtures(
 	if (scenario === "monthly-summary" || scenario === "monthly-too-early") {
 		return monthlyEntries(scenario === "monthly-too-early");
 	}
+
+	if (scenario === "yearly-summary") return yearlyEntries();
 
 	if (scenario === "habit-detail") return habitDetailEntries();
 

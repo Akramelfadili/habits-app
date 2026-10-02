@@ -10,6 +10,7 @@ import {
 	TRAINING_FIXTURE,
 } from "./category-fixtures";
 import { monthlyHabitFixtures } from "./monthly-fixtures";
+import { yearlyHabitFixtures } from "./yearly-fixtures";
 
 /**
  * A fixture habit before its HAB-13 lifecycle fields — `habitFixturesFor`
@@ -53,6 +54,7 @@ export type FixtureScenario =
 	| "perfect-week"
 	| "monthly-summary"
 	| "monthly-too-early"
+	| "yearly-summary"
 	| "reminders"
 	| "reminders-at-cap"
 	| "manage-archive"
@@ -79,6 +81,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"perfect-week",
 	"monthly-summary",
 	"monthly-too-early",
+	"yearly-summary",
 	"reminders",
 	"reminders-at-cap",
 	"manage-archive",
@@ -695,6 +698,8 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return monthlyHabitFixtures(false);
 		case "monthly-too-early":
 			return monthlyHabitFixtures(true);
+		case "yearly-summary":
+			return yearlyHabitFixtures();
 		case "reminders":
 			return remindersHabitFixtures({
 				type: "weekdays",

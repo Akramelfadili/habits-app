@@ -20,10 +20,10 @@ type CompletionGridProps = {
 	/**
 	 * NEW-07's layouts. "detail" is Habit Detail's weekday-rows × week-columns
 	 * of 18px squares; "month" is the Monthly calendar — a Monday-first
-	 * weekday axis over 16px-high pills that fill the width. (The 11px year
-	 * strip joins with HAB-17.)
+	 * weekday axis over 16px-high pills that fill the width; "year" is Yearly's
+	 * per-habit strip — one row of twelve 11px month cells, no axis (HAB-17).
 	 */
-	layout: "detail" | "month";
+	layout: "detail" | "month" | "year";
 };
 
 const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -31,12 +31,15 @@ const DETAIL_CELL = 18;
 const DETAIL_GAP = 5;
 const MONTH_CELL_HEIGHT = 16;
 const MONTH_GAP = 6;
+const YEAR_CELL = 11;
+const YEAR_GAP = 3;
 
 /** The one completion grid (NEW-07) — every calendar-shaped history in the app. */
 export function CompletionGrid({ rows, accent, layout }: CompletionGridProps) {
 	const { colors } = useTheme();
 	const isMonth = layout === "month";
-	const gap = isMonth ? MONTH_GAP : DETAIL_GAP;
+	const isYear = layout === "year";
+	const gap = isMonth ? MONTH_GAP : isYear ? YEAR_GAP : DETAIL_GAP;
 
 	return (
 		<View testID={`completion-grid-${layout}`} style={{ gap }}>
@@ -65,7 +68,7 @@ export function CompletionGrid({ rows, accent, layout }: CompletionGridProps) {
 								key={cell.key}
 								state={cell.state}
 								accent={accent}
-								size={isMonth ? undefined : DETAIL_CELL}
+								size={isMonth ? undefined : isYear ? YEAR_CELL : DETAIL_CELL}
 								height={isMonth ? MONTH_CELL_HEIGHT : undefined}
 								ramp={isMonth ? "ink" : "accent"}
 								accessibilityLabel={cell.accessibilityLabel}
@@ -78,7 +81,9 @@ export function CompletionGrid({ rows, accent, layout }: CompletionGridProps) {
 								style={
 									isMonth
 										? styles.blankMonth
-										: { width: DETAIL_CELL, height: DETAIL_CELL }
+										: isYear
+											? { width: YEAR_CELL, height: YEAR_CELL }
+											: { width: DETAIL_CELL, height: DETAIL_CELL }
 								}
 							/>
 						),

@@ -203,6 +203,13 @@ describe("MonthlySummaryScreen — ready (C2, C3)", () => {
 		await fireEvent.press(screen.getByText("Week"));
 		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
 	});
+
+	it("goes to Yearly from the switcher, replacing the screen (HAB-17)", async () => {
+		await render(<MonthlySummaryScreen />);
+		await fireEvent.press(screen.getByText("Year"));
+		expect(mockReplace).toHaveBeenCalledWith("/habits/year");
+		expect(mockPush).not.toHaveBeenCalled();
+	});
 });
 
 describe("MonthlySummaryScreen — too early (C6)", () => {

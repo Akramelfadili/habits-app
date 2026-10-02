@@ -49,6 +49,8 @@ export default function HabitsLayout() {
 				<Stack.Screen name="week" options={backTo("Today")} />
 				{/* Monthly (HAB-16): same chrome as Weekly, reached from its range switcher or the ⋯ menu. */}
 				<Stack.Screen name="month" options={backTo("Today")} />
+				{/* Yearly (HAB-17): the third sibling of the range switcher; Back still reads "Today". */}
+				<Stack.Screen name="year" options={backTo("Today")} />
 				{/* Pushed from Habit Detail; a bare chevron until the screen relabels it with the habit's name. */}
 				<Stack.Screen name="reminders/[id]" options={backTo("")} />
 				{/* Same as Weekly Summary: back to Today, the large title is screen content. */}
