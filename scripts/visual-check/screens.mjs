@@ -236,6 +236,64 @@ export const SCREENS = {
 		},
 	},
 
+	// HAB-25 — Categories: manage & delete (temporarily pushed from Manage habits until Settings, HAB-15)
+	"manage-categories-built-in-only": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-built-in-only",
+		mockup: "docs/mockups/hab-25-f3a.png",
+		note: "F3a — built-ins only: locked tinted chips, counts, Built-in tag, no actions; Yours holds only Add category. Back reads 'Manage' until Settings (HAB-15) exists.",
+	},
+	"manage-categories-one-custom": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-one-custom",
+		mockup: "docs/mockups/hab-25-f3b.png",
+		note: "F3b — one custom (Music), not used: outline chip, Rename + red Delete.",
+	},
+	"manage-categories-in-use": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-in-use",
+		mockup: "docs/mockups/hab-25-f3c.png",
+		note: "F3c — Music 3 habits (one archived — counts include archived), Language 1, Garden not used; creation order.",
+	},
+	"delete-category-unused": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-in-use",
+		mockup: "docs/mockups/hab-25-f4a.png",
+		note: "F4a — plain confirm, no mention of reassignment.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Delete Garden" }).click();
+		},
+	},
+	"delete-category-in-use": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-in-use",
+		mockup: "docs/mockups/hab-25-f4b.png",
+		note: "F4b — names the count, Music → Other move preview with every affected habit, 'Delete and move 3 habits'.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Delete Music" }).click();
+		},
+	},
+	"rename-category-editing": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-in-use",
+		mockup: null,
+		note: "No mockup — proposed inline rename: the row becomes the add-sheet's name field (counter from 16/20) with Cancel / Save.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Rename Language" }).click();
+			await page.getByLabel("Rename Language").fill("Languages & more");
+		},
+	},
+	"rename-category-duplicate": {
+		feature: "HAB-25",
+		route: "/habits/categories?fixtures=categories-in-use",
+		mockup: null,
+		note: "No mockup — proposed: renaming to a built-in's name ('health') shows the amber duplicate helper and blocks Save.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Rename Language" }).click();
+			await page.getByLabel("Rename Language").fill("health");
+		},
+	},
+
 	// HAB-07 / HAB-08 — Sheets over Today
 	"quantity-log": {
 		feature: "HAB-07",

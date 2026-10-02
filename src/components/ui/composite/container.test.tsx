@@ -57,4 +57,13 @@ describe("Container", () => {
 		);
 		expect(screen.getByText("Row").parent).toHaveStyle({ padding: 6 });
 	});
+
+	it("outlined: a card with a hairline border (HAB-25's move preview)", async () => {
+		await render(
+			<Container variant="outlined">
+				<Text>Preview</Text>
+			</Container>,
+		);
+		expect(screen.getByText("Preview").parent).toHaveStyle({ borderWidth: 1 });
+	});
 });

@@ -243,6 +243,41 @@ export async function setHabitRestored(
 	return updateOne(id, { archivedAt: null, pauses: [...pauses] });
 }
 
+/**
+ * Web-only (not in the native repository): habits embed their category here,
+ * where native resolves it live — so a category rename (HAB-25) has to be
+ * copied onto every habit in it.
+ */
+export function applyCategoryChange(category: Category): void {
+	setHabits(
+		getHabits().map((h) =>
+			h.category.id === category.id ? { ...h, category } : h,
+		),
+	);
+}
+
+/**
+ * Web-only counterpart of the native category delete's reassignment
+ * (HAB-25): every habit in `fromId`, archived ones too, moves to `to` at the
+ * end of the manual order, keeping its relative order.
+ */
+export function reassignHabitsToCategory(fromId: number, to: Category): void {
+	const habits = getHabits();
+	const moving = habits
+		.filter((h) => h.category.id === fromId)
+		.sort(byManualOrder)
+		.map((h) => h.id);
+	const base = Math.max(0, ...habits.map((h) => h.sortOrder));
+	setHabits(
+		habits.map((h) => {
+			const index = moving.indexOf(h.id);
+			return index === -1
+				? h
+				: { ...h, category: to, sortOrder: base + index + 1 };
+		}),
+	);
+}
+
 /** Web has no related rows to clear — the fixture entry stores just ignore an unknown habit id. */
 export async function deleteHabitAndHistory(id: number): Promise<void> {
 	setHabits(getHabits().filter((h) => h.id !== id));

@@ -27,4 +27,11 @@ describe("AddRow", () => {
 		await fireEvent.press(row);
 		expect(onPress).not.toHaveBeenCalled();
 	});
+
+	it("embedded: no dashed outline of its own inside a card (HAB-25)", async () => {
+		await render(<AddRow label="Add category" embedded onPress={jest.fn()} />);
+		expect(screen.getByRole("button", { name: "Add category" })).toHaveStyle({
+			borderWidth: 0,
+		});
+	});
 });

@@ -25,4 +25,14 @@ describe("SectionHeader", () => {
 			fontWeight: "600",
 		});
 	});
+
+	it("group: compact label with its count right beside it (HAB-25)", async () => {
+		await render(<SectionHeader size="group" title="Built-in" count="10" />);
+		expect(screen.getByText("Built-in")).toHaveStyle({
+			fontSize: typeScale.subtitle,
+		});
+		expect(screen.getByText("10").parent).toHaveStyle({
+			justifyContent: "flex-start",
+		});
+	});
 });

@@ -3,7 +3,11 @@ import { StyleSheet, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
 type ContainerProps = PropsWithChildren<{
-	variant?: "card" | "inset" | "sheet";
+	/**
+	 * "outlined" is a card with a hairline border, for a card sitting on a
+	 * card-coloured surface (the category move preview inside a sheet, HAB-25).
+	 */
+	variant?: "card" | "inset" | "sheet" | "outlined";
 	/**
 	 * Groups direct children into one card, separating them with a full-bleed
 	 * hairline instead of the card's default gap (e.g. Category + Direction
@@ -47,8 +51,12 @@ export function Container({
 				tight && styles.tight,
 				{
 					backgroundColor: variant === "inset" ? colors.inner : colors.card,
-					borderWidth: selected ? 1.5 : 0,
-					borderColor: selected ? colors.ink : "transparent",
+					borderWidth: selected ? 1.5 : variant === "outlined" ? 1 : 0,
+					borderColor: selected
+						? colors.ink
+						: variant === "outlined"
+							? colors.border
+							: "transparent",
 				},
 			]}
 		>

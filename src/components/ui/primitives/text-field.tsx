@@ -28,6 +28,8 @@ type TextFieldProps = {
 	 * amber outline plus a NEW-24 helper under the field.
 	 */
 	warning?: string;
+	/** Return key — e.g. saving an inline rename (HAB-25). */
+	onSubmitEditing?: () => void;
 };
 
 /** How close to `maxLength` the remaining-characters counter starts showing. */
@@ -46,6 +48,7 @@ export function TextField({
 	multiline = false,
 	nearLimitCounter = false,
 	warning,
+	onSubmitEditing,
 }: TextFieldProps) {
 	const { colors } = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
@@ -94,6 +97,8 @@ export function TextField({
 				maxLength={maxLength}
 				autoFocus={autoFocus}
 				multiline={multiline}
+				onSubmitEditing={onSubmitEditing}
+				returnKeyType={onSubmitEditing ? "done" : undefined}
 				style={[
 					styles.input,
 					multiline && styles.multiline,

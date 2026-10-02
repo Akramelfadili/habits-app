@@ -6,8 +6,12 @@ type SectionHeaderProps = {
 	title: string;
 	/** Trailing mini-count, e.g. "2/3" — omit when there's nothing to count. */
 	count?: string;
-	/** "small" is a card's own semibold title (Weekly Summary's "Per habit") rather than a group header. */
-	size?: "default" | "small";
+	/**
+	 * "small" is a card's own semibold title (Weekly Summary's "Per habit")
+	 * rather than a group header; "group" is the compact label-and-count above
+	 * a list card (Manage Categories' "Built-in 10", HAB-25), count beside it.
+	 */
+	size?: "default" | "small" | "group";
 };
 
 /**
@@ -23,17 +27,28 @@ export function SectionHeader({
 	const { colors } = useTheme();
 
 	return (
-		<View style={styles.row}>
+		<View style={[styles.row, size === "group" && styles.groupRow]}>
 			<Text
 				style={[
-					size === "small" ? styles.smallTitle : styles.title,
-					{ color: colors.ink },
+					size === "small"
+						? styles.smallTitle
+						: size === "group"
+							? styles.groupTitle
+							: styles.title,
+					{ color: size === "group" ? colors.sub : colors.ink },
 				]}
 			>
 				{title}
 			</Text>
 			{count ? (
-				<Text style={[styles.count, { color: colors.sub }]}>{count}</Text>
+				<Text
+					style={[
+						size === "group" ? styles.groupCount : styles.count,
+						{ color: size === "group" ? colors.faint : colors.sub },
+					]}
+				>
+					{count}
+				</Text>
 			) : null}
 		</View>
 	);
@@ -55,5 +70,17 @@ const styles = StyleSheet.create({
 	},
 	count: {
 		fontSize: typeScale.subtitle,
+	},
+	groupRow: {
+		justifyContent: "flex-start",
+		gap: 6,
+		paddingHorizontal: 4,
+	},
+	groupTitle: {
+		fontSize: typeScale.subtitle,
+		fontWeight: "600",
+	},
+	groupCount: {
+		fontSize: typeScale.caption,
 	},
 });
