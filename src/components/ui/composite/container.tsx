@@ -6,8 +6,10 @@ type ContainerProps = PropsWithChildren<{
 	/**
 	 * "outlined" is a card with a hairline border, for a card sitting on a
 	 * card-coloured surface (the category move preview inside a sheet, HAB-25).
+	 * "dashed" is a transparent placeholder outline (Manage's empty Archived
+	 * section, HAB-19).
 	 */
-	variant?: "card" | "inset" | "sheet" | "outlined";
+	variant?: "card" | "inset" | "sheet" | "outlined" | "dashed";
 	/**
 	 * Groups direct children into one card, separating them with a full-bleed
 	 * hairline instead of the card's default gap (e.g. Category + Direction
@@ -29,6 +31,11 @@ type ContainerProps = PropsWithChildren<{
 	 * sits just inside the card edge.
 	 */
 	tight?: boolean;
+	/**
+	 * A list card with a row held mid-drag: ink outline on the card, the
+	 * layout unchanged (Manage's scoped reorder, HAB-19).
+	 */
+	lifted?: boolean;
 }>;
 
 export function Container({
@@ -37,6 +44,7 @@ export function Container({
 	compact = false,
 	selected = false,
 	tight = false,
+	lifted = false,
 	children,
 }: ContainerProps) {
 	const { colors } = useTheme();
@@ -49,14 +57,27 @@ export function Container({
 				variant === "sheet" && styles.sheet,
 				dividers && styles.dividedBase,
 				tight && styles.tight,
+				tight && (variant === "outlined" || lifted) && styles.tightOutlined,
+				variant === "dashed" && styles.dashed,
 				{
-					backgroundColor: variant === "inset" ? colors.inner : colors.card,
-					borderWidth: selected ? 1.5 : variant === "outlined" ? 1 : 0,
+					backgroundColor:
+						variant === "inset"
+							? colors.inner
+							: variant === "dashed"
+								? "transparent"
+								: colors.card,
+					borderWidth: selected
+						? 1.5
+						: variant === "outlined" || variant === "dashed" || lifted
+							? 1
+							: 0,
 					borderColor: selected
 						? colors.ink
-						: variant === "outlined"
-							? colors.border
-							: "transparent",
+						: lifted
+							? colors.ink
+							: variant === "outlined" || variant === "dashed"
+								? colors.border
+								: "transparent",
 				},
 			]}
 		>
@@ -100,6 +121,13 @@ const styles = StyleSheet.create({
 	tight: {
 		padding: 6,
 		gap: 0,
+	},
+	// The 1px outline replaces 1px of padding, so lifting a card doesn't shift its rows.
+	tightOutlined: {
+		padding: 5,
+	},
+	dashed: {
+		borderStyle: "dashed",
 	},
 	dividedSection: {
 		gap: 16,

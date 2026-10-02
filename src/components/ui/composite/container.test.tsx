@@ -66,4 +66,37 @@ describe("Container", () => {
 		);
 		expect(screen.getByText("Preview").parent).toHaveStyle({ borderWidth: 1 });
 	});
+
+	it("lifted: an outline appears without shifting the content (HAB-19)", async () => {
+		const view = await render(
+			<Container tight>
+				<Text>Row</Text>
+			</Container>,
+		);
+		expect(screen.getByText("Row").parent).toHaveStyle({
+			borderWidth: 0,
+			padding: 6,
+		});
+		await view.rerender(
+			<Container tight lifted>
+				<Text>Row</Text>
+			</Container>,
+		);
+		expect(screen.getByText("Row").parent).toHaveStyle({
+			borderWidth: 1,
+			padding: 5,
+		});
+	});
+
+	it("dashed: a transparent card with a dashed border (HAB-19)", async () => {
+		await render(
+			<Container variant="dashed">
+				<Text>Empty</Text>
+			</Container>,
+		);
+		expect(screen.getByText("Empty").parent).toHaveStyle({
+			borderStyle: "dashed",
+			backgroundColor: "transparent",
+		});
+	});
 });

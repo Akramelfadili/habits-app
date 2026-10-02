@@ -3,7 +3,10 @@ import {
 	useActiveHabits,
 	useArchivedHabits,
 } from "../repositories/habit-repository";
-import { groupHabitsByCategory } from "../screens/today-screen-helpers";
+import {
+	type CategoryGroup,
+	groupHabitsByCategory,
+} from "../screens/today-screen-helpers";
 import type { Habit } from "../types";
 
 export type ArchivedHabitRow = {
@@ -15,6 +18,8 @@ export type ArchivedHabitRow = {
 export type ManageHabitsView = {
 	/** Category by category (Today's group order), manual order within each. */
 	active: Habit[];
+	/** The same habits as one group per category — Today's grouping, so both agree. */
+	groups: CategoryGroup[];
 	/** Most recently archived first. */
 	archived: ArchivedHabitRow[];
 };
@@ -30,8 +35,10 @@ export function useManageHabitsQueries(): ManageHabitsView {
 		logCounts.set(entry.habitId, (logCounts.get(entry.habitId) ?? 0) + 1);
 	}
 
+	const groups = groupHabitsByCategory(active);
 	return {
-		active: groupHabitsByCategory(active).flatMap((group) => group.habits),
+		active: groups.flatMap((group) => group.habits),
+		groups,
 		archived: archived.map((habit) => ({
 			habit,
 			logsKept: logCounts.get(habit.id) ?? 0,

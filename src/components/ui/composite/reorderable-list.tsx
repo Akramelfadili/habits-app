@@ -29,6 +29,16 @@ type ReorderableListProps<T> = {
 	 * trailing). `isDragging` is true while this row is held — show it lifted.
 	 */
 	renderItem: (item: T, handle: ReactNode, isDragging: boolean) => ReactNode;
+	/**
+	 * Wraps each run of equal groups (e.g. one card per category, HAB-19).
+	 * `isDragging` is true while a row of that run is held. Omit to render the
+	 * rows unwrapped.
+	 */
+	renderGroup?: (
+		groupKey: string,
+		rows: ReactNode,
+		state: { isDragging: boolean },
+	) => ReactNode;
 	/** Accessibility label for a row's grip, e.g. "Reorder Meditate". */
 	handleLabel: (item: T) => string;
 	/** The moved item's group, in its new order — only that group changed. */
@@ -48,6 +58,7 @@ export function ReorderableList<T>({
 	keyOf,
 	groupOf = () => "",
 	renderItem,
+	renderGroup,
 	handleLabel,
 	onReorder,
 }: ReorderableListProps<T>) {
@@ -87,80 +98,105 @@ export function ReorderableList<T>({
 		});
 	}
 
+	const rows = shown.map((item, index) => {
+		const key = keyOf(item);
+		const bounds = groupBounds(groups, index);
+		const gesture = Gesture.Pan()
+			.activeOffsetY([-4, 4])
+			.onStart(() => {
+				"worklet";
+				activeIndex.value = index;
+				targetIndex.value = index;
+				scheduleOnRN(setDraggingKey, key);
+			})
+			.onUpdate((event) => {
+				"worklet";
+				dragY.value = event.translationY;
+				targetIndex.value = dragTargetIndex(
+					index,
+					event.translationY,
+					heights.value,
+					bounds,
+				);
+			})
+			.onEnd(() => {
+				"worklet";
+				const to = targetIndex.value;
+				dragY.value = withTiming(
+					offsetBetween(index, to, heights.value),
+					{ duration: SETTLE_MS },
+					() => {
+						"worklet";
+						scheduleOnRN(commit, index, to);
+					},
+				);
+			});
+
+		return (
+			<ReorderableRow
+				key={key}
+				index={index}
+				activeIndex={activeIndex}
+				targetIndex={targetIndex}
+				dragY={dragY}
+				heights={heights}
+				onLayout={(event) => handleLayout(index, event)}
+			>
+				{renderItem(
+					item,
+					<GestureDetector gesture={gesture}>
+						<View
+							accessible
+							accessibilityRole="adjustable"
+							accessibilityLabel={handleLabel(item)}
+							accessibilityActions={[
+								{ name: "moveUp", label: "Move up" },
+								{ name: "moveDown", label: "Move down" },
+							]}
+							onAccessibilityAction={(event) => {
+								const to =
+									event.nativeEvent.actionName === "moveUp"
+										? index - 1
+										: index + 1;
+								if (to >= bounds[0] && to <= bounds[1]) commit(index, to);
+							}}
+							hitSlop={8}
+						>
+							<DragHandle />
+						</View>
+					</GestureDetector>,
+					draggingKey === key,
+				)}
+			</ReorderableRow>
+		);
+	});
+
+	if (!renderGroup) return <View>{rows}</View>;
+
+	// Runs of equal groups, each wrapped by the caller (a card per category).
+	const runs: { key: string; start: number; end: number }[] = [];
+	for (let i = 0; i < shown.length; i += 1) {
+		const last = runs[runs.length - 1];
+		if (last && groups[i] === last.key) last.end = i;
+		else runs.push({ key: groups[i], start: i, end: i });
+	}
 	return (
 		<View>
-			{shown.map((item, index) => {
-				const key = keyOf(item);
-				const bounds = groupBounds(groups, index);
-				const gesture = Gesture.Pan()
-					.activeOffsetY([-4, 4])
-					.onStart(() => {
-						"worklet";
-						activeIndex.value = index;
-						targetIndex.value = index;
-						scheduleOnRN(setDraggingKey, key);
-					})
-					.onUpdate((event) => {
-						"worklet";
-						dragY.value = event.translationY;
-						targetIndex.value = dragTargetIndex(
-							index,
-							event.translationY,
-							heights.value,
-							bounds,
-						);
-					})
-					.onEnd(() => {
-						"worklet";
-						const to = targetIndex.value;
-						dragY.value = withTiming(
-							offsetBetween(index, to, heights.value),
-							{ duration: SETTLE_MS },
-							() => {
-								"worklet";
-								scheduleOnRN(commit, index, to);
-							},
-						);
-					});
-
-				return (
-					<ReorderableRow
-						key={key}
-						index={index}
-						activeIndex={activeIndex}
-						targetIndex={targetIndex}
-						dragY={dragY}
-						heights={heights}
-						onLayout={(event) => handleLayout(index, event)}
-					>
-						{renderItem(
-							item,
-							<GestureDetector gesture={gesture}>
-								<View
-									accessible
-									accessibilityRole="adjustable"
-									accessibilityLabel={handleLabel(item)}
-									accessibilityActions={[
-										{ name: "moveUp", label: "Move up" },
-										{ name: "moveDown", label: "Move down" },
-									]}
-									onAccessibilityAction={(event) => {
-										const to =
-											event.nativeEvent.actionName === "moveUp"
-												? index - 1
-												: index + 1;
-										if (to >= bounds[0] && to <= bounds[1]) commit(index, to);
-									}}
-									hitSlop={8}
-								>
-									<DragHandle />
-								</View>
-							</GestureDetector>,
-							draggingKey === key,
-						)}
-					</ReorderableRow>
-				);
-			})}
+			{runs.map((run, runIndex) => (
+				// Keyed by the group (plus its repeat count, should a group ever
+				// split) so a reorder or an archived first row doesn't remount the card.
+				<View
+					key={`${run.key}-${runs.slice(0, runIndex).filter((r) => r.key === run.key).length}`}
+				>
+					{renderGroup(run.key, rows.slice(run.start, run.end + 1), {
+						isDragging:
+							draggingKey !== null &&
+							shown
+								.slice(run.start, run.end + 1)
+								.some((item) => keyOf(item) === draggingKey),
+					})}
+				</View>
+			))}
 		</View>
 	);
 }

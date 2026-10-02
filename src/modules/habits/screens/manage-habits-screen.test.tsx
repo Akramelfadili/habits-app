@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { ManageHabitsView } from "../hooks/use-manage-habits-queries";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
+import type { Habit } from "../types";
+import { groupHabitsByCategory } from "./today-screen-helpers";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -12,7 +14,15 @@ jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: mockPush, back: mockBack }),
 }));
 
-let mockView: ManageHabitsView = { active: [], archived: [] };
+function viewOf(
+	active: Habit[],
+	archived: ManageHabitsView["archived"] = [],
+): ManageHabitsView {
+	const groups = groupHabitsByCategory(active);
+	return { active: groups.flatMap((g) => g.habits), groups, archived };
+}
+
+let mockView: ManageHabitsView = viewOf([]);
 jest.mock("../hooks/use-manage-habits-queries", () => ({
 	useManageHabitsQueries: () => mockView,
 }));
@@ -29,6 +39,7 @@ jest.mock("../hooks/use-manage-habits-actions", () => ({
 }));
 
 import { useToastStore } from "@/store/toast-store";
+import { MANAGE_FOOTNOTE } from "./manage-habits-helpers";
 import { ManageHabitsScreen } from "./manage-habits-screen";
 
 const water = makeHabit({
@@ -59,22 +70,22 @@ beforeEach(() => {
 	mockArchive.mockResolvedValue(undefined);
 	mockRestore.mockResolvedValue(undefined);
 	mockReorder.mockResolvedValue(undefined);
-	mockView = {
-		active: [water, meditate, read],
-		archived: [{ habit: coldShower, logsKept: 41 }],
-	};
+	mockView = viewOf(
+		[water, meditate, read],
+		[{ habit: coldShower, logsKept: 41 }],
+	);
 });
 
 describe("ManageHabitsScreen", () => {
 	it("lists active habits with grips, and archived ones with Restore", async () => {
 		await render(<ManageHabitsScreen />);
 
-		expect(screen.getByText("Manage habits")).toBeTruthy();
+		expect(screen.getByText("Habits")).toBeTruthy();
 		expect(screen.getAllByText("Morning · daily")).toHaveLength(2);
 		expect(screen.getByText("Evening · 5× a week")).toBeTruthy();
 		expect(screen.getAllByTestId("drag-handle")).toHaveLength(3);
 		expect(screen.getByText("Archived · 1")).toBeTruthy();
-		expect(screen.getByText("2 Sep · 41 days logged")).toBeTruthy();
+		expect(screen.getByText("Archived 2 Sep · 41 logs kept")).toBeTruthy();
 		expect(screen.getByText("Restore")).toBeTruthy();
 	});
 
@@ -133,14 +144,89 @@ describe("ManageHabitsScreen", () => {
 
 	it("is a pushed screen titled after its link — back in the header, no Done (audit #10)", async () => {
 		await render(<ManageHabitsScreen />);
-		expect(screen.getByRole("header", { name: "Manage habits" })).toBeTruthy();
+		expect(screen.getByRole("header", { name: "Habits" })).toBeTruthy();
 		expect(screen.queryByText("Done")).toBeNull();
 	});
 
-	it("hides the Archived section when nothing is archived", async () => {
-		mockView = { active: [water], archived: [] };
+	it("E3: nothing archived keeps the Archived header over a dashed placeholder", async () => {
+		mockView = viewOf([water]);
 		await render(<ManageHabitsScreen />);
+		expect(screen.getByText("Archived")).toBeTruthy();
 		expect(screen.queryByText(/^Archived ·/)).toBeNull();
+		expect(screen.getByText("Nothing archived")).toBeTruthy();
+		expect(screen.queryByText("Restore")).toBeNull();
+	});
+
+	it("headers each category with its habit count, in Today's order", async () => {
+		const run = makeHabit({
+			id: 4,
+			name: "Easy run",
+			category: categoryNamed("Training"),
+		});
+		mockView = viewOf([water, run, meditate]);
+		await render(<ManageHabitsScreen />);
+		expect(screen.getByText("Morning")).toBeTruthy();
+		expect(screen.getByText("2")).toBeTruthy();
+		expect(screen.getByText("Training")).toBeTruthy();
+		expect(screen.getByText("1")).toBeTruthy();
+		expect(screen.getByText(MANAGE_FOOTNOTE)).toBeTruthy();
+	});
+
+	it("shows the outline tag only while a row is lifted, scoped to its category", async () => {
+		await render(<ManageHabitsScreen />);
+		expect(screen.queryByText(/^Reordering within/)).toBeNull();
+	});
+
+	it("E2: everything archived replaces the categories with the empty card, Restore below", async () => {
+		mockView = viewOf([], [{ habit: coldShower, logsKept: 41 }]);
+		await render(<ManageHabitsScreen />);
+		expect(screen.getByText("No active habits")).toBeTruthy();
+		expect(screen.getByText(/Everything is archived/)).toBeTruthy();
+		expect(screen.queryByText(MANAGE_FOOTNOTE)).toBeNull();
+		expect(screen.queryByTestId("drag-handle")).toBeNull();
+		expect(screen.getByText("Restore")).toBeTruthy();
+
+		await fireEvent.press(screen.getByText("Add habit"));
+		expect(mockPush).toHaveBeenCalledWith("/new-habit");
+	});
+
+	it("no habits at all: the empty card doesn't claim anything was archived, and the placeholder shows", async () => {
+		mockView = viewOf([]);
+		await render(<ManageHabitsScreen />);
+		expect(screen.getByText("No active habits")).toBeTruthy();
+		expect(screen.queryByText(/archived, so/)).toBeNull();
+		expect(screen.getByText(/haven't added a habit/)).toBeTruthy();
+		expect(screen.getByText("Nothing archived")).toBeTruthy();
+	});
+
+	it("drops a category's section as soon as its last habit is archived", async () => {
+		const view = await render(<ManageHabitsScreen />);
+		expect(screen.getByText("Evening")).toBeTruthy();
+
+		mockView = viewOf([water, meditate], [{ habit: read, logsKept: 3 }]);
+		await view.rerender(<ManageHabitsScreen />);
+
+		expect(screen.queryByText("Evening")).toBeNull();
+		expect(screen.getByText("Morning")).toBeTruthy();
+	});
+
+	it("keeps the VoiceOver Move up / Move down actions on every grip", async () => {
+		await render(<ManageHabitsScreen />);
+		const grip = screen.getByLabelText("Reorder Meditate");
+		expect(grip.props.accessibilityActions).toEqual([
+			{ name: "moveUp", label: "Move up" },
+			{ name: "moveDown", label: "Move down" },
+		]);
+	});
+
+	it("can't move a habit across categories — Move down off the end of its card does nothing", async () => {
+		await render(<ManageHabitsScreen />);
+		await fireEvent(
+			screen.getByLabelText("Reorder Meditate"),
+			"accessibilityAction",
+			{ nativeEvent: { actionName: "moveDown" } },
+		);
+		expect(mockReorder).not.toHaveBeenCalled();
 	});
 
 	it("no longer carries the temporary Categories row — it lives in Settings (HAB-15)", async () => {

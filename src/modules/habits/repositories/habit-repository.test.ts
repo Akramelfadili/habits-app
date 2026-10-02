@@ -275,6 +275,38 @@ describe("habit-repository", () => {
 		});
 	});
 
+	describe("sort positions across reorder, archive and restore (HAB-19)", () => {
+		it("keeps every habit's sort position unique and unchanged through archive → restore", async () => {
+			const a = await createHabit(baseInput);
+			const b = await createHabit({ ...baseInput, name: "B" });
+			const c = await createHabit({ ...baseInput, name: "C" });
+			await reorderHabits([c.id, a.id]);
+			const before = await Promise.all([a, b, c].map((h) => getHabit(h.id)));
+
+			await setHabitArchived(a.id, new Date());
+			await setHabitRestored(a.id, []);
+
+			const after = await Promise.all([a, b, c].map((h) => getHabit(h.id)));
+			expect(after.map((h) => h?.sortOrder)).toEqual(
+				before.map((h) => h?.sortOrder),
+			);
+			expect(new Set(after.map((h) => h?.sortOrder)).size).toBe(3);
+		});
+
+		it("persists a reorder as the order every reader sees", async () => {
+			const a = await createHabit(baseInput);
+			const b = await createHabit({ ...baseInput, name: "B" });
+
+			await reorderHabits([b.id, a.id]);
+
+			const [first, second] = await Promise.all([
+				getHabit(b.id),
+				getHabit(a.id),
+			]);
+			expect(first?.sortOrder).toBeLessThan(second?.sortOrder ?? 0);
+		});
+	});
+
 	describe("deleteHabitAndHistory (HAB-13)", () => {
 		it("deletes the habit and every row that references it, leaving others alone", async () => {
 			const habit = await createHabit(baseInput);
