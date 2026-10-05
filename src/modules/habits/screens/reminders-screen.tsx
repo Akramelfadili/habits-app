@@ -3,23 +3,21 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AddRow } from "@/components/ui/composite/add-row";
 import { Banner } from "@/components/ui/composite/banner";
-import { Container } from "@/components/ui/composite/container";
 import { headerBackOptions } from "@/components/ui/composite/header-buttons";
-import { ListItem } from "@/components/ui/composite/list-item";
+import { MovedSettingPointer } from "@/components/ui/composite/moved-setting-pointer";
 import { Caption } from "@/components/ui/primitives/caption";
-import { Toggle } from "@/components/ui/primitives/toggle";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { ReminderCard } from "../components/reminder-card";
 import { ReminderTimeSheet } from "../components/reminder-time-sheet";
 import { TodayStatePanel } from "../components/today-state-panel";
-import { EVENING_REVIEW_TIME, REMINDER_CAP_MESSAGE } from "../constants";
+import { REMINDER_CAP_MESSAGE, REMINDER_HINT } from "../constants";
 import { useReminderActions } from "../hooks/use-reminder-actions";
 import {
 	type ReminderWithConflicts,
 	useReminderQueries,
 } from "../hooks/use-reminder-queries";
-import { formatReminderTime, reminderCountLabel } from "./reminders-helpers";
+import { reminderCountLabel } from "./reminders-helpers";
 
 type RemindersScreenProps = {
 	habitId: number;
@@ -31,7 +29,8 @@ const NOTIFICATIONS_OFF_NOTICE =
 /**
  * Reminders (HAB-12): one habit's independent reminder times, each with its
  * own days and toggle → "Add a time" (capped at 4) → the notifications-off
- * notice when permission is denied → the app-wide Evening review toggle.
+ * notice when permission is denied. The app-wide Evening review no longer
+ * lives here (HAB-21) — only a temporary pointer to Settings.
  */
 export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const router = useRouter();
@@ -59,14 +58,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 		);
 	}
 
-	const {
-		habit,
-		reminders,
-		cap,
-		atCap,
-		eveningReviewEnabled,
-		notificationsDenied,
-	} = data;
+	const { habit, reminders, cap, atCap, notificationsDenied } = data;
 	const editing = reminders.find((reminder) => reminder.id === editingId);
 
 	function isExpanded(reminder: ReminderWithConflicts) {
@@ -127,27 +119,19 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 						onPress={handleAdd}
 						disabled={atCap || actions.isAdding}
 					/>
-					{atCap ? <Caption>{REMINDER_CAP_MESSAGE}</Caption> : null}
+					<Caption>{atCap ? REMINDER_CAP_MESSAGE : REMINDER_HINT}</Caption>
 				</View>
 
 				{notificationsDenied ? (
 					<Banner tone="neutral">{NOTIFICATIONS_OFF_NOTICE}</Banner>
 				) : null}
 
-				<Container>
-					<ListItem
-						embedded
-						title="Evening review"
-						subtitle={`One nudge at ${formatReminderTime(EVENING_REVIEW_TIME)} to log anything you missed.`}
-						trailing={
-							<Toggle
-								value={eveningReviewEnabled}
-								onValueChange={actions.setEveningReview}
-								accessibilityLabel="Evening review"
-							/>
-						}
-					/>
-				</Container>
+				{/* TODO(V2.1): remove NEW-27 and this pointer (docs/v3-backlog.md). */}
+				<MovedSettingPointer
+					body="Looking for the evening review? It covers every habit at once, so it now lives in Settings."
+					linkLabel="Open Settings →"
+					onPress={() => router.push("/habits/settings")}
+				/>
 			</ScrollView>
 
 			<ReminderTimeSheet

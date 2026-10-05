@@ -11,6 +11,7 @@ jest.mock("expo-symbols", () => {
 	return { SymbolView: View };
 });
 const mockBack = jest.fn();
+const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
 	// Renders the iOS back item, so the test exercises what reaches the nav bar.
 	Stack: {
@@ -26,7 +27,7 @@ jest.mock("expo-router", () => ({
 			options?.unstable_headerLeftItems?.({ canGoBack: true })[0]?.element ??
 			null,
 	},
-	useRouter: () => ({ back: mockBack }),
+	useRouter: () => ({ back: mockBack, push: mockPush }),
 }));
 jest.mock("@/components/ui/primitives/time-wheel", () => ({
 	TimeWheel: () => null,
@@ -40,7 +41,6 @@ jest.mock("../hooks/use-reminder-queries", () => ({
 const mockAddReminder = jest.fn();
 const mockEditReminder = jest.fn();
 const mockRemoveReminder = jest.fn();
-const mockSetEveningReview = jest.fn();
 jest.mock("../hooks/use-reminder-actions", () => ({
 	useReminderActions: () => ({
 		addReminder: mockAddReminder,
@@ -48,7 +48,6 @@ jest.mock("../hooks/use-reminder-actions", () => ({
 		addError: null,
 		editReminder: mockEditReminder,
 		removeReminder: mockRemoveReminder,
-		setEveningReview: mockSetEveningReview,
 	}),
 }));
 
@@ -87,7 +86,6 @@ function data(overrides: Partial<ReminderScreenData> = {}): ReminderScreenData {
 		],
 		cap: 4,
 		atCap: false,
-		eveningReviewEnabled: false,
 		notificationsDenied: false,
 		...overrides,
 	};
@@ -224,17 +222,42 @@ describe("RemindersScreen", () => {
 		expect(screen.queryByText(/Notifications are off/)).toBeNull();
 	});
 
-	it("has a separate Evening review toggle with no weekday picker", async () => {
+	it("no longer has an Evening review toggle (HAB-21)", async () => {
 		await render(<RemindersScreen habitId={1} />);
+		expect(screen.queryByLabelText("Evening review")).toBeNull();
+		expect(screen.queryByText(/One nudge at/)).toBeNull();
+	});
 
-		expect(
-			screen.getByText("One nudge at 21:30 to log anything you missed."),
-		).toBeTruthy();
-		await fireEvent(
-			screen.getByLabelText("Evening review"),
-			"valueChange",
-			true,
+	it("points at Settings, and the link opens it", async () => {
+		await render(<RemindersScreen habitId={1} />);
+		expect(screen.getByText(/Looking for the evening review\?/)).toBeTruthy();
+
+		await fireEvent.press(
+			screen.getByRole("link", { name: "Open Settings →" }),
 		);
-		expect(mockSetEveningReview).toHaveBeenCalledWith(true);
+		expect(mockPush).toHaveBeenCalledWith("/habits/settings");
+	});
+
+	it("shows the 'Up to four times' caption, then the pointer, below the add row", async () => {
+		await render(<RemindersScreen habitId={1} />);
+		expect(
+			screen.getByText("Up to four times a day for this habit."),
+		).toBeTruthy();
+		expect(screen.getByTestId("moved-setting-pointer")).toBeTruthy();
+	});
+
+	it("keeps the pointer when empty and at the cap (cap message replaces the caption)", async () => {
+		mockData = { ...data(), reminders: [] };
+		const view = await render(<RemindersScreen habitId={1} />);
+		expect(screen.getByTestId("moved-setting-pointer")).toBeTruthy();
+		await view.unmount();
+
+		mockData = { ...data(), atCap: true };
+		await render(<RemindersScreen habitId={1} />);
+		expect(screen.getByText(REMINDER_CAP_MESSAGE)).toBeTruthy();
+		expect(
+			screen.queryByText("Up to four times a day for this habit."),
+		).toBeNull();
+		expect(screen.getByTestId("moved-setting-pointer")).toBeTruthy();
 	});
 });

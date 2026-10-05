@@ -28,6 +28,7 @@ async function editTime(
 	return editReminder(habit, reminderId, patch);
 }
 
+/** Used by Settings (`useSettingsActions`) — the Evening review's only home since HAB-21. */
 export async function toggleEveningReview(enabled: boolean) {
 	if (enabled) await ensureNotificationPermission();
 	return setEveningReview(enabled);
@@ -37,7 +38,6 @@ export function useReminderActions() {
 	const add = useAsyncAction(addTime);
 	const edit = useAsyncAction(editTime);
 	const remove = useAsyncAction(removeReminder);
-	const eveningReview = useAsyncAction(toggleEveningReview);
 
 	return {
 		addReminder: add.execute,
@@ -45,6 +45,5 @@ export function useReminderActions() {
 		addError: add.error,
 		editReminder: edit.execute,
 		removeReminder: remove.execute,
-		setEveningReview: eveningReview.execute,
 	};
 }
