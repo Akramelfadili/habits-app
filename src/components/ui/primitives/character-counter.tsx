@@ -34,7 +34,7 @@ export function CharacterCounter({ length, limit }: CharacterCounterProps) {
 				{ color: atLimit ? colors.warnInk : colors.faint },
 			]}
 		>
-			{`${length}/${limit}`}
+			{`${length} / ${limit}`}
 		</Text>
 	);
 }

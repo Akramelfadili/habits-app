@@ -25,12 +25,14 @@ import { useRetroLogActions } from "../hooks/use-retro-log-actions";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
 import type { DayLog } from "../types";
 import {
+	ARCHIVE_FAILED_MESSAGE,
 	archivedBannerDetail,
 	archivedBannerTitle,
 	completionRateCaption,
 	completionRateLabel,
 	completionRateValue,
 	currentStreakTile,
+	DELETE_FAILED_MESSAGE,
 	habitSubtitle,
 	heatmapRangeLabelFor,
 	legendFrozenLabel,
@@ -80,10 +82,22 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	// Either way the habit leaves wherever Detail was opened from — Today, or
 	// Manage's active list — so go back there rather than stay on it. The
 	// toast is shown on that screen, so the habit doesn't just vanish.
+	// A failed write leaves everything as it was: Detail and any open
+	// confirmation stay put, so retrying is one tap (HAB-23).
+	function reportFailure(message: string, error: unknown) {
+		if (__DEV__) console.warn(message, error);
+		showToast({ message });
+	}
+
 	async function handleArchive() {
 		if (!detail) return;
 		const { name } = detail.habit;
-		await archiveHabit(habitId);
+		try {
+			await archiveHabit(habitId);
+		} catch (error) {
+			reportFailure(ARCHIVE_FAILED_MESSAGE, error);
+			return;
+		}
 		setIsConfirmingDelete(false);
 		showToast({
 			message: `Archived '${name}'`,
@@ -112,7 +126,12 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	async function handleDelete() {
 		if (!detail) return;
 		const { name } = detail.habit;
-		await deleteHabit(habitId);
+		try {
+			await deleteHabit(habitId);
+		} catch (error) {
+			reportFailure(DELETE_FAILED_MESSAGE, error);
+			return;
+		}
 		setIsConfirmingDelete(false);
 		showToast({ message: `Deleted '${name}'` });
 		router.back();

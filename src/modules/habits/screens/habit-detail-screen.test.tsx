@@ -378,17 +378,126 @@ describe("HabitDetailScreen", () => {
 			expect(useToastStore.getState().toast?.actionLabel).toBeUndefined();
 		});
 
-		it("can archive instead", async () => {
+		it("can archive instead from the card (HAB-23 E7) — same toast, Undo and exit as before", async () => {
+			useToastStore.setState({ toast: null });
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
 
 			await fireEvent.press(screen.getByText("Delete habit"));
-			await fireEvent.press(
-				screen.getByText("Archive instead — keeps history"),
-			);
+			await fireEvent.press(screen.getByText("Archive instead"));
 
 			expect(mockArchive).toHaveBeenCalledWith(1);
 			expect(mockDelete).not.toHaveBeenCalled();
+			expect(mockBack).toHaveBeenCalled();
+			expect(screen.queryByText("Delete “Glass of water”?")).toBeNull();
+			const toast = useToastStore.getState().toast;
+			expect(toast).toMatchObject({
+				message: "Archived 'Glass of water'",
+				actionLabel: "Undo",
+			});
+			toast?.onAction?.();
+			expect(mockRestore).toHaveBeenCalledWith(1);
+		});
+
+		it("an already-archived habit gets no archive card, and still deletes the same way", async () => {
+			useToastStore.setState({ toast: null });
+			mockDetail = detail({
+				habit: { ...habit, archivedAt: new Date(2026, 8, 1) },
+			});
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Delete habit"));
+			expect(screen.getByText("Delete “Glass of water”?")).toBeTruthy();
+			expect(screen.queryByText("Archive instead")).toBeNull();
+
+			await fireEvent.press(screen.getByText("Delete permanently"));
+			expect(mockDelete).toHaveBeenCalledWith(1);
+			expect(mockArchive).not.toHaveBeenCalled();
+			expect(mockBack).toHaveBeenCalled();
+			expect(useToastStore.getState().toast).toMatchObject({
+				message: "Deleted 'Glass of water'",
+			});
+			expect(useToastStore.getState().toast?.actionLabel).toBeUndefined();
+		});
+
+		describe("when the write fails (HAB-23)", () => {
+			let warn: jest.SpyInstance;
+			beforeEach(() => {
+				useToastStore.setState({ toast: null });
+				warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+			});
+			afterEach(() => warn.mockRestore());
+
+			function expectSheetActive() {
+				expect(screen.getByText("Delete “Glass of water”?")).toBeTruthy();
+				expect(
+					screen.getByRole("button", { name: /^Archive instead\./ }),
+				).toBeEnabled();
+				expect(
+					screen.getByRole("button", { name: "Keep habit" }),
+				).toBeEnabled();
+				expect(
+					screen.getByRole("button", { name: "Delete permanently" }),
+				).toBeEnabled();
+			}
+
+			it("archive: toasts, warns in dev, keeps the sheet usable, and a retry works", async () => {
+				const failure = new Error("disk full");
+				mockArchive.mockRejectedValueOnce(failure);
+				mockDetail = detail();
+				await render(<HabitDetailScreen habitId={1} />);
+
+				await fireEvent.press(screen.getByText("Delete habit"));
+				await fireEvent.press(screen.getByText("Archive instead"));
+
+				expect(useToastStore.getState().toast).toMatchObject({
+					message: "Couldn't archive. Try again.",
+				});
+				expect(useToastStore.getState().toast?.actionLabel).toBeUndefined();
+				expect(warn).toHaveBeenCalledWith(
+					"Couldn't archive. Try again.",
+					failure,
+				);
+				expect(mockBack).not.toHaveBeenCalled();
+				expectSheetActive();
+
+				await fireEvent.press(screen.getByText("Archive instead"));
+				expect(mockArchive).toHaveBeenCalledTimes(2);
+				expect(mockBack).toHaveBeenCalled();
+				expect(useToastStore.getState().toast).toMatchObject({
+					message: "Archived 'Glass of water'",
+					actionLabel: "Undo",
+				});
+				expect(mockDelete).not.toHaveBeenCalled();
+			});
+
+			it("delete: toasts, warns in dev, keeps the sheet usable, and a retry works", async () => {
+				const failure = new Error("disk full");
+				mockDelete.mockRejectedValueOnce(failure);
+				mockDetail = detail();
+				await render(<HabitDetailScreen habitId={1} />);
+
+				await fireEvent.press(screen.getByText("Delete habit"));
+				await fireEvent.press(screen.getByText("Delete permanently"));
+
+				expect(useToastStore.getState().toast).toMatchObject({
+					message: "Couldn't delete. Try again.",
+				});
+				expect(warn).toHaveBeenCalledWith(
+					"Couldn't delete. Try again.",
+					failure,
+				);
+				expect(mockBack).not.toHaveBeenCalled();
+				expectSheetActive();
+
+				await fireEvent.press(screen.getByText("Delete permanently"));
+				expect(mockDelete).toHaveBeenCalledTimes(2);
+				expect(mockBack).toHaveBeenCalled();
+				expect(useToastStore.getState().toast).toMatchObject({
+					message: "Deleted 'Glass of water'",
+				});
+				expect(mockArchive).not.toHaveBeenCalled();
+			});
 		});
 
 		it("keeping the habit just closes the confirmation", async () => {
