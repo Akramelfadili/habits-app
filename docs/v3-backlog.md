@@ -12,7 +12,7 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 
 - **C1 omits the Last week / This week switch.** The Weekly mockup (C1) shows only the Week / Month / Year switcher under the title; the V1 compact "Last week / This week" switch in the title row is kept (HAB-16's rule: the range switcher is the only change to Weekly). Decide whether C1 means it to go.
 - ~~**Year is disabled** in the range switcher until HAB-17.~~ Enabled by HAB-17.
-- **Pattern action** opens the habit's Reminders screen with no sheet pre-opened — `TODO(HAB-21)`: open "Add a time" with the day (`?addTime=<day>`) pre-selected.
+- **Pattern action** opens the habit's Reminders screen with no sheet pre-opened — `TODO(V3)` in `monthly-summary-screen.tsx`. See "Monthly pattern insight" under HAB-21 below.
 - **Slipping body** omits C3's second sentence ("The drop started when Easy run moved to evenings") — a cause across habits isn't derivable. Insight thresholds are one named block in `services/monthly-insights.ts`.
 - **Unlock date** is first day + 30 (C6: since 4 Sep → 4 Oct), with "N of 30" counting full days before today.
 - **Frozen days** leave both sides of the rate (an excused miss), so the tile can differ slightly from a "scheduled" count that includes them.
@@ -75,3 +75,12 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 - **`no-freezes` fixture** draws a mostly-grey grid (history starts weeks before the habit's first logs); D6's grid is dense. The fixture is tuned for HAB-08's sheet, not this layout.
 - **Existing archived-banner:** none existed on Detail before — the archive state was only an absent "Archive habit" button — so NEW-13 is new there rather than a replacement. Manage's archived rows (HAB-19) keep their own Restore.
 - **Visual baselines:** `habit-detail` and its dark twin changed only in the legend label ("2 freezes left"); `habit-detail-no-freezes` re-captured against D6. The `today-menu-open*` baselines were not touched.
+
+## HAB-21 — Reminders: evening-review removal
+
+- **Monthly pattern insight should open Reminders with Add a time open and the day pre-selected (HAB-16 rule, deferred).** HAB-21's own rules are a removal only, so `?addTime=<day>` was not built; `TODO(V3)` in `monthly-summary-screen.tsx`.
+- **Remove NEW-27 and its pointer on Reminders.** `MovedSettingPointer` (`components/ui/composite/moved-setting-pointer.tsx`, its test, and its use in `reminders-screen.tsx`) is temporary, tagged `TODO(V2.1): remove`. Mockup E4: "for V2.0 only — remove in a later release."
+- **Caption is now always shown.** E4 draws "Up to four times a day for this habit." under the add row in every state; at the cap, the existing "4 of 4 — remove one…" message (reminders-at-cap mockup, V1) replaces it rather than stacking both.
+- **Back label on Settings.** Settings is registered with `backTo("Today")`; opened from the Reminders pointer, its back button still reads "Today" though it returns to Reminders. Make the label contextual if the pointer outlives V2.0.
+- **Notifications-off notice sits between the caption and the pointer** when permission is denied (V1's position); E4 doesn't draw that state.
+- **Hooks trimmed.** `useReminderActions` no longer returns `setEveningReview` and `useReminderQueries` no longer reads the setting; `toggleEveningReview` stays exported from `use-reminder-actions.ts` because `useSettingsActions` composes it. Moving it next to Settings' hook is a tidy-up. `setEveningReview` in `reminder-service.ts` and the evening-review notification are untouched.

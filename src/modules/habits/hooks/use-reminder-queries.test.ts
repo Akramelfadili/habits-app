@@ -8,7 +8,6 @@ const mockHabit = makeHabit({
 });
 
 let mockReminders: Reminder[] = [];
-let mockEveningReview: string | null = null;
 let mockPermission: string | undefined = "granted";
 
 jest.mock("../repositories/habit-repository", () => ({
@@ -17,9 +16,10 @@ jest.mock("../repositories/habit-repository", () => ({
 jest.mock("../repositories/reminder-repository", () => ({
 	useHabitReminders: () => mockReminders,
 }));
-jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
-	useAppSetting: () => mockEveningReview,
-}));
+jest.mock(
+	"@/lib/app-settings/repositories/app-settings-repository",
+	() => ({}),
+);
 jest.mock("@/lib/notifications/use-notification-permission", () => ({
 	useNotificationPermission: () => mockPermission,
 }));
@@ -34,7 +34,6 @@ function reminder(id: number, weekdays: Reminder["weekdays"]): Reminder {
 describe("useReminderQueries", () => {
 	beforeEach(() => {
 		mockReminders = [];
-		mockEveningReview = null;
 		mockPermission = "granted";
 	});
 
@@ -60,11 +59,9 @@ describe("useReminderQueries", () => {
 		expect(result.current?.atCap).toBe(true);
 	});
 
-	it("reads the evening review flag and a denied permission", async () => {
-		mockEveningReview = "true";
+	it("reads a denied permission", async () => {
 		mockPermission = "denied";
 		const { result } = await renderHook(() => useReminderQueries(1));
-		expect(result.current?.eveningReviewEnabled).toBe(true);
 		expect(result.current?.notificationsDenied).toBe(true);
 	});
 

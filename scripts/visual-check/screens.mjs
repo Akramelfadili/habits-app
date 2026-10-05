@@ -608,23 +608,42 @@ export const SCREENS = {
 	reminders: {
 		feature: "HAB-12",
 		route: "/habits/reminders/1?fixtures=reminders",
-		mockup: "docs/mockups/reminders.png",
+		mockup: "docs/mockups/hab-21-e4.png",
 		note: "Cards start collapsed except a conflicting one (21:00); the other two are tapped open to match the mockup. Permission reads as denied in this scenario.",
 		async interact(page) {
 			await page.getByLabel("Reminder at 07:20, Weekdays").click();
 			await page.getByLabel("Reminder at 13:00, Mon, Wed, Fri").click();
 		},
 	},
+	"reminders-dark": {
+		feature: "HAB-21",
+		route: "/habits/reminders/1?fixtures=reminders",
+		mockup: "docs/mockups/hab-21-e4.png",
+		colorScheme: "dark",
+		note: "E4 dark column.",
+		async interact(page) {
+			await page.getByLabel("Reminder at 07:20, Weekdays").click();
+			await page.getByLabel("Reminder at 13:00, Mon, Wed, Fri").click();
+		},
+	},
+	"reminders-at-cap-dark": {
+		feature: "HAB-21",
+		route: "/habits/reminders/1?fixtures=reminders-at-cap&theme=dark",
+		mockup: null,
+		colorScheme: "dark",
+		note: "At the cap in dark: cap message, then the pointer.",
+	},
 	"reminders-at-cap": {
 		feature: "HAB-12",
 		route: "/habits/reminders/1?fixtures=reminders-at-cap",
 		mockup: "docs/mockups/reminders-at-cap.png",
+		note: "Cap message replaces the 'Up to four times' caption; the HAB-21 pointer still follows. The mockup predates HAB-21 and still draws the Evening review row.",
 	},
 	"reminders-empty": {
 		feature: "HAB-12",
 		route: "/habits/reminders/1",
-		mockup: "docs/mockups/reminders.png",
-		note: "A habit with no reminders yet.",
+		mockup: "docs/mockups/hab-21-e4.png",
+		note: "A habit with no reminders yet — caption and HAB-21 pointer only.",
 	},
 	"reminder-time-sheet": {
 		feature: "HAB-12",

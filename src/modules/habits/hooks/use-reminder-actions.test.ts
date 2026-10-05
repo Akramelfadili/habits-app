@@ -17,7 +17,10 @@ jest.mock("../services/reminder-service", () => ({
 	setEveningReview: (...args: unknown[]) => mockSetEveningReview(...args),
 }));
 
-import { useReminderActions } from "./use-reminder-actions";
+import {
+	toggleEveningReview,
+	useReminderActions,
+} from "./use-reminder-actions";
 
 const habit = makeHabit({ id: 3 });
 
@@ -58,12 +61,16 @@ describe("useReminderActions", () => {
 		expect(mockRemoveReminder).toHaveBeenCalledWith(habit, 2);
 	});
 
-	it("asks before turning the evening review on, not off", async () => {
+	it("no longer exposes the evening review (HAB-21)", async () => {
 		const { result } = await renderHook(() => useReminderActions());
-		await act(() => result.current.setEveningReview(false));
+		expect(result.current).not.toHaveProperty("setEveningReview");
+	});
+
+	it("still shares toggleEveningReview with Settings: asks before turning on, not off", async () => {
+		await act(() => toggleEveningReview(false));
 		expect(mockEnsurePermission).not.toHaveBeenCalled();
 
-		await act(() => result.current.setEveningReview(true));
+		await act(() => toggleEveningReview(true));
 		expect(mockEnsurePermission).toHaveBeenCalledTimes(1);
 		expect(mockSetEveningReview).toHaveBeenLastCalledWith(true);
 	});

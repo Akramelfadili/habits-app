@@ -16,7 +16,6 @@ jest.mock("@/theme/theme-preference", () => ({
 	setThemePreference: (...args: unknown[]) => mockSetThemePreference(...args),
 }));
 
-import { useReminderActions } from "./use-reminder-actions";
 import { useSettingsActions } from "./use-settings-actions";
 
 beforeEach(() => {
@@ -25,26 +24,18 @@ beforeEach(() => {
 });
 
 describe("useSettingsActions (HAB-15)", () => {
-	it("the Evening review toggle does exactly what Reminders' toggle does", async () => {
-		const settings = await renderHook(() => useSettingsActions());
-		const reminders = await renderHook(() => useReminderActions());
+	it("the Evening review toggle asks for permission turning on, not off", async () => {
+		const { result } = await renderHook(() => useSettingsActions());
 
-		for (const toggle of [
-			settings.result.current.setEveningReview,
-			reminders.result.current.setEveningReview,
-		]) {
-			mockEnsurePermission.mockClear();
-			mockSetEveningReview.mockClear();
-			await act(() => toggle(true));
-			expect(mockEnsurePermission).toHaveBeenCalledTimes(1);
-			expect(mockSetEveningReview).toHaveBeenCalledWith(true);
+		await act(() => result.current.setEveningReview(true));
+		expect(mockEnsurePermission).toHaveBeenCalledTimes(1);
+		expect(mockSetEveningReview).toHaveBeenCalledWith(true);
 
-			mockEnsurePermission.mockClear();
-			mockSetEveningReview.mockClear();
-			await act(() => toggle(false));
-			expect(mockEnsurePermission).not.toHaveBeenCalled();
-			expect(mockSetEveningReview).toHaveBeenCalledWith(false);
-		}
+		mockEnsurePermission.mockClear();
+		mockSetEveningReview.mockClear();
+		await act(() => result.current.setEveningReview(false));
+		expect(mockEnsurePermission).not.toHaveBeenCalled();
+		expect(mockSetEveningReview).toHaveBeenCalledWith(false);
 	});
 
 	it("keeps the toggle's setting even when iOS notifications are denied", async () => {
