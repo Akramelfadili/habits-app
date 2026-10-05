@@ -75,6 +75,13 @@ export const CATEGORY_SHAPE_SYMBOLS: Record<CategoryShape, SFSymbol> = {
 	ring: "circle",
 };
 
+/**
+ * Habit-name field cap (HAB-22) — counter shows from 80% (26/32). V1 allowed
+ * 40, so older habits may still carry a longer name; it stays valid on edit
+ * only while unchanged (see `makeHabitFormSchema`).
+ */
+export const MAX_HABIT_NAME_LENGTH = 32;
+
 /** Category-name field cap (HAB-24) — counter shows from 80% (16/20). */
 export const MAX_CATEGORY_NAME_LENGTH = 20;
 

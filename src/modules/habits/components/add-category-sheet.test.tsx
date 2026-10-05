@@ -102,12 +102,12 @@ describe("AddCategorySheet", () => {
 		await render(<Harness create={jest.fn()} />);
 
 		await fireEvent.changeText(nameField(), "x".repeat(15));
-		expect(screen.queryByText("15/20")).toBeNull();
+		expect(screen.queryByText("15 / 20")).toBeNull();
 		await fireEvent.changeText(nameField(), "x".repeat(16));
-		expect(screen.getByText("16/20")).toBeTruthy();
+		expect(screen.getByText("16 / 20")).toBeTruthy();
 		await fireEvent.changeText(nameField(), "y".repeat(30));
 		expect(nameField().props.value).toBe("y".repeat(20));
-		expect(screen.getByText("20/20")).toBeTruthy();
+		expect(screen.getByText("20 / 20")).toBeTruthy();
 	});
 
 	it("on a failed add: stays open, keeps the name, re-enables Add, shows the error", async () => {

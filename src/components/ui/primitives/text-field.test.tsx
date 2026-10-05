@@ -131,6 +131,26 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 		expect(onChangeText).toHaveBeenCalledWith("A pasted name that i");
 	});
 
+	it("never cuts a value already over the limit when it's edited", async () => {
+		const onChangeText = jest.fn();
+		const legacy = "a".repeat(38);
+		await render(
+			<TextField
+				label="Name"
+				value={legacy}
+				onChangeText={onChangeText}
+				maxLength={32}
+				nearLimitCounter
+			/>,
+		);
+		await fireEvent.changeText(
+			screen.getByDisplayValue(legacy),
+			"a".repeat(37),
+		);
+		expect(onChangeText).toHaveBeenCalledWith("a".repeat(37));
+		expect(screen.getByText("38 / 32")).toBeTruthy();
+	});
+
 	it("shows the NEW-23 counter from 80% only, never the legacy one", async () => {
 		const { rerender } = await render(
 			<TextField
@@ -141,7 +161,7 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				nearLimitCounter
 			/>,
 		);
-		expect(screen.queryByText(/\/20$/)).toBeNull();
+		expect(screen.queryByText(/ \/ 20$/)).toBeNull();
 
 		await rerender(
 			<TextField
@@ -152,7 +172,7 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				nearLimitCounter
 			/>,
 		);
-		expect(screen.getByText("16/20")).toBeTruthy();
+		expect(screen.getByText("16 / 20")).toBeTruthy();
 	});
 
 	it("outlines a warning in amber with the helper under the field", async () => {

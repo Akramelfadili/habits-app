@@ -1,8 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+	KeyboardAvoidingView,
+	Platform,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { WeekdayPicker } from "@/components/ui/composite/weekday-picker";
@@ -20,6 +28,7 @@ import { CategoryPicker } from "../components/category-picker";
 import {
 	DEFAULT_TARGET_AMOUNT,
 	DIRECTION_CAPTIONS,
+	MAX_HABIT_NAME_LENGTH,
 	MAX_TARGET_AMOUNT,
 	MAX_TIMES_PER_WEEK,
 	MIN_TARGET_AMOUNT,
@@ -38,11 +47,14 @@ import {
 	DEFAULT_FREQUENCY_FORM_VALUES,
 	type HabitFormInput,
 	type HabitFormValues,
-	habitFormSchema,
+	makeHabitFormSchema,
 	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
 	toFrequencyFormValues,
 } from "./habit-form-schema";
+
+/** E5: an example, not a default value — the field opens empty (HAB-22). */
+const NAME_PLACEHOLDER = "e.g. Drink a glass of water";
 
 const FREQUENCY_MODES: { value: FrequencyType; label: string }[] = [
 	{ value: "daily", label: "Daily" },
@@ -62,6 +74,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 	const hasFocused = useRef(false);
 	const router = useRouter();
 	const { colors } = useTheme();
+	const headerHeight = useHeaderHeight();
 	const { getHabitById } = useHabitQueries();
 	const { categories } = useCategoryQueries();
 	const { createHabit, updateHabit, isCreating, isUpdating } =
@@ -71,6 +84,15 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 
 	const mode = habitId === undefined ? "create" : "edit";
 	const habit = habitId === undefined ? undefined : getHabitById(habitId);
+	// A V1 name over the 32 cap stays valid while unchanged (HAB-22).
+	const originalName = habit?.name;
+	const schema = useMemo(
+		() => makeHabitFormSchema(originalName),
+		[originalName],
+	);
+	// The resolver is captured on mount, before an edited habit has loaded.
+	const schemaRef = useRef(schema);
+	schemaRef.current = schema;
 	const hasLoadedEditValues = useRef(false);
 	const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 	// F1c: a hairline above Save once content scrolls under the pinned header.
@@ -81,7 +103,8 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 		unknown,
 		HabitFormValues
 	>({
-		resolver: zodResolver(habitFormSchema),
+		resolver: (values, context, options) =>
+			zodResolver(schemaRef.current)(values, context, options),
 		mode: "onBlur",
 		defaultValues: {
 			name: "",
@@ -127,6 +150,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 	const blockedReason = saveBlockedReason({
 		name: nameValue,
 		categoryId: categoryIdValue,
+		originalName,
 	});
 	const isSaveDisabled =
 		blockedReason !== undefined ||
@@ -185,10 +209,19 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 	}
 
 	return (
-		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
+		// The name field autofocuses on create (HAB-22), so the keyboard is up
+		// from the first frame: lift the pinned Save and its reason line above it.
+		// The offset is the stack header — this view's frame starts below it.
+		<KeyboardAvoidingView
+			behavior={Platform.OS === "ios" ? "padding" : undefined}
+			keyboardVerticalOffset={headerHeight}
+			style={[styles.screen, { backgroundColor: colors.bg }]}
+		>
 			<ScrollView
 				ref={scrollRef}
 				testID="habit-form-scroll"
+				// A chip tap with the keyboard up acts on the first tap, not just dismisses.
+				keyboardShouldPersistTaps="handled"
 				contentContainerStyle={styles.scrollContent}
 				scrollEventThrottle={16}
 				onScroll={(event) =>
@@ -202,11 +235,14 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 						render={({ field, fieldState }) => (
 							<TextField
 								label="Name"
+								placeholder={NAME_PLACEHOLDER}
 								value={field.value}
 								onChangeText={field.onChange}
 								onBlur={field.onBlur}
 								error={fieldState.error?.message}
-								maxLength={40}
+								maxLength={MAX_HABIT_NAME_LENGTH}
+								nearLimitCounter
+								autoFocus={mode === "create"}
 							/>
 						)}
 					/>
@@ -403,7 +439,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 				}}
 				isCreating={isCreatingCategory}
 			/>
-		</View>
+		</KeyboardAvoidingView>
 	);
 }
 

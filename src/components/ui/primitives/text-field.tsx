@@ -71,7 +71,15 @@ export function TextField({
 
 	const field = (
 		<View testID="text-field" style={[styles.container, { borderColor }]}>
-			<SectionLabel>{label}</SectionLabel>
+			{nearLimitCounter && maxLength !== undefined ? (
+				// E6 draws NEW-23 on the label row, so its appearing never moves the input.
+				<View style={styles.labelRow}>
+					<SectionLabel>{label}</SectionLabel>
+					<CharacterCounter length={value.length} limit={maxLength} />
+				</View>
+			) : (
+				<SectionLabel>{label}</SectionLabel>
+			)}
 			<TextInput
 				// The visible label is a sibling Text, not associated with the input —
 				// without this, VoiceOver announces an unnamed text field.
@@ -80,10 +88,14 @@ export function TextField({
 				keyboardAppearance={scheme}
 				value={value}
 				// `maxLength` stops typing; slicing too covers a paste that arrives
-				// over the limit, so it's trimmed to fit rather than rejected.
+				// over the limit, so it's trimmed to fit rather than rejected. A value
+				// already over the limit (a V1 habit name) is never cut by an edit —
+				// deleting shortens it one character at a time as usual.
 				onChangeText={(text) =>
 					onChangeText(
-						maxLength !== undefined ? text.slice(0, maxLength) : text,
+						maxLength !== undefined
+							? text.slice(0, Math.max(maxLength, value.length))
+							: text,
 					)
 				}
 				onFocus={() => {
@@ -117,11 +129,6 @@ export function TextField({
 				>
 					{`${value.length}/${maxLength}`}
 				</Text>
-			) : null}
-			{nearLimitCounter && maxLength !== undefined ? (
-				<View style={styles.nearLimitCounter}>
-					<CharacterCounter length={value.length} limit={maxLength} />
-				</View>
 			) : null}
 			{error ? (
 				<Text style={[styles.error, { color: colors.dangerBg }]}>{error}</Text>
@@ -165,8 +172,10 @@ const styles = StyleSheet.create({
 	error: {
 		fontSize: 11,
 	},
-	nearLimitCounter: {
-		alignSelf: "flex-end",
+	labelRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
 	},
 	withWarning: {
 		// Clears the field's -10 outline margin so the helper sits under the box.

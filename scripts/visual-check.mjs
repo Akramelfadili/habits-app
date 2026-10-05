@@ -68,7 +68,7 @@ const MAX_DIFF_PIXELS = 10;
 async function capture(browser, name, screen) {
 	const clock = screen.clock ?? DEFAULT_CLOCK;
 	const page = await browser.newPage({
-		viewport: VIEWPORT,
+		viewport: screen.viewport ?? VIEWPORT,
 		deviceScaleFactor: 2,
 		colorScheme: screen.colorScheme ?? "light",
 		hasTouch: Boolean(screen.touch),

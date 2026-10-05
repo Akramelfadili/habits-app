@@ -810,8 +810,28 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 	}
 }
 
+/**
+ * HAB-22 name-length check: `?longNames=1` on top of any scenario renames the
+ * first two habits to a V1-length name (40, over today's 32 cap) and one at
+ * exactly the cap, so every screen can be checked with the longest names.
+ */
+export const LONG_FIXTURE_NAMES = [
+	"Read twenty pages before my morning tea!",
+	"Stretch ten minutes after waking",
+] as const;
+
+function withLongNames(habits: FixtureHabit[]): FixtureHabit[] {
+	const search = globalThis.location?.search ?? "";
+	if (new URLSearchParams(search).get("longNames") !== "1") return habits;
+	return habits.map((habit, index) =>
+		index < LONG_FIXTURE_NAMES.length
+			? { ...habit, name: LONG_FIXTURE_NAMES[index] }
+			: habit,
+	);
+}
+
 export function habitFixturesFor(scenario: FixtureScenario): Habit[] {
-	return rawFixturesFor(scenario).map(withLifecycle);
+	return withLongNames(rawFixturesFor(scenario)).map(withLifecycle);
 }
 
 /** `HABIT_FIXTURES` as full habits — the web repository's server snapshot. */

@@ -7,7 +7,9 @@
  * Each entry: `feature` (spec ID, groups the report), `route` (with the
  * `?fixtures=` scenario, see habit-fixtures.ts), `mockup` (the docs/mockups/
  * file it's judged against, or null when no mockup covers that state),
- * optional `clock` (overrides DEFAULT_CLOCK), `note`, `touch` (render in a
+ * optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
+ * in CSS px, overrides the default 393×852 — e.g. a small phone with the
+ * keyboard up), `note`, `touch` (render in a
  * touch-enabled page, for swipe gestures), `colorScheme` ("light" default, or
  * "dark" — the emulated OS scheme, which the Appearance setting's default
  * "System" follows, HAB-15), and `interact(page, ctx)` for states only
@@ -230,6 +232,62 @@ export const SCREENS = {
 		route: "/edit-habit/1",
 		mockup: "docs/mockups/new-habit-form.png",
 		note: "Mockup shows create mode; edit mode should match except Direction is locked.",
+	},
+
+	// HAB-22 — New habit: empty & near-limit polish
+	"new-habit-empty": {
+		feature: "HAB-22",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-22-e5.png",
+		note: "E5 — focused on open, example placeholder, no counter, Save disabled with the name reason. Mockup still draws V1's Icon & colour picker (removed by HAB-24) and the sheet chrome; the real form keeps Category/Direction/Target type.",
+	},
+	"new-habit-near-limit": {
+		feature: "HAB-22",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/hab-22-e6.png",
+		note: "E6 — 31/32: counter shows (from 26), Save enabled once a category is picked, helper gone.",
+		async interact(page) {
+			await typeHabitName(page, "Read twenty pages before coffee");
+			await categoryChip(page, "Learning").click();
+		},
+	},
+	"new-habit-at-limit": {
+		feature: "HAB-22",
+		route: "/new-habit?fixtures=empty",
+		mockup: null,
+		note: "A 50-character paste trimmed to 32 — counter amber at 32/32.",
+		async interact(page) {
+			await typeHabitName(
+				page,
+				"Read twenty pages before coffee every single morning",
+			);
+		},
+	},
+	"new-habit-keyboard-small-phone": {
+		feature: "HAB-22",
+		route: "/new-habit?fixtures=empty",
+		mockup: null,
+		viewport: { width: 375, height: 407 },
+		note: "iPhone SE (375×667) minus a ~260pt keyboard: what's left above the autofocused keyboard — Save and its reason line must stay visible.",
+	},
+	"edit-habit-legacy-name": {
+		feature: "HAB-22",
+		route: "/edit-habit/1?longNames=1",
+		mockup: null,
+		note: "A V1 40-character name, unchanged: counter shows its real 40/32 (amber), Save stays enabled.",
+	},
+	"edit-habit-legacy-name-edited": {
+		feature: "HAB-22",
+		route: "/edit-habit/1?longNames=1",
+		mockup: null,
+		note: "The V1 name edited but still over 32: Save disabled with the shorten reason.",
+		async interact(page) {
+			const name = page.getByLabel("Name", { exact: true }).first();
+			await name.click();
+			await name.press("End");
+			await name.press("Backspace");
+			await name.blur();
+		},
 	},
 
 	// HAB-24 — Categories: pick & add (the New habit form's category card + add sheet)
@@ -875,6 +933,7 @@ const DARK_TWINS = [
 	"category-picker-selected",
 	"add-category-empty",
 	"manage-categories-in-use",
+	"new-habit-near-limit",
 ];
 for (const name of DARK_TWINS) {
 	const light = SCREENS[name];
@@ -883,5 +942,40 @@ for (const name of DARK_TWINS) {
 		mockup: null,
 		colorScheme: "dark",
 		note: `Dark twin of ${name} (HAB-15): OS emulated dark, Appearance on System.`,
+	};
+}
+
+/**
+ * HAB-22: every screen that renders a habit name, re-run with `longNames=1`
+ * (habit-fixtures.ts) — the first two habits get a 40-character V1 name (over
+ * today's 32 cap) and one at exactly 32, to catch bad truncation or wrapping.
+ */
+const LONG_NAME_TWINS = [
+	"today",
+	"habit-detail",
+	"habit-detail-archived",
+	"retro-log",
+	"weekly-summary",
+	"monthly-summary",
+	"monthly-insights",
+	"yearly-summary",
+	"yearly-insights",
+	"reminders-at-cap",
+	"manage-habits",
+	"manage-habits-swipe-open",
+	"delete-confirm",
+	"export-ready",
+];
+for (const name of LONG_NAME_TWINS) {
+	const base = SCREENS[name];
+	const [path, query = ""] = base.route.split("?");
+	const params = new URLSearchParams(query);
+	params.set("longNames", "1");
+	SCREENS[`${name}-long-names`] = {
+		...base,
+		feature: "HAB-22",
+		route: `${path}?${params}`,
+		mockup: null,
+		note: `${name} with a 40-char V1 name and a 32-char name (HAB-22).`,
 	};
 }

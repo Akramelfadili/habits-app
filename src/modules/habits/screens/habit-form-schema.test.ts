@@ -1,5 +1,7 @@
 import {
 	habitFormSchema,
+	makeHabitFormSchema,
+	NAME_TOO_LONG_MESSAGE,
 	NO_CATEGORY_MESSAGE,
 	NO_TARGET_UNIT_MESSAGE,
 	NO_WEEKDAYS_MESSAGE,
@@ -33,12 +35,31 @@ describe("habitFormSchema", () => {
 		}
 	});
 
-	it("rejects a name over 40 characters", () => {
+	it("rejects a name over 32 characters on create (HAB-22)", () => {
 		const result = habitFormSchema.safeParse({
 			...validInput,
-			name: "a".repeat(41),
+			name: "a".repeat(33),
 		});
 		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0]?.message).toBe(NAME_TOO_LONG_MESSAGE);
+		}
+	});
+
+	it("accepts exactly 32 characters on create", () => {
+		const result = habitFormSchema.safeParse({
+			...validInput,
+			name: "a".repeat(32),
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("counts the cap after trimming surrounding whitespace", () => {
+		const result = habitFormSchema.safeParse({
+			...validInput,
+			name: `  ${"a".repeat(32)}  `,
+		});
+		expect(result.success).toBe(true);
 	});
 
 	it("trims leading/trailing whitespace from the name silently", () => {
@@ -187,5 +208,51 @@ describe("frequency form mapping", () => {
 		expect(
 			toFrequencyFormValues({ type: "per-week", timesPerWeek: 6 }),
 		).toEqual({ frequencyType: "per-week", weekdays: [], timesPerWeek: 6 });
+	});
+});
+
+describe("makeHabitFormSchema — legacy V1 names on edit (HAB-22)", () => {
+	const legacyName = "Read twenty pages before a morning tea"; // 38
+	const editSchema = makeHabitFormSchema(legacyName);
+
+	it("keeps an unchanged 38-character name valid", () => {
+		expect(legacyName).toHaveLength(38);
+		const result = editSchema.safeParse({ ...validInput, name: legacyName });
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects the name once edited to 35 characters", () => {
+		const result = editSchema.safeParse({
+			...validInput,
+			name: legacyName.slice(0, 35),
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error.issues[0]?.message).toBe(NAME_TOO_LONG_MESSAGE);
+		}
+	});
+
+	it("accepts the name once edited down to 32 characters", () => {
+		const result = editSchema.safeParse({
+			...validInput,
+			name: legacyName.slice(0, 32),
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("treats only surrounding whitespace as unchanged", () => {
+		const result = editSchema.safeParse({
+			...validInput,
+			name: ` ${legacyName} `,
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("still caps a name that was already within the limit", () => {
+		const result = makeHabitFormSchema("Gym").safeParse({
+			...validInput,
+			name: "a".repeat(33),
+		});
+		expect(result.success).toBe(false);
 	});
 });

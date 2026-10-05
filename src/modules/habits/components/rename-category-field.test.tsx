@@ -82,7 +82,7 @@ describe("RenameCategoryField (HAB-25)", () => {
 		await renderField();
 		await fireEvent.changeText(field(), "A very long category name");
 		expect(field().props.value).toBe("A very long category");
-		expect(screen.getByText("20/20")).toBeTruthy();
+		expect(screen.getByText("20 / 20")).toBeTruthy();
 	});
 
 	it("saves on the return key", async () => {

@@ -23,6 +23,10 @@ jest.mock("expo-router", () => ({
 	useRouter: () => ({ back: mockBack, push: jest.fn() }),
 }));
 
+jest.mock("expo-router/react-navigation", () => ({
+	useHeaderHeight: () => 56,
+}));
+
 const mockCreateHabit = jest.fn();
 const mockUpdateHabit = jest.fn();
 jest.mock("../hooks/use-habit-actions", () => ({
@@ -112,6 +116,56 @@ describe("HabitFormScreen — create mode", () => {
 
 		await pickCategory("Learning");
 		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
+	});
+
+	describe("name field (HAB-22)", () => {
+		const nameInput = () => screen.getByLabelText("Name");
+
+		it("opens empty and focused, with an example placeholder and no counter (E5)", async () => {
+			await render(<HabitFormScreen />);
+			expect(nameInput().props.value).toBe("");
+			expect(nameInput().props.placeholder).toBe("e.g. Drink a glass of water");
+			expect(nameInput().props.autoFocus).toBe(true);
+			expect(nameInput().props.maxLength).toBe(32);
+			expect(screen.queryByText(/ \/ 32$/)).toBeNull();
+			expect(isSaveDisabled()).toBe(true);
+		});
+
+		it("shows the counter only from 26 of 32 characters (E6)", async () => {
+			await render(<HabitFormScreen />);
+			await fireEvent.changeText(nameInput(), "a".repeat(25));
+			expect(screen.queryByText("25 / 32")).toBeNull();
+
+			await fireEvent.changeText(nameInput(), "a".repeat(26));
+			expect(screen.getByText("26 / 32")).toBeTruthy();
+		});
+
+		it("trims a pasted over-limit name to 32 and still shows the at-limit counter", async () => {
+			await render(<HabitFormScreen />);
+			await fireEvent.changeText(nameInput(), "a".repeat(50));
+			expect(nameInput().props.value).toBe("a".repeat(32));
+			expect(screen.getByText("32 / 32")).toBeTruthy();
+		});
+
+		it("drops the helper line once a valid name exists and a category is picked", async () => {
+			await render(<HabitFormScreen />);
+			expect(screen.getByText("Add a name to save this habit")).toBeTruthy();
+
+			await fireEvent.changeText(
+				nameInput(),
+				"Read twenty pages before coffee",
+			);
+			await pickCategory("Learning");
+			expect(screen.queryByText("Add a name to save this habit")).toBeNull();
+			expect(isSaveDisabled()).toBe(false);
+		});
+	});
+
+	it("acts on a tap while the autofocused keyboard is up (HAB-22)", async () => {
+		await render(<HabitFormScreen />);
+		expect(
+			screen.getByTestId("habit-form-scroll").props.keyboardShouldPersistTaps,
+		).toBe("handled");
 	});
 
 	it("lists built-ins in their fixed order, then customs, then Add category last", async () => {
@@ -500,6 +554,72 @@ describe("HabitFormScreen — edit mode", () => {
 			1,
 			expect.objectContaining({ frequency: { type: "daily" } }),
 		);
+	});
+
+	it("doesn't autofocus the name in edit mode (HAB-22)", async () => {
+		await render(<HabitFormScreen habitId={1} />);
+		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
+		expect(screen.getByLabelText("Name").props.autoFocus).toBe(false);
+	});
+
+	describe("legacy V1 name over 32 (HAB-22)", () => {
+		const legacyName = "Read twenty pages before a morning tea"; // 38
+		beforeEach(() => {
+			mockHabits = [makeHabit({ id: 3, name: legacyName, category: MORNING })];
+		});
+
+		it("saves other fields with the name left unchanged, showing its real count", async () => {
+			await render(<HabitFormScreen habitId={3} />);
+			await waitFor(() =>
+				expect(screen.getByDisplayValue(legacyName)).toBeTruthy(),
+			);
+			expect(screen.getByText("38 / 32")).toBeTruthy();
+			expect(isSaveDisabled()).toBe(false);
+
+			await fireEvent.press(screen.getByText("Daily"));
+			await fireEvent.press(screen.getByText("Save habit"));
+			await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalledTimes(1));
+			expect(mockUpdateHabit).toHaveBeenCalledWith(
+				3,
+				expect.objectContaining({ name: legacyName }),
+			);
+		});
+
+		it("blocks Save once the name is edited but still over 32", async () => {
+			await render(<HabitFormScreen habitId={3} />);
+			await waitFor(() =>
+				expect(screen.getByDisplayValue(legacyName)).toBeTruthy(),
+			);
+			await fireEvent.changeText(
+				screen.getByDisplayValue(legacyName),
+				legacyName.slice(0, 35),
+			);
+			expect(screen.getByDisplayValue(legacyName.slice(0, 35))).toBeTruthy();
+			expect(isSaveDisabled()).toBe(true);
+			expect(
+				screen.getByText("Shorten the name to 32 characters to save"),
+			).toBeTruthy();
+		});
+
+		it("saves once the name is edited down to 32", async () => {
+			await render(<HabitFormScreen habitId={3} />);
+			await waitFor(() =>
+				expect(screen.getByDisplayValue(legacyName)).toBeTruthy(),
+			);
+			const shortened = legacyName.slice(0, 32);
+			await fireEvent.changeText(
+				screen.getByDisplayValue(legacyName),
+				shortened,
+			);
+			expect(isSaveDisabled()).toBe(false);
+
+			await fireEvent.press(screen.getByText("Save habit"));
+			await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalledTimes(1));
+			expect(mockUpdateHabit).toHaveBeenCalledWith(
+				3,
+				expect.objectContaining({ name: shortened.trim() }),
+			);
+		});
 	});
 
 	it("locks Direction and shows the explanatory caption", async () => {

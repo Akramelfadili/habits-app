@@ -17,7 +17,7 @@ describe("CharacterCounter", () => {
 		[32, 26, true],
 	])("limit %i, length %i → shown: %s", async (limit, length, shown) => {
 		await render(<CharacterCounter length={length} limit={limit} />);
-		expect(screen.queryByText(`${length}/${limit}`) !== null).toBe(shown);
+		expect(screen.queryByText(`${length} / ${limit}`) !== null).toBe(shown);
 	});
 
 	it.each([
@@ -25,14 +25,14 @@ describe("CharacterCounter", () => {
 		[32, 31],
 	])("stays neutral just under the %i limit", async (limit, length) => {
 		await render(<CharacterCounter length={length} limit={limit} />);
-		expect(screen.getByText(`${length}/${limit}`)).toHaveStyle({
+		expect(screen.getByText(`${length} / ${limit}`)).toHaveStyle({
 			color: surfaceColors.light.faint,
 		});
 	});
 
 	it.each([20, 32])("turns amber at the %i limit", async (limit) => {
 		await render(<CharacterCounter length={limit} limit={limit} />);
-		expect(screen.getByText(`${limit}/${limit}`)).toHaveStyle({
+		expect(screen.getByText(`${limit} / ${limit}`)).toHaveStyle({
 			color: semanticColors.light.warnInk,
 		});
 	});
