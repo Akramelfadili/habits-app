@@ -1,11 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
-import { Container } from "@/components/ui/composite/container";
-import { ListItem } from "@/components/ui/composite/list-item";
-import { Sheet } from "@/components/ui/composite/sheet";
-import { Button } from "@/components/ui/primitives/button";
-import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { typeScale } from "@/theme/theme";
-import { useTheme } from "@/theme/use-theme";
+import { DestructiveConfirmSheet } from "@/components/ui/composite/destructive-confirm-sheet";
 import {
 	archiveInsteadBody,
 	deleteConsequence,
@@ -21,18 +14,18 @@ type DeleteHabitSheetProps = {
 	/** False for a habit that's already archived — there's nothing to offer instead. */
 	canArchive: boolean;
 	onKeep: () => void;
-	onArchive: () => void;
-	onDelete: () => void;
+	onArchive: () => unknown;
+	onDelete: () => unknown;
 	isWorking?: boolean;
 };
 
 /**
- * Delete confirmation (HAB-13, design-system.md): warning icon, headline,
- * consequence copy, the "Archive instead" option surfaced above everything,
- * primary "Keep habit", and "Delete permanently" demoted to a small red text
- * link at the very bottom. That ordering — safe option dominant, destructive
- * option smallest — is deliberate; don't "simplify" it to a filled red
- * button. Non-dismissible: leaving means picking one of the three.
+ * Delete confirmation (HAB-13, reworked by HAB-23 / E7): NEW-33's "with
+ * archive action" state. "Archive instead" is one whole-card button (NEW-25),
+ * so the sheet has exactly Keep habit, the card, and Delete permanently — the
+ * safe option dominant, the permanent one smallest; don't "simplify" the
+ * delete into a filled red button. An already-archived habit gets the plain
+ * state: nothing to offer instead.
  */
 export function DeleteHabitSheet({
 	visible,
@@ -45,71 +38,25 @@ export function DeleteHabitSheet({
 	onDelete,
 	isWorking = false,
 }: DeleteHabitSheetProps) {
-	const { colors } = useTheme();
-
 	return (
-		<Sheet visible={visible} onDismiss={onKeep} dismissible={false}>
-			<View style={styles.copy}>
-				<IconBadge
-					size="large"
-					symbol="exclamationmark"
-					accent={{ tint: colors.warnTint, ink: colors.warnInk }}
-				/>
-				<Text style={[styles.headline, { color: colors.ink }]}>
-					{deleteHeadline(habitName)}
-				</Text>
-				<Text style={[styles.body, { color: colors.sub }]}>
-					{deleteConsequence(loggedDays)}
-				</Text>
-			</View>
-
-			{canArchive ? (
-				<Container variant="inset">
-					<ListItem
-						embedded
-						leading={
-							<IconBadge
-								symbol="archivebox"
-								accent={{ tint: colors.card, ink: colors.sub }}
-							/>
+		<DestructiveConfirmSheet
+			visible={visible}
+			headline={deleteHeadline(habitName)}
+			body={deleteConsequence(loggedDays)}
+			action={
+				canArchive
+					? {
+							title: "Archive instead",
+							body: archiveInsteadBody(currentStreak),
+							onPress: onArchive,
 						}
-						title="Archive instead"
-						subtitle={archiveInsteadBody(currentStreak)}
-					/>
-				</Container>
-			) : null}
-
-			<Button label="Keep habit" onPress={onKeep} disabled={isWorking} />
-			{canArchive ? (
-				<Button
-					label="Archive instead — keeps history"
-					variant="secondary"
-					onPress={onArchive}
-					disabled={isWorking}
-				/>
-			) : null}
-			<Button
-				label="Delete permanently"
-				variant="destructive"
-				onPress={onDelete}
-				disabled={isWorking}
-			/>
-		</Sheet>
+					: undefined
+			}
+			keepLabel="Keep habit"
+			confirmLabel="Delete permanently"
+			onKeep={onKeep}
+			onConfirm={onDelete}
+			isWorking={isWorking}
+		/>
 	);
 }
-
-const styles = StyleSheet.create({
-	copy: {
-		gap: 8,
-		paddingHorizontal: 4,
-	},
-	headline: {
-		fontSize: typeScale.section,
-		fontWeight: "600",
-		marginTop: 4,
-	},
-	body: {
-		fontSize: typeScale.subtitle,
-		lineHeight: 18,
-	},
-});

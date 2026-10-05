@@ -84,3 +84,8 @@ Deviations and follow-ups recorded while building V2, so they aren't lost.
 - **Back label on Settings.** Settings is registered with `backTo("Today")`; opened from the Reminders pointer, its back button still reads "Today" though it returns to Reminders. Make the label contextual if the pointer outlives V2.0.
 - **Notifications-off notice sits between the caption and the pointer** when permission is denied (V1's position); E4 doesn't draw that state.
 - **Hooks trimmed.** `useReminderActions` no longer returns `setEveningReview` and `useReminderQueries` no longer reads the setting; `toggleEveningReview` stays exported from `use-reminder-actions.ts` because `useSettingsActions` composes it. Moving it next to Settings' hook is a tidy-up. `setEveningReview` in `reminder-service.ts` and the evening-review notification are untouched.
+
+## HAB-23 — Delete sheet consolidation
+
+- **E7 is labelled "from Edit habit · delete", but Edit habit has no delete entry.** The mockup draws Edit habit behind the sheet; the only way in is still "Delete habit" on Habit Detail. HAB-23 is layout-only ("no behavior change"), so no entry was added to Edit habit. Decide whether Edit habit should get one.
+- **Visual baselines:** `delete-confirm` and `delete-confirm-long-names` re-captured against E7; `delete-confirm-dark` and `delete-confirm-archived` added. The `today-menu-open*` baselines were not touched.

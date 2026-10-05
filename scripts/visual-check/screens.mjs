@@ -777,10 +777,29 @@ export const SCREENS = {
 		note: "No habits at all: E2 card with copy that doesn't claim anything was archived, plus the E3 placeholder. No mockup draws this combination.",
 	},
 	"delete-confirm": {
-		feature: "HAB-13",
+		feature: "HAB-23",
 		route: "/habits/1?fixtures=habit-detail",
-		mockup: "docs/mockups/delete-confirm.png",
-		note: "Sheet is opened by tapping 'Delete habit' at the bottom of Habit Detail.",
+		mockup: "docs/mockups/hab-23-e7.png",
+		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (v3-backlog).",
+		async interact(page) {
+			await page.getByText("Delete habit").click();
+		},
+	},
+	"delete-confirm-dark": {
+		feature: "HAB-23",
+		route: "/habits/1?fixtures=habit-detail",
+		mockup: "docs/mockups/hab-23-e7.png",
+		colorScheme: "dark",
+		note: "E7 dark half: OS emulated dark, Appearance on System.",
+		async interact(page) {
+			await page.getByText("Delete habit").click();
+		},
+	},
+	"delete-confirm-archived": {
+		feature: "HAB-23",
+		route: "/habits/1?fixtures=habit-detail-archived",
+		mockup: null,
+		note: "Already-archived habit: NEW-33 plain state — no archive card, just Keep habit and Delete permanently. No mockup draws this.",
 		async interact(page) {
 			await page.getByText("Delete habit").click();
 		},

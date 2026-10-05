@@ -79,7 +79,7 @@ These are concrete visual changes to *existing V1 screens*, caused by V2's conso
 
 - **Detail (V1-03), Streak-reset (V1-18), New-habit-variant Detail (V1-21):** heatmap cells 22px/radius 7/gap 6 → 18/6/5; legend swatches 14/radius 5 → 12/radius 4; stat cards 16/10/28 → 14/10/26; chart-card padding 18 → 16.
 - **Weekly Summary (V1-10), Perfect Week (V1-19):** per-habit rows gain the 28px habit badge, row gap 16 → 12; stat cards 18/11/30 → 14/10/26; insight-card padding 18 → 16/18; chart-card padding 18 → 16.
-- **Delete confirm (V1-15):** the old layout drew "Archive instead" as a card *and* a separate button — this is now the `NEW-33` "V1 layout" state specifically so V2's `E7` can remove the duplicate.
+- **Delete confirm (V1-15):** the old layout drew "Archive instead" as a card *and* a separate button. HAB-23 (`E7`) removed the duplicate: the habit delete sheet is `NEW-33 · with archive action`, and the interim "V1 layout" state is retired — there is one delete-sheet implementation.
 
 None of these are behavior changes — same data, same logic, smaller/cleaner chrome. Treat them as a design-token bump on existing screens, not a new feature.
 
@@ -113,7 +113,7 @@ Built as: `EmptyStateCard` and `PlaceholderCard` (`components/ui/composite/`) fo
 > [!note] HAB-25 implementation notes
 > - **Inline rename has no mockup.** F3a–F3c and F4a/F4b don't draw it. The built state (visual-check `rename-category-editing` / `rename-category-duplicate`) is a **proposal**: the row is replaced in place by the `VAR-12` name field (add-category rules: counter from 16/20, paste trimmed, case/space-insensitive duplicate check including built-ins, own name in a different case allowed), with Cancel / Save text actions under it. Replace it if a mockup is drawn.
 > - Built: `NEW-29` → `components/ui/composite/category-row.tsx`; `NEW-33` → `components/ui/composite/destructive-confirm-sheet.tsx` (plain + with-preview states; the copy/preview area scrolls so a long affected-habit list is never truncated). `NEW-28` gained `locked` and a `compact` list-row size.
-> - **HAB-23 must move `DeleteHabitSheet` onto `DestructiveConfirmSheet`** (as its "with archive action" state) — it's still its own V1 layout until then, so the app briefly has two delete-sheet implementations.
+> - **Done in HAB-23:** `DeleteHabitSheet` is a thin wrapper over `DestructiveConfirmSheet`'s "with archive action" state; `NEW-25` → `components/ui/composite/action-card.tsx` (whole card is one button, chevron, pressed/disabled). Confirm and the action latch on the first tap until their handler settles, so a double tap can't fire twice.
 > - Entry point: Settings → Categories (HAB-15; a plain navigable row with no mockup — a proposal, back reads "Settings"). The temporary row on Manage habits has been removed.
 
 ## Notes for whoever builds from this file

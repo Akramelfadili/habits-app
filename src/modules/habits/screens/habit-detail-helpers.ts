@@ -13,6 +13,10 @@ const SHORT_DAY: Record<IsoWeekday, string> = {
 	7: "Sun",
 };
 
+/** Archive or delete failed — shown while the confirmation stays open, so retrying is one tap. */
+export const ARCHIVE_FAILED_MESSAGE = "Couldn't archive. Try again.";
+export const DELETE_FAILED_MESSAGE = "Couldn't delete. Try again.";
+
 /** "daily", "Mon–Fri", "Mon, Wed, Fri", "3× a week" — the cadence in Habit Detail's subtitle. */
 export function frequencyLabel(frequency: Frequency): string {
 	switch (frequency.type) {

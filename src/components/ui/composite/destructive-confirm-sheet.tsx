@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
 	ScrollView,
 	StyleSheet,
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/primitives/button";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { ActionCard } from "./action-card";
 import { Sheet } from "./sheet";
 
 /** How much of the screen the copy + preview may take before it scrolls. */
@@ -24,29 +25,38 @@ type DestructiveConfirmSheetProps = {
 	 * changes, between the copy and the buttons. Omit for the plain state.
 	 */
 	preview?: ReactNode;
+	/**
+	 * The "with archive action" state (habit delete, HAB-23 E7): a NEW-25
+	 * card offering the reversible alternative, between the copy and Keep.
+	 */
+	action?: { title: string; body: string; onPress: () => unknown };
 	keepLabel: string;
 	/** Repeats the consequence when there is one ("Delete and move 3 habits"). */
 	confirmLabel: string;
 	onKeep: () => void;
-	onConfirm: () => void;
-	/** While the delete runs — both buttons go inert so it can't fire twice. */
+	onConfirm: () => unknown;
+	/** While the delete runs — every control goes inert so it can't fire twice. */
 	isWorking?: boolean;
 };
 
 /**
  * NEW-33 Destructive confirm sheet (design-system-v2.md): warning icon,
- * headline, consequence, an optional preview, then a primary "keep" and the
- * delete demoted to a small red text link — the safe option dominant, the
- * permanent one smallest. Non-dismissible: leaving means picking one.
- * The copy and preview scroll when they outgrow half the screen, so a long
- * list is never cut off. HAB-23 moves `DeleteHabitSheet` onto this (its
- * "with archive action" state).
+ * headline, consequence, an optional preview or archive action, then a
+ * primary "keep" and the delete demoted to a small red text link — the safe
+ * option dominant, the permanent one smallest. Non-dismissible: leaving means
+ * picking one. The copy and preview scroll when they outgrow half the
+ * screen, so a long list is never cut off.
+ *
+ * Confirm and the action latch on the first tap until their handler settles:
+ * `isWorking` only arrives after a re-render, so it alone can't stop a second
+ * tap landing in the same frame.
  */
 export function DestructiveConfirmSheet({
 	visible,
 	headline,
 	body,
 	preview,
+	action,
 	keepLabel,
 	confirmLabel,
 	onKeep,
@@ -55,6 +65,38 @@ export function DestructiveConfirmSheet({
 }: DestructiveConfirmSheetProps) {
 	const { colors } = useTheme();
 	const { height } = useWindowDimensions();
+	const pendingRef = useRef(false);
+	const [isPending, setIsPending] = useState(false);
+	const isInert = isWorking || isPending;
+
+	useEffect(() => {
+		if (!visible) {
+			pendingRef.current = false;
+			setIsPending(false);
+		}
+	}, [visible]);
+
+	function once(handler: () => unknown) {
+		return () => {
+			if (pendingRef.current || isWorking) return;
+			pendingRef.current = true;
+			setIsPending(true);
+			const release = () => {
+				pendingRef.current = false;
+				setIsPending(false);
+			};
+			let result: unknown;
+			try {
+				result = handler();
+			} catch (error) {
+				release();
+				throw error;
+			}
+			// Failures are the caller's to surface (Detail toasts them, HAB-23);
+			// the latch only has to let go so the action can be retried.
+			Promise.resolve(result).then(release, release);
+		};
+	}
 
 	return (
 		<Sheet visible={visible} onDismiss={onKeep} dismissible={false}>
@@ -78,13 +120,22 @@ export function DestructiveConfirmSheet({
 					<Text style={[styles.body, { color: colors.sub }]}>{body}</Text>
 				</View>
 				{preview}
+				{action ? (
+					<ActionCard
+						title={action.title}
+						subtitle={action.body}
+						symbol="archivebox"
+						onPress={once(action.onPress)}
+						disabled={isInert}
+					/>
+				) : null}
 			</ScrollView>
-			<Button label={keepLabel} onPress={onKeep} disabled={isWorking} />
+			<Button label={keepLabel} onPress={onKeep} disabled={isInert} />
 			<Button
 				label={confirmLabel}
 				variant="destructive"
-				onPress={onConfirm}
-				disabled={isWorking}
+				onPress={once(onConfirm)}
+				disabled={isInert}
 			/>
 		</Sheet>
 	);
