@@ -42,8 +42,9 @@ tags:
     id: "More"
 - tapOn: "Manage & archive"
 - assertVisible: "Archived · 2"
-- assertVisible: "Manage habits"
-- assertVisible: "Archiving keeps every logged day and streak. Deleting is only offered from the habit detail screen."
+# The screen's title is "Habits" (HAB-19) — the same word as the tab, so it
+# isn't asserted on its own; the footnote identifies the screen.
+- assertVisible: "Order is set per category and matches Today. To move a habit to another category, edit it."
 # No destructive action on this screen.
 - assertNotVisible: "Delete habit"
 

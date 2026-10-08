@@ -33,7 +33,7 @@ type TextFieldProps = {
 };
 
 /** How close to `maxLength` the remaining-characters counter starts showing. */
-export const COUNTER_THRESHOLD = 40;
+const COUNTER_THRESHOLD = 40;
 
 export function TextField({
 	label,

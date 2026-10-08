@@ -298,7 +298,7 @@ function Insight({
 						cause && copy.actionLabel
 							? {
 									label: copy.actionLabel,
-									// TODO(V3): open with "Add a time" and the day (?addTime=<day>) pre-selected — see docs/v3-backlog.md.
+									// TODO(backlog): open with "Add a time" and the day (?addTime=<day>) pre-selected — see docs/backlog.md.
 									onPress: () => onOpenReminders(cause.habit.id),
 								}
 							: undefined

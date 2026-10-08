@@ -33,7 +33,7 @@ import { isOffScheduleEntry } from "./off-schedule";
 
 const DATE_FORMAT = "yyyy-MM-dd";
 
-export const COMPLETION_RATE_WINDOW_DAYS = 90;
+const COMPLETION_RATE_WINDOW_DAYS = 90;
 export const HEATMAP_WEEKS = 10;
 
 type History = {

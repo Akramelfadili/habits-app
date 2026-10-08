@@ -16,7 +16,25 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"preset": "recommended"
+			"preset": "recommended",
+			"style": {
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"drizzle-orm": "Only a repositories/ folder or src/lib/db/ may touch Drizzle or the database client (CLAUDE.md rule 1) - go through a repository-exported function or hook.",
+							"@/lib/db/client": "Only a repositories/ folder or src/lib/db/ may touch Drizzle or the database client (CLAUDE.md rule 1) - go through a repository-exported function or hook.",
+							"@/lib/db/schema": "Only a repositories/ folder or src/lib/db/ may touch Drizzle or the database client (CLAUDE.md rule 1) - go through a repository-exported function or hook."
+						},
+						"patterns": [
+							{
+								"group": ["drizzle-orm/**", "drizzle-kit", "drizzle-kit/**"],
+								"message": "Only a repositories/ folder or src/lib/db/ may touch Drizzle or the database client (CLAUDE.md rule 1) - go through a repository-exported function or hook."
+							}
+						]
+					}
+				}
+			}
 		}
 	},
 	"javascript": {
@@ -31,5 +49,24 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": [
+				"**/repositories/**",
+				"src/lib/db/**",
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"**/test-support/**",
+				"drizzle.config.ts"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": "off"
+					}
+				}
+			}
+		}
+	]
 }

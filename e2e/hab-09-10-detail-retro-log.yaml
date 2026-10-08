@@ -25,8 +25,13 @@ tags:
 - tapOn:
     id: "Sunday 6 September, missed"
 - assertVisible: "Save changes"
-- tapOn:
-    id: "Glass of water, done"
+# Glass of water is a quantity habit (8 glasses): the sheet shows a stepper,
+# not a done checkbox, so step it up to the target.
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: "Increase Glass of water, glasses"
 - tapOn:
     id: "Note"
 - inputText: "Forgot to log — was on the trail all day."

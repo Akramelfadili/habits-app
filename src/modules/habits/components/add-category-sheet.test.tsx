@@ -126,8 +126,13 @@ describe("AddCategorySheet", () => {
 
 		await fireEvent.changeText(nameField(), "Journaling");
 		// Not awaited: the press's handler only settles once the write rejects.
-		const pressing = fireEvent.press(addButton());
-		await waitFor(() => expect(create).toHaveBeenCalled());
+		// Started inside act() so the busy state it sets is flushed there rather
+		// than reported as an update outside act.
+		let pressing: Promise<unknown> = Promise.resolve();
+		await act(async () => {
+			pressing = fireEvent.press(addButton());
+			await waitFor(() => expect(create).toHaveBeenCalled());
+		});
 		// In flight: busy, so it can't be pressed twice.
 		await waitFor(() =>
 			expect(addButton().props.accessibilityState).toMatchObject({

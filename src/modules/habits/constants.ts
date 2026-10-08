@@ -60,7 +60,7 @@ export const CATEGORY_ROTATION: readonly CategoryAppearance[] = [
 /**
  * The one place a category shape becomes an icon. SF Symbols are the closest
  * system glyphs, not the mockup's hand-drawn shapes — a known, accepted
- * deviation (design-system-v2.md draws its own).
+ * deviation (design-system.md draws its own).
  */
 export const CATEGORY_SHAPE_SYMBOLS: Record<CategoryShape, SFSymbol> = {
 	plus: "plus",

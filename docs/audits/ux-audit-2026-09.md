@@ -1,5 +1,7 @@
 # Habits V1 — UX/UI audit (Sep 2026)
 
+> **Status: superseded.** This audit predates V2 (HAB-14…25); most items were fixed there or by later work. The repo now has ~128 visual-check baselines (not 33 states). Items that are still open live in `docs/backlog.md`; the current full audit is `docs/audits/audit.md`. Kept for history — do not treat the findings below as current.
+
 A design and UX read of the whole app seen together, rather than one feature
 at a time. It isn't a bug hunt. Sources:
 

@@ -48,7 +48,9 @@ const REPORT = path.join(OUT_DIR, "report.html");
 
 // iPhone 15/16 logical size — the mockups are drawn on this frame.
 const VIEWPORT = { width: 393, height: 852 };
-const CONCURRENCY = 4;
+// Four Chromium pages at once starved the popover's measurement chain (audit
+// A10-10); two keeps the full run fast enough and the layout settling reliable.
+const CONCURRENCY = 2;
 
 /**
  * Per-pixel colour tolerance (pixelmatch's 0–1 scale). Deliberately far below
@@ -166,7 +168,7 @@ function escapeHtml(text) {
 		.replaceAll('"', "&quot;");
 }
 
-/** Relative URL from the report to a repo file (handles "retro-log .png"). */
+/** Relative URL from the report to a repo file. */
 function fromReport(file) {
 	return path
 		.relative(OUT_DIR, file)
@@ -292,7 +294,16 @@ async function main() {
 		const browser = await chromium.launch();
 		try {
 			await runPool(selected, async (name) => {
-				problemsByName.set(name, await capture(browser, name, SCREENS[name]));
+				let problems = await capture(browser, name, SCREENS[name]);
+				// One retry for a state that fails — a flake clears, a real change
+				// (or a real error) fails twice. Not when rewriting baselines.
+				if (!updateBaseline) {
+					const first = compare(name).status;
+					if (problems.length > 0 || first === "changed") {
+						problems = await capture(browser, name, SCREENS[name]);
+					}
+				}
+				problemsByName.set(name, problems);
 			});
 		} finally {
 			await browser.close();

@@ -4,7 +4,7 @@ import { useTheme } from "@/theme/use-theme";
 type SegmentedControlOption<T extends string> = {
 	value: T;
 	label: string;
-	/** Just this segment is unavailable (Year, until HAB-17) — the others stay live. */
+	/** Just this segment is unavailable (e.g. a period with no data yet) — the others stay live. */
 	disabled?: boolean;
 };
 

@@ -126,7 +126,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 					<Banner tone="neutral">{NOTIFICATIONS_OFF_NOTICE}</Banner>
 				) : null}
 
-				{/* TODO(V2.1): remove NEW-27 and this pointer (docs/v3-backlog.md). */}
+				{/* TODO(backlog): remove NEW-27 and this pointer (docs/backlog.md). */}
 				<MovedSettingPointer
 					body="Looking for the evening review? It covers every habit at once, so it now lives in Settings."
 					linkLabel="Open Settings →"

@@ -275,7 +275,7 @@ function Insight({
 		}
 		case "never-stuck": {
 			const copy = neverStuckCopy(insight);
-			// The year's only tappable card: Edit habit (where Archive should sit at the foot — see docs/v3-backlog.md).
+			// The year's only tappable card: Edit habit (where Archive should sit at the foot — see docs/backlog.md).
 			return (
 				<InsightCard
 					tone="warning"

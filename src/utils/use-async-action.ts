@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 /**
  * Consistent { execute, isLoading, error } shape for any repository or service
- * call a write hook exposes — see docs/app-architecture.md's async-action-state note.
+ * call a write hook exposes — see docs/architecture.md's async-action-state note.
  */
 export function useAsyncAction<Args extends unknown[], Result>(
 	action: (...args: Args) => Promise<Result>,

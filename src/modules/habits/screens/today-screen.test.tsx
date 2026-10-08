@@ -5,6 +5,7 @@ import {
 	waitFor,
 } from "@testing-library/react-native";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
+import { mockMeasureInWindow } from "../test-support/measure-in-window";
 import type { Entry, Habit } from "../types";
 import type { CategoryGroup } from "./today-screen-helpers";
 
@@ -152,7 +153,10 @@ import { useToastStore } from "@/store/toast-store";
 import { TodayScreen } from "./today-screen";
 
 describe("TodayScreen", () => {
+	let measureSpy: jest.SpyInstance;
+
 	beforeEach(() => {
+		measureSpy = mockMeasureInWindow();
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset();
 		mockLogQuantity.mockReset();
@@ -174,6 +178,10 @@ describe("TodayScreen", () => {
 		mockFreezesRemainingThisMonth = 2;
 		mockEligibleHabits = [];
 		mockLoggedToday = [];
+	});
+
+	afterEach(() => {
+		measureSpy.mockRestore();
 	});
 
 	it("shows the no-habits-yet empty state when there are no habits at all", async () => {

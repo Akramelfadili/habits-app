@@ -35,7 +35,7 @@ describe("useRetroLogActions", () => {
 
 		await act(async () => {
 			await expect(
-				result.current.saveDay(new Date(), {
+				result.current.saveDay(new Date(2026, 8, 15), {
 					values: [],
 					noteHabitId: 1,
 					note: "",

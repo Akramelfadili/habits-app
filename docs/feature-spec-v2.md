@@ -79,6 +79,10 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Depends on:** HAB-14.
 
+**As built / Deviations**
+- **Built:** Week / Month / Year range switcher; Monthly summary with calendar, freeze pool and ranked insights (`services/monthly-insights.ts`).
+- **Deviations:** C1's missing Last/This-week switch (kept), the pattern action not pre-opening "Add a time" with the day (**not built**, `TODO(backlog)`), C3's second slipping sentence dropped, `PATTERN_CAUSE_SHARE = 0.25`. See "HAB-16" in `docs/backlog.md`.
+
 ---
 
 ## HAB-17 — Summaries: Yearly
@@ -102,7 +106,7 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 - **Longest** is the year's longest streak, via Detail's own `calculateLongestStreak` clipped to 1 January (a December run doesn't carry into January).
 - **Menu subline** is computed from the habits alone (no year of entries): "2026 so far · since 3 March" (the "since" is dropped when history began in an earlier year).
 - **Switcher:** Year is enabled on Week, Month and Year; switching replaces the screen, so Back still reads "Today".
-- Deviations from the mockups are listed in `docs/v3-backlog.md`.
+- Deviations from the mockups are listed in `docs/backlog.md`.
 
 ---
 
@@ -150,7 +154,7 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 - **Grouping:** one card per category with a `SectionHeader` (name + habit count), in Today's order — both call `groupHabitsByCategory`, so they can't drift. A category with no active habit has no section (archiving the last habit in one removes it live). One `ReorderableList` with a `renderGroup` wrapper; drag stays scoped to its category by `groupOf`. While a row is held, its card gets an ink outline (`Container lifted`) and its header the tag "Reordering within <category>"; both clear on release. VoiceOver "Move up / Move down" actions are kept (they stop at the card's edge).
 - **E2 / E3 / zero habits:** no active habits → `EmptyStateCard` ("No active habits", Add habit → New Habit), no category cards and no footnote, Archived below. Its copy depends on whether anything is archived: "Everything is archived…" vs "You haven't added a habit yet…". Nothing archived → the Archived header stays (no count) over a dashed `PlaceholderCard`. With no habits at all both show (no mockup for the combination).
 - **Copy:** footnote is the mockup's ("Order is set per category and matches Today…"); archived rows read "Archived 2 Sep · 41 logs kept" ("· no logs" for a habit with none).
-- **Deviations:** title "Habits" on the pushed screen, no "Done" — see `docs/v3-backlog.md`. The Jest suite can't drive the drag gesture (gesture handlers don't register under the mock), so the lifted outline/tag is covered by the `manage-habits-dragging` visual-check state, not a unit test.
+- **Deviations:** title "Habits" on the pushed screen, no "Done" — see `docs/backlog.md`. The Jest suite can't drive the drag gesture (gesture handlers don't register under the mock), so the lifted outline/tag is covered by the `manage-habits-dragging` visual-check state, not a unit test.
 - The temporary Categories row stays removed (Settings → Categories, HAB-15).
 
 ---
@@ -193,6 +197,10 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Depends on:** HAB-15 (the setting must exist there before it can be removed from here).
 
+**As built / Deviations**
+- **Built:** evening-review toggle removed from per-habit Reminders; temporary pointer (`MovedSettingPointer`, NEW-27) to Settings; the "Up to four times a day" caption always shown.
+- **Deviations / open:** the pointer is still present (`TODO(backlog)`), `toggleEveningReview` still lives in `use-reminder-actions.ts`. See "HAB-21" and the tidy-ups in `docs/backlog.md`.
+
 ---
 
 ## HAB-22 — New habit: empty & near-limit polish
@@ -209,6 +217,10 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Depends on:** none (habit name field is foundational), but shares its atom with HAB-24.
 
+**As built / Deviations**
+- **Built:** `VAR-12` name field with `NEW-23` counter (from 26 of 32) and `NEW-24` helper; paste trimmed to the limit; Save disabled with the reason shown. The limit is `MAX_HABIT_NAME_LENGTH` in `modules/habits/constants.ts`.
+- **Deviations:** none recorded beyond the limit change itself (V1's 40 → 32, superseded in `feature-spec.md`). See `docs/backlog.md`.
+
 ---
 
 ## HAB-23 — Delete sheet consolidation
@@ -224,6 +236,10 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 **Implementation note (from HAB-25):** the shared `NEW-33` sheet already exists as `components/ui/composite/destructive-confirm-sheet.tsx`. This ticket must rebuild `DeleteHabitSheet` on top of it (its "with archive action" state), not draw a second delete sheet.
 
 **Depends on:** none.
+
+**As built / Deviations**
+- **Built:** `DeleteHabitSheet` is a thin wrapper over `DestructiveConfirmSheet`'s "with archive action" state; the whole archive card (`NEW-25`) is the button; confirm and the card latch on first tap.
+- **Deviations / open:** E7's "from Edit habit" entry does not exist (Edit habit has no delete). See "HAB-23" in `docs/backlog.md`.
 
 ---
 
@@ -249,6 +265,10 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Depends on:** none functionally, but should land before HAB-19 (Manage's category grouping) and before any habit-creation-flow work assumes the new field shape.
 
+**As built / Deviations**
+- **Built:** managed `categories` table; `habits.categoryId` NOT NULL FK; chip picker (`NEW-28`) and add-category sheet; a migration backfilling V1 free-text categories; legacy `icon/color/category` columns left nullable and unused.
+- **Deviations:** the rotation rule — spec: "next pair not already visible"; built: the slot with the fewest existing customs, ties to the lowest (`services/category-rules.ts`). See "HAB-24 / HAB-25" in `docs/backlog.md`.
+
 ---
 
 ## HAB-25 — Categories: manage & delete
@@ -270,6 +290,10 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 - Renaming a custom category to match an existing built-in or another custom category's name: same duplicate-check rules as creation (HAB-24) apply here too.
 
 **Depends on:** HAB-24 (the category model itself must exist first).
+
+**As built / Deviations**
+- **Built:** Manage Categories (`NEW-29` rows), plain and with-move-preview delete sheets (`NEW-33`), entry from Settings → Categories.
+- **Deviations:** inline rename has no mockup (proposal); the temporary row on Manage habits was removed. See "HAB-24 / HAB-25" in `docs/backlog.md`.
 
 ---
 

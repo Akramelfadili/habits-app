@@ -11,9 +11,9 @@ import type { DayOutcome, MonthlyHabitRow } from "./monthly-summary";
 export const MAX_INSIGHTS = 3;
 
 /** A week needs this many counted days to say anything about a trend. */
-export const SLIPPING_MIN_DAYS_PER_WEEK = 3;
+const SLIPPING_MIN_DAYS_PER_WEEK = 3;
 /** …and the habit this many such weeks, so "week over week" has a shape. */
-export const SLIPPING_MIN_WEEKS = 3;
+const SLIPPING_MIN_WEEKS = 3;
 /** First eligible week → last must fall by at least this much (0–1). */
 export const SLIPPING_MIN_DROP = 0.25;
 

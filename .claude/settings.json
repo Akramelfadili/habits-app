@@ -1,4 +1,47 @@
 {
+	"permissions": {
+		"allow": [
+			"Bash(npx tsc:*)",
+			"Bash(npx biome:*)",
+			"Bash(npx jest:*)",
+			"Bash(npm test:*)",
+			"Bash(npm run lint:*)",
+			"Bash(npm run check-architecture:*)",
+			"Bash(npm run test:tooling:*)",
+			"Bash(npm run ratchet:update:*)",
+			"Bash(npm run deadcode:*)",
+			"Bash(npm run visual-check:*)",
+			"Bash(node scripts/check-architecture.mjs:*)",
+			"Bash(make check:*)",
+			"Bash(make lint-check:*)",
+			"Bash(make typecheck:*)",
+			"Bash(make test:*)",
+			"Bash(make test-tooling:*)",
+			"Bash(make check-architecture:*)",
+			"Bash(git status:*)",
+			"Bash(git diff:*)",
+			"Bash(git log:*)",
+			"Bash(git show:*)",
+			"Bash(git blame:*)",
+			"Bash(git ls-files:*)",
+			"Bash(git rev-parse:*)",
+			"Bash(git branch --show-current:*)"
+		],
+		"deny": [
+			"Bash(npm install:*)",
+			"Bash(npm i:*)",
+			"Bash(git push:*)",
+			"Bash(git push --force:*)",
+			"Bash(git reset --hard:*)",
+			"Bash(git clean:*)",
+			"Bash(rm -rf:*)"
+		],
+		"ask": [
+			"Bash(git commit:*)",
+			"Edit(src/lib/db/migrations/**)",
+			"Write(src/lib/db/migrations/**)"
+		]
+	},
 	"hooks": {
 		"PostToolUse": [
 			{
@@ -8,7 +51,7 @@
 						"type": "command",
 						"command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/format.sh",
 						"timeout": 30,
-						"statusMessage": "Running Biome..."
+						"statusMessage": "Formatting with Biome..."
 					}
 				]
 			}
@@ -18,9 +61,9 @@
 				"hooks": [
 					{
 						"type": "command",
-						"command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/run-tests.sh",
-						"timeout": 120,
-						"statusMessage": "Running tests before ending session..."
+						"command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/verify.sh",
+						"timeout": 180,
+						"statusMessage": "Verifying (tsc, architecture, changed tests)..."
 					}
 				]
 			}

@@ -21,21 +21,21 @@ import type { YearlyHabitRow, YearMonthCell } from "./yearly-summary";
 export const MAX_YEARLY_INSIGHTS = 3;
 
 /** "Stuck": at or above this rate (0–1)… */
-export const STUCK_MIN_RATE = 0.85;
+const STUCK_MIN_RATE = 0.85;
 /** …for this many judgeable months in a row. */
 export const STUCK_MIN_MONTHS = 4;
 
 /** "Never stuck": below this rate (0–1)… */
-export const NEVER_STUCK_MAX_RATE = 0.5;
+const NEVER_STUCK_MAX_RATE = 0.5;
 /** …in at least this many judgeable months (not necessarily in a row). */
 export const NEVER_STUCK_MIN_MONTHS = 5;
 
 /** Best month and seasonal dip need this many judgeable months to compare. */
-export const BEST_MONTH_MIN_MONTHS = 2;
+const BEST_MONTH_MIN_MONTHS = 2;
 /** A dip: this many percentage points under the best month… */
-export const SEASONAL_MIN_POINTS = 8;
+const SEASONAL_MIN_POINTS = 8;
 /** …for this many judgeable months in a row. */
-export const SEASONAL_MIN_MONTHS = 2;
+const SEASONAL_MIN_MONTHS = 2;
 
 export type YearlyInsight =
 	/** The year has no finished month yet (early January, or a first month still running). */

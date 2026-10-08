@@ -18,9 +18,6 @@ import type { FixtureHabit } from "./habit-fixtures";
  * - Easy run's two freezes (7 and 22 Aug) → the freeze card.
  */
 
-export const MONTHLY_READY_CLOCK = "2026-09-02T09:00:00";
-export const MONTHLY_TOO_EARLY_CLOCK = "2026-09-16T09:00:00";
-
 const READY_CREATED = new Date("2025-01-01T00:00:00Z");
 const TOO_EARLY_CREATED = new Date("2026-09-04T08:00:00Z");
 

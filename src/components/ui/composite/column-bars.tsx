@@ -17,7 +17,7 @@ type ColumnBarsProps = {
 	 * In the chart context, `states` decides how each is drawn.
 	 */
 	values: (number | null)[];
-	/** "slipping" is the flagged amber treatment (NEW-8's slipping state). Sparkline only. */
+	/** "slipping" is the flagged amber treatment (NEW-08's slipping state). Sparkline only. */
 	tone?: "default" | "slipping";
 	/**
 	 * "sparkline" is the 18px trend beside a habit (Monthly); "chart" is the

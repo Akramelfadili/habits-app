@@ -24,6 +24,52 @@ import { format, subDays } from "date-fns";
  */
 export const DEFAULT_CLOCK = "2026-09-24T09:00:00";
 
+/**
+ * Resolves once a navigation menu's popover has stopped moving: its top edge
+ * equals the ⋯ button's bottom + the 8px gap, unchanged for three consecutive
+ * frames. The menu used to settle through a chain of deferred measurements, so
+ * a fixed wait lost the race under CPU load and the capture caught the popover
+ * 74px too low (audit A10-10). Polls instead of sleeping; throws if it never
+ * settles, so a broken placement fails loudly rather than becoming a baseline.
+ */
+export async function waitForMenuSettled(page, { timeout = 5000 } = {}) {
+	const GAP_BELOW_BUTTON = 8;
+	const scrim = page.getByLabel("Close menu");
+	await scrim.waitFor();
+	const popover = await scrim
+		.locator("xpath=following-sibling::*[1]")
+		.elementHandle();
+	const button = await page
+		.locator('[aria-label="More"]')
+		.first()
+		.elementHandle();
+	const deadline = Date.now() + timeout;
+	let previousTop = Number.NaN;
+	let stableFrames = 0;
+	let last = "";
+	while (Date.now() < deadline) {
+		const { top, expected } = await page.evaluate(
+			([popoverEl, buttonEl]) =>
+				new Promise((resolve) =>
+					requestAnimationFrame(() =>
+						resolve({
+							top: popoverEl.getBoundingClientRect().top,
+							expected: buttonEl.getBoundingClientRect().bottom,
+						}),
+					),
+				),
+			[popover, button],
+		);
+		last = `popover top ${top}, button bottom ${expected}`;
+		const atFinalPosition = Math.abs(top - (expected + GAP_BELOW_BUTTON)) < 0.5;
+		stableFrames =
+			atFinalPosition && top === previousTop ? stableFrames + 1 : 0;
+		previousTop = top;
+		if (stableFrames >= 3) return;
+	}
+	throw new Error(`menu never settled under the button (${last})`);
+}
+
 /** A heatmap cell's accessibility label, `daysAgo` days before the screen's clock. */
 function heatmapCellLabel(clock, daysAgo, status) {
 	const day = subDays(new Date(clock), daysAgo);
@@ -137,19 +183,18 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			// The popover re-anchors under the button once the button is measured.
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 	"today-empty-menu-open": {
 		feature: "HAB-14",
 		route: "/habits?fixtures=empty",
 		mockup: "docs/mockups/hab-14-a4.png",
-		note: "Empty Today, menu open: summaries disabled with the spec's reasons, Manage enabled. Settings is 'Coming soon' until HAB-15.",
+		note: "Empty Today, menu open: summaries disabled with the spec's reasons, Manage enabled. Settings is enabled (HAB-15).",
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("After your first month").waitFor();
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 	"today-rest-day-menu": {
@@ -605,7 +650,7 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 	"today-menu-open-yearly": {
@@ -617,7 +662,7 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 
@@ -780,7 +825,7 @@ export const SCREENS = {
 		feature: "HAB-23",
 		route: "/habits/1?fixtures=habit-detail",
 		mockup: "docs/mockups/hab-23-e7.png",
-		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (v3-backlog).",
+		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (docs/backlog.md).",
 		async interact(page) {
 			await page.getByText("Delete habit").click();
 		},

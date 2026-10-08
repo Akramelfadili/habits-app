@@ -38,7 +38,7 @@ import type {
 
 const EVERY_DAY: IsoWeekday[] = WEEKDAYS.map(({ day }) => day);
 
-export const EVENING_REVIEW_NOTIFICATION_ID = "evening-review";
+const EVENING_REVIEW_NOTIFICATION_ID = "evening-review";
 
 /**
  * Prefix shared by every notification one habit owns. The trailing "-"

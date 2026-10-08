@@ -67,7 +67,7 @@ export function ManageHabitsScreen() {
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
 				{/* A pushed screen: back in the header, a large "Habits" title
-				    (the mockups' title; HAB-19, docs/v3-backlog.md). */}
+				    (the mockups' title; HAB-19, docs/backlog.md). */}
 				<Text
 					accessibilityRole="header"
 					style={[styles.title, { color: colors.ink }]}

@@ -409,11 +409,10 @@ export function TodayScreen() {
 				})}
 
 				{/*
-				 * Temporary until HAB-13 (Manage & Archive) exists: the mockup's
-				 * populated Today screen has no add-habit affordance of its own
-				 * (the tab has no header at all), but the interim habit-list
-				 * screen this replaces always had one — dropping it silently would
-				 * leave no way to add a second habit for several features.
+				 * Not in the mockup (its populated Today screen has no add-habit
+				 * affordance of its own, the tab has no header at all). Kept as a
+				 * fallback entry point; whether to remove it is tracked in
+				 * docs/backlog.md.
 				 */}
 				<Button
 					label="Add habit"

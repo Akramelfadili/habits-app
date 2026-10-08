@@ -4,7 +4,7 @@ import type { SFSymbol } from "sf-symbols-typescript";
 import { useTheme } from "@/theme/use-theme";
 
 /**
- * NEW-28 states (design-system-v2.md). `locked` is Manage Categories'
+ * NEW-28 states (design-system.md). `locked` is Manage Categories'
  * built-ins (HAB-25): tinted with the category's own color, never interactive.
  */
 export type CategoryChipState =
@@ -33,7 +33,7 @@ type CategoryChipProps = {
 /**
  * Category chip — icon + label in the category's *own* color, unlike `Chip`,
  * which fills with the app accent (kept separate on purpose, per
- * design-system-v2). Selected fills with the category's ink and gains a
+ * design-system). Selected fills with the category's ink and gains a
  * check; long labels truncate rather than wrap, so a 2-up grid stays aligned.
  * Locked fills with the category's tint instead of an outline.
  */

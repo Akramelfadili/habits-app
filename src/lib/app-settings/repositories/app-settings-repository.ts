@@ -37,6 +37,7 @@ export async function deleteSetting(key: string): Promise<void> {
 export function useAppSetting(key: string): string | null | undefined {
 	const { data, updatedAt } = useLiveQuery(
 		db.select().from(appSettings).where(eq(appSettings.key, key)),
+		[key],
 	);
 	if (!updatedAt) return undefined;
 	return data?.[0]?.value ?? null;

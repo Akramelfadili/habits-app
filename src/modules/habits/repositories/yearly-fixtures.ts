@@ -21,8 +21,6 @@ import type { FixtureHabit } from "./habit-fixtures";
  *   fourth card and so is cut by the three-card cap.
  */
 
-export const YEARLY_READY_CLOCK = "2026-09-16T09:00:00";
-
 const CREATED = new Date(2026, 2, 3, 8);
 
 const IDS = {

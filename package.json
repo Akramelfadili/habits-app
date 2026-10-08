@@ -13,8 +13,6 @@
 		"expo-drizzle-studio-plugin": "^0.2.1",
 		"expo-file-system": "~57.0.7",
 		"expo-font": "~57.0.4",
-		"expo-glass-effect": "~57.0.4",
-		"expo-image": "~57.0.5",
 		"expo-linking": "~57.0.11",
 		"expo-notifications": "~57.0.21",
 		"expo-router": "~57.0.24",
@@ -24,7 +22,6 @@
 		"expo-status-bar": "~57.0.1",
 		"expo-symbols": "~57.0.3",
 		"expo-system-ui": "~57.0.4",
-		"expo-web-browser": "~57.0.3",
 		"react": "19.2.3",
 		"react-dom": "19.2.3",
 		"react-hook-form": "^7.88.0",
@@ -48,26 +45,33 @@
 		"drizzle-kit": "^0.31.11",
 		"husky": "^9.1.7",
 		"jest-expo": "^57.0.5",
+		"knip": "^6.40.0",
 		"pixelmatch": "^7.2.0",
 		"playwright": "^1.63.0",
 		"pngjs": "^7.0.0",
+		"sf-symbols-typescript": "^2.2.0",
 		"typescript": "~6.0.3"
 	},
 	"scripts": {
 		"start": "expo start",
-		"reset-project": "node ./scripts/reset-project.js",
 		"android": "expo start --android",
 		"ios": "expo start --ios",
 		"web": "expo start --web",
-		"lint": "expo lint",
+		"lint": "biome check .",
 		"prepare": "husky",
 		"test": "jest",
 		"visual-check": "node scripts/visual-check.mjs",
-		"e2e": "node scripts/e2e.mjs"
+		"e2e": "node scripts/e2e.mjs",
+		"check-architecture": "node scripts/check-architecture.mjs",
+		"test:tooling": "node --test \"scripts/**/*.test.mjs\"",
+		"ratchet:update": "node scripts/token-ratchet-update.mjs",
+		"deadcode": "knip --production",
+		"deadcode:all": "knip"
 	},
 	"private": true,
 	"jest": {
 		"preset": "jest-expo",
+		"testTimeout": 15000,
 		"setupFiles": [
 			"./jest.setup.js"
 		]

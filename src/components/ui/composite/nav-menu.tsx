@@ -1,4 +1,4 @@
-import { type PropsWithChildren, useEffect, useRef, useState } from "react";
+import { type PropsWithChildren, useRef, useState } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 import { SectionLabel } from "../primitives/section-label";
@@ -16,7 +16,9 @@ const SIDE_MARGIN = 16;
 const MAX_WIDTH = 300;
 
 /**
- * Anchored popover menu over a dim scrim (NEW-02). Rendered inside the screen,
+ * Anchored popover menu over a dim scrim (NEW-02). `anchorBottom` must already
+ * be measured when this mounts, so the popover renders once at its final
+ * position instead of jumping. Rendered inside the screen,
  * not a Modal, so the button that opened it stays tappable above the scrim —
  * tapping it again closes the menu. Mount it only while open.
  *
@@ -34,8 +36,9 @@ export function NavMenu({
 	const [top, setTop] = useState(anchorBottom + GAP_BELOW_ANCHOR);
 
 	// The anchor is in window space; the overlay may start below the status bar.
-	// Re-run when the anchor arrives (the caller measures it after opening).
-	useEffect(placeBelowAnchor, [anchorBottom]);
+	// The caller measures the anchor *before* mounting, so the first render is
+	// already at the final position unless the overlay itself is offset; this
+	// correction runs once per layout and is a no-op (same state) when it isn't.
 	function placeBelowAnchor() {
 		overlay.current?.measureInWindow?.((_x, y) =>
 			setTop(anchorBottom - y + GAP_BELOW_ANCHOR),

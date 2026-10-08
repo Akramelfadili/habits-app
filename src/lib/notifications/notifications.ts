@@ -1,7 +1,7 @@
 import * as Notifications from "expo-notifications";
 
 /**
- * Adapter over `expo-notifications` (docs/app-architecture.md's Adapter
+ * Adapter over `expo-notifications` (docs/architecture.md's Adapter
  * pattern): the only file that imports it. Everything else speaks this
  * small interface, so swapping the library — or adding a second delivery
  * path — touches this file alone. Local, on-device notifications only.

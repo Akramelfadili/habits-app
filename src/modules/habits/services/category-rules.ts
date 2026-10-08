@@ -45,7 +45,7 @@ function sameAppearance(a: CategoryAppearance, b: CategoryAppearance): boolean {
  * but several rotation hues sit 5–15° from a built-in's (slot 3 · 95 vs
  * Finance · 110, slot 5 · 15 vs Health · 25, slot 6 · 265 vs Productivity ·
  * 255, slot 8 · 350 vs Social · 345, slot 10 · 290 vs Mindfulness · 300).
- * That's the design table (design-system-v2.md), told apart by shape as well
+ * That's the design table (design-system.md), told apart by shape as well
  * as hue — not a bug in this pick. Change the table, not this function.
  */
 export function nextCategoryAppearance(

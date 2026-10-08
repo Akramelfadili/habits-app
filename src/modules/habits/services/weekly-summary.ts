@@ -53,7 +53,7 @@ export type SummaryWeek = "this" | "last";
  * times — so the summary opens on the week that just finished instead: the
  * Sunday-night/Monday-morning review is exactly when people look.
  */
-export const THIS_WEEK_FROM_ISO_DAY = 3;
+const THIS_WEEK_FROM_ISO_DAY = 3;
 
 export function defaultSummaryWeek(today: Date): SummaryWeek {
 	return getISODay(today) < THIS_WEEK_FROM_ISO_DAY ? "last" : "this";

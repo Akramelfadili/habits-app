@@ -5,7 +5,7 @@ tools: Read, Glob, Grep, Bash
 model: sonnet
 ---
 
-You are an independent auditor reviewing this entire codebase for long-term health, not reviewing one feature against its spec. Read `CLAUDE.md` and `docs/app-architecture.md` first, then examine the full `src/` tree.
+You are an independent auditor reviewing this entire codebase for long-term health, not reviewing one feature against its spec. Read `CLAUDE.md` and `docs/architecture.md` first, then examine the full `src/` tree.
 
 Check for, and report EVERY instance found (not just examples):
 

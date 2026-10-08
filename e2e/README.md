@@ -2,7 +2,7 @@
 
 Each flow is a full user journey across several features, not an isolated
 screen. File names lead with the feature IDs they cover (per
-`docs/app-architecture.md`).
+`docs/architecture.md`).
 
 | Flow | Journey | Covers |
 |---|---|---|
@@ -11,6 +11,12 @@ screen. File names lead with the feature IDs they cover (per
 | `hab-12-reminders.yaml` | Detail → Reminders → add a time, set its days (unscheduled-day warning), add a second and switch it off → Detail summary, Today unaffected | HAB-09, 12 |
 | `hab-11-weekly-summary-slipping.yaml` | Summary flags a habit → backfill the week via retro-log → the insight moves to the habit left behind → "Reschedule habit →" opens its Edit | HAB-11, 10, 02 |
 | `hab-13-manage-archive-delete.yaml` | Give a habit a reminder → Manage → reorder → archive it → reminder survives → restore → delete a different habit via Detail's confirm sheet | HAB-13, 12, 09, 03 |
+
+## Status and coverage (honest version)
+
+- **Last verified run:** 2026-10-05 — 3 of the 5 journeys failed (`hab-06`, `hab-09-10`, `hab-13`). Their selectors have since been **updated from the code but not re-run**: `hab-13` asserts the Manage footnote instead of the old title, `hab-06` asserts category group names (Health / Fitness) instead of "Morning", and `hab-09-10` steps Glass of water's quantity stepper up to its target of 8 (the sheet shows a stepper for quantity habits, not a "done" checkbox). Run `npm run e2e` to confirm; the stepper step size and the category header text are the likeliest things to need another tweak. `hab-11` and `hab-12` passed in the last run.
+- **All five journeys are V1.** Nothing covers V2: no flows for HAB-14 (nav menu), 15 (settings / export), 16 (monthly), 17 (yearly), 18 (off-schedule log, retro-log pinning), 19 (manage rework), 20 (archived / restored detail), 21, 22, 24/25 (categories) or the delete sheet. V1 gaps: HAB-02, 04, 05, 07, 08 have no flow of their own. Highest-value additions: HAB-18, HAB-24/25, the HAB-14–16 navigation, HAB-15 export.
+- Names: a flow leads with the feature IDs it covers; multi-ID names deviate from the single-ID example in `CLAUDE.md` on purpose.
 
 ## Running
 

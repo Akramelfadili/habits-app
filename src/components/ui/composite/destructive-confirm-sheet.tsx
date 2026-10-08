@@ -40,7 +40,7 @@ type DestructiveConfirmSheetProps = {
 };
 
 /**
- * NEW-33 Destructive confirm sheet (design-system-v2.md): warning icon,
+ * NEW-33 Destructive confirm sheet (design-system.md): warning icon,
  * headline, consequence, an optional preview or archive action, then a
  * primary "keep" and the delete demoted to a small red text link — the safe
  * option dominant, the permanent one smallest. Non-dismissible: leaving means

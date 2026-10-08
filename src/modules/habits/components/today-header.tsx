@@ -23,13 +23,22 @@ export function TodayHeader({
 }: TodayHeaderProps) {
 	const { colors } = useTheme();
 	const button = useRef<View>(null);
+	const measuring = useRef(false);
 
 	function handlePress() {
-		onToggleMenu();
-		// Measured per press: the header scrolls with Today's content.
-		button.current?.measureInWindow((_x, y, _width, height) =>
-			onAnchorMeasured(y + height),
-		);
+		if (menuOpen || !button.current) {
+			onToggleMenu();
+			return;
+		}
+		if (measuring.current) return;
+		// Measured per press (the header scrolls with Today's content), and
+		// *before* opening, so the menu mounts once at its final position.
+		measuring.current = true;
+		button.current.measureInWindow((_x, y, _width, height) => {
+			measuring.current = false;
+			onAnchorMeasured(y + height);
+			onToggleMenu();
+		});
 	}
 
 	return (

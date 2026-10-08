@@ -8,7 +8,7 @@ import type { ExportModel } from "./export-data";
  * days. `version` lets a future importer tell layouts apart.
  */
 
-export const EXPORT_JSON_VERSION = 1;
+const EXPORT_JSON_VERSION = 1;
 
 const dateOnly = (date: Date) => format(date, "yyyy-MM-dd");
 

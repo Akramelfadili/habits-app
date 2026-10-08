@@ -173,7 +173,7 @@ export const HABIT_FIXTURES: FixtureHabit[] = [
  * weekday at render time so the scenario holds regardless of which day the
  * visual check happens to run on.
  */
-export const REST_DAY_HABIT_FIXTURES: FixtureHabit[] = [
+const REST_DAY_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Evening walk",
@@ -244,7 +244,7 @@ export const DAY_CLOSED_DUE_TODAY_IDS = [1, 2, 3];
  * due only tomorrow (HAB-05's Day closed "Tomorrow" preview) — tomorrow's
  * weekday is computed at render time, same reasoning as Rest day above.
  */
-export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
+const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Glass of water",
@@ -318,7 +318,7 @@ export const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
  * (name, target, unit, current value) so the Quantity Log sheet screenshot
  * (scripts/visual-check.mjs) can be compared to it directly.
  */
-export const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
+const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Glass of water",
@@ -339,7 +339,7 @@ export const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
  * fixture streak short regardless of which real-world day the visual check
  * runs on.
  */
-export const STREAK_AT_RISK_HABIT_CREATED = new Date("2025-01-01T00:00:00Z");
+const STREAK_AT_RISK_HABIT_CREATED = new Date("2025-01-01T00:00:00Z");
 
 /**
  * One daily Build habit matching docs/mockups/streak-at-risk.png — its
@@ -347,7 +347,7 @@ export const STREAK_AT_RISK_HABIT_CREATED = new Date("2025-01-01T00:00:00Z");
  * so opening it shows the streak-at-risk sheet with the full freeze pool
  * available (`frozen-day-fixtures.ts` adds none for this scenario).
  */
-export const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
+const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Meditate",
@@ -369,7 +369,7 @@ export const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
  * days (`frozen-day-fixtures.ts`) that empty this month's shared pool, so
  * the miss resets the streak with no prompt (HAB-08).
  */
-export const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
+const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
 	{
 		id: 1,
 		name: "Meditate",
@@ -432,7 +432,7 @@ export const HABIT_DETAIL_ARCHIVED_DAYS_AGO = 17;
  * archive day), a simple check, and a 07:00 daily reminder
  * (`reminder-fixtures.ts`) so Restore shows E1's "07:00 · daily" row.
  */
-export function habitDetailArchivedFixtures(): FixtureHabit[] {
+function habitDetailArchivedFixtures(): FixtureHabit[] {
 	return habitDetailFixtures().map((habit) => ({
 		...habit,
 		name: "Cold shower",
@@ -447,7 +447,7 @@ export function habitDetailArchivedFixtures(): FixtureHabit[] {
  * A just-created habit with no history, matching
  * docs/mockups/habit-detail-new.png ("Evening walk · Mon–Fri · added today").
  */
-export function habitDetailNewFixtures(): FixtureHabit[] {
+function habitDetailNewFixtures(): FixtureHabit[] {
 	const now = new Date();
 	return [
 		{
@@ -471,7 +471,7 @@ export function habitDetailNewFixtures(): FixtureHabit[] {
  * quantity habits, Mobility a simple check — so the Retro log sheet (HAB-10)
  * renders the mockup's four rows.
  */
-export function retroLogFixtures(): FixtureHabit[] {
+function retroLogFixtures(): FixtureHabit[] {
 	const created = subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS);
 	const base = {
 		direction: "build",
@@ -815,7 +815,7 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
  * first two habits to a V1-length name (40, over today's 32 cap) and one at
  * exactly the cap, so every screen can be checked with the longest names.
  */
-export const LONG_FIXTURE_NAMES = [
+const LONG_FIXTURE_NAMES = [
 	"Read twenty pages before my morning tea!",
 	"Stretch ten minutes after waking",
 ] as const;

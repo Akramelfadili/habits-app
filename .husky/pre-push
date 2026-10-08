@@ -1,0 +1,3 @@
+# Runs on every push. Same as `make check` (Biome without writes + tsc + Jest + tooling tests + architecture rules).
+# pre-commit stays Biome-only on purpose: it must be fast.
+make check

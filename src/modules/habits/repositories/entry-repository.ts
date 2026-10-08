@@ -34,6 +34,9 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 			.from(entries)
 			.where(and(gte(entries.date, startDate), lte(entries.date, endDate)))
 			.orderBy(asc(entries.date)),
+		// `useLiveQuery` subscribes once per `deps` — without these, the first
+		// render's range would be queried forever.
+		[startDate, endDate],
 	);
 	return (data ?? []).map(rowToEntry);
 }

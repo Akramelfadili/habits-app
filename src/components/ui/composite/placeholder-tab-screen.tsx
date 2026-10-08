@@ -6,7 +6,7 @@ type PlaceholderTabScreenProps = {
 	moduleName: string;
 };
 
-/** Stand-in tab content for a module that doesn't exist yet (docs/app-architecture.md). */
+/** Stand-in tab content for a module that doesn't exist yet (docs/architecture.md). */
 export function PlaceholderTabScreen({
 	moduleName,
 }: PlaceholderTabScreenProps) {
