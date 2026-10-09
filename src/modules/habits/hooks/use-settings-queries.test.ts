@@ -6,7 +6,7 @@ jest.mock("../repositories/frozen-day-repository", () => ({
 }));
 const mockSource = makeExportSource();
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockSource.habits,
+	useHabitsList: () => ({ habits: mockSource.habits, loaded: true }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockSource.entries,

@@ -14,7 +14,7 @@ describe("WeekdayPicker", () => {
 		);
 
 		const selected = (name: string) =>
-			screen.getByLabelText(name).props.accessibilityState.selected;
+			screen.getByLabelText(name).props.accessibilityState.checked;
 		expect([
 			selected("Monday"),
 			selected("Tuesday"),

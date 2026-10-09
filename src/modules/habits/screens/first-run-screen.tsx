@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/primitives/button";
 import { Checkbox } from "@/components/ui/primitives/checkbox";
 import { habitAccentInk, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { pluralise } from "@/utils/format";
 import { builtInAppearance, type FirstRunSuggestion } from "../constants";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
@@ -53,7 +54,10 @@ export function FirstRunScreen() {
 		<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={styles.header}>
-					<Text style={[styles.title, { color: colors.ink }]}>
+					<Text
+						accessibilityRole="header"
+						style={[styles.title, { color: colors.ink }]}
+					>
 						Pick a couple to start
 					</Text>
 					<Text style={[styles.subtitle, { color: colors.sub }]}>
@@ -99,9 +103,7 @@ export function FirstRunScreen() {
 			<View style={styles.footer}>
 				<Button
 					label={
-						count === 0
-							? "Add habits"
-							: `Add ${count} habit${count === 1 ? "" : "s"}`
+						count === 0 ? "Add habits" : `Add ${pluralise(count, "habit")}`
 					}
 					onPress={handleAdd}
 					disabled={count === 0}

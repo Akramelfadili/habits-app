@@ -24,6 +24,7 @@ let mockQueries = {
 	notificationsDenied: false,
 	lastExport: "Never",
 	exportSummary: summary,
+	about: { version: "1.4.2", build: "27", schemaVersion: 11 },
 };
 jest.mock("../hooks/use-settings-queries", () => ({
 	useSettingsQueries: () => mockQueries,
@@ -47,6 +48,12 @@ jest
 	.spyOn(require("react-native").Linking, "openSettings")
 	.mockImplementation(() => mockOpenSettings());
 
+const mockCopyDiagnostics = jest.fn();
+jest.mock("@/lib/diagnostics/diagnostics", () => ({
+	copyDiagnostics: () => mockCopyDiagnostics(),
+}));
+
+import { useToastStore } from "@/store/toast-store";
 import { SettingsScreen } from "./settings-screen";
 
 beforeEach(() => {
@@ -58,10 +65,22 @@ beforeEach(() => {
 		notificationsDenied: false,
 		lastExport: "Never",
 		exportSummary: summary,
+		about: { version: "1.4.2", build: "27", schemaVersion: 11 },
 	};
 });
 
 describe("SettingsScreen (HAB-15)", () => {
+	it("has a heading for the screen, the same 500 weight as the others, and a labelled Theme tab list (A6-09, A5-09, A6-05)", async () => {
+		await render(<SettingsScreen />);
+		expect(screen.getByRole("header", { name: "Settings" })).toHaveStyle({
+			fontWeight: "500",
+		});
+		expect(screen.getByLabelText("Theme").props.accessibilityRole).toBe(
+			"tablist",
+		);
+		expect(screen.getByRole("tab", { name: "Dark" })).toBeTruthy();
+	});
+
 	it("applies an Appearance choice when tapped", async () => {
 		await render(<SettingsScreen />);
 		await fireEvent.press(screen.getByText("Dark"));
@@ -127,5 +146,34 @@ describe("SettingsScreen (HAB-15)", () => {
 		expect(screen.queryByText("export sheet open")).toBeNull();
 		await fireEvent.press(screen.getByText("Export all data"));
 		expect(screen.getByText("export sheet open")).toBeTruthy();
+	});
+
+	describe("About", () => {
+		it("shows the app version, build and database schema", async () => {
+			await render(<SettingsScreen />);
+			expect(screen.getByText("About")).toBeTruthy();
+			expect(screen.getByText("1.4.2 (build 27)")).toBeTruthy();
+			expect(screen.getByText("Database schema")).toBeTruthy();
+			expect(screen.getByText("11")).toBeTruthy();
+		});
+
+		it.each([
+			["copied", "Diagnostics copied", "default"],
+			["shared", "Diagnostics ready to share", "default"],
+			["failed", "Couldn't copy diagnostics. Try again.", "error"],
+		])(
+			"Copy diagnostics (%s) says so in a toast",
+			async (result, message, tone) => {
+				useToastStore.setState({ toast: null });
+				mockCopyDiagnostics.mockResolvedValue(result);
+				await render(<SettingsScreen />);
+
+				await fireEvent.press(screen.getByText("Copy diagnostics"));
+
+				await screen.findByText("About");
+				expect(mockCopyDiagnostics).toHaveBeenCalledTimes(1);
+				expect(useToastStore.getState().toast).toMatchObject({ message, tone });
+			},
+		);
 	});
 });

@@ -24,13 +24,13 @@ describe("manage-habits-helpers", () => {
 
 	it("labels an archived row with its archive date and logs kept", () => {
 		expect(archivedRowSubtitle(new Date(2026, 8, 2), 41)).toBe(
-			"Archived 2 Sep · 41 logs kept",
+			"Archived 2 Sep · 41 days logged",
 		);
 		expect(archivedRowSubtitle(new Date(2026, 7, 18), 1)).toBe(
-			"Archived 18 Aug · 1 log kept",
+			"Archived 18 Aug · 1 day logged",
 		); // The audit's "0 logs kept" — an archived habit with no history.
 		expect(archivedRowSubtitle(new Date(2026, 8, 24), 0)).toBe(
-			"Archived 24 Sep · no logs",
+			"Archived 24 Sep · nothing logged",
 		);
 	});
 

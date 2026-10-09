@@ -1,3 +1,4 @@
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import {
 	EXPORT_TODAY,
 	makeExportSource,
@@ -177,6 +178,42 @@ describe("runExport", () => {
 		}).catch((error) => error);
 		expect(failure.reason).toEqual({ kind: "unknown" });
 		expect(mockSetSetting).not.toHaveBeenCalled();
+	});
+
+	it("keeps the real error as the cause and logs it once", async () => {
+		clearLog();
+		const original = new Error("EIO: input/output error");
+		mockWriteScratch.mockImplementation(() => {
+			throw original;
+		});
+		const failure = await runExport({
+			source,
+			options: csv,
+			today: EXPORT_TODAY,
+		}).catch((error) => error);
+
+		expect(failure.cause).toBe(original);
+		const entries = getLogEntries().filter((entry) => entry.level === "error");
+		expect(entries).toHaveLength(1);
+		expect(entries[0]).toMatchObject({
+			scope: "export",
+			message: "export failed",
+		});
+		expect(entries[0].error?.cause?.message).toBe("EIO: input/output error");
+	});
+
+	it("the cause of a storage failure is kept too", async () => {
+		const original = new Error("No space left on device");
+		mockWriteScratch.mockImplementation(() => {
+			throw original;
+		});
+		const failure = await runExport({
+			source,
+			options: csv,
+			today: EXPORT_TODAY,
+		}).catch((error) => error);
+		expect(failure.reason.kind).toBe("storage");
+		expect(failure.cause).toBe(original);
 	});
 
 	it("a failing last-export write fails the export and removes the file", async () => {

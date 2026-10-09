@@ -7,9 +7,10 @@ type BannerProps = {
 	/**
 	 * "warning" is the amber conflict banner (a reminder on a day the habit
 	 * isn't scheduled); "neutral" the grey persistent notice (notifications
-	 * turned off for the app).
+	 * turned off for the app); "error" a failed write where no toast can show
+	 * (design-system.md, Error tone).
 	 */
-	tone?: "warning" | "neutral";
+	tone?: "warning" | "neutral" | "error";
 	/** A link under the message — "Open iOS Settings →" (HAB-15). */
 	action?: { label: string; onPress: () => void };
 };
@@ -21,6 +22,7 @@ type BannerProps = {
 export function Banner({ children, tone = "warning", action }: BannerProps) {
 	const { colors, opacity } = useTheme();
 	const warning = tone === "warning";
+	const error = tone === "error";
 
 	return (
 		<View
@@ -34,13 +36,17 @@ export function Banner({ children, tone = "warning", action }: BannerProps) {
 				testID="banner-marker"
 				style={[
 					styles.marker,
-					warning ? { backgroundColor: colors.warnInk } : styles.ring,
-					!warning && { borderColor: colors.faint },
+					warning && { backgroundColor: colors.warnInk },
+					error && { backgroundColor: colors.dangerBg },
+					!warning && !error && [styles.ring, { borderColor: colors.faint }],
 				]}
 			/>
 			<View style={styles.body}>
 				<Text
-					style={[styles.text, { color: warning ? colors.ink : colors.sub }]}
+					style={[
+						styles.text,
+						{ color: warning || error ? colors.ink : colors.sub },
+					]}
 				>
 					{children}
 				</Text>

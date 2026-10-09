@@ -113,13 +113,13 @@ export function CompletionCircle({
 							: {
 									borderWidth: 2,
 									borderStyle: "dashed",
-									borderColor: colors.border,
+									borderColor: colors.outline,
 								}
 					: completed
 						? { backgroundColor: colors.ink }
 						: showPartial
 							? { backgroundColor: colors.border, overflow: "hidden" }
-							: { borderWidth: 2, borderColor: colors.border },
+							: { borderWidth: 2, borderColor: colors.outline },
 				pressed && { opacity: opacity.pressed },
 			]}
 		>

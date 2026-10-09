@@ -13,8 +13,15 @@ import * as schema from "./schema";
  * for one built here (Node's built-in `node:sqlite`, no native compile step)
  * instead of mocking query behavior away.
  */
-export function createTestDb() {
-	const sqlite = new DatabaseSync(":memory:");
+export function createTestDb({
+	foreignKeys = true,
+}: {
+	/** Off reproduces the device: expo-sqlite leaves foreign keys unenforced. */
+	foreignKeys?: boolean;
+} = {}) {
+	const sqlite = new DatabaseSync(":memory:", {
+		enableForeignKeyConstraints: foreignKeys,
+	});
 	applyMigrations(sqlite, migrationTags());
 	return wrap(sqlite);
 }

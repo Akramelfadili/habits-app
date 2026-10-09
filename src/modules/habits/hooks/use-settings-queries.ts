@@ -1,4 +1,5 @@
 import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
+import { getAppInfo } from "@/lib/diagnostics/app-info";
 import { useNotificationPermission } from "@/lib/notifications/use-notification-permission";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -43,6 +44,8 @@ export function useSettingsQueries() {
 		notificationsDenied: permission === "denied",
 		lastExport: lastExportLabel(lastExport ?? null, new Date()),
 		exportSummary: summary,
+		/** Version, build and database schema — the About group. */
+		about: getAppInfo(),
 	};
 }
 
@@ -51,7 +54,7 @@ export function useExportQueries(options: ExportOptions): {
 	source: ExportSource;
 	summary: ExportSummary;
 } {
-	const habits = useHabitsList();
+	const { habits } = useHabitsList();
 	const entries = useAllEntries();
 	const notes = useEntryNotes();
 	const frozenDays = useFrozenDays();

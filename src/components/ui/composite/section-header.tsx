@@ -19,6 +19,13 @@ type SectionHeaderProps = {
 	tag?: string;
 };
 
+/** "Morning, 2 of 3" — title and count as one stop, "2/3" spoken as a fraction. */
+function spokenLabel(title: string, count?: string, tag?: string): string {
+	const fraction = count?.match(/^(\d+)\/(\d+)$/);
+	const spokenCount = fraction ? `${fraction[1]} of ${fraction[2]}` : count;
+	return [title, spokenCount, tag].filter(Boolean).join(", ");
+}
+
 /**
  * Group header used above a card's rows (Today's "Morning 2/3", Weekly
  * Summary's "Per habit") — the `section` type-scale token, normal case.
@@ -33,7 +40,12 @@ export function SectionHeader({
 	const { colors } = useTheme();
 
 	return (
-		<View style={[styles.row, size === "group" && styles.groupRow]}>
+		<View
+			accessible
+			accessibilityRole="header"
+			accessibilityLabel={spokenLabel(title, count, tag)}
+			style={[styles.row, size === "group" && styles.groupRow]}
+		>
 			<Text
 				style={[
 					size === "small"

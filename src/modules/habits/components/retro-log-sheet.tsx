@@ -109,6 +109,10 @@ function RetroLogForm({
 				style={styles.list}
 				contentContainerStyle={styles.listContent}
 				bounces={false}
+				// A row tap with the note's keyboard up acts on the first tap.
+				keyboardShouldPersistTaps="handled"
+				keyboardDismissMode="on-drag"
+				nestedScrollEnabled
 			>
 				{origin ? (
 					// The pinned origin card: the Container's selected (ink ring) state.

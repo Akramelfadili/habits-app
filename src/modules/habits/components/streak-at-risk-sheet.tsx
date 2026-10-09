@@ -5,6 +5,7 @@ import { Sheet } from "@/components/ui/composite/sheet";
 import { Button } from "@/components/ui/primitives/button";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { pluralise } from "@/utils/format";
 import { FREEZE_POOL_SIZE } from "../constants";
 
 type StreakAtRiskSheetProps = {
@@ -21,7 +22,7 @@ type StreakAtRiskSheetProps = {
 };
 
 function freezeCountLabel(count: number): string {
-	return `${count} freeze${count === 1 ? "" : "s"} left`;
+	return `${pluralise(count, "freeze")} left`;
 }
 
 /**

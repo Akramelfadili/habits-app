@@ -68,8 +68,17 @@ export function QuantityLogSheet({
 					size="large"
 				/>
 				<View style={styles.headerText}>
-					<Text style={[styles.name, { color: colors.ink }]}>{habit.name}</Text>
-					<Text style={[styles.detail, { color: colors.sub }]}>
+					<Text
+						accessibilityRole="header"
+						numberOfLines={2}
+						style={[styles.name, { color: colors.ink }]}
+					>
+						{habit.name}
+					</Text>
+					<Text
+						numberOfLines={2}
+						style={[styles.detail, { color: colors.sub }]}
+					>
 						{`Target ${target} ${unit} · ${frequencySummary(habit.frequency)}`}
 					</Text>
 				</View>

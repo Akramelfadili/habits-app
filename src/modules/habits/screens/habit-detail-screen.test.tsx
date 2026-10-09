@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react-native";
 import type { HabitDetail } from "../hooks/use-habit-detail-queries";
 import type { RetroLogDay } from "../hooks/use-retro-log-queries";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
@@ -18,6 +23,7 @@ jest.mock("expo-router", () => ({
 			options?.headerRight?.() ?? null,
 	},
 }));
+const OK = { ok: true, value: undefined } as const;
 const mockArchive = jest.fn();
 const mockDelete = jest.fn();
 const mockRestore = jest.fn();
@@ -35,7 +41,7 @@ jest.mock("../hooks/use-habit-detail-actions", () => ({
 }));
 
 const today = new Date(2026, 8, 23, 12);
-let mockDetail: HabitDetail | null = null;
+let mockDetail: HabitDetail | null | undefined = null;
 jest.mock("../hooks/use-habit-detail-queries", () => ({
 	useHabitDetailQueries: () => mockDetail,
 }));
@@ -52,7 +58,10 @@ jest.mock("../hooks/use-retro-log-actions", () => ({
 	useRetroLogActions: () => ({ saveDay: mockSaveDay, isSaving: false }),
 }));
 
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { useToastStore } from "@/store/toast-store";
+import { failureMessage } from "@/utils/failure-message";
+import { runSafely } from "@/utils/run-safely";
 import { buildHeatmapWeeks } from "../services/habit-history";
 import { HabitDetailScreen } from "./habit-detail-screen";
 
@@ -66,7 +75,7 @@ const habit = makeHabit({
 });
 
 beforeEach(() => {
-	mockSaveDay.mockReset().mockResolvedValue(undefined);
+	mockSaveDay.mockReset().mockResolvedValue(OK);
 	mockRetroLogQueries
 		.mockReset()
 		.mockImplementation(
@@ -127,6 +136,13 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 }
 
 describe("HabitDetailScreen", () => {
+	it("the habit's name is the heading, and it wraps to at most two lines (A6-09, A5-15)", async () => {
+		mockDetail = detail();
+		await render(<HabitDetailScreen habitId={1} />);
+		const heading = screen.getByRole("header", { name: "Glass of water" });
+		expect(heading.props.numberOfLines).toBe(2);
+	});
+
 	it("shows the header, the three stat tiles, and recent entries in order", async () => {
 		mockDetail = detail();
 		await render(<HabitDetailScreen habitId={1} />);
@@ -170,6 +186,13 @@ describe("HabitDetailScreen", () => {
 		mockDetail = null;
 		await render(<HabitDetailScreen habitId={99} />);
 		expect(screen.getByText("Habit not found")).toBeTruthy();
+	});
+
+	it("renders a neutral blank — not 'Habit not found' — while the habit list loads (A5-04)", async () => {
+		mockDetail = undefined;
+		await render(<HabitDetailScreen habitId={1} />);
+		expect(screen.getByTestId("screen-loading")).toBeTruthy();
+		expect(screen.queryByText("Habit not found")).toBeNull();
 	});
 
 	it("shows notes under their dates, including a noted day with nothing logged", async () => {
@@ -245,6 +268,28 @@ describe("HabitDetailScreen", () => {
 			expect(screen.queryByText("Save changes")).toBeNull();
 		});
 
+		it("a failed save keeps the sheet open so it can be retried", async () => {
+			mockSaveDay.mockResolvedValueOnce({
+				ok: false,
+				error: new Error("disk"),
+			});
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
+			await fireEvent.press(screen.getByRole("button", { name: /^Increase/ }));
+			await fireEvent.press(
+				screen.getByRole("button", { name: "Save changes" }),
+			);
+
+			expect(screen.getByRole("button", { name: "Save changes" })).toBeTruthy();
+
+			await fireEvent.press(
+				screen.getByRole("button", { name: "Save changes" }),
+			);
+			expect(mockSaveDay).toHaveBeenCalledTimes(2);
+			expect(screen.queryByText("Save changes")).toBeNull();
+		});
+
 		it("Cancel discards the draft without saving", async () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
@@ -295,7 +340,7 @@ describe("HabitDetailScreen", () => {
 
 	describe("archive (HAB-13)", () => {
 		beforeEach(() => {
-			mockArchive.mockReset().mockResolvedValue(undefined);
+			mockArchive.mockReset().mockResolvedValue(OK);
 			mockBack.mockReset();
 		});
 
@@ -342,8 +387,8 @@ describe("HabitDetailScreen", () => {
 
 	describe("delete (HAB-13)", () => {
 		beforeEach(() => {
-			mockArchive.mockReset().mockResolvedValue(undefined);
-			mockDelete.mockReset().mockResolvedValue(undefined);
+			mockArchive.mockReset().mockResolvedValue(OK);
+			mockDelete.mockReset().mockResolvedValue(OK);
 			mockBack.mockReset();
 		});
 
@@ -421,12 +466,22 @@ describe("HabitDetailScreen", () => {
 		});
 
 		describe("when the write fails (HAB-23)", () => {
-			let warn: jest.SpyInstance;
 			beforeEach(() => {
 				useToastStore.setState({ toast: null });
-				warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+				clearLog();
 			});
-			afterEach(() => warn.mockRestore());
+
+			/** What the real `useAsyncAction().run` does on a failing write. */
+			const failing = (verb: string, error: Error) => () =>
+				runSafely(
+					{
+						scope: "habit-detail",
+						failure: failureMessage(verb, "this habit"),
+					},
+					async () => {
+						throw error;
+					},
+				);
 
 			function expectSheetActive() {
 				expect(screen.getByText("Delete “Glass of water”?")).toBeTruthy();
@@ -441,9 +496,9 @@ describe("HabitDetailScreen", () => {
 				).toBeEnabled();
 			}
 
-			it("archive: toasts, warns in dev, keeps the sheet usable, and a retry works", async () => {
+			it("archive: error toast, logged, sheet released, and a retry works", async () => {
 				const failure = new Error("disk full");
-				mockArchive.mockRejectedValueOnce(failure);
+				mockArchive.mockImplementationOnce(failing("archive", failure));
 				mockDetail = detail();
 				await render(<HabitDetailScreen habitId={1} />);
 
@@ -451,15 +506,13 @@ describe("HabitDetailScreen", () => {
 				await fireEvent.press(screen.getByText("Archive instead"));
 
 				expect(useToastStore.getState().toast).toMatchObject({
-					message: "Couldn't archive. Try again.",
+					message: "Couldn't archive this habit. Try again.",
+					tone: "error",
 				});
 				expect(useToastStore.getState().toast?.actionLabel).toBeUndefined();
-				expect(warn).toHaveBeenCalledWith(
-					"Couldn't archive. Try again.",
-					failure,
-				);
+				expect(getLogEntries()).toHaveLength(1);
 				expect(mockBack).not.toHaveBeenCalled();
-				expectSheetActive();
+				await waitFor(expectSheetActive);
 
 				await fireEvent.press(screen.getByText("Archive instead"));
 				expect(mockArchive).toHaveBeenCalledTimes(2);
@@ -471,9 +524,9 @@ describe("HabitDetailScreen", () => {
 				expect(mockDelete).not.toHaveBeenCalled();
 			});
 
-			it("delete: toasts, warns in dev, keeps the sheet usable, and a retry works", async () => {
+			it("delete: error toast, logged, sheet released, and a retry works", async () => {
 				const failure = new Error("disk full");
-				mockDelete.mockRejectedValueOnce(failure);
+				mockDelete.mockImplementationOnce(failing("delete", failure));
 				mockDetail = detail();
 				await render(<HabitDetailScreen habitId={1} />);
 
@@ -481,14 +534,12 @@ describe("HabitDetailScreen", () => {
 				await fireEvent.press(screen.getByText("Delete permanently"));
 
 				expect(useToastStore.getState().toast).toMatchObject({
-					message: "Couldn't delete. Try again.",
+					message: "Couldn't delete this habit. Try again.",
+					tone: "error",
 				});
-				expect(warn).toHaveBeenCalledWith(
-					"Couldn't delete. Try again.",
-					failure,
-				);
+				expect(getLogEntries()).toHaveLength(1);
 				expect(mockBack).not.toHaveBeenCalled();
-				expectSheetActive();
+				await waitFor(expectSheetActive);
 
 				await fireEvent.press(screen.getByText("Delete permanently"));
 				expect(mockDelete).toHaveBeenCalledTimes(2);
@@ -525,7 +576,7 @@ describe("HabitDetailScreen", () => {
 
 			expect(screen.getByText("Archived on 2 September")).toBeTruthy();
 			expect(
-				screen.getByText("Hidden from Today. All 41 logs kept."),
+				screen.getByText("Hidden from Today. All 41 days logged are kept."),
 			).toBeTruthy();
 			expect(screen.getByLabelText("Current: —, paused")).toBeTruthy();
 			expect(screen.getByText("BEFORE ARCHIVE")).toBeTruthy();
@@ -543,9 +594,20 @@ describe("HabitDetailScreen", () => {
 			expect(screen.queryByTestId("archived-banner")).toBeNull();
 		});
 
+		it("a failed restore shows no 'back on Today' toast", async () => {
+			useToastStore.setState({ toast: null });
+			mockRestore.mockResolvedValue({ ok: false, error: new Error("disk") });
+			mockDetail = detail({ habit: archivedHabit });
+			await render(<HabitDetailScreen habitId={1} />);
+
+			await fireEvent.press(screen.getByText("Restore"));
+
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
 		it("restores instantly — no sheet, no navigation — and toasts with an Undo that re-archives as it was", async () => {
-			mockRestore.mockResolvedValue(undefined);
-			mockUndoRestore.mockResolvedValue(undefined);
+			mockRestore.mockResolvedValue(OK);
+			mockUndoRestore.mockResolvedValue(OK);
 			mockDetail = detail({ habit: archivedHabit });
 			await render(<HabitDetailScreen habitId={1} />);
 
@@ -554,7 +616,7 @@ describe("HabitDetailScreen", () => {
 			expect(mockRestore).toHaveBeenCalledWith(1);
 			expect(mockBack).not.toHaveBeenCalled();
 			const toast = useToastStore.getState().toast;
-			expect(toast?.message).toBe("Cold shower is back on Today");
+			expect(toast?.message).toBe("Restored 'Cold shower' — back on Today");
 			expect(toast?.actionLabel).toBe("Undo");
 
 			toast?.onAction?.();

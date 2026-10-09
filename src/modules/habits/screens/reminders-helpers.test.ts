@@ -2,6 +2,7 @@ import type { Reminder } from "../types";
 import {
 	earliestReminderTimeOn,
 	formatReminderTime,
+	parseWeekdayParam,
 	reminderCountLabel,
 	reminderDaysLabel,
 	remindersSummary,
@@ -112,5 +113,22 @@ describe("earliestReminderTimeOn (HAB-14)", () => {
 		expect(
 			earliestReminderTimeOn([reminder({ enabled: false })], thursday),
 		).toBeUndefined();
+	});
+
+	describe("parseWeekdayParam (?addTime=<day>)", () => {
+		it.each([
+			["1", 1],
+			["6", 6],
+			["7", 7],
+		])("reads %s as ISO weekday %i", (value, day) => {
+			expect(parseWeekdayParam(value)).toBe(day);
+		});
+
+		it.each([undefined, "", "0", "8", "-1", "2.5", "sat", "NaN"])(
+			"ignores %p",
+			(value) => {
+				expect(parseWeekdayParam(value)).toBeUndefined();
+			},
+		);
 	});
 });

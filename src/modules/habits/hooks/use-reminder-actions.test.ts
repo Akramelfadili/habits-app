@@ -9,11 +9,13 @@ jest.mock("@/lib/notifications/use-notification-permission", () => ({
 const mockAddReminder = jest.fn();
 const mockEditReminder = jest.fn();
 const mockRemoveReminder = jest.fn();
+const mockRestoreReminder = jest.fn();
 const mockSetEveningReview = jest.fn();
 jest.mock("../services/reminder-service", () => ({
 	addReminder: (...args: unknown[]) => mockAddReminder(...args),
 	editReminder: (...args: unknown[]) => mockEditReminder(...args),
 	removeReminder: (...args: unknown[]) => mockRemoveReminder(...args),
+	restoreReminder: (...args: unknown[]) => mockRestoreReminder(...args),
 	setEveningReview: (...args: unknown[]) => mockSetEveningReview(...args),
 }));
 
@@ -35,7 +37,29 @@ describe("useReminderActions", () => {
 		await act(() => result.current.addReminder(habit));
 
 		expect(mockEnsurePermission).toHaveBeenCalledTimes(1);
-		expect(mockAddReminder).toHaveBeenCalledWith(habit);
+		expect(mockAddReminder).toHaveBeenCalledWith(habit, undefined);
+	});
+
+	it("passes a pre-selected day through to the service", async () => {
+		const { result } = await renderHook(() => useReminderActions());
+		await act(() => result.current.addReminder(habit, [6]));
+		expect(mockAddReminder).toHaveBeenCalledWith(habit, [6]);
+	});
+
+	it("restores a removed reminder through the service", async () => {
+		const removed = {
+			id: 5,
+			habitId: 3,
+			hour: 8,
+			minute: 0,
+			weekdays: [1],
+			enabled: true,
+		} as const;
+		const { result } = await renderHook(() => useReminderActions());
+		await act(() =>
+			result.current.restoreReminder({ ...removed, weekdays: [1] }),
+		);
+		expect(mockRestoreReminder).toHaveBeenCalledWith(removed);
 	});
 
 	it("still saves when permission is denied — settings are never lost", async () => {

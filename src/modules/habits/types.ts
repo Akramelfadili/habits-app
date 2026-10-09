@@ -58,6 +58,9 @@ export type CategoryUsage = {
 /** Icon and color are never user-chosen — the caller passes the rotation's pick. */
 export type CreateCategoryInput = CategoryAppearance & { name: string };
 
+/** What the habit live-query hooks return: `loaded` is false until the first result (audit A5-04). */
+export type HabitsResult = { habits: Habit[]; loaded: boolean };
+
 export type Habit = {
 	id: number;
 	name: string;

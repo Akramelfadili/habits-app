@@ -11,7 +11,6 @@ import {
 	seasonalCopy,
 	stripCellState,
 	stuckCopy,
-	thousands,
 	unlockCopy,
 	yearlyMenuLockedReason,
 	yearlyMenuSubline,
@@ -34,17 +33,6 @@ const cell = (
 });
 
 const habit = makeHabit({ id: 1, name: "Read" });
-
-describe("thousands", () => {
-	it.each([
-		[0, "0"],
-		[999, "999"],
-		[1612, "1,612"],
-		[1234567, "1,234,567"],
-	])("%i → %s", (value, expected) => {
-		expect(thousands(value)).toBe(expected);
-	});
-});
 
 describe("stripCellState (HAB-17)", () => {
 	it("draws before-start and future months dashed", () => {
@@ -122,6 +110,29 @@ describe("copy (HAB-17, C4/C5/C7)", () => {
 		});
 	});
 
+	it("keeps month and day nouns singular for a count of one", () => {
+		const row = { habit, rate: 0.9, scheduled: 0 } as never;
+		expect(stuckCopy({ type: "stuck", row, months: 1 }).body).toMatch(
+			/^One month in a row/,
+		);
+		expect(
+			neverStuckCopy({
+				type: "never-stuck",
+				row,
+				underMonths: 1,
+				judgedMonths: 1,
+			}).body,
+		).toMatch(/^Under 50% in one of one month\./);
+		expect(
+			unlockCopy({
+				trackedDays: 1,
+				totalDays: 91,
+				unlockDate: new Date(2026, 11, 4),
+				isUnlocked: false,
+			}).body,
+		).toMatch(/^You're 1 day in\./);
+	});
+
 	it("seasonal dip: 'Summer' only when every month is Jun–Aug", () => {
 		const base = { type: "seasonal", best: cell(5), points: 8 } as const;
 		expect(seasonalCopy({ ...base, run: [cell(6), cell(7)] })).toEqual({
@@ -196,10 +207,10 @@ describe("tiles and labels (HAB-17, C4)", () => {
 		expect(yearTitle(summary)).toBe("2026 so far");
 		expect(
 			yearRangeLabel(summary, new Date(2026, 2, 3), new Date(2026, 8, 16)),
-		).toBe("3 March — 16 September");
+		).toBe("3 March – 16 September");
 		expect(
 			yearRangeLabel(summary, new Date(2024, 2, 3), new Date(2026, 8, 16)),
-		).toBe("1 January — 16 September");
+		).toBe("1 January – 16 September");
 	});
 
 	it("labels the best month, or nothing before one exists", () => {

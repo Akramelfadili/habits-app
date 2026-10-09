@@ -19,7 +19,7 @@ export type ManageCategoriesView = {
  */
 export function useManageCategoriesQueries(): ManageCategoriesView {
 	const categories = useCategories();
-	const habits = useHabitsList();
+	const { habits } = useHabitsList();
 	return useMemo(() => {
 		const usage = categoryUsage(categories, habits);
 		return {

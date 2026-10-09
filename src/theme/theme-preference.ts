@@ -3,6 +3,7 @@ import {
 	getSetting,
 	setSetting,
 } from "@/lib/app-settings/repositories/app-settings-repository";
+import { log } from "@/lib/logger/logger";
 import {
 	applyNativeScheme,
 	DEFAULT_THEME_PREFERENCE,
@@ -17,8 +18,9 @@ export async function loadThemePreference(): Promise<void> {
 	try {
 		const stored = await getSetting(THEME_PREFERENCE_SETTING_KEY);
 		if (isThemePreference(stored)) preference = stored;
-	} catch {
+	} catch (error) {
 		// An unreadable setting must never keep the app from opening.
+		log.warn("theme", "could not read the saved Appearance choice", error);
 	}
 	applyNativeScheme(preference);
 	useThemePreferenceStore.setState({ preference, isLoaded: true });

@@ -17,9 +17,12 @@ let mockActive: Habit[] = [];
 let mockArchived: Habit[] = [];
 let mockEntries: Entry[] = [];
 jest.mock("../repositories/habit-repository", () => ({
-	useActiveHabits: () => mockActive,
-	useArchivedHabits: () => mockArchived,
-	useHabitsList: () => [...mockActive, ...mockArchived],
+	useActiveHabits: () => ({ habits: mockActive, loaded: true }),
+	useArchivedHabits: () => ({ habits: mockArchived, loaded: true }),
+	useHabitsList: () => ({
+		habits: [...mockActive, ...mockArchived],
+		loaded: true,
+	}),
 }));
 const mockUseEntriesInRange = jest.fn(
 	(_start: Date, _end: Date) => mockEntries,
@@ -67,7 +70,7 @@ describe("useTodayMenuQueries (HAB-14)", () => {
 		const { result } = await renderHook(() => useTodayMenuQueries());
 		const [, completed, scheduled] =
 			result.current.weekly.subline.match(/· (\d+) of (\d+) done$/) ?? [];
-		expect(result.current.weekly.subline).toMatch(/^14 — 20 September · /);
+		expect(result.current.weekly.subline).toMatch(/^14 – 20 September · /);
 
 		// Same fixture on the Weekly screen: its Completed tile says the same.
 		await render(<WeeklySummaryScreen />);
@@ -86,7 +89,7 @@ describe("useTodayMenuQueries (HAB-14)", () => {
 		const { result } = await renderHook(() => useTodayMenuQueries());
 		expect(result.current.monthly.disabledReason).toBeUndefined();
 		expect(result.current.monthly.subline).toMatch(
-			/^1 — 31 August · \d+% done$/,
+			/^1 – 31 August · \d+% done$/,
 		);
 	});
 

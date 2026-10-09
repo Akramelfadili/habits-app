@@ -1,4 +1,4 @@
-import { startOfDay } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
@@ -19,6 +19,8 @@ import {
 } from "../services/weekly-summary";
 
 export type MonthlySummaryView =
+	/** The habit list hasn't loaded yet (audit A5-04) — a blank, not the empty state. */
+	| { state: "loading" }
 	/** No habits at all — an empty state instead of zeroed tiles. */
 	| { state: "empty" }
 	/** Under one month of history (C6): the partial current month, progress, and the week to look at instead. */
@@ -39,8 +41,8 @@ export type MonthlySummaryView =
  * `monthEntryRange` says the maths can look at.
  */
 export function useMonthlySummaryQueries(): MonthlySummaryView {
-	const today = startOfDay(new Date());
-	const habits = useHabitsList();
+	const today = useToday();
+	const { habits, loaded } = useHabitsList();
 	const frozenDays = useFrozenDays();
 	const firstDay = historyStart(habits);
 	const unlock = firstDay ? monthUnlock(firstDay, today) : null;
@@ -51,6 +53,7 @@ export function useMonthlySummaryQueries(): MonthlySummaryView {
 	const range = monthEntryRange(month);
 	const entries = useEntriesInRange(range.start, range.end);
 
+	if (!loaded) return { state: "loading" };
 	if (!firstDay || !unlock) return { state: "empty" };
 
 	const summary = buildMonthlySummary({

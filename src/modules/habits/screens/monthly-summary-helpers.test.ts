@@ -40,7 +40,7 @@ const summary = (over: Partial<MonthlySummary> = {}): MonthlySummary => ({
 
 describe("labels", () => {
 	it("formats the month range and percentages", () => {
-		expect(monthRangeLabel(august)).toBe("1 — 31 August");
+		expect(monthRangeLabel(august)).toBe("1 – 31 August");
 		expect(percent(0.796)).toBe("80%");
 		expect(percent(null)).toBe("—");
 		expect(weekdayName(6)).toBe("Saturday");
@@ -59,7 +59,7 @@ describe("labels", () => {
 	});
 
 	it("words the menu row", () => {
-		expect(monthlyMenuSubline(summary())).toBe("1 — 31 August · 80% done");
+		expect(monthlyMenuSubline(summary())).toBe("1 – 31 August · 80% done");
 		expect(
 			monthlyMenuLockedReason({
 				trackedDays: 12,
@@ -114,6 +114,19 @@ describe("unlockCopy", () => {
 		expect(copy.progressLabel).toBe("12 of 30 days");
 		expect(copy.remainingLabel).toBe("18 to go");
 		expect(copy.progress).toBeCloseTo(0.4);
+	});
+});
+
+describe("singular counts", () => {
+	it("tracked days and insight counts read '1 day' / '1 insight'", () => {
+		const copy = unlockCopy({
+			trackedDays: 1,
+			unlockDate: new Date(2026, 9, 4),
+			isUnlocked: false,
+		});
+		expect(copy.body).toMatch(/^You've tracked for 1 day\./);
+		expect(insightCountLabel(1)).toBe("1 insight");
+		expect(insightCountLabel(2)).toBe("2 insights");
 	});
 });
 

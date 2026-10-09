@@ -18,6 +18,7 @@ import { UnlockCard } from "@/components/ui/composite/unlock-card";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { pluralise } from "@/utils/format";
 import { categorySymbol } from "../components/category-symbol";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
@@ -30,6 +31,7 @@ import type {
 	CalendarDayStatus,
 	MonthlySummary,
 } from "../services/monthly-summary";
+import type { IsoWeekday } from "../types";
 import {
 	freezeCardCopy,
 	improvedCopy,
@@ -58,6 +60,15 @@ export function MonthlySummaryScreen() {
 	const { colors } = useTheme();
 	const view = useMonthlySummaryQueries();
 
+	if (view.state === "loading") {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
+	}
+
 	if (view.state === "empty") {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
@@ -66,7 +77,7 @@ export function MonthlySummaryScreen() {
 				</View>
 				<TodayStatePanel
 					icon="chart.bar"
-					headline="Nothing to summarize yet"
+					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its month will show up here."
 				/>
 			</View>
@@ -88,7 +99,12 @@ function Header({
 	return (
 		<View style={styles.header}>
 			{eyebrow ? <SectionLabel>{eyebrow}</SectionLabel> : null}
-			<Text style={[styles.title, { color: colors.ink }]}>Your month</Text>
+			<Text
+				accessibilityRole="header"
+				style={[styles.title, { color: colors.ink }]}
+			>
+				Your month
+			</Text>
 			{switcher ? <RangeSwitcher value="month" /> : null}
 		</View>
 	);
@@ -225,7 +241,9 @@ function Ready({ summary }: { summary: MonthlySummary }) {
 							onEditFrequency={(id) =>
 								router.push(`/edit-habit/${id}?focus=frequency`)
 							}
-							onOpenReminders={(id) => router.push(`/habits/reminders/${id}`)}
+							onOpenReminders={(id, weekday) =>
+								router.push(`/habits/reminders/${id}?addTime=${weekday}`)
+							}
 						/>
 					))}
 				</>
@@ -251,7 +269,7 @@ function Insight({
 	insight: MonthlyInsight;
 	summary: MonthlySummary;
 	onEditFrequency: (habitId: number) => void;
-	onOpenReminders: (habitId: number) => void;
+	onOpenReminders: (habitId: number, weekday: IsoWeekday) => void;
 }) {
 	const { scheme } = useTheme();
 	switch (insight.type) {
@@ -298,8 +316,7 @@ function Insight({
 						cause && copy.actionLabel
 							? {
 									label: copy.actionLabel,
-									// TODO(backlog): open with "Add a time" and the day (?addTime=<day>) pre-selected — see docs/backlog.md.
-									onPress: () => onOpenReminders(cause.habit.id),
+									onPress: () => onOpenReminders(cause.habit.id, cause.weekday),
 								}
 							: undefined
 					}
@@ -356,7 +373,7 @@ function TooEarly({
 				<SectionHeader
 					title={`${format(summary.month.start, "MMMM")} so far`}
 					size="small"
-					count={`${view.unlock.trackedDays} days tracked`}
+					count={`${pluralise(view.unlock.trackedDays, "day")} tracked`}
 				/>
 				<CompletionGrid
 					layout="month"

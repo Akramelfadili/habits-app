@@ -1,8 +1,8 @@
 import { format } from "date-fns";
-import { and, asc, gte, lte } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { frozenDays } from "@/lib/db/schema";
+import { useLiveRows } from "@/lib/db/use-live-rows";
 import type { FrozenDay } from "../types";
 
 type FrozenDayRow = typeof frozenDays.$inferSelect;
@@ -20,10 +20,10 @@ function rowToFrozenDay(row: FrozenDayRow): FrozenDay {
 
 /** Live-query hook — every frozen day, across every habit (the pool is shared, not per-habit). */
 export function useFrozenDays(): FrozenDay[] {
-	const { data } = useLiveQuery(
+	const { data } = useLiveRows<FrozenDayRow>(
 		db.select().from(frozenDays).orderBy(asc(frozenDays.date)),
 	);
-	return (data ?? []).map(rowToFrozenDay);
+	return data.map(rowToFrozenDay);
 }
 
 /**
@@ -46,6 +46,21 @@ export async function getFreezesUsedInMonth(
 			),
 		);
 	return rows.length;
+}
+
+/** Takes a freeze back (the Undo for using one) — returns it to the shared pool. A no-op if that day isn't frozen. */
+export async function unfreezeHabitDay(
+	habitId: number,
+	date: Date,
+): Promise<void> {
+	await db
+		.delete(frozenDays)
+		.where(
+			and(
+				eq(frozenDays.habitId, habitId),
+				eq(frozenDays.date, format(date, DATE_FORMAT)),
+			),
+		);
 }
 
 /** Freezes `habitId`'s missed `date` — idempotent, since a day can only be frozen once. */

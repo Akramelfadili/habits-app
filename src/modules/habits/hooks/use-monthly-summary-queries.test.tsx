@@ -2,6 +2,7 @@ import { renderHook } from "@testing-library/react-native";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 
+let mockLoaded = true;
 let mockHabits: Habit[] = [];
 let mockEntries: Entry[] = [];
 let mockFrozen: FrozenDay[] = [];
@@ -9,7 +10,7 @@ const mockUseEntriesInRange = jest.fn(
 	(_start: Date, _end: Date) => mockEntries,
 );
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useHabitsList: () => ({ habits: mockHabits, loaded: mockLoaded }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) =>
@@ -25,6 +26,7 @@ import { useMonthlySummaryQueries } from "./use-monthly-summary-queries";
 const date = (value: Date) => format(value, "yyyy-MM-dd");
 
 beforeEach(() => {
+	mockLoaded = true;
 	mockHabits = [];
 	mockEntries = [];
 	mockFrozen = [];
@@ -93,5 +95,12 @@ describe("useMonthlySummaryQueries (HAB-16)", () => {
 		const { result } = await renderHook(() => useMonthlySummaryQueries());
 		if (result.current.state !== "ready") throw new Error("state");
 		expect(result.current.summary.freezeDates).toHaveLength(1);
+	});
+
+	it("reports loading — not empty — until the habit list has loaded (A5-04)", async () => {
+		mockLoaded = false;
+		mockHabits = [];
+		const { result } = await renderHook(() => useMonthlySummaryQueries());
+		expect(result.current).toEqual({ state: "loading" });
 	});
 });

@@ -74,7 +74,12 @@ export function HabitHeatmap({
 	return (
 		<Container>
 			<View style={styles.header}>
-				<Text style={[styles.title, { color: colors.ink }]}>Last 10 weeks</Text>
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					Last 10 weeks
+				</Text>
 				<Text style={[styles.range, { color: colors.sub }]}>
 					{hasEntries ? rangeLabel : "Nothing logged yet"}
 				</Text>

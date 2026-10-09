@@ -28,12 +28,15 @@ const mockUseEntriesInRange = jest.fn(
 );
 
 jest.mock("../repositories/habit-repository", () => ({
-	useActiveHabits: () => [
-		mockWeekdayHabit,
-		mockDailyHabit,
-		mockBreakHabit,
-		mockArchivedHabit,
-	],
+	useActiveHabits: () => ({
+		habits: [
+			mockWeekdayHabit,
+			mockDailyHabit,
+			mockBreakHabit,
+			mockArchivedHabit,
+		],
+		loaded: true,
+	}),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) =>

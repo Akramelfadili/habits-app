@@ -16,6 +16,7 @@ async function renderHeader(
 ) {
 	const calls: string[] = [];
 	const onToggleMenu = jest.fn(() => calls.push("toggle"));
+	const onAddHabit = jest.fn();
 	const onAnchorMeasured = jest.fn((bottom: number) =>
 		calls.push(`anchor:${bottom}`),
 	);
@@ -24,11 +25,12 @@ async function renderHeader(
 			today={TODAY}
 			menuOpen={false}
 			onToggleMenu={onToggleMenu}
+			onAddHabit={onAddHabit}
 			onAnchorMeasured={onAnchorMeasured}
 			{...props}
 		/>,
 	);
-	return { view, calls, onToggleMenu, onAnchorMeasured };
+	return { view, calls, onToggleMenu, onAddHabit, onAnchorMeasured };
 }
 
 describe("TodayHeader", () => {
@@ -36,6 +38,13 @@ describe("TodayHeader", () => {
 		await renderHeader();
 		expect(screen.getByText("Today")).toBeTruthy();
 		expect(screen.getByText("THURSDAY, 1 OCTOBER")).toBeTruthy();
+	});
+
+	it("has an Add habit + beside the menu button, and the Today title is a heading", async () => {
+		const { onAddHabit } = await renderHeader();
+		await fireEvent.press(screen.getByRole("button", { name: "Add habit" }));
+		expect(onAddHabit).toHaveBeenCalledTimes(1);
+		expect(screen.getByRole("header", { name: "Today" })).toBeTruthy();
 	});
 
 	it("measures the button before opening, so the menu gets its final anchor first", async () => {

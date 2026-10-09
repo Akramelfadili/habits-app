@@ -14,7 +14,7 @@ describe("weekRangeLabel", () => {
 				start: new Date(2026, 8, 14),
 				end: new Date(2026, 8, 20),
 			}),
-		).toBe("14 — 20 September");
+		).toBe("14 – 20 September");
 	});
 
 	it("names both months across a month boundary", () => {
@@ -23,7 +23,7 @@ describe("weekRangeLabel", () => {
 				start: new Date(2026, 8, 28),
 				end: new Date(2026, 9, 4),
 			}),
-		).toBe("28 September — 4 October");
+		).toBe("28 September – 4 October");
 	});
 });
 
@@ -98,6 +98,11 @@ describe("slippingBody", () => {
 		expect(slippingBody(row)).toBe(
 			"Two of seven days. Try moving it to a day or time that fits better.",
 		);
+	});
+
+	it("keeps the noun singular for one scheduled day", () => {
+		const row = { habit: makeHabit(), completed: 0, scheduled: 1, fraction: 0 };
+		expect(slippingBody(row)).toMatch(/^Zero of one day\./);
 	});
 
 	it("reads naturally at zero", () => {

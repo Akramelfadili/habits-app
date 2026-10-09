@@ -25,7 +25,10 @@ let mockEntries: Entry[] = [];
 let mockNotes: EntryNote[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => [mockWalk, mockWater, mockWeekendOnly, mockArchived],
+	useHabitsList: () => ({
+		habits: [mockWalk, mockWater, mockWeekendOnly, mockArchived],
+		loaded: true,
+	}),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,

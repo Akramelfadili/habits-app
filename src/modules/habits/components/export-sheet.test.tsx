@@ -6,7 +6,7 @@ jest.mock("../repositories/frozen-day-repository", () => ({
 }));
 const mockSource = makeExportSource();
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockSource.habits,
+	useHabitsList: () => ({ habits: mockSource.habits, loaded: true }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockSource.entries,
@@ -63,10 +63,18 @@ beforeEach(() => {
 });
 
 describe("ExportSheet (HAB-15)", () => {
+	it("the sheet's title is a heading, and the format switch is a labelled tab list (A6-09, A6-05)", async () => {
+		await render(<ExportSheet visible onClose={() => {}} />);
+		expect(screen.getAllByRole("header").length).toBeGreaterThan(0);
+		expect(screen.getByLabelText("File format").props.accessibilityRole).toBe(
+			"tablist",
+		);
+	});
+
 	it("confirm states exactly what goes in the file", async () => {
 		await render(<ExportSheet visible onClose={() => {}} />);
 		expect(screen.getByText("2 active · 1 archived")).toBeTruthy();
-		expect(screen.getByText("4 logs · 1 notes")).toBeTruthy();
+		expect(screen.getByText("4 entries · 1 note")).toBeTruthy();
 		expect(screen.getByText("2 Sep – 15 Sep 2026")).toBeTruthy();
 		expect(screen.getByText("Export 4 entries")).toBeTruthy();
 	});
@@ -133,6 +141,60 @@ describe("ExportSheet (HAB-15)", () => {
 			}),
 		);
 		expect(await screen.findByText("Export ready")).toBeTruthy();
+	});
+
+	it("a failed Share shows an inline error under the file card — the sheet stays on Export ready", async () => {
+		mockRunExport.mockResolvedValue(result);
+		mockShare.mockRejectedValueOnce(new Error("no activity"));
+		await render(<ExportSheet visible onClose={() => {}} />);
+		await fireEvent.press(screen.getByText("Export 4 entries"));
+		await screen.findByText("Export ready");
+
+		await fireEvent.press(screen.getByText("Share file…"));
+
+		expect(
+			await screen.findByText("Couldn't share the file. Try again."),
+		).toBeTruthy();
+		expect(screen.getByText("Export ready")).toBeTruthy();
+	});
+
+	it("Save to Files: confirms on success, says nothing when the picker is cancelled, errors on failure", async () => {
+		mockRunExport.mockResolvedValue(result);
+		await render(<ExportSheet visible onClose={() => {}} />);
+		await fireEvent.press(screen.getByText("Export 4 entries"));
+		await screen.findByText("Export ready");
+
+		mockSave.mockResolvedValueOnce(false);
+		await fireEvent.press(screen.getByText("Save to Files"));
+		expect(screen.queryByText("Saved to Files.")).toBeNull();
+		expect(screen.queryByText(/Couldn't save/)).toBeNull();
+
+		mockSave.mockResolvedValueOnce(true);
+		await fireEvent.press(screen.getByText("Save to Files"));
+		expect(await screen.findByText("Saved to Files.")).toBeTruthy();
+
+		mockSave.mockRejectedValueOnce(new Error("No space left on device"));
+		await fireEvent.press(screen.getByText("Save to Files"));
+		expect(
+			await screen.findByText("Couldn't save the file. Try again."),
+		).toBeTruthy();
+	});
+
+	it("a failed export offers Copy diagnostics", async () => {
+		mockRunExport.mockRejectedValueOnce(
+			new ExportFailedError({ kind: "unknown" }),
+		);
+		await render(<ExportSheet visible onClose={() => {}} />);
+		await fireEvent.press(screen.getByText("Export 4 entries"));
+		await screen.findByText("Export didn't finish");
+
+		await fireEvent.press(screen.getByText("Copy diagnostics"));
+
+		expect(
+			await screen.findByText(
+				/Diagnostics (copied|ready to share)\.|Couldn't copy diagnostics\./,
+			),
+		).toBeTruthy();
 	});
 
 	it("Cancel on the confirm step closes without exporting", async () => {

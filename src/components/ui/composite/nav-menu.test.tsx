@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { Profiler } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { NavMenu, NavMenuDivider } from "./nav-menu";
 
 describe("NavMenu", () => {
@@ -32,9 +32,8 @@ describe("NavMenu", () => {
 
 	describe("placement", () => {
 		const popoverTop = () =>
-			StyleSheet.flatten(
-				screen.getByText("SUMMARIES").parent?.parent?.props.style,
-			).top;
+			StyleSheet.flatten(screen.getByTestId("nav-menu-popover").props.style)
+				.top;
 
 		afterEach(() => {
 			jest.restoreAllMocks();
@@ -87,5 +86,21 @@ describe("NavMenu", () => {
 
 			expect(popoverTop()).toBe(88);
 		});
+	});
+
+	it("scrolls its rows and caps its height when large text outgrows the screen", async () => {
+		jest
+			.spyOn(View.prototype, "measureInWindow")
+			.mockImplementation((callback) => callback(0, 0, 390, 844));
+		await render(
+			<NavMenu anchorBottom={100} label="Summaries" onClose={jest.fn()}>
+				<Text>Row</Text>
+			</NavMenu>,
+		);
+		const style = StyleSheet.flatten(
+			screen.getByTestId("nav-menu-popover").props.style,
+		);
+		// Popover at 108, 16 margin below the window.
+		expect(style.maxHeight).toBe(Dimensions.get("window").height - 108 - 16);
 	});
 });

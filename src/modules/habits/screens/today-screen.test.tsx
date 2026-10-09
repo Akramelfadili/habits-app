@@ -1,4 +1,5 @@
 import {
+	act,
 	fireEvent,
 	render,
 	screen,
@@ -26,8 +27,8 @@ jest.mock("expo-router", () => ({
 }));
 
 const mockMenu: Record<string, { subline: string; disabledReason?: string }> = {
-	weekly: { subline: "14 — 20 September · 34 of 42 done" },
-	monthly: { subline: "1 — 31 August · 80% done" },
+	weekly: { subline: "14 – 20 September · 34 of 42 done" },
+	monthly: { subline: "1 – 31 August · 80% done" },
 	yearly: { subline: "2026 so far · since 3 March" },
 	manage: { subline: "7 active · 2 archived" },
 	settings: { subline: "Appearance", disabledReason: "Coming soon" },
@@ -57,7 +58,9 @@ let mockTomorrowPreview: Habit[] = [];
 let mockTomorrowReminderTimes = new Map<number, string>();
 let mockCompletedThisWeekByHabitId: Map<number, number> = new Map();
 let mockQuantityValuesByHabitId = new Map<number, number>();
-const mockToday = new Date("2026-09-16T00:00:00Z");
+const mockToday = new Date(2026, 8, 16);
+const OK = { ok: true, value: undefined } as const;
+let mockIsLoaded = true;
 let mockAtRiskByHabitId = new Map<
 	number,
 	{ missedDate: Date; currentStreak: number }
@@ -72,6 +75,7 @@ jest.mock("../hooks/use-today-queries", () => ({
 		quantityValuesByHabitId: mockQuantityValuesByHabitId,
 		completedThisWeekByHabitId: mockCompletedThisWeekByHabitId,
 		today: mockToday,
+		isLoaded: mockIsLoaded,
 		viewState: mockViewState,
 		tomorrowPreview: mockTomorrowPreview,
 		tomorrowReminderTimeByHabitId: mockTomorrowReminderTimes,
@@ -108,9 +112,11 @@ jest.mock("../hooks/use-quantity-log-actions", () => ({
 }));
 
 const mockApplyFreeze = jest.fn();
+const mockUndoFreeze = jest.fn();
 jest.mock("../hooks/use-streak-actions", () => ({
 	useStreakActions: () => ({
 		applyFreeze: mockApplyFreeze,
+		undoFreeze: mockUndoFreeze,
 		isFreezing: false,
 		freezeError: null,
 	}),
@@ -149,20 +155,48 @@ jest.mock("../hooks/use-first-run-actions", () => ({
 }));
 
 import { Alert } from "react-native";
+import {
+	TOAST_DURATION_MS,
+	ToastHost,
+} from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
 import { TodayScreen } from "./today-screen";
+
+/** Only Date is faked: writes read the clock and must land on mockToday. */
+function fakeDate(now: Date) {
+	jest.useFakeTimers({
+		now,
+		doNotFake: [
+			"nextTick",
+			"setImmediate",
+			"clearImmediate",
+			"setTimeout",
+			"clearTimeout",
+			"setInterval",
+			"clearInterval",
+			"queueMicrotask",
+			"requestAnimationFrame",
+			"cancelAnimationFrame",
+			"performance",
+			"hrtime",
+		],
+	});
+}
 
 describe("TodayScreen", () => {
 	let measureSpy: jest.SpyInstance;
 
 	beforeEach(() => {
+		fakeDate(new Date(2026, 8, 16, 12));
 		measureSpy = mockMeasureInWindow();
+		mockIsLoaded = true;
 		mockPush.mockReset();
-		mockToggleCompletion.mockReset();
-		mockLogQuantity.mockReset();
+		mockToggleCompletion.mockReset().mockResolvedValue(OK);
+		mockLogQuantity.mockReset().mockResolvedValue(OK);
 		mockClearAllHabits.mockReset();
 		mockResetFirstRun.mockReset();
-		mockApplyFreeze.mockReset();
+		mockApplyFreeze.mockReset().mockResolvedValue(OK);
+		mockUndoFreeze.mockReset().mockResolvedValue(OK);
 		mockSeedStreakAtRiskHabit.mockReset();
 		mockGroups = [];
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
@@ -181,6 +215,7 @@ describe("TodayScreen", () => {
 	});
 
 	afterEach(() => {
+		jest.useRealTimers();
 		measureSpy.mockRestore();
 	});
 
@@ -233,8 +268,8 @@ describe("TodayScreen", () => {
 
 		beforeEach(() => {
 			mockViewState = "rest-day";
-			mockToggleCompletion.mockResolvedValue(undefined);
-			mockLogQuantity.mockResolvedValue(undefined);
+			mockToggleCompletion.mockResolvedValue(OK);
+			mockLogQuantity.mockResolvedValue(OK);
 		});
 
 		it("opens the habit picker, not New habit", async () => {
@@ -264,7 +299,7 @@ describe("TodayScreen", () => {
 			expect(mockToggleCompletion).toHaveBeenCalledWith(5, mockToday, true);
 			const toast = useToastStore.getState().toast;
 			expect(toast).toMatchObject({
-				message: "Read logged · off-schedule",
+				message: "Logged 'Read' · off-schedule",
 				actionLabel: "Undo",
 			});
 			toast?.onAction?.();
@@ -299,7 +334,7 @@ describe("TodayScreen", () => {
 
 			expect(mockLogQuantity).toHaveBeenCalledWith(6, mockToday, 1);
 			const toast = useToastStore.getState().toast;
-			expect(toast?.message).toBe("Glass of water logged · off-schedule");
+			expect(toast?.message).toBe("Logged 'Glass of water' · off-schedule");
 			toast?.onAction?.();
 			// Nothing was logged before, so Undo writes 0 — which deletes the entry.
 			expect(mockLogQuantity).toHaveBeenLastCalledWith(6, mockToday, 0);
@@ -446,6 +481,66 @@ describe("TodayScreen", () => {
 		expect(mockToggleCompletion).toHaveBeenLastCalledWith(1, mockToday, false);
 	});
 
+	it("renders a neutral blank — not the empty state — until habits have loaded (A5-04)", async () => {
+		mockIsLoaded = false;
+		mockViewState = "no-habits";
+
+		await render(<TodayScreen />);
+
+		expect(screen.getByTestId("screen-loading")).toBeTruthy();
+		expect(screen.queryByText("Nothing to track yet")).toBeNull();
+	});
+
+	describe("failed and day-rollover writes", () => {
+		beforeEach(() => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
+		});
+
+		it("a failed toggle shows no 'complete' toast (the hook already toasted the error)", async () => {
+			mockToggleCompletion.mockResolvedValue({
+				ok: false,
+				error: new Error("disk"),
+			});
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("Glass of water"));
+
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
+		it("Undo targets the day of the original tap, not the day it is pressed on", async () => {
+			jest.setSystemTime(new Date(2026, 8, 16, 23, 59, 0));
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("Glass of water"));
+			expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, true);
+
+			// Midnight passes before Undo is pressed.
+			jest.setSystemTime(new Date(2026, 8, 17, 0, 1, 0));
+			await act(async () => {
+				await useToastStore.getState().toast?.onAction?.();
+			});
+
+			expect(mockToggleCompletion).toHaveBeenLastCalledWith(
+				1,
+				new Date(2026, 8, 16),
+				false,
+			);
+		});
+
+		it("a tap on a render that still shows yesterday writes nothing", async () => {
+			await render(<TodayScreen />);
+			jest.setSystemTime(new Date(2026, 8, 17, 0, 0, 5));
+
+			await fireEvent.press(screen.getByLabelText("Glass of water"));
+
+			expect(mockToggleCompletion).not.toHaveBeenCalled();
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+	});
+
 	it("confirms a Break habit as resisted, never as complete (HAB-04)", async () => {
 		const breakHabit = makeHabit({
 			id: 7,
@@ -462,6 +557,169 @@ describe("TodayScreen", () => {
 		expect(useToastStore.getState().toast?.message).toBe(
 			"Resisted 'No phone in bed'",
 		);
+	});
+
+	describe("un-ticking offers Undo (A5-06)", () => {
+		const waterGroup = () => [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
+
+		beforeEach(() => {
+			mockViewState = "populated";
+			mockGroups = waterGroup();
+			mockCompletedHabitIds = new Set([1]);
+		});
+
+		it("toasts the un-tick with an Undo that puts it back, on the day of the tap — not on whatever day it is by then", async () => {
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("Glass of water, done"));
+
+			const toast = useToastStore.getState().toast;
+			expect(toast).toMatchObject({
+				message: "Marked 'Glass of water' not complete",
+				actionLabel: "Undo",
+			});
+
+			// The app is left open past midnight before Undo is tapped.
+			fakeDate(new Date(2026, 8, 17, 0, 5));
+			toast?.onAction?.();
+			expect(mockToggleCompletion).toHaveBeenLastCalledWith(1, mockToday, true);
+		});
+
+		it("words a Break habit's un-tick as 'not resisted'", async () => {
+			const breakHabit = makeHabit({
+				id: 4,
+				name: "No phone in bed",
+				category: categoryNamed("Morning"),
+				direction: "break",
+			});
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [breakHabit] },
+			];
+			mockCompletedHabitIds = new Set([4]);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("No phone in bed, resisted"));
+
+			expect(useToastStore.getState().toast?.message).toBe(
+				"Marked 'No phone in bed' not resisted",
+			);
+		});
+
+		it("a newer un-tick replaces the toast — they never stack, and the old Undo is gone", async () => {
+			const reading = makeHabit({
+				id: 2,
+				name: "Read",
+				category: categoryNamed("Morning"),
+			});
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit, reading] },
+			];
+			mockCompletedHabitIds = new Set([1, 2]);
+
+			await render(
+				<>
+					<ToastHost />
+					<TodayScreen />
+				</>,
+			);
+			await fireEvent.press(screen.getByLabelText("Glass of water, done"));
+			await fireEvent.press(screen.getByLabelText("Read, done"));
+
+			expect(screen.getAllByText("Undo")).toHaveLength(1);
+			expect(
+				screen.queryByText("Marked 'Glass of water' not complete"),
+			).toBeNull();
+			expect(screen.getByText("Marked 'Read' not complete")).toBeTruthy();
+
+			await fireEvent.press(screen.getByText("Undo"));
+			expect(mockToggleCompletion).toHaveBeenLastCalledWith(2, mockToday, true);
+			expect(mockToggleCompletion).not.toHaveBeenCalledWith(1, mockToday, true);
+		});
+
+		it("once the toast has expired Undo is gone, so nothing can be restored late", async () => {
+			// This file fakes only Date; the toast's 4 s timer needs every timer.
+			jest.useFakeTimers({ now: new Date(2026, 8, 16, 12) });
+			await render(
+				<>
+					<ToastHost />
+					<TodayScreen />
+				</>,
+			);
+			await fireEvent.press(screen.getByLabelText("Glass of water, done"));
+			expect(screen.getByText("Undo")).toBeTruthy();
+			mockToggleCompletion.mockClear();
+
+			await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS));
+
+			expect(screen.queryByText("Undo")).toBeNull();
+			expect(useToastStore.getState().toast).toBeNull();
+			expect(mockToggleCompletion).not.toHaveBeenCalled();
+		});
+
+		it("a failed un-tick shows no Undo (the error toast is the hook's)", async () => {
+			mockToggleCompletion.mockResolvedValue({ ok: false });
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("Glass of water, done"));
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
+		it("dropping a quantity habit back under its target offers Undo, restoring the exact previous amount", async () => {
+			const water = makeHabit({
+				id: 3,
+				name: "Glass of water",
+				category: categoryNamed("Morning"),
+				targetType: "quantity",
+				targetAmount: 8,
+				targetUnit: "glasses",
+			});
+			mockGroups = [{ category: categoryNamed("Morning"), habits: [water] }];
+			mockCompletedHabitIds = new Set([3]);
+			mockQuantityValuesByHabitId = new Map([[3, 10]]);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(
+				screen.getByLabelText("Log Glass of water, 10 of 8 glasses"),
+			);
+			for (let i = 0; i < 7; i += 1) {
+				await fireEvent.press(
+					screen.getByLabelText("Decrease Glass of water, glasses"),
+				);
+			}
+			await fireEvent.press(screen.getByText("Save 3 of 8"));
+
+			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3);
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Marked 'Glass of water' not complete");
+			toast?.onAction?.();
+			expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 10);
+		});
+
+		it("a quantity save that stays complete (or stays short) offers nothing", async () => {
+			const water = makeHabit({
+				id: 3,
+				name: "Glass of water",
+				category: categoryNamed("Morning"),
+				targetType: "quantity",
+				targetAmount: 8,
+				targetUnit: "glasses",
+			});
+			mockGroups = [{ category: categoryNamed("Morning"), habits: [water] }];
+			mockCompletedHabitIds = new Set([3]);
+			mockQuantityValuesByHabitId = new Map([[3, 10]]);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(
+				screen.getByLabelText("Log Glass of water, 10 of 8 glasses"),
+			);
+			await fireEvent.press(
+				screen.getByLabelText("Decrease Glass of water, glasses"),
+			);
+			await fireEvent.press(screen.getByText("Save 9 of 8"));
+
+			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 9);
+			expect(useToastStore.getState().toast).toBeNull();
+		});
 	});
 
 	it("un-completing toggles back to false, with no confirmation", async () => {
@@ -557,7 +815,7 @@ describe("TodayScreen", () => {
 			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
 		];
 		mockQuantityValuesByHabitId = new Map([[3, 3]]);
-		mockLogQuantity.mockResolvedValue(undefined);
+		mockLogQuantity.mockResolvedValue(OK);
 
 		await render(<TodayScreen />);
 		await fireEvent.press(
@@ -588,7 +846,7 @@ describe("TodayScreen", () => {
 			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
 		];
 		mockQuantityValuesByHabitId = new Map([[3, 7]]);
-		mockLogQuantity.mockResolvedValue(undefined);
+		mockLogQuantity.mockResolvedValue(OK);
 
 		await render(<TodayScreen />);
 		await fireEvent.press(
@@ -605,14 +863,15 @@ describe("TodayScreen", () => {
 		expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 7);
 	});
 
-	it("still offers a way to add a habit once habits already exist", async () => {
+	it("adds a habit from the header + once habits exist, with no ghost link under the list", async () => {
 		mockViewState = "populated";
 		mockGroups = [
 			{ category: categoryNamed("Morning"), habits: [morningHabit] },
 		];
 
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Add habit"));
+		expect(screen.queryByText("Add habit")).toBeNull();
+		await fireEvent.press(screen.getByRole("button", { name: "Add habit" }));
 
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
@@ -744,7 +1003,7 @@ describe("TodayScreen", () => {
 
 			await fireEvent.press(screen.getByLabelText("More"));
 			expect(mockUseTodayMenuQueries).toHaveBeenCalled();
-			expect(screen.getByText("1 — 31 August · 80% done")).toBeTruthy();
+			expect(screen.getByText("1 – 31 August · 80% done")).toBeTruthy();
 			expect(screen.getByText("2026 so far · since 3 March")).toBeTruthy();
 		});
 
@@ -762,7 +1021,7 @@ describe("TodayScreen", () => {
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByLabelText("More"));
 			expect(
-				screen.getByText("14 — 20 September · 34 of 42 done"),
+				screen.getByText("14 – 20 September · 34 of 42 done"),
 			).toBeTruthy();
 			expect(screen.getByText("7 active · 2 archived")).toBeTruthy();
 		});
@@ -826,7 +1085,7 @@ describe("TodayScreen", () => {
 			];
 			const missedDate = new Date("2026-09-15");
 			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
-			mockApplyFreeze.mockResolvedValue(undefined);
+			mockApplyFreeze.mockResolvedValue(OK);
 
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Glass of water"));
@@ -836,6 +1095,45 @@ describe("TodayScreen", () => {
 			await waitFor(() =>
 				expect(screen.queryByText("You missed yesterday")).toBeNull(),
 			);
+		});
+
+		it("Use a freeze confirms with a toast whose Undo takes it back for that same missed day", async () => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
+			const missedDate = new Date("2026-09-15");
+			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Glass of water"));
+			await fireEvent.press(screen.getByText("Use a freeze"));
+
+			const toast = useToastStore.getState().toast;
+			expect(toast).toMatchObject({
+				message: "Used a freeze on 'Glass of water'",
+				actionLabel: "Undo",
+			});
+			toast?.onAction?.();
+			expect(mockUndoFreeze).toHaveBeenCalledWith(1, missedDate);
+		});
+
+		it("a failed freeze leaves the sheet open and shows no Undo", async () => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
+			mockAtRiskByHabitId = new Map([
+				[1, { missedDate: new Date("2026-09-15"), currentStreak: 24 }],
+			]);
+			mockApplyFreeze.mockResolvedValue({ ok: false });
+
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Glass of water"));
+			await fireEvent.press(screen.getByText("Use a freeze"));
+
+			expect(useToastStore.getState().toast).toBeNull();
+			expect(screen.getByText("You missed yesterday")).toBeTruthy();
 		});
 
 		it("Reset and start today closes the sheet without calling applyFreeze", async () => {

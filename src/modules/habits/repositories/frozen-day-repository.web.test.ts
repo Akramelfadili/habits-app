@@ -37,6 +37,25 @@ describe("frozen-day-repository.web", () => {
 		).toBe(true);
 	});
 
+	it("unfreezing removes the day and notifies live readers", async () => {
+		const { freezeHabitDay, unfreezeHabitDay, useFrozenDays } =
+			loadRepository();
+		const { result } = await renderHook(() => useFrozenDays());
+		const day = new Date("2026-09-15T00:00:00Z");
+
+		await act(async () => {
+			await freezeHabitDay(1, day);
+		});
+		expect(result.current.some((f) => f.habitId === 1)).toBe(true);
+
+		await act(async () => {
+			await unfreezeHabitDay(1, day);
+		});
+		expect(
+			result.current.some((f) => f.habitId === 1 && f.date === "2026-09-15"),
+		).toBe(false);
+	});
+
 	it("freezing the same day twice does not create a duplicate", async () => {
 		const { freezeHabitDay, useFrozenDays } = loadRepository();
 		const { result } = await renderHook(() => useFrozenDays());

@@ -22,6 +22,16 @@ function joinList(items: string[]): string {
 	return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
+/** An ISO weekday from a route param ("1"–"7"); anything else is undefined. */
+export function parseWeekdayParam(
+	value: string | undefined,
+): IsoWeekday | undefined {
+	const day = Number(value);
+	return value !== undefined && Number.isInteger(day) && day >= 1 && day <= 7
+		? (day as IsoWeekday)
+		: undefined;
+}
+
 /** 24-hour "07:20" — the time's own display, and its screen-reader name. */
 export function formatReminderTime({
 	hour,

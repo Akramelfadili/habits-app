@@ -1,5 +1,11 @@
 import { type PropsWithChildren, useRef, useState } from "react";
-import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import {
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import { useTheme } from "@/theme/use-theme";
 import { SectionLabel } from "../primitives/section-label";
 
@@ -14,6 +20,7 @@ type NavMenuProps = PropsWithChildren<{
 const GAP_BELOW_ANCHOR = 8;
 const SIDE_MARGIN = 16;
 const MAX_WIDTH = 300;
+const MIN_HEIGHT = 160;
 
 /**
  * Anchored popover menu over a dim scrim (NEW-02). `anchorBottom` must already
@@ -31,7 +38,7 @@ export function NavMenu({
 	children,
 }: NavMenuProps) {
 	const { colors } = useTheme();
-	const { width } = useWindowDimensions();
+	const { width, height } = useWindowDimensions();
 	const overlay = useRef<View>(null);
 	const [top, setTop] = useState(anchorBottom + GAP_BELOW_ANCHOR);
 
@@ -60,19 +67,24 @@ export function NavMenu({
 				accessibilityLabel="Close menu"
 			/>
 			<View
+				testID="nav-menu-popover"
 				style={[
 					styles.popover,
 					{
 						top,
 						width: Math.min(MAX_WIDTH, width - SIDE_MARGIN * 2),
+						// Large text can outgrow the screen: the rows scroll instead of clipping.
+						maxHeight: Math.max(MIN_HEIGHT, height - top - SIDE_MARGIN),
 						backgroundColor: colors.card,
 					},
 				]}
 			>
-				<View style={styles.label}>
-					<SectionLabel>{label}</SectionLabel>
-				</View>
-				{children}
+				<ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+					<View style={styles.label}>
+						<SectionLabel>{label}</SectionLabel>
+					</View>
+					{children}
+				</ScrollView>
 			</View>
 		</View>
 	);

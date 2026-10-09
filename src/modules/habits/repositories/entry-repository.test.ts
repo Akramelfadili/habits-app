@@ -76,6 +76,61 @@ describe("entry-repository", () => {
 		expect(rows).toEqual([]);
 	});
 
+	describe("un-tick then Undo (A5-06)", () => {
+		async function seedNote(habitId: number) {
+			await saveDayLog(DAY_1, {
+				values: [],
+				note: "Slept badly, did it anyway",
+				noteHabitId: habitId,
+			});
+		}
+
+		it("a check habit comes back, and its day note was never touched", async () => {
+			const habitId = await seedHabit();
+			await setHabitCompletedOn(habitId, DAY_1, true);
+			await seedNote(habitId);
+
+			await setHabitCompletedOn(habitId, DAY_1, false); // un-tick
+			expect(await mockDb.select().from(entries)).toEqual([]);
+
+			await setHabitCompletedOn(habitId, DAY_1, true); // Undo
+			expect(await mockDb.select().from(entries)).toEqual([
+				expect.objectContaining({ habitId, date: "2026-09-14", value: null }),
+			]);
+			expect(await mockDb.select().from(entryNotes)).toEqual([
+				expect.objectContaining({ note: "Slept badly, did it anyway" }),
+			]);
+		});
+
+		it("a quantity habit comes back at the exact amount, with its note", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 10);
+			await seedNote(habitId);
+
+			await setHabitQuantityOn(habitId, DAY_1, 3); // dropped under target
+			await setHabitQuantityOn(habitId, DAY_1, 10); // Undo → the prior amount
+
+			expect(await mockDb.select().from(entries)).toEqual([
+				expect.objectContaining({ habitId, date: "2026-09-14", value: 10 }),
+			]);
+			expect(await mockDb.select().from(entryNotes)).toEqual([
+				expect.objectContaining({ note: "Slept badly, did it anyway" }),
+			]);
+		});
+
+		it("zeroing a quantity habit then Undo restores it too", async () => {
+			const habitId = await seedHabit();
+			await setHabitQuantityOn(habitId, DAY_1, 8);
+			await setHabitQuantityOn(habitId, DAY_1, 0);
+			expect(await mockDb.select().from(entries)).toEqual([]);
+
+			await setHabitQuantityOn(habitId, DAY_1, 8);
+			expect(await mockDb.select().from(entries)).toEqual([
+				expect.objectContaining({ value: 8 }),
+			]);
+		});
+	});
+
 	it("keeps each habit's entries independent", async () => {
 		const habitA = await seedHabit();
 		const habitB = await seedHabit();

@@ -159,4 +159,17 @@ describe("RetroLogSheet", () => {
 		expect(onDismiss).toHaveBeenCalledTimes(1);
 		expect(onSave).not.toHaveBeenCalled();
 	});
+
+	it("lets a row tap land on the first tap with the note's keyboard up, and drags it away on scroll (A5-13)", async () => {
+		await renderSheet();
+		const list = screen.getByText("Glass of water").parent;
+		let node = list;
+		let scroll: typeof node = null;
+		while (node && !scroll) {
+			if (node.props.keyboardShouldPersistTaps) scroll = node;
+			node = node.parent;
+		}
+		expect(scroll?.props.keyboardShouldPersistTaps).toBe("handled");
+		expect(scroll?.props.keyboardDismissMode).toBe("on-drag");
+	});
 });

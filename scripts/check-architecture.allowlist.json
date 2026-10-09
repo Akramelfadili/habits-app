@@ -5,15 +5,7 @@
 	},
 	{
 		"rule": "colocated-tests",
-		"file": "src/lib/db/database-provider.tsx"
-	},
-	{
-		"rule": "colocated-tests",
 		"file": "src/lib/dev-clock/pin-clock.ts"
-	},
-	{
-		"rule": "colocated-tests",
-		"file": "src/lib/file-export/file-export.ts"
 	},
 	{
 		"rule": "date-args",

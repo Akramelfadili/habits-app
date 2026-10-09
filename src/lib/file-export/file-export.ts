@@ -70,16 +70,45 @@ function utiFor(mimeType: string): string {
 }
 
 /**
+ * Whether `error` is the iOS folder picker reporting that the person backed
+ * out. expo-modules-core derives the code from the Swift class
+ * `FilePickingCancelledException` → `ERR_FILE_PICKING_CANCELLED`; the message
+ * is matched as well in case a platform reports it differently.
+ */
+export function isPickerCancellation(error: unknown): boolean {
+	if (typeof error !== "object" || error === null) return false;
+	const { code, message } = error as { code?: unknown; message?: unknown };
+	return (
+		(typeof code === "string" && /CANCEL/i.test(code)) ||
+		(typeof message === "string" && /cancel/i.test(message))
+	);
+}
+
+/**
  * "Save to Files": the system folder picker, then a copy of the export into
- * the chosen folder. Resolves false when the person backs out of the picker.
+ * the chosen folder. Resolves false only when the person backs out of the
+ * picker; every other failure (no view controller, copy denied, out of space)
+ * rejects with the real error.
  */
 export async function saveFileToFolder(uri: string): Promise<boolean> {
 	let folder: Directory;
 	try {
 		folder = await Directory.pickDirectoryAsync();
-	} catch {
-		return false;
+	} catch (error) {
+		if (isPickerCancellation(error)) return false;
+		throw error;
 	}
-	new File(uri).copy(folder);
+	await new File(uri).copy(folder);
 	return true;
+}
+
+/** Hands plain text to the share sheet as a `.txt` file — "Copy diagnostics" without the clipboard module. */
+export async function shareText(text: string, fileName: string): Promise<void> {
+	const file = new File(exportsDirectory(), fileName);
+	file.create({ overwrite: true });
+	file.write(text, { encoding: "utf8" });
+	await Sharing.shareAsync(file.uri, {
+		mimeType: "text/plain",
+		UTI: "public.plain-text",
+	});
 }

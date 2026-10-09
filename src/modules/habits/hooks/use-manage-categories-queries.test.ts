@@ -19,7 +19,7 @@ jest.mock("../repositories/category-repository", () => ({
 	],
 }));
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useHabitsList: () => ({ habits: mockHabits, loaded: true }),
 }));
 
 import { useManageCategoriesQueries } from "./use-manage-categories-queries";

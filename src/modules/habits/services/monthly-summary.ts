@@ -329,6 +329,12 @@ export function buildMonthlySummary(
 	});
 	const weeks = monthWeeks(month);
 
+	const activeHabits = ordered.filter((habit) => habit.archivedAt === null);
+	const activeIds = new Set(activeHabits.map((habit) => habit.id));
+	const activeOutcomes = outcomes.filter(({ habitId }) =>
+		activeIds.has(habitId),
+	);
+
 	const rows: MonthlyHabitRow[] = [];
 	for (const habit of ordered) {
 		const own = outcomes.filter((outcome) => outcome.habitId === habit.id);
@@ -398,12 +404,14 @@ export function buildMonthlySummary(
 		freezeDates,
 		calendar: buildCalendar(month, outcomes, historyStart(habits), today),
 		rows,
+		// Insights read active habits only (HAB-17's rule, now Monthly's too): an
+		// archived habit keeps its history in the tiles, calendar and rows, but is
+		// never named by an insight or offered as an action target.
 		insights: insightsFor({
-			rows,
-			outcomes,
-			habits: ordered,
-			completed,
-			scheduled,
+			rows: rows.filter((row) => row.habit.archivedAt === null),
+			outcomes: activeOutcomes,
+			habits: activeHabits,
+			...counts(activeOutcomes),
 		}),
 	};
 }

@@ -1,4 +1,5 @@
-import { format, isSameMonth } from "date-fns";
+import { format } from "date-fns";
+import { formatDateRange, noun } from "@/utils/format";
 import type {
 	WeeklyBestDay,
 	WeeklyHabitRow,
@@ -26,11 +27,9 @@ function capitalize(text: string): string {
 	return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** "14 — 20 September", or "28 September — 4 October" across a month boundary. */
+/** "14 – 20 September", or "28 September – 4 October" across a month boundary. */
 export function weekRangeLabel({ start, end }: WeekWindow): string {
-	return isSameMonth(start, end)
-		? `${format(start, "d")} — ${format(end, "d MMMM")}`
-		: `${format(start, "d MMMM")} — ${format(end, "d MMMM")}`;
+	return formatDateRange(start, end, { long: true });
 }
 
 /** A row is labelled by the habit's name alone — never a suffix on it (HAB-04, audit #8). */
@@ -59,11 +58,11 @@ export function bestDayTile(
 
 /** "Two of seven days. Try moving it …" — the slipping card's body. */
 export function slippingBody(row: WeeklyHabitRow): string {
-	const count = `${capitalize(numberWord(row.completed))} of ${numberWord(row.scheduled)} days`;
+	const count = `${capitalize(numberWord(row.completed))} of ${numberWord(row.scheduled)} ${noun(row.scheduled, "day")}`;
 	return `${count}. Try moving it to a day or time that fits better.`;
 }
 
-/** Today's menu row for this screen — "14 — 20 September · 34 of 42 done" (HAB-14). */
+/** Today's menu row for this screen — "14 – 20 September · 34 of 42 done" (HAB-14). */
 export function weeklyMenuSubline({
 	week,
 	completed,

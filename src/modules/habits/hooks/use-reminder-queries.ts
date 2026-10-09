@@ -22,14 +22,18 @@ export type ReminderScreenData = {
 
 /**
  * Everything the Reminders screen (HAB-12) shows for one habit, or null when
- * the id doesn't resolve.
+ * the id doesn't resolve, or
+ * undefined while the habit list is still loading (audit A5-04).
  */
-export function useReminderQueries(habitId: number): ReminderScreenData | null {
-	const habits = useHabitsList();
+export function useReminderQueries(
+	habitId: number,
+): ReminderScreenData | null | undefined {
+	const { habits, loaded } = useHabitsList();
 	const reminders = useHabitReminders(habitId);
 	const permission = useNotificationPermission();
 
 	const habit = habits.find((candidate) => candidate.id === habitId);
+	if (!loaded) return undefined;
 	if (!habit) return null;
 
 	return {

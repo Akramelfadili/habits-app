@@ -72,11 +72,25 @@ export async function freezeHabitDay(
 	]);
 }
 
+export async function unfreezeHabitDay(
+	habitId: number,
+	date: Date,
+): Promise<void> {
+	const dateString = format(date, DATE_FORMAT);
+	setFrozenDays(
+		getFrozenDays().filter(
+			(frozenDay) =>
+				!(frozenDay.habitId === habitId && frozenDay.date === dateString),
+		),
+	);
+}
+
 // Compile-time guard: this file must export exactly what the native repository
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeFrozenDayRepository = {
 	useFrozenDays,
 	getFreezesUsedInMonth,
 	freezeHabitDay,
+	unfreezeHabitDay,
 };
 void _sameShape;

@@ -1,4 +1,4 @@
-import { startOfDay } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 import {
@@ -11,6 +11,8 @@ import {
 export type WeeklySummaryView = WeeklySummary & {
 	/** No habits at all — the screen shows an empty state instead of zeroed tiles. */
 	hasHabits: boolean;
+	/** False until the habit list has loaded — the screen shows a blank, not the empty state (audit A5-04). */
+	isLoaded: boolean;
 };
 
 /**
@@ -21,13 +23,14 @@ export type WeeklySummaryView = WeeklySummary & {
 export function useWeeklySummaryQueries(
 	which: SummaryWeek = "this",
 ): WeeklySummaryView {
-	const today = startOfDay(new Date());
+	const today = useToday();
 	const week = summaryWeekWindow(today, which);
-	const habits = useActiveHabits();
+	const { habits, loaded } = useActiveHabits();
 	const entries = useEntriesInRange(week.start, week.end);
 
 	return {
 		...buildWeeklySummary({ habits, entries, today, week: which }),
 		hasHabits: habits.length > 0,
+		isLoaded: loaded,
 	};
 }

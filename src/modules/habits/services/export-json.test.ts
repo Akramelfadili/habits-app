@@ -25,6 +25,18 @@ describe("toJson", () => {
 		expect(parsed.habits).toHaveLength(3);
 	});
 
+	it("records which app build and database schema wrote the file (additive; layout version unchanged)", async () => {
+		const parsed = JSON.parse(await toJson(modelFor(true)));
+
+		expect(parsed.version).toBe(1);
+		expect(parsed.app).toEqual({
+			version: expect.any(String),
+			build: expect.any(String),
+		});
+		expect(parsed.schema).toEqual(expect.any(Number));
+		expect(parsed.schema).toBeGreaterThan(0);
+	});
+
 	it("nests each habit's logs, notes and frozen days under it", async () => {
 		const parsed = JSON.parse(await toJson(modelFor(true)));
 		const [cafe, water] = parsed.habits;

@@ -1,3 +1,4 @@
+import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { saveDayLog } from "../repositories/entry-repository";
 
@@ -7,10 +8,13 @@ import { saveDayLog } from "../repositories/entry-repository";
  * entries on read, so there's nothing else to recalculate or orchestrate.
  */
 export function useRetroLogActions() {
-	const save = useAsyncAction(saveDayLog);
+	const save = useAsyncAction(saveDayLog, {
+		scope: "retro-log",
+		failure: failureMessage("save", "this day"),
+	});
 
 	return {
-		saveDay: save.execute,
+		saveDay: save.run,
 		isSaving: save.isLoading,
 		saveError: save.error,
 	};

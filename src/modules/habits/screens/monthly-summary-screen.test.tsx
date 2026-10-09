@@ -74,12 +74,19 @@ describe("MonthlySummaryScreen — ready (C2, C3)", () => {
 		mockView = readyView();
 	});
 
+	it("titles the screen as a heading, with every section title a heading too (A6-09)", async () => {
+		await render(<MonthlySummaryScreen />);
+		expect(screen.getByRole("header", { name: "Your month" })).toBeTruthy();
+		expect(screen.getAllByRole("header").length).toBeGreaterThan(1);
+	});
+
 	it("shows the range, title, switcher with Month selected, and the three tiles", async () => {
 		await render(<MonthlySummaryScreen />);
-		expect(screen.getByText("1 — 31 AUGUST")).toBeTruthy();
+		expect(screen.getByText("1 – 31 AUGUST")).toBeTruthy();
 		expect(screen.getByText("Your month")).toBeTruthy();
 		expect(
-			screen.getByText("Month").parent?.props.accessibilityState.selected,
+			screen.getByText("Month").parent?.parent?.props.accessibilityState
+				.selected,
 		).toBe(true);
 		expect(screen.getByText("COMPLETED")).toBeTruthy();
 		expect(screen.getByText("PERFECT DAYS")).toBeTruthy();
@@ -136,7 +143,7 @@ describe("MonthlySummaryScreen — ready (C2, C3)", () => {
 	it("opens that habit's Reminders from the single-cause pattern insight", async () => {
 		await render(<MonthlySummaryScreen />);
 		await fireEvent.press(screen.getByText("Add a Saturday reminder →"));
-		expect(mockPush).toHaveBeenCalledWith("/habits/reminders/2");
+		expect(mockPush).toHaveBeenCalledWith("/habits/reminders/2?addTime=6");
 	});
 
 	it("gives only the slipping and pattern cards a tap target — improved and freeze are informational", async () => {
@@ -257,7 +264,7 @@ describe("MonthlySummaryScreen — empty", () => {
 	it("explains there's nothing to summarize and offers no switcher", async () => {
 		mockView = { state: "empty" };
 		await render(<MonthlySummaryScreen />);
-		expect(screen.getByText("Nothing to summarize yet")).toBeTruthy();
+		expect(screen.getByText("Nothing to summarise yet")).toBeTruthy();
 		expect(screen.queryByText("Week")).toBeNull();
 	});
 });

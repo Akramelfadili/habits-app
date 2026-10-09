@@ -159,6 +159,8 @@ Tapping a habit row's check control toggles it done/undone **instantly** — no 
 - [ ] Un-checking works and updates the progress bar
 - [ ] Tapping a habit's name navigates toward the (not-yet-built) detail screen without crashing
 
+**As built (audit B9):** un-ticking is still instant with no confirmation, and now shows a toast with **Undo** ("Marked 'X' not complete" / "…not resisted"); the same toast follows a quantity save that drops a habit back under its target. Undo restores the exact previous state (a check, or the exact amount), on the day of the tap — not whatever "today" is by then — and goes through `run()`. A newer toast replaces it (never stacks), and once it has expired there is nothing left to undo. Completing keeps its existing toast.
+
 ---
 
 ## 04 — Break-habit framing
@@ -330,6 +332,8 @@ Every habit tracks a **current streak** (consecutive scheduled days completed) s
 - [ ] Missed day with 0 freezes available resets the streak with no prompt shown
 - [ ] Frozen days are visually distinguishable from completed days wherever history is shown
 
+**As built (audit B9):** "Use a freeze" now confirms with a toast ("Used a freeze on 'X'") whose **Undo** removes that freeze for the same missed day, returning it to the pool. "Reset and start today" still writes nothing, so it has nothing to undo.
+
 ---
 
 ## 09 — Habit detail and history
@@ -500,4 +504,4 @@ Named explicitly so "should we add X" gets answered by pointing here instead of 
 - **Custom reminder sounds** — cosmetic, not core to the loop
 - **Quantity-type Break habits** (e.g. "limit screen time") — noted in Feature 04, deliberately deferred
 - **A merged "Today" view across Habits / To-dos / Expenses** — revisit once all three modules exist independently; do not build cross-module coupling into this module's data or navigation now
-- **One proper entry point on Today for the secondary screens** — the mockups only show the destination screens for Weekly Summary (11), Reminders (12) and Manage & Archive (13), never the navigation to reach them. V1 uses temporary ghost buttons on Today (the same pattern as the interim "Add habit"), which means 3–4 ad hoc buttons stacked there once HAB-13 ships. V2: design (mockup first) and build a single header icon or menu on Today that reaches all three, and remove the temporary buttons.
+- **One proper entry point on Today for the secondary screens** — the mockups only show the destination screens for Weekly Summary (11), Reminders (12) and Manage & Archive (13), never the navigation to reach them. V1 used temporary ghost buttons on Today (the "Add habit" link has since been replaced by the header `+`, audit B9), which meant 3–4 ad hoc buttons stacked there once HAB-13 ships. V2: design (mockup first) and build a single header icon or menu on Today that reaches all three, and remove the temporary buttons.

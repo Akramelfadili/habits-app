@@ -9,6 +9,7 @@ import type {
 	CreateHabitInput,
 	DayRange,
 	Habit,
+	HabitsResult,
 	UpdateHabitInput,
 } from "../types";
 import { getCategories } from "./category-repository.web";
@@ -18,6 +19,7 @@ import {
 	resolveFixtureScenario,
 } from "./habit-fixtures";
 import type * as NativeHabitRepository from "./habit-repository";
+import { assertWritesAllowed } from "./write-failure-fixtures";
 
 /**
  * Web-only stand-in for `habit-repository.ts`, picked by Metro's `.web.ts`
@@ -90,10 +92,18 @@ function byManualOrder(a: Habit, b: Habit): number {
 
 /** Derived lists are cached per store snapshot so `useSyncExternalStore` sees stable references. */
 let derivedFor: Habit[] | undefined;
-let derived: { all: Habit[]; active: Habit[]; archived: Habit[] } = {
-	all: [],
-	active: [],
-	archived: [],
+const loadedResult = (habits: Habit[]): HabitsResult => ({
+	habits,
+	loaded: true,
+});
+let derived: {
+	all: HabitsResult;
+	active: HabitsResult;
+	archived: HabitsResult;
+} = {
+	all: loadedResult([]),
+	active: loadedResult([]),
+	archived: loadedResult([]),
 };
 
 function getDerived() {
@@ -101,22 +111,27 @@ function getDerived() {
 	if (derivedFor !== habits) {
 		const all = [...habits].sort(byManualOrder);
 		derived = {
-			all,
-			active: all.filter((h) => h.archivedAt === null),
-			archived: all
-				.filter((h) => h.archivedAt !== null)
-				.sort(
-					(a, b) =>
-						(b.archivedAt?.getTime() ?? 0) - (a.archivedAt?.getTime() ?? 0),
-				),
+			all: loadedResult(all),
+			active: loadedResult(all.filter((h) => h.archivedAt === null)),
+			archived: loadedResult(
+				all
+					.filter((h) => h.archivedAt !== null)
+					.sort(
+						(a, b) =>
+							(b.archivedAt?.getTime() ?? 0) - (a.archivedAt?.getTime() ?? 0),
+					),
+			),
 		};
 		derivedFor = habits;
 	}
 	return derived;
 }
 
-const SERVER_ACTIVE = DEFAULT_HABITS.filter((h) => h.archivedAt === null);
-const SERVER_ARCHIVED: Habit[] = [];
+const SERVER_ALL = loadedResult(DEFAULT_HABITS);
+const SERVER_ACTIVE = loadedResult(
+	DEFAULT_HABITS.filter((h) => h.archivedAt === null),
+);
+const SERVER_ARCHIVED = loadedResult([]);
 
 function updateOne(id: number, patch: Partial<Habit>): Habit {
 	const existing = getHabits().find((h) => h.id === id);
@@ -127,6 +142,7 @@ function updateOne(id: number, patch: Partial<Habit>): Habit {
 }
 
 export async function createHabit(input: CreateHabitInput): Promise<Habit> {
+	assertWritesAllowed();
 	const category = await categoryById(input.categoryId);
 	const habits = getHabits();
 	const habit = newHabit(input, category, habits, new Date());
@@ -138,6 +154,7 @@ export async function updateHabit(
 	id: number,
 	input: UpdateHabitInput,
 ): Promise<Habit> {
+	assertWritesAllowed();
 	const existing = getHabits().find((h) => h.id === id);
 	if (!existing) throw new Error(`Habit ${id} not found`);
 	const category = await categoryById(input.categoryId);
@@ -181,17 +198,17 @@ export async function createHabitsAndMarkSetting(
 	return created;
 }
 
-export function useHabitsList(): Habit[] {
+export function useHabitsList(): HabitsResult {
 	// Static web rendering has no URL-aware store on the server, so it renders
 	// the default fixtures; the client snapshot then applies `?fixtures=`.
 	return useSyncExternalStore(
 		subscribe,
 		() => getDerived().all,
-		() => DEFAULT_HABITS,
+		() => SERVER_ALL,
 	);
 }
 
-export function useActiveHabits(): Habit[] {
+export function useActiveHabits(): HabitsResult {
 	return useSyncExternalStore(
 		subscribe,
 		() => getDerived().active,
@@ -199,12 +216,16 @@ export function useActiveHabits(): Habit[] {
 	);
 }
 
-export function useArchivedHabits(): Habit[] {
+export function useArchivedHabits(): HabitsResult {
 	return useSyncExternalStore(
 		subscribe,
 		() => getDerived().archived,
 		() => SERVER_ARCHIVED,
 	);
+}
+
+export async function getAllHabits(): Promise<Habit[]> {
+	return [...getHabits()].sort(byManualOrder);
 }
 
 export async function getHabit(id: number): Promise<Habit | undefined> {
@@ -318,6 +339,7 @@ const _sameShape: typeof NativeHabitRepository = {
 	useHabitsList,
 	useActiveHabits,
 	useArchivedHabits,
+	getAllHabits,
 	getHabit,
 	reorderHabits,
 	setHabitArchived,

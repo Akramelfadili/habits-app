@@ -37,6 +37,13 @@ describe("FirstRunScreen", () => {
 		mockSkipFirstRun.mockReset();
 	});
 
+	it("titles the screen as a heading (A6-09)", async () => {
+		await render(<FirstRunScreen />);
+		expect(
+			screen.getByRole("header", { name: "Pick a couple to start" }),
+		).toBeTruthy();
+	});
+
 	it("pre-selects the two default suggestions and shows their count", async () => {
 		await render(<FirstRunScreen />);
 		expect(screen.getByText("Add 2 habits")).toBeTruthy();

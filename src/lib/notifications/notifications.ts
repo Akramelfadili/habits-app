@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { log } from "@/lib/logger/logger";
 
 /**
  * Adapter over `expo-notifications` (docs/architecture.md's Adapter
@@ -78,45 +79,127 @@ function toCalendarWeekday(isoWeekday: number): number {
 }
 
 /**
- * Schedules a repeating reminder. Every-day reminders use one daily trigger
- * rather than seven weekly ones — iOS keeps at most 64 pending
- * notifications per app, so this matters once several habits have
- * reminders. Replaces anything already scheduled under `id`.
+ * Identifier of one scheduled OS notification:
+ * `"<reminder id>:<daily|day-N>:<HHmm>:<generation>"`. The time is part of it
+ * so a launch-time reconcile can tell a reminder whose time was edited from
+ * an up-to-date one; the generation makes every scheduling run's identifiers
+ * unique, so a new set can sit beside the old one while it is being swapped
+ * in (see `syncHabitReminders`) — neither can overwrite or cancel the other.
+ */
+export function notificationIdentifier(
+	reminder: Pick<ReminderNotification, "id" | "hour" | "minute">,
+	slot: NotificationSlot,
+	generation: string,
+): string {
+	const time = `${String(reminder.hour).padStart(2, "0")}${String(reminder.minute).padStart(2, "0")}`;
+	return `${reminder.id}:${slot}:${time}:${generation}`;
+}
+
+let generationCounter = 0;
+
+/** A short token that names one scheduling run — unique even for two runs in the same millisecond. */
+export function newGeneration(): string {
+	generationCounter = (generationCounter + 1) % 1296;
+	return `${Date.now().toString(36)}${generationCounter.toString(36)}`;
+}
+
+export type NotificationSlot = "daily" | `day-${number}`;
+
+/** The triggers a reminder's days need: one daily trigger for all seven, else one weekly per day. */
+export function reminderSlots(weekdays: readonly number[]): NotificationSlot[] {
+	const days = [...new Set(weekdays)];
+	return days.length === 7
+		? ["daily"]
+		: days.map((day) => `day-${day}` as const);
+}
+
+export type ParsedIdentifier = {
+	reminderId: string;
+	slot: string;
+	time: string;
+	generation: string;
+};
+
+/** Reads an identifier made by `notificationIdentifier`; null for anything else (an older format, or not ours). */
+export function parseIdentifier(identifier: string): ParsedIdentifier | null {
+	const match = identifier.match(/^(.+):(daily|day-\d):(\d{4}):([0-9a-z]+)$/);
+	if (!match) return null;
+	return {
+		reminderId: match[1],
+		slot: match[2],
+		time: match[3],
+		generation: match[4],
+	};
+}
+
+/**
+ * Schedules a repeating reminder and returns the identifiers it created.
+ * Every-day reminders use one daily trigger rather than seven weekly ones —
+ * iOS keeps at most 64 pending notifications per app, so this matters once
+ * several habits have reminders.
+ *
+ * It does *not* cancel anything: replacing the old notifications is the
+ * caller's job, after this succeeds, so a failure here never leaves the habit
+ * with fewer reminders than it had. If one of several triggers fails, the
+ * ones already created by this call are cancelled and the error rethrown —
+ * a reminder is scheduled completely or not at all.
  */
 export async function scheduleReminder(
 	reminder: ReminderNotification,
-): Promise<void> {
-	// With the ":" — "habit-3-reminder-7" alone would also match reminder 70.
-	await cancelRemindersWithPrefix(`${reminder.id}:`);
-
+	generation: string,
+): Promise<string[]> {
 	const content = { title: reminder.title, body: reminder.body };
-	const days = [...new Set(reminder.weekdays)];
+	const slots = reminderSlots(reminder.weekdays);
+	const created: string[] = [];
 
-	if (days.length === 7) {
-		await Notifications.scheduleNotificationAsync({
-			identifier: `${reminder.id}:daily`,
-			content,
-			trigger: {
-				type: Notifications.SchedulableTriggerInputTypes.DAILY,
-				hour: reminder.hour,
-				minute: reminder.minute,
-			},
-		});
-		return;
+	try {
+		for (const slot of slots) {
+			const identifier = notificationIdentifier(reminder, slot, generation);
+			await Notifications.scheduleNotificationAsync({
+				identifier,
+				content,
+				trigger:
+					slot === "daily"
+						? {
+								type: Notifications.SchedulableTriggerInputTypes.DAILY,
+								hour: reminder.hour,
+								minute: reminder.minute,
+							}
+						: {
+								type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+								weekday: toCalendarWeekday(Number(slot.slice(4))),
+								hour: reminder.hour,
+								minute: reminder.minute,
+								repeats: true,
+							},
+			});
+			created.push(identifier);
+		}
+		return created;
+	} catch (error) {
+		await cancelScheduled(created).catch((cleanupError) =>
+			log.warn(
+				"notifications",
+				"cleanup after a failed schedule failed",
+				cleanupError,
+			),
+		);
+		throw error;
 	}
+}
 
-	for (const day of days) {
-		await Notifications.scheduleNotificationAsync({
-			identifier: `${reminder.id}:day-${day}`,
-			content,
-			trigger: {
-				type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-				weekday: toCalendarWeekday(day),
-				hour: reminder.hour,
-				minute: reminder.minute,
-				repeats: true,
-			},
-		});
+/** Every pending notification's identifier — a snapshot to diff against before scheduling. */
+export async function listScheduledIdentifiers(): Promise<string[]> {
+	const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+	return scheduled.map((request) => request.identifier);
+}
+
+/** Cancels exactly these identifiers — never "everything", which would take a just-scheduled set with it. */
+export async function cancelScheduled(
+	identifiers: readonly string[],
+): Promise<void> {
+	for (const identifier of identifiers) {
+		await Notifications.cancelScheduledNotificationAsync(identifier);
 	}
 }
 
@@ -127,10 +210,8 @@ export async function scheduleReminder(
  * match habit 12's.
  */
 export async function cancelRemindersWithPrefix(prefix: string): Promise<void> {
-	const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-	for (const request of scheduled) {
-		if (request.identifier.startsWith(prefix)) {
-			await Notifications.cancelScheduledNotificationAsync(request.identifier);
-		}
-	}
+	const identifiers = await listScheduledIdentifiers();
+	await cancelScheduled(
+		identifiers.filter((identifier) => identifier.startsWith(prefix)),
+	);
 }

@@ -28,8 +28,9 @@ Refined monochrome. Black, white, and grey only for all UI chrome (backgrounds, 
 | `accent` / `ink` (text) | `#1A1A19` | Primary text, and the "black" of all monochrome chrome (primary buttons, filled toggles, selected states) |
 | `onAccent` | `#FFFFFF` | Text/icon color sitting on top of `accent` |
 | `sub` | `#5E5E5C` | Secondary text |
-| `faint` | `#6E6E6B` | Tertiary/disabled text — one step lighter than `sub` |
-| `border` | `#E2E1DE` | Hairline borders |
+| `faint` | `#6C6C69` | Tertiary/disabled text — one step lighter than `sub` (4.5:1 on `inner`, was `#6E6E6B` at 4.41:1) |
+| `border` | `#E2E1DE` | Hairline borders (decorative; deliberately ≈1.3:1) |
+| `outline` | `#898987` | The boundary of an unchecked control (Checkbox, Completion circle) — 3:1 against `card`, `bg` and `inner` (WCAG 1.4.11) |
 | `track` | `#DEDDDA` | Toggle/progress track background, empty heatmap cell |
 | `toast` | `#1A1A19` | Toast/snackbar background |
 | `toastInk` | `#FFFFFF` | Toast text |
@@ -46,7 +47,8 @@ Refined monochrome. Black, white, and grey only for all UI chrome (backgrounds, 
 | `onAccent` | `#1A1A1C` | Text/icon color sitting on top of `accent` |
 | `sub` | `#A5A5A2` | Secondary text |
 | `faint` | `#9A9A97` | Tertiary/disabled text |
-| `border` | `#343438` | Hairline borders |
+| `border` | `#343438` | Hairline borders (decorative; deliberately ≈1.25:1) |
+| `outline` | `#777778` | Unchecked-control boundary — 3:1 against `card` and `inner` |
 | `track` | `#3A3A3E` | Toggle/progress track background, empty heatmap cell |
 | `toast` | `#35353A` | Toast/snackbar background |
 | `toastInk` | `#EDEDEA` | Toast text |
@@ -58,8 +60,8 @@ Refined monochrome. Black, white, and grey only for all UI chrome (backgrounds, 
 | Token | Light | Dark | Used for |
 |---|---|---|---|
 | `warnTint` | `#FDF0D5` | `#3A2A0E` | Warning background fill (streak-at-risk icon, slipping-habit card, conflict banners) |
-| `warnInk` | `#9A6708` | `#E8A93A` | Warning foreground (icon strokes, text, "At risk" stat) |
-| `dangerBg` | `#C9372F` | `#D9544D` | Danger — used for permanent/destructive actions (e.g. delete confirmation) and for inline validation errors; not used elsewhere as decoration. |
+| `warnInk` | `#966408` | `#E8A93A` | Warning foreground (icon strokes, text, "At risk" stat) — 4.5:1 on `warnTint` and `bg` (was `#9A6708` at 4.31 / 4.39) |
+| `dangerBg` | `#C9372F` | `#E56059` | Danger (dark was `#D9544D`, 3.93:1 as text on `card`; now 4.53:1) — used for permanent/destructive actions (e.g. delete confirmation) and for inline validation errors; not used elsewhere as decoration. |
 | `frozenBg` | `#EDE8F8` | `#262036` | Frozen-day background fill (heatmap frozen cell, freeze-related chrome) |
 | `frozenInk` | `#7A5AC4` | `#A98FE0` | Frozen-day foreground |
 
@@ -125,6 +127,43 @@ Weight: regular body text, medium-weight for row labels/section headers only —
 **Tab bar item:** Habits / To-dos / Expenses, active/inactive states. Habits is the only implemented tab for V1; the other two render as inactive placeholders.
 
 **Feedback (toast/banner):** a completion toast with inline Undo ("Marked 'Upper body' complete — Undo"), and a persistent warning banner style (used for notification-permission-denied, and for reminder/schedule conflicts).
+
+**Error tone (audit B6 — a failed write).** Failure feedback reuses the two existing patterns with a `danger` marker; no new colour token.
+- **Error toast** (`Toast tone="error"`): the same pill as the completion toast (`toast` background, `toastInk` text, same 4 s, same slot in the Habits stack's `ToastHost`) with a 10 px `dangerBg` dot before the message. One line of copy from `failureMessage(verb, noun)` — "Couldn't archive this habit. Try again." — never raw error text. No action button: the person retries the original control. It replaces a pending Undo toast like any other toast.
+- **Error banner** (`Banner tone="error"`): where no `ToastHost` is mounted (the New/Edit habit modals, sheets), the same inline message as a banner — `inner` fill, `ink` text, a filled `dangerBg` marker (the warning banner's amber marker, in red).
+- **In a sheet** a native Modal covers the page, so the `Sheet` mounts its own `ToastHost` at the *top* of the screen (below the status bar) and the page-level host steps aside while any sheet is open — still one toast, always visible. The Detail delete confirmation and the other sheets that stay open on a failed save rely on this.
+- Rule: a write that fails shows exactly one of the two, near where the person acted; the control that started it is released so a retry works.
+- **Error screen** (root error boundary, migration failure): full-screen, `bg` background, centred title (`section` size, weight 500) + one `sub` line + a primary "Try again" Button and a secondary "Copy diagnostics" Button. Self-contained: it never reads the app database (the theme store only supplies its default "System" scheme until the saved choice has loaded), so it can render when the database is the thing that failed.
+
+## Accessibility and touch targets (audit B8/B9)
+
+**Touch targets are 44 pt, without a hitSlop where targets sit side by side or inside a row.** The visual stays as drawn; the *touchable* box is what grows:
+- **Checkbox** — a 44 × 44 touch box around the 24 pt circle, with −10 margin so the row lays out as before. It reaches only into the host row's own padding (`ListItem` trailing has ≥ 10 pt), never a neighbour.
+- **Weekday chip** — each chip owns an equal flex column at least 44 pt tall; the 36 pt circle is centred in it. The circles are therefore centred in 1/7 of the row rather than pushed to the row's ends (a few points inward at the ends). Role `checkbox` + `checked`.
+- **Chip, Category chip (interactive)** — the pill is unchanged; the touch box is 44 pt tall (`minHeight`), so a wrapping row of chips gains the difference in height.
+- **Segmented control** — 44 pt tall (was 40 / 34 compact): each segment is a touch column that fills the track edge to edge, with the active pill inset 3 pt inside it. Role `tab` inside a `tablist`; the optional `label` ("Direction", "Theme", "Week shown", "Summary period", "File format", "Target") names the group.
+- **Text buttons** (`link`, `inline`, `destructive`) — `minHeight` 44 (were ≈ 26 pt with hitSlop); the footprint grows by the difference. Compact and small buttons keep their hitSlop (visual ≥ 28 pt + 16).
+- **Toast Undo** — the pill is unchanged inside a 44 pt-tall touch area; the toast pill is ≈ 54 pt tall with an action.
+- **Header `+` / `⋯`** — 44 pt circles (`HeaderAddButton`, `HeaderMenuButton`).
+- Heatmap cells stay 18 / 11 / 16 pt (see Deltas) — they are a data display, not controls.
+
+**Headings.** Every screen title, `SectionHeader`, sheet title (`SheetHeader`, Export, Quantity log) and the Detail habit name carry the `header` role. `SectionHeader` is one stop reading "Morning, 2 of 3" (title and count together, "2/3" spoken as a fraction). All screen titles are 24 pt / weight 500 (Settings was 600).
+
+**Toasts are announced.** The host speaks the message once per toast (`announceForAccessibility`, keyed by the toast's id, so a re-render never repeats it), only from the host actually showing it. With a screen reader running the toast stays 8 s instead of 4 s — long enough to hear it and find Undo, still short enough that a stale Undo disappears. The message is the visible text only. It is capped at two lines (full text kept for the screen reader).
+
+**Reduced motion.** One hook, `useReducedMotion` (`src/utils`), is the only place the OS setting is read. With it on: the sheet fades instead of sliding, a reordered row settles instantly, the swipe-to-archive row snaps open/closed (`ReduceMotion.Always`).
+
+**Long names and large text.** `ListItem` titles and subtitles wrap to two lines then end in "…" (the whole text stays in the accessibility label); a trailing value stays on one line, shrinks and is capped at 45 % of the row. Sheets and the nav menu scroll when large text outgrows them (the sheet also shrinks above the keyboard).
+
+**Contrast (WCAG AA, enforced by `src/theme/contrast.test.ts`).** Text ≥ 4.5:1, an unchecked control's outline ≥ 3:1. The token changes were: `faint` (light) `#6E6E6B` → `#6C6C69`; `warnInk` (light) `#9A6708` → `#966408`; `dangerBg` (dark) `#D9544D` → `#E56059`; and a new `outline` token for the outline of an unchecked Checkbox / Completion circle (`#898987` light, `#777778` dark) — hairline `border` stays ≈ 1.3:1 because it is decoration, not the control's boundary. The partial quantity pie keeps its `border` track.
+
+**Selection semantics.** Segmented control → `tab` in a `tablist`; weekday chip → `checkbox`; Stepper → the numeral is `adjustable` (swipe up/down to step within min–max) beside the −/+ buttons.
+
+**Keyboard.** Return on a field either moves on ("Next": Name → Unit for a Quantity habit) or puts the keyboard away ("Done"); it never saves a half-filled form. The New/Edit form drags the keyboard away on scroll, a tap on a chip or row lands on the first tap with the keyboard up (`keyboardShouldPersistTaps="handled"`, also in Retro log), and focusing Unit scrolls it into view. TextField errors have role `alert`.
+
+**Today's header `+`** (`HeaderAddButton`, audit A5-02): beside the `⋯` in every Today state — `card` fill, hairline `border`, an 18 pt `plus` in `ink`, label "Add habit". **Edit habit's Archive** is an `ActionCard` ("Archive habit — Hides it from Today and keeps every logged day. Restore it any time.") after the last section; one tap, same toast and Undo as Detail, not shown for an archived habit.
+
+**Copy rules.** Counts go through `pluralise` / `noun` / `formatCount` (`src/utils/format.ts`) — never `n === 1 ? …`. One term per concept: **"days logged"** for a habit's history, **"entries"** for an export, **"scheduled"/"done"** for rates. Toasts quote the habit name: `Marked 'X' complete`, `Marked 'X' not complete`, `Archived 'X'`, `Restored 'X' — back on Today`, `Logged 'X' · off-schedule`, `Used a freeze on 'X'`, `Removed the 21:00 reminder`. Date ranges use a spaced en dash ("3 Mar – 16 Sep", "14 – 20 September"); British spelling; reminder times stay 24-hour.
 
 ## Categories — colors and shapes
 

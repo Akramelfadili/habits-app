@@ -1,4 +1,4 @@
-import { startOfDay } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
 import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
@@ -43,22 +43,27 @@ export type HabitDetail = {
 
 /**
  * Everything Habit Detail (HAB-09) shows for one habit, or null when the id
- * doesn't resolve (deleted, or a stale link). Reads the same live, unbounded
+ * doesn't resolve (deleted, or a stale link), or undefined while loading. Reads the same live, unbounded
  * entry/freeze queries Today uses and narrows them here — history needs
  * everything since the habit was created anyway, so a per-habit query would
  * save nothing worth a second set of repository functions.
  */
-export function useHabitDetailQueries(habitId: number): HabitDetail | null {
-	const habits = useHabitsList();
+export function useHabitDetailQueries(
+	habitId: number,
+): HabitDetail | null | undefined {
+	const { habits, loaded } = useHabitsList();
+	const today = useToday();
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
 	const notes = useEntryNotes();
 	const reminders = useHabitReminders(habitId);
 
 	const habit = habits.find((candidate) => candidate.id === habitId);
+	// `undefined` while the habit list is still loading — so "not found" is
+	// never shown for a frame on a cold launch or deep link (audit A5-04).
+	if (!loaded) return undefined;
 	if (!habit) return null;
 
-	const today = startOfDay(new Date());
 	const entries = allEntries.filter((entry) => entry.habitId === habitId);
 	const frozenDates = new Set(
 		frozenDays

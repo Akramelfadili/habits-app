@@ -1,20 +1,23 @@
 import { asc, desc, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { db } from "@/lib/db/client";
 import {
+	type categories,
 	entries,
 	entryNotes,
 	frozenDays,
 	habits,
 	reminders,
 } from "@/lib/db/schema";
+import { rollbackQuietly } from "@/lib/db/transaction";
+import { useLiveRows } from "@/lib/db/use-live-rows";
 import type {
 	Category,
 	CreateHabitInput,
 	DayRange,
 	Frequency,
 	Habit,
+	HabitsResult,
 	IsoWeekday,
 	UpdateHabitInput,
 } from "../types";
@@ -25,6 +28,7 @@ import {
 } from "./category-rows";
 
 type HabitRow = typeof habits.$inferSelect;
+type CategoryRow = typeof categories.$inferSelect;
 
 function rowToFrequency(row: HabitRow): Frequency {
 	switch (row.frequencyType) {
@@ -116,28 +120,28 @@ async function toHabit(row: HabitRow): Promise<Habit> {
  * category's stale name/icon/color (HAB-25).
  */
 function useHabitsWithCategories(
-	query: Parameters<typeof useLiveQuery>[0],
-): Habit[] {
-	const habitsResult = useLiveQuery(query);
-	const categoriesResult = useLiveQuery(allCategoriesQuery());
+	query: Parameters<typeof useLiveRows>[0],
+): HabitsResult {
+	const habitsResult = useLiveRows<HabitRow>(query);
+	const categoriesResult = useLiveRows<CategoryRow>(allCategoriesQuery());
 	// The two queries resolve independently. Until both have, report what an
-	// unresolved live query always reports — nothing yet — rather than a
-	// partial list missing whichever habits' categories haven't arrived.
-	const isLoaded =
-		habitsResult.updatedAt !== undefined &&
-		categoriesResult.updatedAt !== undefined;
-	if (!isLoaded) return NOT_LOADED;
+	// unresolved live query always reports — nothing yet, not loaded — rather
+	// than a partial list missing whichever habits' categories haven't arrived.
+	if (!habitsResult.loaded || !categoriesResult.loaded) return NOT_LOADED;
 
 	const byId = new Map(
-		(categoriesResult.data ?? []).map((row) => [row.id, rowToCategory(row)]),
+		categoriesResult.data.map((row) => [row.id, rowToCategory(row)]),
 	);
-	return ((habitsResult.data ?? []) as HabitRow[]).map((row) =>
-		rowToHabit(row, resolveHabitCategory(row.categoryId, byId)),
-	);
+	return {
+		habits: habitsResult.data.map((row) =>
+			rowToHabit(row, resolveHabitCategory(row.categoryId, byId)),
+		),
+		loaded: true,
+	};
 }
 
 /** Stable empty result while loading, so consumers' memo deps don't churn. */
-const NOT_LOADED: Habit[] = [];
+const NOT_LOADED: HabitsResult = { habits: [], loaded: false };
 
 /** New habits go last in their category (HAB-13's manual order). */
 async function nextSortOrder(): Promise<number> {
@@ -208,7 +212,7 @@ export async function createHabitsAndMarkSetting(
 		await db.run(sql`commit`);
 		return created;
 	} catch (err) {
-		await db.run(sql`rollback`);
+		await rollbackQuietly();
 		throw err;
 	}
 }
@@ -239,14 +243,14 @@ export async function updateHabit(
  * that look one habit up by id (Habit Detail, Reminders), which must keep
  * working for an archived habit's history. Manual order (HAB-13).
  */
-export function useHabitsList(): Habit[] {
+export function useHabitsList(): HabitsResult {
 	return useHabitsWithCategories(
 		db.select().from(habits).orderBy(asc(habits.sortOrder), asc(habits.id)),
 	);
 }
 
 /** Live-query hook — habits not archived (Today, Weekly Summary, Manage), in manual order. */
-export function useActiveHabits(): Habit[] {
+export function useActiveHabits(): HabitsResult {
 	return useHabitsWithCategories(
 		db
 			.select()
@@ -257,7 +261,7 @@ export function useActiveHabits(): Habit[] {
 }
 
 /** Live-query hook — archived habits, most recently archived first (HAB-13). */
-export function useArchivedHabits(): Habit[] {
+export function useArchivedHabits(): HabitsResult {
 	return useHabitsWithCategories(
 		db
 			.select()
@@ -265,6 +269,15 @@ export function useArchivedHabits(): Habit[] {
 			.where(isNotNull(habits.archivedAt))
 			.orderBy(desc(habits.archivedAt), asc(habits.id)),
 	);
+}
+
+/** A one-off (non-reactive) read of every habit, archived included — the launch-time reminder reconcile. */
+export async function getAllHabits(): Promise<Habit[]> {
+	const rows = await db
+		.select()
+		.from(habits)
+		.orderBy(asc(habits.sortOrder), asc(habits.id));
+	return Promise.all(rows.map(toHabit));
 }
 
 /** A one-off (non-reactive) read — services need what's stored right now. */
@@ -302,7 +315,7 @@ export async function reorderHabits(orderedIds: number[]): Promise<void> {
 		}
 		await db.run(sql`commit`);
 	} catch (err) {
-		await db.run(sql`rollback`);
+		await rollbackQuietly();
 		throw err;
 	}
 }
@@ -355,7 +368,7 @@ export async function deleteHabitAndHistory(id: number): Promise<void> {
 		await db.delete(habits).where(eq(habits.id, id));
 		await db.run(sql`commit`);
 	} catch (err) {
-		await db.run(sql`rollback`);
+		await rollbackQuietly();
 		throw err;
 	}
 }

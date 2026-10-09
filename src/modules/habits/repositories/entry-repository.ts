@@ -1,8 +1,8 @@
 import { format } from "date-fns";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes } from "@/lib/db/schema";
+import { useLiveRows } from "@/lib/db/use-live-rows";
 import type { DayLog, Entry, EntryNote } from "../types";
 
 type EntryRow = typeof entries.$inferSelect;
@@ -28,7 +28,7 @@ function rowToEntryNote(row: EntryNoteRow): EntryNote {
 export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	const startDate = format(start, DATE_FORMAT);
 	const endDate = format(end, DATE_FORMAT);
-	const { data } = useLiveQuery(
+	const { data } = useLiveRows<EntryRow>(
 		db
 			.select()
 			.from(entries)
@@ -38,7 +38,7 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 		// render's range would be queried forever.
 		[startDate, endDate],
 	);
-	return (data ?? []).map(rowToEntry);
+	return data.map(rowToEntry);
 }
 
 /**
@@ -50,10 +50,10 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
  * and cheaper than getting a tight range right.
  */
 export function useAllEntries(): Entry[] {
-	const { data } = useLiveQuery(
+	const { data } = useLiveRows<EntryRow>(
 		db.select().from(entries).orderBy(asc(entries.date)),
 	);
-	return (data ?? []).map(rowToEntry);
+	return data.map(rowToEntry);
 }
 
 /**
@@ -114,10 +114,10 @@ export async function setHabitQuantityOn(
 
 /** Live-query hook — every habit's day notes (HAB-10). Same "small enough to fetch whole" reasoning as `useAllEntries`. */
 export function useEntryNotes(): EntryNote[] {
-	const { data } = useLiveQuery(
+	const { data } = useLiveRows<EntryNoteRow>(
 		db.select().from(entryNotes).orderBy(asc(entryNotes.date)),
 	);
-	return (data ?? []).map(rowToEntryNote);
+	return data.map(rowToEntryNote);
 }
 
 /**

@@ -308,6 +308,39 @@ describe.each([true, false])(
 	},
 );
 
+describe("integrity at HEAD (audit A7-04: foreign keys are off on the device)", () => {
+	const lastTag = prefixOf(tags[tags.length - 1]);
+
+	it.each([true, false])(
+		"a freshly migrated database passes foreign_key_check and integrity_check (foreign keys %s)",
+		(foreignKeys) => {
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb(lastTag, {
+				foreignKeys,
+			});
+			migrateRest();
+
+			expect(sqlite.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
+			expect(sqlite.prepare("PRAGMA integrity_check").all()).toEqual([
+				{ integrity_check: "ok" },
+			]);
+		},
+	);
+
+	it("foreign_key_check really reports an orphan when keys are off — the assertions above can fail", () => {
+		const { sqlite, migrateRest } = createPartiallyMigratedTestDb(lastTag, {
+			foreignKeys: false,
+		});
+		migrateRest();
+		sqlite
+			.prepare(
+				"INSERT INTO entries (habit_id, date, created_at) VALUES (9999, '2026-09-01', 0)",
+			)
+			.run();
+
+		expect(sqlite.prepare("PRAGMA foreign_key_check").all()).toHaveLength(1);
+	});
+});
+
 describe("a V1-era database (migration 0008) upgraded to HEAD", () => {
 	const fixture = fs.readFileSync(
 		path.join(__dirname, "__fixtures__/v1-era-0008.sql"),

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { SegmentedControl } from "./segmented-control";
 
 const options: [
@@ -25,10 +26,12 @@ describe("SegmentedControl", () => {
 			<SegmentedControl options={options} value="build" onChange={jest.fn()} />,
 		);
 		expect(
-			screen.getByText("Build").parent?.props.accessibilityState.selected,
+			screen.getByRole("tab", { name: "Build" }).props.accessibilityState
+				.selected,
 		).toBe(true);
 		expect(
-			screen.getByText("Break").parent?.props.accessibilityState.selected,
+			screen.getByRole("tab", { name: "Break" }).props.accessibilityState
+				.selected,
 		).toBe(false);
 	});
 
@@ -62,7 +65,35 @@ describe("SegmentedControl", () => {
 		);
 		await fireEvent.press(screen.getByText("Dark"));
 		expect(onChange).toHaveBeenCalledWith("dark");
-		expect(screen.getAllByRole("button")).toHaveLength(3);
+		expect(screen.getAllByRole("tab")).toHaveLength(3);
+	});
+});
+
+describe("SegmentedControl — accessibility and touch targets (A6-03, A6-05)", () => {
+	it("is a labelled tab list whose segments are tabs", async () => {
+		await render(
+			<SegmentedControl
+				options={options}
+				value="build"
+				onChange={jest.fn()}
+				label="Direction"
+			/>,
+		);
+		const group = screen.getByLabelText("Direction");
+		expect(group.props.accessibilityRole).toBe("tablist");
+		expect(screen.getAllByRole("tab")).toHaveLength(2);
+	});
+
+	it("gives every segment a 44pt-tall touch column that abuts its neighbour (no hitSlop to overlap)", async () => {
+		await render(
+			<SegmentedControl options={options} value="build" onChange={jest.fn()} />,
+		);
+		for (const tab of screen.getAllByRole("tab")) {
+			const style = StyleSheet.flatten(tab.props.style);
+			expect(style.minHeight).toBe(44);
+			expect(style.flex).toBe(1);
+			expect(tab.props.hitSlop).toBeUndefined();
+		}
 	});
 });
 
@@ -85,7 +116,8 @@ describe("SegmentedControl — one segment disabled (range switcher, HAB-16)", (
 		await fireEvent.press(screen.getByText("Year"));
 		expect(onChange).not.toHaveBeenCalled();
 		expect(
-			screen.getByText("Year").parent?.props.accessibilityState.disabled,
+			screen.getByRole("tab", { name: "Year" }).props.accessibilityState
+				.disabled,
 		).toBe(true);
 
 		await fireEvent.press(screen.getByText("Month"));

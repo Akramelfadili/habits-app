@@ -22,12 +22,14 @@ export type ManageHabitsView = {
 	groups: CategoryGroup[];
 	/** Most recently archived first. */
 	archived: ArchivedHabitRow[];
+	/** False until both lists have loaded — Manage shows a blank, not "No active habits" (audit A5-04). */
+	isLoaded: boolean;
 };
 
 /** Everything Manage & Archive (HAB-13) lists. */
 export function useManageHabitsQueries(): ManageHabitsView {
-	const active = useActiveHabits();
-	const archived = useArchivedHabits();
+	const { habits: active, loaded: activeLoaded } = useActiveHabits();
+	const { habits: archived, loaded: archivedLoaded } = useArchivedHabits();
 	const entries = useAllEntries();
 
 	const logCounts = new Map<number, number>();
@@ -37,6 +39,7 @@ export function useManageHabitsQueries(): ManageHabitsView {
 
 	const groups = groupHabitsByCategory(active);
 	return {
+		isLoaded: activeLoaded && archivedLoaded,
 		active: groups.flatMap((group) => group.habits),
 		groups,
 		archived: archived.map((habit) => ({

@@ -5,7 +5,6 @@ import { CategoryRow } from "@/components/ui/composite/category-row";
 import { Container } from "@/components/ui/composite/container";
 import { SectionHeader } from "@/components/ui/composite/section-header";
 import { CategoryChip } from "@/components/ui/primitives/category-chip";
-import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { AddCategorySheet } from "../components/add-category-sheet";
@@ -17,9 +16,6 @@ import { useCategoryActions } from "../hooks/use-category-actions";
 import { useManageCategoriesQueries } from "../hooks/use-manage-categories-queries";
 import type { Category } from "../types";
 import { BUILT_IN_TAG, habitCountLabel } from "./manage-categories-helpers";
-
-export const DELETE_FAILED_MESSAGE =
-	"Couldn't delete this category. Try again.";
 
 /**
  * Manage Categories (HAB-25, frames F3a–F3c): the ten built-ins first,
@@ -58,14 +54,10 @@ export function ManageCategoriesScreen() {
 
 	async function handleDelete() {
 		if (!deleting) return;
-		try {
-			await deleteCategory(deleting.category.id);
-		} catch {
-			// The sheet stays open, so retrying is one tap; nothing changed.
-			showToast({ message: DELETE_FAILED_MESSAGE });
-			return;
-		}
-		setDeletingId(null);
+		const result = await deleteCategory(deleting.category.id);
+		// On failure the sheet stays open (the hook has toasted it), so retrying
+		// is one tap; nothing changed.
+		if (result.ok) setDeletingId(null);
 	}
 
 	return (

@@ -37,6 +37,10 @@ Known web-only artifacts, not bugs: SF Symbols (`expo-symbols`) render nothing o
 
 These used to flicker (a popover 74 px lower, audit A10-10) because the popover's anchor was measured after it mounted, and the capture waited a fixed 400 ms. Fixed at the root: `TodayHeader` measures the ⋯ button *before* opening, so `NavMenu` mounts once at its final position, and `waitForMenuSettled` (`scripts/visual-check/screens.mjs`) polls until the popover sits 8 px under the button and has not moved for three frames — it throws, rather than capturing, if it never does. Use it for any new state that opens `NavMenu`. These baselines are ordinary baselines again: recapture them when the menu legitimately changes.
 
+### Failure states (audit B6)
+
+`?fixtures=migration-fails` (every attempt fails) and `?fixtures=migration-fails-once` (Retry recovers) make the web `DatabaseProvider` show the error screen; `?failWrites=1` makes every web fixture write fail (`write-failure-fixtures.ts`), which renders the error toast, the toast inside a sheet and the New habit error banner. The logger mirrors to `console.log`, so a handled failure never trips the harness's `console.error` check (or raises LogBox in development).
+
 ### Test naming
 
 A test mirrors its source file (`x.ts` + `x.test.ts`). A variant for one aspect adds a suffix: `x.web.test.ts`, `x.live.test.ts` (live-query behaviour), `x.<aspect>.test.ts` (e.g. `category-repository.migration.test.ts`). Tests that cross files, like `src/lib/db/migrations.safety.test.ts`, are named for what they guard.

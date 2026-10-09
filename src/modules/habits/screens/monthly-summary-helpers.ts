@@ -1,4 +1,5 @@
 import { addMonths, format, startOfMonth } from "date-fns";
+import { formatDateRange, formatDayMonth, pluralise } from "@/utils/format";
 import { FREEZE_POOL_SIZE } from "../constants";
 import type {
 	MonthlyInsight,
@@ -26,9 +27,9 @@ export function weekdayName(weekday: number): string {
 	return WEEKDAY_NAMES[weekday - 1];
 }
 
-/** "1 — 31 August". */
+/** "1 – 31 August". */
 export function monthRangeLabel({ start, end }: MonthWindow): string {
-	return `${format(start, "d")} — ${format(end, "d MMMM")}`;
+	return formatDateRange(start, end, { long: true });
 }
 
 export function percent(rate: number | null): string {
@@ -79,7 +80,7 @@ export function slippingHabitId(summary: MonthlySummary): number | null {
 
 /** "N insights" beside the section title. */
 export function insightCountLabel(count: number): string {
-	return count === 1 ? "1 insight" : `${count} insights`;
+	return pluralise(count, "insight");
 }
 
 function dayList(dates: Date[]): string {
@@ -153,20 +154,20 @@ export function patternCopy(
 /** The too-early card (C6). */
 export function unlockCopy(unlock: MonthUnlock) {
 	return {
-		title: `Monthly view unlocks on ${format(unlock.unlockDate, "d MMMM")}`,
-		body: `You've tracked for ${unlock.trackedDays} days. A month needs a full month — otherwise one rough week looks like a pattern.`,
+		title: `Monthly view unlocks on ${formatDayMonth(unlock.unlockDate)}`,
+		body: `You've tracked for ${pluralise(unlock.trackedDays, "day")}. A month needs a full month — otherwise one rough week looks like a pattern.`,
 		progress: unlock.trackedDays / MONTH_UNLOCK_DAYS,
 		progressLabel: `${unlock.trackedDays} of ${MONTH_UNLOCK_DAYS} days`,
 		remainingLabel: `${MONTH_UNLOCK_DAYS - unlock.trackedDays} to go`,
 	};
 }
 
-/** Today's menu row for this screen — "1 — 31 August · 80% done" (HAB-14). */
+/** Today's menu row for this screen — "1 – 31 August · 80% done" (HAB-14). */
 export function monthlyMenuSubline(summary: MonthlySummary): string {
 	return `${monthRangeLabel(summary.month)} · ${percent(summary.rate)} done`;
 }
 
 /** Why the menu row can't open yet — "Unlocks 4 October". */
 export function monthlyMenuLockedReason(unlock: MonthUnlock): string {
-	return `Unlocks ${format(unlock.unlockDate, "d MMMM")}`;
+	return `Unlocks ${formatDayMonth(unlock.unlockDate)}`;
 }

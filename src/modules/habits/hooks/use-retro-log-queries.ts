@@ -22,7 +22,7 @@ export function useRetroLogQueries(
 	habitId: number,
 	date: Date | null,
 ): RetroLogDay | null {
-	const allHabits = useHabitsList();
+	const { habits: allHabits } = useHabitsList();
 	const entries = useAllEntries();
 	const notes = useEntryNotes();
 

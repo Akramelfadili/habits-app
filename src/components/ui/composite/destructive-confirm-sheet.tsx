@@ -8,8 +8,11 @@ import {
 } from "react-native";
 import { Button } from "@/components/ui/primitives/button";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
+import { log } from "@/lib/logger/logger";
+import { showToast } from "@/store/toast-store";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { GENERIC_FAILURE_MESSAGE } from "@/utils/failure-message";
 import { ActionCard } from "./action-card";
 import { Sheet } from "./sheet";
 
@@ -92,9 +95,19 @@ export function DestructiveConfirmSheet({
 				release();
 				throw error;
 			}
-			// Failures are the caller's to surface (Detail toasts them, HAB-23);
-			// the latch only has to let go so the action can be retried.
-			Promise.resolve(result).then(release, release);
+			// Callers pass handlers wrapped in `run()`, which toasts its own failure
+			// and never rejects. A handler that rejects anyway still must not leave
+			// the sheet locked or fail silently: let go so a retry works, log it,
+			// and say something went wrong.
+			Promise.resolve(result).then(release, (error) => {
+				release();
+				log.warn(
+					"confirm-sheet",
+					"a handler rejected — wrap it in run()",
+					error,
+				);
+				showToast({ message: GENERIC_FAILURE_MESSAGE, tone: "error" });
+			});
 		};
 	}
 

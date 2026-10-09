@@ -1,12 +1,14 @@
 import { ensureNotificationPermission } from "@/lib/notifications/use-notification-permission";
+import { failureMessage, UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import {
 	addReminder,
 	editReminder,
 	removeReminder,
+	restoreReminder,
 	setEveningReview,
 } from "../services/reminder-service";
-import type { Habit, ReminderPatch } from "../types";
+import type { Habit, IsoWeekday, ReminderPatch } from "../types";
 
 /*
  * Anything that turns a notification *on* first makes sure the OS has been
@@ -14,9 +16,9 @@ import type { Habit, ReminderPatch } from "../types";
  * settings are kept, and the screen shows a persistent notice instead.
  */
 
-async function addTime(habit: Habit) {
+async function addTime(habit: Habit, onlyDays?: readonly IsoWeekday[]) {
 	await ensureNotificationPermission();
-	return addReminder(habit);
+	return addReminder(habit, onlyDays);
 }
 
 async function editTime(
@@ -35,15 +37,30 @@ export async function toggleEveningReview(enabled: boolean) {
 }
 
 export function useReminderActions() {
-	const add = useAsyncAction(addTime);
-	const edit = useAsyncAction(editTime);
-	const remove = useAsyncAction(removeReminder);
+	const add = useAsyncAction(addTime, {
+		scope: "reminders",
+		failure: failureMessage("add", "this reminder"),
+	});
+	const edit = useAsyncAction(editTime, {
+		scope: "reminders",
+		failure: failureMessage("update", "this reminder"),
+	});
+	const remove = useAsyncAction(removeReminder, {
+		scope: "reminders",
+		failure: failureMessage("remove", "this reminder"),
+	});
+
+	const restore = useAsyncAction(restoreReminder, {
+		scope: "reminders",
+		failure: UNDO_FAILED_MESSAGE,
+	});
 
 	return {
-		addReminder: add.execute,
+		addReminder: add.run,
 		isAdding: add.isLoading,
 		addError: add.error,
-		editReminder: edit.execute,
-		removeReminder: remove.execute,
+		editReminder: edit.run,
+		removeReminder: remove.run,
+		restoreReminder: restore.run,
 	};
 }

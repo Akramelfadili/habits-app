@@ -169,4 +169,31 @@ describe("AddCategorySheet", () => {
 		expect(onDismiss).toHaveBeenCalled();
 		expect(create).not.toHaveBeenCalled();
 	});
+
+	describe("Return key (A5-13)", () => {
+		it("adds the category when Return is pressed on a valid name", async () => {
+			const created = makeCategory({ id: 12, name: "Journaling" });
+			const create = jest.fn().mockResolvedValue(created);
+			const onCreated = jest.fn();
+			await render(<Harness create={create} onCreated={onCreated} />);
+
+			await fireEvent.changeText(nameField(), "Journaling");
+			expect(nameField().props.returnKeyType).toBe("done");
+			await fireEvent(nameField(), "submitEditing");
+
+			await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+			await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
+		});
+
+		it("does nothing but put the keyboard away when the name is empty or a duplicate", async () => {
+			const create = jest.fn();
+			await render(<Harness create={create} />);
+
+			await fireEvent(nameField(), "submitEditing");
+			await fireEvent.changeText(nameField(), "Music");
+			await fireEvent(nameField(), "submitEditing");
+
+			expect(create).not.toHaveBeenCalled();
+		});
+	});
 });

@@ -1,15 +1,27 @@
 import { setThemePreference } from "@/theme/theme-preference";
+import { failureMessage } from "@/utils/failure-message";
+import { useAsyncAction } from "@/utils/use-async-action";
 import { toggleEveningReview } from "./use-reminder-actions";
 
 /**
  * Settings' writes (HAB-15). Both go through the same functions the rest of
  * the app uses: the Evening review via `toggleEveningReview` (permission
  * prompt + schedule, identical to the Reminders screen's toggle), Appearance
- * via the theme store (applies instantly, persists after).
+ * via the theme store (applies instantly, persists after). Neither rejects —
+ * a failure is logged and toasted.
  */
 export function useSettingsActions() {
+	const appearance = useAsyncAction(setThemePreference, {
+		scope: "settings",
+		failure: failureMessage("save", "your Appearance choice"),
+	});
+	const eveningReview = useAsyncAction(toggleEveningReview, {
+		scope: "settings",
+		failure: failureMessage("update", "the Evening review"),
+	});
+
 	return {
-		setThemePreference,
-		setEveningReview: toggleEveningReview,
+		setThemePreference: appearance.run,
+		setEveningReview: eveningReview.run,
 	};
 }

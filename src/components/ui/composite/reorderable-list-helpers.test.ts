@@ -3,6 +3,7 @@ import {
 	groupBounds,
 	moveItem,
 	offsetBetween,
+	settleDuration,
 } from "./reorderable-list-helpers";
 
 const groups = ["Morning", "Morning", "Evening", "Training", "Training"];
@@ -52,5 +53,12 @@ describe("moveItem", () => {
 		expect(moveItem(items, 0, 2)).toEqual(["b", "c", "a"]);
 		expect(moveItem(items, 2, 0)).toEqual(["c", "a", "b"]);
 		expect(items).toEqual(["a", "b", "c"]);
+	});
+});
+
+describe("settleDuration", () => {
+	it("settles in 150 ms, and instantly with Reduce Motion on", () => {
+		expect(settleDuration(false)).toBe(150);
+		expect(settleDuration(true)).toBe(0);
 	});
 });

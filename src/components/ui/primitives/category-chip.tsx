@@ -134,16 +134,23 @@ export function CategoryChip({
 			accessibilityState={{ selected: isSelected }}
 			onPress={onPress}
 			style={({ pressed }) => [
-				chipStyle,
+				styles.touch,
 				pressed && { opacity: opacity.pressed },
 			]}
 		>
-			{content}
+			<View testID="category-chip-pill" style={chipStyle}>
+				{content}
+			</View>
 		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
+	// An interactive chip's touch area is 44pt tall around the 36pt pill.
+	touch: {
+		minHeight: 44,
+		justifyContent: "center",
+	},
 	chip: {
 		flexDirection: "row",
 		alignItems: "center",

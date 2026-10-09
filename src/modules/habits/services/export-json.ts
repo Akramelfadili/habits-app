@@ -1,11 +1,13 @@
 import { format } from "date-fns";
+import { getAppInfo } from "@/lib/diagnostics/app-info";
 import { describeFrequency } from "./export-csv";
 import type { ExportModel } from "./export-data";
 
 /**
  * The JSON layout of a data export (HAB-15): the same facts as the CSV, nested
  * the way they belong — each habit carries its own logs, notes and frozen
- * days. `version` lets a future importer tell layouts apart.
+ * days. `version` lets a future importer tell layouts apart; `app` and `schema`
+ * record the app build and database schema that wrote the file.
  */
 
 const EXPORT_JSON_VERSION = 1;
@@ -43,8 +45,17 @@ export async function toJson(
 		await onProgress(logsDone);
 	}
 
+	// `version` is the file layout; `app` and `schema` say which build and
+	// database wrote it — additive, so a layout-1 reader still works.
+	const { version, build, schemaVersion } = getAppInfo();
 	return JSON.stringify(
-		{ version: EXPORT_JSON_VERSION, exportedOn: model.exportedOn, habits },
+		{
+			version: EXPORT_JSON_VERSION,
+			app: { version, build },
+			schema: schemaVersion,
+			exportedOn: model.exportedOn,
+			habits,
+		},
 		null,
 		2,
 	);

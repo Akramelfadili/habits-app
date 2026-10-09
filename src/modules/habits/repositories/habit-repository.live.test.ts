@@ -88,7 +88,7 @@ describe("habit live hooks", () => {
 		const health = builtInCategory("Health");
 		await createHabit(makeHabitInput({ name: "Water", categoryId: health.id }));
 
-		const { result } = await renderHook(() => useActiveHabits());
+		const { result } = await renderHook(() => useActiveHabits().habits);
 		await waitFor(() =>
 			expect(result.current[0]?.category.name).toBe("Health"),
 		);
@@ -109,6 +109,12 @@ describe("habit live hooks", () => {
 			.where(eq(categories.id, health.id));
 	});
 
+	it("an empty database is loaded, not still loading", async () => {
+		const { result } = await renderHook(() => useActiveHabits());
+		await waitFor(() => expect(result.current.loaded).toBe(true));
+		expect(result.current.habits).toEqual([]);
+	});
+
 	it.each([
 		["habits before categories", "categories"],
 		["categories before habits", "habits"],
@@ -121,11 +127,12 @@ describe("habit live hooks", () => {
 
 			const { result } = await renderHook(() => useActiveHabits());
 			await flush();
-			expect(result.current).toEqual([]);
+			expect(result.current).toEqual({ habits: [], loaded: false });
 
 			await act(async () => release(late));
+			await waitFor(() => expect(result.current.loaded).toBe(true));
 			await waitFor(() =>
-				expect(result.current.map((habit) => habit.name)).toEqual([
+				expect(result.current.habits.map((habit) => habit.name)).toEqual([
 					"Water",
 					"Stretch",
 				]),
@@ -148,7 +155,7 @@ describe("habit live hooks", () => {
 		await mockDb.run(sql`PRAGMA foreign_keys = ON`);
 		await createHabit(makeHabitInput({ name: "Water" }));
 
-		const { result } = await renderHook(() => useActiveHabits());
+		const { result } = await renderHook(() => useActiveHabits().habits);
 		await waitFor(() => expect(result.current).toHaveLength(2));
 
 		const other = builtInCategory("Other");

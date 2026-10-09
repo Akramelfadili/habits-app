@@ -9,6 +9,7 @@ jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 const {
 	getFreezesUsedInMonth,
 	freezeHabitDay,
+	unfreezeHabitDay,
 }: typeof FrozenDayRepository = require("./frozen-day-repository");
 
 const DAY = new Date("2026-09-15T00:00:00Z");
@@ -38,6 +39,25 @@ describe("frozen-day-repository", () => {
 		expect(rows).toEqual([
 			expect.objectContaining({ habitId, date: "2026-09-15" }),
 		]);
+	});
+
+	it("unfreezing removes just that habit's frozen day, returning it to the pool", async () => {
+		const habitId = await seedHabit();
+		const otherId = await seedHabit();
+		await freezeHabitDay(habitId, DAY);
+		await freezeHabitDay(otherId, DAY);
+		expect(await getFreezesUsedInMonth(MONTH_START, MONTH_END)).toBe(2);
+
+		await unfreezeHabitDay(habitId, DAY);
+
+		const rows = await mockDb.select().from(frozenDays);
+		expect(rows).toEqual([expect.objectContaining({ habitId: otherId })]);
+		expect(await getFreezesUsedInMonth(MONTH_START, MONTH_END)).toBe(1);
+	});
+
+	it("unfreezing a day that isn't frozen is a no-op", async () => {
+		const habitId = await seedHabit();
+		await expect(unfreezeHabitDay(habitId, DAY)).resolves.not.toThrow();
 	});
 
 	it("freezing the same day twice is a no-op, not a duplicate row", async () => {

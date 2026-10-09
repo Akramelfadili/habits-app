@@ -19,7 +19,12 @@ function viewOf(
 	archived: ManageHabitsView["archived"] = [],
 ): ManageHabitsView {
 	const groups = groupHabitsByCategory(active);
-	return { active: groups.flatMap((g) => g.habits), groups, archived };
+	return {
+		active: groups.flatMap((g) => g.habits),
+		groups,
+		archived,
+		isLoaded: true,
+	};
 }
 
 let mockView: ManageHabitsView = viewOf([]);
@@ -29,11 +34,13 @@ jest.mock("../hooks/use-manage-habits-queries", () => ({
 const mockReorder = jest.fn();
 const mockArchive = jest.fn();
 const mockRestore = jest.fn();
+const mockUndoRestore = jest.fn();
 jest.mock("../hooks/use-manage-habits-actions", () => ({
 	useManageHabitsActions: () => ({
 		reorderHabits: mockReorder,
 		archiveHabit: mockArchive,
 		restoreHabit: mockRestore,
+		undoRestoreHabit: mockUndoRestore,
 		isRestoring: false,
 	}),
 }));
@@ -67,9 +74,10 @@ const coldShower = makeHabit({
 beforeEach(() => {
 	jest.clearAllMocks();
 	useToastStore.setState({ toast: null });
-	mockArchive.mockResolvedValue(undefined);
-	mockRestore.mockResolvedValue(undefined);
-	mockReorder.mockResolvedValue(undefined);
+	mockArchive.mockResolvedValue({ ok: true, value: undefined });
+	mockRestore.mockResolvedValue({ ok: true, value: undefined });
+	mockUndoRestore.mockReset().mockResolvedValue({ ok: true, value: undefined });
+	mockReorder.mockResolvedValue({ ok: true, value: undefined });
 	mockView = viewOf(
 		[water, meditate, read],
 		[{ habit: coldShower, logsKept: 41 }],
@@ -85,7 +93,7 @@ describe("ManageHabitsScreen", () => {
 		expect(screen.getByText("Evening · 5× a week")).toBeTruthy();
 		expect(screen.getAllByTestId("drag-handle")).toHaveLength(3);
 		expect(screen.getByText("Archived · 1")).toBeTruthy();
-		expect(screen.getByText("Archived 2 Sep · 41 logs kept")).toBeTruthy();
+		expect(screen.getByText("Archived 2 Sep · 41 days logged")).toBeTruthy();
 		expect(screen.getByText("Restore")).toBeTruthy();
 	});
 
@@ -132,6 +140,28 @@ describe("ManageHabitsScreen", () => {
 		expect(useToastStore.getState().toast?.message).toBe(
 			"Restored 'Cold shower' — back on Today",
 		);
+	});
+
+	it("Restore's toast has an Undo that re-archives it as it was (original date and pauses)", async () => {
+		await render(<ManageHabitsScreen />);
+		await fireEvent.press(screen.getByText("Restore"));
+
+		const toast = useToastStore.getState().toast;
+		expect(toast?.actionLabel).toBe("Undo");
+		toast?.onAction?.();
+
+		const { habit } = mockView.archived[0];
+		expect(mockUndoRestore).toHaveBeenCalledWith(6, {
+			archivedAt: habit.archivedAt,
+			pauses: habit.pauses,
+		});
+	});
+
+	it("a failed Restore shows no Undo", async () => {
+		mockRestore.mockResolvedValue({ ok: false });
+		await render(<ManageHabitsScreen />);
+		await fireEvent.press(screen.getByText("Restore"));
+		expect(useToastStore.getState().toast).toBeNull();
 	});
 
 	it("opens a habit's detail — including an archived one's history", async () => {
@@ -232,5 +262,24 @@ describe("ManageHabitsScreen", () => {
 	it("no longer carries the temporary Categories row — it lives in Settings (HAB-15)", async () => {
 		await render(<ManageHabitsScreen />);
 		expect(screen.queryByText("Categories")).toBeNull();
+	});
+});
+
+describe("loading and failed writes", () => {
+	it("renders a neutral blank — not the empty state — until the lists load (A5-04)", async () => {
+		mockView = { ...viewOf([]), isLoaded: false };
+		await render(<ManageHabitsScreen />);
+		expect(screen.getByTestId("screen-loading")).toBeTruthy();
+		expect(screen.queryByText("No active habits")).toBeNull();
+	});
+
+	it("a failed restore shows no 'back on Today' toast (the hook already toasted the error)", async () => {
+		useToastStore.setState({ toast: null });
+		mockRestore.mockResolvedValue({ ok: false, error: new Error("disk") });
+		await render(<ManageHabitsScreen />);
+
+		await fireEvent.press(screen.getByText("Restore"));
+
+		expect(useToastStore.getState().toast).toBeNull();
 	});
 });

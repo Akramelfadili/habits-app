@@ -38,10 +38,9 @@ jest.mock("../hooks/use-category-actions", () => ({
 	}),
 }));
 
-import {
-	DELETE_FAILED_MESSAGE,
-	ManageCategoriesScreen,
-} from "./manage-categories-screen";
+import { failureMessage } from "@/utils/failure-message";
+import { runSafely } from "@/utils/run-safely";
+import { ManageCategoriesScreen } from "./manage-categories-screen";
 
 function viewWith(
 	customs: ManageCategoriesView["customs"],
@@ -65,7 +64,7 @@ beforeEach(() => {
 	mockIsDeleting = false;
 	useToastStore.setState({ toast: null });
 	mockRename.mockResolvedValue(undefined);
-	mockDelete.mockResolvedValue(undefined);
+	mockDelete.mockResolvedValue({ ok: true, value: undefined });
 	mockView = viewWith(
 		[
 			{
@@ -165,8 +164,20 @@ describe("ManageCategoriesScreen (HAB-25)", () => {
 		await waitFor(() => expect(mockDelete).toHaveBeenCalledWith(11));
 	});
 
-	it("a failed delete keeps the sheet open and says so", async () => {
-		mockDelete.mockRejectedValue(new Error("disk full"));
+	it("a failed delete keeps the sheet open, says so, and a retry works", async () => {
+		useToastStore.setState({ toast: null });
+		// What the real hook's `run` does with a failing delete.
+		mockDelete.mockImplementationOnce(() =>
+			runSafely(
+				{
+					scope: "categories",
+					failure: failureMessage("delete", "this category"),
+				},
+				async () => {
+					throw new Error("disk full");
+				},
+			),
+		);
 		await render(<ManageCategoriesScreen />);
 		await fireEvent.press(
 			screen.getByRole("button", { name: "Delete Garden" }),
@@ -174,11 +185,18 @@ describe("ManageCategoriesScreen (HAB-25)", () => {
 		await fireEvent.press(screen.getByText("Delete category"));
 
 		await waitFor(() =>
-			expect(useToastStore.getState().toast?.message).toBe(
-				DELETE_FAILED_MESSAGE,
-			),
+			expect(useToastStore.getState().toast).toMatchObject({
+				message: "Couldn't delete this category. Try again.",
+				tone: "error",
+			}),
 		);
 		expect(screen.getByText("Delete “Garden”?")).toBeTruthy();
+
+		await fireEvent.press(screen.getByText("Delete category"));
+		await waitFor(() => expect(mockDelete).toHaveBeenCalledTimes(2));
+		await waitFor(() =>
+			expect(screen.queryByText("Delete “Garden”?")).toBeNull(),
+		);
 	});
 
 	it("Delete is inert while a delete is pending", async () => {

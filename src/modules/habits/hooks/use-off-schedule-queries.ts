@@ -1,4 +1,5 @@
-import { endOfWeek, startOfDay, startOfWeek } from "date-fns";
+import { endOfWeek, startOfWeek } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
 import { WEEK_STARTS_ON } from "../constants";
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
@@ -16,8 +17,8 @@ export function useOffScheduleQueries(): {
 	/** Today's bonus logs, for the rest-day list and the picker's "logged" rows. */
 	loggedToday: OffScheduleLog[];
 } {
-	const habits = useActiveHabits();
-	const today = startOfDay(new Date());
+	const { habits } = useActiveHabits();
+	const today = useToday();
 	const entries = useEntriesInRange(
 		startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON }),
 		endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON }),

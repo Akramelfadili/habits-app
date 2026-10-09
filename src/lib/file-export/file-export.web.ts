@@ -44,6 +44,12 @@ export async function saveFileToFolder(): Promise<boolean> {
 	return true;
 }
 
+export async function shareText(): Promise<void> {}
+
+export function isPickerCancellation(): boolean {
+	return false;
+}
+
 // Compile-time guard: this file must export exactly what the native adapter does.
 const _sameShape: typeof NativeFileExport = {
 	clearExports,
@@ -52,5 +58,7 @@ const _sameShape: typeof NativeFileExport = {
 	discardFile,
 	shareFile,
 	saveFileToFolder,
+	shareText,
+	isPickerCancellation,
 };
 void _sameShape;

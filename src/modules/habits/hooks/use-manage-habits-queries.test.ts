@@ -7,8 +7,8 @@ let mockArchived: Habit[] = [];
 let mockEntries: Entry[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useActiveHabits: () => mockActive,
-	useArchivedHabits: () => mockArchived,
+	useActiveHabits: () => ({ habits: mockActive, loaded: true }),
+	useArchivedHabits: () => ({ habits: mockArchived, loaded: true }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,

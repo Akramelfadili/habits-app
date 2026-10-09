@@ -1,4 +1,5 @@
-import { min, startOfDay } from "date-fns";
+import { min } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
@@ -19,6 +20,8 @@ import {
 } from "../services/yearly-summary";
 
 export type YearlySummaryView =
+	/** The habit list hasn't loaded yet (audit A5-04) — a blank, not the empty state. */
+	| { state: "loading" }
 	/** No habits at all — an empty state instead of zeroed tiles. */
 	| { state: "empty" }
 	/** Under three months of history (C7): the partial chart, progress, and the week to look at instead. */
@@ -40,8 +43,8 @@ export type YearlySummaryView =
  * Monday-aligned span (widened to the shown week, which can start last December).
  */
 export function useYearlySummaryQueries(): YearlySummaryView {
-	const today = startOfDay(new Date());
-	const habits = useHabitsList();
+	const today = useToday();
+	const { habits, loaded } = useHabitsList();
 	const frozenDays = useFrozenDays();
 	const year = yearWindowFor(today);
 	const week = summaryWeekWindow(today, defaultSummaryWeek(today));
@@ -49,6 +52,7 @@ export function useYearlySummaryQueries(): YearlySummaryView {
 	const entries = useEntriesInRange(min([range.start, week.start]), range.end);
 	const firstDay = historyStart(habits);
 
+	if (!loaded) return { state: "loading" };
 	if (!firstDay) return { state: "empty" };
 
 	const summary = buildYearlySummary({

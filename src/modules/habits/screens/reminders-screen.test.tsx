@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { TOAST_DURATION_MS } from "@/components/ui/composite/toast-host";
+import { useToastStore } from "@/store/toast-store";
 import { REMINDER_CAP_MESSAGE } from "../constants";
 import type {
 	ReminderScreenData,
@@ -33,7 +35,7 @@ jest.mock("@/components/ui/primitives/time-wheel", () => ({
 	TimeWheel: () => null,
 }));
 
-let mockData: ReminderScreenData | null = null;
+let mockData: ReminderScreenData | null | undefined = null;
 jest.mock("../hooks/use-reminder-queries", () => ({
 	useReminderQueries: () => mockData,
 }));
@@ -41,6 +43,7 @@ jest.mock("../hooks/use-reminder-queries", () => ({
 const mockAddReminder = jest.fn();
 const mockEditReminder = jest.fn();
 const mockRemoveReminder = jest.fn();
+const mockRestoreReminder = jest.fn();
 jest.mock("../hooks/use-reminder-actions", () => ({
 	useReminderActions: () => ({
 		addReminder: mockAddReminder,
@@ -48,6 +51,7 @@ jest.mock("../hooks/use-reminder-actions", () => ({
 		addError: null,
 		editReminder: mockEditReminder,
 		removeReminder: mockRemoveReminder,
+		restoreReminder: mockRestoreReminder,
 	}),
 }));
 
@@ -94,6 +98,7 @@ function data(overrides: Partial<ReminderScreenData> = {}): ReminderScreenData {
 describe("RemindersScreen", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		mockEditReminder.mockResolvedValue({ ok: true, value: undefined });
 		mockData = data();
 	});
 
@@ -162,15 +167,129 @@ describe("RemindersScreen", () => {
 		expect(mockEditReminder).toHaveBeenCalledWith(habit, 2, { enabled: false });
 	});
 
-	it("removes a time from its expanded card", async () => {
-		await render(<RemindersScreen habitId={1} />);
-		await fireEvent.press(screen.getByText("Remove"));
-		expect(mockRemoveReminder).toHaveBeenCalledWith(habit, 2);
+	describe("Remove with Undo (A5-06)", () => {
+		beforeEach(() => {
+			mockRemoveReminder.mockResolvedValue({ ok: true, value: undefined });
+			mockRestoreReminder.mockResolvedValue({ ok: true, value: undefined });
+			useToastStore.setState({ toast: null });
+		});
+
+		it("removes a time from its expanded card at once — no confirmation — and offers Undo", async () => {
+			await render(<RemindersScreen habitId={1} />);
+			await fireEvent.press(screen.getByText("Remove"));
+
+			expect(mockRemoveReminder).toHaveBeenCalledWith(habit, 2);
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Removed the 21:00 reminder");
+			expect(toast?.actionLabel).toBe("Undo");
+		});
+
+		it("Undo restores that same reminder (its id, time and days), not a new one", async () => {
+			await render(<RemindersScreen habitId={1} />);
+			await fireEvent.press(screen.getByText("Remove"));
+
+			await act(async () => useToastStore.getState().toast?.onAction?.());
+
+			expect(mockRestoreReminder).toHaveBeenCalledTimes(1);
+			expect(mockRestoreReminder).toHaveBeenCalledWith(
+				expect.objectContaining({
+					id: 2,
+					hour: 21,
+					minute: 0,
+					weekdays: [6, 7],
+				}),
+			);
+			expect(mockAddReminder).not.toHaveBeenCalled();
+		});
+
+		it("shows no Undo toast when the removal itself failed", async () => {
+			mockRemoveReminder.mockResolvedValue({ ok: false });
+			await render(<RemindersScreen habitId={1} />);
+			await fireEvent.press(screen.getByText("Remove"));
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
+		it("once the toast has expired there is nothing left to undo", async () => {
+			jest.useFakeTimers();
+			try {
+				const { ToastHost } = require("@/components/ui/composite/toast-host");
+				await render(
+					<>
+						<ToastHost />
+						<RemindersScreen habitId={1} />
+					</>,
+				);
+				await fireEvent.press(screen.getByText("Remove"));
+				expect(screen.getByText("Undo")).toBeTruthy();
+
+				await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS));
+
+				expect(screen.queryByText("Undo")).toBeNull();
+				expect(useToastStore.getState().toast).toBeNull();
+				expect(mockRestoreReminder).not.toHaveBeenCalled();
+			} finally {
+				jest.useRealTimers();
+			}
+		});
+	});
+
+	describe("?addTime=<day> (Monthly pattern action)", () => {
+		beforeEach(() => {
+			mockAddReminder.mockResolvedValue({
+				ok: true,
+				value: reminder(3, 9, [6]),
+			});
+		});
+
+		it("adds a time with just that day pre-selected and opens its time picker", async () => {
+			await render(<RemindersScreen habitId={1} addTime="6" />);
+			await act(async () => {});
+
+			expect(mockAddReminder).toHaveBeenCalledTimes(1);
+			expect(mockAddReminder).toHaveBeenCalledWith(habit, [6]);
+		});
+
+		it("does it once, however often the screen re-renders", async () => {
+			const { rerender } = await render(
+				<RemindersScreen habitId={1} addTime="6" />,
+			);
+			await rerender(<RemindersScreen habitId={1} addTime="6" />);
+			await act(async () => {});
+			expect(mockAddReminder).toHaveBeenCalledTimes(1);
+		});
+
+		it("ignores a bad day, and does nothing at the reminder cap", async () => {
+			await render(<RemindersScreen habitId={1} addTime="9" />);
+			await act(async () => {});
+			expect(mockAddReminder).not.toHaveBeenCalled();
+		});
+
+		it("does not add past the cap", async () => {
+			mockData = data({ atCap: true });
+			await render(<RemindersScreen habitId={1} addTime="6" />);
+			await act(async () => {});
+			expect(mockAddReminder).not.toHaveBeenCalled();
+		});
+
+		it("waits for the habit to load", async () => {
+			mockData = undefined;
+			const { rerender } = await render(
+				<RemindersScreen habitId={1} addTime="6" />,
+			);
+			expect(mockAddReminder).not.toHaveBeenCalled();
+			mockData = data();
+			await rerender(<RemindersScreen habitId={1} addTime="6" />);
+			await act(async () => {});
+			expect(mockAddReminder).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	it("adds a time, then opens its time picker", async () => {
 		// The live query would list the new reminder; here #1 stands in for it.
-		mockAddReminder.mockResolvedValue(reminder(1, 9, [1, 2, 3, 4, 5]));
+		mockAddReminder.mockResolvedValue({
+			ok: true,
+			value: reminder(1, 9, [1, 2, 3, 4, 5]),
+		});
 		await render(<RemindersScreen habitId={1} />);
 
 		expect(screen.queryByText("Save time")).toBeNull();
@@ -193,6 +312,41 @@ describe("RemindersScreen", () => {
 			hour: 21,
 			minute: 0,
 		});
+	});
+
+	it("a failed save keeps the time sheet open — the edit is not silently lost", async () => {
+		mockEditReminder.mockResolvedValueOnce({
+			ok: false,
+			error: new Error("x"),
+		});
+		await render(<RemindersScreen habitId={1} />);
+
+		await fireEvent.press(screen.getByText("Change time"));
+		await fireEvent.press(screen.getByText("Save time"));
+
+		expect(screen.getByText("Save time")).toBeTruthy();
+
+		await fireEvent.press(screen.getByText("Save time"));
+		expect(mockEditReminder).toHaveBeenCalledTimes(2);
+		expect(screen.queryByText("Save time")).toBeNull();
+	});
+
+	it("a failed add does not open the time picker", async () => {
+		mockAddReminder.mockResolvedValue({ ok: false, error: new Error("x") });
+		await render(<RemindersScreen habitId={1} />);
+
+		await fireEvent.press(
+			screen.getByRole("button", { name: "Add a time, 2 of 4" }),
+		);
+
+		expect(screen.queryByText("Save time")).toBeNull();
+	});
+
+	it("renders a neutral blank — not 'Habit not found' — while loading (A5-04)", async () => {
+		mockData = undefined;
+		await render(<RemindersScreen habitId={1} />);
+		expect(screen.getByTestId("screen-loading")).toBeTruthy();
+		expect(screen.queryByText("Habit not found")).toBeNull();
 	});
 
 	it("at 4 of 4, disables Add a time and explains the cap", async () => {

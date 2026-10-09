@@ -74,10 +74,10 @@ function yearlyRow(habits: readonly Habit[], today: Date): TodayMenuRow {
 export function useTodayMenuQueries(): TodayMenuView {
 	const weekly = useWeeklySummaryQueries(defaultSummaryWeek(new Date()));
 	const monthly = useMonthlySummaryQueries();
-	const activeCount = useActiveHabits().length;
-	const archivedCount = useArchivedHabits().length;
+	const activeCount = useActiveHabits().habits.length;
+	const archivedCount = useArchivedHabits().habits.length;
 	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
-	const habits = useHabitsList();
+	const { habits } = useHabitsList();
 	const hasHabits = weekly.hasHabits;
 
 	return {

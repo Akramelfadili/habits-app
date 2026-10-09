@@ -6,15 +6,38 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 ## Open — product decisions and unbuilt spec rules
 
-- **Monthly pattern insight should open Reminders with "Add a time" open and the day pre-selected** (HAB-16 rule, deferred; `?addTime=<day>`). The action currently opens the habit's Reminders screen with nothing pre-opened. `TODO(backlog)` in `monthly-summary-screen.tsx`. HAB-21's own rules were a removal only, so it was not built there either.
-- **Archive is not at the foot of Edit habit** (HAB-17 rule). The "never stuck" card links to Edit habit as it is and reads "Edit or archive <habit> →"; the form has no Archive action (archiving lives on Detail and Manage). Add Archive to the form or retarget the card. See `yearly-summary-screen.tsx`.
-- **Edit habit has no delete entry** (HAB-23). Mockup E7 is labelled "from Edit habit · delete", but the only way in is "Delete habit" on Habit Detail. HAB-23 was layout-only, so no entry was added. Decide whether Edit habit should get one.
-- **Monthly insights can still name or link an archived habit**, while Yearly insights exclude archived habits (HAB-17). Make Monthly consistent: compute its insights and their action targets from active habits only, keeping archived history in the tiles, calendar and rows.
+- **Edit habit has Archive but no Delete** (HAB-23). Mockup E7 is labelled "from Edit habit · delete", but the only way to delete is "Delete habit" on Habit Detail. Archive was added at the foot of Edit habit (audit B9; HAB-17's rule) and deliberately only Archive — Delete stays one step further away. Decide whether Edit habit should also get a Delete entry.
 - **Category order on Manage and Today** (HAB-19). Both use `groupHabitsByCategory` — categories in order of first appearance among habits in manual order, "Other" last — so they always agree. Ordering by the managed category order instead would be more predictable but must change on Today in the same release, otherwise "matches Today" in the Manage footnote stops being true.
 - **Manage keeps the pushed back button and the "Habits" title, with no "Done"** (HAB-19, mockups D3/E2/E3 show a modal-style "Done"). Revisit if Manage becomes a modal or a tab destination.
 - **C1 omits the Last week / This week switch** (HAB-16). The Weekly mockup shows only the Week / Month / Year switcher; the V1 compact switch is kept because HAB-16's rule is that the range switcher is the only change to Weekly. Decide whether C1 means it to go.
 - **Yearly shows only the current year.** No way to look at last year; January opens on a nearly empty "<year> so far". Consider defaulting to the last full year for the first weeks of January, as Monthly opens on the last complete month.
-- **Ghost "Add habit" button and dev buttons on Today** (`today-screen.tsx`). The mockup's populated Today has no add-habit affordance; the button stays as a fallback entry point. The dev buttons are gated on `__DEV__`; they need a "Developer" label, and the seed code should move out of production hooks (audit A1-06).
+- **Dev buttons on Today** (`today-screen.tsx`). The ghost "Add habit" link is gone (audit B9: a header `+` replaces it; the empty state keeps its primary button). The dev buttons are gated on `__DEV__`; they need a "Developer" label, and the seed code should move out of production hooks (audit A1-06).
+
+## Open — UX and accessibility follow-ups (audit B8/B9)
+
+- **Left out of B8/B9** (reasons in `docs/audits/audit.md` §21): A5-14 discard prompt (product call), A5-21 placeholder tabs (product call), A5-10 Back-label derivation (touches the stack layout), A6-04 Today row double stop and at-risk in the label, A6-07 time wheel label, A6-08 decorative icons, A6-11 heatmap-cell focus, A6-14 reorder handle actions, A6-15 sheet scrim/focus management. Un-doable without a device pass: A6-12's Dynamic Type sizes beyond the scroll fallbacks added.
+- **Undo is not offered for** reordering in Manage (the drag is its own reverse), the Retro-log Save (a deliberate sheet; reopen to change) and Delete habit / category (confirm-only by spec, HAB-13/25).
+- **Touch-target exceptions** (reviewer-flagged): the Checkbox's 44 pt box uses a −10 margin that reaches into its host row's padding (device-check on Android, where a child outside its parent's bounds may not receive touches); Stepper −/+ (6), compact/small Buttons (8), the reorder handle and `MovedSettingPointer` keep a hitSlop; none were adjacent-target regressions introduced here, but they are not yet 44 pt by footprint.
+- **`?addTime=<day>` adds the reminder on arrival** (with the OS permission prompt, like "Add a time"); dismissing the time picker leaves the default-time reminder, which can be removed with Undo. If the day isn't one the habit can fall on, the new reminder falls back to every schedulable day (untested edge).
+- **Archive on Edit habit discards unsaved form edits** without a prompt (A5-14, deferred). `restoreReminder` stamps a new `createdAt` (id, time, days and on/off are preserved).
+- **The partial quantity pie** on Today (a habit logged below target) keeps its `border`-toned track; only unchecked outlines moved to the 3:1 `outline` token. Revisit with the next Today visual pass.
+- **Date style:** full months (`d MMMM`) in sentences and headings, short months (`d MMM`) in subtitles and compact ranges; ranges always use a spaced en dash (`formatDateRange`). Weekday runs stay unspaced ("Mon–Fri"). Reminder times stay 24-hour while the native time wheel follows the device (device check).
+- **Spelling is British** ("colour", "summarise"); the `Color` words in code identifiers are untouched.
+
+## Open — reliability follow-ups (audit B6)
+
+- **Logs are in memory only** (A3-10). Owner decision: no log file. A crash or force-quit loses the buffer, so "Copy diagnostics" only helps for the current session. If it proves too thin: a capped file (about 200 KB, one rotation) via `expo-file-system`'s `File.write(…, { append: true })`.
+- **`expo-clipboard` is not installed yet.** "Copy diagnostics" falls back to sharing a `diagnostics.txt` file until it is: `npx expo install expo-clipboard`, then rebuild the dev client (native module).
+- **No `habits.db.bak` before migrating** (A7-08). The migrator is one atomic transaction, so a failed run leaves the old schema; Retry mainly helps with transient errors. A backup would only matter for a migration that succeeds with wrong data.
+- **No floating-promise lint** (A3-12): Biome needs type-aware linting for it. `DestructiveConfirmSheet` now logs a rejecting handler and shows the generic error toast, but callers should still go through `run()`.
+- **A database that cannot be opened at all still crashes before any UI.** `lib/db/client.ts` opens it at import; the failure is now logged, then rethrown. A lazy client would let the error screen show for that case too.
+- **A reminder that saved but failed to schedule is only logged.** `syncAfterWrite` keeps the add/edit successful (the row changed); the next launch's reconcile reschedules it. Consider a quiet "Reminders may not fire — open Reminders" notice.
+- **Orphan risks with foreign keys off** (A7-04; decision: keep them off, see `migrations.safety.test.ts` and `habit-repository.integrity.test.ts`). `deleteHabitAndHistory` and `deleteCategory` are covered and leave none. Still open: (1) dev-only `deleteAllHabits` leaves entries/notes/freezes/reminders behind; (2) a write for a habit that was deleted meanwhile (a stale Undo, a retro-log sheet left open) inserts a child row with no parent; (3) `deleteCategory` reads "Other" and moves habits across awaits (A7-03), so a `createHabit` landing in between can leave a habit on the deleted category (`resolveHabitCategory` falls back to Other when reading); (4) a stale `categoryId` in `createHabit`. A dev-build startup `PRAGMA foreign_key_check` would surface them.
+- **Reconcile only runs when permission is already granted at launch.** Granting it later in iOS Settings leaves drift until the next launch.
+- **Two overlapping `syncHabitReminders` for one habit can interleave** (rapid reminder edits): each treats the other's new set as "old". The last write wins in the database and the next launch reconciles, but serialising per habit would be cleaner.
+- **A second visible `Sheet` would mount a second top `ToastHost`** (two toasts); unlikely today, fix by rendering it only in the top-most sheet.
+- **Release promise-rejection tracking is untested on a device.** React Native only enables Hermes' tracker in development; `installGlobalHandlers` enables it in release with `HermesInternal.enablePromiseRejectionTracker`, which could not be run here.
+- **Still in B9:** Undo for Manage restore / freeze / reminder remove (A5-06), toast wording drift (A5-07), `numberOfLines` on toasts (A5-08), the New/Edit habit "Loading…" text for a deleted habit's edit link.
 
 ## Open — polish and small gaps
 
@@ -55,7 +78,7 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 - Clauses that can't be derived are dropped ("…through two schedule changes", "Travel weeks show up as gaps"). The seasonal card is titled "Summer dip" only when every month is June–August, otherwise "Seasonal dip".
 - Unlock progress is "12 of 91 days" / "from 4 December" (real calendar span); C7 shows 90 / 3 December.
 - Chart bars are scaled to 100% (96px = every habit done); the mockup scales to the tallest month. Strip cells use the three heatmap levels (under 50%, 50–84%, 85%+).
-- Early-year, empty ("Nothing to summarize yet"), "Perfect year so far" and "Nothing stands out" cards have no mockup.
+- Early-year, empty ("Nothing to summarise yet"), "Perfect year so far" and "Nothing stands out" cards have no mockup.
 - "Logged" counts completed scheduled days, not off-schedule logs.
 - Fixture numbers differ from C4's tiles (948 / 80% vs 1,612 / 81%): the fixture is tuned to C5's insights.
 - Insights come from active habits only; tiles, chart and strips keep archived history, so "Best: <month>" can differ from the best-month card.
@@ -67,7 +90,7 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 - `OffScheduleRow` opens Habit Detail on tap; its trailing check is not a toggle. Removing a bonus log is the toast's Undo, or Detail / retro log.
 
 ### HAB-19 — Manage
-- Archived-row subtitle reads "Archived 2 Sep · no logs" (shortened from "nothing logged"); "N logs kept" follows the mockup.
+- Archived-row subtitle reads "Archived 2 Sep · 41 days logged" / "· nothing logged" — "days logged" replaced the mockup's "N logs kept" (audit B9, A5-17: one per-habit term).
 
 ### HAB-20 — Detail
 - D5 "41 of 55 due" reads "N of M days" (UX audit #9 retired "due").

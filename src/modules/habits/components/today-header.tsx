@@ -1,7 +1,10 @@
 import { format } from "date-fns";
 import { useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { HeaderMenuButton } from "@/components/ui/primitives/header-menu-button";
+import {
+	HeaderAddButton,
+	HeaderMenuButton,
+} from "@/components/ui/primitives/header-menu-button";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -10,15 +13,18 @@ type TodayHeaderProps = {
 	today: Date;
 	menuOpen: boolean;
 	onToggleMenu: () => void;
+	/** Opens New habit — the `+` beside the menu button. */
+	onAddHabit: () => void;
 	/** The button's bottom edge in window space, reported on press for placing the popover. */
 	onAnchorMeasured: (anchorBottom: number) => void;
 };
 
-/** Date eyebrow + "Today" title with the `⋯` menu button — identical in all four Today states (HAB-14). */
+/** Date eyebrow + "Today" title with the `+` and `⋯` buttons — identical in all four Today states (HAB-14). */
 export function TodayHeader({
 	today,
 	menuOpen,
 	onToggleMenu,
+	onAddHabit,
 	onAnchorMeasured,
 }: TodayHeaderProps) {
 	const { colors } = useTheme();
@@ -45,8 +51,23 @@ export function TodayHeader({
 		<View style={styles.header}>
 			<SectionLabel>{format(today, "EEEE, d MMMM")}</SectionLabel>
 			<View style={styles.titleRow}>
-				<Text style={[styles.title, { color: colors.ink }]}>Today</Text>
-				<HeaderMenuButton ref={button} open={menuOpen} onPress={handlePress} />
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					Today
+				</Text>
+				<View style={styles.buttons}>
+					<HeaderAddButton
+						accessibilityLabel="Add habit"
+						onPress={onAddHabit}
+					/>
+					<HeaderMenuButton
+						ref={button}
+						open={menuOpen}
+						onPress={handlePress}
+					/>
+				</View>
 			</View>
 		</View>
 	);
@@ -60,6 +81,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
+	},
+	buttons: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
 	},
 	title: {
 		fontSize: typeScale.screenTitle,

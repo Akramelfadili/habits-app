@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { formatDayMonthShort, pluralise } from "@/utils/format";
 import type { Habit } from "../types";
 import { frequencyLabel } from "./habit-detail-helpers";
 
@@ -8,18 +8,16 @@ export function manageRowSubtitle(habit: Habit): string {
 }
 
 /**
- * "Archived 2 Sep · 41 logs kept" ("no logs" for a habit with no
- * history) — the mockups' wording (HAB-19).
+ * "Archived 2 Sep · 41 days logged" ("nothing logged" for a habit with no
+ * history) — "days logged" is the one per-habit term (audit A5-17).
  */
 export function archivedRowSubtitle(
 	archivedAt: Date,
 	logsKept: number,
 ): string {
 	const logs =
-		logsKept === 0
-			? "no logs"
-			: `${logsKept} ${logsKept === 1 ? "log" : "logs"} kept`;
-	return `Archived ${format(archivedAt, "d MMM")} · ${logs}`;
+		logsKept === 0 ? "nothing logged" : `${pluralise(logsKept, "day")} logged`;
+	return `Archived ${formatDayMonthShort(archivedAt)} · ${logs}`;
 }
 
 /** "Archived · 2". */
@@ -46,4 +44,4 @@ export function noActiveMessage(archivedCount: number): string {
 }
 
 export const NOTHING_ARCHIVED_MESSAGE =
-	"Archive a habit from Edit habit to hide it from Today and keep its history.";
+	"Archive a habit from Edit habit, or swipe it left above, to hide it from Today and keep its history.";

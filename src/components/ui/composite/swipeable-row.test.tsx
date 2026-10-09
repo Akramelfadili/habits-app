@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
-import { SwipeableRow } from "./swipeable-row";
+import { ReduceMotion } from "react-native-reanimated";
+import { SwipeableRow, swipeAnimationOptions } from "./swipeable-row";
 
 describe("SwipeableRow", () => {
 	it("renders its row and runs the revealed action", async () => {
@@ -14,5 +15,14 @@ describe("SwipeableRow", () => {
 		expect(screen.getByText("Meditate")).toBeTruthy();
 		await fireEvent.press(screen.getByText("Archive"));
 		expect(onAction).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("swipeAnimationOptions", () => {
+	it("leaves the spring alone, and snaps it with Reduce Motion on", () => {
+		expect(swipeAnimationOptions(false)).toBeUndefined();
+		expect(swipeAnimationOptions(true)).toEqual({
+			reduceMotion: ReduceMotion.Always,
+		});
 	});
 });

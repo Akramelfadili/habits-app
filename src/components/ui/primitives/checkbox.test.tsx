@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { surfaceColors } from "@/theme/theme";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -48,5 +50,40 @@ describe("Checkbox", () => {
 		expect(
 			screen.getByLabelText("Glass of water").props.accessibilityState.checked,
 		).toBe(false);
+	});
+
+	it("has a 44pt touch box around its 24pt circle — a layout-neutral margin, not a hitSlop that could steal a neighbour's taps", async () => {
+		await render(
+			<Checkbox
+				checked={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Read"
+			/>,
+		);
+		const box = screen.getByLabelText("Read");
+		expect(StyleSheet.flatten(box.props.style)).toMatchObject({
+			width: 44,
+			height: 44,
+			margin: -10,
+		});
+		expect(box.props.hitSlop).toBeUndefined();
+	});
+
+	it("draws its unchecked outline in the 3:1 outline token, not the hairline border", async () => {
+		await render(
+			<Checkbox
+				checked={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Read"
+			/>,
+		);
+		const [circle] = screen.getByLabelText("Read").children;
+		expect(
+			StyleSheet.flatten(
+				(circle as unknown as { props: { style: object } }).props.style,
+			),
+		).toMatchObject({
+			borderColor: surfaceColors.light.outline,
+		});
 	});
 });

@@ -13,10 +13,12 @@ describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 	it("marks the screen being shown", async () => {
 		await render(<RangeSwitcher value="month" />);
 		expect(
-			screen.getByText("Month").parent?.props.accessibilityState.selected,
+			screen.getByText("Month").parent?.parent?.props.accessibilityState
+				.selected,
 		).toBe(true);
 		expect(
-			screen.getByText("Week").parent?.props.accessibilityState.selected,
+			screen.getByText("Week").parent?.parent?.props.accessibilityState
+				.selected,
 		).toBe(false);
 	});
 
@@ -50,7 +52,8 @@ describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 
 	it("enables Year and marks it when Yearly is shown", async () => {
 		await render(<RangeSwitcher value="year" />);
-		const year = screen.getByText("Year").parent?.props.accessibilityState;
+		const year =
+			screen.getByText("Year").parent?.parent?.props.accessibilityState;
 		expect(year.selected).toBe(true);
 		expect(year.disabled).toBeFalsy();
 		await fireEvent.press(screen.getByText("Month"));

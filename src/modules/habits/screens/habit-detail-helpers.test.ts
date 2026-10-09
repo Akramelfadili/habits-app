@@ -113,7 +113,7 @@ describe("entry labels", () => {
 
 describe("heatmapRangeLabel", () => {
 	it("spans first to last month, or collapses to one", () => {
-		expect(heatmapRangeLabel(new Date(2026, 6, 20), today)).toBe("Jul — Sep");
+		expect(heatmapRangeLabel(new Date(2026, 6, 20), today)).toBe("Jul – Sep");
 		expect(heatmapRangeLabel(new Date(2026, 8, 1), today)).toBe("Sep");
 	});
 });
@@ -135,15 +135,19 @@ describe("archive and restore copy (HAB-20)", () => {
 			"Archived on 2 September",
 		);
 		expect(archivedBannerDetail(41)).toBe(
-			"Hidden from Today. All 41 logs kept.",
+			"Hidden from Today. All 41 days logged are kept.",
 		);
-		expect(archivedBannerDetail(1)).toBe("Hidden from Today. All 1 log kept.");
-		expect(archivedBannerDetail(0)).toBe("Hidden from Today. No logs yet.");
+		expect(archivedBannerDetail(1)).toBe(
+			"Hidden from Today. Its 1 day logged is kept.",
+		);
+		expect(archivedBannerDetail(0)).toBe(
+			"Hidden from Today. Nothing logged yet.",
+		);
 	});
 
 	it("names the habit in the restore toast", () => {
 		expect(restoredToastMessage("Cold shower")).toBe(
-			"Cold shower is back on Today",
+			"Restored 'Cold shower' — back on Today",
 		);
 	});
 
@@ -186,20 +190,20 @@ describe("archive and restore copy (HAB-20)", () => {
 	it("marks where the heatmap's history ended or paused", () => {
 		const first = new Date(2026, 6, 20);
 		const today = new Date(2026, 8, 23);
-		expect(heatmapRangeLabelFor(makeHabit(), first, today)).toBe("Jul — Sep");
+		expect(heatmapRangeLabelFor(makeHabit(), first, today)).toBe("Jul – Sep");
 		expect(heatmapRangeLabelFor(archived, first, today)).toBe(
-			"Jul — Sep · ended 2 Sep",
+			"Jul – Sep · ended 2 Sep",
 		);
 		const restored = makeHabit({
 			pauses: [{ from: "2026-09-02", to: "2026-09-14" }],
 		});
 		expect(heatmapRangeLabelFor(restored, first, today)).toBe(
-			"Jul — Sep · paused 2 – 15 Sep",
+			"Jul – Sep · paused 2 – 15 Sep",
 		);
 		const old = makeHabit({
 			pauses: [{ from: "2026-01-02", to: "2026-01-14" }],
 		});
-		expect(heatmapRangeLabelFor(old, first, today)).toBe("Jul — Sep");
+		expect(heatmapRangeLabelFor(old, first, today)).toBe("Jul – Sep");
 	});
 
 	it("carries the live freeze count in the legend, and no count once archived (VAR-09)", () => {

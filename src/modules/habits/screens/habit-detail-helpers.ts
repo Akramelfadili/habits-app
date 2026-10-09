@@ -1,4 +1,13 @@
 import { addDays, format, isSameDay, parseISO, subDays } from "date-fns";
+import {
+	formatCount,
+	formatDateRange,
+	formatDayMonth,
+	formatDayMonthShort,
+	noun,
+	pluralise,
+	RANGE_DASH,
+} from "@/utils/format";
 import { WEEKDAYS } from "../constants";
 import type { CompletionRate, LongestStreak } from "../services/habit-history";
 import type { Entry, Frequency, Habit, IsoWeekday } from "../types";
@@ -12,10 +21,6 @@ const SHORT_DAY: Record<IsoWeekday, string> = {
 	6: "Sat",
 	7: "Sun",
 };
-
-/** Archive or delete failed — shown while the confirmation stays open, so retrying is one tap. */
-export const ARCHIVE_FAILED_MESSAGE = "Couldn't archive. Try again.";
-export const DELETE_FAILED_MESSAGE = "Couldn't delete. Try again.";
 
 /** "daily", "Mon–Fri", "Mon, Wed, Fri", "3× a week" — the cadence in Habit Detail's subtitle. */
 export function frequencyLabel(frequency: Frequency): string {
@@ -51,7 +56,7 @@ export function habitSubtitle(habit: Habit, today: Date): string {
 /** "days, in June" — or "no streak yet" before the first one. */
 export function longestStreakCaption(longest: LongestStreak): string {
 	if (longest.days === 0 || !longest.endedOn) return "no streak yet";
-	const unit = longest.days === 1 ? "day" : "days";
+	const unit = noun(longest.days, "day");
 	// Short month: "days, in September" overflows the third-width stat tile.
 	return `${unit}, in ${format(longest.endedOn, "MMM")}`;
 }
@@ -72,7 +77,7 @@ export function completionRateCaption(rate: CompletionRate): string {
 	// Restored (E1): the tile says what it left out; the third-width tile
 	// truncates it to "paused days…" and the accessibility label reads it whole.
 	if (rate.skippedPaused) return "paused days skipped";
-	return `${rate.completed} of ${rate.scheduled} days`;
+	return `${rate.completed} of ${pluralise(rate.scheduled, "day")}`;
 }
 
 /** "Today", "Yesterday", else "Mon 21 Sep". */
@@ -96,28 +101,28 @@ export function notLoggedLabel(habit: Habit): string {
 	return habit.direction === "break" ? "Not resisted" : "Not logged";
 }
 
-/** "Jul — Sep" across the heatmap's span, or a single month when it fits in one. */
+/** "Jul – Sep" across the heatmap's span, or a single month when it fits in one. */
 export function heatmapRangeLabel(firstDay: Date, today: Date): string {
 	const start = format(firstDay, "MMM");
 	const end = format(today, "MMM");
-	return start === end ? end : `${start} — ${end}`;
+	return start === end ? end : `${start}${RANGE_DASH}${end}`;
 }
 
 /** "Archived on 2 September". */
 export function archivedBannerTitle(archivedAt: Date): string {
-	return `Archived on ${format(archivedAt, "d MMMM")}`;
+	return `Archived on ${formatDayMonth(archivedAt)}`;
 }
 
-/** "Hidden from Today. All 41 logs kept." */
+/** "Hidden from Today. All 41 days logged are kept." */
 export function archivedBannerDetail(loggedDays: number): string {
-	if (loggedDays === 0) return "Hidden from Today. No logs yet.";
-	const logs = loggedDays === 1 ? "1 log" : `${loggedDays} logs`;
-	return `Hidden from Today. All ${logs} kept.`;
+	if (loggedDays === 0) return "Hidden from Today. Nothing logged yet.";
+	if (loggedDays === 1) return "Hidden from Today. Its 1 day logged is kept.";
+	return `Hidden from Today. All ${formatCount(loggedDays)} days logged are kept.`;
 }
 
 /** The toast after an instant Restore (HAB-20 / E1). */
 export function restoredToastMessage(habitName: string): string {
-	return `${habitName} is back on Today`;
+	return `Restored '${habitName}' — back on Today`;
 }
 
 /** The Current tile while archived (D5): no number — the streak is paused, not zero. */
@@ -146,13 +151,11 @@ export function completionRateLabel(habit: Habit): string {
 
 /** "2 – 15 Sep" / "28 Aug – 3 Sep" — the span between the archive day and the restore day. */
 function daySpanLabel(from: Date, to: Date): string {
-	return format(from, "MMM") === format(to, "MMM")
-		? `${format(from, "d")} – ${format(to, "d MMM")}`
-		: `${format(from, "d MMM")} – ${format(to, "d MMM")}`;
+	return formatDateRange(from, to);
 }
 
 /**
- * The Detail heatmap's range line (HAB-20): the plain "Jul — Sep", then
+ * The Detail heatmap's range line (HAB-20): the plain "Jul – Sep", then
  * "· ended 2 Sep" while archived (D5), or "· paused 2 – 15 Sep" for the most
  * recent past archive period that overlaps the grid (E1).
  */
@@ -163,7 +166,7 @@ export function heatmapRangeLabelFor(
 ): string {
 	const base = heatmapRangeLabel(firstDay, today);
 	if (habit.archivedAt)
-		return `${base} · ended ${format(habit.archivedAt, "d MMM")}`;
+		return `${base} · ended ${formatDayMonthShort(habit.archivedAt)}`;
 	const recent = [...habit.pauses]
 		.reverse()
 		.find((pause) => parseISO(pause.to) >= firstDay);
@@ -183,10 +186,10 @@ export function legendFrozenLabel(
 	freezesLeft: number,
 ): string | undefined {
 	if (habit.archivedAt) return undefined;
-	return `${freezesLeft} ${freezesLeft === 1 ? "freeze" : "freezes"} left`;
+	return `${pluralise(freezesLeft, "freeze")} left`;
 }
 
 /** D6's passive line — shown only in the month a streak reset with the pool empty. */
 export function streakResetNote(poolRefillsOn: Date): string {
-	return `Streak reset — no freezes left this month. Pool refills on ${format(poolRefillsOn, "d MMMM")}.`;
+	return `Streak reset — no freezes left this month. Pool refills on ${formatDayMonth(poolRefillsOn)}.`;
 }

@@ -1,5 +1,12 @@
 import { format, isSameYear, max } from "date-fns";
 import type { HeatmapCellState } from "@/components/ui/composite/heatmap-cell";
+import {
+	formatCount,
+	formatDateRange,
+	formatDayMonth,
+	noun,
+	pluralise,
+} from "@/utils/format";
 import type { YearlyInsight } from "../services/yearly-insights";
 import type {
 	YearlyHabitRow,
@@ -27,19 +34,14 @@ export const MONTH_INITIALS = [
 
 const monthName = (cell: YearMonthCell) => format(cell.month, "MMMM");
 
-/** 1612 → "1,612" — independent of the device's locale data. */
-export function thousands(value: number): string {
-	return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-/** "3 March — 16 September" — from the first day (or 1 Jan, if history is older) to today. */
+/** "3 March – 16 September" — from the first day (or 1 Jan, if history is older) to today. */
 export function yearRangeLabel(
 	summary: YearlySummary,
 	firstDay: Date,
 	today: Date,
 ): string {
 	const from = max([firstDay, summary.year.start]);
-	return `${format(from, "d MMMM")} — ${format(today, "d MMMM")}`;
+	return formatDateRange(from, today, { long: true });
 }
 
 export function yearTitle(summary: YearlySummary): string {
@@ -50,12 +52,12 @@ export function yearTitle(summary: YearlySummary): string {
 export function yearlyTiles(summary: YearlySummary) {
 	const { longest } = summary;
 	return {
-		logged: { value: thousands(summary.logged), caption: "entries" },
+		logged: { value: formatCount(summary.logged), caption: "entries" },
 		overall: { value: percent(summary.rate), caption: "of scheduled" },
 		longest: {
 			value: String(longest.days),
 			caption: longest.endedOn
-				? `${longest.days === 1 ? "day" : "days"} · ${format(longest.endedOn, "MMMM")}`
+				? `${noun(longest.days, "day")} · ${format(longest.endedOn, "MMMM")}`
 				: "days",
 		},
 	};
@@ -136,7 +138,7 @@ export function bestMonthCopy(
 export function stuckCopy(insight: Extract<YearlyInsight, { type: "stuck" }>) {
 	return {
 		title: `${insight.row.habit.name} stuck`,
-		body: `${capitalize(word(insight.months))} months in a row above 85%. It isn't effort any more.`,
+		body: `${capitalize(word(insight.months))} ${noun(insight.months, "month")} in a row above 85%. It isn't effort any more.`,
 	};
 }
 
@@ -146,7 +148,7 @@ export function neverStuckCopy(
 	const { row, underMonths, judgedMonths } = insight;
 	return {
 		title: `${row.habit.name} never stuck`,
-		body: `Under 50% in ${word(underMonths)} of ${word(judgedMonths)} months. Worth changing what it is — or archiving it.`,
+		body: `Under 50% in ${word(underMonths)} of ${word(judgedMonths)} ${noun(judgedMonths, "month")}. Worth changing what it is — or archiving it.`,
 		actionLabel: `Edit or archive ${row.habit.name} →`,
 	};
 }
@@ -169,7 +171,7 @@ export function earlyCopy(summary: YearlySummary, today: Date) {
 	const days = Math.max(1, Number(format(today, "d")));
 	return {
 		title: "Too early in the year to call",
-		body: `${format(summary.year.start, "yyyy")} is ${days === 1 ? "a day" : `${days} days`} old. Insights appear once a month has finished.`,
+		body: `${format(summary.year.start, "yyyy")} is ${days === 1 ? "a day" : pluralise(days, "day")} old. Insights appear once a month has finished.`,
 	};
 }
 
@@ -181,10 +183,10 @@ function capitalize(text: string): string {
 export function unlockCopy(unlock: YearUnlock) {
 	return {
 		title: "Year trends start after 3 months",
-		body: `You're ${unlock.trackedDays} days in. The chart fills as each month completes; the first yearly insights arrive in ${format(unlock.unlockDate, "MMMM")}.`,
+		body: `You're ${pluralise(unlock.trackedDays, "day")} in. The chart fills as each month completes; the first yearly insights arrive in ${format(unlock.unlockDate, "MMMM")}.`,
 		progress: unlock.trackedDays / unlock.totalDays,
 		progressLabel: `${unlock.trackedDays} of ${unlock.totalDays} days`,
-		remainingLabel: `from ${format(unlock.unlockDate, "d MMMM")}`,
+		remainingLabel: `from ${formatDayMonth(unlock.unlockDate)}`,
 	};
 }
 
@@ -192,11 +194,11 @@ export function unlockCopy(unlock: YearUnlock) {
 export function yearlyMenuSubline(firstDay: Date, today: Date): string {
 	const base = `${format(today, "yyyy")} so far`;
 	return isSameYear(firstDay, today)
-		? `${base} · since ${format(firstDay, "d MMMM")}`
+		? `${base} · since ${formatDayMonth(firstDay)}`
 		: base;
 }
 
 /** Why the menu row can't open yet — "Unlocks 4 December". */
 export function yearlyMenuLockedReason(unlock: YearUnlock): string {
-	return `Unlocks ${format(unlock.unlockDate, "d MMMM")}`;
+	return `Unlocks ${formatDayMonth(unlock.unlockDate)}`;
 }

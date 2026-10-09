@@ -142,10 +142,13 @@ const styles = StyleSheet.create({
 		paddingVertical: 6,
 		paddingHorizontal: 14,
 	},
+	// Text actions are 44pt tall (touch target), not padded out with a hitSlop
+	// — stacked under a CTA or beside another link, a slop would overlap them.
 	link: {
 		backgroundColor: "transparent",
 		paddingVertical: 4,
 		paddingHorizontal: 0,
+		minHeight: 44,
 	},
 	inline: {
 		alignSelf: "flex-start",

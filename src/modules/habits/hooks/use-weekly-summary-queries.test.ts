@@ -10,12 +10,13 @@ function entry(habitId: number, date: string): Entry {
 	return { id: 0, habitId, date, createdAt: new Date(date) };
 }
 
+let mockLoaded = true;
 let mockHabits: Habit[] = [];
 let mockEntries: Entry[] = [];
 const mockRange = jest.fn();
 
 jest.mock("../repositories/habit-repository", () => ({
-	useActiveHabits: () => mockHabits,
+	useActiveHabits: () => ({ habits: mockHabits, loaded: mockLoaded }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) => {
@@ -29,6 +30,7 @@ import { useWeeklySummaryQueries } from "./use-weekly-summary-queries";
 
 beforeEach(() => {
 	jest.useFakeTimers().setSystemTime(TODAY);
+	mockLoaded = true;
 	mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) })];
 	mockEntries = [];
 	mockRange.mockReset();
@@ -62,5 +64,12 @@ describe("useWeeklySummaryQueries", () => {
 		const { result } = await renderHook(() => useWeeklySummaryQueries());
 		expect(result.current.hasHabits).toBe(false);
 		expect(result.current.rows).toEqual([]);
+	});
+
+	it("reports not loaded until the habit list has loaded (A5-04)", async () => {
+		mockLoaded = false;
+		mockHabits = [];
+		const { result } = await renderHook(() => useWeeklySummaryQueries());
+		expect(result.current.isLoaded).toBe(false);
 	});
 });

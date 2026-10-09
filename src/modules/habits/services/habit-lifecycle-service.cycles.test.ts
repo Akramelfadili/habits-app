@@ -1,4 +1,5 @@
 import { addDays, format, isSameDay } from "date-fns";
+import { fakeNotifications as fake } from "../test-support/fake-expo-notifications";
 import { makeHabit } from "../test-support/habit-builder";
 import type { DayRange, Habit, Reminder } from "../types";
 
@@ -10,18 +11,16 @@ import type { DayRange, Habit, Reminder } from "../types";
  */
 
 let mockStored: Habit;
-let mockScheduled: string[] = [];
-const mockScheduleCalls: Record<string, unknown>[] = [];
+// The real notifications adapter runs on an in-memory expo-notifications.
+jest.mock(
+	"expo-notifications",
+	() =>
+		require("../test-support/fake-expo-notifications").fakeNotifications.module,
+);
 
-jest.mock("@/lib/notifications/notifications", () => ({
-	cancelRemindersWithPrefix: async (prefix: string) => {
-		mockScheduled = mockScheduled.filter((id) => !id.startsWith(prefix));
-	},
-	scheduleReminder: async (args: { id: string }) => {
-		mockScheduled.push(args.id);
-		mockScheduleCalls.push(args);
-	},
-}));
+/** One entry per reminder trigger, without the scheduling generation. */
+const mockScheduled = () =>
+	[...fake.scheduled.keys()].map((id) => id.split(":").slice(0, 2).join(":"));
 
 jest.mock("../repositories/habit-repository", () => ({
 	getHabit: async () => mockStored,
@@ -80,8 +79,7 @@ function setNow(date: Date) {
 beforeEach(() => {
 	jest.useFakeTimers();
 	setNow(DAY_ONE);
-	mockScheduled = [];
-	mockScheduleCalls.length = 0;
+	fake.reset();
 	mockStored = makeHabit({
 		id: 3,
 		frequency: { type: "daily" },
@@ -96,22 +94,35 @@ afterEach(() => {
 describe("archive → restore → undo → restore", () => {
 	it("never leaves more than one notification per reminder, and none while archived", async () => {
 		await archiveHabit(3);
-		expect(mockScheduled).toEqual([]);
+		expect(mockScheduled()).toEqual([]);
 
 		setNow(addDays(DAY_ONE, 8));
 		await restoreHabit(3);
-		expect(mockScheduled).toEqual(["habit-3-reminder-1"]);
+		expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
 
 		const afterRestore = { ...mockStored };
 		await undoRestoreHabit(3, {
 			archivedAt: DAY_ONE,
 			pauses: [],
 		});
-		expect(mockScheduled).toEqual([]);
+		expect(mockScheduled()).toEqual([]);
 		expect(afterRestore.archivedAt).toBeNull();
 
 		await restoreHabit(3);
-		expect(mockScheduled).toEqual(["habit-3-reminder-1"]);
+		expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
+	});
+
+	it("archiving still succeeds when cancelling the notifications fails — the habit is archived, the failure is logged", async () => {
+		await archiveHabit(3);
+		await restoreHabit(3);
+		expect(fake.scheduled.size).toBe(1);
+		fake.failCancelOn.add(fake.cancelCalls + 1);
+
+		await expect(archiveHabit(3)).resolves.toBeUndefined();
+
+		expect(mockStored.archivedAt).not.toBeNull();
+		// The orphan is left for the launch-time reconcile to remove.
+		expect(fake.scheduled.size).toBe(1);
 	});
 
 	it("resumes reminders as the stored recurring schedule — nothing fires immediately", async () => {
@@ -119,15 +130,14 @@ describe("archive → restore → undo → restore", () => {
 		setNow(addDays(DAY_ONE, 3));
 		await restoreHabit(3);
 
-		expect(mockScheduleCalls).toHaveLength(1);
-		expect(mockScheduleCalls[0]).toMatchObject({
-			hour: 7,
-			minute: 0,
-			weekdays: [1, 2, 3, 4, 5, 6, 7],
-		});
-		// A recurring weekday trigger only — no one-off "now" notification.
-		expect(mockScheduleCalls[0]).not.toHaveProperty("seconds");
-		expect(mockScheduleCalls[0]).not.toHaveProperty("immediate");
+		expect(fake.scheduled.size).toBe(1);
+		const [only] = [...fake.scheduled.values()];
+		expect(only).toMatchObject({ hour: 7, minute: 0 });
+		expect(only.identifier).toMatch(/^habit-3-reminder-1:daily:0700:/);
+		// A recurring trigger only — no one-off "now" notification.
+		expect(fake.events.filter((e) => e.startsWith("schedule:"))).toHaveLength(
+			1,
+		);
 	});
 
 	it("undo puts back the same archive date and pauses, so the banner, heatmap and Reminders row return as they were", async () => {
@@ -163,7 +173,7 @@ describe("archive → restore → undo → restore", () => {
 			today,
 		});
 		expect(after).toEqual(before);
-		expect(mockScheduled).toEqual([]);
+		expect(mockScheduled()).toEqual([]);
 	});
 
 	it("survives several archive/restore rounds: pauses accumulate, one notification, streak starts fresh each time", async () => {
@@ -175,10 +185,10 @@ describe("archive → restore → undo → restore", () => {
 		for (const [archiveOn, restoreOn] of rounds) {
 			setNow(addDays(DAY_ONE, archiveOn - 1));
 			await archiveHabit(3);
-			expect(mockScheduled).toEqual([]);
+			expect(mockScheduled()).toEqual([]);
 			setNow(addDays(DAY_ONE, restoreOn - 1));
 			await restoreHabit(3);
-			expect(mockScheduled).toEqual(["habit-3-reminder-1"]);
+			expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
 		}
 
 		expect(mockStored.pauses).toEqual([
@@ -230,6 +240,6 @@ describe("archive → restore → undo → restore", () => {
 		await archiveHabit(3);
 		await restoreHabit(3);
 		expect(mockStored.pauses).toEqual([]);
-		expect(mockScheduled).toEqual(["habit-3-reminder-1"]);
+		expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
 	});
 });

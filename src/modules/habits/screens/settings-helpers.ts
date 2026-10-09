@@ -1,5 +1,6 @@
 import { format, isSameDay, isSameYear, parseISO } from "date-fns";
 import type { ThemePreference } from "@/theme/theme-preference-store";
+import { formatCount, pluralise, RANGE_DASH } from "@/utils/format";
 import type { ExportSummary } from "../services/export-data";
 import type { ExportFailureReason } from "../services/export-service";
 
@@ -42,17 +43,13 @@ export const EVENING_REVIEW_FOOTNOTE =
 export const NOTIFICATIONS_OFF_NOTICE =
 	"Notifications are off for Habits in iOS, so the review won't arrive yet.";
 
-export const formatCount = (value: number) => value.toLocaleString("en-GB");
-
 /** "One file · 9 habits · 1,284 entries" — the Export row's subtitle. */
 export function exportRowSubtitle(habits: number, logs: number): string {
-	const habitsLabel =
-		habits === 1 ? "1 habit" : `${formatCount(habits)} habits`;
-	return `One file · ${habitsLabel} · ${entriesLabel(logs)}`;
+	return `One file · ${pluralise(habits, "habit")} · ${entriesLabel(logs)}`;
 }
 
 export function entriesLabel(total: number): string {
-	return total === 1 ? "1 entry" : `${formatCount(total)} entries`;
+	return pluralise(total, "entry", "entries");
 }
 
 export function habitsCountLabel(summary: ExportSummary): string {
@@ -62,7 +59,7 @@ export function habitsCountLabel(summary: ExportSummary): string {
 }
 
 export function logsCountLabel(summary: ExportSummary): string {
-	return `${formatCount(summary.logs)} logs · ${formatCount(summary.notes)} notes`;
+	return `${pluralise(summary.logs, "entry", "entries")} · ${pluralise(summary.notes, "note")}`;
 }
 
 /** "3 Mar – 16 Sep 2026" — or one date when the data sits on a single day. */
@@ -72,7 +69,7 @@ export function rangeLabel(range: ExportSummary["range"]): string {
 	const to = parseISO(range.to);
 	if (isSameDay(from, to)) return format(to, "d MMM yyyy");
 	const fromLabel = format(from, isSameYear(from, to) ? "d MMM" : "d MMM yyyy");
-	return `${fromLabel} – ${format(to, "d MMM yyyy")}`;
+	return `${fromLabel}${RANGE_DASH}${format(to, "d MMM yyyy")}`;
 }
 
 export function exportButtonLabel(logs: number): string {
@@ -80,7 +77,7 @@ export function exportButtonLabel(logs: number): string {
 }
 
 export function kilobytesLabel(bytes: number): string {
-	return `${Math.max(1, Math.ceil(bytes / 1024)).toLocaleString("en-GB")} KB`;
+	return `${formatCount(Math.max(1, Math.ceil(bytes / 1024)))} KB`;
 }
 
 /** What the failed sheet says went wrong, and what's needed. */
@@ -92,3 +89,15 @@ export function exportFailureMessage(reason: ExportFailureReason): string {
 
 export const EXPORT_FAILURE_REASSURANCE =
 	"Nothing was changed — your habits and logs are untouched.";
+
+/** "1.0.0 (build 12)" — the About row's value. */
+export function versionLabel(info: { version: string; build: string }): string {
+	return `${info.version} (build ${info.build})`;
+}
+
+/** What the toast says after "Copy diagnostics". */
+export const DIAGNOSTICS_RESULT_MESSAGE = {
+	copied: "Diagnostics copied",
+	shared: "Diagnostics ready to share",
+	failed: "Couldn't copy diagnostics. Try again.",
+} as const;

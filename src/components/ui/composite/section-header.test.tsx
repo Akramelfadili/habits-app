@@ -50,4 +50,19 @@ describe("SectionHeader", () => {
 			marginLeft: "auto",
 		});
 	});
+
+	it("is one heading stop reading the title and count together (A6-09, A6-10)", async () => {
+		await render(<SectionHeader title="Morning" count="2/3" />);
+		const heading = screen.getByRole("header", { name: "Morning, 2 of 3" });
+		expect(heading.props.accessible).toBe(true);
+	});
+
+	it("is a heading with just the title when there is no count, and carries a tag", async () => {
+		await render(
+			<SectionHeader size="group" title="Training" tag="Reordering" />,
+		);
+		expect(
+			screen.getByRole("header", { name: "Training, Reordering" }),
+		).toBeTruthy();
+	});
 });

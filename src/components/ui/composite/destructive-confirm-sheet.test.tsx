@@ -1,5 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { useToastStore } from "@/store/toast-store";
+import { failureMessage } from "@/utils/failure-message";
+import { runSafely } from "@/utils/run-safely";
 import { DestructiveConfirmSheet } from "./destructive-confirm-sheet";
 
 function renderSheet(
@@ -101,16 +105,86 @@ describe("DestructiveConfirmSheet", () => {
 		expect(props.onKeep).toHaveBeenCalledTimes(1);
 	});
 
-	it("a failed delete releases the lock, so it can be retried", async () => {
-		const onConfirm = jest
-			.fn()
-			.mockRejectedValueOnce(new Error("disk full"))
-			.mockResolvedValueOnce(undefined);
-		await renderSheet({ onConfirm });
-		await fireEvent.press(screen.getByText("Delete category"));
-		await act(async () => {});
-		await fireEvent.press(screen.getByText("Delete category"));
-		expect(onConfirm).toHaveBeenCalledTimes(2);
+	describe("when the delete fails", () => {
+		beforeEach(() => {
+			useToastStore.setState({ toast: null });
+			clearLog();
+		});
+
+		it("a handler wrapped in run(): error toast, lock released, a retry works", async () => {
+			let attempts = 0;
+			const onConfirm = jest.fn(() =>
+				runSafely(
+					{ scope: "t", failure: failureMessage("delete", "this category") },
+					async () => {
+						attempts++;
+						if (attempts === 1) throw new Error("disk full");
+					},
+				),
+			);
+			await renderSheet({ onConfirm });
+
+			await fireEvent.press(screen.getByText("Delete category"));
+			await act(async () => {});
+
+			expect(useToastStore.getState().toast).toMatchObject({
+				message: "Couldn't delete this category. Try again.",
+				tone: "error",
+			});
+			expect(
+				screen.getByRole("button", { name: "Keep category" }),
+			).toBeEnabled();
+			expect(
+				screen.getByRole("button", { name: "Delete category" }),
+			).toBeEnabled();
+
+			await fireEvent.press(screen.getByText("Delete category"));
+			await act(async () => {});
+			expect(onConfirm).toHaveBeenCalledTimes(2);
+		});
+
+		it("a handler that rejects anyway: logged, generic error toast, lock released, a retry works", async () => {
+			const onConfirm = jest
+				.fn()
+				.mockRejectedValueOnce(new Error("disk full"))
+				.mockResolvedValueOnce(undefined);
+			await renderSheet({ onConfirm });
+
+			await fireEvent.press(screen.getByText("Delete category"));
+			await act(async () => {});
+
+			expect(useToastStore.getState().toast).toMatchObject({
+				message: "Something went wrong. Try again.",
+				tone: "error",
+			});
+			expect(getLogEntries().map((e) => e.level)).toEqual(["warn"]);
+			expect(
+				screen.getByRole("button", { name: "Delete category" }),
+			).toBeEnabled();
+
+			await fireEvent.press(screen.getByText("Delete category"));
+			expect(onConfirm).toHaveBeenCalledTimes(2);
+		});
+
+		it("the archive action releases the lock the same way", async () => {
+			const onPress = jest
+				.fn()
+				.mockRejectedValueOnce(new Error("disk full"))
+				.mockResolvedValueOnce(undefined);
+			await renderSheet({
+				action: { title: "Archive instead", body: "Keeps history", onPress },
+			});
+
+			await fireEvent.press(
+				screen.getByRole("button", { name: /^Archive instead/ }),
+			);
+			await act(async () => {});
+			await fireEvent.press(
+				screen.getByRole("button", { name: /^Archive instead/ }),
+			);
+
+			expect(onPress).toHaveBeenCalledTimes(2);
+		});
 	});
 
 	it("can't be dismissed from the scrim", async () => {

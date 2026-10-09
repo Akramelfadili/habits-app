@@ -6,6 +6,7 @@ import {
 	promoteScratchFile,
 	writeScratchFile,
 } from "@/lib/file-export/file-export";
+import { log } from "@/lib/logger/logger";
 import { LAST_EXPORT_SETTING_KEY } from "../constants";
 import type { ExportOptions } from "../types";
 import { buildExportModel, type ExportSource } from "./export-data";
@@ -46,8 +47,15 @@ export class ExportCancelledError extends Error {
 }
 
 export class ExportFailedError extends Error {
-	constructor(readonly reason: ExportFailureReason) {
-		super(reason.kind === "storage" ? "Out of storage" : "Export failed");
+	/** `options.cause` is the real error — kept for the log and diagnostics, never shown as text. */
+	constructor(
+		readonly reason: ExportFailureReason,
+		options?: { cause?: unknown },
+	) {
+		super(
+			reason.kind === "storage" ? "Out of storage" : "Export failed",
+			options,
+		);
 		this.name = "ExportFailedError";
 	}
 }
@@ -118,10 +126,12 @@ export async function runExport({
 		if (scratchUri) discardFile(scratchUri);
 		if (caught instanceof ExportCancelledError) throw caught;
 		const message = caught instanceof Error ? caught.message : String(caught);
-		throw new ExportFailedError(
+		const reason: ExportFailureReason =
 			neededBytes > 0 && STORAGE_ERROR.test(message)
 				? { kind: "storage", neededBytes }
-				: { kind: "unknown" },
-		);
+				: { kind: "unknown" };
+		const failure = new ExportFailedError(reason, { cause: caught });
+		log.error("export", "export failed", failure, { neededBytes });
+		throw failure;
 	}
 }

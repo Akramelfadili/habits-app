@@ -12,8 +12,7 @@
  * keyboard up), `note`, `touch` (render in a
  * touch-enabled page, for swipe gestures), `colorScheme` ("light" default, or
  * "dark" — the emulated OS scheme, which the Appearance setting's default
- * "System" follows, HAB-15), and `interact(page, ctx)` for states only
- * reachable by a tap or gesture.
+ * "System" follows, HAB-15), and `interact(page, ctx)` for states only reachable by a tap or gesture.
  */
 import { format, subDays } from "date-fns";
 
@@ -235,7 +234,7 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByText("Log something anyway", { exact: true }).click();
 			await page.getByLabel("Log Read off-schedule").first().click();
-			await page.getByText("Read logged · off-schedule").waitFor();
+			await page.getByText("Logged 'Read' · off-schedule").waitFor();
 			await page.waitForTimeout(400);
 		},
 	},
@@ -529,10 +528,10 @@ export const SCREENS = {
 		feature: "HAB-20",
 		route: "/habits/1?fixtures=habit-detail-archived",
 		mockup: "docs/mockups/hab-20-e1.png",
-		note: "E1: Restore tapped — banner collapses in place, toast 'Cold shower is back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
+		note: "E1: Restore tapped — banner collapses in place, toast 'Restored 'Cold shower' — back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
 		async interact(page) {
 			await page.getByText("Restore", { exact: true }).click();
-			await page.getByText("Cold shower is back on Today").waitFor();
+			await page.getByText("Restored 'Cold shower' — back on Today").waitFor();
 		},
 	},
 	"habit-detail-restore-undone": {
@@ -542,7 +541,7 @@ export const SCREENS = {
 		note: "Restore then Undo: must be pixel-identical to habit-detail-archived (same archive date, same paused cells).",
 		async interact(page) {
 			await page.getByText("Restore", { exact: true }).click();
-			await page.getByText("Cold shower is back on Today").waitFor();
+			await page.getByText("Restored 'Cold shower' — back on Today").waitFor();
 			await page.getByText("Undo", { exact: true }).click();
 			await page.getByText("Archived on", { exact: false }).waitFor();
 		},
@@ -967,6 +966,101 @@ export const SCREENS = {
 		feature: "Shell",
 		route: "/expenses",
 		mockup: null,
+	},
+
+	// Audit B6 — failure states. Reached only through the web fixtures
+	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in
+	// the app.
+	"error-screen-migration-failed": {
+		feature: "B6",
+		route: "/?fixtures=migration-fails",
+		mockup: null,
+		note: "A failed database migration: plain-words title, 'Try again', 'Copy diagnostics'. No raw error text.",
+	},
+	"error-screen-migration-failed-dark": {
+		feature: "B6",
+		route: "/?fixtures=migration-fails",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+	},
+	"error-toast-today": {
+		feature: "B6",
+		route: "/habits?failWrites=1",
+		mockup: null,
+		note: "A failed tick on Today: error toast (toast pill with a danger dot), the row stays unchecked, no Undo.",
+		async interact(page) {
+			await page.getByLabel("Evening walk").first().click();
+			await page.getByText("Couldn't update this habit. Try again.").waitFor();
+		},
+	},
+	"error-toast-today-dark": {
+		feature: "B6",
+		route: "/habits?failWrites=1",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+		async interact(page) {
+			await page.getByLabel("Evening walk").first().click();
+			await page.getByText("Couldn't update this habit. Try again.").waitFor();
+		},
+	},
+	"error-toast-in-sheet": {
+		feature: "B6",
+		route: "/habits?fixtures=quantity-log&failWrites=1",
+		mockup: null,
+		note: "A failed quantity save: the sheet stays open and the toast shows at the top of the screen, above the sheet (a Modal covers the page-level host).",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+			await page.getByRole("button", { name: /^Save \d+ of/ }).click();
+			await page.getByText("Couldn't save that amount. Try again.").waitFor();
+		},
+	},
+	"new-habit-save-failed": {
+		feature: "B6",
+		route: "/new-habit?fixtures=empty&failWrites=1",
+		mockup: null,
+		note: "A failed Save in the New habit modal (no ToastHost there): inline error banner above Save, the form untouched.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 pages");
+			await categoryChip(page, "Learning").click();
+			await page.getByText("Save habit", { exact: true }).click();
+			await page.getByText("Couldn't save this habit. Try again.").waitFor();
+		},
+	},
+	"new-habit-save-failed-dark": {
+		feature: "B6",
+		route: "/new-habit?fixtures=empty&failWrites=1",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 pages");
+			await categoryChip(page, "Learning").click();
+			await page.getByText("Save habit", { exact: true }).click();
+			await page.getByText("Couldn't save this habit. Try again.").waitFor();
+		},
+	},
+	"settings-about": {
+		feature: "B6",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: null,
+		note: "Settings scrolled to the About group: version (build), database schema, 'Copy diagnostics'.",
+		async interact(page) {
+			await page.getByText("Copy diagnostics").scrollIntoViewIfNeeded();
+			await page.mouse.wheel(0, 400);
+		},
+	},
+	"settings-about-dark": {
+		feature: "B6",
+		route: "/habits/settings?fixtures=settings&theme=dark",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+		async interact(page) {
+			await page.getByText("Copy diagnostics").scrollIntoViewIfNeeded();
+			await page.mouse.wheel(0, 400);
+		},
 	},
 };
 

@@ -1,4 +1,5 @@
 import { parseISO, subDays } from "date-fns";
+import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { type BuiltInCategoryName, findBuiltInCategory } from "../constants";
 import { getCategories } from "../repositories/category-repository";
@@ -80,13 +81,24 @@ async function seedHabitWithHistory(): Promise<void> {
 }
 
 export function useHabitActions() {
-	const create = useAsyncAction(createHabit);
+	const create = useAsyncAction(createHabit, { scope: "habit-form" });
 	// A schedule change moves which reminder days are real (HAB-12), so an
 	// edit re-syncs the habit's notifications along with the write.
-	const update = useAsyncAction(updateHabitAndSyncReminders);
-	const clearAll = useAsyncAction(deleteAllHabits);
-	const seedStreakAtRisk = useAsyncAction(seedStreakAtRiskHabit);
-	const seedHistory = useAsyncAction(seedHabitWithHistory);
+	const update = useAsyncAction(updateHabitAndSyncReminders, {
+		scope: "habit-form",
+	});
+	const clearAll = useAsyncAction(deleteAllHabits, {
+		scope: "dev",
+		failure: failureMessage("clear", "habits"),
+	});
+	const seedStreakAtRisk = useAsyncAction(seedStreakAtRiskHabit, {
+		scope: "dev",
+		failure: failureMessage("seed", "that habit"),
+	});
+	const seedHistory = useAsyncAction(seedHabitWithHistory, {
+		scope: "dev",
+		failure: failureMessage("seed", "that habit"),
+	});
 
 	return {
 		createHabit: create.execute,
@@ -99,13 +111,13 @@ export function useHabitActions() {
 		 * Dev-only escape hatch for clearing out test data — undefined in
 		 * production builds, so callers can't wire it up by accident.
 		 */
-		clearAllHabits: __DEV__ ? clearAll.execute : undefined,
+		clearAllHabits: __DEV__ ? clearAll.run : undefined,
 		isClearingAll: clearAll.isLoading,
 		/** Dev-only escape hatch for manually testing HAB-08 — see `seedStreakAtRiskHabit`. */
-		seedStreakAtRiskHabit: __DEV__ ? seedStreakAtRisk.execute : undefined,
+		seedStreakAtRiskHabit: __DEV__ ? seedStreakAtRisk.run : undefined,
 		isSeedingStreakAtRisk: seedStreakAtRisk.isLoading,
 		/** Dev-only escape hatch for seeing HAB-09 full of data — see `seedHabitWithHistory`. */
-		seedHabitWithHistory: __DEV__ ? seedHistory.execute : undefined,
+		seedHabitWithHistory: __DEV__ ? seedHistory.run : undefined,
 		isSeedingHistory: seedHistory.isLoading,
 	};
 }

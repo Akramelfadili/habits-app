@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
 type WeekdayChipProps = {
@@ -11,7 +11,7 @@ type WeekdayChipProps = {
 	disabled?: boolean;
 };
 
-/** 36px day circle — filled when selected. */
+/** 36px day circle — filled when selected — in a 44pt-tall touch column. */
 export function WeekdayChip({
 	letter,
 	accessibilityLabel,
@@ -23,32 +23,46 @@ export function WeekdayChip({
 
 	return (
 		<Pressable
-			accessibilityRole="button"
+			accessibilityRole="checkbox"
 			accessibilityLabel={accessibilityLabel}
-			accessibilityState={{ selected, disabled }}
+			accessibilityState={{ checked: selected, disabled }}
 			onPress={onPress}
 			disabled={disabled}
 			style={({ pressed }) => [
-				styles.circle,
-				{ backgroundColor: selected ? colors.ink : colors.inner },
+				styles.touch,
 				disabled && { opacity: opacity.disabled },
 				pressed && !disabled && { opacity: opacity.pressed },
 			]}
 		>
-			<Text
+			<View
 				style={[
-					styles.letter,
-					{ color: selected ? colors.onAccent : colors.sub },
-					disabled && { color: colors.faint },
+					styles.circle,
+					{ backgroundColor: selected ? colors.ink : colors.inner },
 				]}
 			>
-				{letter}
-			</Text>
+				<Text
+					style={[
+						styles.letter,
+						{ color: selected ? colors.onAccent : colors.sub },
+						disabled && { color: colors.faint },
+					]}
+				>
+					{letter}
+				</Text>
+			</View>
 		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
+	// Each chip owns an equal column (flex 1) at least 44pt tall: the touch
+	// areas abut, never overlap, and the 36pt circle sits centred in its own.
+	touch: {
+		flex: 1,
+		minHeight: 44,
+		alignItems: "center",
+		justifyContent: "center",
+	},
 	circle: {
 		width: 36,
 		height: 36,

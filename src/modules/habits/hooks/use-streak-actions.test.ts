@@ -1,5 +1,9 @@
 import { act, renderHook } from "@testing-library/react-native";
 
+const mockUnfreeze = jest.fn();
+jest.mock("../repositories/frozen-day-repository", () => ({
+	unfreezeHabitDay: (...args: unknown[]) => mockUnfreeze(...args),
+}));
 const mockApplyFreeze = jest.fn();
 jest.mock("../services/habit-service", () => ({
 	applyFreeze: (...args: unknown[]) => mockApplyFreeze(...args),
@@ -41,5 +45,15 @@ describe("useStreakActions", () => {
 		});
 
 		expect(result.current.freezeError?.message).toBe("No freezes remaining");
+	});
+
+	it("takes a freeze back for the missed day it was applied to", async () => {
+		mockUnfreeze.mockResolvedValue(undefined);
+		const { result } = await renderHook(() => useStreakActions());
+		const missed = new Date(2026, 8, 15);
+
+		await act(() => result.current.undoFreeze(1, missed));
+
+		expect(mockUnfreeze).toHaveBeenCalledWith(1, missed);
 	});
 });

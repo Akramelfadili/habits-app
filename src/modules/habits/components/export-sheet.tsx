@@ -13,8 +13,10 @@ import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { KeyValueRow } from "@/components/ui/primitives/key-value-row";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { Toggle } from "@/components/ui/primitives/toggle";
+import { copyDiagnostics } from "@/lib/diagnostics/diagnostics";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { formatCount, pluralise } from "@/utils/format";
 import { useExportActions } from "../hooks/use-export-actions";
 import {
 	DEFAULT_EXPORT_OPTIONS,
@@ -25,7 +27,6 @@ import {
 	entriesLabel,
 	exportButtonLabel,
 	exportFailureMessage,
-	formatCount,
 	habitsCountLabel,
 	kilobytesLabel,
 	logsCountLabel,
@@ -51,6 +52,9 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 	const { source, summary } = useExportQueries(options);
 	const exporter = useExportActions();
 	const { phase } = exporter;
+	const [diagnosticsResult, setDiagnosticsResult] = useState<
+		"copied" | "shared" | "failed" | null
+	>(null);
 
 	function close() {
 		exporter.reset();
@@ -83,6 +87,7 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 								title="Format"
 								trailing={
 									<SegmentedControl<ExportFormat>
+										label="File format"
 										size="compact"
 										options={[
 											{ value: "csv", label: "CSV" },
@@ -123,7 +128,10 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 				return (
 					<>
 						<View style={styles.heading}>
-							<Text style={[styles.title, { color: colors.ink }]}>
+							<Text
+								accessibilityRole="header"
+								style={[styles.title, { color: colors.ink }]}
+							>
 								Exporting…
 							</Text>
 							<Text
@@ -161,7 +169,10 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 								size="large"
 								accent={{ tint: colors.ink, ink: colors.onAccent }}
 							/>
-							<Text style={[styles.title, { color: colors.ink }]}>
+							<Text
+								accessibilityRole="header"
+								style={[styles.title, { color: colors.ink }]}
+							>
 								Export ready
 							</Text>
 							<Text
@@ -172,8 +183,14 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 						</View>
 						<FileCard
 							name={phase.result.name}
-							meta={`${kilobytesLabel(phase.result.sizeBytes)} · ${phase.result.habits} habits · ${entriesLabel(phase.result.logs)}`}
+							meta={`${kilobytesLabel(phase.result.sizeBytes)} · ${pluralise(phase.result.habits, "habit")} · ${entriesLabel(phase.result.logs)}`}
 						/>
+						{exporter.delivery?.kind === "error" ? (
+							<Banner tone="error">{exporter.delivery.message}</Banner>
+						) : null}
+						{exporter.delivery?.kind === "saved" ? (
+							<Caption>Saved to Files.</Caption>
+						) : null}
 						<Button label="Share file…" onPress={exporter.share} />
 						<Button
 							label="Save to Files"
@@ -192,7 +209,10 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 								size="large"
 								accent={{ tint: colors.warnTint, ink: colors.warnInk }}
 							/>
-							<Text style={[styles.title, { color: colors.ink }]}>
+							<Text
+								accessibilityRole="header"
+								style={[styles.title, { color: colors.ink }]}
+							>
 								Export didn't finish
 							</Text>
 						</View>
@@ -200,6 +220,25 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 						<Caption>{EXPORT_FAILURE_REASSURANCE}</Caption>
 						<Button label="Try again" onPress={exporter.retry} />
 						<Button label="Close" variant="secondary" onPress={close} />
+						{/* The real cause is in the log; this puts it where it can be sent. */}
+						<Button
+							label="Copy diagnostics"
+							variant="link"
+							onPress={async () =>
+								setDiagnosticsResult(await copyDiagnostics())
+							}
+						/>
+						{diagnosticsResult ? (
+							<Caption
+								tone={diagnosticsResult === "failed" ? "error" : "default"}
+							>
+								{diagnosticsResult === "failed"
+									? "Couldn't copy diagnostics."
+									: diagnosticsResult === "shared"
+										? "Diagnostics ready to share."
+										: "Diagnostics copied."}
+							</Caption>
+						) : null}
 					</>
 				);
 		}

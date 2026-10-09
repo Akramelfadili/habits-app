@@ -427,4 +427,60 @@ describe("insights on the HAB-16 fixture (C3)", () => {
 		const pattern = insights.find((insight) => insight.type === "pattern");
 		expect(pattern).toMatchObject({ type: "pattern", cause: null });
 	});
+
+	describe("archived habits (HAB-17's rule, Monthly)", () => {
+		// "Gym" skips every weekend day of August; "Read" is done every day.
+		const weekendSkipper = (overrides: Partial<Habit> = {}) =>
+			daily(1, { name: "Gym", ...overrides });
+		const august = (habit: Habit) =>
+			doneBetween(habit.id, AUGUST.start, AUGUST.end).filter((entry) => {
+				const day = new Date(`${entry.date}T12:00:00`).getDay();
+				return day !== 0 && day !== 6;
+			});
+		const everyDay = doneBetween(2, AUGUST.start, AUGUST.end);
+		const today = new Date(2026, 8, 2, 9);
+
+		it("names the habit in a pattern insight with its action while it's active", () => {
+			const gym = weekendSkipper();
+			const { insights } = summarise(
+				[gym, daily(2, { name: "Read" })],
+				[...august(gym), ...everyDay],
+				today,
+			);
+			const pattern = insights.find((insight) => insight.type === "pattern");
+			expect(pattern).toMatchObject({ type: "pattern" });
+			expect(pattern?.type === "pattern" && pattern.cause?.habit.id).toBe(1);
+		});
+
+		it("never names or targets an archived habit, though its history still counts in the tiles and rows", () => {
+			const gym = weekendSkipper({ archivedAt: new Date(2026, 8, 1) });
+			const read = daily(2, { name: "Read" });
+			const withGym = summarise(
+				[gym, read],
+				[...august(gym), ...everyDay],
+				today,
+			);
+
+			expect(JSON.stringify(withGym.insights)).not.toContain("Gym");
+			expect(
+				withGym.insights.every(
+					(insight) => insight.type !== "pattern" || insight.cause === null,
+				),
+			).toBe(true);
+			// History is kept: the rows and the completion rate still include Gym.
+			expect(withGym.rows.map((row) => row.habit.id)).toContain(1);
+			const activeOnly = summarise([read], everyDay, today);
+			expect(withGym.rate).toBeLessThan(activeOnly.rate ?? 1);
+		});
+
+		it("is 'perfect' on the habits still active, not blocked by an archived habit's misses", () => {
+			const gym = weekendSkipper({ archivedAt: new Date(2026, 8, 1) });
+			const { insights } = summarise(
+				[gym, daily(2, { name: "Read" })],
+				[...august(gym), ...everyDay],
+				today,
+			);
+			expect(insights).toEqual([{ type: "perfect" }]);
+		});
+	});
 });

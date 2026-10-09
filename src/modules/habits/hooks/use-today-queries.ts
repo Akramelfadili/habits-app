@@ -1,11 +1,5 @@
-import {
-	addDays,
-	endOfWeek,
-	format,
-	parseISO,
-	startOfDay,
-	startOfWeek,
-} from "date-fns";
+import { addDays, endOfWeek, format, parseISO, startOfWeek } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
 import { WEEK_STARTS_ON } from "../constants";
 import {
 	useAllEntries,
@@ -44,6 +38,8 @@ export function useTodayQueries(): {
 	/** Days completed so far this Mon–Sun week, today included — per-week habits' "2 of 5". */
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	today: Date;
+	/** False until the habit list has loaded — Today shows a neutral blank, not "Nothing to track yet" (audit A5-04). */
+	isLoaded: boolean;
 	viewState: TodayViewState;
 	/** Habits due tomorrow — only meaningful for the Day closed preview (HAB-05). */
 	tomorrowPreview: Habit[];
@@ -54,8 +50,8 @@ export function useTodayQueries(): {
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
 	freezesRemainingThisMonth: number;
 } {
-	const habits = useActiveHabits();
-	const today = startOfDay(new Date());
+	const { habits, loaded } = useActiveHabits();
+	const today = useToday();
 	const tomorrow = addDays(today, 1);
 	const weekStart = startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
 	const weekEnd = endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
@@ -146,6 +142,7 @@ export function useTodayQueries(): {
 		quantityValuesByHabitId,
 		completedThisWeekByHabitId,
 		today,
+		isLoaded: loaded,
 		viewState: resolveTodayViewState({
 			totalHabitCount: habits.length,
 			progress,

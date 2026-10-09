@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
+import { log } from "@/lib/logger/logger";
 import {
 	getNotificationPermission,
 	type NotificationPermission,
@@ -30,6 +31,13 @@ async function refresh(): Promise<void> {
 	set(await getNotificationPermission());
 }
 
+/** For effects, which can't await: a failed permission read is logged, not an unhandled rejection. */
+function refreshInBackground(): void {
+	refresh().catch((error) =>
+		log.warn("notifications", "could not read the permission", error),
+	);
+}
+
 /**
  * Asks for permission only if it has never been answered, then reports the
  * result. Never re-prompts after a denial — iOS wouldn't show the prompt
@@ -55,9 +63,9 @@ export function useNotificationPermission():
 	);
 
 	useEffect(() => {
-		void refresh();
+		refreshInBackground();
 		const subscription = AppState.addEventListener("change", (state) => {
-			if (state === "active") void refresh();
+			if (state === "active") refreshInBackground();
 		});
 		return () => subscription.remove();
 	}, []);

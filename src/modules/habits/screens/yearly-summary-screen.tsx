@@ -57,6 +57,15 @@ export function YearlySummaryScreen() {
 	const { colors } = useTheme();
 	const view = useYearlySummaryQueries();
 
+	if (view.state === "loading") {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
+	}
+
 	if (view.state === "empty") {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
@@ -65,7 +74,7 @@ export function YearlySummaryScreen() {
 				</View>
 				<TodayStatePanel
 					icon="chart.bar"
-					headline="Nothing to summarize yet"
+					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its year will show up here."
 				/>
 			</View>
@@ -89,7 +98,12 @@ function Header({
 	return (
 		<View style={styles.header}>
 			{eyebrow ? <SectionLabel>{eyebrow}</SectionLabel> : null}
-			<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+			<Text
+				accessibilityRole="header"
+				style={[styles.title, { color: colors.ink }]}
+			>
+				{title}
+			</Text>
 			{switcher ? <RangeSwitcher value="year" /> : null}
 		</View>
 	);

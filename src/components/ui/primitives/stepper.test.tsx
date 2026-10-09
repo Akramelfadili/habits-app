@@ -40,4 +40,42 @@ describe("Stepper", () => {
 		await fireEvent.press(screen.getByLabelText("Increase times per week"));
 		expect(onChange).not.toHaveBeenCalled();
 	});
+
+	describe("adjustable (A6-06)", () => {
+		it("exposes the value as an adjustable with its range", async () => {
+			await renderStepper(3);
+			const value = screen.getByRole("adjustable", { name: "times per week" });
+			expect(value.props.accessibilityValue).toEqual({
+				min: 1,
+				max: 7,
+				now: 3,
+			});
+		});
+
+		it("steps up and down from the screen reader's increment/decrement, within bounds", async () => {
+			const onChange = jest.fn();
+			await renderStepper(3, onChange);
+			const value = screen.getByRole("adjustable", { name: "times per week" });
+
+			await fireEvent(value, "accessibilityAction", {
+				nativeEvent: { actionName: "increment" },
+			});
+			expect(onChange).toHaveBeenLastCalledWith(4);
+			await fireEvent(value, "accessibilityAction", {
+				nativeEvent: { actionName: "decrement" },
+			});
+			expect(onChange).toHaveBeenLastCalledWith(2);
+		});
+
+		it("does not step past the minimum or maximum", async () => {
+			const onChange = jest.fn();
+			await renderStepper(1, onChange);
+			await fireEvent(
+				screen.getByRole("adjustable", { name: "times per week" }),
+				"accessibilityAction",
+				{ nativeEvent: { actionName: "decrement" } },
+			);
+			expect(onChange).not.toHaveBeenCalled();
+		});
+	});
 });

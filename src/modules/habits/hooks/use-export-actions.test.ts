@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { makeExportSource } from "../test-support/export-fixtures";
 import type { ExportOptions } from "../types";
 
@@ -138,5 +139,92 @@ describe("useExportActions", () => {
 		expect(mockShare).toHaveBeenCalledWith(result.uri, result.mimeType);
 		await act(() => hook.current.saveToFiles());
 		expect(mockSave).toHaveBeenCalledWith(result.uri);
+	});
+
+	describe("delivering the finished file", () => {
+		async function ready() {
+			mockRunExport.mockResolvedValue(result);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.run(source, options));
+			return hook;
+		}
+
+		it("a failing share becomes an inline message, never a rejection", async () => {
+			clearLog();
+			mockShare.mockRejectedValueOnce(new Error("no activity"));
+			const hook = await ready();
+
+			await act(() => hook.current.share());
+
+			expect(hook.current.delivery).toEqual({
+				kind: "error",
+				message: "Couldn't share the file. Try again.",
+			});
+			expect(getLogEntries().filter((e) => e.level === "error")).toHaveLength(
+				1,
+			);
+			expect(hook.current.phase.name).toBe("ready");
+		});
+
+		it("a successful share clears an earlier error", async () => {
+			mockShare.mockRejectedValueOnce(new Error("no activity"));
+			const hook = await ready();
+			await act(() => hook.current.share());
+			expect(hook.current.delivery?.kind).toBe("error");
+
+			mockShare.mockResolvedValueOnce(undefined);
+			await act(() => hook.current.share());
+			expect(hook.current.delivery).toBeNull();
+		});
+
+		it("Save to Files that succeeds says so", async () => {
+			mockSave.mockResolvedValueOnce(true);
+			const hook = await ready();
+			await act(() => hook.current.saveToFiles());
+			expect(hook.current.delivery).toEqual({ kind: "saved" });
+		});
+
+		it("backing out of the folder picker is not a failure and says nothing", async () => {
+			mockSave.mockResolvedValueOnce(false);
+			const hook = await ready();
+			await act(() => hook.current.saveToFiles());
+			expect(hook.current.delivery).toBeNull();
+		});
+
+		it("a failing Save to Files becomes an inline message, never a rejection", async () => {
+			mockSave.mockRejectedValueOnce(new Error("No space left on device"));
+			const hook = await ready();
+
+			await act(() => hook.current.saveToFiles());
+
+			expect(hook.current.delivery).toEqual({
+				kind: "error",
+				message: "Couldn't save the file. Try again.",
+			});
+		});
+
+		it("a new export or a reset forgets the previous delivery result", async () => {
+			mockSave.mockResolvedValueOnce(true);
+			const hook = await ready();
+			await act(() => hook.current.saveToFiles());
+			expect(hook.current.delivery).not.toBeNull();
+
+			await act(() => hook.current.reset());
+			expect(hook.current.delivery).toBeNull();
+		});
+	});
+
+	it("an unexpected (non-ExportFailedError) failure is logged and shown as unknown", async () => {
+		clearLog();
+		mockRunExport.mockRejectedValueOnce(new Error("surprise"));
+		const { result: hook } = await renderHook(() => useExportActions());
+
+		await act(() => hook.current.run(source, options));
+
+		expect(hook.current.phase).toEqual({
+			name: "failed",
+			reason: { kind: "unknown" },
+		});
+		expect(getLogEntries().some((e) => e.level === "error")).toBe(true);
 	});
 });

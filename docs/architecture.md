@@ -62,14 +62,18 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /composite                 built from primitives, still generic: ListItem, StatCard, HeatmapCell, header buttons, ...
   /theme                       typed tokens (colour, type, spacing), theme preference store, token-ratchet baseline
 
-  /lib                         cross-module infrastructure
+  /lib                         cross-module infrastructure (one deliberate exception: `lib/db/database-error-screen` renders the shared `ErrorScreen` from components/ui)
     /db                        Drizzle client, schema.ts, migrations/, database-provider, test-db helpers
     /app-settings              key/value settings (its own repositories/ folder)
     /notifications             adapter around expo-notifications
     /file-export               adapter around expo-file-system / expo-sharing
     /dev-clock                 pins "today" for visual-check and demos
+    /logger                    log(), the in-memory ring buffer, global error/rejection handlers
+    /diagnostics               app version/build/schema facts + "Copy diagnostics" report
+    /clipboard                 adapter around expo-clipboard (falls back to the share sheet)
+    /today                     useToday() (rolls over at midnight / on foreground) and currentDay()
   /store                       cross-module Zustand stores (toast)
-  /utils                       generic helpers with no app knowledge (useAsyncAction)
+  /utils                       generic helpers with no app knowledge: useAsyncAction/runSafely, format (pluralise, counts, date ranges — the one home for user-facing counts and dates), useReducedMotion, useScreenReader
 
 /e2e                           Maestro flows, named by feature ID
 /scripts                       visual-check, e2e runner, check-architecture, token ratchet
@@ -101,7 +105,12 @@ Modules never import each other (rule 6). A concept two modules need is promoted
 
 - **Forms:** React Hook Form + Zod, schemas typed against the module's own types.
 - **Dates:** `date-fns` for streaks and week boundaries. Dates are stored as local `yyyy-MM-dd` text, instants as integer seconds. No `86400000` arithmetic, no `Date` maths for weeks.
-- **Async writes:** a shared `useAsyncAction()` returns `{ execute, isLoading, error }`. No React Query: there is no server.
+- **Async writes:** a shared `useAsyncAction(action, { scope, failure })` returns `{ execute, run, isLoading, error }`. `execute` rethrows (for the few callers that show a failure inline themselves); **`run` never rejects** — it logs, shows an error toast (`failure` copy from `failureMessage(verb, noun)`) and resolves `{ ok, value }`, so a caller skips its "it worked" follow-up (an Undo toast, closing a sheet) when `!ok`. Every write hook exposes `run` — except forms that show their own inline error (category add/rename, the habit form, export share/save), which use `execute` or their own try/catch and still log — and every Undo callback runs through `runSafely` in `ToastHost`. A screen with no `ToastHost` above it (the New/Edit habit modals) passes `onFailure` to `runSafely` and shows an inline `Banner tone="error"`. No React Query: there is no server.
+- **Logging and diagnostics (`lib/logger`):** `log.debug|info|warn|error(scope, message, error?, context?)`. Memory only — a 200-entry ring buffer, mirrored to the console in development; nothing is persisted. Privacy is enforced by the logger: `message` is a static string; `context` keeps only numbers, booleans and null (never a habit, note or category name); error messages are capped and have quoted segments removed — so never interpolate user text into an `Error` message, use the id. An error object is recorded once however many layers report it (hook, boundary, global handler). `installGlobalHandlers()` runs first in the root layout and always calls React Native's previous `ErrorUtils` handler (red box, fatal crash); in release it also turns on Hermes' rejection tracker, which React Native only enables in development. "Copy diagnostics" (Settings → About, error screens, a failed export) builds a report from `getAppInfo()` + the buffer.
+- **Live reads:** repositories read through `useLiveRows(query, deps, options)` (`lib/db`), never `useLiveQuery` directly. It returns `{ data, loaded }`; `loaded` flips true with the first result and **stays true when `deps` change** (week navigation, the day rolling over), keeping the previous rows until the next result so nothing flashes blank. Only a query keyed to one entity passes `resetOnDepsChange`. A query error is logged once and **thrown**, which lands in the root `ErrorBoundary` (`RootErrorBoundary`: "Try again" resets expo-router's boundary, the screens remount and the live queries re-subscribe). Habit lists return `{ habits, loaded }`; screens show a neutral blank (`testID="screen-loading"`) until `loaded`, never an empty state.
+- **"Today":** query hooks take `useToday()` (updates on returning to the foreground and at local midnight; the same `Date` object all day). A write reads `currentDay()` at the moment it runs and skips if the screen's render is a day behind; an Undo keeps the day of its own action.
+- **Startup:** `DatabaseProvider` shows `DatabaseErrorScreen` (Retry, Copy diagnostics, splash hidden) when migrations fail; once ready, `useStartupActions()` reconciles the OS's scheduled reminders against the database exactly once per launch (never prompting for permission, never scheduling anything an enabled reminder doesn't call for).
+- **Reminders and the OS (`syncHabitReminders`):** capture the habit's current scheduled identifiers → schedule the new set under a fresh generation (identifiers `"<reminder>:<slot>:<HHmm>:<generation>"` never collide with the old ones) → cancel exactly the captured old identifiers. A failure while scheduling cancels what that run created and leaves the old set; a failed cancel of the old set is logged and left to the reconcile. After a database write has already committed, a scheduling failure is logged but does not fail the action (`syncAfterWrite`).
 - **Notifications and file export:** adapters in `lib/` expose this app's own small interface, so the library can be replaced in one file.
 - **Navigation params:** typed routes are enabled; each screen declares its params in its own file.
 - **Routes stay thin** (rule 9): a route file changes when addresses change, a screen file when content changes.

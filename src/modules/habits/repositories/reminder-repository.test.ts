@@ -11,6 +11,7 @@ const {
 	createReminder,
 	updateReminder,
 	deleteReminder,
+	restoreReminder,
 }: typeof ReminderRepository = require("./reminder-repository");
 
 async function seedHabit(): Promise<number> {
@@ -79,6 +80,37 @@ describe("reminder-repository", () => {
 		const moved = await updateReminder(created.id, { weekdays: [7, 6] });
 		expect(moved.weekdays).toEqual([6, 7]);
 		expect(moved.hour).toBe(7);
+	});
+
+	it("restores a deleted reminder under its original id, time, days and state", async () => {
+		const habitId = await seedHabit();
+		const created = await createReminder({
+			habitId,
+			hour: 18,
+			minute: 5,
+			weekdays: [6, 7],
+			enabled: false,
+		});
+		await deleteReminder(created.id);
+		expect(await getHabitReminders(habitId)).toEqual([]);
+
+		const restored = await restoreReminder(created);
+
+		expect(restored).toEqual(created);
+		expect(await getHabitReminders(habitId)).toEqual([created]);
+	});
+
+	it("refuses to restore over a row that still exists, instead of duplicating it", async () => {
+		const habitId = await seedHabit();
+		const created = await createReminder({
+			habitId,
+			hour: 7,
+			minute: 0,
+			weekdays: [1],
+			enabled: true,
+		});
+		await expect(restoreReminder(created)).rejects.toThrow();
+		expect(await getHabitReminders(habitId)).toHaveLength(1);
 	});
 
 	it("deletes a reminder", async () => {
