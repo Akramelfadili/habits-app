@@ -60,6 +60,7 @@
 		"lint": "biome check .",
 		"prepare": "husky",
 		"test": "jest",
+		"test:slow": "jest --testPathIgnorePatterns /node_modules/ --testPathPattern \"\\\\.slow\\\\.test\\\\.tsx?$\"",
 		"visual-check": "node scripts/visual-check.mjs",
 		"mockups:render": "node scripts/render-mockups.mjs",
 		"e2e": "node scripts/e2e.mjs",
@@ -76,7 +77,9 @@
 		"resolver": "./jest.resolver.js",
 		"testPathIgnorePatterns": [
 			"/node_modules/",
-			"<rootDir>/scripts/"
+			"/__rsc_tests__/",
+			"<rootDir>/scripts/",
+			"\\.slow\\.test\\.tsx?$"
 		],
 		"setupFiles": [
 			"./jest.setup.js"

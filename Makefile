@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-tooling lint lint-check typecheck check-architecture deadcode doctor check e2e visual-check visual-baseline
+.PHONY: help start ios android web test test-slow test-tooling lint lint-check typecheck check-architecture deadcode doctor check e2e visual-check visual-baseline
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -15,8 +15,11 @@ android: ## Start with the Android emulator target
 web: ## Start the web preview
 	npx expo start --web
 
-test: ## Run the test suite
+test: ## Run the test suite (skips *.slow.test.ts; see test-slow)
 	npm test
+
+test-slow: ## Run only the slow tests (*.slow.test.ts); CI runs them, pre-push does not
+	npm run test:slow
 
 test-tooling: ## Run the tests for scripts/ (check-architecture rules) with node --test
 	npm run test:tooling

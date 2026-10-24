@@ -10,7 +10,7 @@ import { WEEK_STARTS_ON } from "../constants";
  * Keys are the same instants date-fns compares: `isSameWeek(a, b)` is
  * `startOfWeek(a) === startOfWeek(b)` and `isSameDay(a, b)` is
  * `startOfDay(a) === startOfDay(b)`, so answers are identical to the scans
- * they replace (`per-week-frequency.equivalence.test.ts`).
+ * they replace (`per-week-frequency.equivalence.slow.test.ts`).
  */
 export type CompletionIndex = {
 	/** startOfWeek(…).getTime() → each completion's own instant, duplicates kept. */

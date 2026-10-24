@@ -3,7 +3,8 @@
 | Command | What it does | When |
 |---|---|---|
 | `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`) |
-| `.github/workflows/check.yml` | `npm ci` → `make check` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
+| `.github/workflows/check.yml` | `npm ci` → `make check` → `npm run test:slow` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
+| `npm run test:slow` (`make test-slow`) | only the `*.slow.test.ts(x)` files, which the default Jest run ignores (`testPathIgnorePatterns` in `package.json`). Today: `per-week-frequency.equivalence.slow.test.ts` (~25 s) | CI; by hand when you touch the code it covers. Not in `make check` / pre-push |
 | `.husky/pre-commit` | `biome check --write .` only (fast on purpose) | every `git commit` |
 | Claude Code `PostToolUse` → `.claude/hooks/format.sh` | Biome-fixes the single file that was just edited with Edit/Write | after every Edit/Write |
 | Claude Code `Stop` → `.claude/hooks/verify.sh` | on a dirty tree: `tsc --incremental` → `check-architecture` → (`test:tooling` if `scripts/` changed) → `jest --onlyChanged`; exit 2 blocks the stop. Skipped on a clean tree and when `stop_hook_active` | when Claude finishes a turn |
@@ -44,6 +45,6 @@ These used to flicker (a popover 74 px lower, audit A10-10) because the popover'
 
 ### Test naming
 
-A test mirrors its source file (`x.ts` + `x.test.ts`). A variant for one aspect adds a suffix: `x.web.test.ts`, `x.live.test.ts` (live-query behaviour), `x.<aspect>.test.ts` (e.g. `category-repository.migration.test.ts`). Tests that cross files, like `src/lib/db/migrations.safety.test.ts`, are named for what they guard.
+A test mirrors its source file (`x.ts` + `x.test.ts`). A variant for one aspect adds a suffix: `x.web.test.ts`, `x.live.test.ts` (live-query behaviour), `x.<aspect>.test.ts` (e.g. `category-repository.migration.test.ts`). Tests that cross files, like `src/lib/db/migrations.safety.test.ts`, are named for what they guard. A test that is slow by design (randomised or exhaustive) ends in `.slow.test.ts` so the gate skips it and only CI runs it (see the table above).
 
 Tests that depend on "today" fake `Date` (`jest.useFakeTimers({ now, doNotFake: [...] })`, see `entry-repository.web.test.ts`) so a run that crosses midnight can't flake. `mockMeasureInWindow` (`modules/habits/test-support/`) answers `measureInWindow` for components that wait for a measurement.

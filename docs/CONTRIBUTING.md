@@ -15,7 +15,7 @@ How changes get into this repo. The rules themselves are in `CLAUDE.md`; the rea
 make check     # Biome (no writes) + tsc + Jest + tooling tests + check-architecture
 ```
 
-It also runs on `git push` (`.husky/pre-push`) and in CI. Never add an allowlist entry (`scripts/check-architecture.allowlist.json`) or raise the token baseline to get green: fix the code. Both files may only shrink.
+It also runs on `git push` (`.husky/pre-push`) and in CI. Jest skips tests named `*.slow.test.ts(x)` (today: the per-week equivalence test, ~25 s); CI runs them after `make check` with `npm run test:slow` (`make test-slow`). Run them yourself when you touch the code they cover. Name a test `.slow.test.ts` only when it is slow by design (a randomised or exhaustive check), not to hide a slow unit test. Never add an allowlist entry (`scripts/check-architecture.allowlist.json`) or raise the token baseline to get green: fix the code. Both files may only shrink.
 
 ## Visual check
 
