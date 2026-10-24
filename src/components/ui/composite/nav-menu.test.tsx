@@ -1,6 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { Profiler } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import {
+	Dimensions,
+	type HostInstance,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { NavMenu, NavMenuDivider } from "./nav-menu";
 
 describe("NavMenu", () => {
@@ -41,7 +47,7 @@ describe("NavMenu", () => {
 
 		it("renders once, already at its final position, when the overlay is not offset", async () => {
 			jest
-				.spyOn(View.prototype, "measureInWindow")
+				.spyOn(View.prototype as HostInstance, "measureInWindow")
 				.mockImplementation((callback) => callback(0, 0, 390, 844));
 			let commits = 0;
 			await render(
@@ -67,7 +73,7 @@ describe("NavMenu", () => {
 
 		it("corrects once, on layout, when the overlay starts below the window top", async () => {
 			jest
-				.spyOn(View.prototype, "measureInWindow")
+				.spyOn(View.prototype as HostInstance, "measureInWindow")
 				.mockImplementation((callback) => callback(0, 20, 390, 800));
 			await render(
 				<NavMenu anchorBottom={100} label="Summaries" onClose={jest.fn()}>
@@ -90,7 +96,7 @@ describe("NavMenu", () => {
 
 	it("scrolls its rows and caps its height when large text outgrows the screen", async () => {
 		jest
-			.spyOn(View.prototype, "measureInWindow")
+			.spyOn(View.prototype as HostInstance, "measureInWindow")
 			.mockImplementation((callback) => callback(0, 0, 390, 844));
 		await render(
 			<NavMenu anchorBottom={100} label="Summaries" onClose={jest.fn()}>

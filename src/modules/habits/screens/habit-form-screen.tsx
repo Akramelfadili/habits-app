@@ -8,9 +8,10 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
+	type ScrollViewInstance,
 	StyleSheet,
 	Text,
-	type TextInput,
+	type TextInputInstance,
 	View,
 } from "react-native";
 import { ActionCard } from "@/components/ui/composite/action-card";
@@ -78,8 +79,8 @@ type HabitFormScreenProps = {
 };
 
 export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
-	const scrollRef = useRef<ScrollView>(null);
-	const unitRef = useRef<TextInput>(null);
+	const scrollRef = useRef<ScrollViewInstance>(null);
+	const unitRef = useRef<TextInputInstance>(null);
 	const hasFocused = useRef(false);
 	const router = useRouter();
 	const { colors } = useTheme();

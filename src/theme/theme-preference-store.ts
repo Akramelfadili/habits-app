@@ -21,7 +21,7 @@ export function isThemePreference(
  */
 export function resolveScheme(
 	preference: ThemePreference,
-	systemScheme: ColorSchemeName | undefined,
+	systemScheme: ColorSchemeName | null | undefined,
 ): ColorScheme {
 	if (preference === "light" || preference === "dark") return preference;
 	return systemScheme === "dark" ? "dark" : "light";

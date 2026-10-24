@@ -5,6 +5,7 @@ import {
 	StyleSheet,
 	useWindowDimensions,
 	View,
+	type ViewInstance,
 } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 import { SectionLabel } from "../primitives/section-label";
@@ -39,7 +40,7 @@ export function NavMenu({
 }: NavMenuProps) {
 	const { colors } = useTheme();
 	const { width, height } = useWindowDimensions();
-	const overlay = useRef<View>(null);
+	const overlay = useRef<ViewInstance>(null);
 	const [top, setTop] = useState(anchorBottom + GAP_BELOW_ANCHOR);
 
 	// The anchor is in window space; the overlay may start below the status bar.

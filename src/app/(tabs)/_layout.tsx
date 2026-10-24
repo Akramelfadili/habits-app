@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs } from "expo-router/js-tabs";
 import { SymbolView } from "expo-symbols";
 import { useTheme } from "@/theme/use-theme";
 

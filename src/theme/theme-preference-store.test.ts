@@ -26,7 +26,7 @@ describe("resolveScheme", () => {
 	it("follows the OS for 'system', falling back to light", () => {
 		expect(resolveScheme("system", "dark")).toBe("dark");
 		expect(resolveScheme("system", "light")).toBe("light");
-		expect(resolveScheme("system", "unspecified")).toBe("light");
+		expect(resolveScheme("system", null)).toBe("light");
 		expect(resolveScheme("system", undefined)).toBe("light");
 	});
 });

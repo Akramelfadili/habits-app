@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { forwardRef } from "react";
-import { Pressable, StyleSheet, type View } from "react-native";
+import { Pressable, StyleSheet, type ViewInstance } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
 type HeaderMenuButtonProps = {
@@ -16,7 +16,7 @@ export const HEADER_MENU_BUTTON_SIZE = 44;
  * The `⋯` that opens a screen's navigation menu (NEW-01). Rest: a card-coloured
  * circle with a hairline. Open: filled ink with an inverted glyph.
  */
-export const HeaderMenuButton = forwardRef<View, HeaderMenuButtonProps>(
+export const HeaderMenuButton = forwardRef<ViewInstance, HeaderMenuButtonProps>(
 	function HeaderMenuButton({ open, onPress }, ref) {
 		const { colors, opacity } = useTheme();
 
