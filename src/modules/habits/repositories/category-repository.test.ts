@@ -23,7 +23,7 @@ const OTHER = builtInCategory("Other");
 const HEALTH = builtInCategory("Health");
 
 async function newCustom(name: string) {
-	return createCategory({ name, shape: "diamond", hue: 175 });
+	return createCategory({ name, shape: "square", hue: 95 });
 }
 
 async function habitRows() {
@@ -53,13 +53,13 @@ describe("category-repository", () => {
 	it("creates a custom with the given look, trimmed, after every built-in", async () => {
 		const created = await createCategory({
 			name: "  Journaling ",
-			shape: "diamond",
-			hue: 175,
+			shape: "square",
+			hue: 95,
 		});
 		expect(created).toMatchObject({
 			name: "Journaling",
-			shape: "diamond",
-			hue: 175,
+			shape: "square",
+			hue: 95,
 			builtIn: false,
 		});
 
@@ -71,6 +71,31 @@ describe("category-repository", () => {
 		const names = (await getCategories()).map((c) => c.name);
 		expect(names.slice(-2)).toEqual(["Journaling", "Music"]);
 		expect(second.id).toBeGreaterThan(created.id);
+	});
+
+	describe("stored order (HAB-42)", () => {
+		it("puts a new category last (max + 1), after Other", async () => {
+			await newCustom("Music");
+			await newCustom("Garden");
+			const names = (await getCategories()).map((c) => c.name);
+			expect(names.slice(-3)).toEqual(["Other", "Music", "Garden"]);
+			const rows = await mockDb
+				.select({ name: categories.name, sortOrder: categories.sortOrder })
+				.from(categories);
+			const orderOf = (name: string) =>
+				rows.find((row) => row.name === name)?.sortOrder;
+			expect(orderOf("Music")).toBe(BUILT_IN_CATEGORIES.length + 1);
+			expect(orderOf("Garden")).toBe(BUILT_IN_CATEGORIES.length + 2);
+		});
+
+		it("reads categories in sort_order, not id order", async () => {
+			const music = await newCustom("Music");
+			await mockDb
+				.update(categories)
+				.set({ sortOrder: 0 })
+				.where(eq(categories.id, music.id));
+			expect((await getCategories())[0].name).toBe("Music");
+		});
 	});
 
 	describe("renameCategory (HAB-25)", () => {

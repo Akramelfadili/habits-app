@@ -22,15 +22,15 @@ describe("useCategoryActions", () => {
 		await act(async () => {
 			returned = await result.current.createCategory({
 				name: "Journaling",
-				shape: "diamond",
-				hue: 175,
+				shape: "ring",
+				hue: 330,
 			});
 		});
 
 		expect(mockCreateCategory).toHaveBeenCalledWith({
 			name: "Journaling",
-			shape: "diamond",
-			hue: 175,
+			shape: "ring",
+			hue: 330,
 		});
 		expect(returned).toBe(created);
 	});

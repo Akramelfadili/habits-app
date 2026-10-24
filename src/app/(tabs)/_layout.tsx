@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs } from "expo-router/js-tabs";
 import { SymbolView } from "expo-symbols";
 import { useTheme } from "@/theme/use-theme";
 
@@ -27,24 +27,6 @@ export default function TabsLayout() {
 					title: "Habits",
 					tabBarIcon: ({ color }) => (
 						<SymbolView name="square.grid.2x2" size={22} tintColor={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="todos"
-				options={{
-					title: "To-dos",
-					tabBarIcon: ({ color }) => (
-						<SymbolView name="list.bullet" size={22} tintColor={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="expenses"
-				options={{
-					title: "Expenses",
-					tabBarIcon: ({ color }) => (
-						<SymbolView name="circle" size={22} tintColor={color} />
 					),
 				}}
 			/>

@@ -18,7 +18,13 @@ Status of the work. Specs: `docs/feature-spec.md` (HAB-01…13) and `docs/featur
 | V2 build | HAB-14…25 (nav menu, settings and export, summaries, logging mechanics, manage rework, detail states, reminders, name polish, delete sheet, categories) | Shipped |
 | Hardening | Audit batches B0–B13 in `docs/audits/audit.md` §16 — cleanups, docs, test hygiene done; folder moves, error handling, accessibility and diagnostics next | In progress |
 | Real-product practices | Crash/error reporting, versioning, changelog | Not started (diagnostics planned) |
-| V3 | Batches V3-0a…V3-6 in `docs/feature-spec-v3.md` | Planned |
+| V3 | Batches V3-0a…V3-6 in `docs/feature-spec-v3.md` | **V3-0a, V3-0b done**; next: the throwaway nav spike, then V3-1 |
+
+### V3 progress
+
+- **V3-0a — Structure and performance:** done (#24).
+- **V3-0b — Foundations:** done. HAB-26 (To-dos/Expenses removed), HAB-28 tokens (additive: type scale, spacing, radius, elevation, focus, motion, accent), the token ratchet extended to spacing / radius / off-scale font sizes, migration 0011 (HAB-42 data: stored category order, Health/Social off red, six-slot rotation), slow tests out of the pre-push gate. Not in it: HAB-29 component consolidation and the T-05 intensity ramp, T-18 density, T-19 gear (they land with the batches whose screens need them).
+- **Next:** the throwaway spike (custom `tabBar` on js-tabs + shared routes + iOS 26 header guard), then **V3-1 navigation shell** (HAB-27). From V3-1 on, each batch moves the screens it rebuilds onto the V3 tokens and lowers the ratchet baselines.
 
 ### V3-6 — Accessibility, baselines, e2e, docs
 

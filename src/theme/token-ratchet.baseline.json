@@ -3,5 +3,8 @@
 	"shadow-elevation": 5,
 	"font-size-literals": 25,
 	"line-height-literals": 8,
-	"font-weight-not-500-600": 0
+	"font-weight-not-500-600": 0,
+	"spacing-literals": 274,
+	"radius-literals": 55,
+	"off-scale-font-sizes": 56
 }

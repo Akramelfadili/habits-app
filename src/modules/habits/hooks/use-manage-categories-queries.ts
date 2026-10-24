@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { categoryUsage } from "../domain/category-rules";
+import { categoryUsage, inCreationOrder } from "../domain/category-rules";
 import { useCategories } from "../repositories/category-repository";
 import { useHabitsList } from "../repositories/habit-repository";
 import type { Category, CategoryUsage } from "../types";
@@ -18,14 +18,15 @@ export type ManageCategoriesView = {
  * over every habit including archived ones — a delete moves those too.
  */
 export function useManageCategoriesQueries(): ManageCategoriesView {
-	const categories = useCategories();
+	const stored = useCategories();
 	const { habits } = useHabitsList();
 	return useMemo(() => {
+		const categories = inCreationOrder(stored);
 		const usage = categoryUsage(categories, habits);
 		return {
 			builtIns: usage.filter((row) => row.category.builtIn),
 			customs: usage.filter((row) => !row.category.builtIn),
 			categories,
 		};
-	}, [categories, habits]);
+	}, [stored, habits]);
 }

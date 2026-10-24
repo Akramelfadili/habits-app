@@ -1,5 +1,6 @@
 # The same gate as `.husky/pre-push`: Biome (no writes), tsc, Jest, the
-# tooling tests and the architecture rules. Visual-check and Maestro stay
+# tooling tests and the architecture rules, plus the slow tests
+# (`*.slow.test.ts`) the pre-push gate skips. Visual-check and Maestro stay
 # manual (they need a browser/simulator and pinned fonts).
 name: check
 
@@ -24,3 +25,4 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: make check
+      - run: npm run test:slow

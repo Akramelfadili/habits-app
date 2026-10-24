@@ -4,6 +4,7 @@ import {
 	StyleSheet,
 	Text,
 	TextInput,
+	type TextInputInstance,
 	View,
 } from "react-native";
 import { useTheme } from "@/theme/use-theme";
@@ -39,7 +40,7 @@ type TextFieldProps = {
 	/** "next" when Return moves to another field; otherwise "done" whenever there is a handler. */
 	returnKeyType?: ReturnKeyTypeOptions;
 	/** For a form that moves focus to this field from the previous one. */
-	inputRef?: Ref<TextInput>;
+	inputRef?: Ref<TextInputInstance>;
 };
 
 /** How close to `maxLength` the remaining-characters counter starts showing. */

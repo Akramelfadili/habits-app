@@ -11,6 +11,7 @@ import m0007 from "./0007_nebulous_nightcrawler.sql";
 import m0008 from "./0008_friendly_exiles.sql";
 import m0009 from "./0009_ordinary_darkhawk.sql";
 import m0010 from "./0010_empty_iron_man.sql";
+import m0011 from "./0011_cold_harrier.sql";
 import journal from "./meta/_journal.json";
 
 export default {
@@ -27,5 +28,6 @@ export default {
 		m0008,
 		m0009,
 		m0010,
+		m0011,
 	},
 };

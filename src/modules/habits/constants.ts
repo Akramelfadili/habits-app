@@ -10,17 +10,18 @@ import type {
 
 /**
  * The ten built-in categories (HAB-24), in their fixed display order. The
- * HAB-24 migration seeds exactly these rows (a test keeps the two in step).
+ * HAB-24 migration seeds these rows and 0011 moves Health and Social off red
+ * (T-16); a test keeps the migrated rows and this list in step.
  * "Other" has no hue on purpose — it's the neutral catch-all, not an identity.
  */
 export const BUILT_IN_CATEGORIES = [
-	{ name: "Health", shape: "plus", hue: 25 },
+	{ name: "Health", shape: "plus", hue: 175 },
 	{ name: "Fitness", shape: "bars", hue: 150 },
 	{ name: "Mindfulness", shape: "diamond", hue: 300 },
 	{ name: "Productivity", shape: "square", hue: 255 },
 	{ name: "Learning", shape: "lines", hue: 75 },
 	{ name: "Finance", shape: "grid", hue: 110 },
-	{ name: "Social", shape: "half", hue: 345 },
+	{ name: "Social", shape: "half", hue: 230 },
 	{ name: "Home", shape: "archive", hue: 45 },
 	{ name: "Creativity", shape: "dot", hue: 200 },
 	{ name: "Other", shape: "ring", hue: null },
@@ -42,18 +43,16 @@ export const OTHER_CATEGORY_NAME: BuiltInCategoryName = "Other";
 /**
  * Custom categories' icon/color, never user-chosen (HAB-24): each new one takes
  * the slot with the fewest custom categories already on it, ties going to the
- * lowest slot — see `nextCategoryAppearance`. Every pair is unique.
+ * lowest slot — see `nextCategoryAppearance`. Every pair is unique. V3 (T-16,
+ * migration 0011) dropped the red hues 15 and 350 and the hues Health (175)
+ * and Social (230) now use; 0011 moved customs on them to these slots.
  */
 export const CATEGORY_ROTATION: readonly CategoryAppearance[] = [
-	{ shape: "diamond", hue: 175 },
 	{ shape: "ring", hue: 330 },
 	{ shape: "square", hue: 95 },
 	{ shape: "bars", hue: 220 },
-	{ shape: "dot", hue: 15 },
 	{ shape: "plus", hue: 265 },
 	{ shape: "half", hue: 130 },
-	{ shape: "lines", hue: 350 },
-	{ shape: "grid", hue: 230 },
 	{ shape: "archive", hue: 290 },
 ];
 

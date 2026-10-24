@@ -3,7 +3,8 @@
 | Command | What it does | When |
 |---|---|---|
 | `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`) |
-| `.github/workflows/check.yml` | `npm ci` → `make check` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
+| `.github/workflows/check.yml` | `npm ci` → `make check` → `npm run test:slow` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
+| `npm run test:slow` (`make test-slow`) | only the `*.slow.test.ts(x)` files, which the default Jest run ignores (`testPathIgnorePatterns` in `package.json`). Today: `per-week-frequency.equivalence.slow.test.ts` (~25 s) | CI; by hand when you touch the code it covers. Not in `make check` / pre-push |
 | `.husky/pre-commit` | `biome check --write .` only (fast on purpose) | every `git commit` |
 | Claude Code `PostToolUse` → `.claude/hooks/format.sh` | Biome-fixes the single file that was just edited with Edit/Write | after every Edit/Write |
 | Claude Code `Stop` → `.claude/hooks/verify.sh` | on a dirty tree: `tsc --incremental` → `check-architecture` → (`test:tooling` if `scripts/` changed) → `jest --onlyChanged`; exit 2 blocks the stop. Skipped on a clean tree and when `stop_hook_active` | when Claude finishes a turn |
@@ -25,6 +26,16 @@ Biome's `style/noRestrictedImports` (in `biome.json`) additionally flags Drizzle
 
 Counts raw colours (hex/rgba/oklch/'white'/'black'), shadow/elevation, `fontSize`/`lineHeight` literals and `fontWeight` other than 500/600 outside `src/theme`. Count **up** → fails (use a token). Count **down** → fails with "lower the baseline" → `npm run ratchet:update`.
 
+Since V3-0b it also counts (lines, like the others):
+
+| Key | What | Use instead | Baseline at V3-0b |
+|---|---|---|---|
+| `spacing-literals` | non-zero numeric `padding*`, `margin*` (negative too), `gap`/`rowGap`/`columnGap` | `space[…]` (F-04) | 274 |
+| `radius-literals` | non-zero numeric `border*Radius` | `radius.*`, `cellRadius()`, `squareRadius()` (F-05) | 55 |
+| `off-scale-font-sizes` | `fontSize` 10 / 10.5 / 11 / 11.5 / 12.5, and `typeScale.micro` / `.caption` / `.subtitle` (10 / 11 / 12.5) | a `textStyles` style (F-03) | 56 |
+
+An off-scale literal (`fontSize: 11`) counts under both `font-size-literals` and `off-scale-font-sizes`. Two literals on one line count once. `0` is not counted (a reset, not a step); sizes (`width`/`height`) are not counted (no size scale). The assessment's "~394" figure counted spacing *and* sizes, so it is higher than 274 + 55. The screens move onto the new tokens batch by batch during V3 (backlog), and each batch lowers these numbers with `npm run ratchet:update`. That script refuses a key the baseline does not have yet: a new key is added to the baseline by hand, in the commit that introduces it.
+
 ## Chromium on the WSL dev box (visual-check)
 
 The WSL box is Ubuntu 20.04 with no sudo:
@@ -44,6 +55,6 @@ These used to flicker (a popover 74 px lower, audit A10-10) because the popover'
 
 ### Test naming
 
-A test mirrors its source file (`x.ts` + `x.test.ts`). A variant for one aspect adds a suffix: `x.web.test.ts`, `x.live.test.ts` (live-query behaviour), `x.<aspect>.test.ts` (e.g. `category-repository.migration.test.ts`). Tests that cross files, like `src/lib/db/migrations.safety.test.ts`, are named for what they guard.
+A test mirrors its source file (`x.ts` + `x.test.ts`). A variant for one aspect adds a suffix: `x.web.test.ts`, `x.live.test.ts` (live-query behaviour), `x.<aspect>.test.ts` (e.g. `category-repository.migration.test.ts`). Tests that cross files, like `src/lib/db/migrations.safety.test.ts`, are named for what they guard. A test that is slow by design (randomised or exhaustive) ends in `.slow.test.ts` so the gate skips it and only CI runs it (see the table above).
 
 Tests that depend on "today" fake `Date` (`jest.useFakeTimers({ now, doNotFake: [...] })`, see `entry-repository.web.test.ts`) so a run that crosses midnight can't flake. `mockMeasureInWindow` (`modules/habits/test-support/`) answers `measureInWindow` for components that wait for a measurement.

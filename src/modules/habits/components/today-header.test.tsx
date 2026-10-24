@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { View } from "react-native";
+import { type HostInstance, View } from "react-native";
 import { mockMeasureInWindow } from "../test-support/measure-in-window";
 
 jest.mock("expo-symbols", () => {
@@ -60,7 +60,7 @@ describe("TodayHeader", () => {
 	it("ignores a second press while the first is still being measured", async () => {
 		let finish: (() => void) | undefined;
 		const spy = jest
-			.spyOn(View.prototype, "measureInWindow")
+			.spyOn(View.prototype as HostInstance, "measureInWindow")
 			.mockImplementation((callback) => {
 				finish = () => callback(0, 56, 44, 44);
 			});

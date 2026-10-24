@@ -28,6 +28,12 @@ The count may only go down. Separately, `check-architecture`'s `hex-colour` rule
 ## Consequences
 
 - New escapes are blocked from the day of the change, and old ones disappear as files are touched, with no migration batch.
-- **Spacing and radius are not counted**, because no tokens existed to point to (A4-01). As of the V3 assessment there are 394 such literals. V3-0b adds the spacing and radius tokens and extends the ratchet to them.
+- **Spacing and radius were not counted at first**, because no tokens existed to point to (A4-01); the V3 assessment counted 394 spacing and size literals.
+- **V3-0b (update):** the `space` and `radius` tokens exist now (F-04, F-05), and the ratchet counts three more keys:
+  - `spacing-literals`: 274 at the start;
+  - `radius-literals`: 55;
+  - `off-scale-font-sizes`: 56. These are the V3-retired sizes 10, 10.5, 11, 11.5 and 12.5, as literals or through `typeScale.micro/caption/subtitle`; a literal is also counted under `font-size-literals`.
+
+  Zero values and width/height are not counted. The screens move onto the tokens batch by batch during V3 rather than in one sweep, which is the same reasoning as the original decision. Details are in `docs/dev-tooling.md`.
 - The baseline is a file in the repo. Lowering it is a deliberate commit, so reviewers see token progress in diffs.
 - About 32 test files assert raw style values (A10-08). They change when the tokens land, separately from the ratchet.

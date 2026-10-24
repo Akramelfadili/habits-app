@@ -4,6 +4,7 @@ import type { Category } from "../types";
 import {
 	categoryUsage,
 	findDuplicateCategory,
+	inCreationOrder,
 	nextCategoryAppearance,
 } from "./category-rules";
 
@@ -24,8 +25,8 @@ function customsOn(slots: number[]): Category[] {
 }
 
 describe("CATEGORY_ROTATION", () => {
-	it("has ten slots with unique shape/hue pairs", () => {
-		expect(CATEGORY_ROTATION).toHaveLength(10);
+	it("has six slots with unique shape/hue pairs (V3 dropped 15, 350, 175, 230)", () => {
+		expect(CATEGORY_ROTATION).toHaveLength(6);
 		const pairs = CATEGORY_ROTATION.map((slot) => `${slot.shape}/${slot.hue}`);
 		expect(new Set(pairs).size).toBe(CATEGORY_ROTATION.length);
 	});
@@ -35,8 +36,8 @@ describe("findDuplicateCategory", () => {
 	const music: Category = {
 		id: 11,
 		name: "Music",
-		shape: "diamond",
-		hue: 175,
+		shape: "ring",
+		hue: 330,
 		builtIn: false,
 	};
 	const categories = [...builtIns, music];
@@ -82,16 +83,16 @@ describe("nextCategoryAppearance", () => {
 		).toEqual(CATEGORY_ROTATION[1]);
 	});
 
-	it("wraps to the lowest slot once all ten are used once", () => {
-		const allTen = customsOn([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-		expect(nextCategoryAppearance([...builtIns, ...allTen])).toEqual(
+	it("wraps to the lowest slot once all six are used once", () => {
+		const allSix = customsOn([0, 1, 2, 3, 4, 5]);
+		expect(nextCategoryAppearance([...builtIns, ...allSix])).toEqual(
 			CATEGORY_ROTATION[0],
 		);
 	});
 
 	it("keeps wrapping evenly — fewest uses first, ties to the lowest slot", () => {
-		const elevenThenTwelve = customsOn([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
-		expect(nextCategoryAppearance([...builtIns, ...elevenThenTwelve])).toEqual(
+		const sevenThenEight = customsOn([0, 1, 2, 3, 4, 5, 0]);
+		expect(nextCategoryAppearance([...builtIns, ...sevenThenEight])).toEqual(
 			CATEGORY_ROTATION[1],
 		);
 	});
@@ -129,5 +130,14 @@ describe("categoryUsage (HAB-25)", () => {
 			{ category: music, habitNames: ["Piano", "Scales"] },
 			{ category: garden, habitNames: [] },
 		]);
+	});
+});
+
+describe("inCreationOrder", () => {
+	it("lists built-ins in their fixed order, then customs by creation, whatever the stored order", () => {
+		const [first, second] = customsOn([0, 1]);
+		const stored = [second, builtIns[9], first, ...builtIns.slice(0, 9)];
+		expect(inCreationOrder(stored)).toEqual([...builtIns, first, second]);
+		expect(stored[0]).toBe(second);
 	});
 });

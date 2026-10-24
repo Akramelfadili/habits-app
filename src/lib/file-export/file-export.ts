@@ -33,7 +33,7 @@ export function writeScratchFile(content: string): WrittenFile {
 	const name = `export-${Date.now()}.partial`;
 	const file = new File(exportsDirectory(), name);
 	file.create({ overwrite: true });
-	file.write(content, { encoding: "utf8" });
+	file.writeSync(content, { encoding: "utf8" });
 	return { uri: file.uri, name, sizeBytes: file.size };
 }
 
@@ -106,7 +106,7 @@ export async function saveFileToFolder(uri: string): Promise<boolean> {
 export async function shareText(text: string, fileName: string): Promise<void> {
 	const file = new File(exportsDirectory(), fileName);
 	file.create({ overwrite: true });
-	file.write(text, { encoding: "utf8" });
+	file.writeSync(text, { encoding: "utf8" });
 	await Sharing.shareAsync(file.uri, {
 		mimeType: "text/plain",
 		UTI: "public.plain-text",

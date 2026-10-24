@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { useRef } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, type ViewInstance } from "react-native";
 import {
 	HeaderAddButton,
 	HeaderMenuButton,
@@ -28,7 +28,7 @@ export function TodayHeader({
 	onAnchorMeasured,
 }: TodayHeaderProps) {
 	const { colors } = useTheme();
-	const button = useRef<View>(null);
+	const button = useRef<ViewInstance>(null);
 	const measuring = useRef(false);
 
 	function handlePress() {

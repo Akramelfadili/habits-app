@@ -71,6 +71,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Delete the 2 routes, the placeholder component and its test, the 2 visual states and 2 baseline PNGs; update README, CLAUDE.md, `docs/architecture.md`, `docs/design-system.md`, `docs/feature-spec.md`.
 - Remove the "future modules" promise from the docs; **keep** the module-isolation rules. Keep or rename the fake `todos` fixture in `check-architecture.test.mjs`.
 
+> **As built (V3-0b):** the 2 routes, their tab entries, `placeholder-tab-screen` + test, the `tab-todos` / `tab-expenses` visual states and PNGs are gone; the tabs layout keeps only Habits until HAB-27. README, CLAUDE.md, `architecture.md`, `design-system.md` and `feature-spec.md` reworded (no future-modules promise; module-isolation rule kept). The fake `src/modules/todos/…` fixture in `check-architecture.test.mjs` is kept as-is: it only exercises the module-isolation rule.
+
 
 ---
 
@@ -101,6 +103,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Health and Social category hues move off red (T-16): hues 175 and 230.
 
 **Check against code:** existing token files and the token ratchet script; which V2 delta values (cell 18/6/5, stat card 14/10/26, chart-card padding 16) are already applied.
+
+> **As built (V3-0b, tokens only, additive):** `src/theme/theme.ts` adds `textStyles` (the nine F-03 styles under new names, next to the old `typeScale`) + `textStylesAx3`, `space` (F-04, keyed value × 25: `space[350]` = 14), `radius` (F-05: xs 4 · s 8 · m 14 · l 20 · xl 28 · pill 999, values from the master file) with `cellRadius()` / `squareRadius()`, `elevation` (F-06 lifted / toast / pill as `boxShadow`, per scheme, also on `useTheme().elevation`), `focusRing` + `focusRingShadow()` (T-13), `minTouchTarget` (44) and `motion` (F-07, durations + bezier tuples, toast hold times). AX3 sizes for subhead and footnote are 36 (T-30), not the mockup's 34 / 33. The only missing F-01 colour was `accent` (= ink), plus the pill fill `pillBg`; `outline`, `onAccent`, `warnTint`, the frozen pair and `toast`/`toastInk` already shipped, and danger stays `dangerBg`. Contrast tests cover onAccent/accent, accent and focus ring vs surfaces, toastInk/toast (≥ 10:1), frozenInk and ink on frozenBg, the frozen border and the warning glyph. **No screen uses them yet**; each V3 batch migrates its own screens (backlog). Not in this batch: the accent-tint intensity ramp (T-05, replaces `heatmapLevelColor`/`inkLevelColor`), the density pass (T-18) and the gear icon (T-19) — they land with the components that need them (backlog, "V3 foundations").
 
 ---
 
@@ -307,6 +311,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Hue change: Health 175, Social 230 (T-16); update V2 category palette tests.
 
 **Data (one migration, tested with child rows):** add `categories.sort_order`, backfilled from today's effective order (first appearance in habit order, Other last); set Health hue 175 and Social hue 230; remap any custom category already on 175, 230, 15 or 350; drop 15 and 350 from the rotation constants; update tests that pin old hues. A habit's colour is its category's hue (legacy `habits.color/icon/category` columns are unused).
+
+> **As built (V3-0b, data part only; no reorder UI yet):** migration **0011** adds `categories.sort_order` (NOT NULL, default 0) and in the same transaction: Health → 175, Social → 230; the custom rotation drops **15, 350 and also 175, 230** (owner's decision: otherwise the next custom lands on Health's hue), leaving 6 slots (ring 330, square 95, bars 220, plus 265, half 130, archive 290); every custom on a dropped hue moves to a **whole new slot** (shape + hue, owner's decision), in id order, each taking the slot `nextCategoryAppearance` would pick; `sort_order` is backfilled 1…n from first appearance among **active** habits in manual order, then categories only archived habits use, then unused ones by id, Other last. The repository reads in `sort_order` (ties by id) and a new category takes max + 1 (same statement); the web twin starts its fixtures in the order 0011 would store. `groupHabitsByCategory(habits, categories)` (Today, Manage) follows the stored order and still forces Other last, since a new custom is stored after it. The picker and Manage Categories keep creation (id) order via `inCreationOrder`. Today used first appearance among the **due** habits, so on a day the earliest habit of a category isn't due, its group can now sit higher than before; Manage is identical. **Not reversible:** the old Health/Social hues and the remapped customs' old looks are overwritten; a downgraded build would read the new colours and ignore `sort_order` (drizzle skips journal entries it doesn't know).
 
 ---
 

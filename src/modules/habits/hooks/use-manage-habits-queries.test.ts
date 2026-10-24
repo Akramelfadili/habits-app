@@ -1,14 +1,19 @@
 import { renderHook } from "@testing-library/react-native";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
-import type { Entry, Habit } from "../types";
+import type { Category, Entry, Habit } from "../types";
 
 let mockActive: Habit[] = [];
+/** Empty = not loaded: groups fall back to first appearance. */
+let mockCategories: Category[] = [];
 let mockArchived: Habit[] = [];
 let mockEntries: Entry[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
 	useActiveHabits: () => ({ habits: mockActive, loaded: true }),
 	useArchivedHabits: () => ({ habits: mockArchived, loaded: true }),
+}));
+jest.mock("../repositories/category-repository", () => ({
+	useCategories: () => mockCategories,
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
@@ -74,7 +79,7 @@ describe("useManageHabitsQueries", () => {
 
 		const { result } = await renderHook(() => useManageHabitsQueries());
 
-		const today = groupHabitsByCategory(mockActive);
+		const today = groupHabitsByCategory(mockActive, mockCategories);
 		expect(result.current.groups).toEqual(today);
 		expect(result.current.groups.map((g) => g.category.name)).toEqual([
 			"Training",
@@ -92,5 +97,28 @@ describe("useManageHabitsQueries", () => {
 		expect(result.current.groups.map((g) => g.category.name)).toEqual([
 			"Morning",
 		]);
+	});
+
+	it("orders groups by the stored category order (HAB-42), Other still last", async () => {
+		mockCategories = [
+			categoryNamed("Other"),
+			categoryNamed("Morning"),
+			categoryNamed("Training"),
+		];
+		mockActive = [
+			makeHabit({ id: 1, category: categoryNamed("Training") }),
+			makeHabit({ id: 2, category: categoryNamed("Other") }),
+			makeHabit({ id: 3, category: categoryNamed("Morning") }),
+		];
+		mockArchived = [];
+
+		const { result } = await renderHook(() => useManageHabitsQueries());
+
+		expect(result.current.groups.map((g) => g.category.name)).toEqual([
+			"Morning",
+			"Training",
+			"Other",
+		]);
+		mockCategories = [];
 	});
 });

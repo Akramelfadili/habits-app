@@ -5,6 +5,7 @@ import {
 	within,
 } from "@testing-library/react-native";
 import { Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ReorderableList } from "./reorderable-list";
 
 type Row = { id: string; group: string };
@@ -30,6 +31,7 @@ async function renderList(onReorder = jest.fn()) {
 				</View>
 			)}
 		/>,
+		{ wrapper: GestureHandlerRootView },
 	);
 	return onReorder;
 }
@@ -92,6 +94,7 @@ describe("ReorderableList", () => {
 						</View>
 					)}
 				/>,
+				{ wrapper: GestureHandlerRootView },
 			);
 			return onReorder;
 		}

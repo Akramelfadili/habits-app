@@ -52,6 +52,44 @@ describe("design-token ratchet", () => {
 		expect(PATTERNS["font-weight-not-500-600"].test(`fontWeight: "600",`)).toBe(
 			false,
 		);
+		for (const line of [
+			"padding: 16,",
+			"paddingHorizontal: 14,",
+			"marginTop: -4,",
+			"gap: 8,",
+			"columnGap: 0.5,",
+		]) {
+			expect(PATTERNS["spacing-literals"].test(line)).toBe(true);
+		}
+		for (const line of ["padding: 0,", "gap: space[200],", "margin: 0 },"]) {
+			expect(PATTERNS["spacing-literals"].test(line)).toBe(false);
+		}
+		expect(PATTERNS["radius-literals"].test("borderRadius: 20,")).toBe(true);
+		expect(PATTERNS["radius-literals"].test("borderTopLeftRadius: 28,")).toBe(
+			true,
+		);
+		expect(PATTERNS["radius-literals"].test("borderRadius: 0,")).toBe(false);
+		expect(PATTERNS["radius-literals"].test("borderRadius: radius.l,")).toBe(
+			false,
+		);
+		for (const line of [
+			"fontSize: 11,",
+			"fontSize: 12.5,",
+			"fontSize: 10 }",
+			"fontSize: typeScale.caption,",
+			"fontSize: typeScale.micro,",
+			"fontSize: typeScale.subtitle,",
+		]) {
+			expect(PATTERNS["off-scale-font-sizes"].test(line)).toBe(true);
+		}
+		for (const line of [
+			"fontSize: 12,",
+			"fontSize: 110,",
+			"fontSize: typeScale.rowLabel,",
+			"...textStyles.caption,",
+		]) {
+			expect(PATTERNS["off-scale-font-sizes"].test(line)).toBe(false);
+		}
 	});
 
 	it("scans the production source tree", () => {

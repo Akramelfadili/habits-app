@@ -17,6 +17,7 @@ import {
 	resolveTodayViewState,
 	type TodayViewState,
 } from "../presenters/today-screen-helpers";
+import { useCategories } from "../repositories/category-repository";
 import {
 	useAllEntries,
 	useEntriesInRange,
@@ -50,6 +51,7 @@ export function useTodayQueries(): {
 	freezesRemainingThisMonth: number;
 } {
 	const { habits, loaded } = useActiveHabits();
+	const categories = useCategories();
 	const today = useToday();
 	const tomorrow = addDays(today, 1);
 	const weekStart = startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
@@ -135,7 +137,7 @@ export function useTodayQueries(): {
 
 	return {
 		totalHabitCount: habits.length,
-		groups: groupHabitsByCategory(dueHabits),
+		groups: groupHabitsByCategory(dueHabits, categories),
 		progress,
 		completedHabitIds,
 		quantityValuesByHabitId,

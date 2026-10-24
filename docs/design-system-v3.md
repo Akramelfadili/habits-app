@@ -61,7 +61,7 @@ Intensity = accent mixed into track at **0 / 28 / 58 / 100 %**:
 - Frozen: violet, always dashed. Streak reset: amber outline. Bonus/off-schedule: accent dot. Before start / future: dashed / hairline. Nothing logged yet: outline (deliberately different from missed = filled track).
 - Never a habit or category hue in heat maps (T-05, retires V2 NEW-16 per-habit hue).
 
-**Categories:** V2 table unchanged except **Health 25 → 175** and **Social 345 → 230** (T-16, no red). Custom-category rotation drops hues 15 and 350. "Other" stays hue-less (neutral). Category appears as a **32 pt icon square** on rows (was 38) and an 8 pt dot in dense grids — never a row fill. Selected category chip uses the accent fill (was its category fill).
+**Categories:** V2 table unchanged except **Health 25 → 175** and **Social 345 → 230** (T-16, no red). Custom-category rotation drops hues 15 and 350 — and, as built, also 175 and 230 (now Health's and Social's), leaving six slots (`design-system.md`). "Other" stays hue-less (neutral). Category appears as a **32 pt icon square** on rows (was 38) and an 8 pt dot in dense grids — never a row fill. Selected category chip uses the accent fill (was its category fill).
 
 ## F-03 Type scale
 

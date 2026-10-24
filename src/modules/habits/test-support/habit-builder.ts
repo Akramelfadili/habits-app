@@ -29,13 +29,13 @@ export function builtInCategory(name: BuiltInCategoryName): Category {
 	return category;
 }
 
-/** A custom category — rotation slot 1's look unless overridden. */
+/** A custom category — rotation slot 1's look (ring/330) unless overridden. */
 export function makeCategory(overrides: Partial<Category> = {}): Category {
 	return {
 		id: 11,
 		name: "Morning",
-		shape: "diamond",
-		hue: 175,
+		shape: "ring",
+		hue: 330,
 		builtIn: false,
 		...overrides,
 	};

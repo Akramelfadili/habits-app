@@ -1,5 +1,9 @@
-import { BUILT_IN_CATEGORIES, CATEGORY_ROTATION } from "../constants";
-import type { Category } from "../types";
+import {
+	BUILT_IN_CATEGORIES,
+	CATEGORY_ROTATION,
+	OTHER_CATEGORY_NAME,
+} from "../constants";
+import type { Category, CategoryAppearance, Habit } from "../types";
 import type { FixtureScenario } from "./habit-fixtures";
 
 /**
@@ -17,13 +21,48 @@ export const FIXTURE_BUILT_IN_CATEGORIES: Category[] = BUILT_IN_CATEGORIES.map(
 	}),
 );
 
+/** The V2 ten-slot rotation the fixtures' customs were created on, before migration 0011. */
+const V2_ROTATION: readonly CategoryAppearance[] = [
+	{ shape: "diamond", hue: 175 },
+	{ shape: "ring", hue: 330 },
+	{ shape: "square", hue: 95 },
+	{ shape: "bars", hue: 220 },
+	{ shape: "dot", hue: 15 },
+	{ shape: "plus", hue: 265 },
+	{ shape: "half", hue: 130 },
+	{ shape: "lines", hue: 350 },
+	{ shape: "grid", hue: 230 },
+	{ shape: "archive", hue: 290 },
+];
+
+const sameLook = (a: CategoryAppearance, b: CategoryAppearance) =>
+	a.shape === b.shape && a.hue === b.hue;
+
+/**
+ * Customs as an upgraded device has them: created on the V2 rotation (slot N
+ * for the Nth), then put through migration 0011 — one on a hue V3 dropped
+ * moves, in id order, to the V3 slot with the fewest customs (ties lowest);
+ * the rest keep their look. So baselines change only where a phone would.
+ */
 function customFixtures(names: string[]): Category[] {
-	return names.map((name, index) => ({
+	const created = names.map((name, index) => ({
 		id: FIXTURE_BUILT_IN_CATEGORIES.length + index + 1,
 		name,
-		...CATEGORY_ROTATION[index % CATEGORY_ROTATION.length],
+		...V2_ROTATION[index % V2_ROTATION.length],
 		builtIn: false,
 	}));
+	const kept = (category: Category) =>
+		CATEGORY_ROTATION.some((slot) => sameLook(slot, category));
+	const result = created.map((category) => ({ ...category }));
+	for (const category of result) {
+		if (kept(category)) continue;
+		const uses = CATEGORY_ROTATION.map(
+			(slot) =>
+				result.filter((other) => kept(other) && sameLook(other, slot)).length,
+		);
+		Object.assign(category, CATEGORY_ROTATION[uses.indexOf(Math.min(...uses))]);
+	}
+	return result;
 }
 
 export function builtInFixture(name: string): Category {
@@ -32,7 +71,7 @@ export function builtInFixture(name: string): Category {
 	return category;
 }
 
-/** V1 fixture habits' free-text categories, as customs on rotation slots 1–3 (fixed order, not first-seen). */
+/** V1 fixture habits' free-text categories, as customs on V2 slots 1–3 (fixed order, not first-seen); Morning then moves off 175. */
 const V1_CUSTOM_FIXTURES = customFixtures(["Morning", "Evening", "Training"]);
 
 export const OTHER_FIXTURE = builtInFixture("Other");
@@ -83,4 +122,37 @@ export function categoryFixturesFor(scenario: FixtureScenario): Category[] {
 		default:
 			return [...FIXTURE_BUILT_IN_CATEGORIES, ...V1_CUSTOM_FIXTURES];
 	}
+}
+
+/**
+ * The order migration 0011 would store for these rows (HAB-42): first
+ * appearance among active habits in manual order, then among archived ones,
+ * then unused categories by id; Other last. The web repository starts from
+ * this, so fixtures group exactly as a migrated device would.
+ */
+export function inMigrationOrder(
+	categories: readonly Category[],
+	habits: readonly Habit[],
+): Category[] {
+	const manual = [...habits].sort(
+		(a, b) => a.sortOrder - b.sortOrder || a.id - b.id,
+	);
+	const firstSeen = new Map<number, number>();
+	const record = (list: Habit[]) => {
+		for (const habit of list) {
+			if (!firstSeen.has(habit.category.id))
+				firstSeen.set(habit.category.id, firstSeen.size);
+		}
+	};
+	record(manual.filter((habit) => habit.archivedAt === null));
+	record(manual.filter((habit) => habit.archivedAt !== null));
+	const isOther = (category: Category) =>
+		category.builtIn && category.name === OTHER_CATEGORY_NAME;
+	const rank = (category: Category) => firstSeen.get(category.id) ?? Infinity;
+	return [...categories].sort(
+		(a, b) =>
+			Number(isOther(a)) - Number(isOther(b)) ||
+			rank(a) - rank(b) ||
+			a.id - b.id,
+	);
 }

@@ -7,7 +7,7 @@ import { OTHER_CATEGORY_NAME } from "../constants";
 import type { Category, CreateCategoryInput } from "../types";
 import { allCategoriesQuery, rowToCategory } from "./category-rows";
 
-/** Live-query hook — every category in picker order (HAB-24): built-ins, then customs by creation. */
+/** Live-query hook — every category in the stored group order (HAB-42). */
 export function useCategories(): Category[] {
 	const { data } = useLiveRows<typeof categories.$inferSelect>(
 		allCategoriesQuery(),
@@ -25,7 +25,8 @@ export async function getCategories(): Promise<Category[]> {
  * Creates a custom category. Its icon/color come from the caller — the same
  * rotation pick the add-category sheet previewed — so what was shown is
  * exactly what's created. Name validation (length, duplicates) happens before
- * this, in the form schema.
+ * this, in the form schema. It goes last in the stored order (max + 1, read in
+ * the same statement).
  */
 export async function createCategory(
 	input: CreateCategoryInput,
@@ -37,6 +38,7 @@ export async function createCategory(
 			shape: input.shape,
 			hue: input.hue,
 			builtIn: false,
+			sortOrder: sql`(SELECT coalesce(max(${categories.sortOrder}), 0) + 1 FROM ${categories})`,
 			createdAt: new Date(),
 		})
 		.returning();

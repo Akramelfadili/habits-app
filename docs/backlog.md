@@ -7,7 +7,7 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 ## Open — product decisions and unbuilt spec rules
 
 - **Edit habit has Archive but no Delete** (HAB-23). Mockup E7 is labelled "from Edit habit · delete", but the only way to delete is "Delete habit" on Habit Detail. Archive was added at the foot of Edit habit (audit B9; HAB-17's rule) and deliberately only Archive — Delete stays one step further away. Decide whether Edit habit should also get a Delete entry.
-- **Category order on Manage and Today** (HAB-19). Both use `groupHabitsByCategory` — categories in order of first appearance among habits in manual order, "Other" last — so they always agree. Ordering by the managed category order instead would be more predictable but must change on Today in the same release, otherwise "matches Today" in the Manage footnote stops being true.
+- ~~**Category order on Manage and Today** (HAB-19).~~ Done in V3-0b: both group by the stored `categories.sort_order` (migration 0011), so they still agree. The reorder UI is HAB-42.
 - **Manage keeps the pushed back button and the "Habits" title, with no "Done"** (HAB-19, mockups D3/E2/E3 show a modal-style "Done"). Revisit if Manage becomes a modal or a tab destination.
 - **C1 omits the Last week / This week switch** (HAB-16). The Weekly mockup shows only the Week / Month / Year switcher; the V1 compact switch is kept because HAB-16's rule is that the range switcher is the only change to Weekly. Decide whether C1 means it to go.
 - **Yearly shows only the current year.** No way to look at last year; January opens on a nearly empty "<year> so far". Consider defaulting to the last full year for the first weeks of January, as Monthly opens on the last complete month.
@@ -64,6 +64,19 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 - **Legacy `habits.icon/color/category` columns** are nullable and unused until a cleanup migration (HAB-24).
 - **`no-freezes` fixture** draws a mostly grey grid; it is tuned for HAB-08's sheet, not Detail's layout.
 
+## Open — V3 foundations (V3-0b)
+
+- **V3 tokens are defined but unused** (HAB-28). `textStyles`, `space`, `radius` (+ `cellRadius`/`squareRadius`), `elevation`, `focusRing`, `minTouchTarget`, `motion`, `accent` and `pillBg` live in `src/theme/theme.ts`; no screen uses them yet. Each V3 batch moves the screens it rebuilds onto them, and deletes the retired `typeScale` sizes it no longer needs.
+- **Light `toastBtn` is 0.14 alpha; the master file says 0.16** (F-01). Not changed in V3-0b because it would move every toast baseline; fix with the V3-26 toast.
+- **Not yet tokenised** (HAB-28, land with the components that need them): the accent-tint intensity ramp (T-05, replaces `heatmapLevelColor`/`inkLevelColor`), the density pass (T-18), the gear icon (T-19), and the pill's Reduce Transparency / Increase Contrast modes (V3-01, HAB-49).
+
+- **Category order: picker and Manage Categories still list by creation** (HAB-42). Only Today and Manage habits group by the stored `sort_order`; decide with the reorder UI whether the picker and C1 follow it too. Other is forced last in groups even though a new custom is stored after it (max + 1); the reorder UI decides whether Other can move.
+- **Today's group order is now the stored order, not first appearance among the day's due habits** (HAB-42). Identical whenever each category's first active habit is due; otherwise a group can sit higher than it used to.
+
+- **Spacing and radius literals move to tokens per batch, not in one sweep** (HAB-28, ADR 004). Baselines at V3-0b: `spacing-literals` 274, `radius-literals` 55, `off-scale-font-sizes` 56. Each V3 batch moves the screens it rebuilds onto `space` / `radius` / `textStyles`, then runs `npm run ratchet:update`. V3-6 checks what is left.
+- **`domain/export-json.ts` imports `lib/diagnostics/app-info`** to stamp the build number into the file: the one accepted exception to "`domain/` is pure" (static facts, no I/O; `architecture.md` layer 4). Revisit if `domain/` gets a lint rule: pass the build in from the export service instead.
+- **27 `"yyyy-MM-dd"` format literals remain outside `utils/day-key.ts`** (V3-0a added `DAY_KEY_FORMAT` / `toDayKey`). Production: `domain/export-csv.ts`, `export-json.ts`, `off-schedule.ts`, `yearly-summary.ts` (2), `strategies/frequency-strategy.ts`, `hooks/use-retro-log-queries.ts`, `screens/habit-detail-screen.tsx`; the rest are web twins and `dev/` fixtures (`entry-repository.web.ts` 5, `entry-fixtures.ts` and friends). Move each to `toDayKey` when its file is touched; a later `check-architecture` rule can then forbid the literal.
+
 ## Decided — deviations the reviewers should not re-flag
 
 ### HAB-16 — Monthly
@@ -114,4 +127,5 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 ## Visual-check
 
 - **`today-menu-open`, `today-empty-menu-open`, `today-menu-open-dark` and the menu states on Weekly/Monthly/Yearly were flaky** (a 74 px popover offset). Root cause and fix: see `docs/audits/audit.md` A10-10 and the B3 hardening notes in `docs/dev-tooling.md`. Baselines recaptured after five consecutive stable full runs.
+- **V3-0b (122 baselines):** the single Habits tab (HAB-26) and the new category colours (Health/Social, plus fixture customs 0011 moves off dropped hues). The web fixtures now model an upgraded device (V2 slots, then 0011's remap), and a test pins them to the SQL. Expo's dev-tools button (bottom left) can appear in a capture on the current Expo; recapture that state if it does, and never accept it into a baseline.
 - Baselines re-captured over time: `retro-log` (D4), `delete-confirm*` (E7), `habit-detail-no-freezes` (D6); added `rest-day-picker*`, `rest-day-logged`, `habit-detail-bonus`, `delete-confirm-dark`, `delete-confirm-archived`.

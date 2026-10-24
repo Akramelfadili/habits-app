@@ -23,11 +23,14 @@ export function rowToCategory(row: CategoryRow): Category {
 }
 
 /**
- * Every category in picker order (HAB-24): autoincrement ids put the
- * migration-seeded built-ins first, then customs in creation order.
+ * Every category in the stored group order (HAB-42, `sort_order`; ties by
+ * id). Callers that need creation order (the picker) re-sort by id.
  */
 export const allCategoriesQuery = () =>
-	db.select().from(categories).orderBy(asc(categories.id));
+	db
+		.select()
+		.from(categories)
+		.orderBy(asc(categories.sortOrder), asc(categories.id));
 
 /**
  * A habit's category from the loaded set — or, if its `category_id` matches

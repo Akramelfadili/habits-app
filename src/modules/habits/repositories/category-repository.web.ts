@@ -3,8 +3,12 @@ import { OTHER_CATEGORY_NAME } from "../constants";
 import {
 	categoryFixturesFor,
 	FIXTURE_BUILT_IN_CATEGORIES,
+	inMigrationOrder,
 } from "../dev/category-fixtures";
-import { resolveFixtureScenario } from "../dev/habit-fixtures";
+import {
+	habitFixturesFor,
+	resolveFixtureScenario,
+} from "../dev/habit-fixtures";
 import type { Category, CreateCategoryInput } from "../types";
 import type * as NativeCategoryRepository from "./category-repository";
 import {
@@ -15,14 +19,22 @@ import {
 /**
  * Web-only stand-in for `category-repository.ts` (see `habit-repository.web.ts`
  * for why web runs on in-memory fixtures). `?fixtures=many-categories` gives
- * docs/mockups/hab-24-f1c.png's eight customs.
+ * docs/mockups/hab-24-f1c.png's eight customs. The store is kept in the
+ * stored group order (HAB-42): fixtures start in the order migration 0011
+ * would give them, and a new category is appended (max + 1, as on device).
  */
 
 let store: Category[] | undefined;
 const listeners = new Set<() => void>();
 
 function getCategoriesNow(): Category[] {
-	store ??= categoryFixturesFor(resolveFixtureScenario());
+	if (!store) {
+		const scenario = resolveFixtureScenario();
+		store = inMigrationOrder(
+			categoryFixturesFor(scenario),
+			habitFixturesFor(scenario),
+		);
+	}
 	return store;
 }
 
@@ -59,6 +71,7 @@ export async function createCategory(
 		hue: input.hue,
 		builtIn: false,
 	};
+	// Appended: the array position is the stored order, so this is max + 1.
 	setCategories([...existing, category]);
 	return category;
 }

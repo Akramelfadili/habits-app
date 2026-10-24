@@ -341,8 +341,8 @@ describe("HabitFormScreen — create mode", () => {
 			await waitFor(() =>
 				expect(mockCreateCategory).toHaveBeenCalledWith({
 					name: "Journaling",
-					shape: "ring",
-					hue: 330,
+					shape: "square",
+					hue: 95,
 				}),
 			);
 			await waitFor(() =>

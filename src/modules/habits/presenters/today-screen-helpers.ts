@@ -7,16 +7,19 @@ export type CategoryGroup = {
 };
 
 /**
- * Groups habits by category in the order each category first appears among
- * habits already in manual order (the order `useActiveHabits()` returns them
- * in — creation order until reordered, and a reorder only permutes slots
- * within one category, so a category's first appearance never moves). The
- * built-in "Other" — V1's "Anytime", and where uncategorised habits migrated
- * to (HAB-24) — is always forced last, regardless of when it would naturally
- * fall. Within a group, input order is preserved — HAB-13's manual order.
- * (HAB-19 reworks Manage's grouping; Today keeps this V1 rule.)
+ * Groups habits by category, groups in the stored category order (HAB-42:
+ * `categories` as `useCategories()` returns them, which migration 0011
+ * backfilled from the old first-appearance rule). A category missing from
+ * `categories` (not loaded yet) follows the known ones, in first appearance.
+ * The built-in "Other" — V1's "Anytime", and where uncategorised habits
+ * migrated to (HAB-24) — is always forced last: a new custom category is
+ * stored after it (max + 1), and only the HAB-42 reorder may say otherwise.
+ * Within a group, input order is preserved — HAB-13's manual order.
  */
-export function groupHabitsByCategory(habits: Habit[]): CategoryGroup[] {
+export function groupHabitsByCategory(
+	habits: Habit[],
+	categories: readonly Category[],
+): CategoryGroup[] {
 	const groups = new Map<number, CategoryGroup>();
 
 	for (const habit of habits) {
@@ -31,7 +34,13 @@ export function groupHabitsByCategory(habits: Habit[]): CategoryGroup[] {
 		}
 	}
 
-	const ordered = Array.from(groups.values());
+	const position = new Map(
+		categories.map((category, index) => [category.id, index]),
+	);
+	const rank = (group: CategoryGroup) =>
+		position.get(group.category.id) ?? categories.length;
+	// Array sort is stable, so unknown categories keep their first appearance.
+	const ordered = Array.from(groups.values()).sort((a, b) => rank(a) - rank(b));
 	const isOther = (group: CategoryGroup) =>
 		group.category.builtIn && group.category.name === OTHER_CATEGORY_NAME;
 	return [

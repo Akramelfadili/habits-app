@@ -13,7 +13,7 @@ jest.mock("expo-file-system", () => {
 			this.uri = parts.map(String).join("/");
 		}
 		create = (...args: unknown[]) => mockCreate(...args);
-		write = (...args: unknown[]) => mockWrite(...args);
+		writeSync = (...args: unknown[]) => mockWrite(...args);
 		copy = (...args: unknown[]) => mockCopy(...args);
 	}
 	class Directory {

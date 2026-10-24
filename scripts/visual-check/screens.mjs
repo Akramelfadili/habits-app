@@ -956,18 +956,6 @@ export const SCREENS = {
 		},
 	},
 
-	// Shell — placeholder tabs for the future modules
-	"tab-todos": {
-		feature: "Shell",
-		route: "/todos",
-		mockup: null,
-	},
-	"tab-expenses": {
-		feature: "Shell",
-		route: "/expenses",
-		mockup: null,
-	},
-
 	// Audit B6 — failure states. Reached only through the web fixtures
 	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in
 	// the app.
