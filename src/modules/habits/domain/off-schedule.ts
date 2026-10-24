@@ -27,19 +27,32 @@ export function isOffScheduleEntry(
 	entry: Entry,
 	habitEntries: readonly Entry[],
 ): boolean {
+	return offScheduleChecker(habit, habitEntries)(entry);
+}
+
+/**
+ * `isOffScheduleEntry` for many entries of one habit: the habit's completed
+ * days are gathered once instead of once per entry (the Detail heatmap asks
+ * about every logged day it shows).
+ */
+export function offScheduleChecker(
+	habit: Habit,
+	habitEntries: readonly Entry[],
+): (entry: Entry) => boolean {
+	const strategy = getHabitStrategy(habit);
 	const completedDates = habitEntries
 		.filter((other) => isEntryComplete(habit, other))
 		.map((other) => parseISO(other.date));
-	if (
-		!completedDates.some(
-			(date) => date.getTime() === parseISO(entry.date).getTime(),
-		)
-	) {
-		completedDates.push(parseISO(entry.date));
-	}
-	return !getHabitStrategy(habit).wasScheduledOn(parseISO(entry.date), {
-		completedDates,
-	});
+	const completedTimes = new Set(completedDates.map((date) => date.getTime()));
+	return (entry) => {
+		const day = parseISO(entry.date);
+		const time = day.getTime();
+		// The entry's own day counts as done (an invalid date never matches, as with `===`).
+		const counted = !Number.isNaN(time) && completedTimes.has(time);
+		return !strategy.wasScheduledOn(day, {
+			completedDates: counted ? completedDates : [...completedDates, day],
+		});
+	};
 }
 
 export type OffScheduleLog = { habit: Habit; entry: Entry };

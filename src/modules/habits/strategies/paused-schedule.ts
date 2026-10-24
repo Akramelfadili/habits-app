@@ -1,6 +1,7 @@
-import { addDays, isSameDay, parseISO } from "date-fns";
+import { addDays, parseISO } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
 import type { DayRange } from "../types";
+import { completionIndex, dayKeyTime } from "./completion-index";
 import type { FrequencyStrategy } from "./frequency-strategy";
 
 /** Far enough ahead that an open pause (still archived) covers every real day. */
@@ -41,7 +42,7 @@ export function withPauses(
 			!isPausedOn(date, pauses) && strategy.isDueOn(date, context),
 		wasScheduledOn: (date, context) =>
 			isPausedOn(date, pauses)
-				? context.completedDates.some((completed) => isSameDay(completed, date))
+				? completionIndex(context.completedDates).days.has(dayKeyTime(date))
 				: strategy.wasScheduledOn(date, context),
 	};
 }

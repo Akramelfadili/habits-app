@@ -1,14 +1,12 @@
-import {
-	addDays,
-	endOfWeek,
-	isAfter,
-	isBefore,
-	isSameDay,
-	isSameWeek,
-	startOfDay,
-} from "date-fns";
+import { addDays, endOfWeek, isAfter, startOfDay } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 import type { Frequency } from "../types";
+import {
+	completedDaysInWeek,
+	completionIndex,
+	completionTimesInWeek,
+	dayKeyTime,
+} from "./completion-index";
 import type { FrequencyStrategy } from "./frequency-strategy";
 
 /**
@@ -30,27 +28,28 @@ export function createPerWeekFrequency(
 	return {
 		// Any day of the week can be one of the X — which ones is up to the user.
 		canFallOn: () => true,
+		// Completions are bucketed by week once per history (completion-index.ts),
+		// so each call reads one week instead of scanning every completion.
 		isDueOn: (date, { completedDates }) => {
-			const dayStart = startOfDay(date);
-			const completedEarlierThisWeek = completedDates.filter(
-				(completed) =>
-					isSameWeek(completed, date, { weekStartsOn: WEEK_STARTS_ON }) &&
-					isBefore(completed, dayStart),
-			).length;
+			const dayStart = startOfDay(date).getTime();
+			let completedEarlierThisWeek = 0;
+			for (const time of completionTimesInWeek(
+				completionIndex(completedDates),
+				date,
+			)) {
+				if (time < dayStart) completedEarlierThisWeek += 1;
+			}
 			return completedEarlierThisWeek < frequency.timesPerWeek;
 		},
 		wasScheduledOn: (date, { completedDates }) => {
-			const completedThisWeek = completedDates.filter((completed) =>
-				isSameWeek(completed, date, { weekStartsOn: WEEK_STARTS_ON }),
+			const completedDays = completedDaysInWeek(
+				completionIndex(completedDates),
+				date,
 			);
-			const isCompleted = (day: Date) =>
-				completedThisWeek.some((completed) => isSameDay(completed, day));
+			const isCompleted = (day: Date) => completedDays.has(dayKeyTime(day));
 			if (isCompleted(date)) return true;
 
-			const distinctCompletions = new Set(
-				completedThisWeek.map((completed) => startOfDay(completed).getTime()),
-			).size;
-			const stillNeeded = frequency.timesPerWeek - distinctCompletions;
+			const stillNeeded = frequency.timesPerWeek - completedDays.size;
 			if (stillNeeded <= 0) return false;
 
 			const weekEnd = endOfWeek(date, { weekStartsOn: WEEK_STARTS_ON });

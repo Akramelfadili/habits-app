@@ -21,7 +21,7 @@ import {
 } from "../strategies/frequency-strategy";
 import { isPausedOn, restartDays } from "../strategies/paused-schedule";
 import type { Entry, EntryNote, Habit } from "../types";
-import { isOffScheduleEntry } from "./off-schedule";
+import { offScheduleChecker } from "./off-schedule";
 import { calculateCurrentStreak, isEntryComplete } from "./streaks";
 
 /**
@@ -220,6 +220,7 @@ export function buildHeatmapWeeks(
 	const completed = completedDatesOf(habit, entries);
 	const context = { completedDates: completed.dates };
 	const entriesByDate = new Map(entries.map((entry) => [entry.date, entry]));
+	const isOffSchedule = offScheduleChecker(habit, entries);
 	const todayStart = startOfDay(today);
 	const createdStart = startOfDay(habit.createdAt);
 	const firstWeek = addWeeks(
@@ -239,9 +240,7 @@ export function buildHeatmapWeeks(
 			// A real log always shows, even on an off-schedule day — hiding it
 			// would misreport what happened; the rate still ignores it. A frozen
 			// day is never a bonus: the freeze says it was owed.
-			const bonus =
-				!frozenDates.has(dateString) &&
-				isOffScheduleEntry(habit, entry, entries);
+			const bonus = !frozenDates.has(dateString) && isOffSchedule(entry);
 			return {
 				date,
 				status: bonus ? "bonus" : "logged",

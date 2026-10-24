@@ -44,12 +44,33 @@ export function calculateCurrentStreak(
 	frozenDates: ReadonlySet<string>,
 	asOf: Date,
 ): number {
-	const strategy = getHabitStrategy(habit);
+	return streakFrom(habit, completionsOf(habit, entries), frozenDates, asOf);
+}
+
+type Completions = {
+	dates: Date[];
+	/** The same days as day keys. */
+	set: Set<string>;
+};
+
+/** `habit`'s completed days, parsed once — shared by the at-risk check and the streak it reports. */
+function completionsOf(habit: Habit, entries: readonly Entry[]): Completions {
 	const completedEntries = entries.filter((entry) =>
 		isEntryComplete(habit, entry),
 	);
-	const completedDates = completedEntries.map((entry) => parseISO(entry.date));
-	const completedSet = new Set(completedEntries.map((entry) => entry.date));
+	return {
+		dates: completedEntries.map((entry) => parseISO(entry.date)),
+		set: new Set(completedEntries.map((entry) => entry.date)),
+	};
+}
+
+function streakFrom(
+	habit: Habit,
+	{ dates: completedDates, set: completedSet }: Completions,
+	frozenDates: ReadonlySet<string>,
+	asOf: Date,
+): number {
+	const strategy = getHabitStrategy(habit);
 	// A restore starts the streak over (HAB-20): never count back past it.
 	const lastRestart = restartDays(habit.pauses).at(-1);
 	const floor = startOfDay(
@@ -102,18 +123,20 @@ export function getStreakAtRisk(
 	const yesterdayString = toDayKey(yesterday);
 	if (frozenDates.has(yesterdayString)) return null;
 
-	const strategy = getHabitStrategy(habit);
-	const completedEntries = entries.filter((entry) =>
-		isEntryComplete(habit, entry),
-	);
-	const completedDates = completedEntries.map((entry) => parseISO(entry.date));
-	if (!strategy.isDueOn(yesterday, { completedDates })) return null;
-	if (completedEntries.some((entry) => entry.date === yesterdayString))
+	// Today renders this for every habit after every write: parse the history
+	// once, and rule out "done yesterday" before asking the strategy anything.
+	const completions = completionsOf(habit, entries);
+	if (completions.set.has(yesterdayString)) return null;
+	if (
+		!getHabitStrategy(habit).isDueOn(yesterday, {
+			completedDates: completions.dates,
+		})
+	)
 		return null;
 
-	const currentStreak = calculateCurrentStreak(
+	const currentStreak = streakFrom(
 		habit,
-		entries,
+		completions,
 		frozenDates,
 		subDays(yesterday, 1),
 	);
