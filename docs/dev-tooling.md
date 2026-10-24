@@ -3,6 +3,7 @@
 | Command | What it does | When |
 |---|---|---|
 | `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`) |
+| `.github/workflows/check.yml` | `npm ci` → `make check` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
 | `.husky/pre-commit` | `biome check --write .` only (fast on purpose) | every `git commit` |
 | Claude Code `PostToolUse` → `.claude/hooks/format.sh` | Biome-fixes the single file that was just edited with Edit/Write | after every Edit/Write |
 | Claude Code `Stop` → `.claude/hooks/verify.sh` | on a dirty tree: `tsc --incremental` → `check-architecture` → (`test:tooling` if `scripts/` changed) → `jest --onlyChanged`; exit 2 blocks the stop. Skipped on a clean tree and when `stop_hook_active` | when Claude finishes a turn |
