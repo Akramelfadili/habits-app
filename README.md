@@ -22,6 +22,7 @@ Use `npx expo install <package>` (not `npm install`) for Expo / React Native pac
 | `npm run lint` | Biome (no writes) |
 | `npm run visual-check` | Renders every screen state on web and diffs against `docs/visual-baseline/` |
 | `npm run e2e` | Maestro journeys in `e2e/` (needs a simulator) |
+| `npm run mockups:render` | Renders the V3 design files to PNG slices + text in `docs/mockups/v3/renders/` |
 | `npx drizzle-kit generate` | New migration after a schema change |
 
 ## Where to read more
@@ -30,6 +31,9 @@ Use `npx expo install <package>` (not `npm install`) for Expo / React Native pac
 - `docs/architecture.md` — folders, layers, patterns, stack
 - `docs/design-system.md` — tokens, components, variants
 - `docs/feature-spec.md`, `docs/feature-spec-v2.md` — what each `HAB-<id>` ticket specifies
+- `docs/feature-spec-v3.md` — V3 (HAB-26–50): habits only, three tabs, new Today / Progress / Habits
+- `docs/design-system-v3.md` — V3 tokens and components (replaces V1/V2 values where it gives one)
+- `docs/mockups/v3/README.md` — the V3 design files and their renders (`npm run mockups:render`)
 - `docs/dev-tooling.md` — hooks, checks, ratchets, visual-check setup
 - `docs/backlog.md` — deferred work and deviations from the specs
 - `docs/roadmap.md` — status

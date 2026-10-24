@@ -1,0 +1,1577 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+BORROWED
+CHANGED
+WHY
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal
+06 · SHEETS AND STATES
+Part 2 of 2 · Streak at risk, toasts and banners, export, suggestions, first run, system states, and the message catalogue.
+DC = destructive confirm · QS = quantity entry · RL = edit this day (retro log) · HP = habit picker · SR = streak at risk · TC = toasts and banners · EX = export · BS = suggestions · FR = first run · SY = system states. Sheets: grabber, title and Close (swipe down = Close). Confirm sheets drop Close and end with Cancel. Alerts (F9, FR3) are centred: title, one line, two buttons. Every message, with its copy, is listed at the end. Dashed tags mark Proposal, needs data check.
+SR1 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+0 of 1
+Meditate
+Missed Thursday · 1 freeze left
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Keep your Meditate streak?
+Close
+You missed Thursday 22. A freeze covers that day, so your 13-day streak carries on.
+1 freeze left
+Using one leaves 0
+Use a freeze
+Reset streak
+Either choice can be undone for 5 seconds.
+SR1 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+0 of 1
+Meditate
+Missed Thursday · 1 freeze left
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Keep your Meditate streak?
+Close
+You missed Thursday 22. A freeze covers that day, so your 13-day streak carries on.
+1 freeze left
+Using one leaves 0
+Use a freeze
+Reset streak
+Either choice can be undone for 5 seconds.
+SR1
+Streak at risk — use a freeze
+V3-24 · V3-13 at risk · V3-22
+BORROWED
+Nothing.
+CHANGED
+Tapping an at-risk circle (T6): plain copy, the live freeze count, Use a freeze (primary) or Reset streak. Undo for 5 s either way.
+WHY
+The decision sits next to the habit it affects.
+SR2 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+0 of 1
+Meditate
+Thu frozen · streak kept at 13
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Freeze used for Thu 22 · 0 left
+Undo
+SR2 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+0 of 1
+Meditate
+Thu frozen · streak kept at 13
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Freeze used for Thu 22 · 0 left
+Undo
+SR2
+Streak at risk — freeze used
+V3-13 frozen · V3-26
+BORROWED
+Nothing.
+CHANGED
+Status turns violet; the toast gives the new count and Undo (as T7).
+WHY
+Freeze use is traceable.
+SR3 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+0 of 1
+Meditate
+Missed Thursday · no freezes left
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Meditate streak resets
+Close
+You missed Thursday 22 and no freezes are left. The streak starts again with your next log; your longest streak (13 days) is kept.
+0 freezes left
+None to use right now
+Close
+SR3 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+0 of 1
+Meditate
+Missed Thursday · no freezes left
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Meditate streak resets
+Close
+You missed Thursday 22 and no freezes are left. The streak starts again with your next log; your longest streak (13 days) is kept.
+0 freezes left
+None to use right now
+Close
+SR3
+Streak at risk — no freezes left
+FREEZE COPY: PENDING CODE CHECK
+V3-24 · V3-22
+BORROWED
+Nothing.
+CHANGED
+One button — there is no choice to make. Says the longest streak is kept. The copy doesn’t say how freezes are earned — pending code check.
+WHY
+No fake choice.
+TC1 · Light
+9:41
+CATALOGUE · UNDO · 5 S
+Toasts
+Drink water +1 · 3 of 8 glasses
+Undo
+T4, QS1 · quantity change
+Drink water logged for Wed 21
+Undo
+T10, RL2 · names the date
+Freeze used for Thu 22 · 0 left
+Undo
+T7, SR2 · live count
+Morning run is back on Today
+Undo
+D5, H5 · restore
+Reminder at 18:30 removed
+Undo
+R3
+Read 20 min archived
+Undo
+DC5
+Music deleted
+Undo
+DC6
+Today
+Progress
+Habits
+TC1 · Dark
+9:41
+CATALOGUE · UNDO · 5 S
+Toasts
+Drink water +1 · 3 of 8 glasses
+Undo
+T4, QS1 · quantity change
+Drink water logged for Wed 21
+Undo
+T10, RL2 · names the date
+Freeze used for Thu 22 · 0 left
+Undo
+T7, SR2 · live count
+Morning run is back on Today
+Undo
+D5, H5 · restore
+Reminder at 18:30 removed
+Undo
+R3
+Read 20 min archived
+Undo
+DC5
+Music deleted
+Undo
+DC6
+Today
+Progress
+Habits
+TC1
+Toasts — Undo
+V3-26
+BORROWED
+Toast pattern from V3-26.
+CHANGED
+Every Undo toast: what happened, plus the date or count when it matters. Undo always on the right; 5 s (VoiceOver: until dismissed). Full copy list at the end of this section.
+WHY
+One pattern, one place.
+TC2 · Light
+9:41
+CATALOGUE · TONES
+Toasts
+Habit saved
+Success · F1–F8 · 4 s
+Reminder saved · 07:00
+Success · R2, R4 · 4 s
+Nothing to export yet — log a habit first
+Info · P3 · 4 s
+!
+Reminder saved, but notifications are off
+Open Settings
+Warning · R2 when denied · 6 s
+!
+Couldn’t save your log. Try again.
+Retry
+Error · V3-13 · until Retry or swipe
+!
+Export failed — not enough storage. Free up space, then retry.
+Retry
+Error · EX4 after the sheet was closed
+Today
+Progress
+Habits
+TC2 · Dark
+9:41
+CATALOGUE · TONES
+Toasts
+Habit saved
+Success · F1–F8 · 4 s
+Reminder saved · 07:00
+Success · R2, R4 · 4 s
+Nothing to export yet — log a habit first
+Info · P3 · 4 s
+!
+Reminder saved, but notifications are off
+Open Settings
+Warning · R2 when denied · 6 s
+!
+Couldn’t save your log. Try again.
+Retry
+Error · V3-13 · until Retry or swipe
+!
+Export failed — not enough storage. Free up space, then retry.
+Retry
+Error · EX4 after the sheet was closed
+Today
+Progress
+Habits
+TC2
+Toasts — success, info, warning, error
+V3-26 tones
+BORROWED
+Tones from V3-26.
+CHANGED
+Success and info: no icon, 4 s. Warning and error add an amber or red icon; errors stay until Retry or swipe.
+WHY
+Tone is never colour alone; the copy says it.
+TC3 · Light
+9:41
+CATALOGUE · STATES THAT LAST
+Banners
+Week starts Monday
+× per week habits reset every Monday at 00:00.
+It’s Saturday now
+Friday closed at midnight with 4 of 5 done.
+Dismiss
+Notifications are off
+Reminders won’t arrive until you allow them in iOS Settings.
+Open Settings
+Export failed
+Not enough storage. Nothing was changed — free up space, then try again.
+Try again
+Archived on 12 October
+Paused days stay paused.
+Restore
+Today
+Progress
+Habits
+TC3 · Dark
+9:41
+CATALOGUE · STATES THAT LAST
+Banners
+Week starts Monday
+× per week habits reset every Monday at 00:00.
+It’s Saturday now
+Friday closed at midnight with 4 of 5 done.
+Dismiss
+Notifications are off
+Reminders won’t arrive until you allow them in iOS Settings.
+Open Settings
+Export failed
+Not enough storage. Nothing was changed — free up space, then try again.
+Try again
+Archived on 12 October
+Paused days stay paused.
+Restore
+Today
+Progress
+Habits
+TC3
+Inline banners
+V3-27
+BORROWED
+Banners from V3-27.
+CHANGED
+Banners carry states that last (notifications off, archived, export failed, new day); toasts carry events.
+WHY
+A clear split between events and states.
+EX1 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+FORMAT
+JSON
+CSV
+JSON has everything, for backup or another app. CSV has one row per log, for spreadsheets.
+Export JSON
+EX1 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+FORMAT
+JSON
+CSV
+JSON has everything, for backup or another app. CSV has one row per log, for spreadsheets.
+Export JSON
+EX1
+Export — choose format
+V3-24 · V3-17 · V3-22
+BORROWED
+Existing JSON/CSV export.
+CHANGED
+From the Progress Export button or Settings › Export data: JSON or CSV, then Export. Runs the existing export.
+WHY
+Same flow from both entry points.
+EX2 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+FORMAT
+JSON
+CSV
+Writing habits-2026-10-23.json
+62%
+Usually under a second. Closing the sheet keeps it going; a toast says when it’s ready.
+Exporting…
+EX2 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+FORMAT
+JSON
+CSV
+Writing habits-2026-10-23.json
+62%
+Usually under a second. Closing the sheet keeps it going; a toast says when it’s ready.
+Exporting…
+EX2
+Export — writing
+V3-07 · V3-22 loading
+BORROWED
+Nothing.
+CHANGED
+Determinate bar with the file name; format locked; button reads Exporting…. Closing keeps it running; a toast says when it’s ready.
+WHY
+Usually under a second, but never a frozen screen.
+EX3 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+habits-2026-10-23.json
+48 KB · 9 habits · 1,284 logs
+Share file
+Done
+Share opens the iOS share sheet. The file is temporary — export again if it’s gone.
+EX3 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+habits-2026-10-23.json
+48 KB · 9 habits · 1,284 logs
+Share file
+Done
+Share opens the iOS share sheet. The file is temporary — export again if it’s gone.
+EX3
+Export — ready, Share
+V3-30 · V3-22
+BORROWED
+Nothing.
+CHANGED
+File card with size and counts. Share file opens the iOS share sheet; Done closes.
+WHY
+Sharing is the point of exporting.
+EX4 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+Export failed
+Not enough storage on this iPhone. Nothing was changed — free up space, then retry.
+Retry
+Cancel
+EX4 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Export data
+Close
+Export failed
+Not enough storage on this iPhone. Nothing was changed — free up space, then retry.
+Retry
+Cancel
+EX4
+Export — failed, Retry
+V3-27 error · V3-22
+BORROWED
+Nothing.
+CHANGED
+Error banner with the reason; Retry is primary; nothing changed.
+WHY
+Says why and what to do next.
+BS1 · Light
+9:41
+Suggestions
+Close
+Tap one to open Add habit with it filled in. Change anything before saving.
+HEALTH
+Drink water
+Quantity · 8 glasses a day
+Cold shower
+3× per week
+MINDFULNESS
+Meditate
+Daily
+Journal 5 min
+Daily
+FITNESS
+Morning run
+Mon, Wed, Fri
+Upper body
+Tue, Thu
+LEARNING
+Read 20 min
+Daily
+BREAK A HABIT
+No social media
+Break · daily
+No phone in bed
+Break · daily
+BS1 · Dark
+9:41
+Suggestions
+Close
+Tap one to open Add habit with it filled in. Change anything before saving.
+HEALTH
+Drink water
+Quantity · 8 glasses a day
+Cold shower
+3× per week
+MINDFULNESS
+Meditate
+Daily
+Journal 5 min
+Daily
+FITNESS
+Morning run
+Mon, Wed, Fri
+Upper body
+Tue, Thu
+LEARNING
+Read 20 min
+Daily
+BREAK A HABIT
+No social media
+Break · daily
+No phone in bed
+Break · daily
+BS1
+Browse suggestions
+V3-24 · V3-13 · V3-23
+BORROWED
+Suggested templates.
+CHANGED
+Ready-made habits grouped by category; tap opens Add habit prefilled. Decided: bundle 8–10 suggestions locally (9 shown).
+WHY
+A faster first habit.
+BS2 · Light
+9:41
+New habit
+Close
+From a suggestion
+Drink water is filled in. Change anything before saving.
+TYPE
+Build
+Break
+NAME
+Drink water
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+GOAL
+Check
+Quantity
+DAILY TARGET
+8
+glasses a day
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+BS2 · Dark
+9:41
+New habit
+Close
+From a suggestion
+Drink water is filled in. Change anything before saving.
+TYPE
+Build
+Break
+NAME
+Drink water
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+GOAL
+Check
+Quantity
+DAILY TARGET
+8
+glasses a day
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+BS2
+Add habit — prefilled from a suggestion
+F1 · V3-27 info
+BORROWED
+Nothing.
+CHANGED
+Name, category, goal, target and frequency filled from the suggestion; a banner says where they came from. Nothing saves until Save.
+WHY
+Speed without surprises.
+FR1 · Light
+9:41
+Small habits, every day
+Tick them off on Today, see your week in Progress, and keep streaks going on off days with freezes.
+Today
+Tick what’s due
+Progress
+Week, month and year
+Freezes
+Keep a streak through a missed day
+Add your first habit
+Browse suggestions
+FR1 · Dark
+9:41
+Small habits, every day
+Tick them off on Today, see your week in Progress, and keep streaks going on off days with freezes.
+Today
+Tick what’s due
+Progress
+Week, month and year
+Freezes
+Keep a streak through a missed day
+Add your first habit
+Browse suggestions
+FR1
+First run — welcome
+Hero · V3-23 · V3-22
+BORROWED
+Nothing.
+CHANGED
+First launch, no tabs: one line about the app, the three things it does, Add your first habit and Browse suggestions.
+WHY
+Gets to a first habit in one tap.
+FR2 · Light
+9:41
+Your first habit
+Close
+NAME
+e.g. Drink water
+OR PICK ONE
+Drink water
+Read 20 min
+Meditate
+Morning run
+No phone in bed
+TYPE
+Build
+Break
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Category, icon and reminders can wait — change them any time.
+Save habit
+Add a name to save
+FR2 · Dark
+9:41
+Your first habit
+Close
+NAME
+e.g. Drink water
+OR PICK ONE
+Drink water
+Read 20 min
+Meditate
+Morning run
+No phone in bed
+TYPE
+Build
+Break
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Category, icon and reminders can wait — change them any time.
+Save habit
+Add a name to save
+FR2
+First run — first habit
+F1 · V3-19
+BORROWED
+Nothing.
+CHANGED
+A slim Add habit: name, quick picks, type and frequency. Everything else can wait; Save is disabled with its reason.
+WHY
+Shortest path to a useful Today.
+FR3 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 1 done
+0%
+HEALTH
+0 of 1
+Drink water
+0 of 8 glasses
+0/8
+Today
+Progress
+Habits
+Remind you each day?
+A nudge at 09:00 to log Drink water. Change the time or turn it off in Reminders.
+Allow reminders
+Not now
+FR3 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+0 of 1 done
+0%
+HEALTH
+0 of 1
+Drink water
+0 of 8 glasses
+0/8
+Today
+Progress
+Habits
+Remind you each day?
+A nudge at 09:00 to log Drink water. Change the time or turn it off in Reminders.
+Allow reminders
+Not now
+FR3
+First run — notification pre-prompt
+Alert · V3-22
+BORROWED
+Nothing.
+CHANGED
+After the first save, our own prompt explains the reminder (09:00 default, as R4). Allow reminders shows the iOS prompt; Not now asks again only when a reminder is added.
+WHY
+People say yes when they know why, and iOS only asks once.
+FR4 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Nothing to track yet
+Add a habit and it shows up here every day it’s due.
+Add habit
+Browse suggestions
+Today
+Progress
+Habits
+FR4 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Nothing to track yet
+Add a habit and it shows up here every day it’s due.
+Add habit
+Browse suggestions
+Today
+Progress
+Habits
+FR4
+First run — empty Today
+V3-28
+BORROWED
+Nothing.
+CHANGED
+If the first habit is skipped, Today shows the empty state with Add habit and Browse suggestions (as T2).
+WHY
+No dead end.
+SY1 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Today
+Progress
+Habits
+SY1 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Today
+Progress
+Habits
+SY1
+Loading — skeleton
+Skeleton · V3-07
+BORROWED
+Nothing.
+CHANGED
+Header and date are real at once; skeleton rows appear only after 300 ms and are static with Reduce Motion.
+WHY
+No flash on fast loads.
+SY2 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Couldn’t load your habits
+Your data is safe. Trying again usually fixes this.
+Try again
+Copy diagnostics
+Today
+Progress
+Habits
+SY2 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Couldn’t load your habits
+Your data is safe. Trying again usually fixes this.
+Try again
+Copy diagnostics
+Today
+Progress
+Habits
+SY2
+Data error — Retry
+V3-28 · V3-22
+BORROWED
+Nothing.
+CHANGED
+Error state inside Today: data is safe, Try again, Copy diagnostics. Tabs stay usable.
+WHY
+Reassure first, then offer the fix.
+SY3 · Light
+9:41
+Updating your data
+This version stores habits in a new format. It usually takes under a minute.
+Step 2 of 3 · moving 1,284 logs
+64%
+Keep the app open. Nothing is deleted.
+SY3 · Dark
+9:41
+Updating your data
+This version stores habits in a new format. It usually takes under a minute.
+Step 2 of 3 · moving 1,284 logs
+64%
+Keep the app open. Nothing is deleted.
+SY3
+Database migration in progress
+Hero · V3-07
+BORROWED
+Nothing.
+CHANGED
+Before the tabs, on the first launch after an update: step, count and a determinate bar. Assumption: if the app is closed, migration resumes on next launch.
+WHY
+People know it’s working and why.
+SY4 · Light
+9:41
+Update didn’t finish
+Your habits are as they were before the update.
+Stopped at step 2 of 3
+Nothing was changed. Try again, or copy diagnostics for support.
+Try again
+Copy diagnostics
+Proposal, needs data check: “Nothing was changed” is only true if the migration runs in one transaction.
+SY4 · Dark
+9:41
+Update didn’t finish
+Your habits are as they were before the update.
+Stopped at step 2 of 3
+Nothing was changed. Try again, or copy diagnostics for support.
+Try again
+Copy diagnostics
+Proposal, needs data check: “Nothing was changed” is only true if the migration runs in one transaction.
+SY4
+Migration failed
+PROPOSAL, NEEDS DATA CHECK
+V3-27 error · V3-22
+BORROWED
+Nothing.
+CHANGED
+Nothing changed; Try again; Copy diagnostics for support. Proposal, needs data check: the “nothing was changed” promise holds only if the migration runs in one transaction.
+WHY
+Failure is safe and explained.
+SY5 · Light
+9:41
+SATURDAY, 24 OCTOBER
+Today
+It’s Saturday now
+Friday closed at midnight with 4 of 5 done. You can still log Friday from the week strip.
+Dismiss
+0 of 3 done
+0%
+HEALTH
+0 of 1
+Drink water
+0 of 8 glasses
+0/8
+MINDFULNESS
+0 of 1
+Meditate
+13-day streak · due today
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 5 days strong
+Today
+Progress
+Habits
+SY5 · Dark
+9:41
+SATURDAY, 24 OCTOBER
+Today
+It’s Saturday now
+Friday closed at midnight with 4 of 5 done. You can still log Friday from the week strip.
+Dismiss
+0 of 3 done
+0%
+HEALTH
+0 of 1
+Drink water
+0 of 8 glasses
+0/8
+MINDFULNESS
+0 of 1
+Meditate
+13-day streak · due today
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 5 days strong
+Today
+Progress
+Habits
+SY5
+Midnight rollover while open
+V3-27 info · V3-07
+BORROWED
+Nothing.
+CHANGED
+At midnight Today moves to the new day by itself: an info banner sums up yesterday, counts reset, streaks carry over. An open sheet keeps its date and says so in its title.
+WHY
+No stale day and no lost log.
+SY6 · Light
+9:41
+Settings
+Notifications
+Notifications are off
+Reminders and the evening review won’t arrive until you allow them in iOS Settings.
+Open Settings
+AFFECTED
+Reminders
+4 times on 3 habits · see R5
+Evening review
+21:00 · see S3
+Times stay editable while notifications are off. Nothing is deleted.
+Today
+Progress
+Habits
+SY6 · Dark
+9:41
+Settings
+Notifications
+Notifications are off
+Reminders and the evening review won’t arrive until you allow them in iOS Settings.
+Open Settings
+AFFECTED
+Reminders
+4 times on 3 habits · see R5
+Evening review
+21:00 · see S3
+Times stay editable while notifications are off. Nothing is deleted.
+Today
+Progress
+Habits
+SY6
+Notifications denied — summary
+V3-27 warning · V3-23
+BORROWED
+Nothing.
+CHANGED
+Settings › Notifications when iOS permission is off: one banner with Open Settings and what is affected. Detailed states: R5 (Reminders) and S3 (Evening review).
+WHY
+One place explains the whole impact.
+06 · Messages
+Every toast, banner and inline message in stages 1–5
+Toasts report something that just happened; banners describe a state that lasts. One toast at a time — a new one replaces the old. Placement: 16 pt above tab bar A, 12 pt above pill B; inside a sheet, above its last button; never over Undo. Undo toasts 5 s, success and info 4 s, warning 6 s, errors until Retry or swipe. VoiceOver announces every toast and keeps it until dismissed. Copy says what happened and names the habit, date or count; never “Success!” or “Oops”.
+TONE
+KIND
+COPY
+ACTION
+WHERE
+SHOWS FOR
+Undo
+Toast
+Drink water +1 · 3 of 8 glasses
+Undo
+T4, QS1
+5 s
+Undo
+Toast
+No social media · resisted today
+Undo
+T5
+5 s
+Undo
+Toast
+Drink water logged for Wed 21
+Undo
+T10, RL2
+5 s
+Undo
+Toast
+Read 20 min unticked
+Undo
+V3-26
+5 s
+Undo
+Toast
+Freeze used for Thu 22 · 0 left
+Undo
+T7, SR2
+5 s
+Undo
+Toast
+Meditate streak reset
+Undo
+SR1 › Reset streak
+5 s
+Undo
+Toast
+Journal 5 min is back on Today
+Undo
+H5, H9
+5 s
+Undo
+Toast
+Morning run is back on Today
+Undo
+D5
+5 s
+Undo
+Toast
+Reminder at 18:30 removed
+Undo
+R3
+5 s
+Undo
+Toast
+Read 20 min archived
+Undo
+DC5, H8
+5 s
+Undo
+Toast
+Music deleted
+Undo
+DC6
+5 s
+Undo
+Toast
+Tue 14 Jul updated · 5 of 5
+Undo
+RL1 on close
+5 s
+Success
+Toast
+Habit saved
+—
+F1–F8, BS2, FR2
+4 s
+Success
+Toast
+Changes saved
+—
+F9 › Save changes
+4 s
+Success
+Toast
+Reminder saved · 07:00
+—
+R2, R4
+4 s
+Success
+Toast
+Diagnostics copied
+—
+S6, SY2, SY4
+4 s
+Success
+Toast
+Read 20 min deleted
+—
+DC3 on success (permanent)
+4 s
+Success
+Toast
+Export ready · habits-2026-10-23.json
+Share
+EX2 if the sheet was closed
+5 s
+Info
+Toast
+Nothing to export yet — log a habit first
+—
+P3 (Export disabled)
+4 s
+Info
+Toast
+Can’t log ahead — pick today or an earlier day
+—
+V3-04 future day
+4 s
+Warning
+Toast
+Reminder saved, but notifications are off
+Open Settings
+R2 when denied
+6 s
+Error
+Toast
+Couldn’t save your log. Try again.
+Retry
+V3-13 error row
+Until Retry or swipe
+Error
+Toast
+Export failed — not enough storage. Free up space, then retry.
+Retry
+EX4 after closing the sheet
+Until Retry or swipe
+Warning
+Banner
+Notifications are off
+Open Settings
+R5, S3, SY6
+While denied
+Error
+Banner
+Export failed · Not enough storage. Nothing was changed — free up space, then try again.
+Try again
+EX4, V3-27
+Until retried
+Error
+Banner
+Couldn’t delete · Nothing was changed. Try again.
+—
+DC4
+Until retried
+Error
+Screen
+Couldn’t load your habits
+Try again · Copy diagnostics
+SY2
+Until fixed
+Error
+Screen
+Update didn’t finish
+Try again · Copy diagnostics
+SY4
+Until fixed
+Info
+Banner
+Week starts Monday
+—
+V3-27, F4
+Always
+Info
+Banner
+It’s Saturday now
+Dismiss
+SY5
+Until dismissed
+Info
+Banner
+Archived on 12 October
+Restore
+D4
+While archived
+Info
+Banner
+Restored today
+—
+D5
+Once
+Info
+Inline
+Logging for Wed 21 Oct
+Show today
+T10
+While a past day is selected
+Info
+Inline
+Insights unlock in 4 days
+—
+P2, P9, P14
+Until 7 days of logs
+Warning
+Inline
+Missed Thursday · 1 freeze left
+— (row opens SR1)
+T6 row status
+Until resolved
+Warning
+Inline
+Streak reset on Wed 14 Oct — no freezes were left.
+—
+D6
+Always
+Error
+Inline
+You already have a habit called Read 20 min. Choose another name.
+—
+F8
+Until fixed
+Error
+Inline
+Pick at least one day
+—
+F8
+Until fixed
+Error
+Inline
+Fitness already exists. Choose another name.
+—
+C3
+Until fixed

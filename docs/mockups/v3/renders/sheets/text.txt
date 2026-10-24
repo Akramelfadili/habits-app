@@ -1,0 +1,1500 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+BORROWED
+CHANGED
+WHY
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal
+06 · SHEETS AND STATES
+Part 1 of 2 · Destructive confirms, quantity entry, edit this day, habit picker. Streak at risk, toasts, export, suggestions, first run and system states → “States” file.
+DC = destructive confirm · QS = quantity entry · RL = edit this day (retro log) · HP = habit picker · SR = streak at risk · TC = toasts and banners · EX = export · BS = suggestions · FR = first run · SY = system states. Sheets: grabber, title and Close (swipe down = Close). Confirm sheets drop Close and end with Cancel. Alerts (F9, FR3) are centred: title, one line, two buttons. Every message, with its copy, is listed at the end. Dashed tags mark Proposal, needs data check.
+DC1 · Light
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Delete permanently
+One tap deletes. This can’t be undone.
+Cancel
+DC1 · Dark
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Delete permanently
+One tap deletes. This can’t be undone.
+Cancel
+DC1
+Delete habit — single confirm
+CHECK AGAINST CURRENT BEHAVIOUR
+V3-24 · V3-25 · V3-22 destructive
+BORROWED
+Nothing.
+CHANGED
+From Detail › Delete habit. Says what is lost (214 logs), offers Archive instead first (default focus), then one tap on Delete permanently. No Close: Cancel ends it; swipe down = Cancel. Decision: single confirm — check against current behaviour.
+WHY
+Delete is the one action Undo can’t cover, so the safe path comes first.
+DC2 · Light
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Tap again to delete
+Later – not in V3: a first-tap lock (tap again within 4 s).
+Cancel
+DC2 · Dark
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Tap again to delete
+Later – not in V3: a first-tap lock (tap again within 4 s).
+Cancel
+DC2
+Delete habit — two-step lock (Later – not in V3)
+LATER – NOT IN V3 (TWO-STEP DELETE)
+V3-25 armed
+BORROWED
+Nothing.
+CHANGED
+Reference only. The decision is a single confirm (DC1). A first-tap lock (“Tap again to delete”, re-locks after 4 s) is PR-10, Later.
+WHY
+Recorded so the option isn’t lost.
+DC3 · Light
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Deleting…
+Keep the app open — this takes a moment.
+Cancel
+DC3 · Dark
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Deleting…
+Keep the app open — this takes a moment.
+Cancel
+DC3
+Delete habit — deleting
+CHECK AGAINST CURRENT BEHAVIOUR
+V3-22 loading
+BORROWED
+Nothing.
+CHANGED
+“Deleting…”, Cancel disabled, sheet can’t be dismissed. On success Detail pops to Habits with “Read 20 min deleted” (no Undo — it’s permanent).
+WHY
+No half-deleted state.
+DC4 · Light
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Couldn’t delete
+Nothing was changed. Try again.
+Archive instead
+Hide from Today, keep history
+Delete permanently
+One tap deletes. This can’t be undone.
+Cancel
+DC4 · Dark
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Couldn’t delete
+Nothing was changed. Try again.
+Archive instead
+Hide from Today, keep history
+Delete permanently
+One tap deletes. This can’t be undone.
+Cancel
+DC4
+Delete habit — failed
+CHECK AGAINST CURRENT BEHAVIOUR
+V3-27 error
+BORROWED
+Nothing.
+CHANGED
+Error banner inside the sheet; nothing was deleted; Delete can be tried again.
+WHY
+Errors sit next to the action that failed.
+DC5 · Light
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Archive Read 20 min?
+It leaves Today and its reminders pause. History and streaks are kept — restore it any time from Habits › Archived.
+Archive habit
+Cancel
+DC5 · Dark
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+Archive Read 20 min?
+It leaves Today and its reminders pause. History and streaks are kept — restore it any time from Habits › Archived.
+Archive habit
+Cancel
+DC5
+Archive habit — confirm
+V3-24 · V3-22
+BORROWED
+Nothing.
+CHANGED
+Archive is reversible, so one tap: Archive habit (primary) or Cancel. Afterwards Detail pops and “Read 20 min archived” offers Undo.
+WHY
+Says what archive keeps, so people choose it over delete.
+DC6 · Light
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+Delete Music?
+No habits use it, so nothing moves. You can undo for 5 seconds.
+Delete category
+Cancel
+DC6 · Dark
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+Delete Music?
+No habits use it, so nothing moves. You can undo for 5 seconds.
+Delete category
+Cancel
+DC6
+Delete category — not in use
+V3-24 · V3-22 destructive
+BORROWED
+Nothing.
+CHANGED
+When no habit uses it: one destructive button and Cancel; Undo toast for 5 s. The in-use version with the move preview is C5.
+WHY
+Nothing is lost, so no first-tap lock.
+DC7 · Light
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Delete permanently
+Cancel
+DC7 · Dark
+9:41
+Habits
+LEARNING · DAILY
+Read 20 min
+Edit
+STREAK
+12
+days
+LONGEST
+21
+days
+90-DAY RATE
+87%
++6 pts
+Today
+Progress
+Habits
+Delete Read 20 min?
+Deletes Read 20 min and its 214 logs. Archiving keeps them and can be undone.
+Archive instead
+Hide from Today, keep history
+Delete permanently
+Cancel
+DC7
+Delete habit — AX3
+01 · AX3 · V3-22
+BORROWED
+Nothing.
+CHANGED
+Button labels wrap inside their buttons and buttons grow in height; nothing overflows. The 4 s hint is read by VoiceOver instead of shown.
+WHY
+Labels must fit at every text size.
+QS0 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10
+Today
+Progress
+Habits
+QS0 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10
+Today
+Progress
+Habits
+QS0
+Quantity row — count button (AX3)
+V3-13 count button · V3-04 · 01 · AX3
+BORROWED
+Nothing.
+CHANGED
+The count “5/8” is a visible button: tap it, or long-press the circle, to open the quantity sheet; the circle itself adds +1. At AX3 the row stacks and the count button and circle sit on their own line, each with a 44 pt target. Light and dark.
+WHY
+The sheet is never hidden behind a gesture.
+QS1 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Drink water
+Close
+5
+of 8 glasses
+QUICK ADD
++1
++2
++3
+Fill to 8
+Set exact value
+Type how many
+Every change saves straight away. Closing shows one toast with Undo on Today.
+QS1 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Drink water
+Close
+5
+of 8 glasses
+QUICK ADD
++1
++2
++3
+Fill to 8
+Set exact value
+Type how many
+Every change saves straight away. Closing shows one toast with Undo on Today.
+QS1
+Quantity — stepper and quick amounts
+V3-24 · V3-18 · V3-19 · V3-23
+BORROWED
+Count shown in the row.
+CHANGED
+Tap the count button (“5/8”) on Today, or long-press the circle (a plain tap on the circle adds +1 with Undo — no sheet): stepper with 44 pt buttons, quick +1 / +2 / +3 and Fill to target, and Set exact value. Each change saves at once; closing shows one toast with Undo.
+WHY
+Most logs stay one tap; exact entry is one step away.
+QS2 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Drink water
+Close
+GLASSES TODAY
+6
+Target 8 · up to 99
+Set to 6
+The number pad opens with the field focused. Setting 6 logs the difference (+1).
+QS2 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Drink water
+Close
+GLASSES TODAY
+6
+Target 8 · up to 99
+Set to 6
+The number pad opens with the field focused. Setting 6 logs the difference (+1).
+QS2
+Quantity — set exact value
+V3-16 · V3-22
+BORROWED
+Nothing.
+CHANGED
+A number field with the number pad; “Set to 6” logs the difference. Target and maximum as helper.
+WHY
+Correcting a count shouldn’t take many taps.
+QS3 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+2 of 5 done
+40%
+HEALTH
+0 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Drink water
+Close
+8
+of 8 glasses · done
+QUICK ADD
++1
++2
++3
+Fill to 8
+Target reached — the circle on Today is full. Extra glasses still count.
+Done
+QS3 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+2 of 5 done
+40%
+HEALTH
+0 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+3× per week · 1 done
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+Today
+Progress
+Habits
+Drink water
+Close
+8
+of 8 glasses · done
+QUICK ADD
++1
++2
++3
+Fill to 8
+Target reached — the circle on Today is full. Extra glasses still count.
+Done
+QS3
+Quantity — target reached
+V3-18 · V3-19 disabled
+BORROWED
+Nothing.
+CHANGED
+The stepper reads “of 8 glasses · done” and Fill to 8 is disabled; extra amounts still count.
+WHY
+No dead end above the target.
+QS4 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Today
+Progress
+Habits
+Drink water
+Close
+5
+of 8 glasses
++1
++2
+Done
+QS4 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Today
+Progress
+Habits
+Drink water
+Close
+5
+of 8 glasses
++1
++2
+Done
+QS4
+Quantity — AX3
+01 · AX3
+BORROWED
+Nothing.
+CHANGED
+Stepper value grows; quick amounts trim to two and wrap; Done goes full width.
+WHY
+Readable and reachable at large text.
+RL1 · Light
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+81%
+since 3 Mar
+BEST STREAK
+41
+days · Meditate
+BEST MONTH
+Sep
+100%
+July 2026
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Tuesday, 14 July
+Close
+Tap a circle to set that day. Streaks and rates update when you close.
+Drink water
+8 of 8 glasses · tap for amount
+8/8
+Upper body
+Tue, Thu · done
+Meditate
+Done
+No social media
+Break · resisted
+Read 20 min
+Missed · tap to log
+Done
+RL1 · Dark
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+81%
+since 3 Mar
+BEST STREAK
+41
+days · Meditate
+BEST MONTH
+Sep
+100%
+July 2026
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Tuesday, 14 July
+Close
+Tap a circle to set that day. Streaks and rates update when you close.
+Drink water
+8 of 8 glasses · tap for amount
+8/8
+Upper body
+Tue, Thu · done
+Meditate
+Done
+No social media
+Break · resisted
+Read 20 min
+Missed · tap to log
+Done
+RL1
+Edit this day — from Month (opened from Year)
+V3-24 · V3-13 · V3-04
+BORROWED
+Nothing.
+CHANGED
+“Edit this day” (P13) lists every habit due that day with its circle; tap to set. Quantity rows open the quantity sheet for that date. Before-start and paused days aren’t listed.
+WHY
+One sheet for any past day, from any view.
+RL2 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Wednesday, 21 October
+Close
+Tap a circle to set that day. Streaks and rates update when you close.
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+3× per week · 1 done that week
+Meditate
+Done
+Read 20 min
+Done · just now
+No social media
+Resisted
+Read 20 min logged for Wed 21
+Undo
+Done
+RL2 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Last 5 weeks
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Wednesday, 21 October
+Close
+Tap a circle to set that day. Streaks and rates update when you close.
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+3× per week · 1 done that week
+Meditate
+Done
+Read 20 min
+Done · just now
+No social media
+Resisted
+Read 20 min logged for Wed 21
+Undo
+Done
+RL2
+Edit this day — from Week, after a change
+V3-24 · V3-26 in sheet
+BORROWED
+Nothing.
+CHANGED
+Opened by tapping a day in Week. After a change, the toast appears inside the sheet above Done, names the date and offers Undo.
+WHY
+Undo stays reachable while the sheet is open.
+RL3 · Light
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+84%
++6 pts vs Sep
+PERFECT DAYS
+6
+of 23 so far
+BEST STREAK
+13
+Meditate · days
+Today
+Progress
+Habits
+Wednesday, 7 October
+Close
+Tap a circle to set that day. Streaks and rates update when you close.
+Meditate
+Frozen · streak kept
+Drink water
+8 of 8 glasses
+8/8
+Read 20 min
+Done
+No social media
+Resisted
+Proposal, needs data check: logging a frozen day would return the freeze.
+Done
+RL3 · Dark
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+84%
++6 pts vs Sep
+PERFECT DAYS
+6
+of 23 so far
+BEST STREAK
+13
+Meditate · days
+Today
+Progress
+Habits
+Wednesday, 7 October
+Close
+Tap a circle to set that day. Streaks and rates update when you close.
+Meditate
+Frozen · streak kept
+Drink water
+8 of 8 glasses
+8/8
+Read 20 min
+Done
+No social media
+Resisted
+Proposal, needs data check: logging a frozen day would return the freeze.
+Done
+RL3
+Edit this day — from Month, frozen day
+PROPOSAL, NEEDS DATA CHECK
+V3-24 · V3-04 frozen
+BORROWED
+Nothing.
+CHANGED
+A frozen day shows the violet circle. Proposal, needs data check: logging it would return the freeze — the app may not record which day a freeze covered.
+WHY
+Keeps freeze accounting honest.
+HP1 · Light
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+81%
+since 3 Mar
+BEST STREAK
+41
+days · Meditate
+BEST MONTH
+Sep
+100%
+July 2026
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Show habit
+Close
+All habits
+7 active
+Drink water
+Health
+Upper body
+Fitness
+Meditate
+Mindfulness
+Read 20 min
+Learning
+No social media
+Productivity · Break
+No phone in bed
+Home · Break
+ARCHIVED · 1
+Morning run
+Fitness · archived 12 Oct
+HP1 · Dark
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+81%
+since 3 Mar
+BEST STREAK
+41
+days · Meditate
+BEST MONTH
+Sep
+100%
+July 2026
+All habits
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Today
+Progress
+Habits
+Show habit
+Close
+All habits
+7 active
+Drink water
+Health
+Upper body
+Fitness
+Meditate
+Mindfulness
+Read 20 min
+Learning
+No social media
+Productivity · Break
+No phone in bed
+Home · Break
+ARCHIVED · 1
+Morning run
+Fitness · archived 12 Oct
+HP1
+Habit picker — all habits
+V3-24 · V3-23 check
+BORROWED
+Nothing.
+CHANGED
+From the habit chip on Year: All habits first, then active habits, then archived. One choice; the sheet closes on tap.
+WHY
+Filtering never leaves the tab.
+HP2 · Light
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+89%
+since 3 Mar
+LONGEST
+41
+days
+FREEZES USED
+3
+this year
+Today
+Progress
+Habits
+Show habit
+Close
+All habits
+7 active
+Drink water
+Health
+Upper body
+Fitness
+Meditate
+Mindfulness
+Read 20 min
+Learning
+No social media
+Productivity · Break
+No phone in bed
+Home · Break
+Choosing a habit closes the sheet and filters Year. All habits resets it.
+HP2 · Dark
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+89%
+since 3 Mar
+LONGEST
+41
+days
+FREEZES USED
+3
+this year
+Today
+Progress
+Habits
+Show habit
+Close
+All habits
+7 active
+Drink water
+Health
+Upper body
+Fitness
+Meditate
+Mindfulness
+Read 20 min
+Learning
+No social media
+Productivity · Break
+No phone in bed
+Home · Break
+Choosing a habit closes the sheet and filters Year. All habits resets it.
+HP2
+Habit picker — one habit
+V3-24 · V3-23 check
+BORROWED
+Nothing.
+CHANGED
+Meditate chosen; the chip on Year shows it (P15). All habits resets the filter.
+WHY
+The current filter is always visible.

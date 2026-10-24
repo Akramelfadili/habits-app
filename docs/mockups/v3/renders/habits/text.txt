@@ -1,0 +1,1280 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+BORROWED
+CHANGED
+WHY
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal
+05 · SCREENS · HABITS
+Part 1 of 3 · Habits tab (H) and Habit Detail (D). Forms and Categories → “Habits Forms” file; Reminders and Settings → “Habits Settings” file.
+H = Habits tab · D = Habit Detail (pushed from any tab; the tab bar shows where it came from) · F = Add/Edit habit (modal form, Save pinned to the bottom) · C = Categories · R = Reminders · S = Settings (pushed from the Habits gear). H8–H10 show tab bar variant B. Sheets and system states are in 06. Dashed tags mark Proposal, needs data check.
+H1 · Light
+9:41
+7 ACTIVE · 2 ARCHIVED
+Habits
+Search habits
+ACTIVE · 7
+Reorder
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+ARCHIVED · 2
+Show
+Categories
+12
+Today
+Progress
+Habits
+H1 · Dark
+9:41
+7 ACTIVE · 2 ARCHIVED
+Habits
+Search habits
+ACTIVE · 7
+Reorder
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+ARCHIVED · 2
+Show
+Categories
+12
+Today
+Progress
+Habits
+H1
+Habits — populated · tab bar B (baseline)
+V3-02 · search · V3-13 rows · V3-23 · V3-01
+BORROWED
+Nothing (the reference has no library).
+CHANGED
+The library: search, active habits grouped by category with a count, Reorder in the Active header, Archived collapsed, then Categories. Gear opens Settings, + opens Add habit.
+WHY
+Management lives in one tab instead of the retired ⋯ menu (NEW-01/02/14).
+H2 · Light
+9:41
+7 ACTIVE · 2 ARCHIVED
+Habits
+in
+Cancel
+ACTIVE · 2
+Drink water
+Health · daily
+No phone in bed
+Home · break
+ARCHIVED · 1
+Morning run
+Fitness · archived 12 Oct
+Restore
+Today
+Progress
+Habits
+H2 · Dark
+9:41
+7 ACTIVE · 2 ARCHIVED
+Habits
+in
+Cancel
+ACTIVE · 2
+Drink water
+Health · daily
+No phone in bed
+Home · break
+ARCHIVED · 1
+Morning run
+Fitness · archived 12 Oct
+Restore
+Today
+Progress
+Habits
+H2
+Habits — search results
+search (active) · V3-13 · V3-23 archived
+BORROWED
+Nothing.
+CHANGED
+Search matches active and archived habits; results split by status. Archived results can be restored in place.
+WHY
+One place to find any habit, including old ones.
+H3 · Light
+9:41
+7 ACTIVE · 2 ARCHIVED
+Habits
+yoga
+Cancel
+No habits match “yoga”
+Search looks through active and archived habits.
+Add “Yoga” as a habit
+Today
+Progress
+Habits
+H3 · Dark
+9:41
+7 ACTIVE · 2 ARCHIVED
+Habits
+yoga
+Cancel
+No habits match “yoga”
+Search looks through active and archived habits.
+Add “Yoga” as a habit
+Today
+Progress
+Habits
+H3
+Habits — search, no results
+V3-28 · search
+BORROWED
+Nothing.
+CHANGED
+Says what was searched and offers to add it as a habit (opens Add habit with the name filled).
+WHY
+A dead end turns into the most likely next step.
+H4 · Light
+9:41
+REORDER · DRAG WITHIN A CATEGORY
+Habits
+Done
+Habits move within their category. To change a category, use Edit.
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+Today
+Progress
+Habits
+H4 · Dark
+9:41
+REORDER · DRAG WITHIN A CATEGORY
+Habits
+Done
+Habits move within their category. To change a category, use Edit.
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+Today
+Progress
+Habits
+H4
+Habits — reorder, row lifted
+V3-23 reorder · E2 lift
+BORROWED
+Nothing.
+CHANGED
+Reorder mode shows handles and Done; a lifted row gets the E2 shadow and stays inside its category.
+WHY
+Drag-to-reorder without accidental moves across categories.
+H5 · Light
+9:41
+Habits
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+ARCHIVED · 1
+Hide
+Morning run
+Archived 12 Oct · best streak 41
+Restore
+A restored habit starts a fresh streak. Paused days stay paused.
+Categories
+12
+Today
+Progress
+Habits
+Journal 5 min is back on Today
+Undo
+H5 · Dark
+9:41
+Habits
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+ARCHIVED · 1
+Hide
+Morning run
+Archived 12 Oct · best streak 41
+Restore
+A restored habit starts a fresh streak. Paused days stay paused.
+Categories
+12
+Today
+Progress
+Habits
+Journal 5 min is back on Today
+Undo
+H5
+Habits — archived expanded + restore (scrolled)
+V3-23 archived · V3-26 undo · V3-02 inline
+BORROWED
+Nothing.
+CHANGED
+Archived opens in place; Restore is instant, with an Undo toast. Copy explains the fresh streak and the paused days.
+WHY
+Restore is safe, so it needs no confirmation — Undo covers mistakes.
+H6 · Light
+9:41
+NO HABITS
+Habits
+No habits yet
+Add your first habit, or start from a suggestion.
+Add habit
+Browse suggestions
+Categories
+10
+Today
+Progress
+Habits
+H6 · Dark
+9:41
+NO HABITS
+Habits
+No habits yet
+Add your first habit, or start from a suggestion.
+Add habit
+Browse suggestions
+Categories
+10
+Today
+Progress
+Habits
+H6
+Habits — no habits
+V3-28 · V3-23
+BORROWED
+Nothing.
+CHANGED
+Empty state with Add habit and suggestions; Categories stays reachable.
+WHY
+The library never looks broken.
+H7 · Light
+9:41
+7 ACTIVE
+Habits
+Search habits
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+FITNESS
+1
+Upper body
+Tue, Thu
+Today
+Progress
+Habits
+H7 · Dark
+9:41
+7 ACTIVE
+Habits
+Search habits
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+FITNESS
+1
+Upper body
+Tue, Thu
+Today
+Progress
+Habits
+H7
+Habits — AX3
+01 · AX3 · V3-13
+BORROWED
+Nothing.
+CHANGED
+Rows stack: badge, then name and status, then the chevron. Header buttons move above the title.
+WHY
+Nothing truncates at AX3.
+H8 · Light
+9:41
+Habits
+FITNESS · TUE, THU
+Upper body
+Edit
+STREAK
+9
+in a row
+LONGEST
+14
+days
+90-DAY RATE
+89%
++4 pts
+Last 5 weeks
+Tue, Thu
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Bonus
+Not due
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+Today
+Progress
+Habits
+Archive Upper body?
+It leaves Today and its reminders pause. History and streaks are kept.
+Archive habit
+Cancel
+H8 · Dark
+9:41
+Habits
+FITNESS · TUE, THU
+Upper body
+Edit
+STREAK
+9
+in a row
+LONGEST
+14
+days
+90-DAY RATE
+89%
++4 pts
+Last 5 weeks
+Tue, Thu
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Bonus
+Not due
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+Today
+Progress
+Habits
+Archive Upper body?
+It leaves Today and its reminders pause. History and streaks are kept.
+Archive habit
+Cancel
+H8
+Detail — tab bar B, sheet open
+V3-01 B · V3-24 · V3-25
+BORROWED
+Nothing.
+CHANGED
+A sheet covers the pill like any content: the scrim dims it and it can’t be tapped until the sheet closes. Archive confirm shown (full set in 06).
+WHY
+One modal layer at a time; no tab switching mid-decision.
+H9 · Light
+9:41
+Habits
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+ARCHIVED · 1
+Hide
+Morning run
+Archived 12 Oct · best streak 41
+Restore
+Categories
+12
+Today
+Progress
+Habits
+Journal 5 min is back on Today
+Undo
+H9 · Dark
+9:41
+Habits
+FITNESS
+1
+Upper body
+Tue, Thu
+MINDFULNESS
+1
+Meditate
+Daily · 13-day streak
+LEARNING
+1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1
+No social media
+Break · daily
+HOME
+1
+No phone in bed
+Break · daily
+ARCHIVED · 1
+Hide
+Morning run
+Archived 12 Oct · best streak 41
+Restore
+Categories
+12
+Today
+Progress
+Habits
+Journal 5 min is back on Today
+Undo
+H9
+Habits — tab bar B, end of list + toast
+V3-01 B · V3-26
+BORROWED
+Nothing.
+CHANGED
+Scrolled to the end: Categories, the last row, stops above the pill. The restore toast sits 12 pt above the pill.
+WHY
+Same bottom padding and toast rule on every tab.
+H10 · Light
+9:41
+7 ACTIVE
+Habits
+Search habits
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+Today
+Progress
+Habits
+Cold shower is back on Today
+Undo
+H10 · Dark
+9:41
+7 ACTIVE
+Habits
+Search habits
+HEALTH
+2
+Drink water
+Daily · 8 glasses
+Cold shower
+3× per week
+Today
+Progress
+Habits
+Cold shower is back on Today
+Undo
+H10
+Habits — AX3 falls back to bar A
+01 · AX3 · V3-01 A
+BORROWED
+Nothing.
+CHANGED
+At AX sizes the pill would cover a much larger share of each (taller) row and its fixed 12 pt labels can’t grow, so the full-width bar A returns automatically. Toasts go back to 16 pt above it.
+WHY
+Large-text users keep the most predictable layout.
+D1 · Light
+9:41
+Habits
+FITNESS · TUE, THU
+Upper body
+Edit
+STREAK
+9
+in a row
+LONGEST
+14
+days
+90-DAY RATE
+89%
++4 pts
+Last 5 weeks
+Tue, Thu
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Bonus
+Not due
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+Today
+Progress
+Habits
+D1 · Dark
+9:41
+Habits
+FITNESS · TUE, THU
+Upper body
+Edit
+STREAK
+9
+in a row
+LONGEST
+14
+days
+90-DAY RATE
+89%
++4 pts
+Last 5 weeks
+Tue, Thu
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Bonus
+Not due
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+Today
+Progress
+Habits
+D1
+Habit Detail — default
+V3-02 · V3-10 · V3-06 mini · V3-23
+BORROWED
+Nothing.
+CHANGED
+Streak, longest and 90-day rate up top; last 5 weeks with a legend (bonus on Mon 19, frozen on Thu 15); reminders summary. Edit in the header.
+WHY
+The numbers people check most sit above the fold.
+D2 · Light
+9:41
+Habits
+Upper body
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+HISTORY
+See all
+Thu 22 Oct
+Done
+Tue 20 Oct
+Done
+Mon 19 Oct
+Done · off-schedule, not counted
+Bonus
+Thu 15 Oct
+Frozen · streak kept
+Tue 6 Oct
+Missed
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+D2 · Dark
+9:41
+Habits
+Upper body
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+HISTORY
+See all
+Thu 22 Oct
+Done
+Tue 20 Oct
+Done
+Mon 19 Oct
+Done · off-schedule, not counted
+Bonus
+Thu 15 Oct
+Frozen · streak kept
+Tue 6 Oct
+Missed
+Archive habit
+Hide from Today, keep history
+Delete habit
+Today
+Progress
+Habits
+D2
+Habit Detail — history + entry points (scrolled)
+V3-23 · V3-25 entry
+BORROWED
+Nothing.
+CHANGED
+History by date: done, missed, frozen, and an off-schedule bonus tagged “not counted”. Archive and Delete at the end; the confirm sheet is stage 5. No times are shown, since per-entry timestamps may not exist (see T11).
+WHY
+Destructive actions are last, after the information.
+D3 · Light
+9:41
+Today
+HEALTH · DAILY · 8 GLASSES
+Drink water
+Edit
+STREAK
+0
+starts with your first log
+LONGEST
+—
+none yet
+90-DAY RATE
+—
+after 7 days
+Last 5 weeks
+Created today
+M
+T
+W
+T
+F
+S
+S
+REMINDERS
+Reminders
+None
+HISTORY
+No logs yet. Tick it on Today to start.
+Today
+Progress
+Habits
+D3 · Dark
+9:41
+Today
+HEALTH · DAILY · 8 GLASSES
+Drink water
+Edit
+STREAK
+0
+starts with your first log
+LONGEST
+—
+none yet
+90-DAY RATE
+—
+after 7 days
+Last 5 weeks
+Created today
+M
+T
+W
+T
+F
+S
+S
+REMINDERS
+Reminders
+None
+HISTORY
+No logs yet. Tick it on Today to start.
+Today
+Progress
+Habits
+D3
+Habit Detail — new habit
+V3-10 empty · V3-06 before start
+BORROWED
+Nothing.
+CHANGED
+Stats explain when they start; the grid shows “before start” up to today.
+WHY
+A new habit doesn’t look like a failing one.
+D4 · Light
+9:41
+Habits
+FITNESS · MON, WED, FRI · ARCHIVED
+Morning run
+Edit
+Archived on 12 October
+Hidden from Today. Paused days stay paused and never count as missed.
+Restore
+STREAK
+—
+paused
+LONGEST
+41
+days
+90-DAY RATE
+78%
+until 12 Oct
+Last 5 weeks
+Mon, Wed, Fri
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Paused
+Today
+Reminders
+Paused
+Today
+Progress
+Habits
+D4 · Dark
+9:41
+Habits
+FITNESS · MON, WED, FRI · ARCHIVED
+Morning run
+Edit
+Archived on 12 October
+Hidden from Today. Paused days stay paused and never count as missed.
+Restore
+STREAK
+—
+paused
+LONGEST
+41
+days
+90-DAY RATE
+78%
+until 12 Oct
+Last 5 weeks
+Mon, Wed, Fri
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Paused
+Today
+Reminders
+Paused
+Today
+Progress
+Habits
+D4
+Habit Detail — archived
+V3-27 archived banner · V3-06 paused
+BORROWED
+Nothing.
+CHANGED
+Banner with Restore; paused days are hatched, never missed; reminders paused.
+WHY
+The archive rules are visible where they apply.
+D5 · Light
+9:41
+Habits
+FITNESS · MON, WED, FRI
+Morning run
+Edit
+Restored today
+Your streak starts fresh with the next log. Paused days stay paused.
+STREAK
+0
+fresh start
+LONGEST
+41
+days
+90-DAY RATE
+78%
+paused days excluded
+Last 5 weeks
+Mon, Wed, Fri
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Paused
+Today
+Reminders
+06:30 · Mon, Wed, Fri
+Today
+Progress
+Habits
+Morning run is back on Today
+Undo
+D5 · Dark
+9:41
+Habits
+FITNESS · MON, WED, FRI
+Morning run
+Edit
+Restored today
+Your streak starts fresh with the next log. Paused days stay paused.
+STREAK
+0
+fresh start
+LONGEST
+41
+days
+90-DAY RATE
+78%
+paused days excluded
+Last 5 weeks
+Mon, Wed, Fri
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Paused
+Today
+Reminders
+06:30 · Mon, Wed, Fri
+Today
+Progress
+Habits
+Morning run is back on Today
+Undo
+D5
+Habit Detail — restored
+V3-27 restored · V3-26 undo
+BORROWED
+Nothing.
+CHANGED
+One-time banner: the streak starts fresh, paused days stay paused. Undo toast targets the restore.
+WHY
+No surprise when the streak shows 0.
+D6 · Light
+9:41
+Progress
+MINDFULNESS · DAILY
+Meditate
+Edit
+STREAK
+7
+days
+LONGEST
+13
+days
+FREEZES
+0
+0 freezes left
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Streak reset on Wed 14 Oct — no freezes were left.
+Reminders
+07:00 · daily
+Today
+Progress
+Habits
+D6 · Dark
+9:41
+Progress
+MINDFULNESS · DAILY
+Meditate
+Edit
+STREAK
+7
+days
+LONGEST
+13
+days
+FREEZES
+0
+0 freezes left
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Done
+Missed
+Frozen
+Reset
+Streak reset on Wed 14 Oct — no freezes were left.
+Reminders
+07:00 · daily
+Today
+Progress
+Habits
+D6
+Habit Detail — streak reset
+V3-10 warning · V3-06 reset · V3-11 notice
+BORROWED
+Nothing.
+CHANGED
+The reset day has an amber outline; a notice explains that no freezes were left; the freeze tile is amber.
+WHY
+Explains the drop instead of hiding it.
+D7 · Light
+9:41
+Today
+HOME · BREAK · DAILY
+No phone in bed
+Edit
+RESISTING
+9
+nights in a row
+LONGEST
+22
+nights
+90-DAY RATE
+81%
+resisted
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Resisted
+Slipped
+Frozen
+HISTORY
+Thu 22 Oct
+Resisted
+Wed 21 Oct
+Resisted
+Tue 13 Oct
+Slipped · not logged
+Today
+Progress
+Habits
+D7 · Dark
+9:41
+Today
+HOME · BREAK · DAILY
+No phone in bed
+Edit
+RESISTING
+9
+nights in a row
+LONGEST
+22
+nights
+90-DAY RATE
+81%
+resisted
+Last 5 weeks
+Daily
+M
+T
+W
+T
+F
+S
+S
+Resisted
+Slipped
+Frozen
+HISTORY
+Thu 22 Oct
+Resisted
+Wed 21 Oct
+Resisted
+Tue 13 Oct
+Slipped · not logged
+Today
+Progress
+Habits
+D7
+Habit Detail — Break habit
+V3-10 · V3-06 · V3-23
+BORROWED
+Nothing.
+CHANGED
+Resistance copy throughout: “Resisting · 9 nights”, “Resisted”, “Slipped”. Never “failed”.
+WHY
+Break habits are about restraint; the language says so.
+D8 · Light
+9:41
+Habits
+FITNESS · TUE, THU
+Upper body
+Edit
+STREAK
+9
+in a row
+LONGEST
+14
+days
+90-DAY RATE
+89%
++4 pts
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+Today
+Progress
+Habits
+D8 · Dark
+9:41
+Habits
+FITNESS · TUE, THU
+Upper body
+Edit
+STREAK
+9
+in a row
+LONGEST
+14
+days
+90-DAY RATE
+89%
++4 pts
+REMINDERS
+Reminders
+07:00 · Tue, Thu
+Today
+Progress
+Habits
+D8
+Habit Detail — AX3
+01 · AX3 · V3-10 1-up
+BORROWED
+Nothing.
+CHANGED
+Title wraps over lines, stats go 1-up, rows stack.
+WHY
+Densest pushed screen stays readable.

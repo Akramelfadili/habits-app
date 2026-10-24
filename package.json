@@ -61,6 +61,7 @@
 		"prepare": "husky",
 		"test": "jest",
 		"visual-check": "node scripts/visual-check.mjs",
+		"mockups:render": "node scripts/render-mockups.mjs",
 		"e2e": "node scripts/e2e.mjs",
 		"check-architecture": "node scripts/check-architecture.mjs",
 		"test:tooling": "node --test \"scripts/**/*.test.mjs\"",

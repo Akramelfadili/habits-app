@@ -1,0 +1,1136 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+BORROWED
+CHANGED
+WHY
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal
+05 · SCREENS · HABITS
+Part 2 of 3 · Add / Edit habit (F) and Categories (C).
+H = Habits tab · D = Habit Detail (pushed from any tab; the tab bar shows where it came from) · F = Add/Edit habit (modal form, Save pinned to the bottom) · C = Categories · R = Reminders · S = Settings (pushed from the Habits gear). H8–H10 show tab bar variant B. Sheets and system states are in 06. Dashed tags mark Proposal, needs data check.
+F1 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+e.g. Drink water
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+Optional — habits without one go to Other.
+GOAL
+Check
+Quantity
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+Add a name to save
+F1 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+e.g. Drink water
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+Optional — habits without one go to Other.
+GOAL
+Check
+Quantity
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+Add a name to save
+F1
+Add habit — empty
+V3-24 · V3-17 · V3-16 · V3-14 · V3-19 · V3-22
+BORROWED
+Nothing.
+CHANGED
+Modal form: Type, Name, Category, Goal, Frequency. Save is disabled, with the reason under it.
+WHY
+Order follows the decisions people make; only the name is required.
+F2 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Read 20 min
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+GOAL
+Check
+Quantity
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+ICON AND COLOUR
+Lines · Gold
+From Learning · tap to change
+REMINDERS
+Add a reminder
+Save habit
+F2 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Read 20 min
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+GOAL
+Check
+Quantity
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+ICON AND COLOUR
+Lines · Gold
+From Learning · tap to change
+REMINDERS
+Add a reminder
+Save habit
+F2
+Add habit — Build · Check · Daily, filled
+V3-16 · V3-14 selected · V3-23
+BORROWED
+Nothing.
+CHANGED
+Icon and colour start from the category and open their own picker (F6). Reminders can be added before saving.
+WHY
+Defaults keep the short path short.
+F3 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Drink water
+GOAL
+Check
+Quantity
+DAILY TARGET
+8
+glasses a day
+UNIT
+glasses
+Shown after the number: 5 of 8 glasses
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+F3 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Drink water
+GOAL
+Check
+Quantity
+DAILY TARGET
+8
+glasses a day
+UNIT
+glasses
+Shown after the number: 5 of 8 glasses
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+F3
+Add habit — Quantity · Weekdays
+V3-18 · V3-16 helper · V3-19
+BORROWED
+Nothing.
+CHANGED
+Quantity adds a daily target stepper and a unit with a live example.
+WHY
+The example shows exactly how Today will read.
+F4 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Cold shower
+GOAL
+Check
+Quantity
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+TIMES PER WEEK
+3
+times a week
+Weeks follow your iOS first weekday (Monday–Sunday here). Once you reach 3, it leaves Today until the next week starts.
+Save habit
+F4 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Cold shower
+GOAL
+Check
+Quantity
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+TIMES PER WEEK
+3
+times a week
+Weeks follow your iOS first weekday (Monday–Sunday here). Once you reach 3, it leaves Today until the next week starts.
+Save habit
+F4
+Add habit — × per week
+V3-18 · V3-19
+BORROWED
+Nothing.
+CHANGED
+A per-week target with the Monday–Sunday rule and the “leaves Today once met” behaviour spelled out.
+WHY
+This behaviour surprises people unless it is stated.
+F5 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+A Break habit counts the days you resist. Tick the circle on each day you held off.
+NAME
+No social media
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+GOAL
+Check
+Quantity
+Break habits are yes or no, so Quantity is off.
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+F5 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+A Break habit counts the days you resist. Tick the circle on each day you held off.
+NAME
+No social media
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+GOAL
+Check
+Quantity
+Break habits are yes or no, so Quantity is off.
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+F5
+Add habit — Break
+V3-17 · V3-16
+BORROWED
+Nothing.
+CHANGED
+Break explains resistance in one line; Quantity is disabled with its reason.
+WHY
+Prevents a combination the model doesn’t support.
+F6 · Light
+9:41
+New habit
+Close
+NAME
+Drink water
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+Finance
+Social
+Home
+Creativity
+Other
+New category
+ICON
+COLOUR
+Colour shows only in the badge and dots. It starts as the category colour. Red is reserved for warnings, so it isn’t offered.
+Save habit
+F6 · Dark
+9:41
+New habit
+Close
+NAME
+Drink water
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+Finance
+Social
+Home
+Creativity
+Other
+New category
+ICON
+COLOUR
+Colour shows only in the badge and dots. It starts as the category colour. Red is reserved for warnings, so it isn’t offered.
+Save habit
+F6
+Add habit — category, icon, colour
+V3-14 all · icon squares · swatches
+BORROWED
+Nothing.
+CHANGED
+All categories plus New category (opens the Add category sheet). Icon and colour pickers; the colour set has no red (T-16).
+WHY
+Colour stays meaningful and never reads as an error.
+F7 · Light
+9:41
+New habit
+Close
+NAME
+Upper body
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+M
+T
+W
+T
+F
+S
+S
+REMINDERS
+07:00
+Tue, Thu
+Add time
+24-hour times. Each time can repeat on its own days.
+Save habit
+F7 · Dark
+9:41
+New habit
+Close
+NAME
+Upper body
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+M
+T
+W
+T
+F
+S
+S
+REMINDERS
+07:00
+Tue, Thu
+Add time
+24-hour times. Each time can repeat on its own days.
+Save habit
+F7
+Add habit — specific days + reminders
+V3-19 weekday · V3-23
+BORROWED
+Nothing.
+CHANGED
+Weekday chips for specific days; reminders inline with remove and Add time (opens the time sheet).
+WHY
+Set it up once, in one place.
+F8 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Read 20 min
+You already have a habit called Read 20 min. Choose another name.
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+M
+T
+W
+T
+F
+S
+S
+Pick at least one day
+Save habit
+Fix 2 issues to save
+F8 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Read 20 min
+You already have a habit called Read 20 min. Choose another name.
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+M
+T
+W
+T
+F
+S
+S
+Pick at least one day
+Save habit
+Fix 2 issues to save
+F8
+Add habit — validation errors
+V3-16 error · V3-19 · V3-22 disabled
+BORROWED
+Nothing.
+CHANGED
+Duplicate name and “no days picked” both shown inline in red; Save names how many issues remain.
+WHY
+Errors sit next to their fields, never in an alert.
+F9 · Light
+9:41
+Edit habit
+Close
+TYPE
+Build
+Break
+NAME
+Read 30 min
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save changes
+Discard changes?
+Your edits to Read 20 min won’t be saved.
+Keep editing
+Discard
+F9 · Dark
+9:41
+Edit habit
+Close
+TYPE
+Build
+Break
+NAME
+Read 30 min
+CATEGORY
+Health
+Fitness
+Mindfulness
+Productivity
+Learning
+New category
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save changes
+Discard changes?
+Your edits to Read 20 min won’t be saved.
+Keep editing
+Discard
+F9
+Edit habit — unsaved changes
+V3-24 · V3-22
+BORROWED
+Nothing.
+CHANGED
+Close with edits opens “Discard changes?” — Keep editing is the primary, Discard is destructive.
+WHY
+The safe choice is the easy one.
+F10 · Light
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Drink water
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+F10 · Dark
+9:41
+New habit
+Close
+TYPE
+Build
+Break
+NAME
+Drink water
+FREQUENCY
+Daily
+Weekdays
+Specific days
+× per week
+Save habit
+F10
+Add habit — AX3
+01 · AX3
+BORROWED
+Nothing.
+CHANGED
+Segmented controls stack, chips wrap, Save goes full width and wraps.
+WHY
+The form stays usable at the largest common size.
+C1 · Light
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Built-ins can’t be renamed or deleted.
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Learning
+1 habit
+Built-in
+Finance
+Not used
+Built-in
+Social
+Not used
+Built-in
+Home
+1 habit
+Built-in
+Creativity
+Not used
+Built-in
+Other
+Not used
+Built-in
+Today
+Progress
+Habits
+C1 · Dark
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Built-ins can’t be renamed or deleted.
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Learning
+1 habit
+Built-in
+Finance
+Not used
+Built-in
+Social
+Not used
+Built-in
+Home
+1 habit
+Built-in
+Creativity
+Not used
+Built-in
+Other
+Not used
+Built-in
+Today
+Progress
+Habits
+C1
+Categories — list
+V3-15 · V3-23
+BORROWED
+Nothing.
+CHANGED
+Custom first with Rename and Delete; built-ins locked with a tag and counts (archived included).
+WHY
+What can be changed is obvious at a glance.
+C2 · Light
+9:41
+Habits
+REORDER · SETS GROUP ORDER
+Categories
+Done
+Groups on Today and Habits follow this order.
+Outdoors
+Health
+Fitness
+Mindfulness
+Learning
+Music
+Today
+Progress
+Habits
+C2 · Dark
+9:41
+Habits
+REORDER · SETS GROUP ORDER
+Categories
+Done
+Groups on Today and Habits follow this order.
+Outdoors
+Health
+Fitness
+Mindfulness
+Learning
+Music
+Today
+Progress
+Habits
+C2
+Categories — reorder
+V3-23 reorder · E2
+BORROWED
+Nothing.
+CHANGED
+Reorder sets group order on Today and Habits.
+WHY
+One order to manage, everywhere.
+C3 · Light
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+fitness
+Not used
+Done
+Fitness already exists. Choose another name.
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+C3 · Dark
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+fitness
+Not used
+Done
+Fitness already exists. Choose another name.
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+C3
+Categories — rename, duplicate
+V3-15 rename · V3-16 error
+BORROWED
+Nothing.
+CHANGED
+Inline rename; duplicates are blocked ignoring case, including built-ins.
+WHY
+No two groups with the same name.
+C4 · Light
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+New category
+Close
+NAME
+Journaling
+PREVIEW
+Journaling
+Icon and colour are picked for you from those not in use.
+Add category
+C4 · Dark
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+New category
+Close
+NAME
+Journaling
+PREVIEW
+Journaling
+Icon and colour are picked for you from those not in use.
+Add category
+C4
+Categories — add category sheet
+V3-24 · V3-16 · V3-14 preview
+BORROWED
+Nothing.
+CHANGED
+Name plus a preview chip with an auto-assigned icon and colour.
+WHY
+Fast to add, consistent to look at.
+C5 · Light
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+Delete Outdoors?
+Close
+1 habit uses it. It moves to Other — its history and streak are kept.
+Weekend hike
+Outdoors → Other
+Delete and move 1 habit
+Cancel
+C5 · Dark
+9:41
+Habits
+10 BUILT-IN · 2 CUSTOM
+Categories
+Reorder
+CUSTOM · 2
+Outdoors
+1 habit
+Rename
+Delete
+Music
+Not used
+Rename
+Delete
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Today
+Progress
+Habits
+Delete Outdoors?
+Close
+1 habit uses it. It moves to Other — its history and streak are kept.
+Weekend hike
+Outdoors → Other
+Delete and move 1 habit
+Cancel
+C5
+Categories — delete in use
+V3-25 pattern · move preview
+BORROWED
+Nothing.
+CHANGED
+Shows exactly which habits move to Other; history and streaks are kept. The plain delete (not used) is in stage 5.
+WHY
+Deleting a category never deletes habits.
+C6 · Light
+9:41
+Habits
+10 BUILT-IN
+Categories
+CUSTOM · 0
+Add a category
+Group habits your own way
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Learning
+1 habit
+Built-in
+Finance
+Not used
+Built-in
+Social
+Not used
+Built-in
+Home
+1 habit
+Built-in
+Creativity
+Not used
+Built-in
+Other
+Not used
+Built-in
+Today
+Progress
+Habits
+C6 · Dark
+9:41
+Habits
+10 BUILT-IN
+Categories
+CUSTOM · 0
+Add a category
+Group habits your own way
+BUILT-IN · 10
+Health
+2 habits
+Built-in
+Fitness
+2 habits · 1 archived
+Built-in
+Mindfulness
+2 habits · 1 archived
+Built-in
+Productivity
+1 habit
+Built-in
+Learning
+1 habit
+Built-in
+Finance
+Not used
+Built-in
+Social
+Not used
+Built-in
+Home
+1 habit
+Built-in
+Creativity
+Not used
+Built-in
+Other
+Not used
+Built-in
+Today
+Progress
+Habits
+C6
+Categories — no custom categories
+V3-15 · V3-23
+BORROWED
+Nothing.
+CHANGED
+An Add a category row takes the custom section’s place.
+WHY
+The empty section still teaches what it is for.

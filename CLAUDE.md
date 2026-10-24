@@ -9,6 +9,7 @@ Plain pointers, not imports — open the file when the row applies.
 | When you touch… | Read first |
 |---|---|
 | A feature (any `HAB-<id>`) | the resolved spec: HAB-01–13 → `docs/feature-spec.md`; HAB-14–25 → `docs/feature-spec-v2.md` (only that ticket's section + the NEW-/VAR- entries it cites). Use `/implement-feature <id>`, which resolves this for you |
+| Navigation, Today, Progress or Habits-tab UI (V3, HAB-26–50) | `docs/feature-spec-v3.md` + `docs/design-system-v3.md` + `docs/mockups/v3/renders/INDEX.md` (no slices? run `npm run mockups:render`) |
 | UI, components, styling, screens | `docs/design-system.md` (V1 and V2 merged; its **Deltas** section: smaller heatmap cells / stat cards on Detail, Weekly Summary, Streak-reset are intentional, not regressions) |
 | `src/modules`, layering, data or business logic | `docs/architecture.md` (folders, layers, patterns, stack, `.web.ts` convention) |
 | Schema or `src/lib/db/migrations/` | the Migrations guard below + `.claude/agents/migration-reviewer.md` (its checklist); run that subagent when done |

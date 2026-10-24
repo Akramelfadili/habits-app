@@ -1,0 +1,1466 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+03 · SCREENS · TODAY
+iPhone 402 × 874. Light and dark side by side. Each frame: V3 ID · components used · borrowed / changed / why.
+T1 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T1 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T1
+Today — populated · tab bar B (baseline)
+V3-01 · V3-02 · V3-03 · V3-07 · V3-13 · V3-04
+BORROWED
+Week strip under the title; progress inside each row.
+CHANGED
+No banner. One progress bar instead of a ring. Category groups as cards with a per-group count. Not-due habits fold into one quiet row.
+WHY
+The day reads top-down: when, how far, what’s left. Circle = log, name = Detail, so a mis-tap on the name never logs.
+T2 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Nothing to track yet
+Add a habit and it shows up here on every day it’s due.
+Add habit
+Browse suggestions
+Today
+Progress
+Habits
+T2 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+Nothing to track yet
+Add a habit and it shows up here on every day it’s due.
+Add habit
+Browse suggestions
+Today
+Progress
+Habits
+T2
+Today — no habits
+V3-01 · V3-02 · V3-28 · V3-22
+BORROWED
+Nothing (the reference has no empty state).
+CHANGED
+Week strip and progress are hidden — there is nothing to show. One primary action and a link to the suggested templates.
+WHY
+Shown only once data has loaded, so there is no flash of empty state on launch (loading in stage 5).
+T3 · Light
+9:41
+SATURDAY, 24 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+Rest day
+Nothing is due today, so every streak is safe. Anything you log counts as a bonus.
+NOT DUE TODAY
+Bonus logs
+Read 20 min
+Weekdays · tap to log a bonus
+Upper body
+Tue, Thu · tap to log a bonus
+Cold shower
+3 of 3 this week · back Monday
+Today
+Progress
+Habits
+T3 · Dark
+9:41
+SATURDAY, 24 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+Rest day
+Nothing is due today, so every streak is safe. Anything you log counts as a bonus.
+NOT DUE TODAY
+Bonus logs
+Read 20 min
+Weekdays · tap to log a bonus
+Upper body
+Tue, Thu · tap to log a bonus
+Cold shower
+3 of 3 this week · back Monday
+Today
+Progress
+Habits
+T3
+Today — rest day
+V3-01 · V3-02 · V3-03 · V3-28 · V3-13 · V3-04 (rest)
+BORROWED
+Nothing.
+CHANGED
+A rest day is a state, not an empty list: it says why nothing is due and keeps not-due habits reachable (dashed circle). A × per week habit that has met its target shows “back Monday”.
+WHY
+Off-schedule logs never affect streaks or rates; the dashed circle and “bonus” copy say so before you tap.
+T4 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+3 of 8 glasses
+3/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Drink water +1 · 3 of 8 glasses
+Undo
+Today
+Progress
+Habits
+T4 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+3 of 8 glasses
+3/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Drink water +1 · 3 of 8 glasses
+Undo
+Today
+Progress
+Habits
+T4
+Today — quantity partial
+V3-13 (quantity) · V3-04 (partial) · V3-26 (undo)
+BORROWED
+Count shown inside the row.
+CHANGED
+Pie fill in the circle plus “3 of 8 glasses”. Partial does not count as done in “1 of 5”. Tapping the circle adds +1 at once with an Undo toast — one tap per glass. Long-press the circle, or tap the count button (“3/8”), to open the quantity sheet (QS1) for bigger changes.
+WHY
+Keeps our circle pattern instead of fill-bar rows; the status line carries the number for VoiceOver and large text.
+T5 · Light
+9:41
+Today
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+2 of 6 done
+33%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+HOME
+0 of 1
+No phone in bed
+Resist tonight · 9-day streak
+1 not due today · Upper body
+Show
+No social media · resisted today
+Undo
+Today
+Progress
+Habits
+T5 · Dark
+9:41
+Today
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+2 of 6 done
+33%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+HOME
+0 of 1
+No phone in bed
+Resist tonight · 9-day streak
+1 not due today · Upper body
+Show
+No social media · resisted today
+Undo
+Today
+Progress
+Habits
+T5
+Today — break habits (scrolled)
+V3-13 (break) · V3-04 (break) · V3-02 (inline) · V3-26
+BORROWED
+Nothing.
+CHANGED
+Amber outline circle, resistance copy (“Resisting · 4 days strong”, “Resist tonight”). Never red, never “failed”. Large title collapses into a solid inline bar on scroll.
+WHY
+Amber is reserved for Break and warnings, so a Break habit is recognisable without reading the name.
+T6 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+0 of 1
+Meditate
+Missed Thursday · 1 freeze left
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T6 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+0 of 1
+Meditate
+Missed Thursday · 1 freeze left
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T6
+Today — streak at risk
+V3-13 (at risk) · V3-04 (risk) · V3-03
+BORROWED
+Nothing.
+CHANGED
+Amber dot on the circle and amber status “Missed Thursday · 1 freeze left”. Thursday has no dot in the week strip. Tapping the circle opens the streak-at-risk sheet (Use a freeze / Reset and start today, stage 5).
+WHY
+Warns in the row it concerns instead of a global banner; the decision stays one tap away.
+T7 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+0 of 1
+Meditate
+Thu frozen · streak kept at 13
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Freeze used for Thu 22 · 0 left
+Undo
+Today
+Progress
+Habits
+T7 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+0 of 5 done
+0%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+0 of 1
+Meditate
+Thu frozen · streak kept at 13
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Freeze used for Thu 22 · 0 left
+Undo
+Today
+Progress
+Habits
+T7
+Today — frozen
+V3-13 · V3-26 (freeze undo)
+BORROWED
+Nothing.
+CHANGED
+After “Use a freeze”, the status reads “Thu frozen · streak kept at 13” in frozen violet; today’s circle stays open. The toast shows the live freeze count, and Undo targets Thu 22.
+WHY
+Violet means freeze everywhere (cell, legend, toast), so the saved day is traceable in Progress.
+T8 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+All done for today
+5 of 5 · Meditate is on a 13-day streak
+5 of 5 done
+100%
+HEALTH
+2 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+2 of 3 this week
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+1 of 1
+Read 20 min
+Done 18:40 · 13-day streak
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T8 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+All done for today
+5 of 5 · Meditate is on a 13-day streak
+5 of 5 done
+100%
+HEALTH
+2 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+2 of 3 this week
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+1 of 1
+Read 20 min
+Done 18:40 · 13-day streak
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T8
+Today — all done
+V3-07 (full) · V3-13 · V3-03
+BORROWED
+Completion feedback.
+CHANGED
+A quiet card at the top (accent square with the today-check), no confetti or banner. The check draws once (600 ms); with Reduce Motion it is static. Today gets its dot in the strip.
+WHY
+Calm by design; streak details stay in Detail. Celebration options are in 07.
+T10 · Light
+9:41
+WEDNESDAY, 21 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+Logging for Wed 21 Oct
+Show today
+3 of 5 done on Wed 21
+60%
+HEALTH
+1 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+3× per week · 1 done that week
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:05
+LEARNING
+0 of 1
+Read 20 min
+Not logged · tap to log for Wed
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted
+1 not due today · Upper body
+Show
+Drink water logged for Wed 21
+Undo
+Today
+Progress
+Habits
+T10 · Dark
+9:41
+WEDNESDAY, 21 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+Logging for Wed 21 Oct
+Show today
+3 of 5 done on Wed 21
+60%
+HEALTH
+1 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+3× per week · 1 done that week
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:05
+LEARNING
+0 of 1
+Read 20 min
+Not logged · tap to log for Wed
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted
+1 not due today · Upper body
+Show
+Drink water logged for Wed 21
+Undo
+Today
+Progress
+Habits
+T10
+Today — past day via week strip
+V3-03 (past selected) · V3-13 · V3-26
+BORROWED
+Tap a day in the strip to see and log it.
+CHANGED
+Replaces the separate retro-log entry. The eyebrow shows the selected date; a bar says “Logging for Wed 21 Oct · Show today”. Future days are inert. The toast names the date, and Undo targets it.
+WHY
+One mental model: Today is a day view and the strip chooses the day. Logging beyond this week: swipe the strip or use Progress.
+T11 · Light
+9:41
+Today
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+2 of 5 done
+40%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+1 of 1
+Read 20 min
+Done 18:40 · 13-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+TODAY’S LOG · 4
+Hide
+18:40
+Read 20 min
+Done
+Undo
+12:30
+Drink water
++3 glasses
+09:10
+Drink water
++2 glasses
+07:10
+Meditate
+Done
+Today
+Progress
+Habits
+T11 · Dark
+9:41
+Today
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+2 of 5 done
+40%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+1 of 1
+Read 20 min
+Done 18:40 · 13-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+TODAY’S LOG · 4
+Hide
+18:40
+Read 20 min
+Done
+Undo
+12:30
+Drink water
++3 glasses
+09:10
+Drink water
++2 glasses
+07:10
+Meditate
+Done
+Today
+Progress
+Habits
+T11
+Today — today’s log (scrolled to end)
+LATER – NOT IN V3
+V3-31 · V3-13 · V3-01
+BORROWED
+The “Done today” timeline.
+CHANGED
+Proposal – needs data check: it needs a stored time for every log entry, which the app may not keep today. Not part of the baseline — T1–T10 are complete without it. If the data exists: an optional section at the end of Today, newest first, only the newest row has Undo, collapsed by default.
+WHY
+Answers “did I already log water at noon?” without opening Detail; collapsed by default so it never pushes habits off screen.
+T13 · Light
+9:41
+Today
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+2 of 8 done
+25%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+FITNESS
+0 of 2
+Morning run
+Mon, Wed, Fri · best streak 41
+Upper body
+Tue, Thu · tap to log a bonus
+HOME
+0 of 1
+No phone in bed
+Resist tonight · 9-day streak
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T13 · Dark
+9:41
+Today
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+2 of 8 done
+25%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+FITNESS
+0 of 2
+Morning run
+Mon, Wed, Fri · best streak 41
+Upper body
+Tue, Thu · tap to log a bonus
+HOME
+0 of 1
+No phone in bed
+Resist tonight · 9-day streak
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T13
+Today — tab bar B, long list scrolled to the end
+V3-01 B · V3-13
+BORROWED
+Nothing.
+CHANGED
+A longer list (6 groups, 8 habits) scrolled to the bottom. Content scrolls under the pill; bottom padding is 112 pt = pill 56 + inset 22 + 22 clearance + a 12 pt safe zone, so the last row’s circle ends 34 pt above the pill and is never under it.
+WHY
+The pill can never cover the circle you are about to tap.
+T14 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+3 of 8 glasses
+3/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Drink water +1 · 3 of 8 glasses
+Undo
+Today
+Progress
+Habits
+T14 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+3 of 8 glasses
+3/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Drink water +1 · 3 of 8 glasses
+Undo
+Today
+Progress
+Habits
+T14
+Today — tab bar B, toast with Undo
+V3-01 B · V3-26
+BORROWED
+Nothing.
+CHANGED
+The toast rises 12 pt above the pill (bottom 90 instead of 106), so Undo is never under the bar.
+WHY
+Undo stays tappable without moving the bar.
+T15 · Light
+9:41
+FRIDAY, OCTOBER 23
+Today
+S
+18
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T15 · Dark
+9:41
+FRIDAY, OCTOBER 23
+Today
+S
+18
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+1 of 5 done
+20%
+HEALTH
+0 of 2
+Drink water
+5 of 8 glasses
+5/8
+Cold shower
+3× per week · 1 done
+1/3
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Daily · 12-day streak
+PRODUCTIVITY
+0 of 1
+No social media
+Resisting · 4 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+T15
+Today — week starts Sunday (iOS locale)
+V3-03 · V3-01 B
+BORROWED
+Nothing.
+CHANGED
+Week start follows the iOS first weekday. With a Sunday locale the strip runs S–S (18–24 Oct), the date reads “Friday, October 23”, and × per week targets reset on Sunday. Progress Week, the matrix and month calendars follow the same rule.
+WHY
+People see the week the way their calendar shows it.
+BORROWED
+CHANGED
+WHY
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal
+LATER – NOT IN V3 · PR-01 FRAME
+The full list (problem, change, effort, data, fallback) is section 07 in the Handoff file.
+Also Later – not in V3: T11 Today’s log (PR-02) · weekday pattern insight (PR-03, removed from P7) · R4 insight deep link · share image · iCloud backup · auto-use freezes.
+PR-01 · Light
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+Day closed at 21:00
+4 of 5 done · Read 20 min missed. Logging it before midnight reopens the day.
+Reopen day
+4 of 5 done
+80%
+HEALTH
+2 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+2 of 3 this week
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Missed today
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+PR-01 · Dark
+9:41
+FRIDAY, 23 OCTOBER
+Today
+M
+19
+T
+20
+W
+21
+T
+22
+F
+23
+S
+24
+S
+25
+Day closed at 21:00
+4 of 5 done · Read 20 min missed. Logging it before midnight reopens the day.
+Reopen day
+4 of 5 done
+80%
+HEALTH
+2 of 2
+Drink water
+8 of 8 glasses
+8/8
+Cold shower
+2 of 3 this week
+MINDFULNESS
+1 of 1
+Meditate
+Done 07:10 · 13-day streak
+LEARNING
+0 of 1
+Read 20 min
+Missed today
+PRODUCTIVITY
+1 of 1
+No social media
+Resisted today · 5 days strong
+1 not due today · Upper body
+Show
+Today
+Progress
+Habits
+Proposal · PR-01
+Later – not in V3 · Evening review / close day
+PROBLEM
+After the evening reminder there is no clear “done for today” moment, and missed habits stay open until midnight with no summary.
+CHANGE
+An evening review closes the day at its set time: a summary card names what was missed and offers “Reopen day”. Rows stay tappable until midnight; logging reopens the day automatically. Closing never locks logging.
+EFFORT
+Med — needs a per-day closed flag and a scheduled evaluation; copy and one card on Today.
+FRAMES
+PR-01 light + dark (was drawn as T9 in stage 2).
