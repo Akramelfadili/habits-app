@@ -30,11 +30,8 @@ jest.mock("../hooks/use-weekly-summary-queries", () => ({
 // these tests don't change verdict on Mondays (the rule itself is tested in
 // weekly-summary.test.ts).
 let mockDefaultWeek: "this" | "last" = "this";
-// The real service module imports habit-service, whose freeze write path
-// would otherwise open the SQLite client — only its pure helpers run here.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-jest.mock("../services/weekly-summary", () => ({
-	...jest.requireActual("../services/weekly-summary"),
+jest.mock("../domain/weekly-summary", () => ({
+	...jest.requireActual("../domain/weekly-summary"),
 	defaultSummaryWeek: () => mockDefaultWeek,
 }));
 
@@ -66,6 +63,7 @@ function summary(
 		isPerfect: false,
 		insight: { type: "slipping", row: rows[0] },
 		hasHabits: true,
+		isLoaded: true,
 		...overrides,
 	};
 }
@@ -84,9 +82,24 @@ function barFillOf(label: string) {
 }
 
 describe("WeeklySummaryScreen", () => {
+	it("renders a neutral blank — not 'Nothing to summarise yet' — while habits load (A5-04)", async () => {
+		mockSummary = summary({ hasHabits: false, isLoaded: false, rows: [] });
+		await render(<WeeklySummaryScreen />);
+		expect(screen.getByTestId("screen-loading")).toBeTruthy();
+		expect(screen.queryByText("Nothing to summarise yet")).toBeNull();
+	});
+
+	it("titles the screen as a heading and names its week switcher (A6-09, A6-05)", async () => {
+		await render(<WeeklySummaryScreen />);
+		expect(screen.getByRole("header", { name: "Your week" })).toBeTruthy();
+		expect(screen.getByLabelText("Week shown").props.accessibilityRole).toBe(
+			"tablist",
+		);
+	});
+
 	it("shows the week range, totals, and best day", async () => {
 		await render(<WeeklySummaryScreen />);
-		expect(screen.getByText("14 — 20 SEPTEMBER")).toBeTruthy();
+		expect(screen.getByText("14 – 20 SEPTEMBER")).toBeTruthy();
 		expect(screen.getByText("Your week")).toBeTruthy();
 		expect(
 			screen.getByLabelText("Completed: 14, of 21 scheduled"),
@@ -178,7 +191,7 @@ describe("WeeklySummaryScreen", () => {
 	it("shows an empty state when there are no habits", async () => {
 		mockSummary = summary({ hasHabits: false, rows: [] });
 		await render(<WeeklySummaryScreen />);
-		expect(screen.getByText("Nothing to summarize yet")).toBeTruthy();
+		expect(screen.getByText("Nothing to summarise yet")).toBeTruthy();
 		expect(screen.queryByText("Per habit")).toBeNull();
 	});
 
@@ -186,10 +199,12 @@ describe("WeeklySummaryScreen", () => {
 		it("sits under the title with Week selected and Year enabled (HAB-17)", async () => {
 			await render(<WeeklySummaryScreen />);
 			expect(
-				screen.getByText("Week").parent?.props.accessibilityState.selected,
+				screen.getByText("Week").parent?.parent?.props.accessibilityState
+					.selected,
 			).toBe(true);
 			expect(
-				screen.getByText("Year").parent?.props.accessibilityState.disabled,
+				screen.getByText("Year").parent?.parent?.props.accessibilityState
+					.disabled,
 			).toBeFalsy();
 			await fireEvent.press(screen.getByText("Year"));
 			expect(mockReplace).toHaveBeenCalledWith("/habits/year");

@@ -205,4 +205,49 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 		await fireEvent(screen.getByLabelText("Name"), "submitEditing");
 		expect(onSubmitEditing).toHaveBeenCalled();
 	});
+
+	it("announces its error as an alert to screen readers (A6-17)", async () => {
+		await render(
+			<TextField
+				label="Name"
+				value=""
+				onChangeText={jest.fn()}
+				error="Give this habit a name."
+			/>,
+		);
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"Give this habit a name.",
+		);
+	});
+
+	it("shows 'Next' and keeps the keyboard up when Return hands focus on", async () => {
+		await render(
+			<TextField
+				label="Name"
+				value="Piano"
+				onChangeText={jest.fn()}
+				returnKeyType="next"
+				onSubmitEditing={jest.fn()}
+			/>,
+		);
+		const input = screen.getByLabelText("Name");
+		expect(input.props.returnKeyType).toBe("next");
+		expect(input.props.submitBehavior).toBe("submit");
+	});
+
+	it("defaults to 'Done' when it has a submit handler, and no key label otherwise", async () => {
+		const { rerender } = await render(
+			<TextField label="Name" value="" onChangeText={jest.fn()} />,
+		);
+		expect(screen.getByLabelText("Name").props.returnKeyType).toBeUndefined();
+		await rerender(
+			<TextField
+				label="Name"
+				value=""
+				onChangeText={jest.fn()}
+				onSubmitEditing={jest.fn()}
+			/>,
+		);
+		expect(screen.getByLabelText("Name").props.returnKeyType).toBe("done");
+	});
 });

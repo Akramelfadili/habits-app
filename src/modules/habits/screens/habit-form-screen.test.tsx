@@ -4,7 +4,8 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import { Keyboard, ScrollView, StyleSheet, TextInput } from "react-native";
+import { useToastStore } from "@/store/toast-store";
 import {
 	categoryNamed,
 	makeCategory,
@@ -25,6 +26,16 @@ jest.mock("expo-router", () => ({
 
 jest.mock("expo-router/react-navigation", () => ({
 	useHeaderHeight: () => 56,
+}));
+
+const mockArchiveHabit = jest.fn();
+const mockRestoreHabit = jest.fn();
+jest.mock("../hooks/use-habit-detail-actions", () => ({
+	useHabitDetailActions: () => ({
+		archiveHabitOrThrow: (...args: unknown[]) => mockArchiveHabit(...args),
+		restoreHabit: (...args: unknown[]) => mockRestoreHabit(...args),
+		isArchiving: false,
+	}),
 }));
 
 const mockCreateHabit = jest.fn();
@@ -74,8 +85,11 @@ const MORNING = categoryNamed("Morning");
 
 const isSaveDisabled = () =>
 	screen.getByText("Save habit").parent?.props.accessibilityState.disabled;
-const isSelected = (label: string) =>
-	screen.getByLabelText(label).props.accessibilityState.selected;
+// Category chips report `selected`; weekday chips are checkboxes and report `checked`.
+const isSelected = (label: string) => {
+	const state = screen.getByLabelText(label).props.accessibilityState;
+	return state.selected ?? state.checked;
+};
 
 async function pickCategory(name: string) {
 	await fireEvent.press(screen.getByLabelText(name));
@@ -220,6 +234,28 @@ describe("HabitFormScreen — create mode", () => {
 		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 
+	it("a failed create shows an inline error, stays on the form, and a retry works", async () => {
+		mockCreateHabit.mockRejectedValueOnce(new Error("disk full"));
+		await render(<HabitFormScreen />);
+
+		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Read");
+		await pickCategory("Morning");
+		await fireEvent.press(screen.getByText("Save habit"));
+
+		expect(
+			await screen.findByText("Couldn't save this habit. Try again."),
+		).toBeTruthy();
+		expect(mockBack).not.toHaveBeenCalled();
+		expect(screen.getByText("Save habit")).toBeTruthy();
+
+		await fireEvent.press(screen.getByText("Save habit"));
+		await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
+		expect(mockCreateHabit).toHaveBeenCalledTimes(2);
+		expect(
+			screen.queryByText("Couldn't save this habit. Try again."),
+		).toBeNull();
+	});
+
 	it("draws a hairline above Save only once the form is scrolled (F1c)", async () => {
 		await render(<HabitFormScreen />);
 		const footerBorder = () =>
@@ -326,19 +362,21 @@ describe("HabitFormScreen — create mode", () => {
 
 		await fireEvent.press(screen.getByText("Quantity"));
 		expect(
-			screen.getByText("Quantity").parent?.props.accessibilityState.selected,
+			screen.getByText("Quantity").parent?.parent?.props.accessibilityState
+				.selected,
 		).toBe(true);
 
 		await fireEvent.press(screen.getByText("Break"));
 
 		await waitFor(() =>
 			expect(
-				screen.getByText("Simple check").parent?.props.accessibilityState
-					.selected,
+				screen.getByText("Simple check").parent?.parent?.props
+					.accessibilityState.selected,
 			).toBe(true),
 		);
 		expect(
-			screen.getByText("Quantity").parent?.props.accessibilityState.disabled,
+			screen.getByText("Quantity").parent?.parent?.props.accessibilityState
+				.disabled,
 		).toBe(true);
 		expect(
 			screen.getByText(/quantity targets aren't available for Break/),
@@ -354,8 +392,8 @@ describe("HabitFormScreen — create mode", () => {
 		await fireEvent.press(screen.getByText("Break"));
 		await waitFor(() =>
 			expect(
-				screen.getByText("Simple check").parent?.props.accessibilityState
-					.selected,
+				screen.getByText("Simple check").parent?.parent?.props
+					.accessibilityState.selected,
 			).toBe(true),
 		);
 
@@ -364,6 +402,69 @@ describe("HabitFormScreen — create mode", () => {
 		expect(mockCreateHabit).toHaveBeenCalledWith(
 			expect.objectContaining({ direction: "break", targetType: "simple" }),
 		);
+	});
+
+	describe("keyboard (A5-13)", () => {
+		afterEach(() => jest.restoreAllMocks());
+
+		it("Return on Name only puts the keyboard away for a simple check — it never saves a half-filled form", async () => {
+			const dismiss = jest
+				.spyOn(Keyboard, "dismiss")
+				.mockImplementation(() => {});
+			await render(<HabitFormScreen />);
+			const name = screen.getByLabelText("Name");
+			expect(name.props.returnKeyType).toBe("done");
+
+			await fireEvent(name, "submitEditing");
+
+			expect(dismiss).toHaveBeenCalledTimes(1);
+			expect(mockCreateHabit).not.toHaveBeenCalled();
+		});
+
+		it("Return on Name moves on to Unit for a quantity habit, with a 'Next' key and the keyboard kept up", async () => {
+			const dismiss = jest
+				.spyOn(Keyboard, "dismiss")
+				.mockImplementation(() => {});
+			const focus = jest
+				.spyOn(TextInput.prototype, "focus")
+				.mockImplementation(() => {});
+			await render(<HabitFormScreen />);
+			await fireEvent.press(screen.getByText("Quantity"));
+			const name = screen.getByLabelText("Name");
+			expect(name.props.returnKeyType).toBe("next");
+			expect(name.props.submitBehavior).toBe("submit");
+
+			await fireEvent(name, "submitEditing");
+
+			expect(focus).toHaveBeenCalledTimes(1);
+			expect(dismiss).not.toHaveBeenCalled();
+		});
+
+		it("Return on Unit puts the keyboard away, and focusing it scrolls it into view", async () => {
+			const dismiss = jest
+				.spyOn(Keyboard, "dismiss")
+				.mockImplementation(() => {});
+			await render(<HabitFormScreen />);
+			await fireEvent.press(screen.getByText("Quantity"));
+			const unit = screen.getByLabelText("Unit");
+			expect(unit.props.returnKeyType).toBe("done");
+
+			await fireEvent(unit, "submitEditing");
+			expect(dismiss).toHaveBeenCalledTimes(1);
+
+			const scrollToEnd = jest
+				.spyOn(ScrollView.prototype, "scrollToEnd")
+				.mockImplementation(() => {});
+			await fireEvent(unit, "focus");
+			expect(scrollToEnd).toHaveBeenCalledWith({ animated: true });
+		});
+
+		it("scrolling the form drags the keyboard away, and a chip tap still lands on the first tap", async () => {
+			await render(<HabitFormScreen />);
+			const scroll = screen.getByTestId("habit-form-scroll");
+			expect(scroll.props.keyboardDismissMode).toBe("on-drag");
+			expect(scroll.props.keyboardShouldPersistTaps).toBe("handled");
+		});
 	});
 
 	it("reveals Amount and Unit fields when Quantity is selected", async () => {
@@ -456,7 +557,8 @@ describe("HabitFormScreen — frequency", () => {
 		await render(<HabitFormScreen />);
 
 		expect(
-			screen.getByText("Daily").parent?.props.accessibilityState.selected,
+			screen.getByText("Daily").parent?.parent?.props.accessibilityState
+				.selected,
 		).toBe(true);
 		expect(screen.getByText("Specific weekdays")).toBeTruthy();
 		expect(screen.getByText("X per week")).toBeTruthy();
@@ -491,8 +593,8 @@ describe("HabitFormScreen — frequency", () => {
 		await fireEvent.press(screen.getByLabelText("Tuesday"));
 		await fireEvent.press(screen.getByLabelText("Sunday"));
 		expect(
-			screen.getByText("Specific weekdays").parent?.props.accessibilityState
-				.selected,
+			screen.getByText("Specific weekdays").parent?.parent?.props
+				.accessibilityState.selected,
 		).toBe(true);
 
 		await fireEvent.press(screen.getByText("Save habit"));
@@ -534,8 +636,8 @@ describe("HabitFormScreen — edit mode", () => {
 		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
 		expect(isSelected("Morning")).toBe(true);
 		expect(
-			screen.getByText("Specific weekdays").parent?.props.accessibilityState
-				.selected,
+			screen.getByText("Specific weekdays").parent?.parent?.props
+				.accessibilityState.selected,
 		).toBe(true);
 		expect(
 			["Monday", "Tuesday", "Wednesday", "Friday"].map(isSelected),
@@ -554,6 +656,59 @@ describe("HabitFormScreen — edit mode", () => {
 			1,
 			expect.objectContaining({ frequency: { type: "daily" } }),
 		);
+	});
+
+	describe("Archive at the foot (HAB-17, A5-01)", () => {
+		beforeEach(() => {
+			mockArchiveHabit.mockReset().mockResolvedValue(undefined);
+			mockRestoreHabit.mockReset().mockResolvedValue(undefined);
+			useToastStore.setState({ toast: null });
+		});
+
+		it("is offered in edit mode only, and not for an archived habit", async () => {
+			await render(<HabitFormScreen />);
+			expect(screen.queryByTestId("action-card")).toBeNull();
+		});
+
+		it("is not offered once the habit is already archived", async () => {
+			mockHabits = [
+				makeHabit({ ...existingHabit, archivedAt: new Date(2026, 8, 2) }),
+			];
+			await render(<HabitFormScreen habitId={1} />);
+			await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
+			expect(screen.queryByTestId("action-card")).toBeNull();
+		});
+
+		it("archives in one tap, closes the form and leaves an Undo toast that restores the habit", async () => {
+			await render(<HabitFormScreen habitId={1} />);
+			await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
+
+			await fireEvent.press(screen.getByTestId("action-card"));
+
+			await waitFor(() => expect(mockArchiveHabit).toHaveBeenCalledWith(1));
+			expect(mockBack).toHaveBeenCalledTimes(1);
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Archived 'Gym'");
+			expect(toast?.actionLabel).toBe("Undo");
+			toast?.onAction?.();
+			expect(mockRestoreHabit).toHaveBeenCalledWith(1);
+		});
+
+		it("stays open and says so inline when archiving fails", async () => {
+			mockArchiveHabit.mockRejectedValue(new Error("db locked"));
+			await render(<HabitFormScreen habitId={1} />);
+			await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
+
+			await fireEvent.press(screen.getByTestId("action-card"));
+
+			await waitFor(() =>
+				expect(
+					screen.getByText("Couldn't archive this habit. Try again."),
+				).toBeTruthy(),
+			);
+			expect(mockBack).not.toHaveBeenCalled();
+			expect(useToastStore.getState().toast).toBeNull();
+		});
 	});
 
 	it("doesn't autofocus the name in edit mode (HAB-22)", async () => {
@@ -628,7 +783,8 @@ describe("HabitFormScreen — edit mode", () => {
 
 		expect(screen.getByText(/checking it off means you did it/)).toBeTruthy();
 		expect(
-			screen.getByText("Break").parent?.props.accessibilityState.disabled,
+			screen.getByText("Break").parent?.parent?.props.accessibilityState
+				.disabled,
 		).toBe(true);
 	});
 

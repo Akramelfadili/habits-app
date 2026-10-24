@@ -1,7 +1,7 @@
 import { asc, eq } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/lib/db/client";
 import { reminders } from "@/lib/db/schema";
+import { useLiveRows } from "@/lib/db/use-live-rows";
 import type {
 	CreateReminderInput,
 	IsoWeekday,
@@ -40,19 +40,23 @@ function habitRemindersQuery(habitId: number) {
 
 /** Live-query hook — one habit's reminder times, earliest first. */
 export function useHabitReminders(habitId: number): Reminder[] {
-	const { data } = useLiveQuery(habitRemindersQuery(habitId), [habitId]);
-	return (data ?? []).map(rowToReminder);
+	const { data } = useLiveRows<ReminderRow>(
+		habitRemindersQuery(habitId),
+		[habitId],
+		{ resetOnDepsChange: true },
+	);
+	return data.map(rowToReminder);
 }
 
 /** Live-query hook — every habit's reminders (Today's tomorrow preview, HAB-14). */
 export function useAllReminders(): Reminder[] {
-	const { data } = useLiveQuery(
+	const { data } = useLiveRows<ReminderRow>(
 		db
 			.select()
 			.from(reminders)
 			.orderBy(asc(reminders.hour), asc(reminders.minute), asc(reminders.id)),
 	);
-	return (data ?? []).map(rowToReminder);
+	return data.map(rowToReminder);
 }
 
 /**
@@ -76,6 +80,27 @@ export async function createReminder(
 			minute: input.minute,
 			weekdays: weekdaysToColumn(input.weekdays),
 			enabled: input.enabled,
+			createdAt: new Date(),
+		})
+		.returning();
+	return rowToReminder(row);
+}
+
+/**
+ * Puts a removed reminder back under its original id (the Undo for Remove).
+ * Ids are autoincrement and never reused, so the id is free unless the row
+ * was never deleted — in which case the insert fails rather than duplicating.
+ */
+export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
+	const [row] = await db
+		.insert(reminders)
+		.values({
+			id: reminder.id,
+			habitId: reminder.habitId,
+			hour: reminder.hour,
+			minute: reminder.minute,
+			weekdays: weekdaysToColumn(reminder.weekdays),
+			enabled: reminder.enabled,
 			createdAt: new Date(),
 		})
 		.returning();

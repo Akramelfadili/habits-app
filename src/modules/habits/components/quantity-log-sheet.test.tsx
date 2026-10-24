@@ -16,6 +16,23 @@ const habit = makeHabit({
 });
 
 describe("QuantityLogSheet", () => {
+	it("the habit's name is the sheet's heading and wraps rather than overflowing (A6-09, A5-15)", async () => {
+		await render(
+			<QuantityLogSheet
+				visible
+				habit={habit}
+				value={6}
+				onDismiss={jest.fn()}
+				onSave={jest.fn()}
+			/>,
+		);
+		const heading = screen.getByRole("header", { name: "Glass of water" });
+		expect(heading.props.numberOfLines).toBe(2);
+		expect(
+			screen.getByText("Target 8 glasses · daily").props.numberOfLines,
+		).toBe(2);
+	});
+
 	it("renders the habit's name and target", async () => {
 		await render(
 			<QuantityLogSheet

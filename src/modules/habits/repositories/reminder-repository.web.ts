@@ -1,12 +1,12 @@
 import { useMemo, useSyncExternalStore } from "react";
+import { resolveFixtureScenario } from "../dev/habit-fixtures";
+import { makeReminderFixtures } from "../dev/reminder-fixtures";
 import type {
 	CreateReminderInput,
 	IsoWeekday,
 	Reminder,
 	ReminderPatch,
 } from "../types";
-import { resolveFixtureScenario } from "./habit-fixtures";
-import { makeReminderFixtures } from "./reminder-fixtures";
 import type * as NativeReminderRepository from "./reminder-repository";
 
 /**
@@ -72,6 +72,19 @@ export async function createReminder(
 	return reminder;
 }
 
+export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
+	const all = getReminders();
+	if (all.some((existing) => existing.id === reminder.id)) {
+		throw new Error(`Reminder ${reminder.id} already exists`);
+	}
+	const restored: Reminder = {
+		...reminder,
+		weekdays: normalizeWeekdays(reminder.weekdays),
+	};
+	setReminders([...all, restored]);
+	return restored;
+}
+
 export async function updateReminder(
 	id: number,
 	patch: ReminderPatch,
@@ -105,6 +118,7 @@ const _sameShape: typeof NativeReminderRepository = {
 	useAllReminders,
 	getHabitReminders,
 	createReminder,
+	restoreReminder,
 	updateReminder,
 	deleteReminder,
 };

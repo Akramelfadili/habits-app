@@ -20,13 +20,13 @@ import { categorySymbol } from "../components/category-symbol";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
+import type { YearlyInsight } from "../domain/yearly-insights";
+import type { YearlySummary, YearMonthCell } from "../domain/yearly-summary";
 import {
 	useYearlySummaryQueries,
 	type YearlySummaryView,
 } from "../hooks/use-yearly-summary-queries";
-import type { YearlyInsight } from "../services/yearly-insights";
-import type { YearlySummary, YearMonthCell } from "../services/yearly-summary";
-import { weeklyMenuSubline } from "./weekly-summary-helpers";
+import { weeklyMenuSubline } from "../presenters/weekly-summary-helpers";
 import {
 	bestMonthCopy,
 	bestMonthLabel,
@@ -44,7 +44,7 @@ import {
 	yearlyTiles,
 	yearRangeLabel,
 	yearTitle,
-} from "./yearly-summary-helpers";
+} from "../presenters/yearly-summary-helpers";
 
 /**
  * Yearly Summary (HAB-17, frames C4/C5/C7): range switcher → Logged / Overall
@@ -57,6 +57,15 @@ export function YearlySummaryScreen() {
 	const { colors } = useTheme();
 	const view = useYearlySummaryQueries();
 
+	if (view.state === "loading") {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
+	}
+
 	if (view.state === "empty") {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
@@ -65,7 +74,7 @@ export function YearlySummaryScreen() {
 				</View>
 				<TodayStatePanel
 					icon="chart.bar"
-					headline="Nothing to summarize yet"
+					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its year will show up here."
 				/>
 			</View>
@@ -89,7 +98,12 @@ function Header({
 	return (
 		<View style={styles.header}>
 			{eyebrow ? <SectionLabel>{eyebrow}</SectionLabel> : null}
-			<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+			<Text
+				accessibilityRole="header"
+				style={[styles.title, { color: colors.ink }]}
+			>
+				{title}
+			</Text>
 			{switcher ? <RangeSwitcher value="year" /> : null}
 		</View>
 	);
@@ -275,7 +289,7 @@ function Insight({
 		}
 		case "never-stuck": {
 			const copy = neverStuckCopy(insight);
-			// The year's only tappable card: Edit habit (where Archive should sit at the foot — see docs/v3-backlog.md).
+			// The year's only tappable card: Edit habit (where Archive should sit at the foot — see docs/backlog.md).
 			return (
 				<InsightCard
 					tone="warning"

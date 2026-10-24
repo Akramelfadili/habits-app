@@ -47,8 +47,11 @@ export function WeekdayPicker<T extends number>({
 }
 
 const styles = StyleSheet.create({
+	// Each chip is a 44pt column wider than its 36pt circle; pulling the row out
+	// 4pt each side keeps the first and last circles near the content edge.
 	row: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		marginHorizontal: -4,
 	},
 });

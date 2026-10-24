@@ -1,3 +1,4 @@
+import { failureMessage, UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import {
 	archiveHabit,
@@ -13,18 +14,32 @@ import {
  * instant with its own Undo (`undoRestoreHabit`, HAB-20).
  */
 export function useHabitDetailActions() {
-	const archive = useAsyncAction(archiveHabit);
-	const remove = useAsyncAction(deleteHabit);
-	const restore = useAsyncAction(restoreHabit);
-	const undoRestore = useAsyncAction(undoRestoreHabit);
+	const archive = useAsyncAction(archiveHabit, {
+		scope: "habit-detail",
+		failure: failureMessage("archive", "this habit"),
+	});
+	const remove = useAsyncAction(deleteHabit, {
+		scope: "habit-detail",
+		failure: failureMessage("delete", "this habit"),
+	});
+	const restore = useAsyncAction(restoreHabit, {
+		scope: "habit-detail",
+		failure: failureMessage("restore", "this habit"),
+	});
+	const undoRestore = useAsyncAction(undoRestoreHabit, {
+		scope: "habit-detail",
+		failure: UNDO_FAILED_MESSAGE,
+	});
 
 	return {
-		archiveHabit: archive.execute,
+		archiveHabit: archive.run,
+		/** For a screen with no ToastHost (the Edit modal) that shows the failure inline itself. */
+		archiveHabitOrThrow: archive.execute,
 		isArchiving: archive.isLoading,
-		deleteHabit: remove.execute,
+		deleteHabit: remove.run,
 		isDeleting: remove.isLoading,
-		restoreHabit: restore.execute,
+		restoreHabit: restore.run,
 		isRestoring: restore.isLoading,
-		undoRestoreHabit: undoRestore.execute,
+		undoRestoreHabit: undoRestore.run,
 	};
 }

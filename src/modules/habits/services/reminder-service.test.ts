@@ -1,12 +1,14 @@
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { fakeNotifications as fake } from "../test-support/fake-expo-notifications";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Reminder } from "../types";
 
-const mockCancel = jest.fn();
-const mockSchedule = jest.fn();
-jest.mock("@/lib/notifications/notifications", () => ({
-	cancelRemindersWithPrefix: (...args: unknown[]) => mockCancel(...args),
-	scheduleReminder: (...args: unknown[]) => mockSchedule(...args),
-}));
+// The real notifications adapter runs on top of an in-memory expo-notifications.
+jest.mock(
+	"expo-notifications",
+	() =>
+		require("../test-support/fake-expo-notifications").fakeNotifications.module,
+);
 
 const mockSetSetting = jest.fn();
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
@@ -14,15 +16,19 @@ jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 }));
 
 const mockUpdateHabit = jest.fn();
+const mockGetHabit = jest.fn();
 jest.mock("../repositories/habit-repository", () => ({
 	updateHabit: (...args: unknown[]) => mockUpdateHabit(...args),
+	getHabit: (...args: unknown[]) => mockGetHabit(...args),
 }));
 
 const mockGetHabitReminders = jest.fn();
 const mockCreateReminder = jest.fn();
 const mockUpdateReminder = jest.fn();
 const mockDeleteReminder = jest.fn();
+const mockRestoreReminderRow = jest.fn();
 jest.mock("../repositories/reminder-repository", () => ({
+	restoreReminder: (...args: unknown[]) => mockRestoreReminderRow(...args),
 	getHabitReminders: (...args: unknown[]) => mockGetHabitReminders(...args),
 	createReminder: (...args: unknown[]) => mockCreateReminder(...args),
 	updateReminder: (...args: unknown[]) => mockUpdateReminder(...args),
@@ -31,10 +37,12 @@ jest.mock("../repositories/reminder-repository", () => ({
 
 import {
 	addReminder,
+	cancelHabitNotifications,
 	editReminder,
 	habitNotificationPrefix,
 	ReminderCapError,
 	removeReminder,
+	restoreReminder,
 	setEveningReview,
 	syncHabitReminders,
 	unscheduledReminderDays,
@@ -60,9 +68,19 @@ function reminder(overrides: Partial<Reminder> = {}): Reminder {
 	};
 }
 
+/** The scheduled identifiers with their generation stripped: "<reminder>:<slot>:<HHmm>". */
+const scheduledKeys = () =>
+	[...fake.scheduled.keys()]
+		.map((id) => id.split(":").slice(0, 3).join(":"))
+		.sort();
+const generationsOf = () =>
+	new Set([...fake.scheduled.keys()].map((id) => id.split(":")[3]));
+
 describe("reminder-service", () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
+		fake.reset();
+		clearLog();
 		mockGetHabitReminders.mockResolvedValue([]);
 	});
 
@@ -83,23 +101,14 @@ describe("reminder-service", () => {
 			expect(
 				unscheduledReminderDays(
 					makeHabit({ frequency: { type: "per-week", timesPerWeek: 3 } }),
-					reminder({ weekdays: [6, 7] }),
+					reminder({ weekdays: [1, 6] }),
 				),
 			).toEqual([]);
 		});
 	});
 
-	describe("syncHabitReminders — archived (HAB-20)", () => {
-		it("cancels but schedules nothing for an archived habit, so editing its reminders can't make it fire", async () => {
-			mockGetHabitReminders.mockResolvedValue([reminder()]);
-			await syncHabitReminders({ ...weekdayHabit, archivedAt: new Date() });
-			expect(mockCancel).toHaveBeenCalledWith("habit-3-");
-			expect(mockSchedule).not.toHaveBeenCalled();
-		});
-	});
-
 	describe("syncHabitReminders", () => {
-		it("cancels everything the habit owns, then schedules only enabled reminders on schedulable days", async () => {
+		it("schedules only enabled reminders on schedulable days", async () => {
 			mockGetHabitReminders.mockResolvedValue([
 				reminder({ id: 1, weekdays: [1, 2, 3, 4, 5] }),
 				reminder({
@@ -115,24 +124,123 @@ describe("reminder-service", () => {
 
 			await syncHabitReminders(weekdayHabit);
 
-			expect(mockCancel).toHaveBeenCalledWith("habit-3-");
 			// Off (#2) and all-unscheduled (#4) reminders schedule nothing;
 			// #3 keeps only Friday — Sat/Sun would fire for nothing.
-			expect(mockSchedule.mock.calls.map(([n]) => [n.id, n.weekdays])).toEqual([
-				["habit-3-reminder-1", [1, 2, 3, 4, 5]],
-				["habit-3-reminder-3", [5]],
+			expect(scheduledKeys()).toEqual([
+				"habit-3-reminder-1:day-1:0720",
+				"habit-3-reminder-1:day-2:0720",
+				"habit-3-reminder-1:day-3:0720",
+				"habit-3-reminder-1:day-4:0720",
+				"habit-3-reminder-1:day-5:0720",
+				"habit-3-reminder-3:day-5:2100",
 			]);
-			expect(mockSchedule.mock.calls[0][0]).toEqual(
-				expect.objectContaining({ title: "Meditate", hour: 7, minute: 20 }),
+		});
+
+		it("an archived habit schedules nothing and its old notifications go, so editing its reminders can't make it fire (HAB-20)", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders(weekdayHabit);
+			expect(fake.scheduled.size).toBe(5);
+
+			await syncHabitReminders({ ...weekdayHabit, archivedAt: new Date() });
+
+			expect(fake.scheduled.size).toBe(0);
+		});
+
+		it("replaces the old set with the new one — the old generation is gone, the new one live", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders(weekdayHabit);
+			const before = generationsOf();
+
+			mockGetHabitReminders.mockResolvedValue([
+				reminder({ hour: 8, minute: 5 }),
+			]);
+			await syncHabitReminders(weekdayHabit);
+
+			expect(scheduledKeys()).toEqual(
+				[1, 2, 3, 4, 5].map((day) => `habit-3-reminder-1:day-${day}:0805`),
+			);
+			const after = generationsOf();
+			expect(after.size).toBe(1);
+			expect([...after][0]).not.toBe([...before][0]);
+		});
+
+		it("schedules the new set BEFORE cancelling the old, and cancels only the old identifiers", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders(weekdayHabit);
+			const oldIdentifiers = new Set(fake.scheduled.keys());
+			fake.events.length = 0;
+
+			mockGetHabitReminders.mockResolvedValue([
+				reminder({ hour: 8, minute: 5 }),
+			]);
+			await syncHabitReminders(weekdayHabit);
+
+			const kinds = fake.events.map((event) => event.split(":")[0]);
+			expect(kinds.indexOf("cancel")).toBeGreaterThan(
+				kinds.lastIndexOf("schedule"),
+			);
+			const cancelled = new Set(
+				fake.events
+					.filter((event) => event.startsWith("cancel:"))
+					.map((event) => event.slice("cancel:".length)),
+			);
+			expect(cancelled).toEqual(oldIdentifiers);
+			// Nothing that is live now was cancelled.
+			for (const id of fake.scheduled.keys())
+				expect(cancelled.has(id)).toBe(false);
+			expect(fake.scheduled.size).toBe(5);
+		});
+
+		it("a scheduling failure part-way cancels the new ones created so far and leaves the old set intact", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders(weekdayHabit);
+			const oldIdentifiers = [...fake.scheduled.keys()].sort();
+			// The next sync's third schedule call fails (after two new ones exist).
+			fake.failScheduleOn.add(fake.scheduleCalls + 3);
+			mockGetHabitReminders.mockResolvedValue([
+				reminder({ hour: 8, minute: 5 }),
+			]);
+
+			await expect(syncHabitReminders(weekdayHabit)).rejects.toThrow(
+				"schedule failed",
+			);
+
+			expect([...fake.scheduled.keys()].sort()).toEqual(oldIdentifiers);
+		});
+
+		it("a failed cancel of the old set is logged, not thrown; the new set is live", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders(weekdayHabit);
+			fake.failCancelOn.add(fake.cancelCalls + 1);
+			mockGetHabitReminders.mockResolvedValue([
+				reminder({ hour: 8, minute: 5 }),
+			]);
+
+			await expect(syncHabitReminders(weekdayHabit)).resolves.toBeUndefined();
+
+			expect(
+				getLogEntries().some(
+					(entry) =>
+						entry.level === "warn" && /cancel failed/.test(entry.message),
+				),
+			).toBe(true);
+			expect(scheduledKeys()).toEqual(
+				expect.arrayContaining(
+					[1, 2, 3, 4, 5].map((day) => `habit-3-reminder-1:day-${day}:0805`),
+				),
 			);
 		});
 
-		it("cancels before it schedules, so a stale notification can't survive", async () => {
+		it("logs counts, never names", async () => {
 			mockGetHabitReminders.mockResolvedValue([reminder()]);
 			await syncHabitReminders(weekdayHabit);
-			expect(mockCancel.mock.invocationCallOrder[0]).toBeLessThan(
-				mockSchedule.mock.invocationCallOrder[0],
-			);
+			const entry = getLogEntries().find((e) => e.message === "synced");
+			expect(entry?.context).toEqual({
+				habitId: 3,
+				scheduled: 5,
+				cancelled: 0,
+			});
+			expect(JSON.stringify(getLogEntries())).not.toContain("Meditate");
 		});
 	});
 
@@ -142,9 +250,44 @@ describe("reminder-service", () => {
 		);
 	});
 
+	describe("cancelHabitNotifications", () => {
+		it("cancels only that habit's notifications", async () => {
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
+			await syncHabitReminders(weekdayHabit);
+			fake.scheduled.set("habit-30-reminder-9:daily:0900:x", {
+				identifier: "habit-30-reminder-9:daily:0900:x",
+				hour: 9,
+				minute: 0,
+			});
+
+			await cancelHabitNotifications(3);
+
+			expect([...fake.scheduled.keys()]).toEqual([
+				"habit-30-reminder-9:daily:0900:x",
+			]);
+		});
+
+		it("a failing cancel is logged and does not throw — the archive/delete already happened", async () => {
+			fake.scheduled.set("habit-3-reminder-1:daily:0900:x", {
+				identifier: "habit-3-reminder-1:daily:0900:x",
+				hour: 9,
+				minute: 0,
+			});
+			fake.failCancelOn.add(1);
+
+			await expect(cancelHabitNotifications(3)).resolves.toBeUndefined();
+
+			expect(getLogEntries()[0]).toMatchObject({
+				level: "error",
+				context: { habitId: 3 },
+			});
+		});
+	});
+
 	describe("addReminder", () => {
 		it("creates a reminder pre-set to the days the habit can fall on, then syncs", async () => {
 			mockCreateReminder.mockResolvedValue(reminder());
+			mockGetHabitReminders.mockResolvedValue([reminder()]);
 
 			await addReminder(weekdayHabit);
 
@@ -155,7 +298,7 @@ describe("reminder-service", () => {
 				weekdays: [1, 2, 3, 4, 5],
 				enabled: true,
 			});
-			expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+			expect(fake.scheduled.size).toBe(5);
 		});
 
 		it("defaults to every day for a daily habit", async () => {
@@ -182,19 +325,140 @@ describe("reminder-service", () => {
 			);
 			expect(mockCreateReminder).not.toHaveBeenCalled();
 		});
+
+		it("the row is saved even if scheduling then fails: the add succeeds, the failure is logged", async () => {
+			const created = reminder({ id: 9 });
+			mockCreateReminder.mockResolvedValue(created);
+			mockGetHabitReminders.mockResolvedValue([created]);
+			fake.failScheduleOn.add(1);
+
+			await expect(addReminder(weekdayHabit)).resolves.toBe(created);
+
+			expect(
+				getLogEntries().some(
+					(e) => e.level === "error" && /scheduling failed/.test(e.message),
+				),
+			).toBe(true);
+			expect(fake.scheduled.size).toBe(0);
+		});
 	});
 
 	it("editReminder writes the patch, then re-syncs", async () => {
 		mockUpdateReminder.mockResolvedValue(reminder({ enabled: false }));
+		mockGetHabitReminders.mockResolvedValue([reminder({ enabled: false })]);
 		await editReminder(weekdayHabit, 1, { enabled: false });
 		expect(mockUpdateReminder).toHaveBeenCalledWith(1, { enabled: false });
-		expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+		expect(fake.scheduled.size).toBe(0);
+	});
+
+	it("editReminder still succeeds when the re-sync fails (the row changed)", async () => {
+		mockUpdateReminder.mockResolvedValue(reminder());
+		mockGetHabitReminders.mockResolvedValue([reminder()]);
+		fake.failScheduleOn.add(1);
+
+		await expect(
+			editReminder(weekdayHabit, 1, { hour: 8 }),
+		).resolves.toBeDefined();
 	});
 
 	it("removeReminder deletes, then re-syncs", async () => {
+		mockGetHabitReminders.mockResolvedValue([reminder({ id: 2 })]);
+		await syncHabitReminders(weekdayHabit);
+		expect(fake.scheduled.size).toBe(5);
+
+		mockGetHabitReminders.mockResolvedValue([]);
 		await removeReminder(weekdayHabit, 2);
+
 		expect(mockDeleteReminder).toHaveBeenCalledWith(2);
-		expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+		expect(fake.scheduled.size).toBe(0);
+	});
+
+	describe("addReminder with a pre-selected day (Monthly pattern)", () => {
+		it("starts the new reminder on just that day when the habit can fall on it", async () => {
+			mockCreateReminder.mockResolvedValue(reminder({ weekdays: [6] }));
+			mockGetHabitReminders.mockResolvedValue([]);
+			await addReminder(dailyHabit, [6]);
+			expect(mockCreateReminder).toHaveBeenCalledWith(
+				expect.objectContaining({ habitId: 4, weekdays: [6] }),
+			);
+		});
+
+		it("falls back to every schedulable day when the day isn't one the habit can fall on", async () => {
+			mockCreateReminder.mockResolvedValue(reminder());
+			mockGetHabitReminders.mockResolvedValue([]);
+			await addReminder(weekdayHabit, [6]);
+			expect(mockCreateReminder).toHaveBeenCalledWith(
+				expect.objectContaining({ weekdays: [1, 2, 3, 4, 5] }),
+			);
+		});
+	});
+
+	describe("restoreReminder (the Undo for Remove)", () => {
+		// A stateful stand-in for the table, so remove → restore round-trips.
+		let rows: Reminder[];
+		beforeEach(() => {
+			rows = [];
+			mockGetHabit.mockResolvedValue(weekdayHabit);
+			mockGetHabitReminders.mockImplementation(async () => [...rows]);
+			mockDeleteReminder.mockImplementation(async (id: number) => {
+				rows = rows.filter((row) => row.id !== id);
+			});
+			mockRestoreReminderRow.mockImplementation(async (row: Reminder) => {
+				rows = [...rows, row];
+				return row;
+			});
+		});
+
+		it("puts back the same id, time and days, with exactly one notification per day — not two", async () => {
+			const wednesday = reminder({ id: 7, hour: 18, minute: 5, weekdays: [3] });
+			rows = [wednesday];
+			await syncHabitReminders(weekdayHabit);
+			expect(fake.scheduled.size).toBe(1);
+
+			await removeReminder(weekdayHabit, 7);
+			expect(rows).toEqual([]);
+			expect(fake.scheduled.size).toBe(0);
+
+			const restored = await restoreReminder(wednesday);
+
+			expect(restored).toEqual(wednesday);
+			expect(rows).toEqual([wednesday]);
+			expect(mockRestoreReminderRow).toHaveBeenCalledWith(wednesday);
+			expect(fake.scheduled.size).toBe(1);
+			expect(scheduledKeys()).toEqual(["habit-3-reminder-7:day-3:1805"]);
+		});
+
+		it("re-syncs through the normal path rather than scheduling by hand", async () => {
+			const five = reminder({ id: 8 });
+			rows = [five];
+			await removeReminder(weekdayHabit, 8);
+			await restoreReminder(five);
+			// One generation live, all five weekdays, no duplicates from the removed set.
+			expect(fake.scheduled.size).toBe(5);
+			expect(generationsOf().size).toBe(1);
+		});
+
+		it("refuses when the habit is gone, and when the cap has been reached meanwhile", async () => {
+			mockGetHabit.mockResolvedValue(undefined);
+			await expect(restoreReminder(reminder({ id: 9 }))).rejects.toThrow();
+			expect(mockRestoreReminderRow).not.toHaveBeenCalled();
+
+			mockGetHabit.mockResolvedValue(weekdayHabit);
+			rows = [1, 2, 3, 4].map((id) => reminder({ id }));
+			await expect(restoreReminder(reminder({ id: 9 }))).rejects.toBeInstanceOf(
+				ReminderCapError,
+			);
+			expect(mockRestoreReminderRow).not.toHaveBeenCalled();
+		});
+
+		it("schedules nothing for a habit archived since (the sync respects it)", async () => {
+			mockGetHabit.mockResolvedValue({
+				...weekdayHabit,
+				archivedAt: new Date(2026, 8, 1),
+			});
+			await restoreReminder(reminder({ id: 10 }));
+			expect(fake.scheduled.size).toBe(0);
+		});
 	});
 
 	it("updateHabitAndSyncReminders re-syncs against the habit's new schedule", async () => {
@@ -210,34 +474,54 @@ describe("reminder-service", () => {
 
 		expect(saved).toBe(nowDaily);
 		// Sat/Sun were pointless on Mon–Fri; on daily they're real.
-		expect(mockSchedule.mock.calls[0][0].weekdays).toEqual([6, 7]);
+		expect(scheduledKeys()).toEqual([
+			"habit-3-reminder-1:day-6:0720",
+			"habit-3-reminder-1:day-7:0720",
+		]);
 	});
 
 	describe("setEveningReview", () => {
-		it("turning on saves the flag and schedules one daily 21:30 notification", async () => {
+		it("turning on schedules one daily 21:30 notification, then saves the flag", async () => {
 			await setEveningReview(true);
 			expect(mockSetSetting).toHaveBeenCalledWith(
 				"habits.eveningReview",
 				"true",
 			);
-			expect(mockSchedule).toHaveBeenCalledWith(
-				expect.objectContaining({
-					id: "evening-review",
-					hour: 21,
-					minute: 30,
-					weekdays: [1, 2, 3, 4, 5, 6, 7],
-				}),
-			);
+			expect(scheduledKeys()).toEqual(["evening-review:daily:2130"]);
+		});
+
+		it("turning on twice leaves one notification, not two", async () => {
+			await setEveningReview(true);
+			await setEveningReview(true);
+			expect(fake.scheduled.size).toBe(1);
+		});
+
+		it("if storing the flag fails, what was just scheduled is cancelled and the error surfaces", async () => {
+			mockSetSetting.mockRejectedValueOnce(new Error("db"));
+			await expect(setEveningReview(true)).rejects.toThrow("db");
+			expect(fake.scheduled.size).toBe(0);
+		});
+
+		it("if scheduling fails, the flag is never stored as on", async () => {
+			fake.failScheduleOn.add(1);
+			await expect(setEveningReview(true)).rejects.toThrow("schedule failed");
+			expect(mockSetSetting).not.toHaveBeenCalled();
 		});
 
 		it("turning off saves the flag and cancels it", async () => {
+			await setEveningReview(true);
 			await setEveningReview(false);
-			expect(mockSetSetting).toHaveBeenCalledWith(
+			expect(mockSetSetting).toHaveBeenLastCalledWith(
 				"habits.eveningReview",
 				"false",
 			);
-			expect(mockCancel).toHaveBeenCalledWith("evening-review:");
-			expect(mockSchedule).not.toHaveBeenCalled();
+			expect(fake.scheduled.size).toBe(0);
+		});
+
+		it("turning off with a failing cancel still succeeds (logged; the reconcile finishes it)", async () => {
+			await setEveningReview(true);
+			fake.failCancelOn.add(fake.cancelCalls + 1);
+			await expect(setEveningReview(false)).resolves.toBeUndefined();
 		});
 	});
 });

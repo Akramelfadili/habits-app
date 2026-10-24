@@ -2,8 +2,8 @@ import { StyleSheet, Text } from "react-native";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/** The counter appears from this fraction of the limit onward (design-system-v2 NEW-23). */
-export const COUNTER_FROM_RATIO = 0.8;
+/** The counter appears from this fraction of the limit onward (design-system NEW-23). */
+const COUNTER_FROM_RATIO = 0.8;
 
 /** The first length at which a counter for `limit` shows — 16 of 20, 26 of 32. */
 export function counterThreshold(limit: number): number {

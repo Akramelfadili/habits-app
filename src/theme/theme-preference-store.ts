@@ -1,5 +1,6 @@
 import { Appearance, type ColorSchemeName } from "react-native";
 import { create } from "zustand";
+import { log } from "@/lib/logger/logger";
 import type { ColorScheme } from "./theme";
 
 /** The Appearance choice (HAB-15). "system" follows iOS. */
@@ -39,6 +40,7 @@ export function applyNativeScheme(preference: ThemePreference) {
 	} catch {
 		// Not every runtime (web fixtures, tests) supports the override — drawing
 		// still follows the store, only the native chrome is left alone.
+		log.debug("theme", "native colour scheme override unavailable");
 	}
 }
 

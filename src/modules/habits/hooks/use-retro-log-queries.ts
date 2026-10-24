@@ -1,7 +1,7 @@
 import { format, startOfDay } from "date-fns";
+import { dayLogValueFor, habitsForDay } from "../domain/retro-log";
 import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
 import { useHabitsList } from "../repositories/habit-repository";
-import { dayLogValueFor, habitsForDay } from "../services/retro-log";
 import type { DayLogValue, Habit } from "../types";
 
 export type RetroLogDay = {
@@ -22,7 +22,7 @@ export function useRetroLogQueries(
 	habitId: number,
 	date: Date | null,
 ): RetroLogDay | null {
-	const allHabits = useHabitsList();
+	const { habits: allHabits } = useHabitsList();
 	const entries = useAllEntries();
 	const notes = useEntryNotes();
 

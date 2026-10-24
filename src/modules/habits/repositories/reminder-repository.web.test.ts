@@ -18,6 +18,27 @@ describe("reminder-repository.web", () => {
 		expect(result.current).toEqual([]);
 	});
 
+	it("restores a removed reminder under the same id, and refuses a duplicate", async () => {
+		const {
+			createReminder,
+			deleteReminder,
+			restoreReminder,
+			getHabitReminders,
+		} = loadRepository();
+		const made = await createReminder({
+			habitId: 1,
+			hour: 8,
+			minute: 30,
+			weekdays: [3, 1],
+			enabled: false,
+		});
+		await deleteReminder(made.id);
+
+		expect(await restoreReminder(made)).toEqual(made);
+		expect(await getHabitReminders(1)).toEqual([made]);
+		await expect(restoreReminder(made)).rejects.toThrow();
+	});
+
 	it("create, update and delete all notify live readers, earliest-first", async () => {
 		const {
 			createReminder,

@@ -58,6 +58,9 @@ export type CategoryUsage = {
 /** Icon and color are never user-chosen — the caller passes the rotation's pick. */
 export type CreateCategoryInput = CategoryAppearance & { name: string };
 
+/** What the habit live-query hooks return: `loaded` is false until the first result (audit A5-04). */
+export type HabitsResult = { habits: Habit[]; loaded: boolean };
+
 export type Habit = {
 	id: number;
 	name: string;
@@ -185,6 +188,11 @@ export type ReminderPatch = Partial<
 
 /** The file format of a data export (HAB-15). */
 export type ExportFormat = "csv" | "json";
+
+/** Why an export failed, as far as the person needs to know (the cause goes to the log). */
+export type ExportFailureReason =
+	| { kind: "storage"; neededBytes: number }
+	| { kind: "unknown" };
 
 /** What the export confirm sheet lets the person choose. */
 export type ExportOptions = {

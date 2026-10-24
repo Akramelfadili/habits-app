@@ -33,7 +33,7 @@ type HeaderButtonProps = {
 };
 
 /** A plain text header button — no capsule, no shadow, at least 44×44. */
-export function HeaderButton({
+function HeaderButton({
 	label,
 	onPress,
 	variant,

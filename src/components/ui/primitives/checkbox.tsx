@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
 type CheckboxProps = {
@@ -22,27 +22,43 @@ export function Checkbox({
 			accessibilityLabel={accessibilityLabel}
 			accessibilityState={{ checked }}
 			onPress={onPress}
-			hitSlop={8}
 			style={({ pressed }) => [
-				styles.base,
-				checked
-					? { backgroundColor: colors.ink }
-					: {
-							backgroundColor: "transparent",
-							borderWidth: 1.5,
-							borderColor: colors.border,
-						},
+				styles.touch,
 				pressed && { opacity: opacity.pressed },
 			]}
 		>
-			{checked ? (
-				<SymbolView name="checkmark" size={14} tintColor={colors.onAccent} />
-			) : null}
+			<View
+				style={[
+					styles.base,
+					checked
+						? { backgroundColor: colors.ink }
+						: {
+								backgroundColor: "transparent",
+								borderWidth: 1.5,
+								borderColor: colors.outline,
+							},
+				]}
+			>
+				{checked ? (
+					<SymbolView name="checkmark" size={14} tintColor={colors.onAccent} />
+				) : null}
+			</View>
 		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
+	// A 44pt touch area around the 24pt circle. The negative margin gives the
+	// extra back, so the row lays out as before; it reaches only into the
+	// host row's own padding (never a sibling), which is why this is not a
+	// hitSlop — it can't spill over adjacent controls.
+	touch: {
+		width: 44,
+		height: 44,
+		margin: -10,
+		alignItems: "center",
+		justifyContent: "center",
+	},
 	base: {
 		width: 24,
 		height: 24,

@@ -1,0 +1,38 @@
+[
+	{
+		"rule": "colocated-tests",
+		"file": "src/lib/db/client.ts"
+	},
+	{
+		"rule": "colocated-tests",
+		"file": "src/lib/dev-clock/pin-clock.ts"
+	},
+	{
+		"rule": "date-args",
+		"file": "src/modules/habits/dev/habit-fixtures.ts"
+	},
+	{
+		"rule": "date-args",
+		"file": "src/modules/habits/dev/monthly-fixtures.ts"
+	},
+	{
+		"rule": "date-args",
+		"file": "src/modules/habits/dev/yearly-fixtures.ts"
+	},
+	{
+		"rule": "date-args",
+		"file": "src/modules/habits/test-support/export-fixtures.ts"
+	},
+	{
+		"rule": "date-args",
+		"file": "src/modules/habits/test-support/habit-builder.ts"
+	},
+	{
+		"rule": "hex-colour",
+		"file": "src/components/ui/composite/nav-menu.tsx"
+	},
+	{
+		"rule": "hex-colour",
+		"file": "src/components/ui/primitives/category-chip.tsx"
+	}
+]

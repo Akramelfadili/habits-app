@@ -1,0 +1,1569 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+BORROWED
+CHANGED
+WHY
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal
+07 · 08 · HANDOFF
+Proposals, accessibility, change log, data needs, open decisions, self-critique.
+Handoff · Notes
+07.1 · Open proposals
+07.2 · Later
+08.1 · Contrast
+08.2 · Touch targets
+08.3 · VoiceOver
+08.4 · Focus
+08.5 · Motion
+08.5a · Pill
+08.6 · Dynamic Type
+08.6a · Type ramp
+08.8 · States
+08.7 · Colour
+CL.1 · Mapping
+CL.2 · Removed
+CL.3 · New
+DN · Data needs
+OD · Decisions
+SC · Self-critique
+Handoff
+How to read this file set
+TOPIC
+NOTE
+Files
+All 9 files hold the full design; each opens on one section. Habits V3 = 00–02, Today = 03 + PR-01, Progress = 04, Habits / Forms / Settings = 05, Sheets / States = 06, Handoff = 07–08. Edit the master (Habits V3) and rebuild the copies.
+IDs
+F = foundations, V3-xx = components, T / P / H / D / F / C / R / S = screens, DC / QS / RL / HP / SR / TC / EX / BS / FR / SY = sheets and states, PR = proposals, T-xx = token and rule changes.
+Baseline
+Tab bar B (floating pill). Density T-18. Quantity tap = +1 (T-22).
+Tokens
+Colours F-01, type F-03, spacing F-04, radius F-05, elevation and focus F-06, motion F-07. No other values.
+Proposals
+Dashed tags. “Later – not in V3” is out of scope (07.2). Open proposals (07.1) each have a fallback.
+Not covered
+iPad, widgets, Watch, notifications content, localisation beyond 24-hour time.
+07.1
+Open proposals — still in V3 scope, pending a check
+“If we skip it” is what ships instead.
+ID
+PROPOSAL
+WHERE
+PROBLEM
+CHANGE
+EFFORT
+DATA NEEDED
+IF WE SKIP IT
+PR-07
+Freeze earning rule
+S4, SR1, SR3
+The rule isn’t confirmed in the code.
+Copy never states a rule until the code check is done.
+Low
+Where the freeze count comes from
+Show the live count only.
+PR-08
+Used / saved freeze counts
+S4
+No history of freeze use.
+Used this month, streaks saved this year.
+Low
+Freeze events with date and habit
+Only “1 left”.
+PR-11
+Editing a frozen day returns the freeze
+RL3
+Logging a frozen day leaves a freeze spent.
+Return the freeze and say so in the toast.
+Med
+Which day each freeze covered
+Frozen days are read-only in Edit this day.
+PR-12
+Atomic migration
+SY3, SY4
+“Nothing was changed” may be untrue after a failure.
+One transaction; keep the old store until done.
+Med
+Migration design check
+SY4 says some data may need repair and links to diagnostics.
+PR-13
+Row style: count fill
+T12
+Some prefer a fill for × per week.
+Optional fill behind the row.
+Low
+None
+Label “1/3” only (default).
+07.2
+Later – not in V3
+Out of V3. Their frames stay for reference and are labelled “Later – not in V3”.
+ID
+PROPOSAL
+WHERE
+PROBLEM
+CHANGE
+EFFORT
+DATA NEEDED
+WHAT V3 SHIPS
+PR-01
+Evening review closes the day
+PR-01 frame (was T9), S3
+No “done for today” moment.
+Summary card at the review time; Reopen day.
+Med
+Per-day closed flag + scheduled evaluation
+Evening review stays a reminder only (S3).
+PR-02
+Today’s log + history times
+T11, D2
+Can’t see “did I log water at noon?”
+Collapsed log at the end of Today; times in history.
+Low
+A stored time for every log entry
+Dates only in history; no log section.
+PR-03
+Weekday pattern insight
+was P7, R4
+Weak weekdays go unnoticed.
+“Tuesdays are the weak day” + reminder deep link.
+Med
+Habit × weekday miss rate, single-cause test
+Slipping, improved and nothing-to-fix insights only.
+PR-04
+Share an image of the view
+Progress Export
+Export only gives data files.
+Share sheet with an image of the range.
+Low
+None
+JSON / CSV export only.
+PR-05
+iCloud backup
+S1, S5
+No backup beyond manual export.
+Toggle in Settings › Data.
+High
+CloudKit model, conflict rules
+Manual export is the backup.
+PR-06
+Auto-use freezes
+S4
+Freezes only work if you open the sheet.
+Use one automatically at midnight.
+Med
+Midnight job; freeze log by date
+Manual use from the streak-at-risk sheet.
+PR-10
+Two-step delete
+DC2, V3-25
+Accidental permanent deletes.
+First tap arms Delete; second within 4 s deletes.
+Low
+—
+Single confirm with Archive first (decided).
+08.1
+Contrast — measured, both themes
+WCAG 2.2 relative luminance. Translucent colours are flattened on their real background; heat cells are computed from the oklab mix; the pill is measured over the darkest content (text colour). Text 4.5:1, UI 3:1. Red = below; fixes are noted.
+PAIR
+USED FOR
+NEED
+LIGHT
+DARK
+RESULT
+text on bg
+Titles, names
+4.5:1
+15.71:1
+14.81:1
+Pass
+text on card
+Row names, values
+4.5:1
+17.42:1
+13.20:1
+Pass
+text on inner
+Pressed rows, fields, segmented
+4.5:1
+15.02:1
+11.53:1
+Pass
+sub on bg
+Notes, back link
+4.5:1
+5.86:1
+7.04:1
+Pass
+sub on card
+Status lines
+4.5:1
+6.50:1
+6.27:1
+Pass
+sub on inner
+Unselected segment
+4.5:1
+5.60:1
+5.48:1
+Pass
+faint on bg
+Eyebrows, group headers
+4.5:1
+4.75:1
+6.16:1
+Pass
+faint on card
+Axis labels, captions
+4.5:1
+5.27:1
+5.49:1
+Pass
+faint on inner
+Search placeholder
+4.5:1
+4.54:1
+4.79:1
+Pass
+onAccent on accent
+Primary button, selected chip
+4.5:1
+17.42:1
+14.81:1
+Pass
+warnInk on card
+At-risk status, Break tag
+4.5:1
+5.09:1
+7.49:1
+Pass
+warnInk on bg
+Warning notes
+4.5:1
+4.59:1
+8.41:1
+Pass
+warnInk on warnTint
+Warning banner title
+4.5:1
+4.51:1
+6.70:1
+Pass
+text on warnTint
+Warning banner body
+4.5:1
+15.43:1
+11.80:1
+Pass
+danger on card
+Errors, Delete
+4.5:1
+5.16:1
+4.53:1
+Pass
+danger on bg
+Form errors
+4.5:1
+4.65:1
+5.09:1
+Pass
+frozenInk on card
+Frozen status line
+4.5:1
+5.14:1
+5.67:1
+Pass
+text on frozenBg
+Day number in a frozen cell
+4.5:1
+14.51:1
+13.34:1
+Pass
+toastInk on toast
+Toast copy and action
+4.5:1
+17.42:1
+10.40:1
+Pass
+sub on pill (worst case)
+Inactive pill label over dark content — was faint (3.9–4.1:1), now sub (T-23)
+4.5:1
+5.11:1
+5.33:1
+Pass
+text on pill (worst case)
+Active tab label
+4.5:1
+13.69:1
+11.22:1
+Pass
+text on cell L1
+Month day number, 1–49 %
+4.5:1
+6.67:1
+4.74:1
+Pass
+onAccent on cell L2
+Month day number, 50–99 %
+4.5:1
+5.93:1
+6.41:1
+Pass
+onAccent on cell L3
+Month day number, complete
+4.5:1
+17.42:1
+14.81:1
+Pass
+outline on bg
+Unchecked circle, toggle off
+3:1
+3.16:1
+3.88:1
+Pass
+outline on card
+Unchecked circle in rows
+3:1
+3.50:1
+3.46:1
+Pass
+accent vs card
+Fills, selection, focus ring
+3:1
+17.42:1
+13.20:1
+Pass
+warnInk vs card (UI)
+Break circle outline
+3:1
+5.09:1
+7.49:1
+Pass
+frozenInk on frozenBg (UI)
+Dashed frozen border — never text
+3:1
+4.28:1
+5.73:1
+Pass
+danger icon on toast
+Error toast icon
+3:1
+3.38:1
+3.57:1
+Pass
+warnInk icon on toast
+Warning toast icon
+3:1
+3.42:1
+5.91:1
+Pass
+cell L3 vs card
+Done cell
+3:1
+17.42:1
+13.20:1
+Pass
+cell L3 vs missed cell
+Done vs missed
+3:1
+12.82:1
+9.65:1
+Pass
+cell L1 vs missed cell
+Partial vs missed — lightness alone is below 3:1
+3:1
+1.92:1
+2.04:1
+Pass · corner notch is the 2nd signal
+Category icon on its tint
+Icon squares, all 9 hues (lowest shown)
+3:1
+3.17:1
+6.53:1
+Pass
+border on card
+Hairlines and dividers
+Exempt
+1.31:1
+1.25:1
+Decorative
+track on card
+Progress track, empty bar
+Exempt
+1.36:1
+1.37:1
+Decorative
+08.2
+Touch-target audit (44 pt minimum)
+ELEMENT
+VISUAL
+HIT AREA
+STATUS
+NOTE
+Completion circle
+28 pt
+44 × 44
+Pass
+Overlaps row padding by 4 pt; the row stays 60.
+Habit row name area
+full row minus circle
+≥ 60 × 250
+Pass
+Opens Detail.
+Week strip day
+40 pt
+51 × 66 column
+Pass
+Header button (+, gear, Export)
+44 pt
+44 × 44
+Pass
+Tab bar A item
+48 tall
+≈ 128 × 48
+Pass
+Tab bar B (pill) item
+48 tall capsule
+≈ 121 × 48
+Pass
+Hit area extends to the pill edge.
+Segmented segment
+40 tall
+≈ 115 × 48 incl. track
+Pass
+Stepper − / +
+44 pt
+44 × 44
+Pass
+Quick amount / text chip
+44 tall
+≥ 56 × 44
+Pass
+Weekday chip
+44 pt
+44 × 44
+Pass
+Gap 4; the row wraps at AX.
+Toggle
+51 × 31
+whole row ≥ 52
+Pass
+The row toggles, not just the switch.
+Compact button (Restore, Share)
+36 tall
+44 tall
+Pass
+4 pt invisible padding top and bottom.
+Toast action
+40 tall
+44 tall
+Pass
+Link (Show, Show today)
+text
+≥ 44 tall
+Pass
+Reorder handle
+16 × 10
+44 × 44
+Pass
+Reminder remove (−)
+22 pt
+44 × 44
+Pass
+Widened from 32 × 44 in this stage; visual unchanged.
+Month calendar cell
+40 pt
+46 × 46 pitch
+Pass
+Week matrix cell
+24 pt
+28 × 28
+Below — by design
+Cells aren’t tappable; the day header (44) opens Edit this day. VoiceOver reads each cell.
+Detail mini-grid week row
+24 pt cells
+≈ 330 × 44 per week
+Pass
+The whole week row is one target and opens Edit this day for that week; cells aren’t separate targets.
+Year map month label
+text “Jul ›”
+44 × 44
+Pass
+Month labels are the only targets on the map and open that Month. Day cells (16 pt) aren’t tappable; day detail lives in Month.
+Quantity count button
+28 tall pill
+≥ 44 × 44
+Pass
+Opens the quantity sheet; the circle beside it adds +1.
+Sheet Close / Cancel
+text / 54 button
+≥ 44
+Pass
+Alert buttons
+50 tall
+≥ 290 × 50
+Pass
+08.3
+VoiceOver reading order and labels
+Labels are what VoiceOver says. Every row is one element; numbers are read as words and times in 24-hour format.
+SCREEN
+#
+ELEMENT
+LABEL · VALUE · TRAIT
+NOTE
+Today
+1
+Header
+“Today, heading. Friday 23 October.”
+2
+Add
+“Add habit, button.”
+3
+Week strip
+“Friday 23, today, selected, 1 of 5 done. Adjustable.”
+Swipe up/down changes day; one stop, not seven.
+4
+Progress
+“1 of 5 done, 20 percent.”
+5
+Group header
+“Health, heading, 0 of 2 done.”
+6
+Row name
+“Drink water, 5 of 8 glasses, button. Opens details.”
+7
+Quantity row
+Circle: “Add a glass, Drink water, 5 of 8. Button.” Count: “Amount, 5 of 8. Button. Opens the quantity sheet.”
+Two stops; long-press is a shortcut, never the only way.
+8
+Circle · check / break
+“Read 20 min, not done. Button. Double-tap to mark done.” / “No social media, resisted today? Button.”
+9
+Not-due row
+“1 not due today, Upper body. Show, button.”
+10
+Toast
+Announced: “Drink water plus 1, 3 of 8. Undo available.”
+Stays until dismissed with VoiceOver on.
+11
+Tab bar
+“Today, tab, selected, 1 of 3.”
+Progress · Week
+1–2
+Header, Export
+“Progress, heading. Week of 19 October.” “Export data, button.”
+3
+Range
+“Week, selected, 1 of 3.”
+4
+Stat tiles
+“Completion, 70 percent, 19 of 27 so far.”
+Each tile one element.
+5
+Insight
+“Insight 1 of 3, adjustable. Read 20 min is slipping. 3 of 5 so far this week… Change frequency, button.”
+6
+Matrix
+Per habit: “Drink water, 3 of 7. Monday done, Tuesday partial 60 percent, Wednesday done…”
+Partial always carries its %.
+Progress · Month
+4
+Calendar
+Per week: “Week of 5 October: Monday 84 percent, Tuesday frozen…”
+Rotor “Days” to move day by day.
+5
+Per habit
+“Meditate, 95 percent, daily, 21 of 22, 1 frozen.”
+Progress · Year
+4
+Month labels
+“July, 88 percent. Button. Opens Month.”
+Day cells are hidden from VoiceOver; AX sizes get the month list (P16).
+Progress · Month
+6
+Day detail
+“Tuesday 14 July, 4 of 5 done. Edit this day, button.”
+Habits
+1–3
+Header, gear, add
+“Habits, heading. 7 active, 1 archived.” “Settings, button.” “Add habit, button.”
+4
+Search
+“Search habits, search field.”
+5
+Rows
+“Drink water, Health, daily, 8 glasses. Button.” Actions: Reorder, Archive.
+6
+Archived
+“Archived, 2, collapsed. Button.” Rows: “Morning run, archived 12 October. Restore, button.”
+Detail
+1–2
+Back, title
+“Habits, back button.” “Upper body, heading. Fitness, Tuesday and Thursday.”
+3
+Stats
+“Streak, 9 in a row.” …
+4
+Mini grid
+Per week row: “Week of 19 October: Monday bonus, Tuesday done, Thursday not logged yet. Button. Opens Edit this day.”
+5
+Rows
+“Reminders, 07:00, Tuesday and Thursday. Button.” “Delete habit, button.”
+Add / Edit
+1
+Sheet
+“New habit, heading. Close, button.”
+Focus is trapped in the sheet.
+2–6
+Fields
+“Type: Build, selected, 1 of 2.” “Name, text field, required.” “Category, Learning, selected.” “Goal…” “Frequency…”
+7
+Save
+“Save habit, dimmed. Add a name to save.”
+Reason read as hint.
+err
+Errors
+On Save: focus moves to the first error; “You already have a habit called Read 20 min.”
+Sheets
+—
+Quantity
+“Drink water, heading.” “Glasses, 5 of 8, adjustable.” “Plus 1, button.” …
+—
+Confirm (DC)
+“Delete Read 20 min?, heading.” Focus starts on “Archive instead”.
+—
+Edit this day
+“Tuesday 14 July, heading.” Rows read like Today.
+—
+Alert (F9, FR3)
+“Discard changes?, alert. Your edits won’t be saved.” Focus on Keep editing.
+—
+Streak at risk
+“Keep your Meditate streak?, heading. 1 freeze left.” Focus on Use a freeze.
+08.4
+Focus order (VoiceOver, Full Keyboard Access, Switch Control)
+CONTEXT
+ORDER
+DEFAULT FOCUS
+ON CLOSE / AFTER
+Tab screens
+Header → primary action → content top to bottom → tab bar
+First content element after the title
+Re-tapping a tab scrolls to top and focuses the title
+Today row
+Name area, then circle (2 stops)
+—
+After a log, focus stays on the circle
+Pushed screen
+Back → title → content
+Title
+Back returns focus to the row that opened it
+Sheet
+Title → Close → content → bottom action
+Title
+Focus returns to the trigger; trapped while open
+Confirm sheet (DC)
+Title → note → safe action → destructive → Cancel
+Safe action (Archive instead)
+Trigger
+Alert
+Title → body → safe → other
+Safe button (Keep editing / Allow)
+Trigger
+Toast
+Not in the tab order; announced; Undo reachable via the VoiceOver Magic Tap
+—
+—
+Full Keyboard Access
+Tab moves between groups, arrows within (strip, segmented, chips)
+As above
+Focus ring = 2 pt surface gap + 2 pt accent
+08.5
+Reduce Motion and Reduce Transparency
+ELEMENT
+DEFAULT
+REDUCE MOTION
+REDUCE TRANSPARENCY · INCREASE CONTRAST
+Circle tick / pie
+200 ms fill, scale 92 % on press
+150 ms crossfade, no scale
+—
+Progress bar, ring
+450 ms fill
+Jumps to the value
+—
+Day switch (strip)
+160 ms slide + fade
+Crossfade
+—
+Sheets, pushes
+iOS spring
+System crossfade
+Scrim stays (it is not translucent material)
+Toast
+Rise 12 pt + fade
+Fade only
+Solid toast surface either way
+All done
+Check draws once, 600 ms
+Static check
+—
+Skeleton
+1.2 s shimmer after 300 ms
+Static blocks
+—
+Reorder lift
+Scale 1.02 + shadow
+Shadow only
+—
+Tab bar B (pill)
+Card 88 % + 20 pt blur + hairline + soft shadow
+No change
+Reduce Transparency: solid card. Increase Contrast: solid card, outline border, no shadow (see below).
+Compact pinned bars
+Solid bg + hairline
+—
+Already solid
+08.5a
+Tab bar B under accessibility settings
+LIGHT · TAB BAR B
+Today
+Progress
+Habits
+Default · card 88 % (light) / 94 % (dark) + 20 pt blur + hairline + soft shadow
+Today
+Progress
+Habits
+Reduce Transparency · solid card, no blur
+Today
+Progress
+Habits
+Increase Contrast · solid card, outline border (3:1), no shadow
+DARK · TAB BAR B
+Today
+Progress
+Habits
+Default · card 88 % (light) / 94 % (dark) + 20 pt blur + hairline + soft shadow
+Today
+Progress
+Habits
+Reduce Transparency · solid card, no blur
+Today
+Progress
+Habits
+Increase Contrast · solid card, outline border (3:1), no shadow
+08.6
+Dynamic Type per component
+COMPONENT
+XS – XXXL
+AX1 – AX5
+NOTE
+Header title
+32 → 40
+52, wraps to 2 lines; buttons move above the title
+Habit row
+Name wraps to 2 lines
+Badge, then name and status, then the circle on its own line; 16 pt padding, 72 pt rows
+Never truncates
+Week strip
+Fixed 40 pt days
+Collapses to “Friday 23 · Change day” button
+Strip is an adjustable element for VoiceOver
+Stat tiles
+3-up
+1-up, 16 pt padding
+Insight card
+Wraps
+Icon above text
+Segmented
+Fixed row
+Stacked list with checks
+P11
+Week matrix
+24 pt cells
+One block per habit with 40 pt cells
+P6
+Year map
+16 pt cells
+Month list with bars
+P16
+Buttons
+One line
+Labels wrap inside; button grows; radius 20
+Never overflow
+Chips
+Wrap
+Wrap, one per line if needed
+Toast
+One line
+Wraps; action drops below the copy
+Tab bar
+Label 12 fixed (iOS)
+B falls back to A; long-press shows Large Content Viewer
+H10
+Sheets
+Content height
+Full height, scrolls; bottom action pinned
+Alerts
+Centred, 36 pt insets
+16 pt insets, buttons stack
+08.6a
+AX3 sizes on the iOS type ramp
+Every AX3 frame uses these values only. 14 pt subhead maps to Subheadline (36) — the 34 / 33 used before were off the ramp.
+TOKEN
+DEFAULT
+IOS STYLE
+AX3
+USED FOR
+display
+32
+Large Title
+52
+Screen titles
+stat
+26
+Title 1
+48
+Stat values
+title
+20
+Title 3
+43
+Sheet titles, stepper value
+body-lg
+17
+Body / Headline
+40
+Field values, alert title
+body
+16
+Callout
+38
+Row names, buttons
+callout
+15
+Subheadline
+36
+Values, links
+subhead
+14
+Subheadline
+36
+Chips, segmented, toast — was 34 / 33, now on the ramp
+footnote
+13
+Footnote
+33
+Sublines, notes
+caption
+12
+Caption 1
+32
+Eyebrows, legend; tab label fixed (iOS)
+08.8
+State coverage in Foundations
+Every interactive component has default, pressed, disabled and focus.
+COMPONENT
+DEFAULT
+PRESSED
+DISABLED
+FOCUS
+NOTE
+V3-01 Tab bar A / B
+✓
+✓
+✓ inert in SY3
+✓
+V3-02 Header button
+✓
+✓
+✓
+✓
+V3-03 Week strip day
+✓
+✓
+✓ before start / future
+✓
+V3-04 Completion circle
+✓
+✓
+✓ future day
+✓
+V3-12 Insight action
+✓
+✓
+n/a
+✓
+Card itself isn’t interactive
+V3-13 Habit row
+✓
+✓
+✓
+✓
+Count button uses V3-22 compact states
+V3-14 Category chip
+✓
+✓
+✓
+✓
+V3-15 Category row
+✓
+✓
+✓ built-in, locked
+via V3-23
+Same focus ring as list items
+V3-16 Text field
+✓
+n/a
+✓
+✓
+Fields focus, not press
+V3-17 Segmented
+✓
+✓
+✓
+✓
+V3-18 Stepper
+✓
+✓
+✓ 0 / 99
+✓
+V3-19 Chip · weekday
+✓
+✓
+✓
+✓
+Weekday pressed added
+V3-20 Toggle · V3-21 Checkbox
+✓
+✓
+✓
+✓
+V3-22 Buttons (all 5 kinds)
+✓
+✓
+✓
+✓
++ loading
+V3-23 List item
+✓
+✓
+✓ with reason
+✓
+V3-25 Confirm
+✓
+✓
+✓ while deleting
+✓
+V3-26 Toast action
+✓
+✓
+n/a
+✓
+Toast disappears instead of disabling
+08.7
+Colour is never the only signal
+MEANING
+COLOUR
+SECOND SIGNAL
+Done
+Accent fill
+Check mark; “Done” in status; VoiceOver “done”
+Partial
+Pie fill / cell L1–L2
+Corner notch on partial cells; pie shape on the circle; “5 of 8” text; % in VoiceOver
+Missed
+Track fill
+“Missed” in status and history
+Break habit
+Amber
+Resistance copy (“Resisting · 4 days”); “Break” tag
+At risk
+Amber dot
+“Missed Thursday · 1 freeze left” text
+Frozen
+Violet
+Dashed border; “Frozen” text; legend label
+Streak reset
+Amber outline
+Notice text in Detail (D6)
+Bonus / off-schedule
+Accent dot
+“Bonus” tag, “not counted”
+Before start / future
+Dashed / hairline
+Shape difference; legend label
+Error
+Red
+“!” icon, error copy, focus moves there
+Selected (chip, tab, segment)
+Accent / capsule
+Check mark (chips), weight 600 (tabs), VoiceOver “selected”
+Category
+Hue in square and dot
+Category name always shown in group headers or status
+Slipping
+Amber bar
+“slipping” in status, insight copy
+CL.1
+Change log — V1 / V2 → V3
+Reused = same component, restyled. Merged = several old components became one. New = no V1/V2 source. Token changes T-01 to T-22 are in F-09.
+V3 ID
+NAME
+WAS
+TYPE
+V3-01
+Tab bar · 3 tabs
+V1-17 AppTabBar
+Reused · restyled, To-dos + Expenses removed; variant B new
+V3-02
+Header + header button
+V1-20 chrome
+Reused · replaces NEW-01 menu
+V3-03
+Week strip
+V1 “Log a past day” link
+New · replaces the retro-log entry
+V3-04
+Completion circle
+V1-06 + VAR-06
+Merged
+V3-05
+Completion cell + legend
+NEW-16 + VAR-09
+Merged
+V3-06
+Completion grid
+NEW-07
+Reused · 3 layouts
+V3-07
+Progress bar
+V1-11
+Reused
+V3-08
+Column bar · sparkline
+NEW-17 + NEW-08 + NEW-09
+Merged
+V3-09
+Rate ring
+—
+New
+V3-10
+Stat card
+VAR-14 + NEW-20
+Merged · icons dropped
+V3-11
+Chart card
+NEW-32 + NEW-31 + NEW-21
+Merged
+V3-12
+Insight card
+VAR-04
+Reused · tones added
+V3-13
+Habit row
+V1-25 + VAR-11
+Merged · denser (T-18)
+V3-14
+Category chip
+NEW-28
+Reused
+V3-15
+Category row
+NEW-29
+Reused
+V3-16
+Text field
+V1-13 + VAR-12 + NEW-23 + NEW-24
+Merged
+V3-17
+Segmented control
+V1-08 + VAR-01
+Merged
+V3-18
+Stepper
+V1-12 + VAR-07
+Merged
+V3-19
+Chip · weekday chip
+V1-09
+Reused · 44 pt
+V3-20
+Toggle
+V1-07
+Reused · off track fixed
+V3-21
+Checkbox
+—
+New
+V3-22
+Buttons
+V1-03 + V1-04 + V1-05 + VAR-13
+Merged
+V3-23
+List item
+V1-14 + VAR-05 + VAR-08
+Merged
+V3-24
+Sheet
+V1-15 + VAR-03
+Merged
+V3-25
+Destructive confirm
+NEW-12 + V1-16
+Merged
+V3-26
+Toast
+V1-18
+Reused · tones
+V3-27
+Inline banner
+V1-19 + NEW-13
+Merged
+V3-28
+Empty state
+V1-21
+Reused
+V3-29
+Unlock card
+NEW-11
+Reused
+V3-30
+File card
+NEW-06
+Reused
+V3-31
+Log row
+NEW-22
+Reused · proposal PR-02
+V3-32
+Icon square
+VAR-02
+Reused
+F-01
+Colour tokens
+V1-01
+Reused · T-01–T-06
+F-02
+Intensity + category palette
+V1-01 tints + NEW-16
+Changed · one accent (T-05)
+F-03
+Type scale
+V1-02
+Reused · 4 sizes retired
+F-04 · F-05
+Spacing, radius
+—
+New
+F-06 · F-07
+Elevation, focus, motion
+—
+New
+F-08
+Iconography
+V1-10 / VAR-02
+Reused · gear (T-19)
+Today
+T1–T14
+V1 Today + V2 Today
+Reused screen · rebuilt
+Progress
+P1–P17
+V2 Progress / stats
+Reused screen · insights first
+Habits tab
+H1–H10
+⋯ menu items (NEW-01/02/14)
+New tab
+Detail
+D1–D8
+V2 Habit detail
+Reused
+Add / Edit
+F1–F10
+V1 Add habit + V2 form
+Merged
+Settings
+S1–S7
+⋯ menu
+New screen
+CL.2
+Removed
+WHAT
+WAS
+WHY
+NOW
+To-dos tab
+V1-17 tab 2
+Out of scope for a habit tracker
+Removed with its screens
+Expenses tab
+V1-17 tab 3
+Out of scope
+Removed
+⋯ menu
+NEW-01 / 02 / 14
+Hid core actions
+Habits tab (gear → Settings, + → Add)
+“Log a past day” link
+V1
+Separate mode, hard to find
+Week strip (V3-03) + Edit this day
+Stat card icons
+VAR-14
+Decoration, colour noise
+Dropped
+Per-habit hue heat maps
+NEW-16
+Colour meant two things
+One accent intensity (T-05)
+Sizes 10.5 · 11 · 11.5 · 12.5
+V1-02
+Below 12 pt / off-scale
+Snapped to 12 / 13 (T-07, T-08)
+Full-row category fill
+V2 count rows
+Invisible to VoiceOver
+“1/3” label; fill is PR-13
+Red category hues
+Health 25, Social 345
+Red = danger
+Hues 175, 230 (T-16)
+CL.3
+New in V3
+Other frames show tab bar A for brevity; they use the same V3-01 B spec (T-21).
+WHAT
+IDS
+WHY
+Habits tab · Settings
+H1–H10, S1–S7
+One home for managing habits
+Week strip + past-day logging
+V3-03, T10
+Today is a day view
+Floating tab bar B
+V3-01 B, T-20/21
+Baseline
+Tokens: spacing, radius, elevation, focus, motion
+F-04–F-07
+Code had none
+Rate ring, checkbox
+V3-09, V3-21
+Insights first on Progress
+P1, V3-12
+Answer “how am I doing” first
+Streak at risk + freezes
+SR1–SR3, S4
+Decision next to the habit
+Quantity: tap = +1, sheet on long-press
+T4, QS1–QS4, T-22
+One tap per log
+States: loading, error, migration, rollover, first run
+SY1–SY6, FR1–FR4
+No undesigned states
+Message catalogue
+06 Messages
+One voice for every message
+Density pass
+T-18, V3-13a
+Less air
+Partial-cell notch
+T-24, V3-05
+Partial never depends on lightness
+Count button on quantity rows
+T-27, T4, QS0
+The sheet is visible, not a hidden gesture
+12 pt pill safe zone
+T-25, T13
+The pill never covers a circle
+Insight pager
+T-28, P1
+One card, others a swipe away
+Week start follows iOS
+T-29, T15
+Locale-correct weeks
+Year: month labels only
+T-26, P12, P13
+No sub-44 pt targets
+DN
+Data needs — final
+Consolidates 04 Data needs and every “needs data check” from stages 3–5.
+NUMBER OR FEATURE
+WHERE
+QUERY OR DATA
+STATUS
+RISK
+Completion rate (any range)
+P1, P7, P12
+Done ÷ due per day, frozen excluded, bonus excluded
+Needs query
+Low
++N pts vs previous
+P7, D1
+Same rate for the previous range
+Needs query
+Low
+Perfect days
+P7
+Days where every due habit was done (frozen ≠ perfect)
+Needs query
+Low
+Best day / daily bars
+P1
+Done ÷ due per weekday this week
+Needs query (cheap)
+Low
+Per-habit month rates
+P8
+Done ÷ due per habit; bonus listed separately
+Needs query
+Low
+Full-year map + best month
+P12–P15
+Level 0–3 per day for a year, all or one habit
+Needs query
+Med — performance
+Year day detail
+P13, RL1
+Each habit’s status on one date
+Assumed (logs by date)
+Low
+Streak, longest, 90-day rate
+Detail, P1
+Stored streaks; 90-day rate query
+Assumed + needs query
+Low
+Slipping / improved
+P1, P5
+This week vs last week per habit
+Assumed (V2 insights)
+Low
+Weekday pattern
+P7
+Habit × weekday miss rate, single-cause test
+Later – not in V3
+Med
+Freeze count
+T6, SR1, S4
+Live freezes left
+Assumed
+Low
+Freeze log by date
+P1, S4, RL3
+Freeze events with date and habit
+Needs data
+Med
+Freeze earning rule
+S4, SR3
+Product rule
+Pending code check
+Med — copy never states the rule
+Per-entry timestamps
+T11, D2
+Time on each log
+Later – not in V3
+Med
+Day closed flag
+PR-01
+Per-day state
+Later – not in V3
+Med
+Archive / restore dates, paused ranges
+D4, D5, cells
+Archived-from / restored-at per habit
+Assumed
+Med — paused days must not count as missed
+Quantity +1 log
+T4
+Append a +1 entry; Undo removes it
+Exists (step logs)
+Low
+Templates
+BS1, BS2
+Bundled list
+Decided · bundle 8–10
+Low
+Delete behaviour
+DC1–DC4
+Current delete flow
+Check against current behaviour
+Low
+Migration transaction
+SY3, SY4
+Atomic migration
+Check (PR-12)
+High — data loss
+Export
+EX1–EX4, S5
+Existing JSON / CSV
+Exists
+Low
+Notification permission
+R5, S3, SY6, FR3
+UNUserNotificationCenter status
+Exists (iOS)
+Low
+OD
+Open decisions
+#
+DECISION
+STATUS
+OUTCOME
+1
+Break habits: daily tick or auto-resisted?
+Decided
+Keep the daily tick.
+2
+Delete: two-step lock or single confirm?
+Decided
+Single confirm with Archive offered first (DC1). Check against current behaviour. Two-step = PR-10, Later.
+3
+Evening review “close day”
+Decided
+Later – not in V3 (PR-01).
+4
+Today’s log section
+Decided
+Later – not in V3 (PR-02).
+5
+Insights on Progress
+Closed
+One card with a pager (P1, P5, P7, P12); “Insight 1 of 3” for VoiceOver.
+6
+Year map taps
+Closed
+Month labels are the only targets; day detail from Month (P12, P13).
+7
+Partial cells need a 2nd signal
+Closed
+Corner notch on L1 / L2 cells and legends; % kept in VoiceOver (T-24).
+8
+Freeze earning rule
+Open · pending code check
+Don’t invent one. All freeze copy avoids stating how freezes are earned.
+9
+Templates
+Decided
+Bundle 8–10 locally (BS1 shows 9).
+10
+Week start
+Closed
+Follows the iOS first weekday (T15 = Sunday).
+11
+Weekday insight, share image, iCloud backup, auto-use freezes
+Decided
+Later – not in V3 (PR-03, PR-04, PR-05, PR-06).
+SC
+Self-critique — the 10 weakest points
+Updated after the final correction pass.
+#
+WEAKNESS
+STATUS
+WHAT CHANGED / WHAT I WOULD CHANGE
+1
+Partial completion was told apart by lightness alone.
+Fixed
+Corner notch (T-24).
+2
+The year map relied on 16 pt day taps.
+Fixed
+Month labels only (T-26).
+3
+Quantity sheet hidden behind a long-press; two tap zones per row.
+Fixed
+Visible count button (T-27, QS0). Still worth testing with Switch Control.
+4
+Many ways into Edit this day.
+Open
+Keep strip + Month + Detail week rows; drop others if testing shows confusion.
+5
+Freeze model underspecified.
+Partly
+Copy no longer states a rule; PR-07, PR-08, PR-11 still need the code check.
+6
+Most frames showed bar A.
+Fixed
+Every frame uses B; AX frames fall back to A by rule.
+7
+Pill could cover the bottom row’s circle.
+Fixed
+12 pt safe zone (T-25, T13).
+8
+Progress does a lot.
+Open
+Cut Week summary bars if the matrix answers the same question.
+9
+Sheet backdrops in 06 are simplified.
+Open
+Use the real Today screen as backdrop in build specs.
+10
+Assumptions not checked against code (migration resume, archived ranges, step logs).
+Open
+Data check before handoff.

@@ -17,7 +17,7 @@ import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
 import { useManageHabitsActions } from "../hooks/use-manage-habits-actions";
 import { useManageHabitsQueries } from "../hooks/use-manage-habits-queries";
-import type { Habit } from "../types";
+import { restoredToastMessage } from "../presenters/habit-detail-helpers";
 import {
 	archivedRowSubtitle,
 	archivedSectionTitle,
@@ -26,7 +26,8 @@ import {
 	NOTHING_ARCHIVED_MESSAGE,
 	noActiveMessage,
 	reorderingTag,
-} from "./manage-habits-helpers";
+} from "../presenters/manage-habits-helpers";
+import type { Habit } from "../types";
 
 /**
  * Manage & Archive (HAB-13, reworked by HAB-19): one card per category, in
@@ -41,16 +42,22 @@ import {
 export function ManageHabitsScreen() {
 	const router = useRouter();
 	const { colors, scheme } = useTheme();
-	const { active, groups, archived } = useManageHabitsQueries();
-	const { reorderHabits, archiveHabit, restoreHabit, isRestoring } =
-		useManageHabitsActions();
+	const { active, groups, archived, isLoaded } = useManageHabitsQueries();
+	const {
+		reorderHabits,
+		archiveHabit,
+		restoreHabit,
+		undoRestoreHabit,
+		isRestoring,
+	} = useManageHabitsActions();
 	const categoryNames = new Map(
 		groups.map(({ category }) => [String(category.id), category.name]),
 	);
 
 	// Same wording as archiving from Habit Detail — one toast rule app-wide.
 	async function handleArchive(habit: Habit) {
-		await archiveHabit(habit.id);
+		const result = await archiveHabit(habit.id);
+		if (!result.ok) return;
 		showToast({
 			message: `Archived '${habit.name}'`,
 			actionLabel: "Undo",
@@ -59,15 +66,33 @@ export function ManageHabitsScreen() {
 	}
 
 	async function handleRestore(habit: Habit) {
-		await restoreHabit(habit.id);
-		showToast({ message: `Restored '${habit.name}' — back on Today` });
+		// Undo puts back the archive date and pauses captured now, not a new
+		// archive dated today — the same as Detail's Restore (HAB-20).
+		const { archivedAt, pauses } = habit;
+		const result = await restoreHabit(habit.id);
+		if (!result.ok) return;
+		showToast({
+			message: restoredToastMessage(habit.name),
+			actionLabel: "Undo",
+			onAction: () => undoRestoreHabit(habit.id, { archivedAt, pauses }),
+		});
+	}
+
+	// Lists still loading: a neutral blank, never a flash of the empty states.
+	if (!isLoaded) {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
 	}
 
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
 				{/* A pushed screen: back in the header, a large "Habits" title
-				    (the mockups' title; HAB-19, docs/v3-backlog.md). */}
+				    (the mockups' title; HAB-19, docs/backlog.md). */}
 				<Text
 					accessibilityRole="header"
 					style={[styles.title, { color: colors.ink }]}

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
-import type { RecentEntry } from "../services/habit-history";
+import type { RecentEntry } from "../domain/habit-history";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
 
@@ -7,7 +7,6 @@ jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { HabitEntryRow } from "./habit-entry-row";
 

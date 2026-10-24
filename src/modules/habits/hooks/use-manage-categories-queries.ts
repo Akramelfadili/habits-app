@@ -1,7 +1,7 @@
 import { useMemo } from "react";
+import { categoryUsage } from "../domain/category-rules";
 import { useCategories } from "../repositories/category-repository";
 import { useHabitsList } from "../repositories/habit-repository";
-import { categoryUsage } from "../services/category-rules";
 import type { Category, CategoryUsage } from "../types";
 
 export type ManageCategoriesView = {
@@ -19,7 +19,7 @@ export type ManageCategoriesView = {
  */
 export function useManageCategoriesQueries(): ManageCategoriesView {
 	const categories = useCategories();
-	const habits = useHabitsList();
+	const { habits } = useHabitsList();
 	return useMemo(() => {
 		const usage = categoryUsage(categories, habits);
 		return {

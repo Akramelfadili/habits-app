@@ -1,14 +1,24 @@
 import { useCallback, useState } from "react";
+import { log } from "@/lib/logger/logger";
+import { type RunResult, type RunSafelyOptions, runSafely } from "./run-safely";
 
 /**
- * Consistent { execute, isLoading, error } shape for any repository or service
- * call a write hook exposes — see docs/app-architecture.md's async-action-state note.
+ * Consistent { execute, run, isLoading, error } shape for any repository or
+ * service call a write hook exposes — see docs/architecture.md's async-action-
+ * state note.
+ *
+ * - `execute` rethrows (for the few callers that handle the failure inline,
+ *   e.g. a sheet that stays open with its own message).
+ * - `run` never rejects: it logs, shows an error toast (`failure` copy, or
+ *   `onFailure`) and resolves `{ ok: false }`. Prefer it for every write.
  */
 export function useAsyncAction<Args extends unknown[], Result>(
 	action: (...args: Args) => Promise<Result>,
+	options: RunSafelyOptions = { scope: "action" },
 ) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
+	const { scope, failure, onFailure } = options;
 
 	const execute = useCallback(
 		async (...args: Args) => {
@@ -20,13 +30,25 @@ export function useAsyncAction<Args extends unknown[], Result>(
 				const normalized =
 					caught instanceof Error ? caught : new Error(String(caught));
 				setError(normalized);
+				// The same object reaching `runSafely` is not logged a second time.
+				log.error(scope, "action failed", normalized);
 				throw normalized;
 			} finally {
 				setIsLoading(false);
 			}
 		},
-		[action],
+		[action, scope],
 	);
 
-	return { execute, isLoading, error };
+	const run = useCallback(
+		async (...args: Args): Promise<RunResult<Result>> => {
+			const result = await runSafely({ scope, failure, onFailure }, () =>
+				execute(...args),
+			);
+			return result;
+		},
+		[execute, scope, failure, onFailure],
+	);
+
+	return { execute, run, isLoading, error };
 }

@@ -1,15 +1,21 @@
-import { useCallback, useReducer, useRef } from "react";
+import { useCallback, useReducer, useRef, useState } from "react";
 import { saveFileToFolder, shareFile } from "@/lib/file-export/file-export";
-import type { ExportSource } from "../services/export-data";
+import { log } from "@/lib/logger/logger";
+import { failureMessage } from "@/utils/failure-message";
+import type { ExportSource } from "../domain/export-data";
 import {
 	ExportCancelledError,
 	ExportFailedError,
-	type ExportFailureReason,
 	type ExportProgress,
 	type ExportResult,
 	runExport,
 } from "../services/export-service";
-import type { ExportOptions } from "../types";
+import type { ExportFailureReason, ExportOptions } from "../types";
+
+/** How the last Share / Save to Files ended, when it didn't simply close the sheet. */
+export type ExportDelivery =
+	| { kind: "saved" }
+	| { kind: "error"; message: string };
 
 export type ExportPhase =
 	| { name: "confirm" }
@@ -53,10 +59,12 @@ export function useExportActions() {
 	const last = useRef<{ source: ExportSource; options: ExportOptions } | null>(
 		null,
 	);
+	const [delivery, setDelivery] = useState<ExportDelivery | null>(null);
 
 	const run = useCallback(
 		async (source: ExportSource, options: ExportOptions) => {
 			last.current = { source, options };
+			setDelivery(null);
 			const abort = new AbortController();
 			controller.current = abort;
 			dispatch({ type: "start" });
@@ -73,6 +81,8 @@ export function useExportActions() {
 				if (caught instanceof ExportCancelledError) {
 					dispatch({ type: "reset" });
 				} else {
+					// A failure `runExport` didn't wrap is still logged, with its cause.
+					log.error("export", "export failed unexpectedly", caught);
 					dispatch({
 						type: "failed",
 						reason:
@@ -94,17 +104,45 @@ export function useExportActions() {
 
 	const cancel = useCallback(() => controller.current?.abort(), []);
 
+	// Neither of these may reject into an `onPress`: a failure becomes an inline
+	// message on the ready card, and backing out of the system UI is not a failure.
 	const share = useCallback(async () => {
-		if (phase.name === "ready") {
+		if (phase.name !== "ready") return;
+		setDelivery(null);
+		try {
+			// The share sheet resolves on dismissal either way — there is no
+			// "cancelled" to tell apart from "sent".
 			await shareFile(phase.result.uri, phase.result.mimeType);
+		} catch (error) {
+			log.error("export", "share failed", error);
+			setDelivery({
+				kind: "error",
+				message: failureMessage("share", "the file"),
+			});
 		}
 	}, [phase]);
 
 	const saveToFiles = useCallback(async () => {
-		if (phase.name === "ready") await saveFileToFolder(phase.result.uri);
+		if (phase.name !== "ready") return;
+		setDelivery(null);
+		try {
+			// false = the person backed out of the folder picker: say nothing.
+			if (await saveFileToFolder(phase.result.uri)) {
+				setDelivery({ kind: "saved" });
+			}
+		} catch (error) {
+			log.error("export", "save to Files failed", error);
+			setDelivery({
+				kind: "error",
+				message: failureMessage("save", "the file"),
+			});
+		}
 	}, [phase]);
 
-	const reset = useCallback(() => dispatch({ type: "reset" }), []);
+	const reset = useCallback(() => {
+		setDelivery(null);
+		dispatch({ type: "reset" });
+	}, []);
 
-	return { phase, run, retry, cancel, share, saveToFiles, reset };
+	return { phase, delivery, run, retry, cancel, share, saveToFiles, reset };
 }

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { surfaceColors } from "@/theme/theme";
 
 jest.mock("expo-symbols", () => {
@@ -44,7 +45,7 @@ describe("CategoryChip", () => {
 				onPress={jest.fn()}
 			/>,
 		);
-		expect(screen.getByTestId("category-chip")).toHaveStyle({
+		expect(screen.getByTestId("category-chip-pill")).toHaveStyle({
 			backgroundColor: "#00F",
 		});
 		expect(screen.getByTestId("symbol-checkmark")).toBeTruthy();
@@ -61,7 +62,7 @@ describe("CategoryChip", () => {
 		await render(
 			<CategoryChip label="Add category" state="add" onPress={onPress} />,
 		);
-		expect(screen.getByTestId("category-chip")).toHaveStyle({
+		expect(screen.getByTestId("category-chip-pill")).toHaveStyle({
 			borderStyle: "dashed",
 		});
 		expect(screen.getByTestId("symbol-plus")).toBeTruthy();
@@ -140,6 +141,17 @@ describe("CategoryChip", () => {
 				accent={accent}
 			/>,
 		);
-		expect(screen.getByTestId("category-chip")).toHaveStyle({ minHeight: 28 });
+		expect(screen.getByTestId("category-chip")).toHaveStyle({
+			minHeight: 28,
+		});
+	});
+
+	it("an interactive chip has a 44pt-tall touch area around its pill", async () => {
+		await render(
+			<CategoryChip label="Learning" state="unselected" onPress={jest.fn()} />,
+		);
+		const button = screen.getByRole("button", { name: "Learning" });
+		expect(StyleSheet.flatten(button.props.style).minHeight).toBe(44);
+		expect(button.props.hitSlop).toBeUndefined();
 	});
 });

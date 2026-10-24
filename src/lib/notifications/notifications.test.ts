@@ -23,7 +23,12 @@ jest.mock("expo-notifications", () => ({
 
 import {
 	cancelRemindersWithPrefix,
+	cancelScheduled,
 	getNotificationPermission,
+	listScheduledIdentifiers,
+	newGeneration,
+	parseIdentifier,
+	reminderSlots,
 	requestNotificationPermission,
 	scheduleReminder,
 } from "./notifications";
@@ -43,7 +48,7 @@ describe("notifications adapter", () => {
 	});
 
 	it("schedules one repeating calendar trigger per weekday, converting ISO to iOS numbering", async () => {
-		await scheduleReminder({ ...reminder, weekdays: [1, 6, 7] });
+		await scheduleReminder({ ...reminder, weekdays: [1, 6, 7] }, "g1");
 
 		expect(mockSchedule).toHaveBeenCalledTimes(3);
 		const triggers = mockSchedule.mock.calls.map(
@@ -59,47 +64,97 @@ describe("notifications adapter", () => {
 			repeats: true,
 		});
 		expect(mockSchedule.mock.calls[0][0].identifier).toBe(
-			"habit-3-reminder-7:day-1",
+			"habit-3-reminder-7:day-1:2105:g1",
 		);
 	});
 
 	it("uses a single daily trigger for an every-day reminder", async () => {
-		await scheduleReminder({ ...reminder, weekdays: [1, 2, 3, 4, 5, 6, 7] });
+		const created = await scheduleReminder(
+			{ ...reminder, weekdays: [1, 2, 3, 4, 5, 6, 7] },
+			"g1",
+		);
 
 		expect(mockSchedule).toHaveBeenCalledTimes(1);
 		expect(mockSchedule.mock.calls[0][0]).toEqual(
 			expect.objectContaining({
-				identifier: "habit-3-reminder-7:daily",
+				identifier: "habit-3-reminder-7:daily:2105:g1",
 				trigger: { type: "daily", hour: 21, minute: 5 },
 			}),
 		);
+		expect(created).toEqual(["habit-3-reminder-7:daily:2105:g1"]);
 	});
 
-	it("replaces the reminder's own earlier notifications, but not a reminder whose id merely starts the same", async () => {
+	it("never cancels anything itself — replacing the old set is the caller's job", async () => {
 		mockGetAllScheduled.mockResolvedValue([
-			{ identifier: "habit-3-reminder-7:day-1" },
-			{ identifier: "habit-3-reminder-70:day-1" },
+			{ identifier: "habit-3-reminder-7:day-1:2105:old" },
 		]);
 
-		await scheduleReminder({ ...reminder, weekdays: [2] });
+		await scheduleReminder({ ...reminder, weekdays: [2] }, "new");
 
-		expect(mockCancel).toHaveBeenCalledTimes(1);
-		expect(mockCancel).toHaveBeenCalledWith("habit-3-reminder-7:day-1");
+		expect(mockCancel).not.toHaveBeenCalled();
+	});
+
+	it("a failure part-way cancels what this call created and rethrows — all or nothing", async () => {
+		mockSchedule
+			.mockResolvedValueOnce("a")
+			.mockResolvedValueOnce("b")
+			.mockRejectedValueOnce(new Error("64 pending"));
+
+		await expect(
+			scheduleReminder({ ...reminder, weekdays: [1, 2, 3] }, "g1"),
+		).rejects.toThrow("64 pending");
+
+		expect(mockCancel.mock.calls.map(([id]) => id)).toEqual([
+			"habit-3-reminder-7:day-1:2105:g1",
+			"habit-3-reminder-7:day-2:2105:g1",
+		]);
+	});
+
+	it("lists identifiers and cancels exactly the ones given", async () => {
+		mockGetAllScheduled.mockResolvedValue([
+			{ identifier: "x" },
+			{ identifier: "y" },
+		]);
+		await expect(listScheduledIdentifiers()).resolves.toEqual(["x", "y"]);
+
+		await cancelScheduled(["y"]);
+		expect(mockCancel.mock.calls.map(([id]) => id)).toEqual(["y"]);
+	});
+
+	it("generations are unique even within one millisecond", () => {
+		const generations = new Set(Array.from({ length: 50 }, newGeneration));
+		expect(generations.size).toBe(50);
+	});
+
+	it("reminderSlots: one daily trigger for all seven days, else one per day", () => {
+		expect(reminderSlots([1, 2, 3, 4, 5, 6, 7])).toEqual(["daily"]);
+		expect(reminderSlots([1, 3, 3])).toEqual(["day-1", "day-3"]);
+	});
+
+	it("parseIdentifier reads its own format and rejects anything else", () => {
+		expect(parseIdentifier("habit-3-reminder-7:day-1:2105:abc1")).toEqual({
+			reminderId: "habit-3-reminder-7",
+			slot: "day-1",
+			time: "2105",
+			generation: "abc1",
+		});
+		expect(parseIdentifier("habit-3-reminder-7:day-1")).toBeNull();
+		expect(parseIdentifier("something-else")).toBeNull();
 	});
 
 	it("cancels everything under a prefix", async () => {
 		mockGetAllScheduled.mockResolvedValue([
-			{ identifier: "habit-1-reminder-1:day-1" },
-			{ identifier: "habit-1-reminder-2:daily" },
-			{ identifier: "habit-12-reminder-3:daily" },
-			{ identifier: "evening-review:daily" },
+			{ identifier: "habit-1-reminder-1:day-1:0900:g" },
+			{ identifier: "habit-1-reminder-2:daily:0900:g" },
+			{ identifier: "habit-12-reminder-3:daily:0900:g" },
+			{ identifier: "evening-review:daily:2130:g" },
 		]);
 
 		await cancelRemindersWithPrefix("habit-1-");
 
 		expect(mockCancel.mock.calls.map(([id]) => id)).toEqual([
-			"habit-1-reminder-1:day-1",
-			"habit-1-reminder-2:daily",
+			"habit-1-reminder-1:day-1:0900:g",
+			"habit-1-reminder-2:daily:0900:g",
 		]);
 	});
 

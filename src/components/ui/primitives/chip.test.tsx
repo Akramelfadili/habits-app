@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { Chip } from "./chip";
 
 describe("Chip", () => {
@@ -13,7 +14,8 @@ describe("Chip", () => {
 	it("exposes the selected state", async () => {
 		await render(<Chip label="Daily" onPress={jest.fn()} selected />);
 		expect(
-			screen.getByText("Daily").parent?.props.accessibilityState.selected,
+			screen.getByRole("button", { name: "Daily" }).props.accessibilityState
+				.selected,
 		).toBe(true);
 	});
 
@@ -26,8 +28,8 @@ describe("Chip", () => {
 		await fireEvent.press(screen.getByText("Weekdays shortcut"));
 		expect(onPress).toHaveBeenCalled();
 		expect(
-			screen.getByText("Weekdays shortcut").parent?.props.accessibilityState
-				.selected,
+			screen.getByRole("button", { name: "Weekdays shortcut" }).props
+				.accessibilityState.selected,
 		).toBe(false);
 	});
 
@@ -37,5 +39,12 @@ describe("Chip", () => {
 
 		await fireEvent.press(screen.getByText("X per week"));
 		expect(onPress).not.toHaveBeenCalled();
+	});
+
+	it("has a 44pt-tall touch area and no hitSlop (chips wrap next to each other)", async () => {
+		await render(<Chip label="Daily" onPress={jest.fn()} />);
+		const button = screen.getByRole("button", { name: "Daily" });
+		expect(StyleSheet.flatten(button.props.style).minHeight).toBe(44);
+		expect(button.props.hitSlop).toBeUndefined();
 	});
 });

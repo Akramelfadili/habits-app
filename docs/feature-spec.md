@@ -1,6 +1,6 @@
 ---
 title: Habits — Feature Spec
-status: draft
+status: shipped (V1). Superseded in places by feature-spec-v2.md — see the notes marked "Superseded by"
 version: 1.0
 domain: Habits (1 of 3 — Habits · To-dos · Expenses)
 tags: [spec, habits, v1, personal-app]
@@ -8,10 +8,12 @@ tags: [spec, habits, v1, personal-app]
 
 # Habits — Feature Spec
 
-V2 specs: see feature-spec-v2.md
+Mockup frame IDs in this file refer to the PNGs in docs/mockups/ (tag mockups-v1-v2); V3 frames live in docs/mockups/v3/.
+
+V2 specs: see feature-spec-v2.md. Where V2 conflicts, V2 wins.
 
 > [!info] How to use this file
-> Features are ordered by **build sequence**, not by importance — each one only needs what came before it. Build straight down the list: get Feature 01 fully working end to end before starting 02. Every feature has an **Acceptance criteria** checklist at the end — check items off as you implement them in Claude Code, so this file doubles as your build tracker.
+> Features are ordered by **build sequence**, not by importance — each one only needs what came before it. Build straight down the list: get Feature 01 fully working end to end before starting 02. Every feature has an **Acceptance criteria** checklist at the end — this file was the build tracker for V1. The checkboxes were not maintained after the build, so treat them as the list of what each feature must satisfy, not as a record of status (the status of the work is in `docs/roadmap.md`).
 
 **Scope:** V1, iOS, single local user, no accounts, no cloud sync.
 **Replaces:** InnerGrow Habit Tracker (the app currently being used).
@@ -50,10 +52,10 @@ A single form, reachable from an "Add habit" button. Fields, in order:
 
 | Field | Type | Required? | Rule |
 |---|---|---|---|
-| Name | short text | Yes | 1–40 characters |
-| Icon | pick one of a fixed set (8 icons) | Yes | defaults to a generic dot icon |
-| Color | pick one of a fixed set (6 colors) | Yes | defaults to the first color not already used by another active habit |
-| Category | short text | No | free text, auto-suggests values you've typed before; left blank = "Anytime" |
+| Name | short text | Yes | ~~1–40 characters~~ **Superseded by HAB-22:** 1–32 characters (`MAX_HABIT_NAME_LENGTH` in `modules/habits/constants.ts`) |
+| Icon | ~~pick one of a fixed set (8 icons)~~ **Superseded by HAB-24:** supplied by the habit's category | Yes | — |
+| Color | ~~pick one of a fixed set (6 colors)~~ **Superseded by HAB-24:** supplied by the habit's category | Yes | — |
+| Category | ~~short text, free text, blank = "Anytime"~~ **Superseded by HAB-24:** pick one of the managed categories (ten built-ins plus your own); required | Yes | no "Anytime" any more |
 | Direction | Build / Break toggle | Yes | defaults to **Build** |
 | Target type | Simple check / Quantity toggle | Yes | defaults to **Simple check** (Quantity is detailed in Feature 07 — for this feature, just build the toggle and the "off" state) |
 
@@ -158,6 +160,8 @@ Tapping a habit row's check control toggles it done/undone **instantly** — no 
 - [ ] Tap-to-toggle works instantly with no confirmation
 - [ ] Un-checking works and updates the progress bar
 - [ ] Tapping a habit's name navigates toward the (not-yet-built) detail screen without crashing
+
+**As built (audit B9):** un-ticking is still instant with no confirmation, and now shows a toast with **Undo** ("Marked 'X' not complete" / "…not resisted"); the same toast follows a quantity save that drops a habit back under its target. Undo restores the exact previous state (a check, or the exact amount), on the day of the tap — not whatever "today" is by then — and goes through `run()`. A newer toast replaces it (never stacks), and once it has expired there is nothing left to undo. Completing keeps its existing toast.
 
 ---
 
@@ -330,6 +334,8 @@ Every habit tracks a **current streak** (consecutive scheduled days completed) s
 - [ ] Missed day with 0 freezes available resets the streak with no prompt shown
 - [ ] Frozen days are visually distinguishable from completed days wherever history is shown
 
+**As built (audit B9):** "Use a freeze" now confirms with a toast ("Used a freeze on 'X'") whose **Undo** removes that freeze for the same missed day, returning it to the pool. "Reset and start today" still writes nothing, so it has nothing to undo.
+
 ---
 
 ## 09 — Habit detail and history
@@ -341,7 +347,7 @@ As me, tapping into one habit, I want to see its whole story at a glance — cur
 
 ### Behavior
 Reached by tapping a habit's name from Today (Feature 03). Shows, top to bottom:
-- Current streak (days) and longest streak achieved
+- Current streak (days) and longest streak achieved. **Superseded by HAB-20** for archived/restored habits: the current streak shows "—" while archived and starts fresh after a restore (see Feature 13); and for a reset with no freezes left, a one-line note appears in the month it happened.
 - Completion rate over the last 90 days (e.g. "87% — 78 of 90 logged")
 - A 10-week heatmap, one cell per scheduled day, shaded by completion (unscheduled days are visually blank, not counted against the rate)
 - A reverse-chronological list of recent log entries, each showing its date, value, and note if one was added (notes come from Feature 10)
@@ -500,4 +506,4 @@ Named explicitly so "should we add X" gets answered by pointing here instead of 
 - **Custom reminder sounds** — cosmetic, not core to the loop
 - **Quantity-type Break habits** (e.g. "limit screen time") — noted in Feature 04, deliberately deferred
 - **A merged "Today" view across Habits / To-dos / Expenses** — revisit once all three modules exist independently; do not build cross-module coupling into this module's data or navigation now
-- **One proper entry point on Today for the secondary screens** — the mockups only show the destination screens for Weekly Summary (11), Reminders (12) and Manage & Archive (13), never the navigation to reach them. V1 uses temporary ghost buttons on Today (the same pattern as the interim "Add habit"), which means 3–4 ad hoc buttons stacked there once HAB-13 ships. V2: design (mockup first) and build a single header icon or menu on Today that reaches all three, and remove the temporary buttons.
+- **One proper entry point on Today for the secondary screens** — the mockups only show the destination screens for Weekly Summary (11), Reminders (12) and Manage & Archive (13), never the navigation to reach them. V1 used temporary ghost buttons on Today (the "Add habit" link has since been replaced by the header `+`, audit B9), which meant 3–4 ad hoc buttons stacked there once HAB-13 ships. V2: design (mockup first) and build a single header icon or menu on Today that reaches all three, and remove the temporary buttons.

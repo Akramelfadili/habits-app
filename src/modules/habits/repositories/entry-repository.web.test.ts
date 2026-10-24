@@ -12,17 +12,72 @@ function loadRepository(): typeof WebEntryRepository {
 	return repository;
 }
 
-const TODAY = format(new Date(), "yyyy-MM-dd");
+// "Today" is pinned (only `Date` is faked) so a run that crosses midnight can't
+// see the fixtures, `new Date()` and TODAY disagree about the day.
+const NOW = new Date(2026, 9, 1, 12);
+const TODAY = format(NOW, "yyyy-MM-dd");
 const RANGE_START = new Date(0);
 const RANGE_END = new Date(8640000000000000);
 
 describe("entry-repository.web", () => {
+	beforeEach(() => {
+		jest.useFakeTimers({
+			now: NOW,
+			doNotFake: [
+				"nextTick",
+				"setImmediate",
+				"clearImmediate",
+				"setTimeout",
+				"clearTimeout",
+				"setInterval",
+				"clearInterval",
+				"queueMicrotask",
+				"requestAnimationFrame",
+				"cancelAnimationFrame",
+				"performance",
+				"hrtime",
+			],
+		});
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
+	});
+
 	it("starts from the fixture entries", async () => {
 		const { useEntriesInRange } = loadRepository();
 		const { result } = await renderHook(() =>
 			useEntriesInRange(RANGE_START, RANGE_END),
 		);
 		expect(result.current.map((entry) => entry.habitId).sort()).toEqual([2, 3]);
+	});
+
+	it("follows a changed range (parity with the native live hook)", async () => {
+		const { setHabitCompletedOn, useEntriesInRange } = loadRepository();
+		await setHabitCompletedOn(1, new Date(2026, 8, 8), true);
+		await setHabitCompletedOn(1, new Date(2026, 8, 15), true);
+		const lastWeek = {
+			start: new Date(2026, 8, 7),
+			end: new Date(2026, 8, 13),
+		};
+		const thisWeek = {
+			start: new Date(2026, 8, 14),
+			end: new Date(2026, 8, 20),
+		};
+
+		const { result, rerender } = await renderHook(
+			(range: { start: Date; end: Date }) =>
+				useEntriesInRange(range.start, range.end),
+			{ initialProps: lastWeek },
+		);
+		expect(
+			result.current.filter((entry) => entry.habitId === 1).map((e) => e.date),
+		).toEqual(["2026-09-08"]);
+
+		await rerender(thisWeek);
+		expect(
+			result.current.filter((entry) => entry.habitId === 1).map((e) => e.date),
+		).toEqual(["2026-09-15"]);
 	});
 
 	it("completing a habit adds it and notifies live readers", async () => {

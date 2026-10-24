@@ -1,10 +1,5 @@
 import { makeHabit } from "../test-support/habit-builder";
 
-const mockCancel = jest.fn();
-jest.mock("@/lib/notifications/notifications", () => ({
-	cancelRemindersWithPrefix: (...args: unknown[]) => mockCancel(...args),
-}));
-
 const mockGetHabit = jest.fn();
 const mockSetArchived = jest.fn();
 const mockSetRestored = jest.fn();
@@ -16,10 +11,11 @@ jest.mock("../repositories/habit-repository", () => ({
 	deleteHabitAndHistory: (...args: unknown[]) => mockDelete(...args),
 }));
 
+const mockCancel = jest.fn();
 const mockSync = jest.fn();
 jest.mock("./reminder-service", () => ({
-	habitNotificationPrefix: (id: number) => `habit-${id}-`,
-	syncHabitReminders: (...args: unknown[]) => mockSync(...args),
+	cancelHabitNotifications: (...args: unknown[]) => mockCancel(...args),
+	syncAfterWrite: (...args: unknown[]) => mockSync(...args),
 }));
 
 import {
@@ -75,7 +71,7 @@ describe("habit-lifecycle-service", () => {
 		await archiveHabit(3);
 
 		expect(mockSetArchived).toHaveBeenCalledWith(3, expect.any(Date));
-		expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+		expect(mockCancel).toHaveBeenCalledWith(3);
 		expect(mockSetArchived.mock.invocationCallOrder[0]).toBeLessThan(
 			mockCancel.mock.invocationCallOrder[0],
 		);
@@ -102,7 +98,7 @@ describe("habit-lifecycle-service", () => {
 		await undoRestoreHabit(3, { archivedAt, pauses });
 
 		expect(mockSetArchived).toHaveBeenCalledWith(3, archivedAt, pauses);
-		expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+		expect(mockCancel).toHaveBeenCalledWith(3);
 	});
 
 	it("refuses to undo a restore that has no archive date to put back", async () => {
@@ -122,7 +118,7 @@ describe("habit-lifecycle-service", () => {
 		await deleteHabit(3);
 
 		expect(mockDelete).toHaveBeenCalledWith(3);
-		expect(mockCancel).toHaveBeenCalledWith("habit-3-");
+		expect(mockCancel).toHaveBeenCalledWith(3);
 	});
 
 	it("leaves notifications alone when the delete fails", async () => {

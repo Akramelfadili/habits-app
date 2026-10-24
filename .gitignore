@@ -37,8 +37,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-example
-
 # generated native folders
 /ios
 /android
@@ -48,3 +46,7 @@ example
 
 # Maestro journey output (scripts/e2e.mjs)
 .e2e-output/
+
+# V3 mockup slices (scripts/render-mockups.mjs) — ~27 MB, regenerate with
+# `npm run mockups:render`. INDEX.md and the text.txt files stay tracked.
+docs/mockups/v3/renders/**/*.png

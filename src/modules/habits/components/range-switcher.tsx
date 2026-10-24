@@ -25,6 +25,7 @@ export function RangeSwitcher({ value }: RangeSwitcherProps) {
 
 	return (
 		<SegmentedControl<Range>
+			label="Summary period"
 			options={[
 				{ value: "week", label: "Week" },
 				{ value: "month", label: "Month" },

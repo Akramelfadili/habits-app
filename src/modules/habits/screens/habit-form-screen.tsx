@@ -4,13 +4,17 @@ import { useHeaderHeight } from "expo-router/react-navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
 	StyleSheet,
 	Text,
+	type TextInput,
 	View,
 } from "react-native";
+import { ActionCard } from "@/components/ui/composite/action-card";
+import { Banner } from "@/components/ui/composite/banner";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { WeekdayPicker } from "@/components/ui/composite/weekday-picker";
@@ -22,7 +26,10 @@ import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { Stepper } from "@/components/ui/primitives/stepper";
 import { TextField } from "@/components/ui/primitives/text-field";
+import { showToast } from "@/store/toast-store";
 import { useTheme } from "@/theme/use-theme";
+import { failureMessage } from "@/utils/failure-message";
+import { runSafely } from "@/utils/run-safely";
 import { AddCategorySheet } from "../components/add-category-sheet";
 import { CategoryPicker } from "../components/category-picker";
 import {
@@ -40,9 +47,9 @@ import {
 import { useCategoryActions } from "../hooks/use-category-actions";
 import { useCategoryQueries } from "../hooks/use-category-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
+import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitQueries } from "../hooks/use-habit-queries";
-import type { FrequencyType } from "../types";
-import { saveBlockedReason } from "./habit-form-helpers";
+import { saveBlockedReason } from "../presenters/habit-form-helpers";
 import {
 	DEFAULT_FREQUENCY_FORM_VALUES,
 	type HabitFormInput,
@@ -51,7 +58,8 @@ import {
 	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
 	toFrequencyFormValues,
-} from "./habit-form-schema";
+} from "../presenters/habit-form-schema";
+import type { FrequencyType } from "../types";
 
 /** E5: an example, not a default value — the field opens empty (HAB-22). */
 const NAME_PLACEHOLDER = "e.g. Drink a glass of water";
@@ -71,6 +79,7 @@ type HabitFormScreenProps = {
 
 export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 	const scrollRef = useRef<ScrollView>(null);
+	const unitRef = useRef<TextInput>(null);
 	const hasFocused = useRef(false);
 	const router = useRouter();
 	const { colors } = useTheme();
@@ -81,6 +90,8 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 		useHabitActions();
 	const { createCategory, isCreating: isCreatingCategory } =
 		useCategoryActions();
+	const { archiveHabitOrThrow, restoreHabit, isArchiving } =
+		useHabitDetailActions();
 
 	const mode = habitId === undefined ? "create" : "edit";
 	const habit = habitId === undefined ? undefined : getHabitById(habitId);
@@ -95,6 +106,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 	schemaRef.current = schema;
 	const hasLoadedEditValues = useRef(false);
 	const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+	const [submitError, setSubmitError] = useState<string | null>(null);
 	// F1c: a hairline above Save once content scrolls under the pinned header.
 	const [isScrolled, setIsScrolled] = useState(false);
 
@@ -176,27 +188,63 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 		const targetUnit =
 			values.targetType === "quantity" ? values.targetUnit.trim() : null;
 
-		if (mode === "create") {
-			await createHabit({
-				name: values.name,
-				categoryId,
-				direction: values.direction,
-				targetType: values.targetType,
-				targetAmount,
-				targetUnit,
-				frequency,
-			});
-		} else if (habitId !== undefined) {
-			await updateHabit(habitId, {
-				name: values.name,
-				categoryId,
-				targetType: values.targetType,
-				targetAmount,
-				targetUnit,
-				frequency,
-			});
-		}
+		// This modal has no ToastHost (it sits above the Habits stack), so a
+		// failed save is shown inline, above Save — the form stays as it was,
+		// and a retry is one tap. `runSafely` also logs it and never rejects.
+		setSubmitError(null);
+		const result = await runSafely(
+			{
+				scope: "habit-form",
+				failure: failureMessage("save", "this habit"),
+				onFailure: (_error, message) => setSubmitError(message),
+			},
+			async () => {
+				if (mode === "create") {
+					await createHabit({
+						name: values.name,
+						categoryId,
+						direction: values.direction,
+						targetType: values.targetType,
+						targetAmount,
+						targetUnit,
+						frequency,
+					});
+				} else if (habitId !== undefined) {
+					await updateHabit(habitId, {
+						name: values.name,
+						categoryId,
+						targetType: values.targetType,
+						targetAmount,
+						targetUnit,
+						frequency,
+					});
+				}
+			},
+		);
+		if (result.ok) router.back();
+	}
 
+	// Archiving is reversible, so it's one tap with an Undo toast — the same as
+	// Detail's (HAB-13/20). This modal has no ToastHost, so a failure is shown
+	// inline; the toast is raised for the screen underneath, as the form closes.
+	async function handleArchive() {
+		if (habitId === undefined || !habit) return;
+		const { name } = habit;
+		setSubmitError(null);
+		const result = await runSafely(
+			{
+				scope: "habit-form",
+				failure: failureMessage("archive", "this habit"),
+				onFailure: (_error, message) => setSubmitError(message),
+			},
+			() => archiveHabitOrThrow(habitId),
+		);
+		if (!result.ok) return;
+		showToast({
+			message: `Archived '${name}'`,
+			actionLabel: "Undo",
+			onAction: () => restoreHabit(habitId),
+		});
 		router.back();
 	}
 
@@ -222,6 +270,8 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 				testID="habit-form-scroll"
 				// A chip tap with the keyboard up acts on the first tap, not just dismisses.
 				keyboardShouldPersistTaps="handled"
+				// Scrolling the form away from a field puts the keyboard away too.
+				keyboardDismissMode="on-drag"
 				contentContainerStyle={styles.scrollContent}
 				scrollEventThrottle={16}
 				onScroll={(event) =>
@@ -243,6 +293,14 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 								maxLength={MAX_HABIT_NAME_LENGTH}
 								nearLimitCounter
 								autoFocus={mode === "create"}
+								// Return goes on to Unit when a quantity habit has one; otherwise
+								// it just puts the keyboard away — never saves a half-filled form.
+								returnKeyType={targetTypeValue === "quantity" ? "next" : "done"}
+								onSubmitEditing={() =>
+									targetTypeValue === "quantity"
+										? unitRef.current?.focus()
+										: Keyboard.dismiss()
+								}
 							/>
 						)}
 					/>
@@ -263,6 +321,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 							leading={<IconBadge symbol="arrow.left.arrow.right" />}
 							trailing={
 								<SegmentedControl
+									label="Direction"
 									size="compact"
 									options={[
 										{ value: "build", label: "Build" },
@@ -358,6 +417,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 				<Container>
 					<SectionLabel>Target type</SectionLabel>
 					<SegmentedControl
+						label="Target"
 						options={[
 							{ value: "simple", label: "Simple check" },
 							{ value: "quantity", label: "Quantity" },
@@ -400,12 +460,30 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 										onBlur={field.onBlur}
 										error={fieldState.error?.message}
 										maxLength={20}
+										inputRef={unitRef}
+										// The last field: Return puts the keyboard away.
+										onSubmitEditing={() => Keyboard.dismiss()}
+										// The Unit field is low on the form — bring it (and the
+										// Archive card below it) clear of the keyboard.
+										onFocus={() =>
+											scrollRef.current?.scrollToEnd({ animated: true })
+										}
 									/>
 								)}
 							/>
 						</>
 					) : null}
 				</Container>
+
+				{mode === "edit" && habit?.archivedAt === null ? (
+					<ActionCard
+						title="Archive habit"
+						subtitle="Hides it from Today and keeps every logged day. Restore it any time."
+						symbol="archivebox"
+						disabled={isArchiving || isSubmitting}
+						onPress={handleArchive}
+					/>
+				) : null}
 			</ScrollView>
 
 			<View
@@ -418,6 +496,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 					},
 				]}
 			>
+				{submitError ? <Banner tone="error">{submitError}</Banner> : null}
 				<Button
 					label="Save habit"
 					onPress={handleSubmit(onSubmit)}
@@ -470,6 +549,7 @@ const styles = StyleSheet.create({
 		gap: 10,
 	},
 	footer: {
+		gap: 8,
 		paddingHorizontal: 16,
 		paddingBottom: 16,
 		paddingTop: 8,

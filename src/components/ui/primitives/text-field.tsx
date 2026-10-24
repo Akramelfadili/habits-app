@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { type Ref, useState } from "react";
+import {
+	type ReturnKeyTypeOptions,
+	StyleSheet,
+	Text,
+	TextInput,
+	View,
+} from "react-native";
 import { useTheme } from "@/theme/use-theme";
 import { CharacterCounter } from "./character-counter";
 import { FieldHelper } from "./field-helper";
@@ -28,12 +34,16 @@ type TextFieldProps = {
 	 * amber outline plus a NEW-24 helper under the field.
 	 */
 	warning?: string;
-	/** Return key — e.g. saving an inline rename (HAB-25). */
+	/** Return key — e.g. saving an inline rename (HAB-25). Dismisses the keyboard unless the handler moves focus. */
 	onSubmitEditing?: () => void;
+	/** "next" when Return moves to another field; otherwise "done" whenever there is a handler. */
+	returnKeyType?: ReturnKeyTypeOptions;
+	/** For a form that moves focus to this field from the previous one. */
+	inputRef?: Ref<TextInput>;
 };
 
 /** How close to `maxLength` the remaining-characters counter starts showing. */
-export const COUNTER_THRESHOLD = 40;
+const COUNTER_THRESHOLD = 40;
 
 export function TextField({
 	label,
@@ -49,6 +59,8 @@ export function TextField({
 	nearLimitCounter = false,
 	warning,
 	onSubmitEditing,
+	returnKeyType,
+	inputRef,
 }: TextFieldProps) {
 	const { colors, scheme } = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
@@ -81,6 +93,7 @@ export function TextField({
 				<SectionLabel>{label}</SectionLabel>
 			)}
 			<TextInput
+				ref={inputRef}
 				// The visible label is a sibling Text, not associated with the input —
 				// without this, VoiceOver announces an unnamed text field.
 				accessibilityLabel={label}
@@ -112,7 +125,10 @@ export function TextField({
 				autoFocus={autoFocus}
 				multiline={multiline}
 				onSubmitEditing={onSubmitEditing}
-				returnKeyType={onSubmitEditing ? "done" : undefined}
+				returnKeyType={returnKeyType ?? (onSubmitEditing ? "done" : undefined)}
+				// A single-line field blurs on Return unless told to stay; "next" hands
+				// focus on in the handler, so the keyboard must not drop in between.
+				submitBehavior={returnKeyType === "next" ? "submit" : undefined}
 				style={[
 					styles.input,
 					multiline && styles.multiline,
@@ -131,7 +147,12 @@ export function TextField({
 				</Text>
 			) : null}
 			{error ? (
-				<Text style={[styles.error, { color: colors.dangerBg }]}>{error}</Text>
+				<Text
+					accessibilityRole="alert"
+					style={[styles.error, { color: colors.dangerBg }]}
+				>
+					{error}
+				</Text>
 			) : null}
 		</View>
 	);

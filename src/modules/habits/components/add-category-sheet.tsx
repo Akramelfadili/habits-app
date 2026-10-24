@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StyleSheet, Text, View } from "react-native";
+import { Keyboard, StyleSheet, Text, View } from "react-native";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
 import { Button } from "@/components/ui/primitives/button";
@@ -13,7 +13,7 @@ import { MAX_CATEGORY_NAME_LENGTH } from "../constants";
 import {
 	findDuplicateCategory,
 	nextCategoryAppearance,
-} from "../services/category-rules";
+} from "../domain/category-rules";
 import type { Category, CreateCategoryInput } from "../types";
 import {
 	type CategoryNameFormValues,
@@ -130,6 +130,10 @@ function AddCategoryForm({
 									: errors.name?.message
 							}
 							autoFocus
+							// Return adds the category when it can; if not, it just puts the keyboard away.
+							onSubmitEditing={
+								duplicate || trimmed === "" ? Keyboard.dismiss : submit
+							}
 						/>
 					)}
 				/>

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -10,6 +10,8 @@ import { SectionHeader } from "@/components/ui/composite/section-header";
 import { Button } from "@/components/ui/primitives/button";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
+import { log } from "@/lib/logger/logger";
+import { currentDay } from "@/lib/today/use-today";
 import { showToast } from "@/store/toast-store";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -30,9 +32,12 @@ import { useQuantityLogActions } from "../hooks/use-quantity-log-actions";
 import { useStreakActions } from "../hooks/use-streak-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
+import {
+	celebratoryHeadline,
+	todayRowSubtitle,
+} from "../presenters/today-screen-helpers";
 import type { Habit } from "../types";
 import { FirstRunScreen } from "./first-run-screen";
-import { celebratoryHeadline, todayRowSubtitle } from "./today-screen-helpers";
 
 export function TodayScreen() {
 	const router = useRouter();
@@ -44,6 +49,7 @@ export function TodayScreen() {
 		quantityValuesByHabitId,
 		completedThisWeekByHabitId,
 		today,
+		isLoaded,
 		viewState,
 		tomorrowPreview,
 		tomorrowReminderTimeByHabitId,
@@ -62,7 +68,7 @@ export function TodayScreen() {
 	} = useHabitActions();
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const { resetFirstRun, isResetting } = useFirstRunActions();
-	const { applyFreeze, isFreezing } = useStreakActions();
+	const { applyFreeze, undoFreeze, isFreezing } = useStreakActions();
 	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
 	const [atRiskHabitId, setAtRiskHabitId] = useState<number | null>(null);
 	const { eligibleHabits, loggedToday } = useOffScheduleQueries();
@@ -86,6 +92,9 @@ export function TodayScreen() {
 		...groups.flatMap((group) => group.habits),
 		...eligibleHabits,
 	].find((habit) => habit.id === quantityHabitId);
+	const atRiskHabit = groups
+		.flatMap((group) => group.habits)
+		.find((habit) => habit.id === atRiskHabitId);
 	const atRiskInfo =
 		atRiskHabitId !== null ? atRiskByHabitId.get(atRiskHabitId) : undefined;
 
@@ -105,11 +114,44 @@ export function TodayScreen() {
 		});
 	}
 
+	/**
+	 * The day a write lands on, read from the clock at the moment of the tap.
+	 * If the app was left open across midnight and this render still shows
+	 * yesterday, the write is skipped — the screen is about to refresh to the
+	 * new day (`useToday`), and a tap must never land on a day the person
+	 * isn't looking at. An Undo keeps the day of its own action, not this one.
+	 */
+	function writableDay(): Date | null {
+		const day = currentDay();
+		if (isSameDay(day, today)) return day;
+		log.info("today", "write skipped: the day rolled over since this render");
+		return null;
+	}
+
+	// Un-ticking is as instant as ticking (HAB-03), and as undoable: the toast
+	// puts the habit back as it was, on the day of the tap. A newer toast
+	// replaces this one, and once it expires there is nothing left to undo.
+	function confirmUncompletion(habit: Habit, undo: () => unknown) {
+		showToast({
+			message:
+				habit.direction === "break"
+					? `Marked '${habit.name}' not resisted`
+					: `Marked '${habit.name}' not complete`,
+			actionLabel: "Undo",
+			onAction: undo,
+		});
+	}
+
 	async function handleToggle(habit: Habit) {
+		const day = writableDay();
+		if (!day) return;
 		const completing = !completedHabitIds.has(habit.id);
-		await toggleCompletion(habit.id, today, completing);
+		const result = await toggleCompletion(habit.id, day, completing);
+		if (!result.ok) return;
 		if (completing) {
-			confirmCompletion(habit, () => toggleCompletion(habit.id, today, false));
+			confirmCompletion(habit, () => toggleCompletion(habit.id, day, false));
+		} else {
+			confirmUncompletion(habit, () => toggleCompletion(habit.id, day, true));
 		}
 	}
 
@@ -117,7 +159,7 @@ export function TodayScreen() {
 	// (nothing was applied to streaks, so there is nothing else to reverse).
 	function confirmOffSchedule(habit: Habit, undo: () => unknown) {
 		showToast({
-			message: `${habit.name} logged · off-schedule`,
+			message: `Logged '${habit.name}' · off-schedule`,
 			actionLabel: "Undo",
 			onAction: undo,
 		});
@@ -130,8 +172,11 @@ export function TodayScreen() {
 			setQuantityHabitId(habit.id);
 			return;
 		}
-		await toggleCompletion(habit.id, today, true);
-		confirmOffSchedule(habit, () => toggleCompletion(habit.id, today, false));
+		const day = writableDay();
+		if (!day) return;
+		const result = await toggleCompletion(habit.id, day, true);
+		if (!result.ok) return;
+		confirmOffSchedule(habit, () => toggleCompletion(habit.id, day, false));
 	}
 
 	function dismissQuantitySheet() {
@@ -142,28 +187,46 @@ export function TodayScreen() {
 	async function handleSaveQuantity(value: number) {
 		if (!quantityHabit) return;
 		const habit = quantityHabit;
+		const day = writableDay();
+		if (!day) return;
 		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
 		const target = habit.targetAmount ?? 0;
-		await logQuantity(habit.id, today, value);
+		const result = await logQuantity(habit.id, day, value);
+		// On failure the sheet stays open with its error toast, so a retry is one tap.
+		if (!result.ok) return;
 		dismissQuantitySheet();
 		if (quantityIsOffSchedule) {
 			// Undo restores the amount from before — or removes the entry if none.
 			if (value > 0) {
-				confirmOffSchedule(habit, () => logQuantity(habit.id, today, previous));
+				confirmOffSchedule(habit, () => logQuantity(habit.id, day, previous));
 			}
 			return;
 		}
-		// Only the save that crosses the target counts as "completing" it;
-		// Undo restores the exact amount logged before.
+		// Only the save that crosses the target counts as "completing" it — and
+		// the one that drops back below it as "un-completing". Either way Undo
+		// restores the exact amount logged before.
 		if (previous < target && value >= target) {
-			confirmCompletion(habit, () => logQuantity(habit.id, today, previous));
+			confirmCompletion(habit, () => logQuantity(habit.id, day, previous));
+		} else if (previous >= target && value < target) {
+			confirmUncompletion(habit, () => logQuantity(habit.id, day, previous));
 		}
 	}
 
 	async function handleUseFreeze() {
 		if (atRiskHabitId === null || !atRiskInfo) return;
-		await applyFreeze(atRiskHabitId, atRiskInfo.missedDate);
+		const habit = atRiskHabit;
+		const { missedDate } = atRiskInfo;
+		const result = await applyFreeze(atRiskHabitId, missedDate);
+		if (!result.ok) return;
 		setAtRiskHabitId(null);
+		// Undo takes the freeze back — for the missed day it was applied to.
+		if (habit) {
+			showToast({
+				message: `Used a freeze on '${habit.name}'`,
+				actionLabel: "Undo",
+				onAction: () => undoFreeze(habit.id, missedDate),
+			});
+		}
 	}
 
 	function handleResetStreak() {
@@ -207,6 +270,7 @@ export function TodayScreen() {
 			today={today}
 			menuOpen={menuOpen}
 			onToggleMenu={() => setMenuOpen((open) => !open)}
+			onAddHabit={() => router.push("/new-habit")}
 			onAnchorMeasured={setMenuAnchorBottom}
 		/>
 	);
@@ -216,6 +280,17 @@ export function TodayScreen() {
 			onClose={() => setMenuOpen(false)}
 		/>
 	) : null;
+
+	// Habits haven't loaded yet: a neutral blank, never a flash of "Nothing to
+	// track yet" or First Run (audit A5-04).
+	if (!isLoaded) {
+		return (
+			<SafeAreaView
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
+	}
 
 	if (viewState === "no-habits" && !hasSeenFirstRun) {
 		return <FirstRunScreen />;
@@ -408,19 +483,6 @@ export function TodayScreen() {
 					);
 				})}
 
-				{/*
-				 * Temporary until HAB-13 (Manage & Archive) exists: the mockup's
-				 * populated Today screen has no add-habit affordance of its own
-				 * (the tab has no header at all), but the interim habit-list
-				 * screen this replaces always had one — dropping it silently would
-				 * leave no way to add a second habit for several features.
-				 */}
-				<Button
-					label="Add habit"
-					variant="ghost"
-					fullWidth={false}
-					onPress={() => router.push("/new-habit")}
-				/>
 				{clearAllHabits ? (
 					<Button
 						label="Clear all habits (dev)"

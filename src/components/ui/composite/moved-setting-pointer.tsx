@@ -15,9 +15,9 @@ type MovedSettingPointerProps = {
  * NEW-27: points at a setting that moved elsewhere — a hairline, a neutral
  * badge, one line of copy and a link (Reminders' "Open Settings →", HAB-21).
  *
- * TODO(V2.1): remove — temporary, for people who look for Evening review where
+ * TODO(backlog): remove — temporary, for people who look for Evening review where
  * it used to be. Delete this component and its use on Reminders together
- * (see docs/v3-backlog.md).
+ * (see docs/backlog.md).
  */
 export function MovedSettingPointer({
 	body,

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { Button } from "./button";
 
@@ -139,4 +140,16 @@ describe("Button — disabled with reason (VAR-13)", () => {
 		);
 		expect(screen.getByRole("button", { name: "Rename Music" })).toBeTruthy();
 	});
+
+	it.each(["link", "inline", "destructive"] as const)(
+		"%s text actions are 44pt tall, and don't lean on a hitSlop that stacked buttons would share",
+		async (variant) => {
+			await render(
+				<Button label="Remove" variant={variant} onPress={jest.fn()} />,
+			);
+			const button = screen.getByRole("button", { name: "Remove" });
+			expect(StyleSheet.flatten(button.props.style).minHeight).toBe(44);
+			expect(button.props.hitSlop).toBeUndefined();
+		},
+	);
 });

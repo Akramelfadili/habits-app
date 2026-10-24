@@ -1,5 +1,7 @@
+import { failureMessage, UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
-import { applyFreeze as applyFreezeToRepository } from "../services/habit-service";
+import { unfreezeHabitDay } from "../repositories/frozen-day-repository";
+import { applyFreeze as applyFreezeToRepository } from "../services/freeze-service";
 
 /**
  * Resolving the streak-at-risk prompt (HAB-08). "Reset and start today" has
@@ -7,10 +9,21 @@ import { applyFreeze as applyFreezeToRepository } from "../services/habit-servic
  * reflects an unfrozen miss correctly the next time it's read.
  */
 export function useStreakActions() {
-	const freeze = useAsyncAction(applyFreezeToRepository);
+	const freeze = useAsyncAction(applyFreezeToRepository, {
+		scope: "streak",
+		failure: failureMessage("use", "a freeze"),
+	});
+
+	// A single repository call, so no service (architecture rule 3).
+	const undo = useAsyncAction(unfreezeHabitDay, {
+		scope: "streak",
+		failure: UNDO_FAILED_MESSAGE,
+	});
 
 	return {
-		applyFreeze: freeze.execute,
+		applyFreeze: freeze.run,
+		/** Takes the freeze back — for the toast's Undo, on the day it was applied to. */
+		undoFreeze: undo.run,
 		isFreezing: freeze.isLoading,
 		freezeError: freeze.error,
 	};

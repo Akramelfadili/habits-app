@@ -2,6 +2,14 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
+/**
+ * Long names and large text wrap to this many lines, then end in "…" — the
+ * full text stays in the accessibility label, so nothing is lost to a screen
+ * reader and no control is pushed out of the row (audit A5-15).
+ */
+const TITLE_LINES = 2;
+const SUBTITLE_LINES = 2;
+
 type ListItemProps = {
 	title: string;
 	subtitle?: string;
@@ -106,22 +114,42 @@ export function ListItem({
 					<View style={styles.text}>
 						{titleAccessory ? (
 							<View style={styles.titleRow}>
-								<Text style={[styles.title, { color: colors.ink }]}>
+								<Text
+									numberOfLines={TITLE_LINES}
+									style={[
+										styles.title,
+										styles.shrinkable,
+										{ color: colors.ink },
+									]}
+								>
 									{title}
 								</Text>
 								{titleAccessory}
 							</View>
 						) : (
-							<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+							<Text
+								numberOfLines={TITLE_LINES}
+								style={[styles.title, { color: colors.ink }]}
+							>
+								{title}
+							</Text>
 						)}
 						{subtitle ? (
-							<Text style={[styles.subtitle, { color: colors.sub }]}>
+							<Text
+								numberOfLines={SUBTITLE_LINES}
+								style={[styles.subtitle, { color: colors.sub }]}
+							>
 								{subtitle}
 							</Text>
 						) : null}
 					</View>
 					{value ? (
-						<Text style={[styles.value, { color: colors.sub }]}>{value}</Text>
+						<Text
+							numberOfLines={1}
+							style={[styles.value, { color: colors.sub }]}
+						>
+							{value}
+						</Text>
 					) : null}
 				</View>
 				{trailing ? null : chevron}
@@ -203,5 +231,11 @@ const styles = StyleSheet.create({
 	},
 	value: {
 		fontSize: 15,
+		flexShrink: 1,
+		maxWidth: "45%",
+		textAlign: "right",
+	},
+	shrinkable: {
+		flexShrink: 1,
 	},
 });

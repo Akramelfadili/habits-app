@@ -27,7 +27,7 @@ type CategoryRowProps = {
 };
 
 /**
- * NEW-29 Category row (design-system-v2.md, HAB-25): chip, count, then
+ * NEW-29 Category row (design-system.md, HAB-25): chip, count, then
  * either a quiet tag (built-ins — no actions at all) or text actions
  * (custom: Rename, Delete).
  */

@@ -1,14 +1,12 @@
-import { min, startOfDay } from "date-fns";
-import { useEntriesInRange } from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useHabitsList } from "../repositories/habit-repository";
-import { historyStart } from "../services/monthly-summary";
+import { min } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
+import { historyStart } from "../domain/monthly-summary";
 import {
 	buildWeeklySummary,
 	defaultSummaryWeek,
 	summaryWeekWindow,
 	type WeeklySummary,
-} from "../services/weekly-summary";
+} from "../domain/weekly-summary";
 import {
 	buildYearlySummary,
 	type YearlySummary,
@@ -16,9 +14,14 @@ import {
 	yearEntryRange,
 	yearUnlock,
 	yearWindowFor,
-} from "../services/yearly-summary";
+} from "../domain/yearly-summary";
+import { useEntriesInRange } from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useHabitsList } from "../repositories/habit-repository";
 
 export type YearlySummaryView =
+	/** The habit list hasn't loaded yet (audit A5-04) — a blank, not the empty state. */
+	| { state: "loading" }
 	/** No habits at all — an empty state instead of zeroed tiles. */
 	| { state: "empty" }
 	/** Under three months of history (C7): the partial chart, progress, and the week to look at instead. */
@@ -40,8 +43,8 @@ export type YearlySummaryView =
  * Monday-aligned span (widened to the shown week, which can start last December).
  */
 export function useYearlySummaryQueries(): YearlySummaryView {
-	const today = startOfDay(new Date());
-	const habits = useHabitsList();
+	const today = useToday();
+	const { habits, loaded } = useHabitsList();
 	const frozenDays = useFrozenDays();
 	const year = yearWindowFor(today);
 	const week = summaryWeekWindow(today, defaultSummaryWeek(today));
@@ -49,6 +52,7 @@ export function useYearlySummaryQueries(): YearlySummaryView {
 	const entries = useEntriesInRange(min([range.start, week.start]), range.end);
 	const firstDay = historyStart(habits);
 
+	if (!loaded) return { state: "loading" };
 	if (!firstDay) return { state: "empty" };
 
 	const summary = buildYearlySummary({

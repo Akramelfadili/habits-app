@@ -1,11 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { habitFixturesFor } from "../dev/habit-fixtures";
+import { monthlyEntries } from "../dev/monthly-fixtures";
+import { yearlyEntries, yearlyHabitFixtures } from "../dev/yearly-fixtures";
 import type { YearlySummaryView } from "../hooks/use-yearly-summary-queries";
-import { habitFixturesFor } from "../repositories/habit-fixtures";
-import { monthlyEntries } from "../repositories/monthly-fixtures";
-import {
-	yearlyEntries,
-	yearlyHabitFixtures,
-} from "../repositories/yearly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
@@ -23,14 +20,13 @@ let mockView: YearlySummaryView;
 jest.mock("../hooks/use-yearly-summary-queries", () => ({
 	useYearlySummaryQueries: () => mockView,
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
-import { buildWeeklySummary } from "../services/weekly-summary";
+import { buildWeeklySummary } from "../domain/weekly-summary";
 import {
 	buildYearlySummary,
 	yearUnlock,
 	yearWindowFor,
-} from "../services/yearly-summary";
+} from "../domain/yearly-summary";
 import { YearlySummaryScreen } from "./yearly-summary-screen";
 
 const NOW = new Date(2026, 8, 16, 9);
@@ -80,12 +76,18 @@ describe("YearlySummaryScreen — ready (C4)", () => {
 		mockView = readyView();
 	});
 
+	it("titles the screen as a heading (A6-09)", async () => {
+		await render(<YearlySummaryScreen />);
+		expect(screen.getByRole("header", { name: "2026 so far" })).toBeTruthy();
+	});
+
 	it("shows the range, 'so far' title, switcher with Year selected, and the three tiles", async () => {
 		await render(<YearlySummaryScreen />);
-		expect(screen.getByText("3 MARCH — 16 SEPTEMBER")).toBeTruthy();
+		expect(screen.getByText("3 MARCH – 16 SEPTEMBER")).toBeTruthy();
 		expect(screen.getByText("2026 so far")).toBeTruthy();
 		expect(
-			screen.getByText("Year").parent?.props.accessibilityState.selected,
+			screen.getByText("Year").parent?.parent?.props.accessibilityState
+				.selected,
 		).toBe(true);
 		expect(screen.getByText("LOGGED")).toBeTruthy();
 		expect(screen.getByText("OVERALL")).toBeTruthy();
@@ -200,7 +202,7 @@ describe("YearlySummaryScreen — early January on older history", () => {
 		};
 		await render(<YearlySummaryScreen />);
 		expect(screen.getByText("2027 so far")).toBeTruthy();
-		expect(screen.getByText("1 JANUARY — 3 JANUARY")).toBeTruthy();
+		expect(screen.getByText("1 – 3 JANUARY")).toBeTruthy();
 		expect(screen.getByText("Too early in the year to call")).toBeTruthy();
 		expect(screen.getAllByTestId("chart-bar-empty")).toHaveLength(11);
 		expect(screen.getByText("Completion by month")).toBeTruthy();
@@ -212,7 +214,7 @@ describe("YearlySummaryScreen — empty", () => {
 	it("explains there's nothing to summarize and offers no switcher", async () => {
 		mockView = { state: "empty" };
 		await render(<YearlySummaryScreen />);
-		expect(screen.getByText("Nothing to summarize yet")).toBeTruthy();
+		expect(screen.getByText("Nothing to summarise yet")).toBeTruthy();
 		expect(screen.queryByText("Month")).toBeNull();
 	});
 });

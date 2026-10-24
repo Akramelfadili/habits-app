@@ -3,30 +3,19 @@ import { act, renderHook } from "@testing-library/react-native";
 const mockCreateHabit = jest.fn();
 const mockUpdateHabit = jest.fn();
 const mockDeleteAllHabits = jest.fn();
-const mockCreateHabitAt = jest.fn();
-const mockSetHabitCompletedOn = jest.fn();
-const mockSetHabitQuantityOn = jest.fn();
-const mockFreezeHabitDay = jest.fn();
+const mockSeedStreakAtRisk = jest.fn();
+const mockSeedHistory = jest.fn();
 
 jest.mock("../repositories/habit-repository", () => ({
 	createHabit: (...args: unknown[]) => mockCreateHabit(...args),
 	deleteAllHabits: (...args: unknown[]) => mockDeleteAllHabits(...args),
-	createHabitAt: (...args: unknown[]) => mockCreateHabitAt(...args),
-}));
-jest.mock("../repositories/category-repository", () => ({
-	getCategories: async () =>
-		jest.requireActual("../test-support/habit-builder")
-			.TEST_BUILT_IN_CATEGORIES,
 }));
 jest.mock("../services/reminder-service", () => ({
 	updateHabitAndSyncReminders: (...args: unknown[]) => mockUpdateHabit(...args),
 }));
-jest.mock("../repositories/entry-repository", () => ({
-	setHabitCompletedOn: (...args: unknown[]) => mockSetHabitCompletedOn(...args),
-	setHabitQuantityOn: (...args: unknown[]) => mockSetHabitQuantityOn(...args),
-}));
-jest.mock("../repositories/frozen-day-repository", () => ({
-	freezeHabitDay: (...args: unknown[]) => mockFreezeHabitDay(...args),
+jest.mock("../dev/dev-seeds", () => ({
+	seedStreakAtRiskHabit: (...args: unknown[]) => mockSeedStreakAtRisk(...args),
+	seedHabitWithHistory: (...args: unknown[]) => mockSeedHistory(...args),
 }));
 
 import { makeHabit, makeHabitInput } from "../test-support/habit-builder";
@@ -40,10 +29,8 @@ describe("useHabitActions", () => {
 		mockCreateHabit.mockReset();
 		mockUpdateHabit.mockReset();
 		mockDeleteAllHabits.mockReset();
-		mockCreateHabitAt.mockReset();
-		mockSetHabitCompletedOn.mockReset();
-		mockSetHabitQuantityOn.mockReset();
-		mockFreezeHabitDay.mockReset();
+		mockSeedStreakAtRisk.mockReset();
+		mockSeedHistory.mockReset();
 	});
 
 	it("calls the repository's createHabit and reports loading state", async () => {
@@ -101,57 +88,31 @@ describe("useHabitActions", () => {
 		});
 	});
 
-	describe("seedStreakAtRiskHabit (dev-only HAB-08 test helper)", () => {
-		it("creates a backdated habit and completes days -2 and -3, skipping yesterday", async () => {
-			mockCreateHabitAt.mockResolvedValue(makeHabit({ id: 9 }));
+	describe("dev seeds (src/modules/habits/dev/dev-seeds.ts)", () => {
+		it("runs seedStreakAtRiskHabit and reports loading state", async () => {
+			mockSeedStreakAtRisk.mockResolvedValue(undefined);
 			const { result } = await renderHook(() => useHabitActions());
 
 			await act(() => result.current.seedStreakAtRiskHabit?.());
 
-			expect(mockCreateHabitAt).toHaveBeenCalledTimes(1);
-			expect(mockSetHabitCompletedOn).toHaveBeenCalledTimes(2);
-			expect(mockSetHabitCompletedOn).toHaveBeenCalledWith(
-				9,
-				expect.any(Date),
-				true,
-			);
+			expect(mockSeedStreakAtRisk).toHaveBeenCalledTimes(1);
+			expect(result.current.isSeedingStreakAtRisk).toBe(false);
 		});
 
-		it("exposes no seedStreakAtRiskHabit outside __DEV__", async () => {
-			await inProduction(async () => {
-				const { result } = await renderHook(() => useHabitActions());
-				expect(result.current.seedStreakAtRiskHabit).toBeUndefined();
-			});
-		});
-	});
-
-	describe("seedHabitWithHistory (dev-only HAB-09 test helper)", () => {
-		it("creates a backdated quantity habit with months of entries and 2 freezes", async () => {
-			mockCreateHabitAt.mockResolvedValue(makeHabit({ id: 7 }));
+		it("runs seedHabitWithHistory and reports loading state", async () => {
+			mockSeedHistory.mockResolvedValue(undefined);
 			const { result } = await renderHook(() => useHabitActions());
 
 			await act(() => result.current.seedHabitWithHistory?.());
 
-			expect(mockCreateHabitAt).toHaveBeenCalledWith(
-				expect.objectContaining({
-					name: "Glass of water",
-					targetType: "quantity",
-					targetAmount: 8,
-				}),
-				expect.any(Date),
-			);
-			expect(mockSetHabitQuantityOn.mock.calls.length).toBeGreaterThan(100);
-			expect(mockSetHabitQuantityOn).toHaveBeenCalledWith(
-				7,
-				expect.any(Date),
-				expect.any(Number),
-			);
-			expect(mockFreezeHabitDay).toHaveBeenCalledTimes(2);
+			expect(mockSeedHistory).toHaveBeenCalledTimes(1);
+			expect(result.current.isSeedingHistory).toBe(false);
 		});
 
-		it("exposes no seedHabitWithHistory outside __DEV__", async () => {
+		it("exposes neither seed outside __DEV__", async () => {
 			await inProduction(async () => {
 				const { result } = await renderHook(() => useHabitActions());
+				expect(result.current.seedStreakAtRiskHabit).toBeUndefined();
 				expect(result.current.seedHabitWithHistory).toBeUndefined();
 			});
 		});

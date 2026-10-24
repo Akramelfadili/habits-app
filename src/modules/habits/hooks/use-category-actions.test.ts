@@ -55,7 +55,7 @@ describe("useCategoryActions", () => {
 		);
 		const { result } = await renderHook(() => useCategoryActions());
 
-		let pending!: Promise<void>;
+		let pending!: Promise<unknown>;
 		await act(async () => {
 			pending = result.current.deleteCategory(11);
 		});

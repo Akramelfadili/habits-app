@@ -23,24 +23,22 @@ import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
 import { useRetroLogActions } from "../hooks/use-retro-log-actions";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
-import type { DayLog } from "../types";
 import {
-	ARCHIVE_FAILED_MESSAGE,
 	archivedBannerDetail,
 	archivedBannerTitle,
 	completionRateCaption,
 	completionRateLabel,
 	completionRateValue,
 	currentStreakTile,
-	DELETE_FAILED_MESSAGE,
 	habitSubtitle,
 	heatmapRangeLabelFor,
 	legendFrozenLabel,
 	longestStreakCaption,
 	restoredToastMessage,
 	streakResetNote,
-} from "./habit-detail-helpers";
-import { remindersSummary } from "./reminders-helpers";
+} from "../presenters/habit-detail-helpers";
+import { remindersSummary } from "../presenters/reminders-helpers";
+import type { DayLog } from "../types";
 
 type HabitDetailScreenProps = {
 	habitId: number;
@@ -75,29 +73,26 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 
 	async function handleSaveDay(values: DayLog["values"], note: string) {
 		if (!retroLogDate) return;
-		await saveDay(retroLogDate, { values, noteHabitId: habitId, note });
-		setRetroLogDate(null);
+		const result = await saveDay(retroLogDate, {
+			values,
+			noteHabitId: habitId,
+			note,
+		});
+		// A failed save leaves the sheet open (with its error toast) for a retry.
+		if (result.ok) setRetroLogDate(null);
 	}
 
 	// Either way the habit leaves wherever Detail was opened from — Today, or
 	// Manage's active list — so go back there rather than stay on it. The
 	// toast is shown on that screen, so the habit doesn't just vanish.
 	// A failed write leaves everything as it was: Detail and any open
-	// confirmation stay put, so retrying is one tap (HAB-23).
-	function reportFailure(message: string, error: unknown) {
-		if (__DEV__) console.warn(message, error);
-		showToast({ message });
-	}
-
+	// confirmation stay put, so retrying is one tap (HAB-23). The hook has
+	// already logged it and shown the error toast.
 	async function handleArchive() {
 		if (!detail) return;
 		const { name } = detail.habit;
-		try {
-			await archiveHabit(habitId);
-		} catch (error) {
-			reportFailure(ARCHIVE_FAILED_MESSAGE, error);
-			return;
-		}
+		const result = await archiveHabit(habitId);
+		if (!result.ok) return;
 		setIsConfirmingDelete(false);
 		showToast({
 			message: `Archived '${name}'`,
@@ -114,7 +109,8 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	async function handleRestore() {
 		if (!detail) return;
 		const { name, archivedAt, pauses } = detail.habit;
-		await restoreHabit(habitId);
+		const result = await restoreHabit(habitId);
+		if (!result.ok) return;
 		showToast({
 			message: restoredToastMessage(name),
 			actionLabel: "Undo",
@@ -126,15 +122,21 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	async function handleDelete() {
 		if (!detail) return;
 		const { name } = detail.habit;
-		try {
-			await deleteHabit(habitId);
-		} catch (error) {
-			reportFailure(DELETE_FAILED_MESSAGE, error);
-			return;
-		}
+		const result = await deleteHabit(habitId);
+		if (!result.ok) return;
 		setIsConfirmingDelete(false);
 		showToast({ message: `Deleted '${name}'` });
 		router.back();
+	}
+
+	// Still loading: a neutral blank, never a "not found" flash (audit A5-04).
+	if (detail === undefined) {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
 	}
 
 	if (!detail) {
@@ -195,7 +197,13 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 					}}
 				/>
 				<View style={styles.headerText}>
-					<Text style={[styles.name, { color: colors.ink }]}>{habit.name}</Text>
+					<Text
+						accessibilityRole="header"
+						numberOfLines={2}
+						style={[styles.name, { color: colors.ink }]}
+					>
+						{habit.name}
+					</Text>
 					<Text style={[styles.subtitle, { color: colors.sub }]}>
 						{habitSubtitle(habit, today)}
 					</Text>

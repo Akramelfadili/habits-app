@@ -126,8 +126,13 @@ describe("AddCategorySheet", () => {
 
 		await fireEvent.changeText(nameField(), "Journaling");
 		// Not awaited: the press's handler only settles once the write rejects.
-		const pressing = fireEvent.press(addButton());
-		await waitFor(() => expect(create).toHaveBeenCalled());
+		// Started inside act() so the busy state it sets is flushed there rather
+		// than reported as an update outside act.
+		let pressing: Promise<unknown> = Promise.resolve();
+		await act(async () => {
+			pressing = fireEvent.press(addButton());
+			await waitFor(() => expect(create).toHaveBeenCalled());
+		});
 		// In flight: busy, so it can't be pressed twice.
 		await waitFor(() =>
 			expect(addButton().props.accessibilityState).toMatchObject({
@@ -163,5 +168,32 @@ describe("AddCategorySheet", () => {
 		await fireEvent.press(screen.getByText("Cancel"));
 		expect(onDismiss).toHaveBeenCalled();
 		expect(create).not.toHaveBeenCalled();
+	});
+
+	describe("Return key (A5-13)", () => {
+		it("adds the category when Return is pressed on a valid name", async () => {
+			const created = makeCategory({ id: 12, name: "Journaling" });
+			const create = jest.fn().mockResolvedValue(created);
+			const onCreated = jest.fn();
+			await render(<Harness create={create} onCreated={onCreated} />);
+
+			await fireEvent.changeText(nameField(), "Journaling");
+			expect(nameField().props.returnKeyType).toBe("done");
+			await fireEvent(nameField(), "submitEditing");
+
+			await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+			await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
+		});
+
+		it("does nothing but put the keyboard away when the name is empty or a duplicate", async () => {
+			const create = jest.fn();
+			await render(<Harness create={create} />);
+
+			await fireEvent(nameField(), "submitEditing");
+			await fireEvent.changeText(nameField(), "Music");
+			await fireEvent(nameField(), "submitEditing");
+
+			expect(create).not.toHaveBeenCalled();
+		});
 	});
 });

@@ -1,23 +1,23 @@
 import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { LAST_EXPORT_SETTING_KEY } from "../constants";
+import { historyStart } from "../domain/monthly-summary";
+import { defaultSummaryWeek } from "../domain/weekly-summary";
+import { yearUnlock } from "../domain/yearly-summary";
+import {
+	monthlyMenuLockedReason,
+	monthlyMenuSubline,
+} from "../presenters/monthly-summary-helpers";
+import { settingsMenuSubline } from "../presenters/settings-helpers";
+import { weeklyMenuSubline } from "../presenters/weekly-summary-helpers";
+import {
+	yearlyMenuLockedReason,
+	yearlyMenuSubline,
+} from "../presenters/yearly-summary-helpers";
 import {
 	useActiveHabits,
 	useArchivedHabits,
 	useHabitsList,
 } from "../repositories/habit-repository";
-import {
-	monthlyMenuLockedReason,
-	monthlyMenuSubline,
-} from "../screens/monthly-summary-helpers";
-import { settingsMenuSubline } from "../screens/settings-helpers";
-import { weeklyMenuSubline } from "../screens/weekly-summary-helpers";
-import {
-	yearlyMenuLockedReason,
-	yearlyMenuSubline,
-} from "../screens/yearly-summary-helpers";
-import { historyStart } from "../services/monthly-summary";
-import { defaultSummaryWeek } from "../services/weekly-summary";
-import { yearUnlock } from "../services/yearly-summary";
 import type { Habit } from "../types";
 import {
 	type MonthlySummaryView,
@@ -74,10 +74,10 @@ function yearlyRow(habits: readonly Habit[], today: Date): TodayMenuRow {
 export function useTodayMenuQueries(): TodayMenuView {
 	const weekly = useWeeklySummaryQueries(defaultSummaryWeek(new Date()));
 	const monthly = useMonthlySummaryQueries();
-	const activeCount = useActiveHabits().length;
-	const archivedCount = useArchivedHabits().length;
+	const activeCount = useActiveHabits().habits.length;
+	const archivedCount = useArchivedHabits().habits.length;
 	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
-	const habits = useHabitsList();
+	const { habits } = useHabitsList();
 	const hasHabits = weekly.hasHabits;
 
 	return {

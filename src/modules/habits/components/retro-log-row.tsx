@@ -5,7 +5,7 @@ import { Stepper } from "@/components/ui/primitives/stepper";
 import { habitAccentInk, habitAccentTint } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { MAX_QUANTITY_VALUE } from "../constants";
-import { isDayLogValueDone, toggledDayLogValue } from "../services/retro-log";
+import { isDayLogValueDone, toggledDayLogValue } from "../domain/retro-log";
 import type { DayLogValue, Habit } from "../types";
 import { categorySymbol } from "./category-symbol";
 import { retroLogRowSubtitle } from "./retro-log-sheet-helpers";

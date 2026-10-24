@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
+import { useToastStore } from "@/store/toast-store";
 
 const mockEnsurePermission = jest.fn();
 jest.mock("@/lib/notifications/use-notification-permission", () => ({
@@ -49,5 +50,32 @@ describe("useSettingsActions (HAB-15)", () => {
 		const { result } = await renderHook(() => useSettingsActions());
 		await act(() => result.current.setThemePreference("dark"));
 		expect(mockSetThemePreference).toHaveBeenCalledWith("dark");
+	});
+
+	it("a failing Evening review toggle never rejects: it toasts the failure", async () => {
+		useToastStore.setState({ toast: null });
+		mockSetEveningReview.mockRejectedValueOnce(new Error("schedule failed"));
+		const { result } = await renderHook(() => useSettingsActions());
+
+		const returned = await act(() => result.current.setEveningReview(true));
+
+		expect(returned).toMatchObject({ ok: false });
+		expect(useToastStore.getState().toast).toMatchObject({
+			message: "Couldn't update the Evening review. Try again.",
+			tone: "error",
+		});
+	});
+
+	it("a failing Appearance save never rejects: it toasts the failure", async () => {
+		useToastStore.setState({ toast: null });
+		mockSetThemePreference.mockRejectedValueOnce(new Error("db"));
+		const { result } = await renderHook(() => useSettingsActions());
+
+		const returned = await act(() => result.current.setThemePreference("dark"));
+
+		expect(returned).toMatchObject({ ok: false });
+		expect(useToastStore.getState().toast?.message).toBe(
+			"Couldn't save your Appearance choice. Try again.",
+		);
 	});
 });

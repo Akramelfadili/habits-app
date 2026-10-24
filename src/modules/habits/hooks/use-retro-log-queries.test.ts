@@ -25,14 +25,15 @@ let mockEntries: Entry[] = [];
 let mockNotes: EntryNote[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => [mockWalk, mockWater, mockWeekendOnly, mockArchived],
+	useHabitsList: () => ({
+		habits: [mockWalk, mockWater, mockWeekendOnly, mockArchived],
+		loaded: true,
+	}),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
 	useEntryNotes: () => mockNotes,
 }));
-// Only habit-service's pure helpers are reached.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { useRetroLogQueries } from "./use-retro-log-queries";
 

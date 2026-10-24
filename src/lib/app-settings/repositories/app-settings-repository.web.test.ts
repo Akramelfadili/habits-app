@@ -43,4 +43,18 @@ describe("app-settings-repository.web", () => {
 		});
 		expect(result.current).toBeNull();
 	});
+
+	it("follows a changed key (parity with the native live hook)", async () => {
+		const { setSetting, useAppSetting } = loadRepository();
+		await setSetting("first", "one");
+		await setSetting("second", "two");
+		const { result, rerender } = await renderHook(
+			(key: string) => useAppSetting(key),
+			{ initialProps: "first" },
+		);
+		expect(result.current).toBe("one");
+
+		await rerender("second");
+		expect(result.current).toBe("two");
+	});
 });

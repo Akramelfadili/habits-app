@@ -56,7 +56,21 @@ export function Stepper({
 		<View style={[styles.row, isLarge && styles.rowLarge]}>
 			{renderButton("−", value - 1, value <= min)}
 			<Text
-				accessibilityLabel={`${value} ${accessibilityLabel}`}
+				// Swipe up/down on the value to step it (VoiceOver / TalkBack), as well
+				// as the −/+ buttons either side.
+				accessible
+				accessibilityRole="adjustable"
+				accessibilityLabel={accessibilityLabel}
+				accessibilityValue={{ min, max, now: value }}
+				accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+				onAccessibilityAction={(event) => {
+					if (event.nativeEvent.actionName === "increment" && value < max) {
+						onChange(value + 1);
+					}
+					if (event.nativeEvent.actionName === "decrement" && value > min) {
+						onChange(value - 1);
+					}
+				}}
 				style={[
 					isLarge ? styles.valueLarge : styles.value,
 					{ color: colors.ink },

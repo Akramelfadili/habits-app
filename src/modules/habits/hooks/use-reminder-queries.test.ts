@@ -11,7 +11,7 @@ let mockReminders: Reminder[] = [];
 let mockPermission: string | undefined = "granted";
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => [mockHabit],
+	useHabitsList: () => ({ habits: [mockHabit], loaded: true }),
 }));
 jest.mock("../repositories/reminder-repository", () => ({
 	useHabitReminders: () => mockReminders,

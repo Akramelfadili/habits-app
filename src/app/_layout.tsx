@@ -5,19 +5,31 @@ import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useModalFormHeaderOptions } from "@/components/ui/composite/modal-form-header";
+import { RootErrorBoundary } from "@/components/ui/composite/root-error-boundary";
 import { DatabaseProvider } from "@/lib/db/database-provider";
+import { SCHEMA_VERSION } from "@/lib/db/schema-version";
 import { pinClockFromUrl } from "@/lib/dev-clock/pin-clock";
+import { installGlobalHandlers } from "@/lib/logger/global-handlers";
+import { log } from "@/lib/logger/logger";
 import { configureNotificationHandler } from "@/lib/notifications/notifications";
+import { useStartupActions } from "@/modules/habits/hooks/use-startup-actions";
 import { loadThemePreference } from "@/theme/theme-preference";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
+
+// First, before anything can throw: unhandled errors and promise rejections
+// are logged (and still reach React Native's own handler — red box, fatal).
+installGlobalHandlers();
+log.info("app", "start", { schemaVersion: SCHEMA_VERSION });
 
 // Web fixture runs only (`?clock=`, dev) — before any screen reads "now".
 pinClockFromUrl();
 
 // Held until the saved Appearance choice is applied (ThemeGate) — otherwise a
 // dark-mode user would see a light frame before the app repaints.
-void SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch((error) =>
+	log.warn("app", "could not hold the splash screen", error),
+);
 
 // Once, before anything can schedule — lets reminders (HAB-12) show while the app is open.
 configureNotificationHandler();
@@ -42,6 +54,16 @@ function ThemeGate({ children }: { children: React.ReactNode }) {
 	return isLoaded ? children : null;
 }
 
+/** Renders nothing; runs the once-per-launch work once the database is ready. */
+function StartupActions() {
+	useStartupActions();
+	return null;
+}
+
+// expo-router's route-level error boundary (audit A3-02): anything that throws
+// while rendering lands on the recovery screen instead of a blank app.
+export { RootErrorBoundary as ErrorBoundary };
+
 export default function RootLayout() {
 	const { colors } = useTheme();
 	const newHabitHeaderOptions = useModalFormHeaderOptions("New habit");
@@ -55,6 +77,7 @@ export default function RootLayout() {
 				<ThemeGate>
 					{/* "auto" follows the resolved scheme, explicit Light/Dark included. */}
 					<StatusBar style="auto" />
+					<StartupActions />
 					<Stack
 						screenOptions={{
 							headerStyle: { backgroundColor: colors.bg },

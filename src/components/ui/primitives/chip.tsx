@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/theme/use-theme";
 
 type ChipProps = {
@@ -28,31 +28,42 @@ export function Chip({
 			onPress={onPress}
 			disabled={disabled}
 			style={({ pressed }) => [
-				styles.chip,
-				{ backgroundColor: colors.inner },
-				isOutline && {
-					backgroundColor: "transparent",
-					borderColor: colors.ink,
-				},
-				selected && { backgroundColor: colors.ink },
+				styles.touch,
 				disabled && { opacity: opacity.disabled },
 				pressed && !disabled && { opacity: opacity.pressed },
 			]}
 		>
-			<Text
+			<View
 				style={[
-					styles.label,
-					{ color: selected ? colors.onAccent : colors.ink },
-					disabled && { color: colors.faint },
+					styles.chip,
+					{ backgroundColor: colors.inner },
+					isOutline && {
+						backgroundColor: "transparent",
+						borderColor: colors.ink,
+					},
+					selected && { backgroundColor: colors.ink },
 				]}
 			>
-				{label}
-			</Text>
+				<Text
+					style={[
+						styles.label,
+						{ color: selected ? colors.onAccent : colors.ink },
+						disabled && { color: colors.faint },
+					]}
+				>
+					{label}
+				</Text>
+			</View>
 		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
+	// The pill is unchanged; its touch area is 44pt tall.
+	touch: {
+		minHeight: 44,
+		justifyContent: "center",
+	},
 	chip: {
 		borderRadius: 999,
 		borderWidth: 1,

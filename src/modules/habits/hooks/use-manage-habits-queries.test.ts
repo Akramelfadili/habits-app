@@ -7,14 +7,14 @@ let mockArchived: Habit[] = [];
 let mockEntries: Entry[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useActiveHabits: () => mockActive,
-	useArchivedHabits: () => mockArchived,
+	useActiveHabits: () => ({ habits: mockActive, loaded: true }),
+	useArchivedHabits: () => ({ habits: mockArchived, loaded: true }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
 }));
 
-import { groupHabitsByCategory } from "../screens/today-screen-helpers";
+import { groupHabitsByCategory } from "../presenters/today-screen-helpers";
 import { useManageHabitsQueries } from "./use-manage-habits-queries";
 
 function entry(habitId: number, date: string): Entry {

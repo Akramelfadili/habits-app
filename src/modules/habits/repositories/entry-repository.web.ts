@@ -1,9 +1,13 @@
 import { format } from "date-fns";
 import { useSyncExternalStore } from "react";
+import {
+	makeEntryFixtures,
+	makeEntryNoteFixtures,
+} from "../dev/entry-fixtures";
+import { resolveFixtureScenario } from "../dev/habit-fixtures";
+import { assertWritesAllowed } from "../dev/write-failure-fixtures";
 import type { DayLog, Entry, EntryNote } from "../types";
-import { makeEntryFixtures, makeEntryNoteFixtures } from "./entry-fixtures";
 import type * as NativeEntryRepository from "./entry-repository";
-import { resolveFixtureScenario } from "./habit-fixtures";
 
 /**
  * Web-only stand-in for `entry-repository.ts` (see `habit-repository.web.ts`
@@ -63,6 +67,7 @@ export async function setHabitCompletedOn(
 	date: Date,
 	completed: boolean,
 ): Promise<void> {
+	assertWritesAllowed();
 	const dateString = format(date, "yyyy-MM-dd");
 	const entries = getEntries();
 	const existing = entries.find(
@@ -89,6 +94,7 @@ export async function setHabitQuantityOn(
 	date: Date,
 	value: number,
 ): Promise<void> {
+	assertWritesAllowed();
 	const dateString = format(date, "yyyy-MM-dd");
 	const entries = getEntries();
 	const existing = entries.find(
@@ -124,6 +130,7 @@ export function useEntryNotes(): EntryNote[] {
 
 /** Web counterpart of the native transactional day save (HAB-10). */
 export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
+	assertWritesAllowed();
 	for (const { habitId, value } of log.values) {
 		if (typeof value === "boolean") {
 			await setHabitCompletedOn(habitId, date, value);

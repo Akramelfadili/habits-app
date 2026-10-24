@@ -8,7 +8,7 @@ const mockHabits = [
 ];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useHabitsList: () => ({ habits: mockHabits, loaded: true }),
 }));
 
 import { useHabitQueries } from "./use-habit-queries";

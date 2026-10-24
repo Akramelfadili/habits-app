@@ -15,7 +15,7 @@ type ActionCardProps = {
 };
 
 /**
- * NEW-25 Action card (design-system-v2.md): an outlined card where the whole
+ * NEW-25 Action card (design-system.md): an outlined card where the whole
  * card is the button, marked by a trailing chevron — "Archive instead" on the
  * delete sheet (HAB-23, E7). Deliberately not `InsightCard` (VAR-04), whose
  * body is never tappable: merging them would hide a tap target.

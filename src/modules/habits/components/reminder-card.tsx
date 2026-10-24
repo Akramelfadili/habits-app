@@ -12,7 +12,7 @@ import {
 	formatReminderTime,
 	reminderDaysLabel,
 	unscheduledDaysWarning,
-} from "../screens/reminders-helpers";
+} from "../presenters/reminders-helpers";
 import type { IsoWeekday } from "../types";
 
 type ReminderCardProps = {

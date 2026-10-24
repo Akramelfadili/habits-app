@@ -54,4 +54,12 @@ describe("notification permission", () => {
 		await expect(ensureNotificationPermission()).resolves.toBe("denied");
 		expect(mockRequest).not.toHaveBeenCalled();
 	});
+
+	it("a failing permission read is logged, not an unhandled rejection", async () => {
+		mockGet.mockRejectedValue(new Error("native module"));
+		const { useNotificationPermission } = load();
+		const { result } = await renderHook(() => useNotificationPermission());
+		await act(async () => {});
+		expect(result.current).toBeUndefined();
+	});
 });

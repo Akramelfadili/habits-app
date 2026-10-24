@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import {
 	clearExports,
@@ -6,10 +5,12 @@ import {
 	promoteScratchFile,
 	writeScratchFile,
 } from "@/lib/file-export/file-export";
+import { log } from "@/lib/logger/logger";
+import { toDayKey } from "@/utils/day-key";
 import { LAST_EXPORT_SETTING_KEY } from "../constants";
-import type { ExportOptions } from "../types";
-import { buildExportModel, type ExportSource } from "./export-data";
-import { EXPORT_FORMATS } from "./export-formats";
+import { buildExportModel, type ExportSource } from "../domain/export-data";
+import { EXPORT_FORMATS } from "../domain/export-formats";
+import type { ExportFailureReason, ExportOptions } from "../types";
 
 /**
  * Runs a data export (HAB-15): build → serialize (with progress) → write to a
@@ -34,10 +35,6 @@ export type ExportResult = {
 	logs: number;
 };
 
-export type ExportFailureReason =
-	| { kind: "storage"; neededBytes: number }
-	| { kind: "unknown" };
-
 export class ExportCancelledError extends Error {
 	constructor() {
 		super("Export cancelled");
@@ -46,8 +43,15 @@ export class ExportCancelledError extends Error {
 }
 
 export class ExportFailedError extends Error {
-	constructor(readonly reason: ExportFailureReason) {
-		super(reason.kind === "storage" ? "Out of storage" : "Export failed");
+	/** `options.cause` is the real error — kept for the log and diagnostics, never shown as text. */
+	constructor(
+		readonly reason: ExportFailureReason,
+		options?: { cause?: unknown },
+	) {
+		super(
+			reason.kind === "storage" ? "Out of storage" : "Export failed",
+			options,
+		);
 		this.name = "ExportFailedError";
 	}
 }
@@ -58,7 +62,7 @@ const STORAGE_ERROR = /no space|enospc|out of (storage|space)|disk full/i;
 const yieldToUi = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 export function exportFileName(today: Date, extension: string): string {
-	return `habits-${format(today, "yyyy-MM-dd")}.${extension}`;
+	return `habits-${toDayKey(today)}.${extension}`;
 }
 
 type RunExportInput = {
@@ -105,7 +109,7 @@ export async function runExport({
 		scratchUri = written.uri;
 		throwIfCancelled();
 
-		await setSetting(LAST_EXPORT_SETTING_KEY, format(today, "yyyy-MM-dd"));
+		await setSetting(LAST_EXPORT_SETTING_KEY, toDayKey(today));
 		return {
 			uri: written.uri,
 			name: written.name,
@@ -118,10 +122,12 @@ export async function runExport({
 		if (scratchUri) discardFile(scratchUri);
 		if (caught instanceof ExportCancelledError) throw caught;
 		const message = caught instanceof Error ? caught.message : String(caught);
-		throw new ExportFailedError(
+		const reason: ExportFailureReason =
 			neededBytes > 0 && STORAGE_ERROR.test(message)
 				? { kind: "storage", neededBytes }
-				: { kind: "unknown" },
-		);
+				: { kind: "unknown" };
+		const failure = new ExportFailedError(reason, { cause: caught });
+		log.error("export", "export failed", failure, { neededBytes });
+		throw failure;
 	}
 }

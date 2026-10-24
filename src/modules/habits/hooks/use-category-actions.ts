@@ -1,3 +1,4 @@
+import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import {
 	createCategory,
@@ -10,9 +11,12 @@ import {
  * reassign-to-Other is one transaction inside it), so no service in between.
  */
 export function useCategoryActions() {
-	const create = useAsyncAction(createCategory);
-	const rename = useAsyncAction(renameCategory);
-	const remove = useAsyncAction(deleteCategory);
+	const create = useAsyncAction(createCategory, { scope: "categories" });
+	const rename = useAsyncAction(renameCategory, { scope: "categories" });
+	const remove = useAsyncAction(deleteCategory, {
+		scope: "categories",
+		failure: failureMessage("delete", "this category"),
+	});
 
 	return {
 		createCategory: create.execute,
@@ -20,7 +24,7 @@ export function useCategoryActions() {
 		createError: create.error,
 		renameCategory: rename.execute,
 		isRenaming: rename.isLoading,
-		deleteCategory: remove.execute,
+		deleteCategory: remove.run,
 		isDeleting: remove.isLoading,
 	};
 }

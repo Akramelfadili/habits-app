@@ -24,6 +24,19 @@ describe("Banner", () => {
 		});
 	});
 
+	it("error tone sits on the inset surface with a filled danger marker", async () => {
+		await render(<Banner tone="error">Couldn't save. Try again.</Banner>);
+		expect(screen.getByTestId("banner")).toHaveStyle({
+			backgroundColor: surfaceColors.light.inner,
+		});
+		expect(screen.getByTestId("banner-marker")).toHaveStyle({
+			backgroundColor: semanticColors.light.dangerBg,
+		});
+		expect(screen.getByText("Couldn't save. Try again.")).toHaveStyle({
+			color: surfaceColors.light.ink,
+		});
+	});
+
 	it("shows an action link under the message and fires it (HAB-15)", async () => {
 		const onPress = jest.fn();
 		await render(

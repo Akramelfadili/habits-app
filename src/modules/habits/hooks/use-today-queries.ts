@@ -1,20 +1,14 @@
-import {
-	addDays,
-	endOfWeek,
-	format,
-	parseISO,
-	startOfDay,
-	startOfWeek,
-} from "date-fns";
+import { addDays, endOfWeek, parseISO, startOfWeek } from "date-fns";
+import { useToday } from "@/lib/today/use-today";
+import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import {
-	useAllEntries,
-	useEntriesInRange,
-} from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useActiveHabits } from "../repositories/habit-repository";
-import { useAllReminders } from "../repositories/reminder-repository";
-import { earliestReminderTimeOn } from "../screens/reminders-helpers";
+	freezesRemainingInMonth,
+	getStreakAtRisk,
+	isEntryComplete,
+	type StreakAtRisk,
+} from "../domain/streaks";
+import { earliestReminderTimeOn } from "../presenters/reminders-helpers";
 import {
 	type CategoryGroup,
 	computeProgress,
@@ -22,17 +16,16 @@ import {
 	type Progress,
 	resolveTodayViewState,
 	type TodayViewState,
-} from "../screens/today-screen-helpers";
+} from "../presenters/today-screen-helpers";
 import {
-	freezesRemainingInMonth,
-	getStreakAtRisk,
-	isEntryComplete,
-	type StreakAtRisk,
-} from "../services/habit-service";
+	useAllEntries,
+	useEntriesInRange,
+} from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useActiveHabits } from "../repositories/habit-repository";
+import { useAllReminders } from "../repositories/reminder-repository";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 export function useTodayQueries(): {
 	totalHabitCount: number;
@@ -44,6 +37,8 @@ export function useTodayQueries(): {
 	/** Days completed so far this Mon–Sun week, today included — per-week habits' "2 of 5". */
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	today: Date;
+	/** False until the habit list has loaded — Today shows a neutral blank, not "Nothing to track yet" (audit A5-04). */
+	isLoaded: boolean;
 	viewState: TodayViewState;
 	/** Habits due tomorrow — only meaningful for the Day closed preview (HAB-05). */
 	tomorrowPreview: Habit[];
@@ -54,8 +49,8 @@ export function useTodayQueries(): {
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
 	freezesRemainingThisMonth: number;
 } {
-	const habits = useActiveHabits();
-	const today = startOfDay(new Date());
+	const { habits, loaded } = useActiveHabits();
+	const today = useToday();
 	const tomorrow = addDays(today, 1);
 	const weekStart = startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
 	const weekEnd = endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
@@ -66,7 +61,7 @@ export function useTodayQueries(): {
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 
 	const completedDatesByHabit = new Map<number, Date[]>();
-	const todayString = format(today, DATE_FORMAT);
+	const todayString = toDayKey(today);
 	const completedHabitIds = new Set<number>();
 	const quantityValuesByHabitId = new Map<number, number>();
 	for (const entry of entries) {
@@ -146,6 +141,7 @@ export function useTodayQueries(): {
 		quantityValuesByHabitId,
 		completedThisWeekByHabitId,
 		today,
+		isLoaded: loaded,
 		viewState: resolveTodayViewState({
 			totalHabitCount: habits.length,
 			progress,

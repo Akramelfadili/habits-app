@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -8,6 +9,7 @@ jest.mock("expo-symbols", () => {
 import { surfaceColors } from "@/theme/theme";
 import {
 	HEADER_MENU_BUTTON_SIZE,
+	HeaderAddButton,
 	HeaderMenuButton,
 } from "./header-menu-button";
 
@@ -42,6 +44,20 @@ describe("HeaderMenuButton", () => {
 		const onPress = jest.fn();
 		await render(<HeaderMenuButton open={false} onPress={onPress} />);
 		await fireEvent.press(screen.getByLabelText("More"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("HeaderAddButton is the same 44pt circle, labelled for what it adds, and calls onPress", async () => {
+		const onPress = jest.fn();
+		await render(
+			<HeaderAddButton accessibilityLabel="Add habit" onPress={onPress} />,
+		);
+		const button = screen.getByRole("button", { name: "Add habit" });
+		expect(StyleSheet.flatten(button.props.style)).toMatchObject({
+			width: HEADER_MENU_BUTTON_SIZE,
+			height: HEADER_MENU_BUTTON_SIZE,
+		});
+		await fireEvent.press(button);
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 });

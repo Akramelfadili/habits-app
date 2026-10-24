@@ -1,4 +1,4 @@
-import { EVENING_FIXTURE, OTHER_FIXTURE } from "./category-fixtures";
+import { EVENING_FIXTURE, OTHER_FIXTURE } from "../dev/category-fixtures";
 import type * as WebCategoryRepository from "./category-repository.web";
 import type * as WebHabitRepository from "./habit-repository.web";
 

@@ -1,0 +1,1482 @@
+V3
+HABITS ONLY · STAGES 1–4 · FOUNDATIONS, COMPONENTS, NAVIGATION, TODAY, PROGRESS, HABITS · LIGHT & DARK
+00–02 Foundations · Components · Nav
+03 Today · 07 Proposals
+04 Progress
+05 Habits
+One purpose, one system
+V3 rebuilds Habits as a single-purpose app with three tabs — Today, Progress, Habits — and folds the V1 + V2 inventory into one design system. V1 and V2 frames, components and tokens are untouched in their own files and stay the reference. Everything in this block is new and carries a V3 ID; “was” names the V1/V2 ID it replaces.
+HOW TO READ THIS BLOCK
+F-xx foundation tokens · V3-xx components (frames in later stages reference these IDs, e.g. “T1 · V3-01, V3-03, V3-13”).
+Every specimen is drawn twice from the same definition: Light panel left, Dark panel right. State label under each specimen; a second line gives the reason or rule.
+V1/V2 file audit. V3 work touches only this file. Two V1/V2 files carry an edit made before V3 started, and they belong together: Habit Flow.dc.html passes embedded to the inventory it mounts, and HabitInventory.dc.html uses it to switch between its fixed 11,520 px canvas layout (inside Habit Flow) and a responsive layout (opened alone). Neither edit changes any frame, component, token or copy. There is no pre-edit copy in the project, so a byte-identical restore needs the project’s version history; reverting only one of the two would break the inventory inside Habit Flow.
+Large text: section 01 · AX3 redraws every layout-changing component at Dynamic Type AX3.
+Assumption: built-in iOS font (SF Pro) at the sizes below; React Native allowFontScaling on everywhere except the tab bar label (iOS behaviour).
+04 · SCREENS · PROGRESS
+Week / Month / Year pinned under the header. Light and dark side by side.
+Insights sit at the top: three stat tiles, then one insight card on screen (assumption: the ranked list of up to 3 pages horizontally, so the grid stays above the fold). Variants drawn: slipping (P1), improved (P5, P12), pattern with a single cause (P7), nothing to fix (P10); the rest are specified in V3-12. A dashed border marks Proposal, needs data check. Rates are whole numbers, exclude frozen days and never count bonus logs. Weeks follow the iOS first weekday (Monday here; Sunday shown in T15). Too early = fewer than 7 days of logs. Export in the header runs the existing JSON/CSV export of all data (same as Settings › Export data); sharing an image of the current view is Later – not in V3. Scrolled frames show only the compact pinned bar.
+P1 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Read 20 min is slipping
+3 of 5 so far this week, 7 of 7 last week.
+Change frequency
+›
+This week
+19 – 25 Oct
+M
+T
+W
+T
+F
+S
+S
+Drink water
+3/7
+Read 20 min
+4/7
+Upper body
+2/2
+Meditate
+3/7
+Cold shower
+2/3
+No social media
+4/7
+Done
+Partial
+Missed
+Frozen
+Off-schedule
+Not logged yet
+Future
+Week summary
+Due habits done per day
+M
+83%
+T
+67%
+W
+83%
+T
+67%
+F
+50%
+S
+S
+Perfect days
+1
+Freezes used
+1
+Bonus logs
+1
+Today
+Progress
+Habits
+P1 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+70%
+19 of 27 so far
+BEST STREAK
+13
+Meditate · days
+BEST DAY
+Mon
+5 of 6 done
+Read 20 min is slipping
+3 of 5 so far this week, 7 of 7 last week.
+Change frequency
+›
+This week
+19 – 25 Oct
+M
+T
+W
+T
+F
+S
+S
+Drink water
+3/7
+Read 20 min
+4/7
+Upper body
+2/2
+Meditate
+3/7
+Cold shower
+2/3
+No social media
+4/7
+Done
+Partial
+Missed
+Frozen
+Off-schedule
+Not logged yet
+Future
+Week summary
+Due habits done per day
+M
+83%
+T
+67%
+W
+83%
+T
+67%
+F
+50%
+S
+S
+Perfect days
+1
+Freezes used
+1
+Bonus logs
+1
+Today
+Progress
+Habits
+P1
+Progress · Week — populated · tab bar B (baseline)
+V3-02 · V3-17 · V3-10 · V3-12 · V3-06 week matrix · V3-08 · V3-01
+BORROWED
+Habits × days matrix with a weekly total per habit; an overall rate.
+CHANGED
+Insights move to the top: three stat tiles (completion, best streak, best day) and one ranked insight card (slipping → Change frequency). The matrix uses our completion cell: frozen in violet (Meditate Tue), off-schedule bonus dot (Upper body Mon), open days for × per week (Cold shower), and a Break habit (No social media) whose resisted days count as done. Daily bars summarise the week.
+WHY
+“How am I doing?” is answered before the detail, and one cell language runs through Week, Month and Year.
+P2 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+Insights unlock in 4 days
+They need 7 days of logs. Your first 3 days are below.
+3 of 7 days
+This week
+19 – 25 Oct
+M
+T
+W
+T
+F
+S
+S
+Drink water
+2/3
+Read 20 min
+2/3
+Meditate
+2/3
+Done
+Partial
+Missed
+Frozen
+Off-schedule
+Not logged yet
+Future
+Started Wed 21 Oct · Mon–Tue before start
+Today
+Progress
+Habits
+P2 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+Insights unlock in 4 days
+They need 7 days of logs. Your first 3 days are below.
+3 of 7 days
+This week
+19 – 25 Oct
+M
+T
+W
+T
+F
+S
+S
+Drink water
+2/3
+Read 20 min
+2/3
+Meditate
+2/3
+Done
+Partial
+Missed
+Frozen
+Off-schedule
+Not logged yet
+Future
+Started Wed 21 Oct · Mon–Tue before start
+Today
+Progress
+Habits
+P2
+Progress · Week — too early
+V3-29 · V3-06 · V3-05 (before start, today)
+BORROWED
+Nothing.
+CHANGED
+With fewer than 7 days of data, an unlock card with progress replaces stats and insights. The partial matrix stays; days before the start are dashed.
+WHY
+Rates from 3 days mislead; the real grid still shows what happened.
+P3 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+No habits yet
+Progress fills in once you add a habit and tick it on Today.
+Add habit
+Today
+Progress
+Habits
+P3 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+No habits yet
+Progress fills in once you add a habit and tick it on Today.
+Add habit
+Today
+Progress
+Habits
+P3
+Progress — no habits
+V3-28 · V3-02 (export disabled) · V3-17
+BORROWED
+Nothing.
+CHANGED
+Empty state with Add habit. Export is disabled; tapping it explains why in a toast. Same frame for Month and Year — the switcher stays so the layout doesn’t jump.
+WHY
+One clear next step instead of an empty chart.
+P4 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+Nothing logged yet
+Tick a habit on Today and this week starts filling in.
+Go to Today
+This week
+19 – 25 Oct
+M
+T
+W
+T
+F
+S
+S
+Drink water
+0/5
+Read 20 min
+0/5
+Meditate
+0/5
+No social media
+0/5
+Done
+Partial
+Missed
+Frozen
+Off-schedule
+Not logged yet
+Future
+Outlined = nothing logged yet (not missed)
+Today
+Progress
+Habits
+P4 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+Nothing logged yet
+Tick a habit on Today and this week starts filling in.
+Go to Today
+This week
+19 – 25 Oct
+M
+T
+W
+T
+F
+S
+S
+Drink water
+0/5
+Read 20 min
+0/5
+Meditate
+0/5
+No social media
+0/5
+Done
+Partial
+Missed
+Frozen
+Off-schedule
+Not logged yet
+Future
+Outlined = nothing logged yet (not missed)
+Today
+Progress
+Habits
+P4
+Progress · Week — no data yet
+V3-28 · V3-06 · V3-05 (nothing logged)
+BORROWED
+Nothing.
+CHANGED
+Habits exist but nothing is logged: outlined cells mean “nothing logged yet”, deliberately different from a missed (filled track) cell. Link back to Today.
+WHY
+A fresh week should not look like a failed week.
+P5 · Light
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+100%
+3 of 3 due · Tue frozen
+STREAK
+13
+days
+FREEZES
+0
+0 freezes left
+Meditate is up 2 days
+3 of 3 so far this week, 4 of 7 last week.
+Meditate
+Daily · your only habit
+M
+T
+W
+T
+F
+S
+S
+19
+20
+21
+22
+23
+24
+25
+Today
+Progress
+Habits
+P5 · Dark
+9:41
+WEEK OF 19 OCTOBER
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+100%
+3 of 3 due · Tue frozen
+STREAK
+13
+days
+FREEZES
+0
+0 freezes left
+Meditate is up 2 days
+3 of 3 so far this week, 4 of 7 last week.
+Meditate
+Daily · your only habit
+M
+T
+W
+T
+F
+S
+S
+19
+20
+21
+22
+23
+24
+25
+Today
+Progress
+Habits
+P5
+Progress · Week — one habit only
+V3-10 · V3-12 (improved) · V3-05 40 pt
+BORROWED
+Nothing.
+CHANGED
+A one-row matrix wastes the screen, so it becomes one card: badge, name and seven 40 pt day cells with numbers. Stats switch to that habit; the insight is “improved”. Frozen days are excluded from the rate.
+WHY
+Same data, sized for one habit.
+P6 · Light
+9:41
+Progress
+Export
+Week
+Today
+Progress
+Habits
+P6 · Dark
+9:41
+Progress
+Export
+Week
+Today
+Progress
+Habits
+P6
+Progress · Week — AX3 (scrolled)
+V3-06 list fallback · V3-17 collapsed · 01 · AX3
+BORROWED
+Nothing.
+CHANGED
+At AX3 the matrix becomes one block per habit: name and total, then 40 pt cells. The switcher collapses to the selected range in the pinned bar; tapping it opens the stacked list (P11).
+WHY
+Nothing clips or truncates at large text; VoiceOver reads each cell (“Wed, done”).
+P7 · Light
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+84%
++6 pts vs Sep
+PERFECT DAYS
+6
+of 23 so far
+BEST STREAK
+13
+Meditate · days
+Meditate is up 3 days
+21 of 22 this month, 18 of 22 in September.
+October
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+7 Oct frozen · 24–31 still ahead
+Per habit
+October so far
+Meditate
+Daily · 21 of 22 · 1 frozen
+95%
+Drink water
+Daily · 21 of 23
+91%
+Cold shower
+3× per week · 9 of 10
+90%
+No social media
+Break
+Resisted 20 of 23
+87%
+Upper body
+Tue, Thu · 6 of 7 · 2 bonus, not counted
+86%
+Read 20 min
+Daily · 17 of 23 · slipping
+74%
+Today
+Progress
+Habits
+P7 · Dark
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+84%
++6 pts vs Sep
+PERFECT DAYS
+6
+of 23 so far
+BEST STREAK
+13
+Meditate · days
+Meditate is up 3 days
+21 of 22 this month, 18 of 22 in September.
+October
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+7 Oct frozen · 24–31 still ahead
+Per habit
+October so far
+Meditate
+Daily · 21 of 22 · 1 frozen
+95%
+Drink water
+Daily · 21 of 23
+91%
+Cold shower
+3× per week · 9 of 10
+90%
+No social media
+Break
+Resisted 20 of 23
+87%
+Upper body
+Tue, Thu · 6 of 7 · 2 bonus, not counted
+86%
+Read 20 min
+Daily · 17 of 23 · slipping
+74%
+Today
+Progress
+Habits
+P7
+Progress · Month — populated
+V3-10 · V3-12 (improved, pager) · V3-06 month calendar · V3-11
+BORROWED
+Month calendar with overall rate, perfect days and best streak.
+CHANGED
+Calendar cells show completion intensity as accent tints with the day number; partial days carry a corner notch; the frozen day is violet, today ringed, future hairline. One insight card with a pager (1 of 2). The weekday-pattern insight is Later – not in V3 (PR-03).
+WHY
+Intensity instead of a habit hue keeps one meaning for colour (T-05); the notch means partial never depends on lightness.
+P8 · Light
+9:41
+Progress
+Export
+Today
+Progress
+Habits
+P8 · Dark
+9:41
+Progress
+Export
+Today
+Progress
+Habits
+P8
+Progress · Month — per-habit rates (scrolled)
+V3-11 · V3-07 · V3-06
+BORROWED
+Per-habit rates.
+CHANGED
+Ranked by rate, slipping last. The Break habit is tagged “Break” in amber and counts resisted days. A frozen day shows in the status line in violet and is excluded from the rate. Bonus logs are listed but “not counted”. Slipping uses the amber bar.
+WHY
+Each rule from the behaviour spec is visible where it applies.
+P9 · Light
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+Month summary unlocks in 4 days
+Rates and insights need 7 days of logs. Days so far are on the calendar.
+3 of 7 days
+October
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+Started Wed 21 Oct · earlier days dashed
+Today
+Progress
+Habits
+P9 · Dark
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+Month summary unlocks in 4 days
+Rates and insights need 7 days of logs. Days so far are on the calendar.
+3 of 7 days
+October
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+Started Wed 21 Oct · earlier days dashed
+Today
+Progress
+Habits
+P9
+Progress · Month — too early
+V3-29 · V3-06 month calendar
+BORROWED
+Nothing.
+CHANGED
+Unlock card; the calendar shows the 3 logged days, earlier days dashed as before start.
+WHY
+Same unlock pattern as Week, so it is learned once.
+P10 · Light
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+90%
+19 of 21 · 1 frozen
+STREAK
+7
+days · since 16 Oct
+LONGEST
+13
+days
+Nothing to fix
+Meditate is at or above its 4-week average.
+October
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+Meditate · 14–15 missed · 7 frozen
+Today
+Progress
+Habits
+P10 · Dark
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+90%
+19 of 21 · 1 frozen
+STREAK
+7
+days · since 16 Oct
+LONGEST
+13
+days
+Nothing to fix
+Meditate is at or above its 4-week average.
+October
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+Meditate · 14–15 missed · 7 frozen
+Today
+Progress
+Habits
+P10
+Progress · Month — one habit only
+V3-10 · V3-12 (nothing to fix) · V3-06
+BORROWED
+Nothing.
+CHANGED
+With one habit the calendar is binary (done, missed, frozen); stats become streak and longest; the insight is “Nothing to fix”.
+WHY
+Intensity levels would only ever be 0 or 3 here.
+P11 · Light
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+84%
++6 pts vs Sep
+Today
+Progress
+Habits
+P11 · Dark
+9:41
+OCTOBER 2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+84%
++6 pts vs Sep
+Today
+Progress
+Habits
+P11
+Progress · Month — AX3
+V3-17 stacked · V3-10 1-up · 01 · AX3
+BORROWED
+Nothing.
+CHANGED
+The switcher becomes a stacked list with a check and stat cards go 1-up; the calendar continues below as week rows (as P6).
+WHY
+Large text keeps every number readable without horizontal scrolling.
+P12 · Light
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+81%
+since 3 Mar
+BEST STREAK
+41
+days · Meditate
+BEST MONTH
+Sep
+100%
+September was your best month
+Every scheduled habit, every day. October is at 84 % so far.
+All habits · 2026
+Since 3 Mar
+Jan ›
+Feb ›
+Mar ›
+Apr ›
+May ›
+Jun ›
+Jul ›
+Aug ›
+Sep ›
+Oct ›
+Nov ›
+Dec ›
+Less
+More
+Frozen
+Rows Mon → Sun · tap a month to open it
+Today
+Progress
+Habits
+P12 · Dark
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+81%
+since 3 Mar
+BEST STREAK
+41
+days · Meditate
+BEST MONTH
+Sep
+100%
+September was your best month
+Every scheduled habit, every day. October is at 84 % so far.
+All habits · 2026
+Since 3 Mar
+Jan ›
+Feb ›
+Mar ›
+Apr ›
+May ›
+Jun ›
+Jul ›
+Aug ›
+Sep ›
+Oct ›
+Nov ›
+Dec ›
+Less
+More
+Frozen
+Rows Mon → Sun · tap a month to open it
+Today
+Progress
+Habits
+P12
+Progress · Year — populated
+V3-10 · V3-12 (pager) · V3-06 year heat map · V3-05 legend
+BORROWED
+A GitHub-style year heat map.
+CHANGED
+Three 4-month bands with 16 pt cells, month labels, Less → More legend (partial levels notched), frozen in violet. Month labels are the only tap targets (44 pt) and open that Month; day cells are not tappable — day detail lives in Month (P13). VoiceOver and AX users get the month list (P16).
+WHY
+The whole year fits the screen and no target is smaller than 44 pt.
+P13 · Light
+9:41
+JULY 2026
+Progress
+Export
+Week
+Month
+Year
+July
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+Opened from Year › Jul · 14 July selected
+Tuesday, 14 July
+4 of 5 done · 80%
+Close
+Drink water
+8 of 8
+Upper body
+Done
+Meditate
+Done
+No social media
+Resisted
+Read 20 min
+Missed
+Edit this day ›
+Today
+Progress
+Habits
+P13 · Dark
+9:41
+JULY 2026
+Progress
+Export
+Week
+Month
+Year
+July
+Daily completion
+M
+T
+W
+T
+F
+S
+S
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+Less
+More
+Frozen
+Opened from Year › Jul · 14 July selected
+Tuesday, 14 July
+4 of 5 done · 80%
+Close
+Drink water
+8 of 8
+Upper body
+Done
+Meditate
+Done
+No social media
+Resisted
+Read 20 min
+Missed
+Edit this day ›
+Today
+Progress
+Habits
+P13
+Progress · Month — day selected (opened from Year › Jul)
+V3-06 (selected cell) · V3-04 20 pt · V3-23 link
+BORROWED
+Nothing.
+CHANGED
+Tapping “Jul ›” on Year opens Month for July. Tapping a 40 pt day rings it and shows a detail card with each habit’s state; “Edit this day” opens the Edit this day sheet (RL1). Back returns to Year.
+WHY
+Day detail needs a real tap target, so it lives in Month, not on the 16 pt year grid.
+P14 · Light
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+Year view unlocks in 4 days
+It needs 7 days of logs. The current months are shown below.
+3 of 7 days
+All habits · 2026
+Since 21 Oct
+Sep ›
+Oct ›
+Nov ›
+Dec ›
+Less
+More
+Frozen
+Rows Mon → Sun · tap a month to open it
+Today
+Progress
+Habits
+P14 · Dark
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+Year view unlocks in 4 days
+It needs 7 days of logs. The current months are shown below.
+3 of 7 days
+All habits · 2026
+Since 21 Oct
+Sep ›
+Oct ›
+Nov ›
+Dec ›
+Less
+More
+Frozen
+Rows Mon → Sun · tap a month to open it
+Today
+Progress
+Habits
+P14
+Progress · Year — too early
+V3-29 · V3-06 year band
+BORROWED
+Nothing.
+CHANGED
+Unlock card plus only the current band, so the 3 days of data are visible rather than lost in a year of empty cells.
+WHY
+Same unlock pattern.
+P15 · Light
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+89%
+since 3 Mar
+LONGEST
+41
+days
+FREEZES USED
+3
+this year
+Meditate
+Meditate · 2026
+Since 3 Mar
+Jan ›
+Feb ›
+Mar ›
+Apr ›
+May ›
+Jun ›
+Jul ›
+Aug ›
+Sep ›
+Oct ›
+Nov ›
+Dec ›
+Less
+More
+Frozen
+Rows Mon → Sun · tap a month to open it
+Today
+Progress
+Habits
+P15 · Dark
+9:41
+2026
+Progress
+Export
+Week
+Month
+Year
+COMPLETION
+89%
+since 3 Mar
+LONGEST
+41
+days
+FREEZES USED
+3
+this year
+Meditate
+Meditate · 2026
+Since 3 Mar
+Jan ›
+Feb ›
+Mar ›
+Apr ›
+May ›
+Jun ›
+Jul ›
+Aug ›
+Sep ›
+Oct ›
+Nov ›
+Dec ›
+Less
+More
+Frozen
+Rows Mon → Sun · tap a month to open it
+Today
+Progress
+Habits
+P15
+Progress · Year — one habit (filter)
+Habit picker chip · V3-10 · V3-06
+BORROWED
+Nothing.
+CHANGED
+A habit chip filters the map to one habit and opens the Habit picker sheet (stage 5). Cells are binary for that habit; frozen days violet.
+WHY
+Answers “how did Meditate go this year?” without leaving the tab.
+P16 · Light
+9:41
+Progress
+Export
+Year
+Today
+Progress
+Habits
+P16 · Dark
+9:41
+Progress
+Export
+Year
+Today
+Progress
+Habits
+P16
+Progress · Year — AX3 (scrolled)
+V3-07 · 01 · AX3
+BORROWED
+Nothing.
+CHANGED
+At AX3 the grid is unreadable, so Year becomes a month list with bars and whole-number %; tap a month to open it.
+WHY
+Large text never gets a wall of tiny squares.
+P17 · Light
+9:41
+Progress
+Export
+Today
+Progress
+Habits
+P17 · Dark
+9:41
+Progress
+Export
+Today
+Progress
+Habits
+P17
+Progress · Month — tab bar B, scrolled to the end
+V3-01 B · V3-11
+BORROWED
+Nothing.
+CHANGED
+Per-habit rates scroll under the pill; the last rate ends above it. The compact bar with the range switcher stays pinned.
+WHY
+Same bottom-padding rule on every tab.
+04 · Data needs
+Every number or chart that needs a query
+METRIC
+WHERE
+QUERY IT NEEDS
+STATUS
++6 pts vs Sep
+P7 stat
+Completion rate of the previous month (due vs done per day, frozen days excluded), minus this month’s rate.
+Needs query
+Best month
+P12 stat + insight
+Completion rate per calendar month for the year; take the max.
+Needs query
+Perfect days
+P7 stat
+Days in range where every due habit was done. Assumption: a frozen day is not perfect.
+Needs query
+Freezes used
+P1 summary, P15, S4
+Count of freeze events by date and habit in range.
+Needs query (freeze log by date)
+Full-year map
+P12–P15
+Per-day completion level 0–3 for every day of the year, all habits or one habit.
+Needs query
+Weekday pattern
+P7 insight
+Per habit × weekday miss rate over the last 4 weeks, plus a single-cause test (one habit drives the dip).
+Proposal, needs data check
+Best day (week)
+P1 stat
+Max of done ÷ due per day in the current week.
+Needs query (cheap)
+Daily bars
+P1 summary
+Done ÷ due per day, Mon–Sun.
+Needs query (cheap)
+Per-habit month rates
+P8
+Done ÷ due per habit for the month, frozen excluded, bonus listed separately.
+Needs query
+Best / current streak
+P1, P7, Detail
+Stored streak values.
+Assumed to exist
+Slipping / improved
+P1, P5 insights
+This week vs last week done count per habit.
+Assumed to exist (V2 insights)
+Year day detail
+P13
+Each habit’s status on one date.
+Assumed to exist (logs by date)
+Export
+Progress header
+Existing JSON/CSV export. Image share of the view.
+Exists · image share = Proposal

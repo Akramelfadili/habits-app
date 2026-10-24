@@ -1,15 +1,18 @@
 import { and, asc, eq, max, sql } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/lib/db/client";
 import { categories, habits } from "@/lib/db/schema";
+import { rollbackQuietly } from "@/lib/db/transaction";
+import { useLiveRows } from "@/lib/db/use-live-rows";
 import { OTHER_CATEGORY_NAME } from "../constants";
 import type { Category, CreateCategoryInput } from "../types";
 import { allCategoriesQuery, rowToCategory } from "./category-rows";
 
 /** Live-query hook — every category in picker order (HAB-24): built-ins, then customs by creation. */
 export function useCategories(): Category[] {
-	const { data } = useLiveQuery(allCategoriesQuery());
-	return (data ?? []).map(rowToCategory);
+	const { data } = useLiveRows<typeof categories.$inferSelect>(
+		allCategoriesQuery(),
+	);
+	return data.map(rowToCategory);
 }
 
 /** One-off read — e.g. resolving built-ins by name outside a component. */
@@ -107,7 +110,7 @@ export async function deleteCategory(id: number): Promise<void> {
 		await db.delete(categories).where(eq(categories.id, id));
 		await db.run(sql`commit`);
 	} catch (err) {
-		await db.run(sql`rollback`);
+		await rollbackQuietly();
 		throw err;
 	}
 }

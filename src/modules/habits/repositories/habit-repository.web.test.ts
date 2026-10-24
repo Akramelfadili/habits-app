@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
+import { HABIT_FIXTURES } from "../dev/habit-fixtures";
 import { makeHabitInput } from "../test-support/habit-builder";
 import { inProduction } from "../test-support/in-production";
-import { HABIT_FIXTURES } from "./habit-fixtures";
 import type * as WebHabitRepository from "./habit-repository.web";
 
 // Jest runs as iOS, so `./habit-repository` would resolve to the SQLite one —
@@ -25,7 +25,7 @@ const input = makeHabitInput({
 describe("habit-repository.web", () => {
 	it("starts from the fixture habits", async () => {
 		const { useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList());
+		const { result } = await renderHook(() => useHabitsList().habits);
 		expect(result.current.map((h) => h.name)).toEqual(
 			HABIT_FIXTURES.map((h) => h.name),
 		);
@@ -33,7 +33,7 @@ describe("habit-repository.web", () => {
 
 	it("creates a habit with the next id and notifies live readers", async () => {
 		const { createHabit, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList());
+		const { result } = await renderHook(() => useHabitsList().habits);
 
 		let created: Awaited<ReturnType<typeof createHabit>> | undefined;
 		await act(async () => {
@@ -54,7 +54,7 @@ describe("habit-repository.web", () => {
 
 	it("creates a batch of habits and marks the setting", async () => {
 		const { createHabitsAndMarkSetting, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList());
+		const { result } = await renderHook(() => useHabitsList().habits);
 
 		let created: Awaited<ReturnType<typeof createHabitsAndMarkSetting>> = [];
 		await act(async () => {
@@ -74,7 +74,7 @@ describe("habit-repository.web", () => {
 
 	it("clears every habit", async () => {
 		const { deleteAllHabits, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList());
+		const { result } = await renderHook(() => useHabitsList().habits);
 
 		await act(() => deleteAllHabits());
 		expect(result.current).toEqual([]);
@@ -82,7 +82,7 @@ describe("habit-repository.web", () => {
 
 	it("refuses to clear habits outside __DEV__", async () => {
 		const { deleteAllHabits, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList());
+		const { result } = await renderHook(() => useHabitsList().habits);
 
 		await inProduction(async () => {
 			await expect(deleteAllHabits()).rejects.toThrow("dev-only");
@@ -116,8 +116,8 @@ describe("habit-repository.web", () => {
 				useActiveHabits,
 				useArchivedHabits,
 			} = loadRepository();
-			const active = await renderHook(() => useActiveHabits());
-			const archived = await renderHook(() => useArchivedHabits());
+			const active = await renderHook(() => useActiveHabits().habits);
+			const archived = await renderHook(() => useArchivedHabits().habits);
 			expect(archived.result.current).toEqual([]);
 
 			await act(async () => {
@@ -138,7 +138,7 @@ describe("habit-repository.web", () => {
 
 		it("reorders by swapping the habits' own sort values", async () => {
 			const { reorderHabits, useHabitsList } = loadRepository();
-			const { result } = await renderHook(() => useHabitsList());
+			const { result } = await renderHook(() => useHabitsList().habits);
 
 			await act(() => reorderHabits([2, 1]));
 

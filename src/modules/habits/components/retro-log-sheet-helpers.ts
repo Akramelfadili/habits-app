@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { isDayLogValueDone } from "../services/retro-log";
+import { isDayLogValueDone } from "../domain/retro-log";
 import type { DayLogValue, Habit } from "../types";
 
 /** The sheet's title — "Tuesday, 8 September" (docs/mockups/retro-log.png). */

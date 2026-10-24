@@ -23,7 +23,7 @@ let mockFrozenDays: FrozenDay[] = [];
 let mockNotes: EntryNote[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useHabitsList: () => ({ habits: mockHabits, loaded: true }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,

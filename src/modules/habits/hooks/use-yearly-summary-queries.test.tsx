@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 
+let mockLoaded = true;
 let mockHabits: Habit[] = [];
 let mockEntries: Entry[] = [];
 let mockFrozen: FrozenDay[] = [];
@@ -10,7 +11,7 @@ const mockUseEntriesInRange = jest.fn(
 	(_start: Date, _end: Date) => mockEntries,
 );
 jest.mock("../repositories/habit-repository", () => ({
-	useHabitsList: () => mockHabits,
+	useHabitsList: () => ({ habits: mockHabits, loaded: mockLoaded }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) =>
@@ -25,6 +26,7 @@ import { useYearlySummaryQueries } from "./use-yearly-summary-queries";
 const date = (value: Date) => format(value, "yyyy-MM-dd");
 
 beforeEach(() => {
+	mockLoaded = true;
 	mockHabits = [];
 	mockEntries = [];
 	mockFrozen = [];
@@ -99,5 +101,12 @@ describe("useYearlySummaryQueries (HAB-17)", () => {
 		// Saturday 2 Jan → "this week" is Mon 28 Dec; the year's own range starts Mon 28 Dec too (1 Jan 2027 is a Friday).
 		const [start] = mockUseEntriesInRange.mock.calls[0];
 		expect(date(start)).toBe("2026-12-28");
+	});
+
+	it("reports loading — not empty — until the habit list has loaded (A5-04)", async () => {
+		mockLoaded = false;
+		mockHabits = [];
+		const { result } = await renderHook(() => useYearlySummaryQueries());
+		expect(result.current).toEqual({ state: "loading" });
 	});
 });

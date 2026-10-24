@@ -5,15 +5,14 @@
  * feature that made it.
  *
  * Each entry: `feature` (spec ID, groups the report), `route` (with the
- * `?fixtures=` scenario, see habit-fixtures.ts), `mockup` (the docs/mockups/
+ * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the docs/mockups/
  * file it's judged against, or null when no mockup covers that state),
  * optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
  * in CSS px, overrides the default 393×852 — e.g. a small phone with the
  * keyboard up), `note`, `touch` (render in a
  * touch-enabled page, for swipe gestures), `colorScheme` ("light" default, or
  * "dark" — the emulated OS scheme, which the Appearance setting's default
- * "System" follows, HAB-15), and `interact(page, ctx)` for states only
- * reachable by a tap or gesture.
+ * "System" follows, HAB-15), and `interact(page, ctx)` for states only reachable by a tap or gesture.
  */
 import { format, subDays } from "date-fns";
 
@@ -23,6 +22,52 @@ import { format, subDays } from "date-fns";
  * on the day the check runs — the baseline diff would drift daily otherwise.
  */
 export const DEFAULT_CLOCK = "2026-09-24T09:00:00";
+
+/**
+ * Resolves once a navigation menu's popover has stopped moving: its top edge
+ * equals the ⋯ button's bottom + the 8px gap, unchanged for three consecutive
+ * frames. The menu used to settle through a chain of deferred measurements, so
+ * a fixed wait lost the race under CPU load and the capture caught the popover
+ * 74px too low (audit A10-10). Polls instead of sleeping; throws if it never
+ * settles, so a broken placement fails loudly rather than becoming a baseline.
+ */
+export async function waitForMenuSettled(page, { timeout = 5000 } = {}) {
+	const GAP_BELOW_BUTTON = 8;
+	const scrim = page.getByLabel("Close menu");
+	await scrim.waitFor();
+	const popover = await scrim
+		.locator("xpath=following-sibling::*[1]")
+		.elementHandle();
+	const button = await page
+		.locator('[aria-label="More"]')
+		.first()
+		.elementHandle();
+	const deadline = Date.now() + timeout;
+	let previousTop = Number.NaN;
+	let stableFrames = 0;
+	let last = "";
+	while (Date.now() < deadline) {
+		const { top, expected } = await page.evaluate(
+			([popoverEl, buttonEl]) =>
+				new Promise((resolve) =>
+					requestAnimationFrame(() =>
+						resolve({
+							top: popoverEl.getBoundingClientRect().top,
+							expected: buttonEl.getBoundingClientRect().bottom,
+						}),
+					),
+				),
+			[popover, button],
+		);
+		last = `popover top ${top}, button bottom ${expected}`;
+		const atFinalPosition = Math.abs(top - (expected + GAP_BELOW_BUTTON)) < 0.5;
+		stableFrames =
+			atFinalPosition && top === previousTop ? stableFrames + 1 : 0;
+		previousTop = top;
+		if (stableFrames >= 3) return;
+	}
+	throw new Error(`menu never settled under the button (${last})`);
+}
 
 /** A heatmap cell's accessibility label, `daysAgo` days before the screen's clock. */
 function heatmapCellLabel(clock, daysAgo, status) {
@@ -137,19 +182,18 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			// The popover re-anchors under the button once the button is measured.
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 	"today-empty-menu-open": {
 		feature: "HAB-14",
 		route: "/habits?fixtures=empty",
 		mockup: "docs/mockups/hab-14-a4.png",
-		note: "Empty Today, menu open: summaries disabled with the spec's reasons, Manage enabled. Settings is 'Coming soon' until HAB-15.",
+		note: "Empty Today, menu open: summaries disabled with the spec's reasons, Manage enabled. Settings is enabled (HAB-15).",
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("After your first month").waitFor();
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 	"today-rest-day-menu": {
@@ -190,7 +234,7 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByText("Log something anyway", { exact: true }).click();
 			await page.getByLabel("Log Read off-schedule").first().click();
-			await page.getByText("Read logged · off-schedule").waitFor();
+			await page.getByText("Logged 'Read' · off-schedule").waitFor();
 			await page.waitForTimeout(400);
 		},
 	},
@@ -484,10 +528,10 @@ export const SCREENS = {
 		feature: "HAB-20",
 		route: "/habits/1?fixtures=habit-detail-archived",
 		mockup: "docs/mockups/hab-20-e1.png",
-		note: "E1: Restore tapped — banner collapses in place, toast 'Cold shower is back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
+		note: "E1: Restore tapped — banner collapses in place, toast 'Restored 'Cold shower' — back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
 		async interact(page) {
 			await page.getByText("Restore", { exact: true }).click();
-			await page.getByText("Cold shower is back on Today").waitFor();
+			await page.getByText("Restored 'Cold shower' — back on Today").waitFor();
 		},
 	},
 	"habit-detail-restore-undone": {
@@ -497,7 +541,7 @@ export const SCREENS = {
 		note: "Restore then Undo: must be pixel-identical to habit-detail-archived (same archive date, same paused cells).",
 		async interact(page) {
 			await page.getByText("Restore", { exact: true }).click();
-			await page.getByText("Cold shower is back on Today").waitFor();
+			await page.getByText("Restored 'Cold shower' — back on Today").waitFor();
 			await page.getByText("Undo", { exact: true }).click();
 			await page.getByText("Archived on", { exact: false }).waitFor();
 		},
@@ -605,7 +649,7 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 	"today-menu-open-yearly": {
@@ -617,7 +661,7 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByLabel("More", { exact: true }).click();
 			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await page.waitForTimeout(400);
+			await waitForMenuSettled(page);
 		},
 	},
 
@@ -780,7 +824,7 @@ export const SCREENS = {
 		feature: "HAB-23",
 		route: "/habits/1?fixtures=habit-detail",
 		mockup: "docs/mockups/hab-23-e7.png",
-		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (v3-backlog).",
+		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (docs/backlog.md).",
 		async interact(page) {
 			await page.getByText("Delete habit").click();
 		},
@@ -923,6 +967,101 @@ export const SCREENS = {
 		route: "/expenses",
 		mockup: null,
 	},
+
+	// Audit B6 — failure states. Reached only through the web fixtures
+	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in
+	// the app.
+	"error-screen-migration-failed": {
+		feature: "B6",
+		route: "/?fixtures=migration-fails",
+		mockup: null,
+		note: "A failed database migration: plain-words title, 'Try again', 'Copy diagnostics'. No raw error text.",
+	},
+	"error-screen-migration-failed-dark": {
+		feature: "B6",
+		route: "/?fixtures=migration-fails",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+	},
+	"error-toast-today": {
+		feature: "B6",
+		route: "/habits?failWrites=1",
+		mockup: null,
+		note: "A failed tick on Today: error toast (toast pill with a danger dot), the row stays unchecked, no Undo.",
+		async interact(page) {
+			await page.getByLabel("Evening walk").first().click();
+			await page.getByText("Couldn't update this habit. Try again.").waitFor();
+		},
+	},
+	"error-toast-today-dark": {
+		feature: "B6",
+		route: "/habits?failWrites=1",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+		async interact(page) {
+			await page.getByLabel("Evening walk").first().click();
+			await page.getByText("Couldn't update this habit. Try again.").waitFor();
+		},
+	},
+	"error-toast-in-sheet": {
+		feature: "B6",
+		route: "/habits?fixtures=quantity-log&failWrites=1",
+		mockup: null,
+		note: "A failed quantity save: the sheet stays open and the toast shows at the top of the screen, above the sheet (a Modal covers the page-level host).",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+			await page.getByRole("button", { name: /^Save \d+ of/ }).click();
+			await page.getByText("Couldn't save that amount. Try again.").waitFor();
+		},
+	},
+	"new-habit-save-failed": {
+		feature: "B6",
+		route: "/new-habit?fixtures=empty&failWrites=1",
+		mockup: null,
+		note: "A failed Save in the New habit modal (no ToastHost there): inline error banner above Save, the form untouched.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 pages");
+			await categoryChip(page, "Learning").click();
+			await page.getByText("Save habit", { exact: true }).click();
+			await page.getByText("Couldn't save this habit. Try again.").waitFor();
+		},
+	},
+	"new-habit-save-failed-dark": {
+		feature: "B6",
+		route: "/new-habit?fixtures=empty&failWrites=1",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 pages");
+			await categoryChip(page, "Learning").click();
+			await page.getByText("Save habit", { exact: true }).click();
+			await page.getByText("Couldn't save this habit. Try again.").waitFor();
+		},
+	},
+	"settings-about": {
+		feature: "B6",
+		route: "/habits/settings?fixtures=settings&theme=light",
+		mockup: null,
+		note: "Settings scrolled to the About group: version (build), database schema, 'Copy diagnostics'.",
+		async interact(page) {
+			await page.getByText("Copy diagnostics").scrollIntoViewIfNeeded();
+			await page.mouse.wheel(0, 400);
+		},
+	},
+	"settings-about-dark": {
+		feature: "B6",
+		route: "/habits/settings?fixtures=settings&theme=dark",
+		mockup: null,
+		colorScheme: "dark",
+		note: "Same, dark.",
+		async interact(page) {
+			await page.getByText("Copy diagnostics").scrollIntoViewIfNeeded();
+			await page.mouse.wheel(0, 400);
+		},
+	},
 };
 
 /**
@@ -966,7 +1105,7 @@ for (const name of DARK_TWINS) {
 
 /**
  * HAB-22: every screen that renders a habit name, re-run with `longNames=1`
- * (habit-fixtures.ts) — the first two habits get a 40-character V1 name (over
+ * (src/modules/habits/dev/habit-fixtures.ts) — the first two habits get a 40-character V1 name (over
  * today's 32 cap) and one at exactly 32, to catch bad truncation or wrapping.
  */
 const LONG_NAME_TWINS = [

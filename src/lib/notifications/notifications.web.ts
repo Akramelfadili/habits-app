@@ -28,7 +28,35 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 	return fixturePermission();
 }
 
-export async function scheduleReminder(): Promise<void> {}
+export function notificationIdentifier(
+	reminder: Pick<NativeNotifications.ReminderNotification, "id">,
+	slot: string,
+	generation: string,
+): string {
+	return `${reminder.id}:${slot}:${generation}`;
+}
+
+export function newGeneration(): string {
+	return "web";
+}
+
+export function reminderSlots(): NativeNotifications.NotificationSlot[] {
+	return [];
+}
+
+export function parseIdentifier(): NativeNotifications.ParsedIdentifier | null {
+	return null;
+}
+
+export async function scheduleReminder(): Promise<string[]> {
+	return [];
+}
+
+export async function listScheduledIdentifiers(): Promise<string[]> {
+	return [];
+}
+
+export async function cancelScheduled(): Promise<void> {}
 
 export async function cancelRemindersWithPrefix(): Promise<void> {}
 
@@ -39,6 +67,12 @@ const _sameShape: typeof NativeNotifications = {
 	getNotificationPermission,
 	requestNotificationPermission,
 	scheduleReminder,
+	listScheduledIdentifiers,
+	cancelScheduled,
 	cancelRemindersWithPrefix,
+	notificationIdentifier,
+	newGeneration,
+	reminderSlots,
+	parseIdentifier,
 };
 void _sameShape;

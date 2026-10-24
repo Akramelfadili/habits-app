@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react-native";
+import { useToastStore } from "@/store/toast-store";
 
 const mockSaveDayLog = jest.fn();
 
@@ -29,20 +30,24 @@ describe("useRetroLogActions", () => {
 		expect(result.current.isSaving).toBe(false);
 	});
 
-	it("surfaces a failed save as saveError", async () => {
+	it("a failed save never rejects: it toasts the failure and surfaces saveError", async () => {
+		useToastStore.setState({ toast: null });
 		mockSaveDayLog.mockRejectedValue(new Error("disk full"));
 		const { result } = await renderHook(() => useRetroLogActions());
 
-		await act(async () => {
-			await expect(
-				result.current.saveDay(new Date(), {
-					values: [],
-					noteHabitId: 1,
-					note: "",
-				}),
-			).rejects.toThrow("disk full");
-		});
+		const returned = await act(() =>
+			result.current.saveDay(new Date(2026, 8, 15), {
+				values: [],
+				noteHabitId: 1,
+				note: "",
+			}),
+		);
 
+		expect(returned).toMatchObject({ ok: false });
+		expect(useToastStore.getState().toast).toMatchObject({
+			message: "Couldn't save this day. Try again.",
+			tone: "error",
+		});
 		expect(result.current.saveError?.message).toBe("disk full");
 	});
 });

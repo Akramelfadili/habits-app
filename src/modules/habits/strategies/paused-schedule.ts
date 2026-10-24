@@ -1,14 +1,14 @@
-import { addDays, format, isSameDay, parseISO } from "date-fns";
+import { addDays, parseISO } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import type { DayRange } from "../types";
+import { completionIndex, dayKeyTime } from "./completion-index";
 import type { FrequencyStrategy } from "./frequency-strategy";
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 /** Far enough ahead that an open pause (still archived) covers every real day. */
 export const OPEN_PAUSE_END = "9999-12-31";
 
 export function isPausedOn(date: Date, pauses: readonly DayRange[]): boolean {
-	const day = format(date, DATE_FORMAT);
+	const day = toDayKey(date);
 	return pauses.some((pause) => day >= pause.from && day <= pause.to);
 }
 
@@ -19,9 +19,7 @@ export function isPausedOn(date: Date, pauses: readonly DayRange[]): boolean {
  * Sorted ascending, "yyyy-MM-dd".
  */
 export function restartDays(pauses: readonly DayRange[]): string[] {
-	return pauses
-		.map((pause) => format(addDays(parseISO(pause.to), 1), DATE_FORMAT))
-		.sort();
+	return pauses.map((pause) => toDayKey(addDays(parseISO(pause.to), 1))).sort();
 }
 
 /**
@@ -44,7 +42,7 @@ export function withPauses(
 			!isPausedOn(date, pauses) && strategy.isDueOn(date, context),
 		wasScheduledOn: (date, context) =>
 			isPausedOn(date, pauses)
-				? context.completedDates.some((completed) => isSameDay(completed, date))
+				? completionIndex(context.completedDates).days.has(dayKeyTime(date))
 				: strategy.wasScheduledOn(date, context),
 	};
 }

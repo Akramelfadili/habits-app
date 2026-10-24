@@ -1,5 +1,5 @@
-import { format, startOfDay, subDays } from "date-fns";
-import { cancelRemindersWithPrefix } from "@/lib/notifications/notifications";
+import { startOfDay, subDays } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import {
 	deleteHabitAndHistory,
 	getHabit,
@@ -7,18 +7,13 @@ import {
 	setHabitRestored,
 } from "../repositories/habit-repository";
 import type { DayRange, Habit } from "../types";
-import {
-	habitNotificationPrefix,
-	syncHabitReminders,
-} from "./reminder-service";
+import { cancelHabitNotifications, syncAfterWrite } from "./reminder-service";
 
 /**
  * Archive, restore and delete (HAB-13). Each is composite: the habit's row
  * changes *and* its OS notifications have to follow in the same operation —
  * a reminder firing for an archived or deleted habit is a user-facing bug.
  */
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 /**
  * The habit's pauses once it's restored at `restoredAt`: the archive period
@@ -31,8 +26,8 @@ export function pausesAfterRestore(
 	restoredAt: Date,
 ): DayRange[] {
 	if (!habit.archivedAt) return habit.pauses;
-	const from = format(habit.archivedAt, DATE_FORMAT);
-	const to = format(subDays(startOfDay(restoredAt), 1), DATE_FORMAT);
+	const from = toDayKey(habit.archivedAt);
+	const to = toDayKey(subDays(startOfDay(restoredAt), 1));
 	if (to < from) return habit.pauses;
 	return [...habit.pauses, { from, to }];
 }
@@ -40,7 +35,7 @@ export function pausesAfterRestore(
 /** Off Today and every active list; reminder rows are kept, only their notifications stop. */
 export async function archiveHabit(habitId: number): Promise<void> {
 	await setHabitArchived(habitId, new Date());
-	await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
+	await cancelHabitNotifications(habitId);
 }
 
 /**
@@ -58,7 +53,7 @@ export async function restoreHabit(habitId: number): Promise<void> {
 		habitId,
 		pausesAfterRestore(habit, new Date()),
 	);
-	await syncHabitReminders(restored);
+	await syncAfterWrite(restored);
 }
 
 /**
@@ -73,11 +68,11 @@ export async function undoRestoreHabit(
 	if (!before.archivedAt)
 		throw new Error("Nothing to undo: habit wasn't archived");
 	await setHabitArchived(habitId, before.archivedAt, before.pauses);
-	await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
+	await cancelHabitNotifications(habitId);
 }
 
 /** The one unrecoverable action in the module — only reachable from Habit Detail, behind a confirmation. */
 export async function deleteHabit(habitId: number): Promise<void> {
 	await deleteHabitAndHistory(habitId);
-	await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
+	await cancelHabitNotifications(habitId);
 }

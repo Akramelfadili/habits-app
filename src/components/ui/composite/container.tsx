@@ -148,6 +148,8 @@ const styles = StyleSheet.create({
 		borderBottomLeftRadius: 0,
 		borderBottomRightRadius: 0,
 		paddingTop: 10,
+		// Lets a sheet's scrolling content shrink above the keyboard.
+		flexShrink: 1,
 	},
 	grabber: {
 		width: 36,

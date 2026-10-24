@@ -10,8 +10,9 @@ export const surfaceColors = {
 		ink: "#1A1A19",
 		onAccent: "#FFFFFF",
 		sub: "#5E5E5C",
-		faint: "#6E6E6B",
+		faint: "#6C6C69",
 		border: "#E2E1DE",
+		outline: "#898987",
 		track: "#DEDDDA",
 		toast: "#1A1A19",
 		toastInk: "#FFFFFF",
@@ -27,6 +28,7 @@ export const surfaceColors = {
 		sub: "#A5A5A2",
 		faint: "#9A9A97",
 		border: "#343438",
+		outline: "#777778",
 		track: "#3A3A3E",
 		toast: "#35353A",
 		toastInk: "#EDEDEA",
@@ -38,7 +40,7 @@ export const surfaceColors = {
 export const semanticColors = {
 	light: {
 		warnTint: "#FDF0D5",
-		warnInk: "#9A6708",
+		warnInk: "#966408",
 		dangerBg: "#C9372F",
 		frozenBg: "#EDE8F8",
 		frozenInk: "#7A5AC4",
@@ -46,7 +48,7 @@ export const semanticColors = {
 	dark: {
 		warnTint: "#3A2A0E",
 		warnInk: "#E8A93A",
-		dangerBg: "#D9544D",
+		dangerBg: "#E56059",
 		frozenBg: "#262036",
 		frozenInk: "#A98FE0",
 	},

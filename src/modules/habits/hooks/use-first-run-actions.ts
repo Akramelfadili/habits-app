@@ -2,6 +2,7 @@ import {
 	deleteSetting,
 	setSetting,
 } from "@/lib/app-settings/repositories/app-settings-repository";
+import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { SEEN_FIRST_RUN_SETTING_KEY } from "../constants";
 import { deleteAllHabits } from "../repositories/habit-repository";
@@ -23,19 +24,28 @@ async function resetFirstRun(): Promise<void> {
 }
 
 export function useFirstRunActions() {
-	const add = useAsyncAction(addSuggestedHabits);
-	const skip = useAsyncAction(skipFirstRun);
-	const reset = useAsyncAction(resetFirstRun);
+	const add = useAsyncAction(addSuggestedHabits, {
+		scope: "first-run",
+		failure: failureMessage("add", "those habits"),
+	});
+	const skip = useAsyncAction(skipFirstRun, {
+		scope: "first-run",
+		failure: "Couldn't continue. Try again.",
+	});
+	const reset = useAsyncAction(resetFirstRun, {
+		scope: "first-run",
+		failure: failureMessage("reset", "first run"),
+	});
 
 	return {
-		addSuggestedHabits: add.execute,
+		addSuggestedHabits: add.run,
 		isAdding: add.isLoading,
 		addError: add.error,
-		skipFirstRun: skip.execute,
+		skipFirstRun: skip.run,
 		isSkipping: skip.isLoading,
 		skipError: skip.error,
 		/** Dev-only escape hatch — undefined in production so callers can't wire it up by accident. */
-		resetFirstRun: __DEV__ ? reset.execute : undefined,
+		resetFirstRun: __DEV__ ? reset.run : undefined,
 		isResetting: reset.isLoading,
 	};
 }

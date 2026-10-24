@@ -1,4 +1,4 @@
-import type { ExportSource } from "../services/export-data";
+import type { ExportSource } from "../domain/export-data";
 import { categoryNamed, makeHabit } from "./habit-builder";
 
 /** Wednesday 16 Sep 2026 — the day every export test runs "on". */

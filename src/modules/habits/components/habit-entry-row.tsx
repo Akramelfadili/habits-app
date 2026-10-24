@@ -2,13 +2,13 @@ import { ListItem } from "@/components/ui/composite/list-item";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { habitAccentInk, habitAccentTint } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import type { RecentEntry } from "../domain/habit-history";
+import { isEntryComplete } from "../domain/streaks";
 import {
 	entryDateLabel,
 	entryValueLabel,
 	notLoggedLabel,
-} from "../screens/habit-detail-helpers";
-import type { RecentEntry } from "../services/habit-history";
-import { isEntryComplete } from "../services/habit-service";
+} from "../presenters/habit-detail-helpers";
 import type { Habit } from "../types";
 
 type HabitEntryRowProps = {

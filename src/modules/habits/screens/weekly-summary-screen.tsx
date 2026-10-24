@@ -14,19 +14,19 @@ import { useTheme } from "@/theme/use-theme";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
-import { useWeeklySummaryQueries } from "../hooks/use-weekly-summary-queries";
 import {
 	defaultSummaryWeek,
 	type SummaryWeek,
 	type WeeklyInsight,
-} from "../services/weekly-summary";
+} from "../domain/weekly-summary";
+import { useWeeklySummaryQueries } from "../hooks/use-weekly-summary-queries";
 import {
 	bestDayTile,
 	slippingBody,
 	weeklyRowCount,
 	weeklyRowLabel,
 	weekRangeLabel,
-} from "./weekly-summary-helpers";
+} from "../presenters/weekly-summary-helpers";
 
 /**
  * Weekly Summary (HAB-11): week range header with a Last week / This week
@@ -50,10 +50,16 @@ export function WeeklySummaryScreen() {
 		<View style={styles.header}>
 			<SectionLabel>{weekRangeLabel(week)}</SectionLabel>
 			<View style={styles.titleRow}>
-				<Text style={[styles.title, { color: colors.ink }]}>Your week</Text>
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					Your week
+				</Text>
 				{summary.hasHabits ? (
 					<SegmentedControl
 						size="compact"
+						label="Week shown"
 						options={[
 							{ value: "last", label: "Last week" },
 							{ value: "this", label: "This week" },
@@ -71,13 +77,23 @@ export function WeeklySummaryScreen() {
 		</View>
 	);
 
+	// Habits still loading: a neutral blank, never "Nothing to summarise yet".
+	if (!summary.isLoaded) {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
+	}
+
 	if (!summary.hasHabits) {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 				<View style={styles.headerPadding}>{header}</View>
 				<TodayStatePanel
 					icon="chart.bar"
-					headline="Nothing to summarize yet"
+					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its week will show up here."
 				/>
 			</View>

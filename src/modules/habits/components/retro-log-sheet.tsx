@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/primitives/button";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { TextField } from "@/components/ui/primitives/text-field";
 import { MAX_NOTE_LENGTH } from "../constants";
+import { diffDayLog } from "../domain/retro-log";
 import type { RetroLogDay } from "../hooks/use-retro-log-queries";
-import { diffDayLog } from "../services/retro-log";
 import type { DayLog, Habit } from "../types";
 import { RetroLogRow } from "./retro-log-row";
 import {
@@ -109,6 +109,10 @@ function RetroLogForm({
 				style={styles.list}
 				contentContainerStyle={styles.listContent}
 				bounces={false}
+				// A row tap with the note's keyboard up acts on the first tap.
+				keyboardShouldPersistTaps="handled"
+				keyboardDismissMode="on-drag"
+				nestedScrollEnabled
 			>
 				{origin ? (
 					// The pinned origin card: the Container's selected (ink ring) state.

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/lib/db/client";
 import { appSettings } from "@/lib/db/schema";
+import { useLiveRows } from "@/lib/db/use-live-rows";
 
 export async function getSetting(key: string): Promise<string | null> {
 	const [row] = await db
@@ -35,9 +35,11 @@ export async function deleteSetting(key: string): Promise<void> {
  * check for that explicitly rather than treating it the same as `null`.
  */
 export function useAppSetting(key: string): string | null | undefined {
-	const { data, updatedAt } = useLiveQuery(
+	const { data, loaded } = useLiveRows<typeof appSettings.$inferSelect>(
 		db.select().from(appSettings).where(eq(appSettings.key, key)),
+		[key],
+		{ resetOnDepsChange: true },
 	);
-	if (!updatedAt) return undefined;
-	return data?.[0]?.value ?? null;
+	if (!loaded) return undefined;
+	return data[0]?.value ?? null;
 }

@@ -10,6 +10,8 @@ import { KeyValueRow } from "@/components/ui/primitives/key-value-row";
 import { ScopeChip } from "@/components/ui/primitives/scope-chip";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { Toggle } from "@/components/ui/primitives/toggle";
+import { copyDiagnostics } from "@/lib/diagnostics/diagnostics";
+import { showToast } from "@/store/toast-store";
 import { typeScale } from "@/theme/theme";
 import type { ThemePreference } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -17,13 +19,15 @@ import { ExportSheet } from "../components/export-sheet";
 import { EVENING_REVIEW_TIME } from "../constants";
 import { useSettingsActions } from "../hooks/use-settings-actions";
 import { useSettingsQueries } from "../hooks/use-settings-queries";
-import { formatReminderTime } from "./reminders-helpers";
+import { formatReminderTime } from "../presenters/reminders-helpers";
 import {
 	appearanceCaption,
+	DIAGNOSTICS_RESULT_MESSAGE,
 	EVENING_REVIEW_FOOTNOTE,
 	exportRowSubtitle,
 	NOTIFICATIONS_OFF_NOTICE,
-} from "./settings-helpers";
+	versionLabel,
+} from "../presenters/settings-helpers";
 
 /**
  * Settings (HAB-15, frames B1–B6): Appearance (Light / Dark / System, applied
@@ -40,13 +44,27 @@ export function SettingsScreen() {
 	const actions = useSettingsActions();
 	const [isExporting, setIsExporting] = useState(false);
 
+	async function handleCopyDiagnostics() {
+		const result = await copyDiagnostics();
+		showToast({
+			message: DIAGNOSTICS_RESULT_MESSAGE[result],
+			tone: result === "failed" ? "error" : "default",
+		});
+	}
+
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Text style={[styles.title, { color: colors.ink }]}>Settings</Text>
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					Settings
+				</Text>
 
 				<SettingsGroup title="Appearance">
 					<SegmentedControl<ThemePreference>
+						label="Theme"
 						options={[
 							{ value: "light", label: "Light" },
 							{ value: "dark", label: "Dark" },
@@ -118,6 +136,21 @@ export function SettingsScreen() {
 					/>
 					<KeyValueRow label="Last export" value={settings.lastExport} />
 				</SettingsGroup>
+
+				<SettingsGroup title="About" dividers>
+					<KeyValueRow label="Version" value={versionLabel(settings.about)} />
+					<KeyValueRow
+						label="Database schema"
+						value={String(settings.about.schemaVersion)}
+					/>
+					<ListItem
+						embedded
+						title="Copy diagnostics"
+						subtitle="Version info and recent activity, for a bug report"
+						leading={<IconBadge symbol="doc.on.doc" />}
+						onPress={handleCopyDiagnostics}
+					/>
+				</SettingsGroup>
 			</ScrollView>
 
 			<ExportSheet
@@ -143,7 +176,6 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		fontSize: typeScale.screenTitle,
-		fontWeight: "600",
-		paddingHorizontal: 4,
+		fontWeight: "500",
 	},
 });

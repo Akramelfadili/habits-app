@@ -48,6 +48,38 @@ export const HeaderMenuButton = forwardRef<View, HeaderMenuButtonProps>(
 	},
 );
 
+type HeaderAddButtonProps = {
+	/** What it adds — "Add habit". Becomes the accessibility label. */
+	accessibilityLabel: string;
+	onPress: () => void;
+};
+
+/**
+ * The `+` beside the `⋯` (Today's Add habit): the same 44pt card-coloured
+ * circle with a hairline, so the two read as one pair.
+ */
+export function HeaderAddButton({
+	accessibilityLabel,
+	onPress,
+}: HeaderAddButtonProps) {
+	const { colors, opacity } = useTheme();
+
+	return (
+		<Pressable
+			accessibilityRole="button"
+			accessibilityLabel={accessibilityLabel}
+			onPress={onPress}
+			style={({ pressed }) => [
+				styles.button,
+				{ backgroundColor: colors.card, borderColor: colors.border },
+				pressed && { opacity: opacity.pressed },
+			]}
+		>
+			<SymbolView name="plus" size={18} tintColor={colors.ink} />
+		</Pressable>
+	);
+}
+
 const styles = StyleSheet.create({
 	button: {
 		width: HEADER_MENU_BUTTON_SIZE,

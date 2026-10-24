@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { MAX_CATEGORY_NAME_LENGTH } from "../constants";
-import { findDuplicateCategory } from "../services/category-rules";
+import { findDuplicateCategory } from "../domain/category-rules";
 import type { Category } from "../types";
 
 export const NO_CATEGORY_NAME_MESSAGE = "Add a name to create this category";

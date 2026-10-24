@@ -9,11 +9,13 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { DragHandle } from "@/components/ui/primitives/drag-handle";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
 import {
 	dragTargetIndex,
 	groupBounds,
 	moveItem,
 	offsetBetween,
+	settleDuration,
 } from "./reorderable-list-helpers";
 
 type ReorderableListProps<T> = {
@@ -45,8 +47,6 @@ type ReorderableListProps<T> = {
 	onReorder: (groupKeys: string[]) => void;
 };
 
-const SETTLE_MS = 150;
-
 /**
  * A vertical list whose rows are dragged by their grip (design-system "List
  * item — reorder", Manage & Archive). The grip also offers "Move up" / "Move
@@ -72,6 +72,7 @@ export function ReorderableList<T>({
 	const [draggingKey, setDraggingKey] = useState<string | null>(null);
 	const groups = shown.map(groupOf);
 
+	const settleMs = settleDuration(useReducedMotion());
 	const heights = useSharedValue<number[]>([]);
 	const activeIndex = useSharedValue(-1);
 	const targetIndex = useSharedValue(-1);
@@ -124,7 +125,7 @@ export function ReorderableList<T>({
 				const to = targetIndex.value;
 				dragY.value = withTiming(
 					offsetBetween(index, to, heights.value),
-					{ duration: SETTLE_MS },
+					{ duration: settleMs },
 					() => {
 						"worklet";
 						scheduleOnRN(commit, index, to);
@@ -140,6 +141,7 @@ export function ReorderableList<T>({
 				targetIndex={targetIndex}
 				dragY={dragY}
 				heights={heights}
+				settleMs={settleMs}
 				onLayout={(event) => handleLayout(index, event)}
 			>
 				{renderItem(
@@ -207,6 +209,7 @@ type ReorderableRowProps = {
 	targetIndex: SharedValue<number>;
 	dragY: SharedValue<number>;
 	heights: SharedValue<number[]>;
+	settleMs: number;
 	onLayout: (event: LayoutChangeEvent) => void;
 	children: ReactNode;
 };
@@ -218,6 +221,7 @@ function ReorderableRow({
 	targetIndex,
 	dragY,
 	heights,
+	settleMs,
 	onLayout,
 	children,
 }: ReorderableRowProps) {
@@ -236,7 +240,7 @@ function ReorderableRow({
 		if (target <= index && index < active) translateY = shift;
 		return {
 			transform: [
-				{ translateY: withTiming(translateY, { duration: SETTLE_MS }) },
+				{ translateY: withTiming(translateY, { duration: settleMs }) },
 			],
 			zIndex: 0,
 		};
