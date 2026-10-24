@@ -50,8 +50,11 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /screens                   one file per screen
     /components                components used only by Habits
     /hooks                     use<X>Queries() / use<X>Actions()
-    /services                  pure domain logic and genuinely composite operations
-    /repositories              the only files that import Drizzle; also the dev fixtures (*-fixtures.ts)
+    /presenters                view-model helpers and form schemas shared by hooks, components, screens
+    /services                  orchestration only: multi-repository writes, lib adapters
+    /domain                    pure rules: streaks, history, summaries, insights, export formats
+    /repositories              the only files that import Drizzle (+ .web.ts twins)
+    /dev                       web fixtures (*-fixtures.ts) and __DEV__-only device seeds
     /strategies                FrequencyStrategy implementations and the paused-schedule wrapper
     /test-support              test-only builders and fixtures (never imported by app code)
     constants.ts, types.ts     module constants; the module's own domain types
@@ -91,13 +94,16 @@ Tests are colocated and named after the file they cover: `x.ts` + `x.test.ts`. A
 
 ## Layers inside a module
 
-Dependencies point down only: **repositories / strategies ← services ← hooks ← components ← screens**.
+Dependencies point down only: **repositories / strategies / dev ← domain ← services ← presenters ← hooks ← components ← screens** (enforced by `check-architecture`'s `layer-order`).
 
-1. **Repositories** are plain files of exported functions, never classes. They are the only code allowed to import `drizzle-orm`, the db client or the schema (rule 1; this includes `lib/*/repositories/`). They map rows to the module's own `types.ts` types before returning, and they export live-query hooks so nothing above them ever holds a Drizzle query (rule 2; arguments are passed as `useLiveQuery` deps). Reason: swapping the data layer then touches `repositories/` only.
+1. **Repositories** are plain files of exported functions, never classes. They are the only code allowed to import `drizzle-orm`, the db client or the schema (rule 1; this includes `lib/*/repositories/`). They map rows to the module's own `types.ts` types before returning, and they export live-query hooks so nothing above them ever holds a Drizzle query (rule 2; arguments are passed as `useLiveRows` deps). Reason: swapping the data layer then touches `repositories/` only.
 2. **Strategies** are one file per frequency type or streak rule, implementing a shared interface (rule 5). Reason: a new frequency is a new file; no tested code is edited.
-3. **Services** hold pure domain rules (summaries, insights, history, export formats) and multi-step orchestration. A single repository call is never wrapped in a service (rule 3). Reason: avoid ceremony; keep the rules in one place and testable.
-4. **Hooks** bridge to screens. `use<X>Queries()` reads, `use<X>Actions()` writes (rule 4). Reason: a screen that only writes should not subscribe to every query.
-5. **Components, then screens.** Screens assemble documented components; they never restyle a raw `Pressable`/`View`/`Text` in place of a documented element (rule 10).
+3. **Dev** (`dev/`) holds the web/visual-check fixtures (`*-fixtures.ts`) and the `__DEV__`-only device seeds. It ranks with repositories because the `.web.ts` twins read its fixtures. Reason: dev data stays out of the production layers' folders.
+4. **Domain** (`domain/`) holds pure rules: streaks, history, summaries, insights, off-schedule and retro-log rules, export formats. It may use strategies and types but never repositories or `dev/`, so every rule is testable without a database. Reason: the rules are the app; keep them in one place and side-effect free.
+5. **Services** (`services/`) orchestrate: a write that reads first (the freeze pool), several repositories in one action (habit lifecycle, reminders and the OS), or lib adapters (export, first run). A single repository call is never wrapped in a service (rule 3). Reason: avoid ceremony.
+6. **Presenters** (`presenters/`) turn domain results into what a screen shows: labels, grouping, view models, form schemas. Pure; used by hooks, components and screens. Reason: view logic that several layers share must not live in `screens/`.
+7. **Hooks** bridge to screens. `use<X>Queries()` reads, `use<X>Actions()` writes (rule 4). Reason: a screen that only writes should not subscribe to every query.
+8. **Components, then screens.** Screens assemble documented components; they never restyle a raw `Pressable`/`View`/`Text` in place of a documented element (rule 10).
 
 Modules never import each other (rule 6). A concept two modules need is promoted deliberately into `lib/` or `components/ui/`.
 

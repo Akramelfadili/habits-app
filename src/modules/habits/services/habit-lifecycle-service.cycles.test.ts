@@ -63,7 +63,7 @@ jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 }));
 jest.mock("../repositories/frozen-day-repository", () => ({}));
 
-import { buildHeatmapWeeks, currentStreakAsOf } from "./habit-history";
+import { buildHeatmapWeeks, currentStreakAsOf } from "../domain/habit-history";
 import {
 	archiveHabit,
 	restoreHabit,

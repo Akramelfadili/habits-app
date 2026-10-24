@@ -22,12 +22,12 @@ jest.mock("../hooks/use-yearly-summary-queries", () => ({
 }));
 jest.mock("../repositories/frozen-day-repository", () => ({}));
 
-import { buildWeeklySummary } from "../services/weekly-summary";
+import { buildWeeklySummary } from "../domain/weekly-summary";
 import {
 	buildYearlySummary,
 	yearUnlock,
 	yearWindowFor,
-} from "../services/yearly-summary";
+} from "../domain/yearly-summary";
 import { YearlySummaryScreen } from "./yearly-summary-screen";
 
 const NOW = new Date(2026, 8, 16, 9);

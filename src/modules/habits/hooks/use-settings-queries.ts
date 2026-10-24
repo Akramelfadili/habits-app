@@ -7,15 +7,15 @@ import {
 	EVENING_REVIEW_SETTING_KEY,
 	LAST_EXPORT_SETTING_KEY,
 } from "../constants";
-import { lastExportLabel } from "../presenters/settings-helpers";
-import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useHabitsList } from "../repositories/habit-repository";
 import {
 	type ExportSource,
 	type ExportSummary,
 	summarizeExport,
-} from "../services/export-data";
+} from "../domain/export-data";
+import { lastExportLabel } from "../presenters/settings-helpers";
+import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useHabitsList } from "../repositories/habit-repository";
 import type { ExportOptions } from "../types";
 
 /** Archived habits are included by default (HAB-15) — the Settings row quotes the same. */

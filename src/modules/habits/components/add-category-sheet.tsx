@@ -13,7 +13,7 @@ import { MAX_CATEGORY_NAME_LENGTH } from "../constants";
 import {
 	findDuplicateCategory,
 	nextCategoryAppearance,
-} from "../services/category-rules";
+} from "../domain/category-rules";
 import type { Category, CreateCategoryInput } from "../types";
 import {
 	type CategoryNameFormValues,

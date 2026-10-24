@@ -33,8 +33,8 @@ let mockDefaultWeek: "this" | "last" = "this";
 // The real service module imports habit-service, whose freeze write path
 // would otherwise open the SQLite client — only its pure helpers run here.
 jest.mock("../repositories/frozen-day-repository", () => ({}));
-jest.mock("../services/weekly-summary", () => ({
-	...jest.requireActual("../services/weekly-summary"),
+jest.mock("../domain/weekly-summary", () => ({
+	...jest.requireActual("../domain/weekly-summary"),
 	defaultSummaryWeek: () => mockDefaultWeek,
 }));
 

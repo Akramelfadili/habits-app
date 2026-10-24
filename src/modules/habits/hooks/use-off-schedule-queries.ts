@@ -1,13 +1,13 @@
 import { endOfWeek, startOfWeek } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import { WEEK_STARTS_ON } from "../constants";
-import { useEntriesInRange } from "../repositories/entry-repository";
-import { useActiveHabits } from "../repositories/habit-repository";
 import {
 	type OffScheduleLog,
 	offScheduleCandidates,
 	offScheduleLogsOn,
-} from "../services/off-schedule";
+} from "../domain/off-schedule";
+import { useEntriesInRange } from "../repositories/entry-repository";
+import { useActiveHabits } from "../repositories/habit-repository";
 import type { Habit } from "../types";
 
 /** What the rest-day picker (HAB-18) and the rest-day list read. */

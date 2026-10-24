@@ -62,7 +62,7 @@ import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { useToastStore } from "@/store/toast-store";
 import { failureMessage } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
-import { buildHeatmapWeeks } from "../services/habit-history";
+import { buildHeatmapWeeks } from "../domain/habit-history";
 import { HabitDetailScreen } from "./habit-detail-screen";
 
 const habit = makeHabit({

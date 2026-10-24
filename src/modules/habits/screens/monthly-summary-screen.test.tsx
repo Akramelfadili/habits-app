@@ -24,8 +24,8 @@ import {
 	buildMonthlySummary,
 	monthUnlock,
 	monthWindowFor,
-} from "../services/monthly-summary";
-import { buildWeeklySummary } from "../services/weekly-summary";
+} from "../domain/monthly-summary";
+import { buildWeeklySummary } from "../domain/weekly-summary";
 import { MonthlySummaryScreen } from "./monthly-summary-screen";
 
 function readyView(): MonthlySummaryView {

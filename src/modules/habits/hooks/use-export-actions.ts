@@ -2,7 +2,7 @@ import { useCallback, useReducer, useRef, useState } from "react";
 import { saveFileToFolder, shareFile } from "@/lib/file-export/file-export";
 import { log } from "@/lib/logger/logger";
 import { failureMessage } from "@/utils/failure-message";
-import type { ExportSource } from "../services/export-data";
+import type { ExportSource } from "../domain/export-data";
 import {
 	ExportCancelledError,
 	ExportFailedError,

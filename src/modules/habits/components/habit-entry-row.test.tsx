@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
-import type { RecentEntry } from "../services/habit-history";
+import type { RecentEntry } from "../domain/habit-history";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
 

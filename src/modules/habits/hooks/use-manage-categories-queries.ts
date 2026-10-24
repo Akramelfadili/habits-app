@@ -1,7 +1,7 @@
 import { useMemo } from "react";
+import { categoryUsage } from "../domain/category-rules";
 import { useCategories } from "../repositories/category-repository";
 import { useHabitsList } from "../repositories/habit-repository";
-import { categoryUsage } from "../services/category-rules";
 import type { Category, CategoryUsage } from "../types";
 
 export type ManageCategoriesView = {

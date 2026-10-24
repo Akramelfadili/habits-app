@@ -7,7 +7,7 @@ import { HeatmapLegend } from "@/components/ui/composite/heatmap-legend";
 import { Caption } from "@/components/ui/primitives/caption";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import type { HeatmapDay } from "../services/habit-history";
+import type { HeatmapDay } from "../domain/habit-history";
 import type { Habit } from "../types";
 
 type HabitHeatmapProps = {

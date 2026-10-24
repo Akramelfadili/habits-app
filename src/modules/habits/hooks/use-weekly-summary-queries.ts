@@ -1,12 +1,12 @@
 import { useToday } from "@/lib/today/use-today";
-import { useEntriesInRange } from "../repositories/entry-repository";
-import { useActiveHabits } from "../repositories/habit-repository";
 import {
 	buildWeeklySummary,
 	type SummaryWeek,
 	summaryWeekWindow,
 	type WeeklySummary,
-} from "../services/weekly-summary";
+} from "../domain/weekly-summary";
+import { useEntriesInRange } from "../repositories/entry-repository";
+import { useActiveHabits } from "../repositories/habit-repository";
 
 export type WeeklySummaryView = WeeklySummary & {
 	/** No habits at all — the screen shows an empty state instead of zeroed tiles. */

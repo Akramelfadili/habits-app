@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 import { Button } from "@/components/ui/primitives/button";
 import { TextField } from "@/components/ui/primitives/text-field";
 import { MAX_CATEGORY_NAME_LENGTH } from "../constants";
-import { findDuplicateCategory } from "../services/category-rules";
+import { findDuplicateCategory } from "../domain/category-rules";
 import type { Category } from "../types";
 import {
 	type CategoryNameFormValues,

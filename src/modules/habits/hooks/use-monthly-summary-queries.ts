@@ -1,7 +1,4 @@
 import { useToday } from "@/lib/today/use-today";
-import { useEntriesInRange } from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useHabitsList } from "../repositories/habit-repository";
 import {
 	buildMonthlySummary,
 	defaultSummaryMonth,
@@ -11,12 +8,15 @@ import {
 	monthEntryRange,
 	monthUnlock,
 	monthWindowFor,
-} from "../services/monthly-summary";
+} from "../domain/monthly-summary";
 import {
 	buildWeeklySummary,
 	defaultSummaryWeek,
 	type WeeklySummary,
-} from "../services/weekly-summary";
+} from "../domain/weekly-summary";
+import { useEntriesInRange } from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useHabitsList } from "../repositories/habit-repository";
 
 export type MonthlySummaryView =
 	/** The habit list hasn't loaded yet (audit A5-04) — a blank, not the empty state. */

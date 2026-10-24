@@ -172,19 +172,24 @@ for (const file of productionFiles) {
 }
 
 // 4. Layer order inside a module:
-//    repositories/strategies/dev < services < presenters < hooks < components < screens.
+//    repositories/strategies/dev < domain < services < presenters < hooks < components < screens.
 //    dev/ (fixtures + dev seeds) sits with repositories: the .web.ts twins read its fixtures.
+//    domain/ is pure rules (streaks, summaries, insights, export formats): it may use
+//    strategies but never repositories/ or dev/ (checked below), so it stays testable without a db.
+//    services/ orchestrates repositories + domain + lib adapters.
 //    presenters/ (view-model helpers, form schemas) is pure: hooks, components and screens use it.
 const LAYER_RANK = {
 	repositories: 0,
 	strategies: 0,
 	dev: 0,
-	services: 1,
-	presenters: 2,
-	hooks: 3,
-	components: 4,
-	screens: 5,
+	domain: 1,
+	services: 2,
+	presenters: 3,
+	hooks: 4,
+	components: 5,
+	screens: 6,
 };
+const DOMAIN_FORBIDDEN = new Set(["repositories", "dev"]);
 const layerOf = (relPath) => {
 	const m = relPath.match(/^src\/modules\/[^/]+\/([^/]+)\//);
 	return m && m[1] in LAYER_RANK ? m[1] : undefined;
@@ -202,6 +207,14 @@ for (const file of productionFiles) {
 				file,
 				line,
 				`${fromLayer}/ imports from ${toLayer}/ (upward dependency)`,
+				spec,
+			);
+		else if (fromLayer === "domain" && DOMAIN_FORBIDDEN.has(toLayer))
+			report(
+				"layer-order",
+				file,
+				line,
+				`domain/ imports from ${toLayer}/ — domain rules stay pure; orchestrate in services/`,
 				spec,
 			);
 	}

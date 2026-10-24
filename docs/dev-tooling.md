@@ -15,7 +15,7 @@
 
 ## `check-architecture` rules (`scripts/check-architecture.mjs`)
 
-`drizzle-placement` · `live-query-placement` · `module-isolation` · `layer-order` (repositories/strategies ← services ← hooks ← components ← screens) · `hook-naming` · `thin-routes` (≤ 20 lines, imports only module screens / shared UI / expo-router / react; `_layout.tsx` exempt) · `colocated-tests` · `web-twin` · `hex-colour` · `date-args` (`new Date(<args>)`).
+`drizzle-placement` · `live-query-placement` · `module-isolation` · `layer-order` (repositories/strategies/dev ← domain ← services ← presenters ← hooks ← components ← screens; `domain/` never imports repositories or `dev/`) · `hook-naming` · `thin-routes` (≤ 20 lines, imports only module screens / shared UI / expo-router / react; `_layout.tsx` exempt) · `colocated-tests` · `web-twin` · `hex-colour` · `date-args` (`new Date(<args>)`).
 
 Known violations are in `scripts/check-architecture.allowlist.json`. **Entries may only be removed**: a new violation fails, and an entry that no longer matches a violation also fails ("remove it"). Regenerate the full list (to review) with `node scripts/check-architecture.mjs --print-allowlist`. The rules themselves are tested by `scripts/check-architecture.test.mjs` (`npm run test:tooling`) — Jest's testMatch does not run `.mjs`, so that is a separate `node --test` step.
 

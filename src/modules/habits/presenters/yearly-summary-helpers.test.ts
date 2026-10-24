@@ -1,7 +1,7 @@
 // Only habit-service's pure helpers are reached through the services.
 jest.mock("../repositories/frozen-day-repository", () => ({}));
 
-import type { YearlySummary, YearMonthCell } from "../services/yearly-summary";
+import type { YearlySummary, YearMonthCell } from "../domain/yearly-summary";
 import { makeHabit } from "../test-support/habit-builder";
 import {
 	bestMonthCopy,

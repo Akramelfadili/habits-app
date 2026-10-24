@@ -8,9 +8,9 @@ import {
 } from "@/lib/file-export/file-export";
 import { log } from "@/lib/logger/logger";
 import { LAST_EXPORT_SETTING_KEY } from "../constants";
+import { buildExportModel, type ExportSource } from "../domain/export-data";
+import { EXPORT_FORMATS } from "../domain/export-formats";
 import type { ExportOptions } from "../types";
-import { buildExportModel, type ExportSource } from "./export-data";
-import { EXPORT_FORMATS } from "./export-formats";
 
 /**
  * Runs a data export (HAB-15): build → serialize (with progress) → write to a

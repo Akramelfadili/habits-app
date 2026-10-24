@@ -1,15 +1,12 @@
 import { min } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
-import { useEntriesInRange } from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useHabitsList } from "../repositories/habit-repository";
-import { historyStart } from "../services/monthly-summary";
+import { historyStart } from "../domain/monthly-summary";
 import {
 	buildWeeklySummary,
 	defaultSummaryWeek,
 	summaryWeekWindow,
 	type WeeklySummary,
-} from "../services/weekly-summary";
+} from "../domain/weekly-summary";
 import {
 	buildYearlySummary,
 	type YearlySummary,
@@ -17,7 +14,10 @@ import {
 	yearEntryRange,
 	yearUnlock,
 	yearWindowFor,
-} from "../services/yearly-summary";
+} from "../domain/yearly-summary";
+import { useEntriesInRange } from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useHabitsList } from "../repositories/habit-repository";
 
 export type YearlySummaryView =
 	/** The habit list hasn't loaded yet (audit A5-04) — a blank, not the empty state. */

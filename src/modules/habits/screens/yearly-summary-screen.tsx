@@ -20,6 +20,8 @@ import { categorySymbol } from "../components/category-symbol";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
+import type { YearlyInsight } from "../domain/yearly-insights";
+import type { YearlySummary, YearMonthCell } from "../domain/yearly-summary";
 import {
 	useYearlySummaryQueries,
 	type YearlySummaryView,
@@ -43,8 +45,6 @@ import {
 	yearRangeLabel,
 	yearTitle,
 } from "../presenters/yearly-summary-helpers";
-import type { YearlyInsight } from "../services/yearly-insights";
-import type { YearlySummary, YearMonthCell } from "../services/yearly-summary";
 
 /**
  * Yearly Summary (HAB-17, frames C4/C5/C7): range switcher → Logged / Overall

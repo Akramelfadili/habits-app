@@ -1,7 +1,7 @@
 import { failureMessage, UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { unfreezeHabitDay } from "../repositories/frozen-day-repository";
-import { applyFreeze as applyFreezeToRepository } from "../services/habit-service";
+import { applyFreeze as applyFreezeToRepository } from "../services/freeze-service";
 
 /**
  * Resolving the streak-at-risk prompt (HAB-08). "Reset and start today" has

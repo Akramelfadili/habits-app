@@ -18,8 +18,8 @@ import {
 import { WEEK_STARTS_ON } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
-import { isEntryComplete } from "./habit-service";
 import { insightsFor, type MonthlyInsight } from "./monthly-insights";
+import { isEntryComplete } from "./streaks";
 
 /**
  * Monthly Summary's math (HAB-16) — pure functions, same shape as

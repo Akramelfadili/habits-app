@@ -1,17 +1,14 @@
 import { addMonths, format, startOfMonth } from "date-fns";
 import { formatDateRange, formatDayMonth, pluralise } from "@/utils/format";
 import { FREEZE_POOL_SIZE } from "../constants";
-import type {
-	MonthlyInsight,
-	PatternCause,
-} from "../services/monthly-insights";
+import type { MonthlyInsight, PatternCause } from "../domain/monthly-insights";
 import {
 	MONTH_UNLOCK_DAYS,
 	type MonthlyHabitRow,
 	type MonthlySummary,
 	type MonthUnlock,
 	type MonthWindow,
-} from "../services/monthly-summary";
+} from "../domain/monthly-summary";
 
 const WEEKDAY_NAMES = [
 	"Monday",

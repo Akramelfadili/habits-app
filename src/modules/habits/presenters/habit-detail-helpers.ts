@@ -9,7 +9,7 @@ import {
 	RANGE_DASH,
 } from "@/utils/format";
 import { WEEKDAYS } from "../constants";
-import type { CompletionRate, LongestStreak } from "../services/habit-history";
+import type { CompletionRate, LongestStreak } from "../domain/habit-history";
 import type { Entry, Frequency, Habit, IsoWeekday } from "../types";
 
 const SHORT_DAY: Record<IsoWeekday, string> = {

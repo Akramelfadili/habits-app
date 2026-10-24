@@ -5,7 +5,7 @@ import type {
 	WeeklyHabitRow,
 	WeeklySummary,
 	WeekWindow,
-} from "../services/weekly-summary";
+} from "../domain/weekly-summary";
 import type { Habit } from "../types";
 
 const NUMBER_WORDS = [

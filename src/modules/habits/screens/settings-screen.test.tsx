@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import type { ExportSummary } from "../services/export-data";
+import type { ExportSummary } from "../domain/export-data";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");

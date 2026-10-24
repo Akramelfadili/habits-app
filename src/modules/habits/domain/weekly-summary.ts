@@ -15,7 +15,7 @@ import {
 import { WEEK_STARTS_ON } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, Habit } from "../types";
-import { isEntryComplete } from "./habit-service";
+import { isEntryComplete } from "./streaks";
 
 /**
  * Weekly Summary's math (HAB-11) — pure functions over this week's habits and

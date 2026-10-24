@@ -1,8 +1,4 @@
 import { useToday } from "@/lib/today/use-today";
-import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useHabitsList } from "../repositories/habit-repository";
-import { useHabitReminders } from "../repositories/reminder-repository";
 import {
 	buildHeatmapWeeks,
 	type CompletionRate,
@@ -15,8 +11,12 @@ import {
 	recentEntries,
 	type StreakReset,
 	streakResetInfo,
-} from "../services/habit-history";
-import { freezesRemainingInMonth } from "../services/habit-service";
+} from "../domain/habit-history";
+import { freezesRemainingInMonth } from "../domain/streaks";
+import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useHabitsList } from "../repositories/habit-repository";
+import { useHabitReminders } from "../repositories/reminder-repository";
 import type { Habit, Reminder } from "../types";
 
 export type HabitDetail = {

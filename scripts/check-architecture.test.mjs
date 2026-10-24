@@ -191,6 +191,36 @@ describe("check-architecture", () => {
 		);
 	});
 
+	it("layer-order: domain/ is pure — strategies yes, repositories and services no", () => {
+		const { code, out } = run({
+			...GOOD,
+			"src/modules/habits/strategies/daily.ts": "export const s = 1;\n",
+			"src/modules/habits/strategies/daily.test.ts": "",
+			"src/modules/habits/domain/streaks.ts": `import { s } from "../strategies/daily";\nexport const streak = s;\n`,
+			"src/modules/habits/domain/streaks.test.ts": "",
+			"src/modules/habits/services/freeze-service.ts": `import { streak } from "../domain/streaks";\nexport const f = streak;\n`,
+			"src/modules/habits/services/freeze-service.test.ts": "",
+		});
+		assert.equal(code, 0, out);
+		expectViolation(
+			{
+				"src/modules/habits/domain/streaks.ts": `import { x } from "../repositories/habit-repository";\nexport const streak = x;\n`,
+				"src/modules/habits/domain/streaks.test.ts": "",
+			},
+			"layer-order",
+		);
+		expectViolation(
+			{
+				"src/modules/habits/services/freeze-service.ts":
+					"export const f = 1;\n",
+				"src/modules/habits/services/freeze-service.test.ts": "",
+				"src/modules/habits/domain/streaks.ts": `import { f } from "../services/freeze-service";\nexport const streak = f;\n`,
+				"src/modules/habits/domain/streaks.test.ts": "",
+			},
+			"layer-order",
+		);
+	});
+
 	it("layer-order: services importing hooks fails", () => {
 		expectViolation(
 			{

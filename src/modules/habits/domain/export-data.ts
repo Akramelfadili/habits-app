@@ -7,7 +7,7 @@ import type {
 	Habit,
 } from "../types";
 import { calculateLongestStreak, currentStreakAsOf } from "./habit-history";
-import { isEntryComplete } from "./habit-service";
+import { isEntryComplete } from "./streaks";
 
 /**
  * What an export (HAB-15) is built from, and the format-independent shape it's

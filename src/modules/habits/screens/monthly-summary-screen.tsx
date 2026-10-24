@@ -24,6 +24,12 @@ import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { FREEZE_POOL_SIZE } from "../constants";
+import type { MonthlyInsight } from "../domain/monthly-insights";
+import type {
+	CalendarDay,
+	CalendarDayStatus,
+	MonthlySummary,
+} from "../domain/monthly-summary";
 import { useMonthlySummaryQueries } from "../hooks/use-monthly-summary-queries";
 import {
 	freezeCardCopy,
@@ -40,12 +46,6 @@ import {
 	unlockCopy,
 } from "../presenters/monthly-summary-helpers";
 import { weeklyMenuSubline } from "../presenters/weekly-summary-helpers";
-import type { MonthlyInsight } from "../services/monthly-insights";
-import type {
-	CalendarDay,
-	CalendarDayStatus,
-	MonthlySummary,
-} from "../services/monthly-summary";
 import type { IsoWeekday } from "../types";
 
 /**

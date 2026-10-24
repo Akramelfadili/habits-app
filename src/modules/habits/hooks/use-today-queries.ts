@@ -1,6 +1,12 @@
 import { addDays, endOfWeek, format, parseISO, startOfWeek } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import { WEEK_STARTS_ON } from "../constants";
+import {
+	freezesRemainingInMonth,
+	getStreakAtRisk,
+	isEntryComplete,
+	type StreakAtRisk,
+} from "../domain/streaks";
 import { earliestReminderTimeOn } from "../presenters/reminders-helpers";
 import {
 	type CategoryGroup,
@@ -17,12 +23,6 @@ import {
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 import { useAllReminders } from "../repositories/reminder-repository";
-import {
-	freezesRemainingInMonth,
-	getStreakAtRisk,
-	isEntryComplete,
-	type StreakAtRisk,
-} from "../services/habit-service";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
 

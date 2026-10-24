@@ -37,10 +37,10 @@ Rules 1, 2, 4, 6, 8, 9 are enforced by `npm run check-architecture` (and rule 1 
 
 1. **Only a `repositories/` folder (a module's, or `src/lib/*/repositories/`) and `src/lib/db/` import `drizzle-orm` or the db client/schema.** Everything else gets the module's own `types.ts` types, never Drizzle-inferred ones.
 2. **Reactive reads go through a repository-exported live-query hook**, never a raw `useLiveQuery`; a hook whose query takes arguments passes them as `useLiveQuery` deps.
-3. **Services only for genuinely composite operations**; never wrap a single repository call.
+3. **Pure rules live in `domain/`; `services/` only for genuinely composite operations** (repositories + domain + lib adapters); never wrap a single repository call.
 4. **Hooks are `use<X>Queries()` / `use<X>Actions()`** — reads and writes separate.
 5. **New frequency types and streak rules are a new Strategy file**, not an `if` branch.
-6. **Modules never import each other**; inside a module dependencies point down only: repositories/strategies ← services ← hooks ← components ← screens.
+6. **Modules never import each other**; inside a module dependencies point down only: repositories/strategies/dev ← domain ← services ← presenters ← hooks ← components ← screens (`domain/` never imports repositories or `dev/`).
 7. **Forms: React Hook Form + Zod. Dates: `date-fns`**, never native `Date` math for streaks or week boundaries.
 8. **Tests are colocated** (`x.ts` + `x.test.ts`); Maestro flows in `/e2e` named by feature ID.
 9. **Routes in `src/app/` stay thin** — import and render a screen from `/modules`.

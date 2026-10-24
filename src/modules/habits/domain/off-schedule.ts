@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, Habit } from "../types";
-import { isEntryComplete } from "./habit-service";
+import { isEntryComplete } from "./streaks";
 
 /**
  * Off-schedule logs (HAB-18). Nothing is stored to mark one: an entry is a

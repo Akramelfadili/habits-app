@@ -7,13 +7,13 @@ import {
 	noun,
 	pluralise,
 } from "@/utils/format";
-import type { YearlyInsight } from "../services/yearly-insights";
+import type { YearlyInsight } from "../domain/yearly-insights";
 import type {
 	YearlyHabitRow,
 	YearlySummary,
 	YearMonthCell,
 	YearUnlock,
-} from "../services/yearly-summary";
+} from "../domain/yearly-summary";
 import { percent } from "./monthly-summary-helpers";
 
 /** The axis under the chart, and the strip's "J — D" caption. */

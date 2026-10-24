@@ -1,7 +1,7 @@
 import type {
 	MonthlyHabitRow,
 	MonthlySummary,
-} from "../services/monthly-summary";
+} from "../domain/monthly-summary";
 
 // Only habit-service's pure helpers run here, never its freeze write path.
 jest.mock("../repositories/frozen-day-repository", () => ({}));

@@ -1,7 +1,7 @@
 import { format, isSameDay, isSameYear, parseISO } from "date-fns";
 import type { ThemePreference } from "@/theme/theme-preference-store";
 import { formatCount, pluralise, RANGE_DASH } from "@/utils/format";
-import type { ExportSummary } from "../services/export-data";
+import type { ExportSummary } from "../domain/export-data";
 import type { ExportFailureReason } from "../services/export-service";
 
 /** Settings' "Last export" value (HAB-15): "Never", "Today", "2 August", or with the year once it's not this one. */

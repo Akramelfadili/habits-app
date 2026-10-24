@@ -5,7 +5,7 @@ jest.mock("../repositories/frozen-day-repository", () => ({
 	unfreezeHabitDay: (...args: unknown[]) => mockUnfreeze(...args),
 }));
 const mockApplyFreeze = jest.fn();
-jest.mock("../services/habit-service", () => ({
+jest.mock("../services/freeze-service", () => ({
 	applyFreeze: (...args: unknown[]) => mockApplyFreeze(...args),
 }));
 

@@ -21,8 +21,8 @@ import {
 } from "../strategies/frequency-strategy";
 import { isPausedOn, restartDays } from "../strategies/paused-schedule";
 import type { Entry, EntryNote, Habit } from "../types";
-import { calculateCurrentStreak, isEntryComplete } from "./habit-service";
 import { isOffScheduleEntry } from "./off-schedule";
+import { calculateCurrentStreak, isEntryComplete } from "./streaks";
 
 /**
  * Habit Detail's history math (HAB-09) — pure functions over a habit's own

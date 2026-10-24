@@ -1,7 +1,7 @@
 import { format, isAfter, parseISO, startOfDay } from "date-fns";
 import { isHabitDueOn } from "../strategies/frequency-strategy";
 import type { DayLog, DayLogValue, Entry, Habit } from "../types";
-import { isEntryComplete } from "./habit-service";
+import { isEntryComplete } from "./streaks";
 
 /**
  * Retro log's day math (HAB-10) — pure functions over one calendar day. The

@@ -2,21 +2,12 @@ import { startOfDay, subDays } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay } from "../types";
 
-const mockGetFreezesUsedInMonth = jest.fn();
-const mockFreezeHabitDay = jest.fn();
-jest.mock("../repositories/frozen-day-repository", () => ({
-	getFreezesUsedInMonth: (...args: unknown[]) =>
-		mockGetFreezesUsedInMonth(...args),
-	freezeHabitDay: (...args: unknown[]) => mockFreezeHabitDay(...args),
-}));
-
 import {
-	applyFreeze,
 	calculateCurrentStreak,
 	freezesRemainingInMonth,
 	getStreakAtRisk,
 	isEntryComplete,
-} from "./habit-service";
+} from "./streaks";
 
 const HABIT_CREATED = new Date("2026-01-01T00:00:00Z");
 const dailyHabit = makeHabit({
@@ -304,24 +295,5 @@ describe("freezesRemainingInMonth", () => {
 			{ id: 1, habitId: 1, date: "2026-08-31", createdAt: new Date() },
 		];
 		expect(freezesRemainingInMonth(frozenDays, new Date("2026-09-16"))).toBe(2);
-	});
-});
-
-describe("applyFreeze", () => {
-	beforeEach(() => {
-		mockGetFreezesUsedInMonth.mockReset();
-		mockFreezeHabitDay.mockReset();
-	});
-
-	it("writes the freeze when the pool has room", async () => {
-		mockGetFreezesUsedInMonth.mockResolvedValue(1);
-		await applyFreeze(1, new Date("2026-09-15"));
-		expect(mockFreezeHabitDay).toHaveBeenCalledWith(1, new Date("2026-09-15"));
-	});
-
-	it("refuses to write once the shared pool is exhausted", async () => {
-		mockGetFreezesUsedInMonth.mockResolvedValue(2);
-		await expect(applyFreeze(1, new Date("2026-09-15"))).rejects.toThrow();
-		expect(mockFreezeHabitDay).not.toHaveBeenCalled();
 	});
 });
