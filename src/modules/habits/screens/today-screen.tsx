@@ -32,9 +32,12 @@ import { useQuantityLogActions } from "../hooks/use-quantity-log-actions";
 import { useStreakActions } from "../hooks/use-streak-actions";
 import { useTodayActions } from "../hooks/use-today-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
+import {
+	celebratoryHeadline,
+	todayRowSubtitle,
+} from "../presenters/today-screen-helpers";
 import type { Habit } from "../types";
 import { FirstRunScreen } from "./first-run-screen";
-import { celebratoryHeadline, todayRowSubtitle } from "./today-screen-helpers";
 
 export function TodayScreen() {
 	const router = useRouter();

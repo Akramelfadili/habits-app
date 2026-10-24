@@ -19,7 +19,7 @@ import { ExportSheet } from "../components/export-sheet";
 import { EVENING_REVIEW_TIME } from "../constants";
 import { useSettingsActions } from "../hooks/use-settings-actions";
 import { useSettingsQueries } from "../hooks/use-settings-queries";
-import { formatReminderTime } from "./reminders-helpers";
+import { formatReminderTime } from "../presenters/reminders-helpers";
 import {
 	appearanceCaption,
 	DIAGNOSTICS_RESULT_MESSAGE,
@@ -27,7 +27,7 @@ import {
 	exportRowSubtitle,
 	NOTIFICATIONS_OFF_NOTICE,
 	versionLabel,
-} from "./settings-helpers";
+} from "../presenters/settings-helpers";
 
 /**
  * Settings (HAB-15, frames B1–B6): Appearance (Light / Dark / System, applied

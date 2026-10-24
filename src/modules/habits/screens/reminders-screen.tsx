@@ -18,12 +18,12 @@ import {
 	type ReminderWithConflicts,
 	useReminderQueries,
 } from "../hooks/use-reminder-queries";
-import type { Reminder } from "../types";
 import {
 	formatReminderTime,
 	parseWeekdayParam,
 	reminderCountLabel,
-} from "./reminders-helpers";
+} from "../presenters/reminders-helpers";
+import type { Reminder } from "../types";
 
 type RemindersScreenProps = {
 	habitId: number;

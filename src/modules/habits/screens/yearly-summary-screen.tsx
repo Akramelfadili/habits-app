@@ -24,9 +24,7 @@ import {
 	useYearlySummaryQueries,
 	type YearlySummaryView,
 } from "../hooks/use-yearly-summary-queries";
-import type { YearlyInsight } from "../services/yearly-insights";
-import type { YearlySummary, YearMonthCell } from "../services/yearly-summary";
-import { weeklyMenuSubline } from "./weekly-summary-helpers";
+import { weeklyMenuSubline } from "../presenters/weekly-summary-helpers";
 import {
 	bestMonthCopy,
 	bestMonthLabel,
@@ -44,7 +42,9 @@ import {
 	yearlyTiles,
 	yearRangeLabel,
 	yearTitle,
-} from "./yearly-summary-helpers";
+} from "../presenters/yearly-summary-helpers";
+import type { YearlyInsight } from "../services/yearly-insights";
+import type { YearlySummary, YearMonthCell } from "../services/yearly-summary";
 
 /**
  * Yearly Summary (HAB-17, frames C4/C5/C7): range switcher → Logged / Overall

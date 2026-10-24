@@ -171,16 +171,19 @@ for (const file of productionFiles) {
 	}
 }
 
-// 4. Layer order inside a module: repositories/strategies/dev < services < hooks < components < screens.
+// 4. Layer order inside a module:
+//    repositories/strategies/dev < services < presenters < hooks < components < screens.
 //    dev/ (fixtures + dev seeds) sits with repositories: the .web.ts twins read its fixtures.
+//    presenters/ (view-model helpers, form schemas) is pure: hooks, components and screens use it.
 const LAYER_RANK = {
 	repositories: 0,
 	strategies: 0,
 	dev: 0,
 	services: 1,
-	hooks: 2,
-	components: 3,
-	screens: 4,
+	presenters: 2,
+	hooks: 3,
+	components: 4,
+	screens: 5,
 };
 const layerOf = (relPath) => {
 	const m = relPath.match(/^src\/modules\/[^/]+\/([^/]+)\//);

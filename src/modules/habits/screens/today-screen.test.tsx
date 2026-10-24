@@ -5,10 +5,10 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import type { CategoryGroup } from "../presenters/today-screen-helpers";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import { mockMeasureInWindow } from "../test-support/measure-in-window";
 import type { Entry, Habit } from "../types";
-import type { CategoryGroup } from "./today-screen-helpers";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");

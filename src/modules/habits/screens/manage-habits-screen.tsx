@@ -17,8 +17,7 @@ import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
 import { useManageHabitsActions } from "../hooks/use-manage-habits-actions";
 import { useManageHabitsQueries } from "../hooks/use-manage-habits-queries";
-import type { Habit } from "../types";
-import { restoredToastMessage } from "./habit-detail-helpers";
+import { restoredToastMessage } from "../presenters/habit-detail-helpers";
 import {
 	archivedRowSubtitle,
 	archivedSectionTitle,
@@ -27,7 +26,8 @@ import {
 	NOTHING_ARCHIVED_MESSAGE,
 	noActiveMessage,
 	reorderingTag,
-} from "./manage-habits-helpers";
+} from "../presenters/manage-habits-helpers";
+import type { Habit } from "../types";
 
 /**
  * Manage & Archive (HAB-13, reworked by HAB-19): one card per category, in

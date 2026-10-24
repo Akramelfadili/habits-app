@@ -6,7 +6,7 @@ import {
 	entryDateLabel,
 	entryValueLabel,
 	notLoggedLabel,
-} from "../screens/habit-detail-helpers";
+} from "../presenters/habit-detail-helpers";
 import type { RecentEntry } from "../services/habit-history";
 import { isEntryComplete } from "../services/habit-service";
 import type { Habit } from "../types";

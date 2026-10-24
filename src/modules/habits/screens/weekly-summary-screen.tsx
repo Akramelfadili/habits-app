@@ -16,17 +16,17 @@ import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useWeeklySummaryQueries } from "../hooks/use-weekly-summary-queries";
 import {
-	defaultSummaryWeek,
-	type SummaryWeek,
-	type WeeklyInsight,
-} from "../services/weekly-summary";
-import {
 	bestDayTile,
 	slippingBody,
 	weeklyRowCount,
 	weeklyRowLabel,
 	weekRangeLabel,
-} from "./weekly-summary-helpers";
+} from "../presenters/weekly-summary-helpers";
+import {
+	defaultSummaryWeek,
+	type SummaryWeek,
+	type WeeklyInsight,
+} from "../services/weekly-summary";
 
 /**
  * Weekly Summary (HAB-11): week range header with a Last week / This week

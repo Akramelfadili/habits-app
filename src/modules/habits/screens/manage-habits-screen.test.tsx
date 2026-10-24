@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { ManageHabitsView } from "../hooks/use-manage-habits-queries";
+import { groupHabitsByCategory } from "../presenters/today-screen-helpers";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import type { Habit } from "../types";
-import { groupHabitsByCategory } from "./today-screen-helpers";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -46,7 +46,7 @@ jest.mock("../hooks/use-manage-habits-actions", () => ({
 }));
 
 import { useToastStore } from "@/store/toast-store";
-import { MANAGE_FOOTNOTE } from "./manage-habits-helpers";
+import { MANAGE_FOOTNOTE } from "../presenters/manage-habits-helpers";
 import { ManageHabitsScreen } from "./manage-habits-screen";
 
 const water = makeHabit({

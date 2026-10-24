@@ -160,6 +160,37 @@ describe("check-architecture", () => {
 		);
 	});
 
+	it("layer-order: presenters sit between services and hooks", () => {
+		const { code, out } = run({
+			...GOOD,
+			"src/modules/habits/services/stats-service.ts": "export const n = 1;\n",
+			"src/modules/habits/services/stats-service.test.ts": "",
+			"src/modules/habits/presenters/stats-helpers.ts": `import { n } from "../services/stats-service";\nexport const label = n;\n`,
+			"src/modules/habits/presenters/stats-helpers.test.ts": "",
+			"src/modules/habits/hooks/use-stats-queries.ts": `import { label } from "../presenters/stats-helpers";\nexport function useStatsQueries() { return label; }\n`,
+			"src/modules/habits/hooks/use-stats-queries.test.ts": "",
+			"src/modules/habits/components/stats-card.tsx": `import { label } from "../presenters/stats-helpers";\nexport const C = label;\n`,
+			"src/modules/habits/components/stats-card.test.tsx": "",
+		});
+		assert.equal(code, 0, out);
+		expectViolation(
+			{
+				"src/modules/habits/presenters/up-helpers.ts": `import { useHabitQueries } from "../hooks/use-habit-queries";\nexport const x = useHabitQueries;\n`,
+				"src/modules/habits/presenters/up-helpers.test.ts": "",
+			},
+			"layer-order",
+		);
+		expectViolation(
+			{
+				"src/modules/habits/services/up-service.ts": `import { x } from "../presenters/up-helpers";\nexport const y = x;\n`,
+				"src/modules/habits/services/up-service.test.ts": "",
+				"src/modules/habits/presenters/up-helpers.ts": "export const x = 1;\n",
+				"src/modules/habits/presenters/up-helpers.test.ts": "",
+			},
+			"layer-order",
+		);
+	});
+
 	it("layer-order: services importing hooks fails", () => {
 		expectViolation(
 			{

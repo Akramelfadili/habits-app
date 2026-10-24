@@ -25,13 +25,6 @@ import { RangeSwitcher } from "../components/range-switcher";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { FREEZE_POOL_SIZE } from "../constants";
 import { useMonthlySummaryQueries } from "../hooks/use-monthly-summary-queries";
-import type { MonthlyInsight } from "../services/monthly-insights";
-import type {
-	CalendarDay,
-	CalendarDayStatus,
-	MonthlySummary,
-} from "../services/monthly-summary";
-import type { IsoWeekday } from "../types";
 import {
 	freezeCardCopy,
 	improvedCopy,
@@ -45,8 +38,15 @@ import {
 	slippingHabitId,
 	trendRowLabel,
 	unlockCopy,
-} from "./monthly-summary-helpers";
-import { weeklyMenuSubline } from "./weekly-summary-helpers";
+} from "../presenters/monthly-summary-helpers";
+import { weeklyMenuSubline } from "../presenters/weekly-summary-helpers";
+import type { MonthlyInsight } from "../services/monthly-insights";
+import type {
+	CalendarDay,
+	CalendarDayStatus,
+	MonthlySummary,
+} from "../services/monthly-summary";
+import type { IsoWeekday } from "../types";
 
 /**
  * Monthly Summary (HAB-16, frames C2/C3/C6): range switcher → Completed /

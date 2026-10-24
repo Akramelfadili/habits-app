@@ -49,8 +49,7 @@ import { useCategoryQueries } from "../hooks/use-category-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitQueries } from "../hooks/use-habit-queries";
-import type { FrequencyType } from "../types";
-import { saveBlockedReason } from "./habit-form-helpers";
+import { saveBlockedReason } from "../presenters/habit-form-helpers";
 import {
 	DEFAULT_FREQUENCY_FORM_VALUES,
 	type HabitFormInput,
@@ -59,7 +58,8 @@ import {
 	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
 	toFrequencyFormValues,
-} from "./habit-form-schema";
+} from "../presenters/habit-form-schema";
+import type { FrequencyType } from "../types";
 
 /** E5: an example, not a default value — the field opens empty (HAB-22). */
 const NAME_PLACEHOLDER = "e.g. Drink a glass of water";

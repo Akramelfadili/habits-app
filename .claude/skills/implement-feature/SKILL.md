@@ -18,7 +18,7 @@ disable-model-invocation: true
 1. **Explore.**
    - **V1/V2 screens (HAB-01…25):** check `docs/mockups/` for images of the screens this feature builds or changes. If none match, STOP and say which screens lack a mockup — do not proceed until the person provides one or says to proceed without.
    - **V3 screens (HAB-26…50):** no PNG in `docs/mockups/` is required. Read `docs/mockups/v3/renders/INDEX.md`, then the matching section's `text.txt` for copy and rules, and its slices for layout if present locally (they are gitignored — `npm run mockups:render` creates them). If the ticket's frames are in none of them, STOP and say which.
-   - **Search before you plan:** `rg` the codebase for existing components, hooks, helpers and repositories that already do part of this (`components/ui/primitives|composite`, the module's components, `*-helpers.ts`, services). List the shared components you will touch and who else uses them.
+   - **Search before you plan:** `rg` the codebase for existing components, hooks, helpers and repositories that already do part of this (`components/ui/primitives|composite`, the module's components, `presenters/` (`*-helpers.ts`), services). List the shared components you will touch and who else uses them.
    - Look at the current state of the relevant `modules/habits/` subfolders before assuming what exists.
 
 2. **Plan, then wait for "Go".** State:

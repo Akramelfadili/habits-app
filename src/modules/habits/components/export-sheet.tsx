@@ -31,7 +31,7 @@ import {
 	kilobytesLabel,
 	logsCountLabel,
 	rangeLabel,
-} from "../screens/settings-helpers";
+} from "../presenters/settings-helpers";
 import type { ExportFormat, ExportOptions } from "../types";
 
 type ExportSheetProps = {

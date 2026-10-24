@@ -1,12 +1,12 @@
+import {
+	type CategoryGroup,
+	groupHabitsByCategory,
+} from "../presenters/today-screen-helpers";
 import { useAllEntries } from "../repositories/entry-repository";
 import {
 	useActiveHabits,
 	useArchivedHabits,
 } from "../repositories/habit-repository";
-import {
-	type CategoryGroup,
-	groupHabitsByCategory,
-} from "../screens/today-screen-helpers";
 import type { Habit } from "../types";
 
 export type ArchivedHabitRow = {

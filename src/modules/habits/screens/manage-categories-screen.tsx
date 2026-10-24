@@ -14,8 +14,11 @@ import { RenameCategoryField } from "../components/rename-category-field";
 import { OTHER_CATEGORY_NAME } from "../constants";
 import { useCategoryActions } from "../hooks/use-category-actions";
 import { useManageCategoriesQueries } from "../hooks/use-manage-categories-queries";
+import {
+	BUILT_IN_TAG,
+	habitCountLabel,
+} from "../presenters/manage-categories-helpers";
 import type { Category } from "../types";
-import { BUILT_IN_TAG, habitCountLabel } from "./manage-categories-helpers";
 
 /**
  * Manage Categories (HAB-25, frames F3a–F3c): the ten built-ins first,

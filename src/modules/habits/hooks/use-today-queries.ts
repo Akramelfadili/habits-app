@@ -1,14 +1,7 @@
 import { addDays, endOfWeek, format, parseISO, startOfWeek } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import { WEEK_STARTS_ON } from "../constants";
-import {
-	useAllEntries,
-	useEntriesInRange,
-} from "../repositories/entry-repository";
-import { useFrozenDays } from "../repositories/frozen-day-repository";
-import { useActiveHabits } from "../repositories/habit-repository";
-import { useAllReminders } from "../repositories/reminder-repository";
-import { earliestReminderTimeOn } from "../screens/reminders-helpers";
+import { earliestReminderTimeOn } from "../presenters/reminders-helpers";
 import {
 	type CategoryGroup,
 	computeProgress,
@@ -16,7 +9,14 @@ import {
 	type Progress,
 	resolveTodayViewState,
 	type TodayViewState,
-} from "../screens/today-screen-helpers";
+} from "../presenters/today-screen-helpers";
+import {
+	useAllEntries,
+	useEntriesInRange,
+} from "../repositories/entry-repository";
+import { useFrozenDays } from "../repositories/frozen-day-repository";
+import { useActiveHabits } from "../repositories/habit-repository";
+import { useAllReminders } from "../repositories/reminder-repository";
 import {
 	freezesRemainingInMonth,
 	getStreakAtRisk,
