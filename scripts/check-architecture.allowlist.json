@@ -9,15 +9,15 @@
 	},
 	{
 		"rule": "date-args",
-		"file": "src/modules/habits/repositories/habit-fixtures.ts"
+		"file": "src/modules/habits/dev/habit-fixtures.ts"
 	},
 	{
 		"rule": "date-args",
-		"file": "src/modules/habits/repositories/monthly-fixtures.ts"
+		"file": "src/modules/habits/dev/monthly-fixtures.ts"
 	},
 	{
 		"rule": "date-args",
-		"file": "src/modules/habits/repositories/yearly-fixtures.ts"
+		"file": "src/modules/habits/dev/yearly-fixtures.ts"
 	},
 	{
 		"rule": "date-args",

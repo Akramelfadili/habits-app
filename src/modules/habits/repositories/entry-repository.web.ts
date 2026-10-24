@@ -1,10 +1,13 @@
 import { format } from "date-fns";
 import { useSyncExternalStore } from "react";
+import {
+	makeEntryFixtures,
+	makeEntryNoteFixtures,
+} from "../dev/entry-fixtures";
+import { resolveFixtureScenario } from "../dev/habit-fixtures";
+import { assertWritesAllowed } from "../dev/write-failure-fixtures";
 import type { DayLog, Entry, EntryNote } from "../types";
-import { makeEntryFixtures, makeEntryNoteFixtures } from "./entry-fixtures";
 import type * as NativeEntryRepository from "./entry-repository";
-import { resolveFixtureScenario } from "./habit-fixtures";
-import { assertWritesAllowed } from "./write-failure-fixtures";
 
 /**
  * Web-only stand-in for `entry-repository.ts` (see `habit-repository.web.ts`

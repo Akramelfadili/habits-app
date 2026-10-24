@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react-native";
+import { HABIT_FIXTURES } from "../dev/habit-fixtures";
 import { makeHabitInput } from "../test-support/habit-builder";
 import { inProduction } from "../test-support/in-production";
-import { HABIT_FIXTURES } from "./habit-fixtures";
 import type * as WebHabitRepository from "./habit-repository.web";
 
 // Jest runs as iOS, so `./habit-repository` would resolve to the SQLite one —

@@ -1,8 +1,5 @@
 import { addDays, format } from "date-fns";
-import {
-	yearlyEntries,
-	yearlyHabitFixtures,
-} from "../repositories/yearly-fixtures";
+import { yearlyEntries, yearlyHabitFixtures } from "../dev/yearly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 

@@ -1,11 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { habitFixturesFor } from "../dev/habit-fixtures";
+import { monthlyEntries } from "../dev/monthly-fixtures";
+import { yearlyEntries, yearlyHabitFixtures } from "../dev/yearly-fixtures";
 import type { YearlySummaryView } from "../hooks/use-yearly-summary-queries";
-import { habitFixturesFor } from "../repositories/habit-fixtures";
-import { monthlyEntries } from "../repositories/monthly-fixtures";
-import {
-	yearlyEntries,
-	yearlyHabitFixtures,
-} from "../repositories/yearly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {

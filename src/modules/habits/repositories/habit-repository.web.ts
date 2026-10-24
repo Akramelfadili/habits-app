@@ -4,6 +4,12 @@ import { useSyncExternalStore } from "react";
 // repository (and its real `db`/expo-sqlite import) even when this file is
 // loaded explicitly for a web test.
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository.web";
+import {
+	DEFAULT_HABITS,
+	habitFixturesFor,
+	resolveFixtureScenario,
+} from "../dev/habit-fixtures";
+import { assertWritesAllowed } from "../dev/write-failure-fixtures";
 import type {
 	Category,
 	CreateHabitInput,
@@ -13,13 +19,7 @@ import type {
 	UpdateHabitInput,
 } from "../types";
 import { getCategories } from "./category-repository.web";
-import {
-	DEFAULT_HABITS,
-	habitFixturesFor,
-	resolveFixtureScenario,
-} from "./habit-fixtures";
 import type * as NativeHabitRepository from "./habit-repository";
-import { assertWritesAllowed } from "./write-failure-fixtures";
 
 /**
  * Web-only stand-in for `habit-repository.ts`, picked by Metro's `.web.ts`

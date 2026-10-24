@@ -1,12 +1,12 @@
 import { useMemo, useSyncExternalStore } from "react";
+import { resolveFixtureScenario } from "../dev/habit-fixtures";
+import { makeReminderFixtures } from "../dev/reminder-fixtures";
 import type {
 	CreateReminderInput,
 	IsoWeekday,
 	Reminder,
 	ReminderPatch,
 } from "../types";
-import { resolveFixtureScenario } from "./habit-fixtures";
-import { makeReminderFixtures } from "./reminder-fixtures";
 import type * as NativeReminderRepository from "./reminder-repository";
 
 /**

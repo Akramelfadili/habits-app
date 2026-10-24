@@ -1,9 +1,6 @@
 import { addDays, format, getDate } from "date-fns";
-import { habitFixturesFor } from "../repositories/habit-fixtures";
-import {
-	monthlyEntries,
-	monthlyFrozenDays,
-} from "../repositories/monthly-fixtures";
+import { habitFixturesFor } from "../dev/habit-fixtures";
+import { monthlyEntries, monthlyFrozenDays } from "../dev/monthly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 

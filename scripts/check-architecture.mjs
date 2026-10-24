@@ -171,10 +171,12 @@ for (const file of productionFiles) {
 	}
 }
 
-// 4. Layer order inside a module: repositories/strategies < services < hooks < components < screens.
+// 4. Layer order inside a module: repositories/strategies/dev < services < hooks < components < screens.
+//    dev/ (fixtures + dev seeds) sits with repositories: the .web.ts twins read its fixtures.
 const LAYER_RANK = {
 	repositories: 0,
 	strategies: 0,
+	dev: 0,
 	services: 1,
 	hooks: 2,
 	components: 3,

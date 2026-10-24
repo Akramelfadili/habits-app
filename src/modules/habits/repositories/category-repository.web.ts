@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { OTHER_CATEGORY_NAME } from "../constants";
-import type { Category, CreateCategoryInput } from "../types";
 import {
 	categoryFixturesFor,
 	FIXTURE_BUILT_IN_CATEGORIES,
-} from "./category-fixtures";
+} from "../dev/category-fixtures";
+import { resolveFixtureScenario } from "../dev/habit-fixtures";
+import type { Category, CreateCategoryInput } from "../types";
 import type * as NativeCategoryRepository from "./category-repository";
-import { resolveFixtureScenario } from "./habit-fixtures";
 import {
 	applyCategoryChange,
 	reassignHabitsToCategory,

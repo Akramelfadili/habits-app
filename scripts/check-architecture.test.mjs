@@ -140,6 +140,26 @@ describe("check-architecture", () => {
 		);
 	});
 
+	it("layer-order: dev/ sits with repositories — web twins may import its fixtures, it may not import services", () => {
+		const { code, out } = run({
+			...GOOD,
+			"src/modules/habits/dev/habit-fixtures.ts": "export const rows = [];\n",
+			"src/modules/habits/dev/dev-seeds.ts": `import { x } from "../repositories/habit-repository";\nexport const seed = x;\n`,
+			"src/modules/habits/dev/dev-seeds.test.ts": "",
+			"src/modules/habits/repositories/habit-repository.web.ts": `import { rows } from "../dev/habit-fixtures";\nexport const x = rows;\n`,
+		});
+		assert.equal(code, 0, out);
+		expectViolation(
+			{
+				"src/modules/habits/services/up-service.ts": "export const y = 1;\n",
+				"src/modules/habits/services/up-service.test.ts": "",
+				"src/modules/habits/dev/dev-seeds.ts": `import { y } from "../services/up-service";\nexport const seed = y;\n`,
+				"src/modules/habits/dev/dev-seeds.test.ts": "",
+			},
+			"layer-order",
+		);
+	});
+
 	it("layer-order: services importing hooks fails", () => {
 		expectViolation(
 			{

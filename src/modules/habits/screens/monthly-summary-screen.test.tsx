@@ -1,10 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { habitFixturesFor } from "../dev/habit-fixtures";
+import { monthlyEntries, monthlyFrozenDays } from "../dev/monthly-fixtures";
 import type { MonthlySummaryView } from "../hooks/use-monthly-summary-queries";
-import { habitFixturesFor } from "../repositories/habit-fixtures";
-import {
-	monthlyEntries,
-	monthlyFrozenDays,
-} from "../repositories/monthly-fixtures";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");

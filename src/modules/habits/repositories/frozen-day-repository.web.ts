@@ -1,9 +1,9 @@
 import { format } from "date-fns";
 import { useSyncExternalStore } from "react";
+import { makeFrozenDayFixtures } from "../dev/frozen-day-fixtures";
+import { resolveFixtureScenario } from "../dev/habit-fixtures";
 import type { FrozenDay } from "../types";
-import { makeFrozenDayFixtures } from "./frozen-day-fixtures";
 import type * as NativeFrozenDayRepository from "./frozen-day-repository";
-import { resolveFixtureScenario } from "./habit-fixtures";
 
 /**
  * Web-only stand-in for `frozen-day-repository.ts` — in-memory fixtures, no
