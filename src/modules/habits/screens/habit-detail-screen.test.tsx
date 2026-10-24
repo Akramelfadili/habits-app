@@ -12,7 +12,6 @@ jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 jest.mock("expo-router", () => ({

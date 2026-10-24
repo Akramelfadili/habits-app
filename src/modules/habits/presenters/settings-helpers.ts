@@ -2,7 +2,7 @@ import { format, isSameDay, isSameYear, parseISO } from "date-fns";
 import type { ThemePreference } from "@/theme/theme-preference-store";
 import { formatCount, pluralise, RANGE_DASH } from "@/utils/format";
 import type { ExportSummary } from "../domain/export-data";
-import type { ExportFailureReason } from "../services/export-service";
+import type { ExportFailureReason } from "../types";
 
 /** Settings' "Last export" value (HAB-15): "Never", "Today", "2 August", or with the year once it's not this one. */
 export function lastExportLabel(stored: string | null, today: Date): string {

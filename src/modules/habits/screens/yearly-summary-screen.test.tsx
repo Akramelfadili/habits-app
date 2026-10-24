@@ -20,7 +20,6 @@ let mockView: YearlySummaryView;
 jest.mock("../hooks/use-yearly-summary-queries", () => ({
 	useYearlySummaryQueries: () => mockView,
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { buildWeeklySummary } from "../domain/weekly-summary";
 import {

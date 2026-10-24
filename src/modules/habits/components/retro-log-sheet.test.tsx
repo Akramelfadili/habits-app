@@ -11,7 +11,6 @@ jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { MAX_NOTE_LENGTH } from "../constants";
 import { RetroLogSheet } from "./retro-log-sheet";

@@ -24,7 +24,6 @@ jest.mock("../repositories/entry-repository", () => ({
 		return mockEntries;
 	},
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { useWeeklySummaryQueries } from "./use-weekly-summary-queries";
 

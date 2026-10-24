@@ -5,10 +5,6 @@ import {
 import { makeHabit } from "../test-support/habit-builder";
 import { buildExportModel, summarizeExport } from "./export-data";
 
-// Only the pure streak helpers are used — habit-service's freeze write path (and
-// the SQLite client behind it) never runs.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 const source = makeExportSource();
 
 describe("buildExportModel", () => {

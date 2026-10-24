@@ -1,4 +1,5 @@
-import { format, isAfter, parseISO, startOfDay } from "date-fns";
+import { isAfter, parseISO, startOfDay } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { isHabitDueOn } from "../strategies/frequency-strategy";
 import type { DayLog, DayLogValue, Entry, Habit } from "../types";
 import { isEntryComplete } from "./streaks";
@@ -23,7 +24,7 @@ export function habitsForDay(
 	focusHabitId: number,
 ): Habit[] {
 	const day = startOfDay(date);
-	const dateString = format(day, "yyyy-MM-dd");
+	const dateString = toDayKey(day);
 	const shown = habits.filter((habit) => {
 		if (habit.id === focusHabitId) return true;
 		if (isAfter(startOfDay(habit.createdAt), day)) return false;

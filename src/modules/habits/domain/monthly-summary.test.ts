@@ -4,9 +4,6 @@ import { monthlyEntries, monthlyFrozenDays } from "../dev/monthly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 
-// Only habit-service's pure `isEntryComplete` is used here.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import { MAX_INSIGHTS } from "./monthly-insights";
 import {
 	buildMonthlySummary,

@@ -4,8 +4,6 @@ import {
 	makeExportSource,
 } from "../test-support/export-fixtures";
 
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 const mockFiles = new Map<string, string>();
 const mockWriteScratch = jest.fn();
 jest.mock("@/lib/file-export/file-export", () => ({

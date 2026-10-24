@@ -1,7 +1,5 @@
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import { retroLogRowSubtitle, retroLogTitle } from "./retro-log-sheet-helpers";
 
 const water = makeHabit({

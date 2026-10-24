@@ -2,8 +2,6 @@ import { addDays, format } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import {
 	buildHeatmapWeeks,
 	calculateCompletionRate,

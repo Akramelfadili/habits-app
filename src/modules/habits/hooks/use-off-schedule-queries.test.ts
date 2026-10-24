@@ -42,7 +42,6 @@ jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) =>
 		mockUseEntriesInRange(start, end),
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { useOffScheduleQueries } from "./use-off-schedule-queries";
 

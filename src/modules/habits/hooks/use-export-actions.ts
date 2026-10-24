@@ -6,12 +6,11 @@ import type { ExportSource } from "../domain/export-data";
 import {
 	ExportCancelledError,
 	ExportFailedError,
-	type ExportFailureReason,
 	type ExportProgress,
 	type ExportResult,
 	runExport,
 } from "../services/export-service";
-import type { ExportOptions } from "../types";
+import type { ExportFailureReason, ExportOptions } from "../types";
 
 /** How the last Share / Save to Files ended, when it didn't simply close the sheet. */
 export type ExportDelivery =

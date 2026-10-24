@@ -189,6 +189,11 @@ export type ReminderPatch = Partial<
 /** The file format of a data export (HAB-15). */
 export type ExportFormat = "csv" | "json";
 
+/** Why an export failed, as far as the person needs to know (the cause goes to the log). */
+export type ExportFailureReason =
+	| { kind: "storage"; neededBytes: number }
+	| { kind: "unknown" };
+
 /** What the export confirm sheet lets the person choose. */
 export type ExportOptions = {
 	format: ExportFormat;

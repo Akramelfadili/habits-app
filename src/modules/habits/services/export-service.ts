@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import {
 	clearExports,
@@ -7,10 +6,11 @@ import {
 	writeScratchFile,
 } from "@/lib/file-export/file-export";
 import { log } from "@/lib/logger/logger";
+import { toDayKey } from "@/utils/day-key";
 import { LAST_EXPORT_SETTING_KEY } from "../constants";
 import { buildExportModel, type ExportSource } from "../domain/export-data";
 import { EXPORT_FORMATS } from "../domain/export-formats";
-import type { ExportOptions } from "../types";
+import type { ExportFailureReason, ExportOptions } from "../types";
 
 /**
  * Runs a data export (HAB-15): build → serialize (with progress) → write to a
@@ -34,10 +34,6 @@ export type ExportResult = {
 	habits: number;
 	logs: number;
 };
-
-export type ExportFailureReason =
-	| { kind: "storage"; neededBytes: number }
-	| { kind: "unknown" };
 
 export class ExportCancelledError extends Error {
 	constructor() {
@@ -66,7 +62,7 @@ const STORAGE_ERROR = /no space|enospc|out of (storage|space)|disk full/i;
 const yieldToUi = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 export function exportFileName(today: Date, extension: string): string {
-	return `habits-${format(today, "yyyy-MM-dd")}.${extension}`;
+	return `habits-${toDayKey(today)}.${extension}`;
 }
 
 type RunExportInput = {
@@ -113,7 +109,7 @@ export async function runExport({
 		scratchUri = written.uri;
 		throwIfCancelled();
 
-		await setSetting(LAST_EXPORT_SETTING_KEY, format(today, "yyyy-MM-dd"));
+		await setSetting(LAST_EXPORT_SETTING_KEY, toDayKey(today));
 		return {
 			uri: written.uri,
 			name: written.name,

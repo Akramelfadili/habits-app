@@ -2,10 +2,6 @@ import { addDays, format, isSameDay, subDays } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
 
-// Only habit-service's pure streak helpers are used here — its freeze write
-// path (and the SQLite client behind it) never runs.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import {
 	buildHeatmapWeeks,
 	calculateCompletionRate,

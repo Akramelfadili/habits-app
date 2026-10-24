@@ -61,7 +61,6 @@ jest.mock("../repositories/reminder-repository", () => ({
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 	setSetting: jest.fn(),
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { buildHeatmapWeeks, currentStreakAsOf } from "../domain/habit-history";
 import {

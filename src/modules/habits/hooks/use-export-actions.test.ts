@@ -3,8 +3,6 @@ import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { makeExportSource } from "../test-support/export-fixtures";
 import type { ExportOptions } from "../types";
 
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 const mockShare = jest.fn();
 const mockSave = jest.fn();
 jest.mock("@/lib/file-export/file-export", () => ({

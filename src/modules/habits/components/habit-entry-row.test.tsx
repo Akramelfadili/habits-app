@@ -7,7 +7,6 @@ jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { HabitEntryRow } from "./habit-entry-row";
 

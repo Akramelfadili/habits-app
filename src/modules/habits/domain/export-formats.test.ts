@@ -7,8 +7,6 @@ import { buildExportModel } from "./export-data";
 import { EXPORT_FORMATS } from "./export-formats";
 import { toJson } from "./export-json";
 
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 describe("EXPORT_FORMATS", () => {
 	it("registers csv and json with their file types", () => {
 		expect(EXPORT_FORMATS.csv).toMatchObject({

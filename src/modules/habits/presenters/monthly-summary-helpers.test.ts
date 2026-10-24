@@ -3,9 +3,6 @@ import type {
 	MonthlySummary,
 } from "../domain/monthly-summary";
 
-// Only habit-service's pure helpers run here, never its freeze write path.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import { makeHabit } from "../test-support/habit-builder";
 import {
 	freezeCardCopy,

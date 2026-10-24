@@ -1,10 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { makeHabit } from "../test-support/habit-builder";
-
-// Only habit-service's pure helpers are reached — never its SQLite write path.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import { buildHeatmapWeeks } from "../domain/habit-history";
+import { makeHabit } from "../test-support/habit-builder";
 import { HabitHeatmap } from "./habit-heatmap";
 
 const today = new Date(2026, 8, 23, 12); // Wednesday

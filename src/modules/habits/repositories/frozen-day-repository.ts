@@ -27,7 +27,7 @@ export function useFrozenDays(): FrozenDay[] {
 /**
  * A one-off (non-reactive) count of freezes used in `[monthStart, monthEnd]`,
  * across every habit — the shared pool's write-time eligibility check
- * (`habit-service.ts`'s `applyFreeze`) needs a fresh read at call time, not
+ * (`services/freeze-service.ts`'s `applyFreeze`) needs a fresh read at call time, not
  * whatever a hook last rendered, since it gates whether the write is allowed.
  */
 export async function getFreezesUsedInMonth(

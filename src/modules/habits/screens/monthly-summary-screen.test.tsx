@@ -18,7 +18,6 @@ let mockView: MonthlySummaryView;
 jest.mock("../hooks/use-monthly-summary-queries", () => ({
 	useMonthlySummaryQueries: () => mockView,
 }));
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import {
 	buildMonthlySummary,

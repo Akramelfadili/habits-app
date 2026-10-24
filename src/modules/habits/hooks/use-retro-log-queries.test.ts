@@ -34,8 +34,6 @@ jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
 	useEntryNotes: () => mockNotes,
 }));
-// Only habit-service's pure helpers are reached.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
 
 import { useRetroLogQueries } from "./use-retro-log-queries";
 

@@ -5,7 +5,7 @@
  * feature that made it.
  *
  * Each entry: `feature` (spec ID, groups the report), `route` (with the
- * `?fixtures=` scenario, see habit-fixtures.ts), `mockup` (the docs/mockups/
+ * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the docs/mockups/
  * file it's judged against, or null when no mockup covers that state),
  * optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
  * in CSS px, overrides the default 393×852 — e.g. a small phone with the
@@ -1105,7 +1105,7 @@ for (const name of DARK_TWINS) {
 
 /**
  * HAB-22: every screen that renders a habit name, re-run with `longNames=1`
- * (habit-fixtures.ts) — the first two habits get a 40-character V1 name (over
+ * (src/modules/habits/dev/habit-fixtures.ts) — the first two habits get a 40-character V1 name (over
  * today's 32 cap) and one at exactly 32, to catch bad truncation or wrapping.
  */
 const LONG_NAME_TWINS = [

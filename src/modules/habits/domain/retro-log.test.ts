@@ -1,9 +1,6 @@
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
 
-// Same as habit-history.test.ts: only habit-service's pure helpers are used.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import { calculateLongestStreak, currentStreakAsOf } from "./habit-history";
 import {
 	dayLogValueFor,

@@ -2,10 +2,6 @@ import { addDays, format } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, Habit } from "../types";
 
-// Only habit-service's pure `isEntryComplete` is used here — its freeze write
-// path (and the SQLite client behind it) never runs.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 import {
 	buildWeeklySummary,
 	defaultSummaryWeek,

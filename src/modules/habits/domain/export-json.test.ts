@@ -5,9 +5,6 @@ import {
 import { buildExportModel } from "./export-data";
 import { toJson } from "./export-json";
 
-// Only the pure streak helpers are used — habit-service's freeze write path never runs.
-jest.mock("../repositories/frozen-day-repository", () => ({}));
-
 function modelFor(includeArchived: boolean) {
 	return buildExportModel(
 		makeExportSource(),
