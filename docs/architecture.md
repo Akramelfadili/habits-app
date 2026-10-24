@@ -63,7 +63,10 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
   /components/ui
     /primitives                no business meaning: Button, Chip, TextField, Toggle, ...
     /composite                 built from primitives, still generic: ListItem, StatCard, HeatmapCell, header buttons, ...
-  /theme                       typed tokens (colour, type, spacing), theme preference store, token-ratchet baseline
+  /theme                       typed tokens, theme preference store, token-ratchet baseline. theme.ts: colours
+                               (surface + semantic, per scheme), the V1/V2 `typeScale` and the V3 tokens —
+                               `textStyles` (F-03), `space` (F-04), `radius` + `cellRadius`/`squareRadius` (F-05),
+                               `elevation`, `focusRing`, `minTouchTarget` (F-06), `motion` (F-07)
 
   /lib                         cross-module infrastructure (one deliberate exception: `lib/db/database-error-screen` renders the shared `ErrorScreen` from components/ui)
     /db                        Drizzle client, schema.ts, migrations/, database-provider, test-db helpers
@@ -123,9 +126,10 @@ Modules never import each other (rule 6). Habits is the only module today, but t
 - **Notifications and file export:** adapters in `lib/` expose this app's own small interface, so the library can be replaced in one file.
 - **Navigation params:** typed routes are enabled; each screen declares its params in its own file.
 - **Routes stay thin** (rule 9): a route file changes when addresses change, a screen file when content changes.
-- **Reuse before create** (rule 10): search `components/ui/primitives|composite` and the module's components first; reuse, extend, then create (in `components/ui/` first, with every documented state). Colours, shadows and font sizes/weights come from `src/theme` tokens.
+- **Reuse before create** (rule 10): search `components/ui/primitives|composite` and the module's components first; reuse, extend, then create (in `components/ui/` first, with every documented state). Colours, shadows, font sizes/weights, spacing and radii come from `src/theme` tokens. New V3 code uses the V3 tokens (`textStyles`, `space`, `radius`, …); existing screens move onto them in the V3 batch that rebuilds them, and the ratchet (ADR 004) counts what is left.
+- **Category order:** `categories.sort_order` is the group order on Today and Manage habits (HAB-42; `groupHabitsByCategory(habits, categories)`, Other always last). The picker and Manage Categories list in creation order (`inCreationOrder`, id order). A new category takes max + 1.
 - **Tests:** colocated (rule 8). Reactive-read behaviour is tested against `src/lib/db/test-live-query.ts`, a stand-in for `useLiveQuery`.
-- **Migrations:** see the migration guard in `CLAUDE.md` and `.claude/agents/migration-reviewer.md`.
+- **Migrations:** see the migration guard in `CLAUDE.md` and `.claude/agents/migration-reviewer.md`. A data migration may use window functions, recursive CTEs and a `TEMP` table (0011 does, to hand out rotation slots one at a time without reading rows its own UPDATE changed); test it from rows written in the previous shape (`createPartiallyMigratedTestDb`), with foreign keys on and off. Data rewrites are not reversible; say so in the spec's As-built note.
 
 ## Decision log
 
@@ -133,6 +137,7 @@ If a package or approach is replaced, record the change here with a date rather 
 
 - 2026-09: Categories became a managed table (HAB-24/25). `habits.categoryId` is a NOT NULL FK; the legacy `icon/color/category` columns stay nullable and unused until a cleanup migration.
 - 2026-10: Docs consolidated into `architecture.md` and `design-system.md`.
+- 2026-10 (V3-0b): habits only (HAB-26 removed the To-dos/Expenses placeholders and the future-modules promise; the module-isolation rule stays). V3 design tokens added to `src/theme` and the token ratchet extended to spacing, radius and the retired font sizes. Migration 0011 (HAB-42 data): `categories.sort_order`, Health 175 / Social 230, custom rotation down to six slots. Slow tests (`*.slow.test.ts`) run in CI only.
 - 2026-10 (V3-0a): module layers became repositories/strategies/dev ← domain ← services ← presenters ← hooks ← components ← screens (pure rules out of `services/`, view helpers out of `screens/`, fixtures out of `repositories/`); per-week history math pre-buckets completions by week (`strategies/completion-index.ts`); CI added.
 
 Not decided: analytics, crash reporting (the app is local-only).
