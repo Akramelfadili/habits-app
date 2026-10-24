@@ -104,6 +104,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Check against code:** existing token files and the token ratchet script; which V2 delta values (cell 18/6/5, stat card 14/10/26, chart-card padding 16) are already applied.
 
+> **As built (V3-0b, tokens only, additive):** `src/theme/theme.ts` adds `textStyles` (the nine F-03 styles under new names, next to the old `typeScale`) + `textStylesAx3`, `space` (F-04, keyed value × 25: `space[350]` = 14), `radius` (F-05: xs 4 · s 8 · m 14 · l 20 · xl 28 · pill 999, values from the master file) with `cellRadius()` / `squareRadius()`, `elevation` (F-06 lifted / toast / pill as `boxShadow`, per scheme, also on `useTheme().elevation`), `focusRing` + `focusRingShadow()` (T-13), `minTouchTarget` (44) and `motion` (F-07, durations + bezier tuples, toast hold times). AX3 sizes for subhead and footnote are 36 (T-30), not the mockup's 34 / 33. The only missing F-01 colour was `accent` (= ink), plus the pill fill `pillBg`; `outline`, `onAccent`, `warnTint`, the frozen pair and `toast`/`toastInk` already shipped, and danger stays `dangerBg`. Contrast tests cover onAccent/accent, accent and focus ring vs surfaces, toastInk/toast (≥ 10:1), frozenInk and ink on frozenBg, the frozen border and the warning glyph. **No screen uses them yet**; each V3 batch migrates its own screens (backlog). Not in this batch: the accent-tint intensity ramp (T-05, replaces `heatmapLevelColor`/`inkLevelColor`), the density pass (T-18) and the gear icon (T-19) — they land with the components that need them (backlog, "V3 foundations").
+
 ---
 
 ## HAB-29 — Core component set

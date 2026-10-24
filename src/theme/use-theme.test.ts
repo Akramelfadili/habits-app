@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react-native";
 import * as ReactNative from "react-native";
-import { semanticColors, surfaceColors } from "./theme";
+import { elevation, semanticColors, surfaceColors } from "./theme";
 import { useThemePreferenceStore } from "./theme-preference-store";
 import { useTheme } from "./use-theme";
 
@@ -28,6 +28,7 @@ describe("useTheme", () => {
 			...surfaceColors.dark,
 			...semanticColors.dark,
 		});
+		expect(result.current.elevation).toBe(elevation.dark);
 	});
 
 	it("lets an explicit preference override the OS", async () => {

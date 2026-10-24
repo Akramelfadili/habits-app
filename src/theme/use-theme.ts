@@ -1,5 +1,6 @@
 import { useColorScheme } from "react-native";
 import {
+	elevation,
 	interactionOpacity,
 	semanticColors,
 	surfaceColors,
@@ -23,6 +24,7 @@ export function useTheme() {
 		scheme,
 		colors: { ...surfaceColors[scheme], ...semanticColors[scheme] },
 		type: typeScale,
+		elevation: elevation[scheme],
 		opacity: interactionOpacity,
 	};
 }

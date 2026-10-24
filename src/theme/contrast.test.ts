@@ -70,6 +70,49 @@ describe.each(["light", "dark"] as const)(
 			}
 		});
 
+		it("text on the accent fill clears 4.5:1", () => {
+			expect(contrast(surface.onAccent, surface.accent)).toBeGreaterThanOrEqual(
+				TEXT_AA,
+			);
+		});
+
+		// accent equals ink today; this guards the fill and focus ring if they ever diverge.
+		it("the accent fill and the focus ring clear 3:1 against the page and card", () => {
+			for (const ground of [surface.bg, surface.card, surface.inner]) {
+				expect(contrast(surface.accent, ground)).toBeGreaterThanOrEqual(
+					NON_TEXT_AA,
+				);
+			}
+		});
+
+		it("toast text clears 4.5:1 on the toast surface (10:1 per F-01)", () => {
+			expect(contrast(surface.toastInk, surface.toast)).toBeGreaterThanOrEqual(
+				10,
+			);
+		});
+
+		it("freeze count text clears 4.5:1 on the page and card", () => {
+			for (const ground of [surface.bg, surface.card]) {
+				expect(contrast(semantic.frozenInk, ground)).toBeGreaterThanOrEqual(
+					TEXT_AA,
+				);
+			}
+		});
+
+		it("text on a frozen day uses ink, which clears 4.5:1 on frozenBg (T-15)", () => {
+			expect(contrast(surface.ink, semantic.frozenBg)).toBeGreaterThanOrEqual(
+				TEXT_AA,
+			);
+		});
+
+		it("the frozen border clears 3:1 against its fill and the card", () => {
+			for (const ground of [semantic.frozenBg, surface.card]) {
+				expect(contrast(semantic.frozenInk, ground)).toBeGreaterThanOrEqual(
+					NON_TEXT_AA,
+				);
+			}
+		});
+
 		it("keeps hairline borders decorative — they are not the control outline", () => {
 			expect(surface.outline).not.toBe(surface.border);
 			expect(contrast(surface.border, surface.card)).toBeLessThan(NON_TEXT_AA);
