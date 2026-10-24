@@ -26,6 +26,16 @@ Biome's `style/noRestrictedImports` (in `biome.json`) additionally flags Drizzle
 
 Counts raw colours (hex/rgba/oklch/'white'/'black'), shadow/elevation, `fontSize`/`lineHeight` literals and `fontWeight` other than 500/600 outside `src/theme`. Count **up** → fails (use a token). Count **down** → fails with "lower the baseline" → `npm run ratchet:update`.
 
+Since V3-0b it also counts (lines, like the others):
+
+| Key | What | Use instead | Baseline at V3-0b |
+|---|---|---|---|
+| `spacing-literals` | non-zero numeric `padding*`, `margin*` (negative too), `gap`/`rowGap`/`columnGap` | `space[…]` (F-04) | 274 |
+| `radius-literals` | non-zero numeric `border*Radius` | `radius.*`, `cellRadius()`, `squareRadius()` (F-05) | 55 |
+| `off-scale-font-sizes` | `fontSize` 10 / 10.5 / 11 / 11.5 / 12.5, and `typeScale.micro` / `.caption` / `.subtitle` (10 / 11 / 12.5) | a `textStyles` style (F-03) | 56 |
+
+An off-scale literal (`fontSize: 11`) counts under both `font-size-literals` and `off-scale-font-sizes`. Two literals on one line count once. `0` is not counted (a reset, not a step); sizes (`width`/`height`) are not counted (no size scale). The assessment's "~394" figure counted spacing *and* sizes, so it is higher than 274 + 55. The screens move onto the new tokens batch by batch during V3 (backlog), and each batch lowers these numbers with `npm run ratchet:update`. That script refuses a key the baseline does not have yet: a new key is added to the baseline by hand, in the commit that introduces it.
+
 ## Chromium on the WSL dev box (visual-check)
 
 The WSL box is Ubuntu 20.04 with no sudo:
