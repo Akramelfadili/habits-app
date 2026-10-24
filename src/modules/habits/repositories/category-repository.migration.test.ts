@@ -1,5 +1,6 @@
 import { createPartiallyMigratedTestDb } from "@/lib/db/test-db";
 import { BUILT_IN_CATEGORIES, CATEGORY_ROTATION } from "../constants";
+import { categoryFixturesFor } from "../dev/category-fixtures";
 
 /**
  * HAB-24's data migration (0009 + 0010): V1's free-text `category` strings →
@@ -124,9 +125,14 @@ describe("HAB-24 category migration", () => {
 			"Weekend projects at",
 			"Evening",
 		]);
-		expect(customs.map(({ shape, hue }) => ({ shape, hue }))).toEqual(
-			CATEGORY_ROTATION.slice(0, 3),
-		);
+		// 0009 hands out its ten V2 slots in order (diamond/175, ring/330,
+		// square/95); 0011 then moves "morning" off 175 (now Health's) to the
+		// emptiest V3 slot, bars/220.
+		expect(customs.map(({ shape, hue }) => ({ shape, hue }))).toEqual([
+			CATEGORY_ROTATION[2],
+			CATEGORY_ROTATION[0],
+			CATEGORY_ROTATION[1],
+		]);
 		// Customs come after every built-in — the picker's order is id order.
 		const ids = categoriesOf(sqlite).map((c) => c.id);
 		expect(Math.min(...customs.map((c) => c.id))).toBeGreaterThan(
@@ -313,4 +319,299 @@ describe.each([
 			sqlite.prepare("PRAGMA foreign_key_list(habits)").all(),
 		).toMatchObject([{ table: "categories", from: "category_id", to: "id" }]);
 	});
+});
+
+/**
+ * HAB-42's data migration (0011): Health/Social off red, customs on dropped
+ * rotation hues moved to a V3 slot, and the stored group order backfilled.
+ * Rows are written in the 0010 shape (managed categories, no sort_order).
+ */
+describe.each([true, false])(
+	"HAB-42 category migration (foreign keys %s)",
+	(foreignKeys) => {
+		type Db = ReturnType<typeof createPartiallyMigratedTestDb>["sqlite"];
+
+		function insertCustom(
+			sqlite: Db,
+			name: string,
+			shape: string,
+			hue: number,
+		) {
+			return Number(
+				sqlite
+					.prepare(
+						"INSERT INTO categories (name, shape, hue, built_in, created_at) VALUES (?, ?, ?, 0, 0)",
+					)
+					.run(name, shape, hue).lastInsertRowid,
+			);
+		}
+
+		function insertHabit(
+			sqlite: Db,
+			name: string,
+			categoryName: string,
+			{
+				sortOrder,
+				archived = false,
+			}: { sortOrder: number; archived?: boolean },
+		) {
+			sqlite
+				.prepare(
+					"INSERT INTO habits (name, category_id, sort_order, archived_at, created_at, updated_at) SELECT ?, id, ?, ?, 0, 0 FROM categories WHERE name = ?",
+				)
+				.run(name, sortOrder, archived ? 1 : null, categoryName);
+		}
+
+		function orderOf(sqlite: Db): string[] {
+			return (
+				sqlite
+					.prepare("SELECT name FROM categories ORDER BY sort_order, id")
+					.all() as { name: string }[]
+			).map((row) => row.name);
+		}
+
+		function appearanceOf(sqlite: Db, name: string) {
+			return sqlite
+				.prepare("SELECT shape, hue FROM categories WHERE name = ?")
+				.get(name);
+		}
+
+		it("moves Health to 175 and Social to 230, matching BUILT_IN_CATEGORIES", () => {
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
+				foreignKeys,
+			});
+			migrateRest();
+
+			const builtIns = categoriesOf(sqlite)
+				.filter((c) => c.built_in === 1)
+				.map(({ name, shape, hue }) => ({ name, shape, hue }));
+			expect(builtIns).toEqual(
+				BUILT_IN_CATEGORIES.map(({ name, shape, hue }) => ({
+					name,
+					shape,
+					hue,
+				})),
+			);
+			expect(appearanceOf(sqlite, "Health")).toEqual({
+				shape: "plus",
+				hue: 175,
+			});
+			expect(appearanceOf(sqlite, "Social")).toEqual({
+				shape: "half",
+				hue: 230,
+			});
+		});
+
+		it("keeps no red hue and no custom on a built-in's hue in the rotation", () => {
+			const hues = CATEGORY_ROTATION.map((slot) => slot.hue);
+			for (const dropped of [15, 350, 175, 230]) {
+				expect(hues).not.toContain(dropped);
+			}
+			const builtInHues = BUILT_IN_CATEGORIES.map((c) => c.hue);
+			for (const hue of hues) expect(builtInHues).not.toContain(hue);
+		});
+
+		it("moves customs on 175, 230, 15 and 350 to the emptiest slot, in id order, and leaves the rest", () => {
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
+				foreignKeys,
+			});
+			// Already on V3 slots: ring/330 ×2, square/95 ×1 — they stay put.
+			insertCustom(sqlite, "Music", "ring", 330);
+			insertCustom(sqlite, "Language", "square", 95);
+			insertCustom(sqlite, "Garden", "ring", 330);
+			// On dropped hues, in id order.
+			insertCustom(sqlite, "Morning", "diamond", 175);
+			insertCustom(sqlite, "Side project", "dot", 15);
+			insertCustom(sqlite, "Pets", "lines", 350);
+			insertCustom(sqlite, "Kids", "grid", 230);
+			insertCustom(sqlite, "Cooking", "diamond", 175);
+			insertCustom(sqlite, "Choir", "dot", 15);
+			insertHabit(sqlite, "Practice", "Morning", { sortOrder: 1 });
+			migrateRest();
+
+			const byName = Object.fromEntries(
+				categoriesOf(sqlite)
+					.filter((c) => c.built_in === 0)
+					.map((c) => [c.name, { shape: c.shape, hue: c.hue }]),
+			);
+			// Counts before: [ring 2, square 1, bars 0, plus 0, half 0, archive 0].
+			expect(byName).toEqual({
+				Music: { shape: "ring", hue: 330 },
+				Language: { shape: "square", hue: 95 },
+				Garden: { shape: "ring", hue: 330 },
+				Morning: { shape: "bars", hue: 220 },
+				"Side project": { shape: "plus", hue: 265 },
+				Pets: { shape: "half", hue: 130 },
+				Kids: { shape: "archive", hue: 290 },
+				// All four empty slots now hold one; square (1) is the lowest of the fewest.
+				Cooking: { shape: "square", hue: 95 },
+				// Then bars, the lowest slot with one.
+				Choir: { shape: "bars", hue: 220 },
+			});
+			// The moved category keeps its id, so its habit is untouched.
+			expect(habitCategoryNames(sqlite)).toEqual({ Practice: "Morning" });
+		});
+
+		it("backfills sort_order from first appearance among active habits, then archived, then unused by id, Other last", () => {
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
+				foreignKeys,
+			});
+			insertCustom(sqlite, "Music", "ring", 330);
+			insertCustom(sqlite, "Garden", "square", 95);
+			insertCustom(sqlite, "Unused custom", "bars", 220);
+			insertHabit(sqlite, "Stretch", "Other", { sortOrder: 1 });
+			insertHabit(sqlite, "Piano", "Music", { sortOrder: 3 });
+			insertHabit(sqlite, "Run", "Fitness", { sortOrder: 2 });
+			insertHabit(sqlite, "Lift", "Fitness", { sortOrder: 4 });
+			// A tie on sort_order falls back to id: Read (id 5) before Budget (id 6).
+			insertHabit(sqlite, "Read", "Learning", { sortOrder: 5 });
+			insertHabit(sqlite, "Budget", "Finance", { sortOrder: 5 });
+			// Only archived habits use Garden and Health: they follow every active group.
+			insertHabit(sqlite, "Weed", "Garden", { sortOrder: 0, archived: true });
+			insertHabit(sqlite, "Floss", "Health", { sortOrder: 7, archived: true });
+			// Archived Music doesn't move Music: its active habit already placed it.
+			insertHabit(sqlite, "Old piano", "Music", {
+				sortOrder: 0,
+				archived: true,
+			});
+			migrateRest();
+
+			expect(orderOf(sqlite)).toEqual([
+				"Fitness",
+				"Music",
+				"Learning",
+				"Finance",
+				"Garden",
+				"Health",
+				// Unused, by id: the built-ins, then the unused custom.
+				"Mindfulness",
+				"Productivity",
+				"Social",
+				"Home",
+				"Creativity",
+				"Unused custom",
+				"Other",
+			]);
+			const orders = (
+				sqlite
+					.prepare("SELECT sort_order FROM categories ORDER BY sort_order")
+					.all() as { sort_order: number }[]
+			).map((row) => row.sort_order);
+			expect(orders).toEqual(orders.map((_, index) => index + 1));
+		});
+
+		it("orders a fresh install's built-ins by id with Other last", () => {
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
+				foreignKeys,
+			});
+			migrateRest();
+			expect(orderOf(sqlite)).toEqual(BUILT_IN_CATEGORIES.map((c) => c.name));
+		});
+
+		it("keeps every habit and entry, every join, and changes no table but categories", () => {
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
+				foreignKeys,
+			});
+			insertCustom(sqlite, "Morning", "diamond", 175);
+			insertCustom(sqlite, "Music", "ring", 330);
+			insertHabit(sqlite, "Stretch", "Morning", { sortOrder: 1 });
+			insertHabit(sqlite, "Piano", "Music", { sortOrder: 2 });
+			insertHabit(sqlite, "Floss", "Health", { sortOrder: 3, archived: true });
+			insertHabit(sqlite, "Walk", "Other", { sortOrder: 4 });
+			sqlite
+				.prepare(
+					"INSERT INTO entries (habit_id, date, created_at) SELECT id, '2026-10-01', 0 FROM habits",
+				)
+				.run();
+			const schemaOf = () =>
+				sqlite
+					.prepare(
+						"SELECT name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY name",
+					)
+					.all() as { name: string; sql: string | null }[];
+			const before = schemaOf();
+			const joinsBefore = habitCategoryNames(sqlite);
+
+			migrateRest();
+
+			expect(sqlite.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
+			expect(sqlite.prepare("SELECT count(*) AS n FROM habits").get()).toEqual({
+				n: 4,
+			});
+			expect(sqlite.prepare("SELECT count(*) AS n FROM entries").get()).toEqual(
+				{ n: 4 },
+			);
+			expect(habitCategoryNames(sqlite)).toEqual(joinsBefore);
+			const after = schemaOf();
+			const changed = after
+				.filter((row) => {
+					const old = before.find((b) => b.name === row.name);
+					return !old || old.sql !== row.sql;
+				})
+				.map((row) => row.name);
+			expect(changed).toEqual(["categories"]);
+			expect(after.map((row) => row.name)).toEqual(
+				before.map((row) => row.name),
+			);
+		});
+
+		if (!foreignKeys) {
+			it("ignores a habit whose category_id dangles (keys are off on device)", () => {
+				const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
+					foreignKeys,
+				});
+				sqlite
+					.prepare(
+						"INSERT INTO habits (name, category_id, sort_order, created_at, updated_at) VALUES ('ghost', 999, 0, 0, 0)",
+					)
+					.run();
+				insertHabit(sqlite, "Run", "Fitness", { sortOrder: 1 });
+				migrateRest();
+				expect(orderOf(sqlite).slice(0, 2)).toEqual(["Fitness", "Health"]);
+				expect(
+					sqlite.prepare("SELECT count(*) AS n FROM categories").get(),
+				).toEqual({ n: 10 });
+			});
+		}
+	},
+);
+
+describe("web fixtures vs migration 0011", () => {
+	it.each(["many-categories", "default"] as const)(
+		"%s customs look exactly as 0011 leaves them on a V2 device",
+		(scenario) => {
+			const fixtures = categoryFixturesFor(
+				scenario as Parameters<typeof categoryFixturesFor>[0],
+			).filter((c) => !c.builtIn);
+			const V2_SLOTS = [
+				["diamond", 175],
+				["ring", 330],
+				["square", 95],
+				["bars", 220],
+				["dot", 15],
+				["plus", 265],
+				["half", 130],
+				["lines", 350],
+				["grid", 230],
+				["archive", 290],
+			] as const;
+			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011");
+			fixtures.forEach((fixture, index) => {
+				const [shape, hue] = V2_SLOTS[index % V2_SLOTS.length];
+				sqlite
+					.prepare(
+						"INSERT INTO categories (name, shape, hue, built_in, created_at) VALUES (?, ?, ?, 0, 0)",
+					)
+					.run(fixture.name, shape, hue);
+			});
+			migrateRest();
+
+			const migrated = categoriesOf(sqlite)
+				.filter((c) => c.built_in === 0)
+				.map(({ name, shape, hue }) => ({ name, shape, hue }));
+			expect(migrated).toEqual(
+				fixtures.map(({ name, shape, hue }) => ({ name, shape, hue })),
+			);
+		},
+	);
 });

@@ -22,7 +22,10 @@ describe("groupHabitsByCategory", () => {
 			category: categoryNamed("Morning"),
 		});
 
-		const groups = groupHabitsByCategory([morningHabit, anotherMorningHabit]);
+		const groups = groupHabitsByCategory(
+			[morningHabit, anotherMorningHabit],
+			[],
+		);
 
 		expect(groups).toEqual([
 			{
@@ -32,7 +35,7 @@ describe("groupHabitsByCategory", () => {
 		]);
 	});
 
-	it("orders groups by first-appearance in the given (creation-ordered) list", () => {
+	it("orders groups by the stored category order (HAB-42), not habit order", () => {
 		const evening = makeHabit({ id: 1, category: categoryNamed("Evening") });
 		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
 		const secondEvening = makeHabit({
@@ -40,11 +43,47 @@ describe("groupHabitsByCategory", () => {
 			category: categoryNamed("Evening"),
 		});
 
-		const groups = groupHabitsByCategory([evening, morning, secondEvening]);
+		const groups = groupHabitsByCategory(
+			[evening, morning, secondEvening],
+			[categoryNamed("Morning"), categoryNamed("Evening")],
+		);
 
 		expect(groups.map((group) => group.category.name)).toEqual([
-			"Evening",
 			"Morning",
+			"Evening",
+		]);
+		expect(groups[1].habits).toEqual([evening, secondEvening]);
+	});
+
+	it("puts categories the stored order doesn't know after the known ones, in first appearance", () => {
+		const evening = makeHabit({ id: 1, category: categoryNamed("Evening") });
+		const training = makeHabit({ id: 2, category: categoryNamed("Training") });
+		const morning = makeHabit({ id: 3, category: categoryNamed("Morning") });
+
+		const groups = groupHabitsByCategory(
+			[evening, training, morning],
+			[categoryNamed("Morning")],
+		);
+
+		expect(groups.map((group) => group.category.name)).toEqual([
+			"Morning",
+			"Evening",
+			"Training",
+		]);
+	});
+
+	it("keeps Other last even when it is stored first", () => {
+		const other = makeHabit({ id: 1, category: categoryNamed("Other") });
+		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
+
+		const groups = groupHabitsByCategory(
+			[other, morning],
+			[categoryNamed("Other"), categoryNamed("Morning")],
+		);
+
+		expect(groups.map((group) => group.category.name)).toEqual([
+			"Morning",
+			"Other",
 		]);
 	});
 
@@ -52,7 +91,7 @@ describe("groupHabitsByCategory", () => {
 		const noCategory = makeHabit({ id: 1, category: categoryNamed("Other") });
 		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
 
-		const groups = groupHabitsByCategory([noCategory, morning]);
+		const groups = groupHabitsByCategory([noCategory, morning], []);
 
 		expect(groups.map((group) => group.category.name)).toEqual([
 			"Morning",
@@ -67,7 +106,7 @@ describe("groupHabitsByCategory", () => {
 		const custom = makeHabit({ id: 1, category: customOther });
 		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
 
-		const groups = groupHabitsByCategory([custom, morning]);
+		const groups = groupHabitsByCategory([custom, morning], []);
 
 		expect(groups.map((group) => group.category.id)).toEqual([
 			50,
@@ -76,7 +115,7 @@ describe("groupHabitsByCategory", () => {
 	});
 
 	it("returns an empty array for no habits", () => {
-		expect(groupHabitsByCategory([])).toEqual([]);
+		expect(groupHabitsByCategory([], [])).toEqual([]);
 	});
 });
 

@@ -171,33 +171,29 @@ Ten built-in categories, fixed order, each a `(name, icon shape, hue)` triple:
 
 | Name | Shape | Hue |
 |---|---|---|
-| Health | plus | 25 |
+| Health | plus | 175 (was 25; V3 T-16, migration 0011) |
 | Fitness | bars | 150 |
 | Mindfulness | diamond | 300 |
 | Productivity | square | 255 |
 | Learning | lines | 75 |
 | Finance | grid | 110 |
-| Social | half | 345 |
+| Social | half | 230 (was 345; V3 T-16, migration 0011) |
 | Home | archive | 45 |
 | Creativity | dot | 200 |
 | Other | ring | **null** |
 
 **"Other" has no hue** — it's the one built-in that renders neutral (uses `sub`/`inner`, the same monochrome tokens as app chrome), not a colored accent. This is deliberate, not an oversight: Other is a catch-all, not an identity category, so it doesn't get a place in the color system. Any habit reassigned to Other on category deletion (see below) picks up this neutral treatment immediately.
 
-Custom categories draw from a fixed 10-slot rotation, assigned in order as categories are created — **not** user-chosen:
+Custom categories draw from a fixed 6-slot rotation, assigned in order as categories are created — **not** user-chosen. V3 (T-16, migration 0011) removed V2's red slots (dot/15, lines/350) and the two whose hues Health and Social now use (diamond/175, grid/230); 0011 moved existing customs on them to a remaining slot:
 
 | Slot | Shape | Hue |
 |---|---|---|
-| 1 | diamond | 175 |
-| 2 | ring | 330 |
-| 3 | square | 95 |
-| 4 | bars | 220 |
-| 5 | dot | 15 |
-| 6 | plus | 265 |
-| 7 | half | 130 |
-| 8 | lines | 350 |
-| 9 | grid | 230 |
-| 10 | archive | 290 |
+| 1 | ring | 330 |
+| 2 | square | 95 |
+| 3 | bars | 220 |
+| 4 | plus | 265 |
+| 5 | half | 130 |
+| 6 | archive | 290 |
 
 Both built-in and rotation hues follow the same `tint(hue)`/`ink(hue)` OKLCH formula defined above for habit accents (Color tokens) — categories are not a separate color system, they're the same formula applied to a longer, fixed hue list.
 

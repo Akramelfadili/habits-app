@@ -2,6 +2,7 @@ import {
 	type CategoryGroup,
 	groupHabitsByCategory,
 } from "../presenters/today-screen-helpers";
+import { useCategories } from "../repositories/category-repository";
 import { useAllEntries } from "../repositories/entry-repository";
 import {
 	useActiveHabits,
@@ -16,7 +17,7 @@ export type ArchivedHabitRow = {
 };
 
 export type ManageHabitsView = {
-	/** Category by category (Today's group order), manual order within each. */
+	/** Category by category (the stored group order, as Today), manual order within each. */
 	active: Habit[];
 	/** The same habits as one group per category — Today's grouping, so both agree. */
 	groups: CategoryGroup[];
@@ -31,13 +32,14 @@ export function useManageHabitsQueries(): ManageHabitsView {
 	const { habits: active, loaded: activeLoaded } = useActiveHabits();
 	const { habits: archived, loaded: archivedLoaded } = useArchivedHabits();
 	const entries = useAllEntries();
+	const categories = useCategories();
 
 	const logCounts = new Map<number, number>();
 	for (const entry of entries) {
 		logCounts.set(entry.habitId, (logCounts.get(entry.habitId) ?? 0) + 1);
 	}
 
-	const groups = groupHabitsByCategory(active);
+	const groups = groupHabitsByCategory(active, categories);
 	return {
 		isLoaded: activeLoaded && archivedLoaded,
 		active: groups.flatMap((group) => group.habits),

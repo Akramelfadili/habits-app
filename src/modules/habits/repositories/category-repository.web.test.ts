@@ -21,6 +21,29 @@ function loadRepositories() {
 const EVENING_HABIT_IDS = [1, 2];
 
 describe("category-repository.web (HAB-25)", () => {
+	it("starts in the order migration 0011 would store: first appearance among the fixture habits, Other last", async () => {
+		const { getCategories, getAllHabits } = loadRepositories();
+		const habits = await getAllHabits();
+		const categories = await getCategories();
+
+		const firstSeen: string[] = [];
+		for (const habit of [...habits]
+			.filter((h) => h.archivedAt === null)
+			.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)) {
+			if (!firstSeen.includes(habit.category.name))
+				firstSeen.push(habit.category.name);
+		}
+		const used = firstSeen.filter((name) => name !== OTHER_FIXTURE.name);
+		expect(categories.slice(0, used.length).map((c) => c.name)).toEqual(used);
+		expect(categories.at(-1)?.name).toBe(OTHER_FIXTURE.name);
+	});
+
+	it("appends a new category at the end of the stored order", async () => {
+		const { createCategory, getCategories } = loadRepositories();
+		await createCategory({ name: "Music", shape: "ring", hue: 330 });
+		expect((await getCategories()).at(-1)?.name).toBe("Music");
+	});
+
 	it("renames a custom and every habit in it shows the new name", async () => {
 		const { renameCategory, getCategories, getHabit } = loadRepositories();
 

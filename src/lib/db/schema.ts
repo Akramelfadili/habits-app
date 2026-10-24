@@ -42,6 +42,11 @@ export const categories = sqliteTable("categories", {
 	/** OKLCH hue; null only for the neutral built-in "Other". */
 	hue: integer("hue"),
 	builtIn: integer("built_in", { mode: "boolean" }).notNull().default(false),
+	/**
+	 * Group order on Today and Manage (HAB-42). Backfilled by 0011; a new
+	 * category takes max + 1. The picker keeps creation (id) order.
+	 */
+	sortOrder: integer("sort_order").notNull().default(0),
 	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 

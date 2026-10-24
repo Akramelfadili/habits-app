@@ -7,7 +7,7 @@ const health: Category = {
 	id: 1,
 	name: "Health",
 	shape: "plus",
-	hue: 25,
+	hue: 175,
 	builtIn: true,
 };
 const other: Category = {
@@ -20,8 +20,8 @@ const other: Category = {
 const music: Category = {
 	id: 11,
 	name: "Music",
-	shape: "dot",
-	hue: 175,
+	shape: "ring",
+	hue: 330,
 	builtIn: false,
 };
 
@@ -30,9 +30,10 @@ describe("rowToCategory", () => {
 		const row = {
 			id: 11,
 			name: "Music",
-			shape: "dot",
-			hue: 175,
+			shape: "ring",
+			hue: 330,
 			builtIn: false,
+			sortOrder: 12,
 			createdAt: new Date(),
 		};
 

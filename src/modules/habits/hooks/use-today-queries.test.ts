@@ -65,6 +65,10 @@ jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: () => mockEntries,
 	useAllEntries: () => mockAllEntries ?? mockEntries,
 }));
+jest.mock("../repositories/category-repository", () => ({
+	// Not loaded: Today's groups fall back to first appearance.
+	useCategories: () => [],
+}));
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozenDays,
 }));

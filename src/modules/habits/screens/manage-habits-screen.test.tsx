@@ -19,7 +19,7 @@ function viewOf(
 	active: Habit[],
 	archived: ManageHabitsView["archived"] = [],
 ): ManageHabitsView {
-	const groups = groupHabitsByCategory(active);
+	const groups = groupHabitsByCategory(active, []);
 	return {
 		active: groups.flatMap((g) => g.habits),
 		groups,
