@@ -60,7 +60,7 @@
 		"lint": "biome check .",
 		"prepare": "husky",
 		"test": "jest",
-		"test:slow": "jest --testPathIgnorePatterns /node_modules/ --testPathPattern \"\\\\.slow\\\\.test\\\\.tsx?$\"",
+		"test:slow": "jest --testPathIgnorePatterns /node_modules/ --testPathPatterns \"\\\\.slow\\\\.test\\\\.tsx?$\"",
 		"visual-check": "node scripts/visual-check.mjs",
 		"mockups:render": "node scripts/render-mockups.mjs",
 		"e2e": "node scripts/e2e.mjs",
