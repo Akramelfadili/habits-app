@@ -30,24 +30,6 @@ export default function TabsLayout() {
 					),
 				}}
 			/>
-			<Tabs.Screen
-				name="todos"
-				options={{
-					title: "To-dos",
-					tabBarIcon: ({ color }) => (
-						<SymbolView name="list.bullet" size={22} tintColor={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="expenses"
-				options={{
-					title: "Expenses",
-					tabBarIcon: ({ color }) => (
-						<SymbolView name="circle" size={22} tintColor={color} />
-					),
-				}}
-			/>
 		</Tabs>
 	);
 }

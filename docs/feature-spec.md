@@ -2,7 +2,7 @@
 title: Habits — Feature Spec
 status: shipped (V1). Superseded in places by feature-spec-v2.md — see the notes marked "Superseded by"
 version: 1.0
-domain: Habits (1 of 3 — Habits · To-dos · Expenses)
+domain: Habits (habits only since V3, HAB-26)
 tags: [spec, habits, v1, personal-app]
 ---
 
@@ -505,5 +505,5 @@ Named explicitly so "should we add X" gets answered by pointing here instead of 
 - **Home / lock-screen widgets** — good idea, treat as a separate build effort after V1 ships
 - **Custom reminder sounds** — cosmetic, not core to the loop
 - **Quantity-type Break habits** (e.g. "limit screen time") — noted in Feature 04, deliberately deferred
-- **A merged "Today" view across Habits / To-dos / Expenses** — revisit once all three modules exist independently; do not build cross-module coupling into this module's data or navigation now
+- ~~**A merged "Today" view across Habits / To-dos / Expenses**~~ — dropped: V3 is habits only, the To-dos and Expenses tabs were removed (HAB-26)
 - **One proper entry point on Today for the secondary screens** — the mockups only show the destination screens for Weekly Summary (11), Reminders (12) and Manage & Archive (13), never the navigation to reach them. V1 used temporary ghost buttons on Today (the "Add habit" link has since been replaced by the header `+`, audit B9), which meant 3–4 ad hoc buttons stacked there once HAB-13 ships. V2: design (mockup first) and build a single header icon or menu on Today that reaches all three, and remove the temporary buttons.

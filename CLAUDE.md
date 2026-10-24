@@ -1,6 +1,6 @@
 # Habits App
 
-A personal iOS habit-tracking app (Expo / React Native / TypeScript). Part of a larger personal app eventually combining Habits, To-dos and Expenses as independent modules sharing one shell — Habits is the only module being built.
+A personal iOS habit-tracking app (Expo / React Native / TypeScript). Habits only (V3 removed the To-dos and Expenses placeholders, HAB-26); the code still lives in one self-contained module, `src/modules/habits`.
 
 ## When you touch X, read Y
 

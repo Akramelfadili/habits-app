@@ -6,7 +6,7 @@ How the code is organised and what it is built with. Enforcement lives in `docs/
 
 - Solo developer; Windows + WSL dev box, occasional access to a Mac for builds and signing only.
 - Local-only: no backend, no accounts, no sync.
-- Habits is the only module being built, but the shell is meant to host To-dos and Expenses later without touching Habits code.
+- Habits only. The To-dos and Expenses placeholder tabs were removed in V3 (HAB-26); there is no plan for other modules.
 
 ## Stack
 
@@ -44,7 +44,6 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
       _layout.tsx
       habits/                  nested stack: index (Today), [id] (Detail), manage, categories,
                                settings, week, month, year, reminders/[id]
-      todos.tsx, expenses.tsx  placeholder tabs
 
   /modules/habits              everything Habits-specific; nothing outside imports into it
     /screens                   one file per screen
@@ -60,7 +59,6 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /test-support              test-only builders and fixtures (never imported by app code)
     constants.ts, types.ts     module constants; the module's own domain types
     messages.ts                the message catalogue: every toast, banner and inline message (HAB-48)
-  /modules/todos, /expenses    do not exist yet; they will mirror this shape
 
   /components/ui
     /primitives                no business meaning: Button, Chip, TextField, Toggle, ...
@@ -109,7 +107,7 @@ Dependencies point down only: **repositories / strategies / dev ← domain ← s
 7. **Hooks** bridge to screens. `use<X>Queries()` reads, `use<X>Actions()` writes (rule 4). Reason: a screen that only writes should not subscribe to every query.
 8. **Components, then screens.** Screens assemble documented components; they never restyle a raw `Pressable`/`View`/`Text` in place of a documented element (rule 10).
 
-Modules never import each other (rule 6). A concept two modules need is promoted deliberately into `lib/` or `components/ui/`.
+Modules never import each other (rule 6). Habits is the only module today, but the rule and its `module-isolation` check stay: they cost nothing, and they keep `lib/` and `components/ui/` free of Habits concepts. A concept a second module would need is promoted deliberately into `lib/` or `components/ui/`.
 
 ## Cross-cutting decisions
 

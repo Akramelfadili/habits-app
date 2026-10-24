@@ -124,7 +124,7 @@ Weight: regular body text, medium-weight for row labels/section headers only —
 
 **Stat card** (`VAR-14`, one size everywhere: 14px padding / 10px label / 26px value): large-numeral tiles (streak, 90-day %, week totals) — one variant uses the `warning` background tint for a flagged number (e.g. "2" freezes, or a slipping stat).
 
-**Tab bar item:** Habits / To-dos / Expenses, active/inactive states. Habits is the only implemented tab for V1; the other two render as inactive placeholders.
+**Tab bar item:** active/inactive states. Only the Habits tab exists: the To-dos and Expenses placeholder tabs were removed in V3 (HAB-26); the V3 tab bar (Today, Progress, Habits) is V3-01 in `design-system-v3.md`.
 
 **Feedback (toast/banner):** a completion toast with inline Undo ("Marked 'Upper body' complete — Undo"), and a persistent warning banner style (used for notification-permission-denied, and for reminder/schedule conflicts).
 

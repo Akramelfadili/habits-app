@@ -1,6 +1,6 @@
 # Habits
 
-A personal iOS habit-tracking app built with Expo, React Native and TypeScript. It is the first module of a larger personal app (Habits, To-dos, Expenses) that will share one shell; only Habits is built.
+A personal iOS habit-tracking app built with Expo, React Native and TypeScript. It tracks habits only.
 
 Data lives on the device in SQLite (Drizzle ORM). There is no backend.
 
