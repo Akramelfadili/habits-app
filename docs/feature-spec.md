@@ -8,6 +8,8 @@ tags: [spec, habits, v1, personal-app]
 
 # Habits — Feature Spec
 
+Mockup frame IDs in this file refer to the PNGs in docs/mockups/ (tag mockups-v1-v2); V3 frames live in docs/mockups/v3/.
+
 V2 specs: see feature-spec-v2.md. Where V2 conflicts, V2 wins.
 
 > [!info] How to use this file

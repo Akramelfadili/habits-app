@@ -10,7 +10,7 @@ One reference for every token, component state and screen structure, transcribed
 
 ## Source of truth
 
-The machine-readable mockup sources (`design-reference/Habit System.dc.html`, `Habit Flow.dc.html`, `HabitFlowV2.dc.html`, `habit-components.js`) **live outside this repository** and are not available to build from. The in-repo reference is the PNG set in `docs/mockups/` (named by ticket and frame, e.g. `hab-25-f3a.png`) together with this file. If a value here is in doubt, check the mockup PNG, then the token in `src/theme`. Exact design values could not be re-verified against the `.dc.html` sources from within the repo.
+The machine-readable V1/V2 mockup sources (`Habit System.dc.html`, `Habit Flow.dc.html`, `HabitFlowV2.dc.html`, `habit-components.js`) **live outside this repository** and are not available to build from. The in-repo V1/V2 reference is the PNG set in `docs/mockups/` (named by ticket and frame, e.g. `hab-25-f3a.png`; also kept at tag `mockups-v1-v2`) together with this file. V3 sources (`Habits V3*.dc.html`) are in `docs/mockups/v3/`, with values in `docs/design-system-v3.md`. If a value here is in doubt, check the mockup PNG, then the token in `src/theme`. Exact design values could not be re-verified against the `.dc.html` sources from within the repo.
 
 ## Design direction
 
