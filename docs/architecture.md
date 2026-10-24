@@ -55,7 +55,8 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /domain                    pure rules: streaks, history, summaries, insights, export formats
     /repositories              the only files that import Drizzle (+ .web.ts twins)
     /dev                       web fixtures (*-fixtures.ts) and __DEV__-only device seeds
-    /strategies                FrequencyStrategy implementations and the paused-schedule wrapper
+    /strategies                FrequencyStrategy implementations, the paused-schedule wrapper, and the
+                               completion index (completions bucketed by week/day once per history)
     /test-support              test-only builders and fixtures (never imported by app code)
     constants.ts, types.ts     module constants; the module's own domain types
     messages.ts                the message catalogue: every toast, banner and inline message (HAB-48)
@@ -77,11 +78,13 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /clipboard                 adapter around expo-clipboard (falls back to the share sheet)
     /today                     useToday() (rolls over at midnight / on foreground) and currentDay()
   /store                       cross-module Zustand stores (toast)
-  /utils                       generic helpers with no app knowledge: useAsyncAction/runSafely, format (pluralise, counts, date ranges — the one home for user-facing counts and dates), useReducedMotion, useScreenReader
+  /utils                       generic helpers with no app knowledge: useAsyncAction/runSafely, format (pluralise, counts, date ranges — the one home for user-facing counts and dates), day-key (the stored "yyyy-MM-dd" calendar-day key: toDayKey/fromDayKey), useReducedMotion, useScreenReader
 
 /e2e                           Maestro flows, named by feature ID
-/scripts                       visual-check, e2e runner, check-architecture, token ratchet
-/docs                          specs, design system, this file; mockups/ and visual-baseline/ hold PNGs
+/scripts                       visual-check, e2e runner, check-architecture, token ratchet, mockup renderer (scripts/README.md)
+/docs                          specs, design systems, this file, decisions/ (ADRs), CONTRIBUTING.md, audits/;
+                               mockups/ and visual-baseline/ hold PNGs (mockups/v3/ the V3 design files)
+/.github/workflows             CI: make check on every PR and push to master
 drizzle.config.ts              at the repo root
 ```
 
@@ -100,7 +103,7 @@ Dependencies point down only: **repositories / strategies / dev ← domain ← s
 1. **Repositories** are plain files of exported functions, never classes. They are the only code allowed to import `drizzle-orm`, the db client or the schema (rule 1; this includes `lib/*/repositories/`). They map rows to the module's own `types.ts` types before returning, and they export live-query hooks so nothing above them ever holds a Drizzle query (rule 2; arguments are passed as `useLiveRows` deps). Reason: swapping the data layer then touches `repositories/` only.
 2. **Strategies** are one file per frequency type or streak rule, implementing a shared interface (rule 5). Reason: a new frequency is a new file; no tested code is edited.
 3. **Dev** (`dev/`) holds the web/visual-check fixtures (`*-fixtures.ts`) and the `__DEV__`-only device seeds. It ranks with repositories because the `.web.ts` twins read its fixtures. Reason: dev data stays out of the production layers' folders.
-4. **Domain** (`domain/`) holds pure rules: streaks, history, summaries, insights, off-schedule and retro-log rules, export formats. It may use strategies and types but never repositories or `dev/`, so every rule is testable without a database. Reason: the rules are the app; keep them in one place and side-effect free.
+4. **Domain** (`domain/`) holds pure rules: streaks, history, summaries, insights, off-schedule and retro-log rules, export formats. It may use strategies and types but never repositories or `dev/`, so every rule is testable without a database. One accepted exception: `export-json.ts` stamps the file with the app build from `lib/diagnostics/app-info` (static facts, no I/O). Reason: the rules are the app; keep them in one place and side-effect free.
 5. **Services** (`services/`) orchestrate: a write that reads first (the freeze pool), several repositories in one action (habit lifecycle, reminders and the OS), or lib adapters (export, first run). A single repository call is never wrapped in a service (rule 3). Reason: avoid ceremony.
 6. **Presenters** (`presenters/`) turn domain results into what a screen shows: labels, grouping, view models, form schemas. Pure; used by hooks, components and screens. Reason: view logic that several layers share must not live in `screens/`.
 7. **Hooks** bridge to screens. `use<X>Queries()` reads, `use<X>Actions()` writes (rule 4). Reason: a screen that only writes should not subscribe to every query.
@@ -128,9 +131,10 @@ Modules never import each other (rule 6). A concept two modules need is promoted
 
 ## Decision log
 
-If a package or approach is replaced, record the change here with a date rather than swapping it silently.
+If a package or approach is replaced, record the change here with a date rather than swapping it silently. Decisions with real trade-offs get an ADR in `docs/decisions/` (context, decision, consequences): 001 Drizzle + `useLiveRows`, 002 foreign keys off on device, 003 `run()` never rejects, 004 the design-token ratchet.
 
 - 2026-09: Categories became a managed table (HAB-24/25). `habits.categoryId` is a NOT NULL FK; the legacy `icon/color/category` columns stay nullable and unused until a cleanup migration.
 - 2026-10: Docs consolidated into `architecture.md` and `design-system.md`.
+- 2026-10 (V3-0a): module layers became repositories/strategies/dev ← domain ← services ← presenters ← hooks ← components ← screens (pure rules out of `services/`, view helpers out of `screens/`, fixtures out of `repositories/`); per-week history math pre-buckets completions by week (`strategies/completion-index.ts`); CI added.
 
 Not decided: analytics, crash reporting (the app is local-only).

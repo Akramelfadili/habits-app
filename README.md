@@ -28,12 +28,15 @@ Use `npx expo install <package>` (not `npm install`) for Expo / React Native pac
 ## Where to read more
 
 - `CLAUDE.md` — working rules and the "when you touch X, read Y" table
-- `docs/architecture.md` — folders, layers, patterns, stack
+- `docs/architecture.md` — folders, layers, patterns, stack (`src/modules/habits/README.md` and `scripts/README.md` for the short version)
 - `docs/design-system.md` — tokens, components, variants
 - `docs/feature-spec.md`, `docs/feature-spec-v2.md` — what each `HAB-<id>` ticket specifies
 - `docs/feature-spec-v3.md` — V3 (HAB-26–50): habits only, three tabs, new Today / Progress / Habits
 - `docs/design-system-v3.md` — V3 tokens and components (replaces V1/V2 values where it gives one)
 - `docs/mockups/v3/README.md` — the V3 design files and their renders (`npm run mockups:render`)
+- `docs/assessment-v3.md` — V3 impact per ticket, architecture review and batch plan
+- `docs/decisions/` — architecture decision records (ADRs 001–004)
+- `docs/CONTRIBUTING.md` — branches, commits, PRs, the gate, migrations, the feature flow
 - `docs/dev-tooling.md` — hooks, checks, ratchets, visual-check setup
 - `docs/backlog.md` — deferred work and deviations from the specs
 - `docs/roadmap.md` — status
