@@ -2,7 +2,6 @@ import {
 	addDays,
 	addMonths,
 	addWeeks,
-	format,
 	isAfter,
 	isBefore,
 	isSameDay,
@@ -14,6 +13,7 @@ import {
 	subDays,
 } from "date-fns";
 import type { HeatmapLevel } from "@/theme/theme";
+import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import {
 	getHabitStrategy,
@@ -30,8 +30,6 @@ import { calculateCurrentStreak, isEntryComplete } from "./streaks";
  * habit's FrequencyStrategy (`wasScheduledOn`), so the streaks, the 90-day
  * rate, and the heatmap can never disagree about which days counted.
  */
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 const COMPLETION_RATE_WINDOW_DAYS = 90;
 export const HEATMAP_WEEKS = 10;
@@ -64,9 +62,7 @@ export function currentStreakAsOf({
 	frozenDates,
 	today,
 }: History): number {
-	const todayDone = completedDatesOf(habit, entries).set.has(
-		format(today, DATE_FORMAT),
-	);
+	const todayDone = completedDatesOf(habit, entries).set.has(toDayKey(today));
 	const asOf = todayDone ? today : subDays(startOfDay(today), 1);
 	return calculateCurrentStreak(habit, entries, frozenDates, asOf);
 }
@@ -98,7 +94,7 @@ export function calculateLongestStreak({
 		!isAfter(cursor, todayStart);
 		cursor = addDays(cursor, 1)
 	) {
-		const dateString = format(cursor, DATE_FORMAT);
+		const dateString = toDayKey(cursor);
 		if (restarts.has(dateString)) run = 0;
 		if (!strategy.wasScheduledOn(cursor, context)) continue;
 		if (completed.set.has(dateString) || frozenDates.has(dateString)) {
@@ -157,7 +153,7 @@ export function calculateCompletionRate({
 	) {
 		if (isPausedOn(cursor, closedPauses)) skippedPaused = true;
 		if (!strategy.wasScheduledOn(cursor, context)) continue;
-		const isDone = completed.set.has(format(cursor, DATE_FORMAT));
+		const isDone = completed.set.has(toDayKey(cursor));
 		if (isSameDay(cursor, todayStart) && !isDone) continue;
 		scheduled += 1;
 		if (isDone) done += 1;
@@ -232,7 +228,7 @@ export function buildHeatmapWeeks(
 	);
 
 	function dayFor(date: Date): HeatmapDay {
-		const dateString = format(date, DATE_FORMAT);
+		const dateString = toDayKey(date);
 		const entry = entriesByDate.get(dateString);
 		const isFuture = isAfter(date, todayStart);
 		const beforeCreation = isBefore(date, createdStart);
@@ -344,7 +340,7 @@ export function streakResetInfo(
 		!isBefore(cursor, earliest);
 		cursor = subDays(cursor, 1)
 	) {
-		const dateString = format(cursor, DATE_FORMAT);
+		const dateString = toDayKey(cursor);
 		if (
 			!strategy.wasScheduledOn(cursor, context) ||
 			completed.set.has(dateString) ||

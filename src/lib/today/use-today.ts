@@ -1,15 +1,14 @@
-import { addDays, format, parseISO, startOfDay } from "date-fns";
+import { addDays, parseISO, startOfDay } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { AppState } from "react-native";
-
-const DAY_KEY_FORMAT = "yyyy-MM-dd";
+import { toDayKey } from "@/utils/day-key";
 
 /** Local midnight today — the single place the app asks "what day is it" for a write. */
 export function currentDay(): Date {
 	return startOfDay(new Date());
 }
 
-const dayKey = () => format(new Date(), DAY_KEY_FORMAT);
+const dayKey = () => toDayKey(new Date());
 
 /** Milliseconds until the next local midnight (+1 s, so the clock is surely past it). */
 function msUntilMidnight(): number {

@@ -1,13 +1,11 @@
-import { format } from "date-fns";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { frozenDays } from "@/lib/db/schema";
 import { useLiveRows } from "@/lib/db/use-live-rows";
+import { toDayKey } from "@/utils/day-key";
 import type { FrozenDay } from "../types";
 
 type FrozenDayRow = typeof frozenDays.$inferSelect;
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 function rowToFrozenDay(row: FrozenDayRow): FrozenDay {
 	return {
@@ -41,8 +39,8 @@ export async function getFreezesUsedInMonth(
 		.from(frozenDays)
 		.where(
 			and(
-				gte(frozenDays.date, format(monthStart, DATE_FORMAT)),
-				lte(frozenDays.date, format(monthEnd, DATE_FORMAT)),
+				gte(frozenDays.date, toDayKey(monthStart)),
+				lte(frozenDays.date, toDayKey(monthEnd)),
 			),
 		);
 	return rows.length;
@@ -56,10 +54,7 @@ export async function unfreezeHabitDay(
 	await db
 		.delete(frozenDays)
 		.where(
-			and(
-				eq(frozenDays.habitId, habitId),
-				eq(frozenDays.date, format(date, DATE_FORMAT)),
-			),
+			and(eq(frozenDays.habitId, habitId), eq(frozenDays.date, toDayKey(date))),
 		);
 }
 
@@ -70,6 +65,6 @@ export async function freezeHabitDay(
 ): Promise<void> {
 	await db
 		.insert(frozenDays)
-		.values({ habitId, date: format(date, DATE_FORMAT), createdAt: new Date() })
+		.values({ habitId, date: toDayKey(date), createdAt: new Date() })
 		.onConflictDoNothing();
 }

@@ -1,14 +1,12 @@
-import { format } from "date-fns";
 import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes } from "@/lib/db/schema";
 import { useLiveRows } from "@/lib/db/use-live-rows";
+import { toDayKey } from "@/utils/day-key";
 import type { DayLog, Entry, EntryNote } from "../types";
 
 type EntryRow = typeof entries.$inferSelect;
 type EntryNoteRow = typeof entryNotes.$inferSelect;
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 function rowToEntry(row: EntryRow): Entry {
 	return {
@@ -26,8 +24,8 @@ function rowToEntryNote(row: EntryNoteRow): EntryNote {
 
 /** Live-query hook — entries with a date in `[start, end]`, inclusive. */
 export function useEntriesInRange(start: Date, end: Date): Entry[] {
-	const startDate = format(start, DATE_FORMAT);
-	const endDate = format(end, DATE_FORMAT);
+	const startDate = toDayKey(start);
+	const endDate = toDayKey(end);
 	const { data } = useLiveRows<EntryRow>(
 		db
 			.select()
@@ -66,7 +64,7 @@ export async function setHabitCompletedOn(
 	date: Date,
 	completed: boolean,
 ): Promise<void> {
-	const dateString = format(date, DATE_FORMAT);
+	const dateString = toDayKey(date);
 
 	if (completed) {
 		await db
@@ -94,7 +92,7 @@ export async function setHabitQuantityOn(
 	date: Date,
 	value: number,
 ): Promise<void> {
-	const dateString = format(date, DATE_FORMAT);
+	const dateString = toDayKey(date);
 
 	if (value <= 0) {
 		await db
@@ -133,7 +131,7 @@ export function useEntryNotes(): EntryNote[] {
  * is a no-op there, but lets an async driver (the Jest test db) finish first.
  */
 export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
-	const dateString = format(date, DATE_FORMAT);
+	const dateString = toDayKey(date);
 	const note = log.note.trim();
 	const now = new Date();
 

@@ -3,7 +3,6 @@ import {
 	differenceInCalendarDays,
 	endOfMonth,
 	endOfWeek,
-	format,
 	getISODay,
 	isAfter,
 	isBefore,
@@ -15,6 +14,7 @@ import {
 	startOfWeek,
 	subMonths,
 } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
@@ -43,8 +43,6 @@ import { isEntryComplete } from "./streaks";
  * one counted habit (`countedDays`) — not the calendar length, so a month of
  * rest days or a part-month history doesn't read as failure.
  */
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 /** A month needs this many days of history before the Monthly screen unlocks. */
 export const MONTH_UNLOCK_DAYS = 30;
@@ -237,7 +235,7 @@ export function outcomesFor({
 		) {
 			if (isBefore(cursor, createdStart)) continue;
 			if (!strategy.wasScheduledOn(cursor, context)) continue;
-			const date = format(cursor, DATE_FORMAT);
+			const date = toDayKey(cursor);
 			const weekday = getISODay(cursor) as IsoWeekday;
 			if (completedSet.has(date)) {
 				outcomes.push({ habitId: habit.id, date, weekday, outcome: "done" });
@@ -287,7 +285,7 @@ function buildCalendar(
 	const statusOf = (date: Date): CalendarDayStatus => {
 		if (firstDay && isBefore(date, firstDay)) return { kind: "before-start" };
 		if (isAfter(date, lastCounted)) return { kind: "future" };
-		const day = byDate.get(format(date, DATE_FORMAT)) ?? [];
+		const day = byDate.get(toDayKey(date)) ?? [];
 		if (day.some(({ outcome }) => outcome === "frozen")) {
 			return { kind: "frozen" };
 		}
@@ -386,8 +384,8 @@ export function buildMonthlySummary(
 		if (dayCounts.completed === dayCounts.scheduled) perfectDays += 1;
 	}
 
-	const monthStart = format(month.start, DATE_FORMAT);
-	const monthEnd = format(month.end, DATE_FORMAT);
+	const monthStart = toDayKey(month.start);
+	const monthEnd = toDayKey(month.end);
 	const freezeDates = frozenDays
 		.filter((frozen) => frozen.date >= monthStart && frozen.date <= monthEnd)
 		.map((frozen) => parseISO(frozen.date))

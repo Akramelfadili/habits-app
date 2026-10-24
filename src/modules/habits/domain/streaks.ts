@@ -1,18 +1,16 @@
 import {
 	endOfMonth,
-	format,
 	isBefore,
 	parseISO,
 	startOfDay,
 	startOfMonth,
 	subDays,
 } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { FREEZE_POOL_SIZE } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import { restartDays } from "../strategies/paused-schedule";
 import type { Entry, FrozenDay, Habit } from "../types";
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 /**
  * Whether `entry` counts as an actual completion of `habit` — presence alone
@@ -55,7 +53,7 @@ export function calculateCurrentStreak(
 	// A restore starts the streak over (HAB-20): never count back past it.
 	const lastRestart = restartDays(habit.pauses).at(-1);
 	const floor = startOfDay(
-		lastRestart && lastRestart > format(habit.createdAt, DATE_FORMAT)
+		lastRestart && lastRestart > toDayKey(habit.createdAt)
 			? parseISO(lastRestart)
 			: habit.createdAt,
 	);
@@ -63,7 +61,7 @@ export function calculateCurrentStreak(
 	let streak = 0;
 	let cursor = startOfDay(asOf);
 	while (!isBefore(cursor, floor)) {
-		const dateString = format(cursor, DATE_FORMAT);
+		const dateString = toDayKey(cursor);
 		if (strategy.wasScheduledOn(cursor, { completedDates })) {
 			if (completedSet.has(dateString) || frozenDates.has(dateString)) {
 				streak += 1;
@@ -101,7 +99,7 @@ export function getStreakAtRisk(
 	if (freezesRemaining <= 0) return null;
 
 	const yesterday = subDays(startOfDay(today), 1);
-	const yesterdayString = format(yesterday, DATE_FORMAT);
+	const yesterdayString = toDayKey(yesterday);
 	if (frozenDates.has(yesterdayString)) return null;
 
 	const strategy = getHabitStrategy(habit);
@@ -129,8 +127,8 @@ export function freezesRemainingInMonth(
 	frozenDays: readonly FrozenDay[],
 	monthDate: Date,
 ): number {
-	const monthStart = format(startOfMonth(monthDate), DATE_FORMAT);
-	const monthEnd = format(endOfMonth(monthDate), DATE_FORMAT);
+	const monthStart = toDayKey(startOfMonth(monthDate));
+	const monthEnd = toDayKey(endOfMonth(monthDate));
 	const used = frozenDays.filter(
 		(frozenDay) => frozenDay.date >= monthStart && frozenDay.date <= monthEnd,
 	).length;

@@ -1,4 +1,5 @@
-import { format, startOfDay, subDays } from "date-fns";
+import { startOfDay, subDays } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import {
 	deleteHabitAndHistory,
 	getHabit,
@@ -14,8 +15,6 @@ import { cancelHabitNotifications, syncAfterWrite } from "./reminder-service";
  * a reminder firing for an archived or deleted habit is a user-facing bug.
  */
 
-const DATE_FORMAT = "yyyy-MM-dd";
-
 /**
  * The habit's pauses once it's restored at `restoredAt`: the archive period
  * becomes a closed pause from the archive day through the day before the
@@ -27,8 +26,8 @@ export function pausesAfterRestore(
 	restoredAt: Date,
 ): DayRange[] {
 	if (!habit.archivedAt) return habit.pauses;
-	const from = format(habit.archivedAt, DATE_FORMAT);
-	const to = format(subDays(startOfDay(restoredAt), 1), DATE_FORMAT);
+	const from = toDayKey(habit.archivedAt);
+	const to = toDayKey(subDays(startOfDay(restoredAt), 1));
 	if (to < from) return habit.pauses;
 	return [...habit.pauses, { from, to }];
 }

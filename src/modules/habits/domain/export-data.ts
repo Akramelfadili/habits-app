@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import type {
 	Entry,
 	EntryNote,
@@ -15,8 +15,6 @@ import { isEntryComplete } from "./streaks";
  * sheet's counts and the written file can never disagree: both come from
  * `buildExportModel`.
  */
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 export type ExportSource = {
 	habits: readonly Habit[];
@@ -107,7 +105,7 @@ export function buildExportModel(
 	});
 
 	return {
-		exportedOn: format(today, DATE_FORMAT),
+		exportedOn: toDayKey(today),
 		habits: records,
 		logCount: records.reduce((sum, record) => sum + record.logs.length, 0),
 		noteCount: records.reduce((sum, record) => sum + record.notes.length, 0),

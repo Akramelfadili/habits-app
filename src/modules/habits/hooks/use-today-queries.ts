@@ -1,5 +1,6 @@
-import { addDays, endOfWeek, format, parseISO, startOfWeek } from "date-fns";
+import { addDays, endOfWeek, parseISO, startOfWeek } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
+import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import {
 	freezesRemainingInMonth,
@@ -25,8 +26,6 @@ import { useActiveHabits } from "../repositories/habit-repository";
 import { useAllReminders } from "../repositories/reminder-repository";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 export function useTodayQueries(): {
 	totalHabitCount: number;
@@ -62,7 +61,7 @@ export function useTodayQueries(): {
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 
 	const completedDatesByHabit = new Map<number, Date[]>();
-	const todayString = format(today, DATE_FORMAT);
+	const todayString = toDayKey(today);
 	const completedHabitIds = new Set<number>();
 	const quantityValuesByHabitId = new Map<number, number>();
 	for (const entry of entries) {

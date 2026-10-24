@@ -1,7 +1,6 @@
 import {
 	addDays,
 	endOfWeek,
-	format,
 	getISODay,
 	isAfter,
 	isBefore,
@@ -12,6 +11,7 @@ import {
 	startOfWeek,
 	subWeeks,
 } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, Habit } from "../types";
@@ -29,8 +29,6 @@ import { isEntryComplete } from "./streaks";
  * habit is judged on the days that have actually happened; a finished week
  * (last week) counts all seven.
  */
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 /** A habit needs this many scheduled days this week before it can be flagged as slipping. */
 export const SLIPPING_MIN_SCHEDULED_DAYS = 3;
@@ -145,7 +143,7 @@ export function buildWeeklySummary({
 		) {
 			if (isBefore(cursor, createdStart)) continue;
 			if (!strategy.wasScheduledOn(cursor, context)) continue;
-			const dateString = format(cursor, DATE_FORMAT);
+			const dateString = toDayKey(cursor);
 			const isDone = completedSet.has(dateString);
 			if (isSameDay(cursor, todayStart) && !isDone) continue;
 

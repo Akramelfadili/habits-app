@@ -1,5 +1,5 @@
-import { format } from "date-fns";
 import { useSyncExternalStore } from "react";
+import { toDayKey } from "@/utils/day-key";
 import { makeFrozenDayFixtures } from "../dev/frozen-day-fixtures";
 import { resolveFixtureScenario } from "../dev/habit-fixtures";
 import type { FrozenDay } from "../types";
@@ -9,8 +9,6 @@ import type * as NativeFrozenDayRepository from "./frozen-day-repository";
  * Web-only stand-in for `frozen-day-repository.ts` — in-memory fixtures, no
  * expo-sqlite binding, same shape as `entry-repository.web.ts`.
  */
-
-const DATE_FORMAT = "yyyy-MM-dd";
 
 let store: FrozenDay[] | undefined;
 const listeners = new Set<() => void>();
@@ -42,8 +40,8 @@ export async function getFreezesUsedInMonth(
 	monthStart: Date,
 	monthEnd: Date,
 ): Promise<number> {
-	const startDate = format(monthStart, DATE_FORMAT);
-	const endDate = format(monthEnd, DATE_FORMAT);
+	const startDate = toDayKey(monthStart);
+	const endDate = toDayKey(monthEnd);
 	return getFrozenDays().filter(
 		(frozenDay) => frozenDay.date >= startDate && frozenDay.date <= endDate,
 	).length;
@@ -53,7 +51,7 @@ export async function freezeHabitDay(
 	habitId: number,
 	date: Date,
 ): Promise<void> {
-	const dateString = format(date, DATE_FORMAT);
+	const dateString = toDayKey(date);
 	const frozenDays = getFrozenDays();
 	if (
 		frozenDays.some(
@@ -76,7 +74,7 @@ export async function unfreezeHabitDay(
 	habitId: number,
 	date: Date,
 ): Promise<void> {
-	const dateString = format(date, DATE_FORMAT);
+	const dateString = toDayKey(date);
 	setFrozenDays(
 		getFrozenDays().filter(
 			(frozenDay) =>
