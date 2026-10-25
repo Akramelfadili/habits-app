@@ -34,7 +34,14 @@ import { useReducedTransparency } from "@/utils/use-reduced-transparency";
 /** The pill's own height, without the gap below it. */
 export const PILL_HEIGHT = 56;
 
-/** How far the pill floats above the bottom safe-area inset. */
+/**
+ * How far the pill floats above the *screen* edge — not above the safe-area
+ * inset. The mockup draws the home indicator at 8 with a 5 pt bar and the
+ * pill at 22, i.e. V3-01's "9 above home indicator": a floating bar
+ * deliberately sits over the home-indicator strip. It is also the only
+ * reading under which T-25's 112 = 56 + 22 + 22 + 12 and T14's "toast bottom
+ * 90" come out right.
+ */
 export const PILL_BOTTOM_INSET = 22;
 
 /** Left and right margin from the screen edge (F-04 space-400). */
@@ -43,12 +50,18 @@ export const PILL_SIDE_INSET = space[400];
 /** The padding inside the pill — also how far a hit area reaches past its item. */
 const PILL_PADDING = space[100];
 
+/** Gap between the last row and the pill's top edge (T-25). */
+const PILL_CLEARANCE = 22;
+
+/** The strip under that gap which nothing may occupy (T-25). */
+const PILL_SAFE_ZONE = 12;
+
 /**
- * Clearance between the last row and the pill, and the safe strip under it
- * (T-25): 56 + 22 + 22 + 12 = 112. Every scrolling screen inside the tabs
- * pays it as bottom padding, so the last row's circle is never under the bar.
+ * What every scrolling screen inside the tabs pays as bottom padding, so the
+ * last row's circle is never under the bar (T-25): 56 + 22 + 22 + 12 = 112.
  */
-export const TAB_BAR_BOTTOM_PADDING = PILL_HEIGHT + PILL_BOTTOM_INSET + 22 + 12;
+export const TAB_BAR_BOTTOM_PADDING =
+	PILL_HEIGHT + PILL_BOTTOM_INSET + PILL_CLEARANCE + PILL_SAFE_ZONE;
 
 /** Bar A's own height, above the bottom safe-area inset (V3-01 A). */
 export const BAR_A_HEIGHT = 56;
@@ -62,9 +75,12 @@ export function tabBarToastOffset(
 	bottomInset: number,
 	accessibilityTextSize: boolean,
 ): number {
+	// Bar A sits on the screen edge and carries the inset itself, so its toast
+	// clears both. The pill already floats clear of the inset (see
+	// PILL_BOTTOM_INSET), so its toast is a flat 90 from the edge.
 	return accessibilityTextSize
 		? bottomInset + BAR_A_HEIGHT + space[400]
-		: bottomInset + PILL_BOTTOM_INSET + PILL_HEIGHT + space[300];
+		: PILL_BOTTOM_INSET + PILL_HEIGHT + space[300];
 }
 
 /**
@@ -88,7 +104,11 @@ export type TabBarPillItem = {
 
 type TabBarPillProps = {
 	items: readonly TabBarPillItem[];
-	/** The device's bottom safe-area inset; the pill floats 22 pt above it. */
+	/**
+	 * The device's bottom safe-area inset. Only bar A uses it — it sits on the
+	 * screen edge and carries the inset as its own padding; the pill floats at
+	 * a flat 22 pt over the home indicator (see `PILL_BOTTOM_INSET`).
+	 */
 	bottomInset: number;
 	/**
 	 * Inert: no tab can be tapped. True while a sheet or alert is open (H8 — no
@@ -150,7 +170,7 @@ export function TabBarPill({
 				{
 					left: PILL_SIDE_INSET,
 					right: PILL_SIDE_INSET,
-					bottom: bottomInset + PILL_BOTTOM_INSET,
+					bottom: PILL_BOTTOM_INSET,
 					borderColor: colors.border,
 				},
 			]}

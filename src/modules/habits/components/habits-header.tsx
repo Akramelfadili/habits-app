@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
-import { typeScale } from "@/theme/theme";
+import { space, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type HabitsHeaderProps = {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
 	buttons: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 8,
+		gap: space[200],
 	},
 	title: {
 		fontSize: typeScale.screenTitle,

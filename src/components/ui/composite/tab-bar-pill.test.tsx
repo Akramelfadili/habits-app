@@ -99,7 +99,10 @@ describe("TabBarPill (V3-01 B)", () => {
 			height: PILL_HEIGHT,
 			left: PILL_SIDE_INSET,
 			right: PILL_SIDE_INSET,
-			bottom: 34 + PILL_BOTTOM_INSET,
+			// A flat 22 from the screen edge: the pill floats over the home
+			// indicator rather than above the safe-area inset (V3-01 "9 above
+			// home indicator").
+			bottom: PILL_BOTTOM_INSET,
 		});
 		expect(PILL_SIDE_INSET).toBe(16);
 		expect(PILL_BOTTOM_INSET).toBe(22);
@@ -177,18 +180,19 @@ describe("TabBarPill (V3-01 B)", () => {
 		expect(onProgress).toHaveBeenCalledTimes(1);
 	});
 
-	// T-25: 56 pill + 22 float + 22 clearance + 12 safe zone.
+	// T-25: 56 pill + 22 float + 22 clearance + 12 safe zone. It only
+	// decomposes because the float is measured from the screen edge, so the
+	// clearance under the pill is a real 34 on every device.
 	it("asks every scrolling screen for 112 pt of bottom padding", () => {
 		expect(TAB_BAR_BOTTOM_PADDING).toBe(112);
-		expect(TAB_BAR_BOTTOM_PADDING).toBe(PILL_HEIGHT + PILL_BOTTOM_INSET + 34);
+		expect(TAB_BAR_BOTTOM_PADDING - (PILL_BOTTOM_INSET + PILL_HEIGHT)).toBe(34);
 	});
 
 	// T-21: 12 pt over the pill's top edge, 16 pt over bar A's.
 	it("puts a toast 12 pt above the pill and 16 pt above bar A", () => {
-		expect(tabBarToastOffset(0, false)).toBe(
-			PILL_BOTTOM_INSET + PILL_HEIGHT + 12,
-		);
-		expect(tabBarToastOffset(34, false)).toBe(124);
+		// T14 gives the pill's toast an absolute bottom of 90, inset or not.
+		expect(tabBarToastOffset(0, false)).toBe(90);
+		expect(tabBarToastOffset(34, false)).toBe(90);
 		expect(tabBarToastOffset(34, true)).toBe(34 + BAR_A_HEIGHT + 16);
 	});
 

@@ -1,12 +1,12 @@
 # Journey: Today → Habit Detail → tap a missed past day on the heatmap →
 # retro-log it with a note → the heatmap cell, streak and entries update.
-# Covers HAB-03 (entry point), HAB-09 (detail + heatmap), HAB-10 (retro-log + notes), HAB-08 (streak recalculation).
+# Covers HAB-03 (entry point), HAB-09 (detail + heatmap), HAB-10 (retro-log + notes), HAB-08 (streak recalculation), HAB-27 (Detail inside the Today tab).
 #
 # Seed (`retro-log` fixtures, clock pinned to Thu 1 Oct): "Glass of water"
 # (daily, 8 glasses) has a 24-day current streak, bounded by a miss 25 days
 # ago (Sun 6 Sep) — logging that day joins the streak to the 2 full days
 # behind it (26–27 days ago), so the streak reads 27 afterwards.
-url: ${APP_URL}/habits?fixtures=retro-log&clock=2026-10-01T09:00:00
+url: ${APP_URL}/?fixtures=retro-log&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
 tags:
@@ -50,3 +50,7 @@ tags:
     id: "Sunday 6 September, logged"
 - assertVisible: "Forgot to log — was on the trail all day."
 - tapOn: "Cancel"
+
+# HAB-27: Detail was pushed inside the Today tab, so Back lands on Today.
+- back
+- assertVisible: "Today"

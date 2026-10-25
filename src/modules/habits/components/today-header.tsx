@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { StyleSheet, Text, View } from "react-native";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
-import { typeScale } from "@/theme/theme";
+import { space, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type TodayHeaderProps = {
@@ -43,7 +43,7 @@ export function TodayHeader({ today, onAddHabit }: TodayHeaderProps) {
 
 const styles = StyleSheet.create({
 	header: {
-		gap: 4,
+		gap: space[100],
 	},
 	titleRow: {
 		flexDirection: "row",
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
 	buttons: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 8,
+		gap: space[200],
 	},
 	title: {
 		fontSize: typeScale.screenTitle,
