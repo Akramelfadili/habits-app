@@ -1,0 +1,401 @@
+import { BlurView } from "expo-blur";
+import { useRef } from "react";
+import {
+	Animated,
+	Easing,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
+import {
+	elevation,
+	minTouchTarget,
+	motion,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
+import { useTheme } from "@/theme/use-theme";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
+import { useReducedTransparency } from "@/utils/use-reduced-transparency";
+
+/**
+ * The floating pill tab bar (V3-01 variant B, T-20/21) — the V3 baseline on
+ * every frame. It overlays the content, which scrolls under it; every
+ * scrolling screen pays `TAB_BAR_BOTTOM_PADDING` for that.
+ *
+ * Geometry is the mockup's: 56 pt tall, 16 pt side insets, floating 22 pt
+ * above the bottom safe-area inset, 4 pt of padding around items that are
+ * therefore 48 pt tall. The hit area reaches the pill's edge.
+ */
+
+/** The pill's own height, without the gap below it. */
+export const PILL_HEIGHT = 56;
+
+/** How far the pill floats above the bottom safe-area inset. */
+export const PILL_BOTTOM_INSET = 22;
+
+/** Left and right margin from the screen edge (F-04 space-400). */
+export const PILL_SIDE_INSET = space[400];
+
+/** The padding inside the pill — also how far a hit area reaches past its item. */
+const PILL_PADDING = space[100];
+
+/**
+ * expo-blur's 1–100 `intensity` is not a blur radius, so the mockup's "20 pt
+ * blur" has no exact equivalent; this is its default, and the fill above it
+ * (`pillBg`, 88 % light / 94 % dark) is what actually carries the look. Worth
+ * an eye on a device — see the phone checklist.
+ */
+const PILL_BLUR_INTENSITY = 50;
+
+export type TabBarIconName = "today" | "progress" | "habits";
+
+export type TabBarPillItem = {
+	/** Stable identity — the navigator's route key. */
+	key: string;
+	label: string;
+	icon: TabBarIconName;
+	focused: boolean;
+	onPress: () => void;
+};
+
+type TabBarPillProps = {
+	items: readonly TabBarPillItem[];
+	/** The device's bottom safe-area inset; the pill floats 22 pt above it. */
+	bottomInset: number;
+	/**
+	 * Inert: no tab can be tapped. True while a sheet or alert is open (H8 — no
+	 * tab switching mid-decision) and while the migration runs (SY3). The pill
+	 * stays visible and reads as disabled rather than disappearing.
+	 */
+	disabled?: boolean;
+};
+
+export function TabBarPill({
+	items,
+	bottomInset,
+	disabled = false,
+}: TabBarPillProps) {
+	const { colors, scheme } = useTheme();
+	const reducedTransparency = useReducedTransparency();
+
+	return (
+		<View
+			testID="tab-bar-pill"
+			accessibilityRole="tablist"
+			// Inert, not hidden: the bar is still part of the layout under a sheet.
+			pointerEvents={disabled ? "none" : "box-none"}
+			style={[
+				styles.pill,
+				elevation[scheme].pill,
+				{
+					left: PILL_SIDE_INSET,
+					right: PILL_SIDE_INSET,
+					bottom: bottomInset + PILL_BOTTOM_INSET,
+					borderColor: colors.border,
+				},
+			]}
+		>
+			{reducedTransparency ? (
+				// 08.5: a solid card, no blur — the same geometry and hairline.
+				<View
+					testID="tab-bar-pill-solid"
+					style={[styles.material, { backgroundColor: colors.card }]}
+				/>
+			) : (
+				<BlurView
+					testID="tab-bar-pill-blur"
+					intensity={PILL_BLUR_INTENSITY}
+					tint={scheme}
+					style={styles.material}
+				>
+					<View
+						style={[
+							StyleSheet.absoluteFill,
+							{ backgroundColor: colors.pillBg },
+						]}
+					/>
+				</BlurView>
+			)}
+			{items.map((item) => (
+				<TabBarPillTab key={item.key} item={item} disabled={disabled} />
+			))}
+		</View>
+	);
+}
+
+function TabBarPillTab({
+	item,
+	disabled,
+}: {
+	item: TabBarPillItem;
+	disabled: boolean;
+}) {
+	const { colors, scheme } = useTheme();
+	const reducedMotion = useReducedMotion();
+	const press = useRef(new Animated.Value(0)).current;
+
+	function animatePress(to: number) {
+		Animated.timing(press, {
+			toValue: to,
+			duration: motion.press.duration,
+			easing: Easing.bezier(...motion.press.easing),
+			useNativeDriver: true,
+		}).start();
+	}
+
+	// F-07 press: a large target scales to 98 %; Reduce Motion flashes to 70 %
+	// opacity instead and never scales.
+	const scale = reducedMotion
+		? 1
+		: press.interpolate({
+				inputRange: [0, 1],
+				outputRange: [1, motion.press.scale.max],
+			});
+	const opacity = reducedMotion
+		? press.interpolate({
+				inputRange: [0, 1],
+				outputRange: [1, motion.press.reduced.opacity],
+			})
+		: 1;
+
+	// The selected item's filled capsule, and the pressed fill under an
+	// unselected one — the two swap tone between schemes (V3-01 B).
+	const selectedFill = scheme === "dark" ? colors.track : colors.inner;
+	const pressedFill = scheme === "dark" ? colors.inner : colors.track;
+
+	const ink = disabled
+		? colors.outline
+		: item.focused
+			? colors.ink
+			: // T-23: the inactive label reads in sub, not faint, over the
+				// translucent pill.
+				colors.sub;
+	const glyphInk = disabled
+		? colors.outline
+		: item.focused
+			? colors.ink
+			: colors.faint;
+
+	return (
+		<Pressable
+			testID={`tab-${item.icon}`}
+			accessibilityRole="tab"
+			accessibilityLabel={item.label}
+			accessibilityState={{ selected: item.focused, disabled }}
+			disabled={disabled}
+			// Reaches the pill's edge, so there is no dead strip around an item.
+			hitSlop={PILL_PADDING}
+			onPressIn={() => animatePress(1)}
+			onPressOut={() => animatePress(0)}
+			onPress={item.onPress}
+			style={styles.tab}
+		>
+			<TabCapsule
+				visible={item.focused}
+				color={selectedFill}
+				reducedMotion={reducedMotion}
+			/>
+			{item.focused ? null : (
+				<Animated.View
+					style={[
+						styles.capsule,
+						{ backgroundColor: pressedFill, opacity: press },
+					]}
+				/>
+			)}
+			<Animated.View
+				style={[styles.content, { opacity, transform: [{ scale }] }]}
+			>
+				<TabGlyph name={item.icon} color={glyphInk} />
+				<Text
+					// iOS keeps tab labels at a fixed size (F-03, 08.6a); at AX sizes
+					// the whole pill gives way to bar A instead.
+					allowFontScaling={false}
+					style={[
+						textStyles.caption,
+						styles.label,
+						{ color: ink },
+						item.focused && styles.labelSelected,
+					]}
+				>
+					{item.label}
+				</Text>
+			</Animated.View>
+		</Pressable>
+	);
+}
+
+/** The selected capsule, crossfading between items (F-07 "state"). */
+function TabCapsule({
+	visible,
+	color,
+	reducedMotion,
+}: {
+	visible: boolean;
+	color: string;
+	reducedMotion: boolean;
+}) {
+	const shown = useRef(new Animated.Value(visible ? 1 : 0)).current;
+	const previous = useRef(visible);
+
+	if (previous.current !== visible) {
+		previous.current = visible;
+		Animated.timing(shown, {
+			toValue: visible ? 1 : 0,
+			duration: reducedMotion
+				? motion.state.reduced.crossfade
+				: motion.state.duration,
+			easing: Easing.bezier(...motion.state.easing),
+			useNativeDriver: true,
+		}).start();
+	}
+
+	return (
+		<Animated.View
+			testID="tab-capsule"
+			style={[styles.capsule, { backgroundColor: color, opacity: shown }]}
+		/>
+	);
+}
+
+/**
+ * The three tab glyphs (F-08, T-17): Today is a ring with a check, Progress
+ * three rising bars, Habits a list. Drawn from the mockup's geometry rather
+ * than SF Symbols, which are the one icon set that renders as nothing on web
+ * — and the tab bar is in every visual baseline.
+ */
+function TabGlyph({ name, color }: { name: TabBarIconName; color: string }) {
+	if (name === "today") {
+		return (
+			<View style={[glyph.ring, { borderColor: color }]}>
+				<View style={[glyph.check, { borderColor: color }]} />
+			</View>
+		);
+	}
+	if (name === "progress") {
+		return (
+			<View style={glyph.bars}>
+				{[7, 11, 16].map((height) => (
+					<View
+						key={height}
+						style={[glyph.bar, { height, backgroundColor: color }]}
+					/>
+				))}
+			</View>
+		);
+	}
+	return (
+		<View style={glyph.list}>
+			{[0, 1, 2].map((row) => (
+				<View key={row} style={glyph.listRow}>
+					<View style={[glyph.listDot, { backgroundColor: color }]} />
+					<View
+						style={[
+							glyph.listLine,
+							{ backgroundColor: color },
+							row === 2 && glyph.listLineShort,
+						]}
+					/>
+				</View>
+			))}
+		</View>
+	);
+}
+
+/** Icon box: 18 pt wide, so the three glyphs sit on one baseline. */
+const GLYPH_BOX = 18;
+const STROKE = 2;
+
+const styles = StyleSheet.create({
+	pill: {
+		position: "absolute",
+		height: PILL_HEIGHT,
+		borderRadius: radius.pill,
+		borderWidth: StyleSheet.hairlineWidth,
+		flexDirection: "row",
+		alignItems: "stretch",
+		padding: PILL_PADDING,
+		gap: space[50],
+	},
+	/** The blurred / solid fill, clipped to the pill. */
+	material: {
+		...StyleSheet.absoluteFill,
+		borderRadius: radius.pill,
+		overflow: "hidden",
+	},
+	tab: {
+		flex: 1,
+		minHeight: minTouchTarget + space[100],
+		alignItems: "center",
+		justifyContent: "center",
+		borderRadius: radius.pill,
+	},
+	capsule: {
+		...StyleSheet.absoluteFill,
+		borderRadius: radius.pill,
+	},
+	content: {
+		alignItems: "center",
+		gap: space[100],
+	},
+	label: {
+		textAlign: "center",
+	},
+	/** The selected tab's label: ink plus the one 600 in the type scale (F-03). */
+	labelSelected: {
+		fontWeight: "600",
+	},
+});
+
+const glyph = StyleSheet.create({
+	ring: {
+		width: GLYPH_BOX,
+		height: GLYPH_BOX,
+		borderRadius: radius.pill,
+		borderWidth: STROKE,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	check: {
+		width: 8,
+		height: 4,
+		borderLeftWidth: STROKE,
+		borderBottomWidth: STROKE,
+		transform: [{ translateY: -1 }, { rotate: "-45deg" }],
+	},
+	bars: {
+		width: GLYPH_BOX,
+		height: GLYPH_BOX,
+		flexDirection: "row",
+		alignItems: "flex-end",
+		justifyContent: "space-between",
+	},
+	bar: {
+		width: 4,
+	},
+	list: {
+		width: GLYPH_BOX,
+		height: 15,
+		justifyContent: "space-between",
+	},
+	listRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: space[50],
+	},
+	listDot: {
+		width: 3,
+		height: 3,
+	},
+	listLine: {
+		flex: 1,
+		height: STROKE,
+	},
+	listLineShort: {
+		flex: 0,
+		width: 8,
+	},
+});

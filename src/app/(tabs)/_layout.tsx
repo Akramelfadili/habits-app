@@ -1,65 +1,71 @@
 import { Tabs } from "expo-router/js-tabs";
-import { SymbolView } from "expo-symbols";
 import { StyleSheet, View } from "react-native";
+import {
+	type TabBarIconName,
+	TabBarPill,
+} from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
-import { useTheme } from "@/theme/use-theme";
 
 /**
  * The three V3 tabs (HAB-27, D2): Today, Progress, Habits. Each tab is a
  * *group* of the one shared stack in `(today,progress,habits)/`, so Detail
  * pushes inside the tab it came from (ADR 006).
  *
- * No screen draws this navigator's own header bar — every screen title is
- * screen content (V3-02). The floating pill (V3-01 B) replaces this standard
- * bar in the next step.
+ * The bar is the floating pill (V3-01 B) through the navigator's `tabBar`
+ * prop. It is absolutely positioned, so it takes no layout height and the
+ * screens — which are `flex: 1` siblings — scroll under it.
+ *
+ * No screen draws this navigator's own header bar: every screen title is
+ * screen content (V3-02).
  *
  * One toast slot for the whole shell, so a confirmation outlives both the
  * screen and the tab that raised it (archive on Detail → toast on Today).
  * It sits here and not in the shared stack, which is mounted once per tab.
  */
-export default function TabsLayout() {
-	const { colors } = useTheme();
 
+/** Route name → the tab's F-08 glyph and label. */
+const TABS: Record<string, { label: string; icon: TabBarIconName }> = {
+	"(today)": { label: "Today", icon: "today" },
+	"(progress)": { label: "Progress", icon: "progress" },
+	"(habits)": { label: "Habits", icon: "habits" },
+};
+
+export default function TabsLayout() {
 	return (
 		<View style={styles.root}>
 			<Tabs
-				screenOptions={{
-					headerShown: false,
-					tabBarStyle: {
-						backgroundColor: colors.card,
-						borderTopColor: colors.border,
-					},
-					tabBarActiveTintColor: colors.ink,
-					tabBarInactiveTintColor: colors.faint,
-				}}
+				screenOptions={{ headerShown: false }}
+				tabBar={({ state, emitter, navigateToTab, insets }) => (
+					<TabBarPill
+						bottomInset={insets.bottom}
+						items={state.routes.map((route, index) => {
+							const tab = TABS[route.name];
+							const focused = index === state.index;
+							return {
+								key: route.key,
+								label: tab?.label ?? route.name,
+								icon: tab?.icon ?? "today",
+								focused,
+								// The same press contract as the default bar: announce
+								// `tabPress` first, so anything listening can prevent it.
+								onPress: () => {
+									const event = emitter.emit({
+										type: "tabPress",
+										target: route.key,
+										canPreventDefault: true,
+									});
+									if (!focused && !event.defaultPrevented) {
+										navigateToTab(route.key);
+									}
+								},
+							};
+						})}
+					/>
+				)}
 			>
-				<Tabs.Screen
-					name="(today)"
-					options={{
-						title: "Today",
-						tabBarIcon: ({ color }) => (
-							<SymbolView name="checkmark.circle" size={22} tintColor={color} />
-						),
-					}}
-				/>
-				<Tabs.Screen
-					name="(progress)"
-					options={{
-						title: "Progress",
-						tabBarIcon: ({ color }) => (
-							<SymbolView name="chart.bar" size={22} tintColor={color} />
-						),
-					}}
-				/>
-				<Tabs.Screen
-					name="(habits)"
-					options={{
-						title: "Habits",
-						tabBarIcon: ({ color }) => (
-							<SymbolView name="list.bullet" size={22} tintColor={color} />
-						),
-					}}
-				/>
+				<Tabs.Screen name="(today)" options={{ title: "Today" }} />
+				<Tabs.Screen name="(progress)" options={{ title: "Progress" }} />
+				<Tabs.Screen name="(habits)" options={{ title: "Habits" }} />
 			</Tabs>
 			<ToastHost />
 		</View>
