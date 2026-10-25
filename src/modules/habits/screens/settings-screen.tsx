@@ -117,7 +117,7 @@ export function SettingsScreen() {
 						title="Categories"
 						subtitle="Rename or delete your own"
 						navigable
-						onPress={() => router.push("/habits/categories")}
+						onPress={() => router.push("/categories")}
 					/>
 				</SettingsGroup>
 

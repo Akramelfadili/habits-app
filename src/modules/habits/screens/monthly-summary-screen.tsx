@@ -242,7 +242,7 @@ function Ready({ summary }: { summary: MonthlySummary }) {
 								router.push(`/edit-habit/${id}?focus=frequency`)
 							}
 							onOpenReminders={(id, weekday) =>
-								router.push(`/habits/reminders/${id}?addTime=${weekday}`)
+								router.push(`/reminders/${id}?addTime=${weekday}`)
 							}
 						/>
 					))}
@@ -385,7 +385,7 @@ function TooEarly({
 				title="Your week is ready"
 				subtitle={weeklyMenuSubline(week)}
 				value="See week →"
-				onPress={() => router.replace("/habits/week")}
+				onPress={() => router.replace("/week")}
 			/>
 		</ScrollView>
 	);

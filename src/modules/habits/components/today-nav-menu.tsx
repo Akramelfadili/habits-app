@@ -16,14 +16,7 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 	const router = useRouter();
 	const menu = useTodayMenuQueries();
 
-	function go(
-		href:
-			| "/habits/week"
-			| "/habits/month"
-			| "/habits/year"
-			| "/habits/manage"
-			| "/habits/settings",
-	) {
+	function go(href: "/week" | "/month" | "/year" | "/manage" | "/settings") {
 		onClose();
 		router.push(href);
 	}
@@ -35,34 +28,34 @@ export function TodayNavMenu({ anchorBottom, onClose }: TodayNavMenuProps) {
 				title="Weekly summary"
 				subline={menu.weekly.subline}
 				disabledReason={menu.weekly.disabledReason}
-				onPress={() => go("/habits/week")}
+				onPress={() => go("/week")}
 			/>
 			<MenuRow
 				symbol="calendar"
 				title="Monthly"
 				subline={menu.monthly.subline}
 				disabledReason={menu.monthly.disabledReason}
-				onPress={() => go("/habits/month")}
+				onPress={() => go("/month")}
 			/>
 			<MenuRow
 				symbol="circle"
 				title="Yearly"
 				subline={menu.yearly.subline}
 				disabledReason={menu.yearly.disabledReason}
-				onPress={() => go("/habits/year")}
+				onPress={() => go("/year")}
 			/>
 			<NavMenuDivider />
 			<MenuRow
 				symbol="list.bullet"
 				title="Manage & archive"
 				subline={menu.manage.subline}
-				onPress={() => go("/habits/manage")}
+				onPress={() => go("/manage")}
 			/>
 			<MenuRow
 				symbol="gearshape"
 				title="Settings"
 				subline={menu.settings.subline}
-				onPress={() => go("/habits/settings")}
+				onPress={() => go("/settings")}
 			/>
 		</NavMenu>
 	);

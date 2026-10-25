@@ -147,7 +147,7 @@ export function ManageHabitsScreen() {
 											/>
 										}
 										trailing={handle}
-										onPress={() => router.push(`/habits/${habit.id}`)}
+										onPress={() => router.push(`/habit/${habit.id}`)}
 										accessibilityActions={[
 											{
 												label: "Archive",
@@ -204,7 +204,7 @@ export function ManageHabitsScreen() {
 											onPress={() => handleRestore(habit)}
 										/>
 									}
-									onPress={() => router.push(`/habits/${habit.id}`)}
+									onPress={() => router.push(`/habit/${habit.id}`)}
 								/>
 							))}
 						</Container>

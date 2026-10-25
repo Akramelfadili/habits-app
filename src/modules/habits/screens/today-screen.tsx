@@ -356,7 +356,7 @@ export function TodayScreen() {
 									key={habit.id}
 									habit={habit}
 									entry={entry}
-									onPress={() => router.push(`/habits/${habit.id}`)}
+									onPress={() => router.push(`/habit/${habit.id}`)}
 								/>
 							))}
 						</Container>
@@ -473,7 +473,7 @@ export function TodayScreen() {
 									onPress={() =>
 										atRiskByHabitId.has(habit.id)
 											? setAtRiskHabitId(habit.id)
-											: router.push(`/habits/${habit.id}`)
+											: router.push(`/habit/${habit.id}`)
 									}
 									onToggle={() => handleToggle(habit)}
 									onOpenQuantitySheet={() => setQuantityHabitId(habit.id)}

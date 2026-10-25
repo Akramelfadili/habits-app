@@ -263,7 +263,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 						: remindersSummary(reminders)
 				}
 				navigable
-				onPress={() => router.push(`/habits/reminders/${habit.id}`)}
+				onPress={() => router.push(`/reminders/${habit.id}`)}
 			/>
 
 			<View style={styles.entries}>

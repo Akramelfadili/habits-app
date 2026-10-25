@@ -4,9 +4,9 @@ import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 type Range = "week" | "month" | "year";
 
 const ROUTES = {
-	week: "/habits/week",
-	month: "/habits/month",
-	year: "/habits/year",
+	week: "/week",
+	month: "/month",
+	year: "/year",
 } as const;
 
 type RangeSwitcherProps = {
