@@ -5,6 +5,7 @@ import { AddRow } from "@/components/ui/composite/add-row";
 import { Banner } from "@/components/ui/composite/banner";
 import { headerBackOptions } from "@/components/ui/composite/header-buttons";
 import { MovedSettingPointer } from "@/components/ui/composite/moved-setting-pointer";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Caption } from "@/components/ui/primitives/caption";
 import { showToast } from "@/store/toast-store";
 import { typeScale } from "@/theme/theme";
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 8,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 12,
 	},
 	title: {

@@ -1,10 +1,13 @@
 import { Tabs } from "expo-router/js-tabs";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
+	pillToastOffset,
 	type TabBarIconName,
 	TabBarPill,
 } from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
+import { useToastStore } from "@/store/toast-store";
 
 /**
  * The three V3 tabs (HAB-27, D2): Today, Progress, Habits. Each tab is a
@@ -13,14 +16,16 @@ import { ToastHost } from "@/components/ui/composite/toast-host";
  *
  * The bar is the floating pill (V3-01 B) through the navigator's `tabBar`
  * prop. It is absolutely positioned, so it takes no layout height and the
- * screens — which are `flex: 1` siblings — scroll under it.
+ * screens — which are `flex: 1` siblings — scroll under it, each paying
+ * `TAB_BAR_BOTTOM_PADDING` at the bottom of its content (T-25).
  *
  * No screen draws this navigator's own header bar: every screen title is
  * screen content (V3-02).
  *
- * One toast slot for the whole shell, so a confirmation outlives both the
- * screen and the tab that raised it (archive on Detail → toast on Today).
- * It sits here and not in the shared stack, which is mounted once per tab.
+ * One toast slot for the whole shell, 12 pt above the pill (T-21), so a
+ * confirmation outlives both the screen and the tab that raised it (archive
+ * on Detail → toast on Today). It sits here and not in the shared stack,
+ * which is mounted once per tab.
  */
 
 /** Route name → the tab's F-08 glyph and label. */
@@ -31,13 +36,22 @@ const TABS: Record<string, { label: string; icon: TabBarIconName }> = {
 };
 
 export default function TabsLayout() {
+	const insets = useSafeAreaInsets();
+	// A sheet's native Modal already covers the pill and dims it with the
+	// scrim; this also stops it taking taps through, so there is no tab
+	// switching mid-decision (H8). A native Alert blocks touches by itself.
+	// During the migration (SY3) the pill does not exist yet: MigrationGate
+	// renders before the tabs do.
+	const sheetOpen = useToastStore((state) => state.openSheets > 0);
+
 	return (
 		<View style={styles.root}>
 			<Tabs
 				screenOptions={{ headerShown: false }}
-				tabBar={({ state, emitter, navigateToTab, insets }) => (
+				tabBar={({ state, emitter, navigateToTab, insets: barInsets }) => (
 					<TabBarPill
-						bottomInset={insets.bottom}
+						bottomInset={barInsets.bottom}
+						disabled={sheetOpen}
 						items={state.routes.map((route, index) => {
 							const tab = TABS[route.name];
 							const focused = index === state.index;
@@ -67,7 +81,7 @@ export default function TabsLayout() {
 				<Tabs.Screen name="(progress)" options={{ title: "Progress" }} />
 				<Tabs.Screen name="(habits)" options={{ title: "Habits" }} />
 			</Tabs>
-			<ToastHost />
+			<ToastHost bottomOffset={pillToastOffset(insets.bottom)} />
 		</View>
 	);
 }

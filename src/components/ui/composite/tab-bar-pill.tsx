@@ -43,6 +43,21 @@ export const PILL_SIDE_INSET = space[400];
 const PILL_PADDING = space[100];
 
 /**
+ * Clearance between the last row and the pill, and the safe strip under it
+ * (T-25): 56 + 22 + 22 + 12 = 112. Every scrolling screen inside the tabs
+ * pays it as bottom padding, so the last row's circle is never under the bar.
+ */
+export const TAB_BAR_BOTTOM_PADDING = PILL_HEIGHT + PILL_BOTTOM_INSET + 22 + 12;
+
+/**
+ * Where a toast's bottom edge sits: 12 pt above the pill (T-21, TC). Bar A
+ * puts it 16 pt above itself instead — see `tab-bar-bar-a.tsx`.
+ */
+export function pillToastOffset(bottomInset: number): number {
+	return bottomInset + PILL_BOTTOM_INSET + PILL_HEIGHT + space[300];
+}
+
+/**
  * expo-blur's 1–100 `intensity` is not a blur radius, so the mockup's "20 pt
  * blur" has no exact equivalent; this is its default, and the fill above it
  * (`pillBg`, 88 % light / 94 % dark) is what actually carries the look. Worth

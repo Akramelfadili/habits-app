@@ -4,6 +4,7 @@ import { AddRow } from "@/components/ui/composite/add-row";
 import { CategoryRow } from "@/components/ui/composite/category-row";
 import { Container } from "@/components/ui/composite/container";
 import { SectionHeader } from "@/components/ui/composite/section-header";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { CategoryChip } from "@/components/ui/primitives/category-chip";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 12,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
 	},
 	title: {

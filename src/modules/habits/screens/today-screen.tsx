@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Button } from "@/components/ui/primitives/button";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
@@ -273,7 +274,13 @@ export function TodayScreen() {
 
 	if (viewState === "no-habits") {
 		return (
-			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+			<SafeAreaView
+				style={[
+					styles.screen,
+					styles.panelScreen,
+					{ backgroundColor: colors.bg },
+				]}
+			>
 				<View style={styles.headerPadding}>{header}</View>
 				<TodayStatePanel
 					icon="circle"
@@ -315,7 +322,13 @@ export function TodayScreen() {
 
 	if (viewState === "rest-day") {
 		return (
-			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+			<SafeAreaView
+				style={[
+					styles.screen,
+					styles.panelScreen,
+					{ backgroundColor: colors.bg },
+				]}
+			>
 				<View style={styles.headerPadding}>{header}</View>
 				<TodayStatePanel
 					icon="minus"
@@ -524,8 +537,12 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 12,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
+	},
+	/** The states that show a panel instead of a list still clear the pill. */
+	panelScreen: {
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 	},
 	headerPadding: {
 		paddingHorizontal: 16,

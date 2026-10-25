@@ -4,6 +4,7 @@ import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Banner } from "@/components/ui/composite/banner";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { SettingsGroup } from "@/components/ui/composite/settings-group";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { KeyValueRow } from "@/components/ui/primitives/key-value-row";
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 12,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
 	},
 	remindersBlock: {

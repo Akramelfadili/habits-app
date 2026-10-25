@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { showToast, useToastStore } from "@/store/toast-store";
 import {
@@ -54,6 +54,24 @@ describe("ToastHost", () => {
 		await act(() => jest.advanceTimersByTime(1000));
 
 		expect(screen.getByText("Second")).toBeTruthy();
+	});
+
+	describe("placement above the tab bar (T-21)", () => {
+		async function hostBottom(props: Record<string, unknown> = {}) {
+			await render(<ToastHost {...props} />);
+			await act(() => showToast({ message: "Archived 'Read'" }));
+			return StyleSheet.flatten(screen.getByTestId("toast-host").props.style)
+				.bottom;
+		}
+
+		it("keeps a plain 16 pt screen margin with no bar under it", async () => {
+			expect(await hostBottom()).toBe(16);
+		});
+
+		// pillToastOffset(34) = 34 inset + 22 float + 56 pill + 12 gap.
+		it("floats where the shell says — 12 pt above the pill", async () => {
+			expect(await hostBottom({ bottomOffset: 124 })).toBe(124);
+		});
 	});
 
 	it("renders an error-tone toast", async () => {

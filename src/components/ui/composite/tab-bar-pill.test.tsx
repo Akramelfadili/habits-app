@@ -11,6 +11,8 @@ import {
 	PILL_BOTTOM_INSET,
 	PILL_HEIGHT,
 	PILL_SIDE_INSET,
+	pillToastOffset,
+	TAB_BAR_BOTTOM_PADDING,
 	TabBarPill,
 	type TabBarPillItem,
 } from "./tab-bar-pill";
@@ -159,6 +161,18 @@ describe("TabBarPill (V3-01 B)", () => {
 		await fireEvent.press(tab);
 
 		expect(onProgress).toHaveBeenCalledTimes(1);
+	});
+
+	// T-25: 56 pill + 22 float + 22 clearance + 12 safe zone.
+	it("asks every scrolling screen for 112 pt of bottom padding", () => {
+		expect(TAB_BAR_BOTTOM_PADDING).toBe(112);
+		expect(TAB_BAR_BOTTOM_PADDING).toBe(PILL_HEIGHT + PILL_BOTTOM_INSET + 34);
+	});
+
+	// T-21: the toast's bottom edge, 12 pt over the pill's top edge.
+	it("puts a toast 12 pt above itself", () => {
+		expect(pillToastOffset(0)).toBe(PILL_BOTTOM_INSET + PILL_HEIGHT + 12);
+		expect(pillToastOffset(34)).toBe(124);
 	});
 
 	describe("inert (H8 sheets, SY3 migration)", () => {

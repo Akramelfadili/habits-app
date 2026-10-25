@@ -8,6 +8,7 @@ import { PlaceholderCard } from "@/components/ui/composite/placeholder-card";
 import { ReorderableList } from "@/components/ui/composite/reorderable-list";
 import { SectionHeader } from "@/components/ui/composite/section-header";
 import { SwipeableRow } from "@/components/ui/composite/swipeable-row";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Button } from "@/components/ui/primitives/button";
 import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 12,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
 	},
 	section: {
