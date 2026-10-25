@@ -2,12 +2,13 @@ import { Tabs } from "expo-router/js-tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-	pillToastOffset,
 	type TabBarIconName,
 	TabBarPill,
+	tabBarToastOffset,
 } from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 /**
  * The three V3 tabs (HAB-27, D2): Today, Progress, Habits. Each tab is a
@@ -37,6 +38,8 @@ const TABS: Record<string, { label: string; icon: TabBarIconName }> = {
 
 export default function TabsLayout() {
 	const insets = useSafeAreaInsets();
+	// The toast sits 12 pt over the pill, 16 pt over bar A (T-21).
+	const accessibilityTextSize = useAccessibilityTextSize();
 	// A sheet's native Modal already covers the pill and dims it with the
 	// scrim; this also stops it taking taps through, so there is no tab
 	// switching mid-decision (H8). A native Alert blocks touches by itself.
@@ -81,7 +84,9 @@ export default function TabsLayout() {
 				<Tabs.Screen name="(progress)" options={{ title: "Progress" }} />
 				<Tabs.Screen name="(habits)" options={{ title: "Habits" }} />
 			</Tabs>
-			<ToastHost bottomOffset={pillToastOffset(insets.bottom)} />
+			<ToastHost
+				bottomOffset={tabBarToastOffset(insets.bottom, accessibilityTextSize)}
+			/>
 		</View>
 	);
 }

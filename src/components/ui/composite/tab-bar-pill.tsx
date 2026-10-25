@@ -17,6 +17,7 @@ import {
 	textStyles,
 } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { useReducedTransparency } from "@/utils/use-reduced-transparency";
 
@@ -49,12 +50,21 @@ const PILL_PADDING = space[100];
  */
 export const TAB_BAR_BOTTOM_PADDING = PILL_HEIGHT + PILL_BOTTOM_INSET + 22 + 12;
 
+/** Bar A's own height, above the bottom safe-area inset (V3-01 A). */
+export const BAR_A_HEIGHT = 56;
+
 /**
- * Where a toast's bottom edge sits: 12 pt above the pill (T-21, TC). Bar A
- * puts it 16 pt above itself instead — see `tab-bar-bar-a.tsx`.
+ * Where a toast's bottom edge sits: 12 pt above the pill, 16 pt above bar A
+ * (T-21, TC). `accessibilityTextSize` is `useAccessibilityTextSize()` — the
+ * same switch the bar itself reads.
  */
-export function pillToastOffset(bottomInset: number): number {
-	return bottomInset + PILL_BOTTOM_INSET + PILL_HEIGHT + space[300];
+export function tabBarToastOffset(
+	bottomInset: number,
+	accessibilityTextSize: boolean,
+): number {
+	return accessibilityTextSize
+		? bottomInset + BAR_A_HEIGHT + space[400]
+		: bottomInset + PILL_BOTTOM_INSET + PILL_HEIGHT + space[300];
 }
 
 /**
@@ -95,6 +105,38 @@ export function TabBarPill({
 }: TabBarPillProps) {
 	const { colors, scheme } = useTheme();
 	const reducedTransparency = useReducedTransparency();
+	const accessibilityTextSize = useAccessibilityTextSize();
+
+	// H10: at AX sizes the pill would cover a much larger share of each
+	// (taller) row, and its labels are fixed at 12 pt and cannot grow with the
+	// rest — so the predictable full-width bar comes back instead.
+	if (accessibilityTextSize) {
+		return (
+			<View
+				testID="tab-bar-a"
+				accessibilityRole="tablist"
+				pointerEvents={disabled ? "none" : "box-none"}
+				style={[
+					styles.barA,
+					{
+						// 4 + a 48 pt row + 4 = the 56 pt bar, then the home indicator.
+						paddingBottom: space[100] + bottomInset,
+						backgroundColor: colors.card,
+						borderTopColor: colors.border,
+					},
+				]}
+			>
+				{items.map((item) => (
+					<TabBarPillTab
+						key={item.key}
+						item={item}
+						disabled={disabled}
+						variant="bar"
+					/>
+				))}
+			</View>
+		);
+	}
 
 	return (
 		<View
@@ -135,7 +177,12 @@ export function TabBarPill({
 				</BlurView>
 			)}
 			{items.map((item) => (
-				<TabBarPillTab key={item.key} item={item} disabled={disabled} />
+				<TabBarPillTab
+					key={item.key}
+					item={item}
+					disabled={disabled}
+					variant="pill"
+				/>
 			))}
 		</View>
 	);
@@ -144,9 +191,11 @@ export function TabBarPill({
 function TabBarPillTab({
 	item,
 	disabled,
+	variant,
 }: {
 	item: TabBarPillItem;
 	disabled: boolean;
+	variant: "pill" | "bar";
 }) {
 	const { colors, scheme } = useTheme();
 	const reducedMotion = useReducedMotion();
@@ -181,13 +230,14 @@ function TabBarPillTab({
 	const selectedFill = scheme === "dark" ? colors.track : colors.inner;
 	const pressedFill = scheme === "dark" ? colors.inner : colors.track;
 
+	// T-23: over the translucent pill an inactive label needs sub (faint
+	// measured 3.9–4.1:1 there). Bar A is an opaque card, where faint passes.
+	const inactiveInk = variant === "pill" ? colors.sub : colors.faint;
 	const ink = disabled
 		? colors.outline
 		: item.focused
 			? colors.ink
-			: // T-23: the inactive label reads in sub, not faint, over the
-				// translucent pill.
-				colors.sub;
+			: inactiveInk;
 	const glyphInk = disabled
 		? colors.outline
 		: item.focused
@@ -206,23 +256,33 @@ function TabBarPillTab({
 			onPressIn={() => animatePress(1)}
 			onPressOut={() => animatePress(0)}
 			onPress={item.onPress}
-			style={styles.tab}
+			style={variant === "pill" ? styles.tab : styles.barATab}
 		>
-			<TabCapsule
-				visible={item.focused}
-				color={selectedFill}
-				reducedMotion={reducedMotion}
-			/>
-			{item.focused ? null : (
+			{/* Bar A marks the selected tab with ink and weight alone — no
+			    capsule — so only its pressed fill is drawn. */}
+			{variant === "pill" ? (
+				<TabCapsule
+					visible={item.focused}
+					color={selectedFill}
+					reducedMotion={reducedMotion}
+				/>
+			) : null}
+			{item.focused && variant === "pill" ? null : (
 				<Animated.View
 					style={[
-						styles.capsule,
-						{ backgroundColor: pressedFill, opacity: press },
+						variant === "pill" ? styles.capsule : styles.barACapsule,
+						{
+							backgroundColor: variant === "pill" ? pressedFill : colors.inner,
+							opacity: press,
+						},
 					]}
 				/>
 			)}
 			<Animated.View
-				style={[styles.content, { opacity, transform: [{ scale }] }]}
+				style={[
+					variant === "pill" ? styles.content : styles.barAContent,
+					{ opacity, transform: [{ scale }] },
+				]}
 			>
 				<TabGlyph name={item.icon} color={glyphInk} />
 				<Text
@@ -351,6 +411,38 @@ const styles = StyleSheet.create({
 	capsule: {
 		...StyleSheet.absoluteFill,
 		borderRadius: radius.pill,
+	},
+	/**
+	 * V3-01 A, the AX fallback: a full-width card with a top hairline, 56 pt
+	 * over the bottom inset. Absolute like the pill, so the 112 pt bottom
+	 * padding and the scroll-under behaviour are the same in both modes.
+	 */
+	barA: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		borderTopWidth: StyleSheet.hairlineWidth,
+		flexDirection: "row",
+		alignItems: "stretch",
+		paddingHorizontal: space[200],
+		paddingTop: space[100],
+		gap: space[100],
+	},
+	barATab: {
+		flex: 1,
+		minHeight: minTouchTarget + space[100],
+		alignItems: "center",
+		justifyContent: "center",
+		borderRadius: radius.m,
+	},
+	barACapsule: {
+		...StyleSheet.absoluteFill,
+		borderRadius: radius.m,
+	},
+	barAContent: {
+		alignItems: "center",
+		gap: space[150],
 	},
 	content: {
 		alignItems: "center",

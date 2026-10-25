@@ -1,6 +1,12 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { AccessibilityInfo, StyleSheet } from "react-native";
+import {
+	AccessibilityInfo,
+	StyleSheet,
+	useWindowDimensions,
+} from "react-native";
 import { surfaceColors } from "@/theme/theme";
+
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions");
 
 jest.mock("expo-blur", () => {
 	const { View } = require("react-native");
@@ -8,13 +14,14 @@ jest.mock("expo-blur", () => {
 });
 
 import {
+	BAR_A_HEIGHT,
 	PILL_BOTTOM_INSET,
 	PILL_HEIGHT,
 	PILL_SIDE_INSET,
-	pillToastOffset,
 	TAB_BAR_BOTTOM_PADDING,
 	TabBarPill,
 	type TabBarPillItem,
+	tabBarToastOffset,
 } from "./tab-bar-pill";
 
 const onToday = jest.fn();
@@ -58,6 +65,12 @@ async function renderPill(
 	return result;
 }
 
+function setFontScale(fontScale: number) {
+	jest
+		.mocked(useWindowDimensions)
+		.mockReturnValue({ width: 393, height: 852, scale: 3, fontScale });
+}
+
 function styleOf(testID: string) {
 	return StyleSheet.flatten(screen.getByTestId(testID).props.style);
 }
@@ -73,6 +86,7 @@ describe("TabBarPill (V3-01 B)", () => {
 		jest
 			.spyOn(AccessibilityInfo, "isReduceTransparencyEnabled")
 			.mockResolvedValue(false);
+		setFontScale(1);
 	});
 
 	afterEach(() => jest.restoreAllMocks());
@@ -169,10 +183,13 @@ describe("TabBarPill (V3-01 B)", () => {
 		expect(TAB_BAR_BOTTOM_PADDING).toBe(PILL_HEIGHT + PILL_BOTTOM_INSET + 34);
 	});
 
-	// T-21: the toast's bottom edge, 12 pt over the pill's top edge.
-	it("puts a toast 12 pt above itself", () => {
-		expect(pillToastOffset(0)).toBe(PILL_BOTTOM_INSET + PILL_HEIGHT + 12);
-		expect(pillToastOffset(34)).toBe(124);
+	// T-21: 12 pt over the pill's top edge, 16 pt over bar A's.
+	it("puts a toast 12 pt above the pill and 16 pt above bar A", () => {
+		expect(tabBarToastOffset(0, false)).toBe(
+			PILL_BOTTOM_INSET + PILL_HEIGHT + 12,
+		);
+		expect(tabBarToastOffset(34, false)).toBe(124);
+		expect(tabBarToastOffset(34, true)).toBe(34 + BAR_A_HEIGHT + 16);
 	});
 
 	describe("inert (H8 sheets, SY3 migration)", () => {
@@ -192,6 +209,86 @@ describe("TabBarPill (V3-01 B)", () => {
 			expect(
 				StyleSheet.flatten(screen.getByText("Today").props.style).color,
 			).toBe(surfaceColors.light.outline);
+		});
+	});
+
+	describe("accessibility text sizes fall back to bar A (H10)", () => {
+		it("keeps the pill at every standard Dynamic Type size", async () => {
+			for (const fontScale of [0.82, 1, 1.23, 1.35]) {
+				setFontScale(fontScale);
+				const view = await render(
+					<TabBarPill items={items("today")} bottomInset={34} />,
+				);
+				await act(async () => {});
+				expect(screen.queryByTestId("tab-bar-pill")).toBeTruthy();
+				expect(screen.queryByTestId("tab-bar-a")).toBeNull();
+				await view.unmount();
+			}
+		});
+
+		it("swaps the pill for the full-width bar from AX1 up", async () => {
+			for (const fontScale of [1.65, 2.35, 3.12]) {
+				setFontScale(fontScale);
+				const view = await render(
+					<TabBarPill items={items("today")} bottomInset={34} />,
+				);
+				await act(async () => {});
+				expect(screen.queryByTestId("tab-bar-pill")).toBeNull();
+				expect(screen.queryByTestId("tab-bar-a")).toBeTruthy();
+				await view.unmount();
+			}
+		});
+
+		it("is a card with a top hairline, 56 pt over the bottom inset", async () => {
+			setFontScale(2.35);
+			await renderPill();
+
+			expect(styleOf("tab-bar-a")).toMatchObject({
+				position: "absolute",
+				left: 0,
+				right: 0,
+				bottom: 0,
+				backgroundColor: surfaceColors.light.card,
+				borderTopColor: surfaceColors.light.border,
+				paddingTop: 4,
+				paddingBottom: 4 + 34,
+			});
+			// 4 + a 48 pt row + 4 = BAR_A_HEIGHT, then the home indicator.
+			expect(
+				StyleSheet.flatten(screen.getByTestId("tab-today").props.style)
+					.minHeight,
+			).toBe(48);
+			expect(4 + 48 + 4).toBe(BAR_A_HEIGHT);
+		});
+
+		// Bar A is an opaque card: faint passes there, so V1's inactive ink stays.
+		it("reads inactive labels in faint, and keeps the labels unscaled", async () => {
+			setFontScale(2.35);
+			await renderPill();
+
+			expect(
+				StyleSheet.flatten(screen.getByText("Habits").props.style).color,
+			).toBe(surfaceColors.light.faint);
+			expect(screen.getByText("Habits").props.allowFontScaling).toBe(false);
+		});
+
+		it("still marks and presses the right tab", async () => {
+			setFontScale(2.35);
+			await renderPill({ items: items("habits") });
+
+			expect(
+				screen.getByTestId("tab-habits").props.accessibilityState,
+			).toMatchObject({ selected: true });
+			await fireEvent.press(screen.getByTestId("tab-progress"));
+			expect(onProgress).toHaveBeenCalledTimes(1);
+		});
+
+		it("is inert under a sheet too", async () => {
+			setFontScale(2.35);
+			await renderPill({ disabled: true });
+
+			await fireEvent.press(screen.getByTestId("tab-progress"));
+			expect(onProgress).not.toHaveBeenCalled();
 		});
 	});
 
