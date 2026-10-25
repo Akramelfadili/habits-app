@@ -368,7 +368,7 @@ function TooEarly({
 				title="Your week is ready"
 				subtitle={weeklyMenuSubline(week)}
 				value="See week →"
-				onPress={() => router.replace("/habits/week")}
+				onPress={() => router.replace("/week")}
 			/>
 		</ScrollView>
 	);

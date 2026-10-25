@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Container } from "@/components/ui/composite/container";
 import { EmptyStateCard } from "@/components/ui/composite/empty-state-card";
@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/primitives/button";
 import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { showToast } from "@/store/toast-store";
-import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
+import { habitAccentInk, habitAccentTint } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
+import { HabitsHeader } from "../components/habits-header";
 import { useManageHabitsActions } from "../hooks/use-manage-habits-actions";
 import { useManageHabitsQueries } from "../hooks/use-manage-habits-queries";
 import { restoredToastMessage } from "../presenters/habit-detail-helpers";
@@ -91,14 +92,13 @@ export function ManageHabitsScreen() {
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				{/* A pushed screen: back in the header, a large "Habits" title
-				    (the mockups' title; HAB-19, docs/backlog.md). */}
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					Habits
-				</Text>
+				{/* The Habits tab's root (HAB-27): a large "Habits" title with the
+				    gear (→ Settings) and + (→ Add habit) — the two rows the ⋯ menu
+				    used to own. */}
+				<HabitsHeader
+					onOpenSettings={() => router.push("/settings")}
+					onAddHabit={() => router.push("/new-habit")}
+				/>
 
 				{active.length > 0 ? (
 					<>
@@ -147,7 +147,7 @@ export function ManageHabitsScreen() {
 											/>
 										}
 										trailing={handle}
-										onPress={() => router.push(`/habits/${habit.id}`)}
+										onPress={() => router.push(`/habit/${habit.id}`)}
 										accessibilityActions={[
 											{
 												label: "Archive",
@@ -204,7 +204,7 @@ export function ManageHabitsScreen() {
 											onPress={() => handleRestore(habit)}
 										/>
 									}
-									onPress={() => router.push(`/habits/${habit.id}`)}
+									onPress={() => router.push(`/habit/${habit.id}`)}
 								/>
 							))}
 						</Container>
@@ -229,10 +229,6 @@ const styles = StyleSheet.create({
 		paddingTop: 12,
 		paddingBottom: 24,
 		gap: 16,
-	},
-	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
 	},
 	section: {
 		gap: 8,

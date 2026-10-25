@@ -1,6 +1,6 @@
 import { format, isSameDay } from "date-fns";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
@@ -22,7 +22,6 @@ import { OffScheduleRow } from "../components/off-schedule-row";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { TodayHeader } from "../components/today-header";
-import { TodayNavMenu } from "../components/today-nav-menu";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
@@ -75,18 +74,6 @@ export function TodayScreen() {
 	// Rest day's picker (HAB-18); a quantity pick closes it and opens the log sheet.
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [quantityIsOffSchedule, setQuantityIsOffSchedule] = useState(false);
-
-	const [menuOpen, setMenuOpen] = useState(false);
-	// Until the button is measured, roughly under a one-line header.
-	const [menuAnchorBottom, setMenuAnchorBottom] = useState(110);
-
-	// Leaving Today (a menu row, or any push over it) closes the menu, so it
-	// never greets the person on the way back.
-	useFocusEffect(
-		useCallback(() => {
-			return () => setMenuOpen(false);
-		}, []),
-	);
 
 	const quantityHabit = [
 		...groups.flatMap((group) => group.habits),
@@ -266,20 +253,8 @@ export function TodayScreen() {
 	}
 
 	const header = (
-		<TodayHeader
-			today={today}
-			menuOpen={menuOpen}
-			onToggleMenu={() => setMenuOpen((open) => !open)}
-			onAddHabit={() => router.push("/new-habit")}
-			onAnchorMeasured={setMenuAnchorBottom}
-		/>
+		<TodayHeader today={today} onAddHabit={() => router.push("/new-habit")} />
 	);
-	const navMenu = menuOpen ? (
-		<TodayNavMenu
-			anchorBottom={menuAnchorBottom}
-			onClose={() => setMenuOpen(false)}
-		/>
-	) : null;
 
 	// Habits haven't loaded yet: a neutral blank, never a flash of "Nothing to
 	// track yet" or First Run (audit A5-04).
@@ -334,7 +309,6 @@ export function TodayScreen() {
 						/>
 					) : null}
 				</TodayStatePanel>
-				{navMenu}
 			</SafeAreaView>
 		);
 	}
@@ -356,7 +330,7 @@ export function TodayScreen() {
 									key={habit.id}
 									habit={habit}
 									entry={entry}
-									onPress={() => router.push(`/habits/${habit.id}`)}
+									onPress={() => router.push(`/habit/${habit.id}`)}
 								/>
 							))}
 						</Container>
@@ -385,7 +359,6 @@ export function TodayScreen() {
 						isSaving={isLogging}
 					/>
 				) : null}
-				{navMenu}
 			</SafeAreaView>
 		);
 	}
@@ -426,7 +399,6 @@ export function TodayScreen() {
 						</Container>
 					) : null}
 				</ScrollView>
-				{navMenu}
 			</SafeAreaView>
 		);
 	}
@@ -473,7 +445,7 @@ export function TodayScreen() {
 									onPress={() =>
 										atRiskByHabitId.has(habit.id)
 											? setAtRiskHabitId(habit.id)
-											: router.push(`/habits/${habit.id}`)
+											: router.push(`/habit/${habit.id}`)
 									}
 									onToggle={() => handleToggle(habit)}
 									onOpenQuantitySheet={() => setQuantityHabitId(habit.id)}
@@ -541,7 +513,6 @@ export function TodayScreen() {
 					isApplyingFreeze={isFreezing}
 				/>
 			) : null}
-			{navMenu}
 		</SafeAreaView>
 	);
 }

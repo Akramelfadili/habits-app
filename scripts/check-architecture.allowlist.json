@@ -29,10 +29,6 @@
 	},
 	{
 		"rule": "hex-colour",
-		"file": "src/components/ui/composite/nav-menu.tsx"
-	},
-	{
-		"rule": "hex-colour",
 		"file": "src/components/ui/primitives/category-chip.tsx"
 	}
 ]

@@ -1,51 +1,23 @@
 import { format } from "date-fns";
-import { useRef } from "react";
-import { StyleSheet, Text, View, type ViewInstance } from "react-native";
-import {
-	HeaderAddButton,
-	HeaderMenuButton,
-} from "@/components/ui/primitives/header-menu-button";
+import { StyleSheet, Text, View } from "react-native";
+import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type TodayHeaderProps = {
 	today: Date;
-	menuOpen: boolean;
-	onToggleMenu: () => void;
-	/** Opens New habit — the `+` beside the menu button. */
+	/** Opens New habit — the `+` (V3-02, D3). */
 	onAddHabit: () => void;
-	/** The button's bottom edge in window space, reported on press for placing the popover. */
-	onAnchorMeasured: (anchorBottom: number) => void;
 };
 
-/** Date eyebrow + "Today" title with the `+` and `⋯` buttons — identical in all four Today states (HAB-14). */
-export function TodayHeader({
-	today,
-	menuOpen,
-	onToggleMenu,
-	onAddHabit,
-	onAnchorMeasured,
-}: TodayHeaderProps) {
+/**
+ * Date eyebrow + "Today" title with the `+` button — identical in all four
+ * Today states. The `⋯` menu it used to sit beside is gone (HAB-27, D2):
+ * summaries moved to the Progress tab, Manage and Settings to the Habits tab.
+ */
+export function TodayHeader({ today, onAddHabit }: TodayHeaderProps) {
 	const { colors } = useTheme();
-	const button = useRef<ViewInstance>(null);
-	const measuring = useRef(false);
-
-	function handlePress() {
-		if (menuOpen || !button.current) {
-			onToggleMenu();
-			return;
-		}
-		if (measuring.current) return;
-		// Measured per press (the header scrolls with Today's content), and
-		// *before* opening, so the menu mounts once at its final position.
-		measuring.current = true;
-		button.current.measureInWindow((_x, y, _width, height) => {
-			measuring.current = false;
-			onAnchorMeasured(y + height);
-			onToggleMenu();
-		});
-	}
 
 	return (
 		<View style={styles.header}>
@@ -58,14 +30,10 @@ export function TodayHeader({
 					Today
 				</Text>
 				<View style={styles.buttons}>
-					<HeaderAddButton
+					<HeaderCircleButton
+						symbol="plus"
 						accessibilityLabel="Add habit"
 						onPress={onAddHabit}
-					/>
-					<HeaderMenuButton
-						ref={button}
-						open={menuOpen}
-						onPress={handlePress}
 					/>
 				</View>
 			</View>

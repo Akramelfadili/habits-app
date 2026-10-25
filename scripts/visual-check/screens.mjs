@@ -23,52 +23,6 @@ import { format, subDays } from "date-fns";
  */
 export const DEFAULT_CLOCK = "2026-09-24T09:00:00";
 
-/**
- * Resolves once a navigation menu's popover has stopped moving: its top edge
- * equals the ⋯ button's bottom + the 8px gap, unchanged for three consecutive
- * frames. The menu used to settle through a chain of deferred measurements, so
- * a fixed wait lost the race under CPU load and the capture caught the popover
- * 74px too low (audit A10-10). Polls instead of sleeping; throws if it never
- * settles, so a broken placement fails loudly rather than becoming a baseline.
- */
-export async function waitForMenuSettled(page, { timeout = 5000 } = {}) {
-	const GAP_BELOW_BUTTON = 8;
-	const scrim = page.getByLabel("Close menu");
-	await scrim.waitFor();
-	const popover = await scrim
-		.locator("xpath=following-sibling::*[1]")
-		.elementHandle();
-	const button = await page
-		.locator('[aria-label="More"]')
-		.first()
-		.elementHandle();
-	const deadline = Date.now() + timeout;
-	let previousTop = Number.NaN;
-	let stableFrames = 0;
-	let last = "";
-	while (Date.now() < deadline) {
-		const { top, expected } = await page.evaluate(
-			([popoverEl, buttonEl]) =>
-				new Promise((resolve) =>
-					requestAnimationFrame(() =>
-						resolve({
-							top: popoverEl.getBoundingClientRect().top,
-							expected: buttonEl.getBoundingClientRect().bottom,
-						}),
-					),
-				),
-			[popover, button],
-		);
-		last = `popover top ${top}, button bottom ${expected}`;
-		const atFinalPosition = Math.abs(top - (expected + GAP_BELOW_BUTTON)) < 0.5;
-		stableFrames =
-			atFinalPosition && top === previousTop ? stableFrames + 1 : 0;
-		previousTop = top;
-		if (stableFrames >= 3) return;
-	}
-	throw new Error(`menu never settled under the button (${last})`);
-}
-
 /** A heatmap cell's accessibility label, `daysAgo` days before the screen's clock. */
 function heatmapCellLabel(clock, daysAgo, status) {
 	const day = subDays(new Date(clock), daysAgo);
@@ -128,12 +82,12 @@ export const SCREENS = {
 	// HAB-06 — First run
 	"first-run": {
 		feature: "HAB-06",
-		route: "/habits?fixtures=first-run",
+		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/first-run.png",
 	},
 	"first-run-none-selected": {
 		feature: "HAB-06",
-		route: "/habits?fixtures=first-run",
+		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/first-run.png",
 		note: "Both defaults unchecked — primary reads 'Add habits', disabled. Mockup shows the default state.",
 		async interact(page) {
@@ -145,12 +99,12 @@ export const SCREENS = {
 	// HAB-03 / HAB-04 / HAB-05 — Today
 	today: {
 		feature: "HAB-03",
-		route: "/habits",
+		route: "/",
 		mockup: "docs/mockups/today-populated.png",
 	},
 	"today-break-resisted": {
 		feature: "HAB-04",
-		route: "/habits",
+		route: "/",
 		mockup: "docs/mockups/today-populated.png",
 		note: "Break habit ticked: resisted caption on the row, plus the completion toast with Undo.",
 		async interact(page) {
@@ -159,54 +113,24 @@ export const SCREENS = {
 	},
 	"today-empty": {
 		feature: "HAB-05",
-		route: "/habits?fixtures=empty",
+		route: "/?fixtures=empty",
 		mockup: "docs/mockups/today-empty-state.png",
 	},
 	"today-rest-day": {
 		feature: "HAB-05",
-		route: "/habits?fixtures=rest-day",
+		route: "/?fixtures=rest-day",
 		mockup: "docs/mockups/rest-day.png",
 	},
 	"today-day-closed": {
 		feature: "HAB-05",
-		route: "/habits?fixtures=day-closed",
+		route: "/?fixtures=day-closed",
 		mockup: "docs/mockups/day-closed.png",
-	},
-
-	// HAB-14 — Today's ⋯ navigation menu (A1–A6)
-	"today-menu-open": {
-		feature: "HAB-14",
-		route: "/habits",
-		mockup: "docs/mockups/hab-14-a2.png",
-		note: "Populated Today with the ⋯ menu open. Monthly and Yearly are live (HAB-16/17), so their sublines follow the default fixtures' history.",
-		async interact(page) {
-			await page.getByLabel("More", { exact: true }).click();
-			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await waitForMenuSettled(page);
-		},
-	},
-	"today-empty-menu-open": {
-		feature: "HAB-14",
-		route: "/habits?fixtures=empty",
-		mockup: "docs/mockups/hab-14-a4.png",
-		note: "Empty Today, menu open: summaries disabled with the spec's reasons, Manage enabled. Settings is enabled (HAB-15).",
-		async interact(page) {
-			await page.getByLabel("More", { exact: true }).click();
-			await page.getByText("After your first month").waitFor();
-			await waitForMenuSettled(page);
-		},
-	},
-	"today-rest-day-menu": {
-		feature: "HAB-14",
-		route: "/habits?fixtures=rest-day",
-		mockup: "docs/mockups/hab-14-a5.png",
-		note: "Rest day with ⋯ closed. 'Log something anyway' opens the off-schedule picker (HAB-18).",
 	},
 
 	// HAB-18 — off-schedule log (D1, D2) and retro-log pinning (D4)
 	"rest-day-picker": {
 		feature: "HAB-18",
-		route: "/habits?fixtures=rest-day-picker",
+		route: "/?fixtures=rest-day-picker",
 		mockup: "docs/mockups/hab-18-d1.png",
 		note: "Picker over the rest day: Glass of water (Amount ›) and checks; the Break habit is left out.",
 		async interact(page) {
@@ -217,7 +141,7 @@ export const SCREENS = {
 	},
 	"rest-day-picker-empty": {
 		feature: "HAB-18",
-		route: "/habits?fixtures=rest-day-ineligible",
+		route: "/?fixtures=rest-day-ineligible",
 		mockup: null,
 		note: "Only a Break habit exists: the picker says nothing is eligible instead of listing nothing.",
 		async interact(page) {
@@ -228,7 +152,7 @@ export const SCREENS = {
 	},
 	"rest-day-logged": {
 		feature: "HAB-18",
-		route: "/habits?fixtures=rest-day-picker",
+		route: "/?fixtures=rest-day-picker",
 		mockup: "docs/mockups/hab-18-d2.png",
 		note: "Read logged off-schedule: toast with Undo over the rest day, which now lists it. 'Logged 10:42' becomes the real time of day.",
 		async interact(page) {
@@ -240,7 +164,7 @@ export const SCREENS = {
 	},
 	"today-day-closed-reminders": {
 		feature: "HAB-14",
-		route: "/habits?fixtures=day-closed",
+		route: "/?fixtures=day-closed",
 		mockup: "docs/mockups/hab-14-a6.png",
 		note: "Day closed: tomorrow rows carry their earliest reminder time; 'Read before bed' has no reminder and no trailing text.",
 	},
@@ -416,25 +340,25 @@ export const SCREENS = {
 	// HAB-25 — Categories: manage & delete (temporarily pushed from Manage habits until Settings, HAB-15)
 	"manage-categories-built-in-only": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-built-in-only",
+		route: "/(habits)/categories?fixtures=categories-built-in-only",
 		mockup: "docs/mockups/hab-25-f3a.png",
 		note: "F3a — built-ins only: locked tinted chips, counts, Built-in tag, no actions; Yours holds only Add category. Back reads 'Manage' until Settings (HAB-15) exists.",
 	},
 	"manage-categories-one-custom": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-one-custom",
+		route: "/(habits)/categories?fixtures=categories-one-custom",
 		mockup: "docs/mockups/hab-25-f3b.png",
 		note: "F3b — one custom (Music), not used: outline chip, Rename + red Delete.",
 	},
 	"manage-categories-in-use": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-in-use",
+		route: "/(habits)/categories?fixtures=categories-in-use",
 		mockup: "docs/mockups/hab-25-f3c.png",
 		note: "F3c — Music 3 habits (one archived — counts include archived), Language 1, Garden not used; creation order.",
 	},
 	"delete-category-unused": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-in-use",
+		route: "/(habits)/categories?fixtures=categories-in-use",
 		mockup: "docs/mockups/hab-25-f4a.png",
 		note: "F4a — plain confirm, no mention of reassignment.",
 		async interact(page) {
@@ -443,7 +367,7 @@ export const SCREENS = {
 	},
 	"delete-category-in-use": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-in-use",
+		route: "/(habits)/categories?fixtures=categories-in-use",
 		mockup: "docs/mockups/hab-25-f4b.png",
 		note: "F4b — names the count, Music → Other move preview with every affected habit, 'Delete and move 3 habits'.",
 		async interact(page) {
@@ -452,7 +376,7 @@ export const SCREENS = {
 	},
 	"rename-category-editing": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-in-use",
+		route: "/(habits)/categories?fixtures=categories-in-use",
 		mockup: null,
 		note: "No mockup — proposed inline rename: the row becomes the add-sheet's name field (counter from 16/20) with Cancel / Save.",
 		async interact(page) {
@@ -462,7 +386,7 @@ export const SCREENS = {
 	},
 	"rename-category-duplicate": {
 		feature: "HAB-25",
-		route: "/habits/categories?fixtures=categories-in-use",
+		route: "/(habits)/categories?fixtures=categories-in-use",
 		mockup: null,
 		note: "No mockup — proposed: renaming to a built-in's name ('health') shows the amber duplicate helper and blocks Save.",
 		async interact(page) {
@@ -474,7 +398,7 @@ export const SCREENS = {
 	// HAB-07 / HAB-08 — Sheets over Today
 	"quantity-log": {
 		feature: "HAB-07",
-		route: "/habits?fixtures=quantity-log",
+		route: "/?fixtures=quantity-log",
 		mockup: "docs/mockups/quantity-log.png",
 		note: "Sheet is opened by simulating the tap the mockup can't capture from a static route load.",
 		async interact(page) {
@@ -483,7 +407,7 @@ export const SCREENS = {
 	},
 	"streak-at-risk": {
 		feature: "HAB-08",
-		route: "/habits?fixtures=streak-at-risk",
+		route: "/?fixtures=streak-at-risk",
 		mockup: "docs/mockups/streak-at-risk.png",
 		note: "Sheet is opened by tapping the at-risk habit's row, same as a real 'open this habit' interaction.",
 		async interact(page) {
@@ -492,7 +416,7 @@ export const SCREENS = {
 	},
 	"habit-detail-no-freezes": {
 		feature: "HAB-20",
-		route: "/habits/1?fixtures=no-freezes",
+		route: "/(today)/habit/1?fixtures=no-freezes",
 		mockup: "docs/mockups/hab-20-d6.png",
 		note: "D6: pool spent, yesterday missed, today done — streak reset to 1. The month's reset note, the legend's '0 freezes left' and the outlined missed day (HAB-20). Supersedes streak-reset-no-freezes.png.",
 	},
@@ -500,12 +424,12 @@ export const SCREENS = {
 	// HAB-09 / HAB-10 — Habit detail + retro log
 	"habit-detail": {
 		feature: "HAB-09",
-		route: "/habits/1?fixtures=habit-detail",
+		route: "/(today)/habit/1?fixtures=habit-detail",
 		mockup: "docs/mockups/habit-detail.png",
 	},
 	"habit-detail-pushed-header": {
 		feature: "Header buttons",
-		route: "/habits?fixtures=habit-detail",
+		route: "/?fixtures=habit-detail",
 		mockup: "docs/mockups/habit-detail.png",
 		note: "Pushed from Today, so there's history: the plain '‹ Today' back button (header-buttons.tsx) and Edit. Web can't show the iOS 26 Liquid Glass capsule this guards against — that's device-only; the chevron is an SF Symbol (blank on web).",
 		async interact(page) {
@@ -515,18 +439,18 @@ export const SCREENS = {
 	},
 	"habit-detail-new": {
 		feature: "HAB-09",
-		route: "/habits/1?fixtures=habit-detail-new",
+		route: "/(today)/habit/1?fixtures=habit-detail-new",
 		mockup: "docs/mockups/habit-detail-new.png",
 	},
 	"habit-detail-archived": {
 		feature: "HAB-20",
-		route: "/habits/1?fixtures=habit-detail-archived",
+		route: "/(today)/habit/1?fixtures=habit-detail-archived",
 		mockup: "docs/mockups/hab-20-d5.png",
 		note: "D5: banner with the archive date and Restore, Current '—' paused, 'Before archive' rate, dotted paused cells, 'Paused while archived' on Reminders. The mockup's Edit-habit row isn't built (Edit lives in the header).",
 	},
 	"habit-detail-restored": {
 		feature: "HAB-20",
-		route: "/habits/1?fixtures=habit-detail-archived",
+		route: "/(today)/habit/1?fixtures=habit-detail-archived",
 		mockup: "docs/mockups/hab-20-e1.png",
 		note: "E1: Restore tapped — banner collapses in place, toast 'Restored 'Cold shower' — back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
 		async interact(page) {
@@ -536,7 +460,7 @@ export const SCREENS = {
 	},
 	"habit-detail-restore-undone": {
 		feature: "HAB-20",
-		route: "/habits/1?fixtures=habit-detail-archived",
+		route: "/(today)/habit/1?fixtures=habit-detail-archived",
 		mockup: "docs/mockups/hab-20-d5.png",
 		note: "Restore then Undo: must be pixel-identical to habit-detail-archived (same archive date, same paused cells).",
 		async interact(page) {
@@ -548,13 +472,13 @@ export const SCREENS = {
 	},
 	"habit-detail-bonus": {
 		feature: "HAB-18",
-		route: "/habits/1?fixtures=habit-detail-bonus",
+		route: "/(today)/habit/1?fixtures=habit-detail-bonus",
 		mockup: null,
 		note: "Glass of water scheduled Mon–Fri only, so the weekend logs in its history draw as NEW-16 bonus dots (no mockup — the dot has none).",
 	},
 	"retro-log": {
 		feature: "HAB-10",
-		route: "/habits/1?fixtures=retro-log",
+		route: "/(today)/habit/1?fixtures=retro-log",
 		mockup: "docs/mockups/hab-18-d4.png",
 		note: "Origin habit pinned first in the ringed card (HAB-18 D4), the rest under 'Also on <weekday>'. Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
 		async interact(page, { clock }) {
@@ -565,7 +489,7 @@ export const SCREENS = {
 	// HAB-11 — Weekly summary
 	"weekly-summary": {
 		feature: "HAB-11",
-		route: "/habits/week?fixtures=weekly-summary",
+		route: "/(progress)/week?fixtures=weekly-summary",
 		mockup: "docs/mockups/weekly-summary.png",
 		// The summary counts up to today only, so pin "now" to the end of a
 		// week — otherwise a Monday run would show an empty week.
@@ -574,14 +498,14 @@ export const SCREENS = {
 	},
 	"weekly-summary-perfect": {
 		feature: "HAB-11",
-		route: "/habits/week?fixtures=perfect-week",
+		route: "/(progress)/week?fixtures=perfect-week",
 		mockup: "docs/mockups/perfect-week.png",
 		clock: "2026-09-13T20:00:00",
 		note: "Clock pinned to Sun 13 Sep evening. Mockup's '42 of 42' tile disagrees with its own 5/5 and 3/3 bars (36).",
 	},
 	"weekly-summary-too-early": {
 		feature: "HAB-11",
-		route: "/habits/week?fixtures=weekly-summary",
+		route: "/(progress)/week?fixtures=weekly-summary",
 		mockup: "docs/mockups/weekly-summary.png",
 		clock: "2026-09-15T20:00:00",
 		note: "Tuesday evening, switched to This week (Tuesday opens on last week): no habit due 3 times yet, so the insight reads 'Too early to call'.",
@@ -591,14 +515,14 @@ export const SCREENS = {
 	},
 	"weekly-summary-last-week": {
 		feature: "HAB-11",
-		route: "/habits/week?fixtures=weekly-summary-last-week",
+		route: "/(progress)/week?fixtures=weekly-summary-last-week",
 		mockup: "docs/mockups/weekly-summary.png",
 		clock: "2026-09-21T09:00:00",
 		note: "Monday morning: opens on last week (14–20 Sep), the mockup's week, with the full seven days counted.",
 	},
 	"weekly-summary-empty": {
 		feature: "HAB-11",
-		route: "/habits/week?fixtures=empty",
+		route: "/(progress)/week?fixtures=empty",
 		mockup: null,
 		note: "No habits at all.",
 	},
@@ -606,7 +530,7 @@ export const SCREENS = {
 	// HAB-16 — Monthly summary (C2, C3, C6) + the range switcher on Weekly (C1)
 	"monthly-summary": {
 		feature: "HAB-16",
-		route: "/habits/month?fixtures=monthly-summary",
+		route: "/(progress)/month?fixtures=monthly-summary",
 		mockup: "docs/mockups/hab-16-c2.png",
 		// 2 Sep → the last complete month is August (1 Aug is a Saturday).
 		clock: "2026-09-02T09:00:00",
@@ -614,7 +538,7 @@ export const SCREENS = {
 	},
 	"monthly-insights": {
 		feature: "HAB-16",
-		route: "/habits/month?fixtures=monthly-summary",
+		route: "/(progress)/month?fixtures=monthly-summary",
 		mockup: "docs/mockups/hab-16-c3.png",
 		clock: "2026-09-02T09:00:00",
 		note: "Scrolled to the insights: slipping → improved → pattern, then the freeze card. The slipping body omits the mockup's 'started when Easy run moved' clause (not derivable).",
@@ -629,53 +553,28 @@ export const SCREENS = {
 	},
 	"monthly-too-early": {
 		feature: "HAB-16",
-		route: "/habits/month?fixtures=monthly-too-early",
+		route: "/(progress)/month?fixtures=monthly-too-early",
 		mockup: "docs/mockups/hab-16-c6.png",
 		clock: "2026-09-16T09:00:00",
 		note: "12 days of history (since 4 Sep): unlock card, partial September calendar, the week one tap away.",
 	},
 	"monthly-empty": {
 		feature: "HAB-16",
-		route: "/habits/month?fixtures=empty",
+		route: "/(progress)/month?fixtures=empty",
 		mockup: null,
 		note: "No habits at all.",
 	},
-	"today-menu-open-monthly": {
-		feature: "HAB-16",
-		route: "/habits?fixtures=monthly-summary",
-		mockup: "docs/mockups/hab-14-a2.png",
-		clock: "2026-09-02T09:00:00",
-		note: "Menu with Monthly live: '1 — 31 August · N% done'.",
-		async interact(page) {
-			await page.getByLabel("More", { exact: true }).click();
-			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await waitForMenuSettled(page);
-		},
-	},
-	"today-menu-open-yearly": {
-		feature: "HAB-17",
-		route: "/habits?fixtures=yearly-summary",
-		mockup: "docs/mockups/hab-14-a2.png",
-		clock: "2026-09-16T09:00:00",
-		note: "Menu with Yearly live: '2026 so far · since 3 March'.",
-		async interact(page) {
-			await page.getByLabel("More", { exact: true }).click();
-			await page.getByText("Weekly summary", { exact: true }).waitFor();
-			await waitForMenuSettled(page);
-		},
-	},
-
 	// HAB-17 — Yearly summary (C4, C5, C7)
 	"yearly-summary": {
 		feature: "HAB-17",
-		route: "/habits/year?fixtures=yearly-summary",
+		route: "/(progress)/year?fixtures=yearly-summary",
 		mockup: "docs/mockups/hab-17-c4.png",
 		clock: "2026-09-16T09:00:00",
 		note: "3 March — 16 September 2026. Fixture numbers differ from the mockup's tiles (1,612 / 81%); the insights are tuned to C5. Strips use the 11px year layout; the chart's current month (September) is the lighter bar.",
 	},
 	"yearly-insights": {
 		feature: "HAB-17",
-		route: "/habits/year?fixtures=yearly-summary",
+		route: "/(progress)/year?fixtures=yearly-summary",
 		mockup: "docs/mockups/hab-17-c5.png",
 		clock: "2026-09-16T09:00:00",
 		note: "Scrolled to the insights: best month → stuck → never stuck (the only tappable one). The mockup's fourth card (Summer dip) is cut by the max-three rule; copy omits clauses that aren't derivable ('through two schedule changes', 'Travel weeks show up as gaps').",
@@ -688,14 +587,14 @@ export const SCREENS = {
 	},
 	"yearly-too-early": {
 		feature: "HAB-17",
-		route: "/habits/year?fixtures=monthly-too-early",
+		route: "/(progress)/year?fixtures=monthly-too-early",
 		mockup: "docs/mockups/hab-17-c7.png",
 		clock: "2026-09-16T09:00:00",
 		note: "12 days of history (since 4 Sep): unlock card ('12 of 91 days' — the real 4 Sep → 4 Dec span; the mockup says 90 and 'from 3 December'), one bar in progress and eleven dashed slots, the week one tap away.",
 	},
 	"yearly-empty": {
 		feature: "HAB-17",
-		route: "/habits/year?fixtures=empty",
+		route: "/(progress)/year?fixtures=empty",
 		mockup: null,
 		note: "No habits at all.",
 	},
@@ -709,7 +608,7 @@ export const SCREENS = {
 	// HAB-12 — Reminders
 	reminders: {
 		feature: "HAB-12",
-		route: "/habits/reminders/1?fixtures=reminders",
+		route: "/(today)/reminders/1?fixtures=reminders",
 		mockup: "docs/mockups/hab-21-e4.png",
 		note: "Cards start collapsed except a conflicting one (21:00); the other two are tapped open to match the mockup. Permission reads as denied in this scenario.",
 		async interact(page) {
@@ -719,7 +618,7 @@ export const SCREENS = {
 	},
 	"reminders-dark": {
 		feature: "HAB-21",
-		route: "/habits/reminders/1?fixtures=reminders",
+		route: "/(today)/reminders/1?fixtures=reminders",
 		mockup: "docs/mockups/hab-21-e4.png",
 		colorScheme: "dark",
 		note: "E4 dark column.",
@@ -730,26 +629,26 @@ export const SCREENS = {
 	},
 	"reminders-at-cap-dark": {
 		feature: "HAB-21",
-		route: "/habits/reminders/1?fixtures=reminders-at-cap&theme=dark",
+		route: "/(today)/reminders/1?fixtures=reminders-at-cap&theme=dark",
 		mockup: null,
 		colorScheme: "dark",
 		note: "At the cap in dark: cap message, then the pointer.",
 	},
 	"reminders-at-cap": {
 		feature: "HAB-12",
-		route: "/habits/reminders/1?fixtures=reminders-at-cap",
+		route: "/(today)/reminders/1?fixtures=reminders-at-cap",
 		mockup: "docs/mockups/reminders-at-cap.png",
 		note: "Cap message replaces the 'Up to four times' caption; the HAB-21 pointer still follows. The mockup predates HAB-21 and still draws the Evening review row.",
 	},
 	"reminders-empty": {
 		feature: "HAB-12",
-		route: "/habits/reminders/1",
+		route: "/(today)/reminders/1",
 		mockup: "docs/mockups/hab-21-e4.png",
 		note: "A habit with no reminders yet — caption and HAB-21 pointer only.",
 	},
 	"reminder-time-sheet": {
 		feature: "HAB-12",
-		route: "/habits/reminders/1?fixtures=reminders",
+		route: "/(today)/reminders/1?fixtures=reminders",
 		mockup: null,
 		note: "Time sheet for the 21:00 reminder. Web shows a static read-out where iOS has the SwiftUI wheel.",
 		async interact(page) {
@@ -760,13 +659,13 @@ export const SCREENS = {
 	// HAB-13 — Manage, archive, delete (reworked by HAB-19; judged against D3)
 	"manage-habits": {
 		feature: "HAB-13",
-		route: "/habits/manage?fixtures=manage-archive",
+		route: "/(habits)/manage?fixtures=manage-archive",
 		mockup: "docs/mockups/hab-19-d3.png",
 		note: "Resting state; the mockup's lifted row and toasts are the next two states.",
 	},
 	"manage-habits-dragging": {
 		feature: "HAB-13",
-		route: "/habits/manage?fixtures=manage-archive",
+		route: "/(habits)/manage?fixtures=manage-archive",
 		mockup: "docs/mockups/hab-19-d3.png",
 		note: "Meditate's grip held mid-drag, not yet released — the mockup's lifted row.",
 		async interact(page) {
@@ -778,7 +677,7 @@ export const SCREENS = {
 	},
 	"manage-habits-swipe-open": {
 		feature: "HAB-13",
-		route: "/habits/manage?fixtures=manage-archive",
+		route: "/(habits)/manage?fixtures=manage-archive",
 		mockup: "docs/mockups/hab-19-d3.png",
 		touch: true,
 		note: "Read swiped left, Archive action revealed — no mockup draws this state.",
@@ -788,7 +687,7 @@ export const SCREENS = {
 	},
 	"manage-habits-archived-toast": {
 		feature: "HAB-13",
-		route: "/habits/manage?fixtures=manage-archive",
+		route: "/(habits)/manage?fixtures=manage-archive",
 		mockup: "docs/mockups/manage-archive.png",
 		touch: true,
 		note: "Read swiped left and archived — \"Archived 'Read'\" toast with Undo, Read now under Archived.",
@@ -804,25 +703,25 @@ export const SCREENS = {
 	},
 	"manage-habits-no-active": {
 		feature: "HAB-19",
-		route: "/habits/manage?fixtures=manage-all-archived",
+		route: "/(habits)/manage?fixtures=manage-all-archived",
 		mockup: "docs/mockups/hab-19-e2.png",
 		note: "E2 — everything archived: category sections gone, empty card with Add habit, Restore below.",
 	},
 	"manage-habits-nothing-archived": {
 		feature: "HAB-19",
-		route: "/habits/manage?fixtures=manage-nothing-archived",
+		route: "/(habits)/manage?fixtures=manage-nothing-archived",
 		mockup: "docs/mockups/hab-19-e3.png",
 		note: "E3 — Archived header stays over a dashed placeholder.",
 	},
 	"manage-habits-no-habits": {
 		feature: "HAB-19",
-		route: "/habits/manage?fixtures=empty",
+		route: "/(habits)/manage?fixtures=empty",
 		mockup: null,
 		note: "No habits at all: E2 card with copy that doesn't claim anything was archived, plus the E3 placeholder. No mockup draws this combination.",
 	},
 	"delete-confirm": {
 		feature: "HAB-23",
-		route: "/habits/1?fixtures=habit-detail",
+		route: "/(today)/habit/1?fixtures=habit-detail",
 		mockup: "docs/mockups/hab-23-e7.png",
 		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (docs/backlog.md).",
 		async interact(page) {
@@ -831,7 +730,7 @@ export const SCREENS = {
 	},
 	"delete-confirm-dark": {
 		feature: "HAB-23",
-		route: "/habits/1?fixtures=habit-detail",
+		route: "/(today)/habit/1?fixtures=habit-detail",
 		mockup: "docs/mockups/hab-23-e7.png",
 		colorScheme: "dark",
 		note: "E7 dark half: OS emulated dark, Appearance on System.",
@@ -841,7 +740,7 @@ export const SCREENS = {
 	},
 	"delete-confirm-archived": {
 		feature: "HAB-23",
-		route: "/habits/1?fixtures=habit-detail-archived",
+		route: "/(today)/habit/1?fixtures=habit-detail-archived",
 		mockup: null,
 		note: "Already-archived habit: NEW-33 plain state — no archive card, just Keep habit and Delete permanently. No mockup draws this.",
 		async interact(page) {
@@ -852,40 +751,40 @@ export const SCREENS = {
 	// HAB-15 — Settings & local data export (B1–B6)
 	settings: {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
 		mockup: "docs/mockups/hab-15-b1.png",
 		note: "B1 light — Light picked, Evening review on, never exported. Adds a plain Categories row (no mockup — proposal, HAB-25's expected home). Chevrons are SF Symbols (blank on web).",
 	},
 	"settings-dark": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=dark",
+		route: "/(habits)/settings?fixtures=settings&theme=dark",
 		mockup: "docs/mockups/hab-15-b1.png",
 		colorScheme: "dark",
 		note: "B1 dark column — Dark picked (OS emulated dark).",
 	},
 	"settings-explicit-over-os": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=dark",
+		route: "/(habits)/settings?fixtures=settings&theme=dark",
 		mockup: null,
 		colorScheme: "light",
 		note: "Explicit Dark while the emulated OS is light: the app must draw dark.",
 	},
 	"settings-system-notifications-off": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings-notifications-off",
+		route: "/(habits)/settings?fixtures=settings-notifications-off",
 		mockup: "docs/mockups/hab-15-b2.png",
 		note: "B2 — System (resolves light), Evening review on but iOS notifications off: neutral notice with 'Open iOS Settings →'; Last export 2 August.",
 	},
 	"settings-system-dark": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings-notifications-off",
+		route: "/(habits)/settings?fixtures=settings-notifications-off",
 		mockup: "docs/mockups/hab-15-b2.png",
 		colorScheme: "dark",
 		note: "B2 dark — System follows the emulated dark OS; caption says 'currently dark'.",
 	},
 	"export-confirm": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
 		mockup: "docs/mockups/hab-15-b3.png",
 		note: "B3 — confirm sheet: counts, range, CSV/JSON, archived toggle, 'Export N entries'. Fixture data differs from the mockup's numbers.",
 		async interact(page) {
@@ -895,7 +794,7 @@ export const SCREENS = {
 	},
 	"export-confirm-archived-off": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
 		mockup: "docs/mockups/hab-15-b3.png",
 		note: "B3 with 'Include archived habits' off — counts and the button shrink.",
 		async interact(page) {
@@ -906,7 +805,7 @@ export const SCREENS = {
 	},
 	"export-progress": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
 		mockup: "docs/mockups/hab-15-b4.png",
 		note: "B4 — determinate progress. The page slows setTimeout(0) so the ~1s export is still running when captured.",
 		async interact(page) {
@@ -923,7 +822,7 @@ export const SCREENS = {
 	},
 	"export-ready": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
 		mockup: "docs/mockups/hab-15-b5.png",
 		note: "B5 — Export ready: file card, Share file…, Save to Files, Done.",
 		async interact(page) {
@@ -934,7 +833,7 @@ export const SCREENS = {
 	},
 	"export-failed": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=export-fails&theme=light",
+		route: "/(habits)/settings?fixtures=export-fails&theme=light",
 		mockup: "docs/mockups/hab-15-b6.png",
 		note: "B6 — failed on storage: reason, what's needed, 'nothing was changed', Try again / Close.",
 		async interact(page) {
@@ -945,7 +844,7 @@ export const SCREENS = {
 	},
 	"export-ready-dark": {
 		feature: "HAB-15",
-		route: "/habits/settings?fixtures=settings&theme=dark",
+		route: "/(habits)/settings?fixtures=settings&theme=dark",
 		mockup: "docs/mockups/hab-15-b5.png",
 		colorScheme: "dark",
 		note: "B5 dark column.",
@@ -974,7 +873,7 @@ export const SCREENS = {
 	},
 	"error-toast-today": {
 		feature: "B6",
-		route: "/habits?failWrites=1",
+		route: "/?failWrites=1",
 		mockup: null,
 		note: "A failed tick on Today: error toast (toast pill with a danger dot), the row stays unchecked, no Undo.",
 		async interact(page) {
@@ -984,7 +883,7 @@ export const SCREENS = {
 	},
 	"error-toast-today-dark": {
 		feature: "B6",
-		route: "/habits?failWrites=1",
+		route: "/?failWrites=1",
 		mockup: null,
 		colorScheme: "dark",
 		note: "Same, dark.",
@@ -995,7 +894,7 @@ export const SCREENS = {
 	},
 	"error-toast-in-sheet": {
 		feature: "B6",
-		route: "/habits?fixtures=quantity-log&failWrites=1",
+		route: "/?fixtures=quantity-log&failWrites=1",
 		mockup: null,
 		note: "A failed quantity save: the sheet stays open and the toast shows at the top of the screen, above the sheet (a Modal covers the page-level host).",
 		async interact(page) {
@@ -1031,7 +930,7 @@ export const SCREENS = {
 	},
 	"settings-about": {
 		feature: "B6",
-		route: "/habits/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
 		mockup: null,
 		note: "Settings scrolled to the About group: version (build), database schema, 'Copy diagnostics'.",
 		async interact(page) {
@@ -1041,7 +940,7 @@ export const SCREENS = {
 	},
 	"settings-about-dark": {
 		feature: "B6",
-		route: "/habits/settings?fixtures=settings&theme=dark",
+		route: "/(habits)/settings?fixtures=settings&theme=dark",
 		mockup: null,
 		colorScheme: "dark",
 		note: "Same, dark.",
@@ -1061,7 +960,6 @@ export const SCREENS = {
  */
 const DARK_TWINS = [
 	"today",
-	"today-menu-open",
 	"monthly-summary",
 	"monthly-insights",
 	"monthly-too-early",

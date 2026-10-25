@@ -13,6 +13,7 @@ jest.mock("expo-symbols", () => {
 
 import {
 	HEADER_BUTTON_MIN_SIZE,
+	HeaderCircleButton,
 	headerActionOptions,
 	headerBackOptions,
 	headerNoBackOptions,
@@ -170,5 +171,39 @@ describe("headerNoBackOptions", () => {
 		expect(options.headerBackVisible).toBe(false);
 		expect(options.headerLeft?.(itemProps)).toBeNull();
 		expect(options.unstable_headerLeftItems?.(itemProps)).toEqual([]);
+	});
+});
+
+describe("HeaderCircleButton (V3-02)", () => {
+	it("is a 44 pt circle carrying its glyph, labelled by what it does", async () => {
+		await render(
+			<HeaderCircleButton
+				symbol="gearshape"
+				accessibilityLabel="Settings"
+				onPress={jest.fn()}
+			/>,
+		);
+
+		const button = screen.getByRole("button", { name: "Settings" });
+		const style = StyleSheet.flatten(button.props.style);
+		expect(style).toMatchObject({
+			width: HEADER_BUTTON_MIN_SIZE,
+			height: HEADER_BUTTON_MIN_SIZE,
+		});
+		expect(screen.getByTestId("symbol-gearshape")).toBeTruthy();
+	});
+
+	it("presses once", async () => {
+		const onPress = jest.fn();
+		await render(
+			<HeaderCircleButton
+				symbol="plus"
+				accessibilityLabel="Add habit"
+				onPress={onPress}
+			/>,
+		);
+
+		await fireEvent.press(screen.getByTestId("header-circle-plus"));
+		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 });

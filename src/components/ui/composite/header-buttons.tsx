@@ -1,12 +1,17 @@
 import type { NativeStackNavigationOptions } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text } from "react-native";
+import type { SFSymbol } from "sf-symbols-typescript";
+import { radius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
- * The ONE place navigation-header buttons are defined — back, Cancel, Edit,
- * and any future Done/Save. A guard test (`header-buttons.guard.test.ts`)
- * fails if any other file sets a header button option directly.
+ * The ONE place header buttons are defined — the navigation-bar ones (back,
+ * Cancel, Edit, any future Done/Save) and the circle buttons a screen draws in
+ * its own large-title header (V3-02: ≤ 2 trailing 44 pt buttons — the `+` on
+ * Today and Habits, the gear on Habits). A guard test
+ * (`header-buttons.guard.test.ts`) fails if any other file sets a header
+ * button option directly.
  *
  * Why: on iOS 26 every native nav-bar item is wrapped in a shared Liquid Glass
  * capsule unless the item sets `hidesSharedBackground`. A plain `headerRight`
@@ -139,6 +144,42 @@ export function headerActionOptions({
 	};
 }
 
+type HeaderCircleButtonProps = {
+	symbol: SFSymbol;
+	/** What it does — "Add habit", "Settings". Becomes the accessibility label. */
+	accessibilityLabel: string;
+	onPress: () => void;
+};
+
+/**
+ * A trailing button in a screen's own large-title header (V3-02): a 44 pt
+ * card-coloured circle with a hairline, so a pair of them reads as one group.
+ * Not a navigation-bar item — those are the `*Options` helpers above.
+ */
+export function HeaderCircleButton({
+	symbol,
+	accessibilityLabel,
+	onPress,
+}: HeaderCircleButtonProps) {
+	const { colors, opacity } = useTheme();
+
+	return (
+		<Pressable
+			testID={`header-circle-${symbol}`}
+			accessibilityRole="button"
+			accessibilityLabel={accessibilityLabel}
+			onPress={onPress}
+			style={({ pressed }) => [
+				styles.circle,
+				{ backgroundColor: colors.card, borderColor: colors.border },
+				pressed && { opacity: opacity.pressed },
+			]}
+		>
+			<SymbolView name={symbol} size={18} tintColor={colors.ink} />
+		</Pressable>
+	);
+}
+
 /** No leading button at all — a modal form leaves only through its Cancel. */
 export function headerNoBackOptions(): HeaderButtonOptions {
 	return {
@@ -162,6 +203,14 @@ const styles = StyleSheet.create({
 	back: {
 		justifyContent: "flex-start",
 		paddingHorizontal: 6,
+	},
+	circle: {
+		width: HEADER_BUTTON_MIN_SIZE,
+		height: HEADER_BUTTON_MIN_SIZE,
+		borderRadius: radius.pill,
+		borderWidth: 1,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	/** Matches the system back title it replaces. */
 	backLabel: {

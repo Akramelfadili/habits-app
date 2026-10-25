@@ -207,14 +207,14 @@ describe("WeeklySummaryScreen", () => {
 					.disabled,
 			).toBeFalsy();
 			await fireEvent.press(screen.getByText("Year"));
-			expect(mockReplace).toHaveBeenCalledWith("/habits/year");
+			expect(mockReplace).toHaveBeenCalledWith("/year");
 		});
 
 		it("goes to Monthly, keeping the Last week / This week switch where it was", async () => {
 			await render(<WeeklySummaryScreen />);
 			expect(screen.getByText("Last week")).toBeTruthy();
 			await fireEvent.press(screen.getByText("Month"));
-			expect(mockReplace).toHaveBeenCalledWith("/habits/month");
+			expect(mockReplace).toHaveBeenCalledWith("/month");
 		});
 
 		it("is hidden in the empty state", async () => {

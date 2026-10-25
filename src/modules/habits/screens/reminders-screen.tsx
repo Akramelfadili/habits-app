@@ -182,7 +182,7 @@ export function RemindersScreen({ habitId, addTime }: RemindersScreenProps) {
 				<MovedSettingPointer
 					body="Looking for the evening review? It covers every habit at once, so it now lives in Settings."
 					linkLabel="Open Settings →"
-					onPress={() => router.push("/habits/settings")}
+					onPress={() => router.push("/settings")}
 				/>
 			</ScrollView>
 
