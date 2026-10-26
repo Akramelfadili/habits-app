@@ -949,15 +949,73 @@ export const SCREENS = {
 			await page.mouse.wheel(0, 400);
 		},
 	},
+	// HAB-27 — the navigation shell: the floating pill (V3-01 B) and the
+	// layout rules that come with it. The pill is in every other baseline
+	// too; these are the frames the spec draws it in.
+	"tab-bar-today": {
+		feature: "HAB-27",
+		route: "/",
+		mockup: "docs/mockups/v3/renders/today/slice_00.png",
+		note: "T1 — Today with the pill: Today active (filled capsule, ink, 600), Progress and Habits in sub.",
+	},
+	"tab-bar-long-list-end": {
+		feature: "HAB-27",
+		route: "/?fixtures=manage-archive",
+		mockup: "docs/mockups/v3/renders/today/slice_05.png",
+		viewport: { width: 393, height: 640 },
+		note: "T13 — a long Today scrolled to the end: content stops 34 pt above the pill (112 pt bottom padding, T-25). The dev-build seed buttons are the real tail of the list here.",
+		async interact(page) {
+			await page.mouse.wheel(0, 4000);
+			await page.waitForTimeout(400);
+		},
+	},
+	"tab-bar-toast": {
+		feature: "HAB-27",
+		route: "/",
+		mockup: "docs/mockups/v3/renders/today/slice_06.png",
+		note: "T14 — the Undo toast 12 pt above the pill (T-21). Glass of water is a quantity habit, so a check habit is ticked instead.",
+		async interact(page) {
+			await page.getByLabel("No phone after 23:00", { exact: true }).click();
+		},
+	},
+	"tab-bar-sheet-over-pill": {
+		feature: "HAB-27",
+		route: "/?fixtures=quantity-log",
+		mockup: "docs/mockups/v3/renders/habits/slice_04.png",
+		note: "H8 — a sheet covers the pill and the scrim dims it; the pill is inert until it closes.",
+		async interact(page) {
+			await page
+				.getByLabel(/^Log .*, \d+ of \d+/)
+				.first()
+				.click();
+			await page.waitForTimeout(400);
+		},
+	},
+	"tab-bar-ax-bar-a": {
+		feature: "HAB-27",
+		route: "/?textSize=ax",
+		mockup: "docs/mockups/v3/renders/habits/slice_05.png",
+		note: "H10 — at accessibility text sizes the pill gives way to the full-width bar A. `?textSize=ax` stands in for Dynamic Type, which react-native-web never reports.",
+	},
+	"tab-bar-progress": {
+		feature: "HAB-27",
+		route: "/(progress)/week?fixtures=weekly-summary",
+		mockup: "docs/mockups/v3/renders/progress/slice_00.png",
+		note: "P1 — the Progress tab root with the pill, Progress active.",
+	},
+	"tab-bar-habits-end": {
+		feature: "HAB-27",
+		route: "/(habits)/manage?fixtures=manage-archive",
+		mockup: "docs/mockups/v3/renders/habits/slice_05.png",
+		viewport: { width: 393, height: 640 },
+		note: "H9 — the Habits tab scrolled to the end: the last row stops above the pill, Habits active.",
+		async interact(page) {
+			await page.mouse.wheel(0, 4000);
+			await page.waitForTimeout(400);
+		},
+	},
 };
 
-/**
- * Dark twins of the screens that carry the most chrome (HAB-15's dark mode):
- * the same route and interaction, rendered with the emulated OS in dark and
- * the Appearance setting left on its default, System. Only the dark mockup in
- * B1/B2 exists, so these are judged against the light baselines for layout
- * and by eye for colour.
- */
 const DARK_TWINS = [
 	"today",
 	"monthly-summary",
@@ -978,6 +1036,13 @@ const DARK_TWINS = [
 	"add-category-empty",
 	"manage-categories-in-use",
 	"new-habit-near-limit",
+	"tab-bar-today",
+	"tab-bar-long-list-end",
+	"tab-bar-toast",
+	"tab-bar-sheet-over-pill",
+	"tab-bar-ax-bar-a",
+	"tab-bar-progress",
+	"tab-bar-habits-end",
 ];
 for (const name of DARK_TWINS) {
 	const light = SCREENS[name];

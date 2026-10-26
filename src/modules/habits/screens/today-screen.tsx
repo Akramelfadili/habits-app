@@ -39,6 +39,13 @@ import {
 import type { Habit } from "../types";
 import { FirstRunScreen } from "./first-run-screen";
 
+/**
+ * No bottom edge: the floating pill carries its own 22 pt float over the home
+ * indicator and every scroller pays `TAB_BAR_BOTTOM_PADDING`, so a bottom
+ * safe-area inset here would stack a third gap on top of both (HAB-27).
+ */
+const SCREEN_EDGES = ["top", "left", "right"] as const;
+
 export function TodayScreen() {
 	const router = useRouter();
 	const { colors, scheme } = useTheme();
@@ -262,6 +269,7 @@ export function TodayScreen() {
 	if (!isLoaded) {
 		return (
 			<SafeAreaView
+				edges={SCREEN_EDGES}
 				testID="screen-loading"
 				style={[styles.screen, { backgroundColor: colors.bg }]}
 			/>
@@ -275,6 +283,7 @@ export function TodayScreen() {
 	if (viewState === "no-habits") {
 		return (
 			<SafeAreaView
+				edges={SCREEN_EDGES}
 				style={[
 					styles.screen,
 					styles.panelScreen,
@@ -323,6 +332,7 @@ export function TodayScreen() {
 	if (viewState === "rest-day") {
 		return (
 			<SafeAreaView
+				edges={SCREEN_EDGES}
 				style={[
 					styles.screen,
 					styles.panelScreen,
@@ -378,7 +388,10 @@ export function TodayScreen() {
 
 	if (viewState === "day-closed") {
 		return (
-			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+			<SafeAreaView
+				edges={SCREEN_EDGES}
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			>
 				<ScrollView contentContainerStyle={styles.content}>
 					{header}
 					<TodayStatePanel
@@ -417,7 +430,10 @@ export function TodayScreen() {
 	}
 
 	return (
-		<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+		<SafeAreaView
+			edges={SCREEN_EDGES}
+			style={[styles.screen, { backgroundColor: colors.bg }]}
+		>
 			<ScrollView contentContainerStyle={styles.content}>
 				{header}
 
