@@ -1,7 +1,8 @@
 import { addDays, endOfWeek, parseISO, startOfWeek } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
-import { toDayKey } from "@/utils/day-key";
+import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
+import { isHabitListedOn } from "../domain/selected-day";
 import {
 	freezesRemainingInMonth,
 	getStreakAtRisk,
@@ -28,16 +29,24 @@ import { useAllReminders } from "../repositories/reminder-repository";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
 
-export function useTodayQueries(): {
+/**
+ * `selectedKey` is the day Today shows (`useSelectedDayQueries`): a past day's
+ * key, or `null` to follow today. The week window and every per-day read are
+ * keyed by that day; streak-at-risk belongs to the real today only.
+ */
+export function useTodayQueries(selectedKey: string | null = null): {
 	totalHabitCount: number;
 	groups: CategoryGroup[];
 	progress: Progress;
 	completedHabitIds: ReadonlySet<number>;
-	/** Today's logged quantity value per habit — only set for quantity habits with an entry today. */
+	/** The shown day's logged quantity value per habit — only set for quantity habits with an entry that day. */
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
-	/** Days completed so far this Mon–Sun week, today included — per-week habits' "2 of 5". */
+	/** Days completed so far in the shown day's Mon–Sun week — per-week habits' "2 of 5". */
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
+	/** The real today — what streak-at-risk is measured against. */
 	today: Date;
+	/** The day being shown: `today`, or the past day selected. */
+	selectedDay: Date;
 	/** False until the habit list has loaded — Today shows a neutral blank, not "Nothing to track yet" (audit A5-04). */
 	isLoaded: boolean;
 	viewState: TodayViewState;
@@ -54,8 +63,9 @@ export function useTodayQueries(): {
 	const categories = useCategories();
 	const today = useToday();
 	const tomorrow = addDays(today, 1);
-	const weekStart = startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
-	const weekEnd = endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
+	const selectedDay = selectedKey === null ? today : fromDayKey(selectedKey);
+	const weekStart = startOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON });
+	const weekEnd = endOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON });
 	const entries = useEntriesInRange(weekStart, weekEnd);
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
@@ -63,14 +73,14 @@ export function useTodayQueries(): {
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 
 	const completedDatesByHabit = new Map<number, Date[]>();
-	const todayString = toDayKey(today);
+	const dayString = toDayKey(selectedDay);
 	const completedHabitIds = new Set<number>();
 	const quantityValuesByHabitId = new Map<number, number>();
 	for (const entry of entries) {
 		const habit = habitsById.get(entry.habitId);
 		if (!habit) continue;
 
-		if (entry.date === todayString && entry.value !== undefined) {
+		if (entry.date === dayString && entry.value !== undefined) {
 			quantityValuesByHabitId.set(entry.habitId, entry.value);
 		}
 
@@ -79,13 +89,15 @@ export function useTodayQueries(): {
 		const list = completedDatesByHabit.get(entry.habitId) ?? [];
 		list.push(parseISO(entry.date));
 		completedDatesByHabit.set(entry.habitId, list);
-		if (entry.date === todayString) completedHabitIds.add(entry.habitId);
+		if (entry.date === dayString) completedHabitIds.add(entry.habitId);
 	}
 
 	const dueHabits = habits.filter((habit) =>
-		getHabitStrategy(habit).isDueOn(today, {
-			completedDates: completedDatesByHabit.get(habit.id) ?? [],
-		}),
+		isHabitListedOn(
+			habit,
+			selectedDay,
+			completedDatesByHabit.get(habit.id) ?? [],
+		),
 	);
 	const tomorrowPreview = habits.filter((habit) =>
 		getHabitStrategy(habit).isDueOn(tomorrow, {
@@ -124,7 +136,8 @@ export function useTodayQueries(): {
 	}
 	const freezesRemainingThisMonth = freezesRemainingInMonth(frozenDays, today);
 	const atRiskByHabitId = new Map<number, StreakAtRisk>();
-	for (const habit of dueHabits) {
+	// Only the real today can be at risk: the grace window is yesterday, measured from now.
+	for (const habit of selectedKey === null ? dueHabits : []) {
 		const atRisk = getStreakAtRisk(
 			habit,
 			entriesByHabit.get(habit.id) ?? [],
@@ -143,6 +156,7 @@ export function useTodayQueries(): {
 		quantityValuesByHabitId,
 		completedThisWeekByHabitId,
 		today,
+		selectedDay,
 		isLoaded: loaded,
 		viewState: resolveTodayViewState({
 			totalHabitCount: habits.length,

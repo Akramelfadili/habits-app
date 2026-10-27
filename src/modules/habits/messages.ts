@@ -9,6 +9,8 @@
  * error text in a message; that goes to the log.
  */
 
+import { showToast } from "@/store/toast-store";
+
 export type MessageTone = "info" | "success" | "warning" | "error";
 
 export type MessageSpec<Params extends readonly unknown[] = never[]> = {
@@ -49,12 +51,69 @@ export function messageText<Params extends readonly unknown[]>(
 	return typeof spec.text === "string" ? spec.text : spec.text(...params);
 }
 
+/** " · Wed 21 Oct" when a toast is about a day that isn't today (HAB-30, T10), else nothing. */
+const onDay = (day?: string) => (day ? ` · ${day}` : "");
+
 /**
- * The catalogue. Empty until V3 screens start using it; entries look like
- * `freezeUsed: { tone: "success", text: (day: string, left: number) => … }`.
+ * The catalogue. Today's toasts live here (V3-2a); the rest of the module's
+ * strings move in as their screens are rebuilt. `day` is the date to name
+ * ("Wed 21 Oct") and is omitted for today.
  */
-export const messages = {} satisfies Record<
+export const messages = {
+	completed: {
+		tone: "success",
+		text: (habit: string, day?: string) =>
+			`Marked '${habit}' complete${onDay(day)}`,
+	},
+	resisted: {
+		tone: "success",
+		text: (habit: string, day?: string) => `Resisted '${habit}'${onDay(day)}`,
+	},
+	notCompleted: {
+		tone: "info",
+		text: (habit: string, day?: string) =>
+			`Marked '${habit}' not complete${onDay(day)}`,
+	},
+	notResisted: {
+		tone: "info",
+		text: (habit: string, day?: string) =>
+			`Marked '${habit}' not resisted${onDay(day)}`,
+	},
+	offSchedule: {
+		tone: "success",
+		text: (habit: string, day?: string) =>
+			`Logged '${habit}' · off-schedule${onDay(day)}`,
+	},
+	/** D6: "Drink water +1 · 3 of 8 glasses". Above target it keeps counting: "9 of 8 glasses". */
+	quantityAdded: {
+		tone: "success",
+		text: (
+			habit: string,
+			count: number,
+			target: number,
+			unit: string | null,
+			day?: string,
+		) =>
+			`${habit} +1 · ${count} of ${target}${unit ? ` ${unit}` : ""}${onDay(day)}`,
+	},
+} satisfies Record<
 	string,
 	// biome-ignore lint/suspicious/noExplicitAny: each entry declares its own params
 	MessageSpec<any>
 >;
+
+/**
+ * Shows `spec` as the app's one toast, with an Undo when `undo` is given.
+ * Copy and tone come from the catalogue, so a screen never writes its own.
+ */
+export function showMessage<Params extends readonly unknown[]>(
+	spec: MessageSpec<Params>,
+	params: Params,
+	undo?: () => unknown,
+): void {
+	showToast({
+		message: messageText(spec, ...params),
+		tone: spec.tone === "error" ? "error" : "default",
+		...(undo ? { actionLabel: "Undo", onAction: undo } : {}),
+	});
+}

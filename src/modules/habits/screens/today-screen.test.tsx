@@ -63,6 +63,7 @@ jest.mock("../hooks/use-today-queries", () => ({
 		quantityValuesByHabitId: mockQuantityValuesByHabitId,
 		completedThisWeekByHabitId: mockCompletedThisWeekByHabitId,
 		today: mockToday,
+		selectedDay: mockToday,
 		isLoaded: mockIsLoaded,
 		viewState: mockViewState,
 		tomorrowPreview: mockTomorrowPreview,

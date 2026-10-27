@@ -1,15 +1,18 @@
-import { isSameDay } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { useState } from "react";
 import { log } from "@/lib/logger/logger";
 import { currentDay } from "@/lib/today/use-today";
-import { showToast } from "@/store/toast-store";
+import { fromDayKey } from "@/utils/day-key";
+import { messages, showMessage } from "../messages";
 import type { Habit } from "../types";
 import { useQuantityLogActions } from "./use-quantity-log-actions";
 import { useTodayActions } from "./use-today-actions";
 
 type TodayLogInput = {
-	/** The day this render shows — a write is skipped if the clock has moved past it. */
+	/** The real today — a write to it is skipped if the clock has moved past this render's. */
 	today: Date;
+	/** A past day's key when one is selected (`useSelectedDayQueries`); `null` follows today. */
+	selectedKey: string | null;
 	completedHabitIds: ReadonlySet<number>;
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
 	/** Every habit a quantity sheet can be opened for: the due ones plus the rest-day picker's. */
@@ -23,6 +26,7 @@ type TodayLogInput = {
  */
 export function useTodayLogActions({
 	today,
+	selectedKey,
 	completedHabitIds,
 	quantityValuesByHabitId,
 	loggableHabits,
@@ -36,52 +40,49 @@ export function useTodayLogActions({
 		(habit) => habit.id === quantityHabitId,
 	);
 
+	// Names the date in a toast only when it isn't today (T10).
+	const dayLabel =
+		selectedKey === null
+			? undefined
+			: format(fromDayKey(selectedKey), "EEE d MMM");
+
 	// Every completion confirms itself with a short-lived Undo (design system,
 	// "Feedback"). The toast lives in the shell's shared slot.
 	function confirmCompletion(habit: Habit, undo: () => unknown) {
-		showToast({
-			// A Break habit is resisted, never "complete" (HAB-04).
-			message:
-				habit.direction === "break"
-					? `Resisted '${habit.name}'`
-					: `Marked '${habit.name}' complete`,
-			actionLabel: "Undo",
-			onAction: undo,
-		});
+		// A Break habit is resisted, never "complete" (HAB-04).
+		const spec =
+			habit.direction === "break" ? messages.resisted : messages.completed;
+		showMessage(spec, [habit.name, dayLabel], undo);
 	}
 
 	// Un-ticking is as instant as ticking (HAB-03), and as undoable: the toast
 	// puts the habit back as it was, on the day of the tap. A newer toast
 	// replaces this one, and once it expires there is nothing left to undo.
 	function confirmUncompletion(habit: Habit, undo: () => unknown) {
-		showToast({
-			message:
-				habit.direction === "break"
-					? `Marked '${habit.name}' not resisted`
-					: `Marked '${habit.name}' not complete`,
-			actionLabel: "Undo",
-			onAction: undo,
-		});
+		const spec =
+			habit.direction === "break"
+				? messages.notResisted
+				: messages.notCompleted;
+		showMessage(spec, [habit.name, dayLabel], undo);
 	}
 
 	// A bonus log confirms itself the same way; Undo removes exactly that entry
 	// (nothing was applied to streaks, so there is nothing else to reverse).
 	function confirmOffSchedule(habit: Habit, undo: () => unknown) {
-		showToast({
-			message: `Logged '${habit.name}' · off-schedule`,
-			actionLabel: "Undo",
-			onAction: undo,
-		});
+		showMessage(messages.offSchedule, [habit.name, dayLabel], undo);
 	}
 
 	/**
-	 * The day a write lands on, read from the clock at the moment of the tap.
-	 * If the app was left open across midnight and this render still shows
-	 * yesterday, the write is skipped — the screen is about to refresh to the
-	 * new day (`useToday`), and a tap must never land on a day the person
-	 * isn't looking at. An Undo keeps the day of its own action, not this one.
+	 * The day a write lands on. A selected past day is that date, however late
+	 * it is now — a past selection stays across midnight. Otherwise it is read
+	 * from the clock at the moment of the tap: if the app was left open across
+	 * midnight and this render still shows yesterday, the write is skipped —
+	 * the screen is about to refresh to the new day (`useToday`), and a tap
+	 * must never land on a day the person isn't looking at. An Undo keeps the
+	 * day of its own action, not this one.
 	 */
 	function writableDay(): Date | null {
+		if (selectedKey !== null) return fromDayKey(selectedKey);
 		const day = currentDay();
 		if (isSameDay(day, today)) return day;
 		log.info("today", "write skipped: the day rolled over since this render");

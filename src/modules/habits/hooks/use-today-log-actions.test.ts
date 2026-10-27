@@ -27,10 +27,14 @@ const water = makeHabit({
 	targetUnit: "glasses",
 });
 
-function setup(values = new Map<number, number>()) {
+function setup(
+	values = new Map<number, number>(),
+	selectedKey: string | null = null,
+) {
 	return renderHook(() =>
 		useTodayLogActions({
 			today: TODAY,
+			selectedKey,
 			completedHabitIds: new Set<number>(),
 			quantityValuesByHabitId: values,
 			loggableHabits: [read, water],
@@ -91,5 +95,37 @@ describe("useTodayLogActions", () => {
 		await act(() => result.current.logOffSchedule(water));
 		expect(result.current.quantityHabit?.id).toBe(2);
 		expect(mockToggle).toHaveBeenCalledTimes(1);
+	});
+
+	describe("with a past day selected", () => {
+		const PAST = "2026-10-12";
+		const PAST_DATE = new Date(2026, 9, 12);
+
+		it("writes to that date, names it in the toast, and Undo targets it too", async () => {
+			const { result } = await setup(new Map(), PAST);
+			await act(() => result.current.toggle(read));
+			expect(mockToggle).toHaveBeenCalledWith(1, PAST_DATE, true);
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Marked 'Read' complete · Mon 12 Oct");
+			toast?.onAction?.();
+			expect(mockToggle).toHaveBeenLastCalledWith(1, PAST_DATE, false);
+		});
+
+		it("is not skipped when the day has rolled over since the render", async () => {
+			const { result } = await setup(new Map(), PAST);
+			jest.setSystemTime(new Date(2026, 9, 15, 0, 1));
+			await act(() => result.current.toggle(read));
+			expect(mockToggle).toHaveBeenCalledWith(1, PAST_DATE, true);
+		});
+
+		it("saves a quantity to that date", async () => {
+			const { result } = await setup(new Map([[2, 5]]), PAST);
+			await act(() => result.current.openQuantitySheet(2));
+			await act(() => result.current.saveQuantity(8));
+			expect(mockLogQuantity).toHaveBeenCalledWith(2, PAST_DATE, 8);
+			expect(useToastStore.getState().toast?.message).toBe(
+				"Marked 'Water' complete · Mon 12 Oct",
+			);
+		});
 	});
 });

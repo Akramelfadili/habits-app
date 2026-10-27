@@ -13,6 +13,7 @@ import { TodayRestDay } from "../components/today/today-rest-day";
 import { TodayHeader } from "../components/today-header";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useOffScheduleQueries } from "../hooks/use-off-schedule-queries";
+import { useSelectedDayQueries } from "../hooks/use-selected-day-queries";
 import { useTodayDevActions } from "../hooks/use-today-dev-actions";
 import { useTodayFreezeActions } from "../hooks/use-today-freeze-actions";
 import { useTodayLogActions } from "../hooks/use-today-log-actions";
@@ -30,14 +31,18 @@ const SCREEN_EDGES = ["top", "left", "right"] as const;
 export function TodayScreen() {
 	const router = useRouter();
 	const { colors } = useTheme();
-	const today = useTodayQueries();
-	const { eligibleHabits, loggedToday } = useOffScheduleQueries();
+	const { selectedKey } = useSelectedDayQueries();
+	const today = useTodayQueries(selectedKey);
+	const { eligibleHabits, loggedToday } = useOffScheduleQueries(
+		today.selectedDay,
+	);
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const dev = useTodayDevActions();
 
 	const dueHabits = today.groups.flatMap((group) => group.habits);
 	const logging = useTodayLogActions({
 		today: today.today,
+		selectedKey,
 		completedHabitIds: today.completedHabitIds,
 		quantityValuesByHabitId: today.quantityValuesByHabitId,
 		loggableHabits: [...dueHabits, ...eligibleHabits],
@@ -100,7 +105,7 @@ export function TodayScreen() {
 					/>
 				) : (
 					<TodayRestDay
-						today={today.today}
+						today={today.selectedDay}
 						eligibleHabits={eligibleHabits}
 						loggedToday={loggedToday}
 						onOpenHabit={openHabit}
