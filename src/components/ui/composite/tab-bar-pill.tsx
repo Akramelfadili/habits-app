@@ -112,8 +112,7 @@ type TabBarPillProps = {
 	bottomInset: number;
 	/**
 	 * Inert: no tab can be tapped. True while a sheet or alert is open (H8 — no
-	 * tab switching mid-decision) and while the migration runs (SY3). The pill
-	 * stays visible and reads as disabled rather than disappearing.
+	 * tab switching mid-decision). The pill stays visible and reads as disabled rather than disappearing.
 	 */
 	disabled?: boolean;
 };
