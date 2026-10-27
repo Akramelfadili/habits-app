@@ -1,0 +1,95 @@
+import { act, renderHook } from "@testing-library/react-native";
+import { useToastStore } from "@/store/toast-store";
+import { makeHabit } from "../test-support/habit-builder";
+
+const mockToggle = jest.fn();
+const mockLogQuantity = jest.fn();
+
+jest.mock("./use-today-actions", () => ({
+	useTodayActions: () => ({ toggleCompletion: mockToggle }),
+}));
+jest.mock("./use-quantity-log-actions", () => ({
+	useQuantityLogActions: () => ({
+		logQuantity: mockLogQuantity,
+		isLogging: false,
+	}),
+}));
+
+import { useTodayLogActions } from "./use-today-log-actions";
+
+const TODAY = new Date(2026, 9, 14);
+const read = makeHabit({ id: 1, name: "Read" });
+const water = makeHabit({
+	id: 2,
+	name: "Water",
+	targetType: "quantity",
+	targetAmount: 8,
+	targetUnit: "glasses",
+});
+
+function setup(values = new Map<number, number>()) {
+	return renderHook(() =>
+		useTodayLogActions({
+			today: TODAY,
+			completedHabitIds: new Set<number>(),
+			quantityValuesByHabitId: values,
+			loggableHabits: [read, water],
+		}),
+	);
+}
+
+describe("useTodayLogActions", () => {
+	beforeEach(() => {
+		jest.useFakeTimers({
+			now: new Date(2026, 9, 14, 12),
+			doNotFake: ["nextTick", "setImmediate", "queueMicrotask"],
+		});
+		mockToggle.mockReset().mockResolvedValue({ ok: true });
+		mockLogQuantity.mockReset().mockResolvedValue({ ok: true });
+		useToastStore.setState({ toast: null });
+	});
+	afterEach(() => jest.useRealTimers());
+
+	it("toggles for today and confirms with an Undo that targets the same day", async () => {
+		const { result } = await setup();
+		await act(() => result.current.toggle(read));
+		expect(mockToggle).toHaveBeenCalledWith(1, TODAY, true);
+		const toast = useToastStore.getState().toast;
+		expect(toast?.message).toBe("Marked 'Read' complete");
+		jest.setSystemTime(new Date(2026, 9, 15, 9));
+		toast?.onAction?.();
+		expect(mockToggle).toHaveBeenLastCalledWith(1, TODAY, false);
+	});
+
+	it("skips a write when the render still shows yesterday", async () => {
+		const { result } = await setup();
+		jest.setSystemTime(new Date(2026, 9, 15, 0, 1));
+		await act(() => result.current.toggle(read));
+		expect(mockToggle).not.toHaveBeenCalled();
+	});
+
+	it("opens and closes the quantity sheet, and a crossing save offers Undo to the previous amount", async () => {
+		const { result } = await setup(new Map([[2, 5]]));
+		await act(() => result.current.openQuantitySheet(2));
+		expect(result.current.quantityHabit?.id).toBe(2);
+		expect(result.current.quantityValue).toBe(5);
+
+		await act(() => result.current.saveQuantity(8));
+
+		expect(mockLogQuantity).toHaveBeenCalledWith(2, TODAY, 8);
+		expect(result.current.quantityHabit).toBeUndefined();
+		useToastStore.getState().toast?.onAction?.();
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, TODAY, 5);
+	});
+
+	it("logs a rest-day check at once, and hands a quantity habit to the sheet", async () => {
+		const { result } = await setup();
+		await act(() => result.current.logOffSchedule(read));
+		expect(useToastStore.getState().toast?.message).toBe(
+			"Logged 'Read' · off-schedule",
+		);
+		await act(() => result.current.logOffSchedule(water));
+		expect(result.current.quantityHabit?.id).toBe(2);
+		expect(mockToggle).toHaveBeenCalledTimes(1);
+	});
+});
