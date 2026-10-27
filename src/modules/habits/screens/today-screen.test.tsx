@@ -667,8 +667,9 @@ describe("TodayScreen", () => {
 			mockQuantityValuesByHabitId = new Map([[3, 10]]);
 
 			await render(<TodayScreen />);
-			await fireEvent.press(
-				screen.getByLabelText("Log Glass of water, 10 of 8 glasses"),
+			await fireEvent(
+				screen.getByLabelText("Add one to Glass of water, 10 of 8 glasses"),
+				"longPress",
 			);
 			for (let i = 0; i < 7; i += 1) {
 				await fireEvent.press(
@@ -698,8 +699,9 @@ describe("TodayScreen", () => {
 			mockQuantityValuesByHabitId = new Map([[3, 10]]);
 
 			await render(<TodayScreen />);
-			await fireEvent.press(
-				screen.getByLabelText("Log Glass of water, 10 of 8 glasses"),
+			await fireEvent(
+				screen.getByLabelText("Add one to Glass of water, 10 of 8 glasses"),
+				"longPress",
 			);
 			await fireEvent.press(
 				screen.getByLabelText("Decrease Glass of water, glasses"),
@@ -766,7 +768,7 @@ describe("TodayScreen", () => {
 		expect(screen.queryByText(/daily/i)).toBeNull();
 	});
 
-	it("tapping a quantity habit's row opens the Quantity Log sheet instead of toggling", async () => {
+	it("long-pressing a quantity habit's circle opens the Quantity Log sheet instead of toggling", async () => {
 		const quantityHabit = makeHabit({
 			id: 3,
 			name: "Glass of water",
@@ -782,12 +784,63 @@ describe("TodayScreen", () => {
 		mockQuantityValuesByHabitId = new Map([[3, 3]]);
 
 		await render(<TodayScreen />);
-		await fireEvent.press(
-			screen.getByLabelText("Log Glass of water, 3 of 8 glasses"),
+		await fireEvent(
+			screen.getByLabelText("Add one to Glass of water, 3 of 8 glasses"),
+			"longPress",
 		);
 
 		expect(screen.getByText("Save 3 of 8")).toBeTruthy();
 		expect(mockToggleCompletion).not.toHaveBeenCalled();
+	});
+
+	it("tapping a quantity habit's circle adds one, with an Undo to the amount before", async () => {
+		const quantityHabit = makeHabit({
+			id: 3,
+			name: "Glass of water",
+			category: categoryNamed("Morning"),
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+		mockViewState = "populated";
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
+		];
+		mockQuantityValuesByHabitId = new Map([[3, 2]]);
+
+		await render(<TodayScreen />);
+		await fireEvent.press(
+			screen.getByLabelText("Add one to Glass of water, 2 of 8 glasses"),
+		);
+
+		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3);
+		expect(screen.queryByText("Save 3 of 8")).toBeNull();
+		const toast = useToastStore.getState().toast;
+		expect(toast?.message).toBe("Glass of water +1 · 3 of 8 glasses");
+		toast?.onAction?.();
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 2);
+	});
+
+	it("the count control opens the Quantity Log sheet", async () => {
+		const quantityHabit = makeHabit({
+			id: 3,
+			name: "Glass of water",
+			category: categoryNamed("Morning"),
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+		mockViewState = "populated";
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
+		];
+		mockQuantityValuesByHabitId = new Map([[3, 3]]);
+
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("3/8"));
+
+		expect(screen.getByText("Save 3 of 8")).toBeTruthy();
+		expect(mockLogQuantity).not.toHaveBeenCalled();
 	});
 
 	it("saving the Quantity Log sheet logs the value for today and closes it", async () => {
@@ -807,8 +860,9 @@ describe("TodayScreen", () => {
 		mockLogQuantity.mockResolvedValue(OK);
 
 		await render(<TodayScreen />);
-		await fireEvent.press(
-			screen.getByLabelText("Log Glass of water, 3 of 8 glasses"),
+		await fireEvent(
+			screen.getByLabelText("Add one to Glass of water, 3 of 8 glasses"),
+			"longPress",
 		);
 		await fireEvent.press(
 			screen.getByLabelText("Increase Glass of water, glasses"),
@@ -838,8 +892,9 @@ describe("TodayScreen", () => {
 		mockLogQuantity.mockResolvedValue(OK);
 
 		await render(<TodayScreen />);
-		await fireEvent.press(
-			screen.getByLabelText("Log Glass of water, 7 of 8 glasses"),
+		await fireEvent(
+			screen.getByLabelText("Add one to Glass of water, 7 of 8 glasses"),
+			"longPress",
 		);
 		await fireEvent.press(
 			screen.getByLabelText("Increase Glass of water, glasses"),

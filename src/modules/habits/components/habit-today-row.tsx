@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Chip } from "@/components/ui/primitives/chip";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -15,7 +16,9 @@ type HabitTodayRowProps = {
 	subtitle?: string;
 	/** Toggles done/undone instantly — no confirmation (HAB-03). Simple/Break habits only. */
 	onToggle: () => void;
-	/** Opens the Quantity Log sheet (HAB-07) instead of toggling directly. */
+	/** A tap on a quantity habit's circle adds one (D6, HAB-31). */
+	onIncrement?: () => void;
+	/** Opens the quantity sheet (HAB-07, HAB-34): long-press on a quantity habit's circle, and its count control. */
 	onOpenQuantitySheet?: () => void;
 	/** Opens Habit Detail (HAB-09). */
 	onPress: () => void;
@@ -49,10 +52,10 @@ function completionAccessibilityLabel(
 		: `${habit.name}, done`;
 }
 
-/** Label for a quantity habit's control, which opens the log sheet rather than toggling (HAB-07). */
+/** Label for a quantity habit's circle, which adds one rather than toggling (D6). */
 function quantityAccessibilityLabel(habit: Habit, value: number): string {
 	const unit = habit.targetUnit ?? "";
-	return `Log ${habit.name}, ${value} of ${habit.targetAmount ?? 0} ${unit}`.trim();
+	return `Add one to ${habit.name}, ${value} of ${habit.targetAmount ?? 0} ${unit}`.trim();
 }
 
 /**
@@ -66,6 +69,7 @@ export function HabitTodayRow({
 	quantityValue,
 	subtitle,
 	onToggle,
+	onIncrement,
 	onOpenQuantitySheet,
 	onPress,
 	atRisk = false,
@@ -104,9 +108,17 @@ export function HabitTodayRow({
 					) : null}
 				</View>
 			</Pressable>
+			{isQuantity && onOpenQuantitySheet ? (
+				// The sheet's other way in until the V3 count button (HAB-31, V3-2b).
+				<Chip
+					label={`${value}/${habit.targetAmount ?? 0}`}
+					onPress={onOpenQuantitySheet}
+				/>
+			) : null}
 			<CompletionCircle
 				completed={completed}
-				onPress={isQuantity ? (onOpenQuantitySheet ?? onToggle) : onToggle}
+				onPress={isQuantity ? (onIncrement ?? onToggle) : onToggle}
+				onLongPress={isQuantity ? onOpenQuantitySheet : undefined}
 				accessibilityLabel={
 					isQuantity
 						? quantityAccessibilityLabel(habit, value)

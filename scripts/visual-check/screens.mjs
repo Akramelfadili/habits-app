@@ -400,9 +400,9 @@ export const SCREENS = {
 		feature: "HAB-07",
 		route: "/?fixtures=quantity-log",
 		mockup: "docs/mockups/quantity-log.png",
-		note: "Sheet is opened by simulating the tap the mockup can't capture from a static route load.",
+		note: "Sheet is opened from the row's count control (a tap on the circle adds one, D6) — the interaction the mockup can't capture from a static route load.",
 		async interact(page) {
-			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+			await page.getByText("6/8", { exact: true }).click();
 		},
 	},
 	"streak-at-risk": {
@@ -909,7 +909,7 @@ export const SCREENS = {
 		mockup: null,
 		note: "A failed quantity save: the sheet stays open and the toast shows at the top of the screen, above the sheet (a Modal covers the page-level host).",
 		async interact(page) {
-			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+			await page.getByText("6/8", { exact: true }).click();
 			await page.getByRole("button", { name: /^Save \d+ of/ }).click();
 			await page.getByText("Couldn't save that amount. Try again.").waitFor();
 		},

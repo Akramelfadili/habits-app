@@ -86,6 +86,49 @@ describe("useTodayLogActions", () => {
 		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, TODAY, 5);
 	});
 
+	it("+1 writes previous + 1 and Undo writes previous, captured at tap time", async () => {
+		const { result } = await setup(new Map([[2, 3]]));
+		await act(() => result.current.addOne(water));
+		expect(mockLogQuantity).toHaveBeenCalledWith(2, TODAY, 4);
+		const toast = useToastStore.getState().toast;
+		expect(toast?.message).toBe("Water +1 · 4 of 8 glasses");
+		toast?.onAction?.();
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, TODAY, 3);
+	});
+
+	it("+1 from nothing starts at 1; Undo then removes the entry (writes 0)", async () => {
+		const { result } = await setup();
+		await act(() => result.current.addOne(water));
+		expect(mockLogQuantity).toHaveBeenCalledWith(2, TODAY, 1);
+		useToastStore.getState().toast?.onAction?.();
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, TODAY, 0);
+	});
+
+	it("+1 keeps counting above the target", async () => {
+		const { result } = await setup(new Map([[2, 8]]));
+		await act(() => result.current.addOne(water));
+		expect(mockLogQuantity).toHaveBeenCalledWith(2, TODAY, 9);
+		expect(useToastStore.getState().toast?.message).toBe(
+			"Water +1 · 9 of 8 glasses",
+		);
+	});
+
+	it("+1 shows no toast when the write fails (the hook has already toasted the error)", async () => {
+		mockLogQuantity.mockResolvedValue({ ok: false });
+		const { result } = await setup();
+		await act(() => result.current.addOne(water));
+		expect(useToastStore.getState().toast).toBeNull();
+	});
+
+	it("+1 on a past day writes to that date and names it", async () => {
+		const { result } = await setup(new Map([[2, 1]]), "2026-10-12");
+		await act(() => result.current.addOne(water));
+		expect(mockLogQuantity).toHaveBeenCalledWith(2, new Date(2026, 9, 12), 2);
+		expect(useToastStore.getState().toast?.message).toBe(
+			"Water +1 · 2 of 8 glasses · Mon 12 Oct",
+		);
+	});
+
 	it("logs a rest-day check at once, and hands a quantity habit to the sheet", async () => {
 		const { result } = await setup();
 		await act(() => result.current.logOffSchedule(read));

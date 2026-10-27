@@ -140,6 +140,7 @@ export function TodayScreen() {
 							completedThisWeekByHabitId={today.completedThisWeekByHabitId}
 							atRiskByHabitId={today.atRiskByHabitId}
 							onToggle={logging.toggle}
+							onAddOne={logging.addOne}
 							onOpenQuantitySheet={logging.openQuantitySheet}
 							onOpenHabit={openHabit}
 							onOpenAtRisk={freeze.openAtRisk}

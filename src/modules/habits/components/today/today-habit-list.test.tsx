@@ -17,6 +17,7 @@ const groups = [
 async function renderList(overrides = {}) {
 	const handlers = {
 		onToggle: jest.fn(),
+		onAddOne: jest.fn(),
 		onOpenQuantitySheet: jest.fn(),
 		onOpenHabit: jest.fn(),
 		onOpenAtRisk: jest.fn(),

@@ -21,6 +21,7 @@ type TodayHabitListProps = {
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
 	onToggle: (habit: Habit) => void;
+	onAddOne: (habit: Habit) => void;
 	onOpenQuantitySheet: (habitId: number) => void;
 	onOpenHabit: (habitId: number) => void;
 	onOpenAtRisk: (habitId: number) => void;
@@ -35,6 +36,7 @@ export function TodayHabitList({
 	completedThisWeekByHabitId,
 	atRiskByHabitId,
 	onToggle,
+	onAddOne,
 	onOpenQuantitySheet,
 	onOpenHabit,
 	onOpenAtRisk,
@@ -83,6 +85,7 @@ export function TodayHabitList({
 										: onOpenHabit(habit.id)
 								}
 								onToggle={() => onToggle(habit)}
+								onIncrement={() => onAddOne(habit)}
 								onOpenQuantitySheet={() => onOpenQuantitySheet(habit.id)}
 							/>
 						))}

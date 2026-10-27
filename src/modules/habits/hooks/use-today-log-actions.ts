@@ -3,6 +3,7 @@ import { useState } from "react";
 import { log } from "@/lib/logger/logger";
 import { currentDay } from "@/lib/today/use-today";
 import { fromDayKey } from "@/utils/day-key";
+import { MAX_QUANTITY_VALUE } from "../constants";
 import { messages, showMessage } from "../messages";
 import type { Habit } from "../types";
 import { useQuantityLogActions } from "./use-quantity-log-actions";
@@ -102,6 +103,27 @@ export function useTodayLogActions({
 		}
 	}
 
+	/**
+	 * A tap on a quantity habit's circle (D6): one more than the day holds, with
+	 * an Undo that writes back what was there at tap time. There is no step log —
+	 * one entry per habit per day holds the total — and above the target it keeps
+	 * counting.
+	 */
+	async function addOne(habit: Habit) {
+		const day = writableDay();
+		if (!day) return;
+		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
+		if (previous >= MAX_QUANTITY_VALUE) return;
+		const next = previous + 1;
+		const result = await logQuantity(habit.id, day, next);
+		if (!result.ok) return;
+		showMessage(
+			messages.quantityAdded,
+			[habit.name, next, habit.targetAmount ?? 0, habit.targetUnit, dayLabel],
+			() => logQuantity(habit.id, day, previous),
+		);
+	}
+
 	function openQuantitySheet(habitId: number) {
 		setQuantityHabitId(habitId);
 	}
@@ -155,6 +177,7 @@ export function useTodayLogActions({
 
 	return {
 		toggle,
+		addOne,
 		quantityHabit,
 		quantityValue: quantityHabit
 			? (quantityValuesByHabitId.get(quantityHabit.id) ?? 0)
