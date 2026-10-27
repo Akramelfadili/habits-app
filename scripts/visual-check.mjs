@@ -78,13 +78,21 @@ async function capture(browser, name, screen) {
 	const problems = [];
 	page.on("pageerror", (err) => problems.push(`pageerror: ${err.message}`));
 	page.on("console", (msg) => {
-		if (msg.type() === "error") problems.push(`console.error: ${msg.text()}`);
+		if (
+			msg.type() === "error" &&
+			!screen.ignoreErrors?.some((pattern) => pattern.test(msg.text()))
+		) {
+			problems.push(`console.error: ${msg.text()}`);
+		}
 	});
 
 	try {
-		// Pin the page's clock (local time) before anything loads — fixtures and
-		// screens compute "today" from it.
-		await page.clock.setFixedTime(new Date(clock));
+		// Start the page's clock (local time) at the pinned moment before anything
+		// loads — fixtures and screens compute "today" from it. It must keep
+		// running: `setFixedTime` froze React's own clock, so a lazily loaded
+		// route never got past its Suspense fallback ("Bundling…") and every such
+		// state was captured blank.
+		await page.clock.setSystemTime(new Date(clock));
 
 		// The first hit on a route can wait on a Metro bundle, hence the long timeout.
 		await page.goto(`${BASE_URL}${screen.route}`, {

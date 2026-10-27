@@ -691,6 +691,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/manage-archive.png",
 		touch: true,
 		note: "Read swiped left and archived — \"Archived 'Read'\" toast with Undo, Read now under Archived.",
+		ignoreErrors: [/No handler for tag/],
 		async interact(page) {
 			const { y } = await swipeLeft(
 				page,
@@ -699,6 +700,16 @@ export const SCREENS = {
 			// Every row's Archive action is in the DOM behind it; tap where
 			// Read's was just revealed, at the row's trailing edge.
 			await page.touchscreen.tap(page.viewportSize().width - 60, y);
+			// react-native-web only: the archived row unmounts while Swipeable still
+			// has a queued config update, and gesture-handler's web NodeManager
+			// throws "No handler for tag N" (native ignores the missing handler).
+			// It is a dev-only LogBox toast over the pill, not app behaviour:
+			// dismiss it so the baseline shows the screen.
+			await page
+				.getByText(/No handler for tag/)
+				.waitFor({ timeout: 3000 })
+				.catch(() => {});
+			await page.mouse.click(309, 817);
 		},
 	},
 	"manage-habits-no-active": {
