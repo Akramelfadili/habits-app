@@ -10,6 +10,7 @@ Plain pointers, not imports — open the file when the row applies.
 |---|---|
 | A feature (any `HAB-<id>`) | the resolved spec: HAB-01–13 → `docs/feature-spec.md`; HAB-14–25 → `docs/feature-spec-v2.md` (only that ticket's section + the NEW-/VAR- entries it cites). Use `/implement-feature <id>`, which resolves this for you |
 | Navigation, Today, Progress or Habits-tab UI (V3, HAB-26–50) | `docs/feature-spec-v3.md` + `docs/design-system-v3.md` + `docs/mockups/v3/renders/INDEX.md` (no slices? run `npm run mockups:render`) |
+| The tab bar, the route tree or anything that pushes a screen | `docs/decisions/006-navigation.md`, then the navigation section of `docs/architecture.md` |
 | UI, components, styling, screens | `docs/design-system.md` (V1 and V2 merged; its **Deltas** section: smaller heatmap cells / stat cards on Detail, Weekly Summary, Streak-reset are intentional, not regressions) |
 | `src/modules`, layering, data or business logic | `docs/architecture.md` (folders, layers, patterns, stack, `.web.ts` convention) |
 | Schema or `src/lib/db/migrations/` | the Migrations guard below + `.claude/agents/migration-reviewer.md` (its checklist); run that subagent when done |
@@ -48,7 +49,8 @@ Rules 1, 2, 4, 6, 8, 9 are enforced by `npm run check-architecture` (and rule 1 
 
 ## Guards you will trip
 
-- **Header buttons only via `composite/header-buttons.tsx`** (iOS 26 Liquid Glass bug; guard test).
+- **Header buttons only via `composite/header-buttons.tsx`** (iOS 26 Liquid Glass bug; guard test). That file also owns `HeaderCircleButton`, the 44 pt circle a screen draws in its own large-title header (the `+` on Today and Habits, the gear on Habits).
+- **Navigation is three tabs over one shared route group** (HAB-27, ADR 006): `src/app/(tabs)/(today,progress,habits)/`. A new screen reachable from more than one tab goes in that folder and is pushed with a plain href (`/habit/5`) — the current tab is kept automatically. A link that must land in a given tab names the group (`/(progress)/week`). Every scrolling screen inside the tabs ends with `TAB_BAR_BOTTOM_PADDING`; the tab bar overlays content. `src/navigation.test.tsx` guards it.
 - **Migrations:** test with foreign keys ON, the whole chain in one transaction, with child rows present. Table rebuilds use `PRAGMA defer_foreign_keys` (`PRAGMA foreign_keys` is a no-op inside the migrator's transaction). Edits under `src/lib/db/migrations/` need approval.
 - **Every new repository ships a `.web.ts` twin** with identical exports (`_sameShape` guard).
 - **Do not change existing Strategy semantics** (e.g. per-week) while building another feature.
@@ -58,4 +60,4 @@ Rules 1, 2, 4, 6, 8, 9 are enforced by `npm run check-architecture` (and rule 1 
 
 ## Definition of done
 
-`make check` green → visual-check on touched screens, light and dark (the `today-menu-open*` baselines are stable now — recapture them only when the menu itself changes) → `spec-reviewer` subagent (+ `migration-reviewer` for schema changes) → log deviations in the backlog and add an "As built" note to the spec section → **do not commit or push unless asked.**
+`make check` green → visual-check on touched screens, light and dark → `spec-reviewer` subagent (+ `migration-reviewer` for schema changes) → log deviations in the backlog and add an "As built" note to the spec section → **do not commit or push unless asked.**

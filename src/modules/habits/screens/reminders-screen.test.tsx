@@ -389,7 +389,7 @@ describe("RemindersScreen", () => {
 		await fireEvent.press(
 			screen.getByRole("link", { name: "Open Settings →" }),
 		);
-		expect(mockPush).toHaveBeenCalledWith("/habits/settings");
+		expect(mockPush).toHaveBeenCalledWith("/settings");
 	});
 
 	it("shows the 'Up to four times' caption, then the pointer, below the add row", async () => {

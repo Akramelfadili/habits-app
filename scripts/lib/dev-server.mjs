@@ -74,6 +74,6 @@ export function stopServer(child) {
 }
 
 /** Warms Metro's web bundle so the first flow/screenshot doesn't time out on it. */
-export async function warmBundle(route = "/habits") {
+export async function warmBundle(route = "/") {
 	await fetch(`${BASE_URL}${route}`, { signal: AbortSignal.timeout(180_000) });
 }

@@ -35,7 +35,7 @@ Use `npx expo install <package>` (not `npm install`) for Expo / React Native pac
 - `docs/design-system-v3.md` — V3 tokens and components (replaces V1/V2 values where it gives one)
 - `docs/mockups/v3/README.md` — the V3 design files and their renders (`npm run mockups:render`)
 - `docs/assessment-v3.md` — V3 impact per ticket, architecture review and batch plan
-- `docs/decisions/` — architecture decision records (ADRs 001–004)
+- `docs/decisions/` — architecture decision records (001–004, 006; 006 is the V3 navigation shell)
 - `docs/CONTRIBUTING.md` — branches, commits, PRs, the gate, migrations, the feature flow
 - `docs/dev-tooling.md` — hooks, checks, ratchets, visual-check setup
 - `docs/backlog.md` — deferred work and deviations from the specs

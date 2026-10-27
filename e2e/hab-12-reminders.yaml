@@ -1,7 +1,8 @@
 # Journey: Today → Habit Detail → Reminders → add a time, adjust its days
 # (triggering the unscheduled-day warning), add a second and switch it off →
 # back on Detail the summary reflects it, and Today is unaffected.
-# Covers HAB-09 (entry point), HAB-12 (reminders).
+# Covers HAB-09 (entry point), HAB-12 (reminders), HAB-27 (Reminders is a
+# shared route, pushed inside the tab it was opened from).
 #
 # MANUAL-ONLY: whether the OS notification actually fires at 09:00 on the
 # right days can't be checked here — web stubs expo-notifications, and even
@@ -12,7 +13,7 @@
 #
 # Seed (default fixtures, clock pinned to Thu 1 Oct): "Evening walk" is
 # scheduled Mon–Fri and has no reminders.
-url: ${APP_URL}/habits?clock=2026-10-01T09:00:00
+url: ${APP_URL}/?clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
 tags:
@@ -63,6 +64,8 @@ tags:
 - back
 - assertVisible: "1 on · 09:00"
 
-# Reminders never gate Today.
+# Reminders never gate Today. Both screens were pushed inside the Today tab,
+# so Back walks straight back out to it (HAB-27).
 - back
+- assertVisible: "Today"
 - assertVisible: "Evening walk"

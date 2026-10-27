@@ -1,6 +1,6 @@
 # Journey: first run → pick suggestions → add a habit of my own → log it on Today.
 # Covers HAB-06 (first run), HAB-01/02 (create + frequency, edit from Detail), HAB-03 (Today completion).
-url: ${APP_URL}/habits?fixtures=first-run&clock=2026-10-01T09:00:00
+url: ${APP_URL}/?fixtures=first-run&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
 tags:
@@ -26,12 +26,16 @@ tags:
 - assertVisible: "Fitness"
 - assertVisible: "5 min"
 
-# HAB-01: add a habit of my own, daily by default.
-- tapOn: "Add habit"
+# HAB-01: add a habit of my own, from the + in Today's header (HAB-27 — the
+# ⋯ menu is gone and the + is an icon button, so it matches by label).
+- tapOn:
+    id: "Add habit"
 - assertVisible: "New habit"
 - tapOn:
     id: "Name"
 - inputText: "Floss"
+# A category is required since HAB-24 — Save stays disabled without one.
+- tapOn: "Health"
 - tapOn: "Save habit"
 
 # HAB-03: it shows on Today and can be ticked off.
@@ -50,3 +54,11 @@ tags:
 - tapOn: "Cancel"
 - assertVisible:
     id: "Current: 1, day streak"
+
+# HAB-27: Detail opened from Today, so the Today tab is still the selected
+# one and Back comes back to it.
+- assertVisible:
+    id: "Today"
+- back
+- assertVisible: "Today"
+- assertVisible: "Floss"

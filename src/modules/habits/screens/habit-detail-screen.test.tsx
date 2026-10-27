@@ -318,7 +318,7 @@ describe("HabitDetailScreen", () => {
 
 			expect(screen.getByText("1 on · 07:20")).toBeTruthy();
 			await fireEvent.press(screen.getByText("Reminders"));
-			expect(mockPush).toHaveBeenCalledWith("/habits/reminders/1");
+			expect(mockPush).toHaveBeenCalledWith("/reminders/1");
 		});
 
 		it("says so when none are set", async () => {

@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Button } from "@/components/ui/primitives/button";
 import { Checkbox } from "@/components/ui/primitives/checkbox";
 import { habitAccentInk, typeScale } from "@/theme/theme";
@@ -149,7 +150,11 @@ const styles = StyleSheet.create({
 	footer: {
 		paddingHorizontal: 16,
 		paddingTop: 8,
-		paddingBottom: 16,
+		// First Run still renders inside the Today tab, so the floating pill
+		// overlays it and would sit on top of "Add N habits" (HAB-46 takes the
+		// tabs away from first launch in V3-5; until then it pays the same
+		// clearance as every other screen under the bar).
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		alignItems: "center",
 		gap: 4,
 	},

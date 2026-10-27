@@ -174,7 +174,7 @@ describe("ManageHabitsScreen", () => {
 
 		await fireEvent.press(screen.getByText("Cold shower"));
 
-		expect(mockPush).toHaveBeenCalledWith("/habits/6");
+		expect(mockPush).toHaveBeenCalledWith("/habit/6");
 	});
 
 	it("is a pushed screen titled after its link — back in the header, no Done (audit #10)", async () => {

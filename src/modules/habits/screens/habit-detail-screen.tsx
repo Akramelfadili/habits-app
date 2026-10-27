@@ -7,6 +7,7 @@ import { Container } from "@/components/ui/composite/container";
 import { headerActionOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { StatCard } from "@/components/ui/composite/stat-card";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Button } from "@/components/ui/primitives/button";
 import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
@@ -263,7 +264,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 						: remindersSummary(reminders)
 				}
 				navigable
-				onPress={() => router.push(`/habits/reminders/${habit.id}`)}
+				onPress={() => router.push(`/reminders/${habit.id}`)}
 			/>
 
 			<View style={styles.entries}>
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 8,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
 	},
 	header: {

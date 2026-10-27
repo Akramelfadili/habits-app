@@ -174,13 +174,13 @@ describe("YearlySummaryScreen — too early (C7)", () => {
 	it("offers the week instead, replacing the screen", async () => {
 		await render(<YearlySummaryScreen />);
 		await fireEvent.press(screen.getByText("Your week is ready"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
+		expect(mockReplace).toHaveBeenCalledWith("/week");
 	});
 
 	it("keeps the switcher so Week and Month are one tap away", async () => {
 		await render(<YearlySummaryScreen />);
 		await fireEvent.press(screen.getByText("Month"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/month");
+		expect(mockReplace).toHaveBeenCalledWith("/month");
 	});
 });
 

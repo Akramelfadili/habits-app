@@ -26,18 +26,6 @@ jest.mock("expo-router", () => ({
 	},
 }));
 
-const mockMenu: Record<string, { subline: string; disabledReason?: string }> = {
-	weekly: { subline: "14 – 20 September · 34 of 42 done" },
-	monthly: { subline: "1 – 31 August · 80% done" },
-	yearly: { subline: "2026 so far · since 3 March" },
-	manage: { subline: "7 active · 2 archived" },
-	settings: { subline: "Appearance", disabledReason: "Coming soon" },
-};
-const mockUseTodayMenuQueries = jest.fn(() => mockMenu);
-jest.mock("../hooks/use-today-menu-queries", () => ({
-	useTodayMenuQueries: () => mockUseTodayMenuQueries(),
-}));
-
 const morningHabit = makeHabit({
 	id: 1,
 	name: "Glass of water",
@@ -744,7 +732,7 @@ describe("TodayScreen", () => {
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Glass of water"));
 
-		expect(mockPush).toHaveBeenCalledWith("/habits/1");
+		expect(mockPush).toHaveBeenCalledWith("/habit/1");
 	});
 
 	it("subtitles a row with what it asks: a quantity target, or a per-week habit's standing", async () => {
@@ -888,7 +876,7 @@ describe("TodayScreen", () => {
 		expect(screen.queryAllByText(/^\d\d:\d\d$/)).toHaveLength(1);
 	});
 
-	describe("navigation menu (HAB-14)", () => {
+	describe("header (HAB-27)", () => {
 		const states = [
 			"no-habits",
 			"rest-day",
@@ -902,128 +890,31 @@ describe("TodayScreen", () => {
 			];
 		});
 
-		it("no longer shows the temporary Weekly summary / Manage habits buttons", async () => {
-			mockViewState = "populated";
-			await render(<TodayScreen />);
-			expect(screen.queryByText("Weekly summary")).toBeNull();
-			expect(screen.queryByText("Manage habits")).toBeNull();
-		});
-
-		it.each(states)("offers the ⋯ button in the %s state", async (state) => {
+		it.each(states)("offers the header + in the %s state", async (state) => {
 			mockViewState = state;
 			await render(<TodayScreen />);
-			const button = screen.getByLabelText("More");
-			expect(button.props.accessibilityState).toMatchObject({
-				expanded: false,
-			});
+			// By testID, not label: the empty state also has an "Add habit" button.
+			await fireEvent.press(screen.getByTestId("header-circle-plus"));
+			expect(mockPush).toHaveBeenCalledWith("/new-habit");
 		});
 
-		it.each(states)(
-			"opens the menu with its five rows from the %s state",
-			async (state) => {
-				mockViewState = state;
-				await render(<TodayScreen />);
-				await fireEvent.press(screen.getByLabelText("More"));
-
-				// The open menu is a modal view, so the button behind it leaves the a11y tree.
-				expect(
-					screen.getByLabelText("More", { includeHiddenElements: true }).props
-						.accessibilityState,
-				).toMatchObject({
-					expanded: true,
-				});
-				for (const title of [
-					"Weekly summary",
-					"Monthly",
-					"Yearly",
-					"Manage & archive",
-					"Settings",
-				]) {
-					expect(screen.getByText(title)).toBeTruthy();
-				}
-				expect(screen.getByLabelText("Close menu")).toBeTruthy();
-			},
-		);
-
-		it("closes on the scrim", async () => {
-			mockViewState = "populated";
+		// The ⋯ menu is gone (D2): summaries live on the Progress tab, Manage and
+		// Settings on the Habits tab.
+		it.each(states)("has no ⋯ menu in the %s state", async (state) => {
+			mockViewState = state;
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(screen.getByLabelText("Close menu"));
-			expect(screen.queryByText("Weekly summary")).toBeNull();
-		});
-
-		it("closes when ⋯ is pressed again", async () => {
-			mockViewState = "populated";
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(
-				screen.getByLabelText("More", { includeHiddenElements: true }),
-			);
-			expect(screen.queryByText("Weekly summary")).toBeNull();
-		});
-
-		it.each([
-			["Weekly summary", "/habits/week"],
-			["Monthly", "/habits/month"],
-			["Yearly", "/habits/year"],
-			["Manage & archive", "/habits/manage"],
-		])("%s navigates and closes the menu", async (title, href) => {
-			mockViewState = "populated";
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(screen.getByText(title));
-
-			expect(mockPush).toHaveBeenCalledWith(href);
-			expect(screen.queryByText(title)).toBeNull();
-		});
-
-		it("disabled rows do nothing but close nothing either", async () => {
-			mockViewState = "populated";
-			mockUseTodayMenuQueries.mockReturnValue({
-				...mockMenu,
-				yearly: { subline: "", disabledReason: "Unlocks 4 December" },
-			});
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(
-				screen.getByLabelText("Yearly, Unlocks 4 December"),
-			);
-
-			expect(mockPush).not.toHaveBeenCalled();
-			expect(screen.getByText("Yearly")).toBeTruthy();
-			mockUseTodayMenuQueries.mockReturnValue(mockMenu);
-		});
-
-		it("computes the rows' live context only while the menu is open (HAB-16)", async () => {
-			mockViewState = "populated";
-			mockUseTodayMenuQueries.mockClear();
-			await render(<TodayScreen />);
-			expect(mockUseTodayMenuQueries).not.toHaveBeenCalled();
-
-			await fireEvent.press(screen.getByLabelText("More"));
-			expect(mockUseTodayMenuQueries).toHaveBeenCalled();
-			expect(screen.getByText("1 – 31 August · 80% done")).toBeTruthy();
-			expect(screen.getByText("2026 so far · since 3 March")).toBeTruthy();
-		});
-
-		it("opens Settings from the menu (HAB-15)", async () => {
-			mockViewState = "populated";
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("More"));
-			await fireEvent.press(screen.getByText("Settings"));
-
-			expect(mockPush).toHaveBeenCalledWith("/habits/settings");
-		});
-
-		it("shows each row's live context", async () => {
-			mockViewState = "populated";
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("More"));
 			expect(
-				screen.getByText("14 – 20 September · 34 of 42 done"),
-			).toBeTruthy();
-			expect(screen.getByText("7 active · 2 archived")).toBeTruthy();
+				screen.queryByLabelText("More", { includeHiddenElements: true }),
+			).toBeNull();
+			for (const title of [
+				"Weekly summary",
+				"Monthly",
+				"Yearly",
+				"Manage & archive",
+				"Settings",
+			]) {
+				expect(screen.queryByText(title)).toBeNull();
+			}
 		});
 	});
 
@@ -1075,7 +966,7 @@ describe("TodayScreen", () => {
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Glass of water"));
 
-			expect(mockPush).toHaveBeenCalledWith("/habits/1");
+			expect(mockPush).toHaveBeenCalledWith("/habit/1");
 		});
 
 		it("Use a freeze applies it for the missed date and closes the sheet", async () => {

@@ -1,12 +1,13 @@
 import { format, isSameDay } from "date-fns";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Button } from "@/components/ui/primitives/button";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
@@ -22,7 +23,6 @@ import { OffScheduleRow } from "../components/off-schedule-row";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { TodayHeader } from "../components/today-header";
-import { TodayNavMenu } from "../components/today-nav-menu";
 import { TodayStatePanel } from "../components/today-state-panel";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
@@ -38,6 +38,13 @@ import {
 } from "../presenters/today-screen-helpers";
 import type { Habit } from "../types";
 import { FirstRunScreen } from "./first-run-screen";
+
+/**
+ * No bottom edge: the floating pill carries its own 22 pt float over the home
+ * indicator and every scroller pays `TAB_BAR_BOTTOM_PADDING`, so a bottom
+ * safe-area inset here would stack a third gap on top of both (HAB-27).
+ */
+const SCREEN_EDGES = ["top", "left", "right"] as const;
 
 export function TodayScreen() {
 	const router = useRouter();
@@ -75,18 +82,6 @@ export function TodayScreen() {
 	// Rest day's picker (HAB-18); a quantity pick closes it and opens the log sheet.
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [quantityIsOffSchedule, setQuantityIsOffSchedule] = useState(false);
-
-	const [menuOpen, setMenuOpen] = useState(false);
-	// Until the button is measured, roughly under a one-line header.
-	const [menuAnchorBottom, setMenuAnchorBottom] = useState(110);
-
-	// Leaving Today (a menu row, or any push over it) closes the menu, so it
-	// never greets the person on the way back.
-	useFocusEffect(
-		useCallback(() => {
-			return () => setMenuOpen(false);
-		}, []),
-	);
 
 	const quantityHabit = [
 		...groups.flatMap((group) => group.habits),
@@ -266,26 +261,15 @@ export function TodayScreen() {
 	}
 
 	const header = (
-		<TodayHeader
-			today={today}
-			menuOpen={menuOpen}
-			onToggleMenu={() => setMenuOpen((open) => !open)}
-			onAddHabit={() => router.push("/new-habit")}
-			onAnchorMeasured={setMenuAnchorBottom}
-		/>
+		<TodayHeader today={today} onAddHabit={() => router.push("/new-habit")} />
 	);
-	const navMenu = menuOpen ? (
-		<TodayNavMenu
-			anchorBottom={menuAnchorBottom}
-			onClose={() => setMenuOpen(false)}
-		/>
-	) : null;
 
 	// Habits haven't loaded yet: a neutral blank, never a flash of "Nothing to
 	// track yet" or First Run (audit A5-04).
 	if (!isLoaded) {
 		return (
 			<SafeAreaView
+				edges={SCREEN_EDGES}
 				testID="screen-loading"
 				style={[styles.screen, { backgroundColor: colors.bg }]}
 			/>
@@ -298,7 +282,14 @@ export function TodayScreen() {
 
 	if (viewState === "no-habits") {
 		return (
-			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+			<SafeAreaView
+				edges={SCREEN_EDGES}
+				style={[
+					styles.screen,
+					styles.panelScreen,
+					{ backgroundColor: colors.bg },
+				]}
+			>
 				<View style={styles.headerPadding}>{header}</View>
 				<TodayStatePanel
 					icon="circle"
@@ -334,14 +325,20 @@ export function TodayScreen() {
 						/>
 					) : null}
 				</TodayStatePanel>
-				{navMenu}
 			</SafeAreaView>
 		);
 	}
 
 	if (viewState === "rest-day") {
 		return (
-			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+			<SafeAreaView
+				edges={SCREEN_EDGES}
+				style={[
+					styles.screen,
+					styles.panelScreen,
+					{ backgroundColor: colors.bg },
+				]}
+			>
 				<View style={styles.headerPadding}>{header}</View>
 				<TodayStatePanel
 					icon="minus"
@@ -356,7 +353,7 @@ export function TodayScreen() {
 									key={habit.id}
 									habit={habit}
 									entry={entry}
-									onPress={() => router.push(`/habits/${habit.id}`)}
+									onPress={() => router.push(`/habit/${habit.id}`)}
 								/>
 							))}
 						</Container>
@@ -385,14 +382,16 @@ export function TodayScreen() {
 						isSaving={isLogging}
 					/>
 				) : null}
-				{navMenu}
 			</SafeAreaView>
 		);
 	}
 
 	if (viewState === "day-closed") {
 		return (
-			<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+			<SafeAreaView
+				edges={SCREEN_EDGES}
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			>
 				<ScrollView contentContainerStyle={styles.content}>
 					{header}
 					<TodayStatePanel
@@ -426,13 +425,15 @@ export function TodayScreen() {
 						</Container>
 					) : null}
 				</ScrollView>
-				{navMenu}
 			</SafeAreaView>
 		);
 	}
 
 	return (
-		<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
+		<SafeAreaView
+			edges={SCREEN_EDGES}
+			style={[styles.screen, { backgroundColor: colors.bg }]}
+		>
 			<ScrollView contentContainerStyle={styles.content}>
 				{header}
 
@@ -473,7 +474,7 @@ export function TodayScreen() {
 									onPress={() =>
 										atRiskByHabitId.has(habit.id)
 											? setAtRiskHabitId(habit.id)
-											: router.push(`/habits/${habit.id}`)
+											: router.push(`/habit/${habit.id}`)
 									}
 									onToggle={() => handleToggle(habit)}
 									onOpenQuantitySheet={() => setQuantityHabitId(habit.id)}
@@ -541,7 +542,6 @@ export function TodayScreen() {
 					isApplyingFreeze={isFreezing}
 				/>
 			) : null}
-			{navMenu}
 		</SafeAreaView>
 	);
 }
@@ -553,8 +553,12 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 12,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
+	},
+	/** The states that show a panel instead of a list still clear the pill. */
+	panelScreen: {
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 	},
 	headerPadding: {
 		paddingHorizontal: 16,

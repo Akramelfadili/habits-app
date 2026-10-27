@@ -13,6 +13,7 @@ import { InsightCard } from "@/components/ui/composite/insight-card";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { SectionHeader } from "@/components/ui/composite/section-header";
 import { StatCard } from "@/components/ui/composite/stat-card";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { TrendRow } from "@/components/ui/composite/trend-row";
 import { UnlockCard } from "@/components/ui/composite/unlock-card";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
@@ -242,7 +243,7 @@ function Ready({ summary }: { summary: MonthlySummary }) {
 								router.push(`/edit-habit/${id}?focus=frequency`)
 							}
 							onOpenReminders={(id, weekday) =>
-								router.push(`/habits/reminders/${id}?addTime=${weekday}`)
+								router.push(`/reminders/${id}?addTime=${weekday}`)
 							}
 						/>
 					))}
@@ -385,7 +386,7 @@ function TooEarly({
 				title="Your week is ready"
 				subtitle={weeklyMenuSubline(week)}
 				value="See week →"
-				onPress={() => router.replace("/habits/week")}
+				onPress={() => router.replace("/week")}
 			/>
 		</ScrollView>
 	);
@@ -398,7 +399,7 @@ const styles = StyleSheet.create({
 	content: {
 		paddingHorizontal: 16,
 		paddingTop: 8,
-		paddingBottom: 24,
+		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: 16,
 	},
 	emptyHeader: {

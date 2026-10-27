@@ -7,6 +7,9 @@ import { runSafely } from "@/utils/run-safely";
 import { useScreenReader } from "@/utils/use-screen-reader";
 import { Toast } from "./toast";
 
+/** Screen margin for a toast with no tab bar under it. */
+const DEFAULT_TOAST_BOTTOM = 16;
+
 /** How long a toast — and with it, its Undo — stays up. */
 export const TOAST_DURATION_MS = 4000;
 
@@ -24,6 +27,12 @@ type ToastHostProps = {
 	 * sheet is open the page-level host steps aside, so there is one toast.
 	 */
 	placement?: "bottom" | "top";
+	/**
+	 * How far above the bottom edge a "bottom" toast floats. The shell passes
+	 * the tab bar's offset (12 pt above the pill, 16 pt above bar A — T-21);
+	 * a host with no bar above it keeps the plain screen margin.
+	 */
+	bottomOffset?: number;
 };
 
 /**
@@ -34,7 +43,10 @@ type ToastHostProps = {
  * that throws or rejects) is logged and answered with an error toast — it
  * never escapes as a floating rejection.
  */
-export function ToastHost({ placement = "bottom" }: ToastHostProps) {
+export function ToastHost({
+	placement = "bottom",
+	bottomOffset = DEFAULT_TOAST_BOTTOM,
+}: ToastHostProps) {
 	const toast = useToastStore((state) => state.toast);
 	const openSheets = useToastStore((state) => state.openSheets);
 	const dismissToast = useToastStore((state) => state.dismissToast);
@@ -66,8 +78,13 @@ export function ToastHost({ placement = "bottom" }: ToastHostProps) {
 
 	const content = (
 		<View
+			testID="toast-host"
 			pointerEvents="box-none"
-			style={placement === "top" ? undefined : styles.host}
+			style={
+				placement === "top"
+					? undefined
+					: [styles.host, { bottom: bottomOffset }]
+			}
 		>
 			<Toast
 				message={toast.message}
@@ -111,6 +128,5 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 16,
 		right: 16,
-		bottom: 16,
 	},
 });

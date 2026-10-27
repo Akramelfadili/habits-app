@@ -9,13 +9,14 @@ screen. File names lead with the feature IDs they cover (per
 | `hab-06-01-03-first-run-add-and-log.yaml` | First run → pick suggestions → add a habit → log it on Today → open Edit from its Detail | HAB-06, 01, 02, 03 |
 | `hab-09-10-detail-retro-log.yaml` | Today → Detail → tap a missed heatmap day → retro-log with a note → heatmap, streak (24 → 27), note all update | HAB-03, 09, 10, 08 |
 | `hab-12-reminders.yaml` | Detail → Reminders → add a time, set its days (unscheduled-day warning), add a second and switch it off → Detail summary, Today unaffected | HAB-09, 12 |
-| `hab-11-weekly-summary-slipping.yaml` | Summary flags a habit → backfill the week via retro-log → the insight moves to the habit left behind → "Reschedule habit →" opens its Edit | HAB-11, 10, 02 |
-| `hab-13-manage-archive-delete.yaml` | Give a habit a reminder → Manage → reorder → archive it → reminder survives → restore → delete a different habit via Detail's confirm sheet | HAB-13, 12, 09, 03 |
+| `hab-11-weekly-summary-slipping.yaml` | The Progress tab flags a habit → backfill the week via retro-log → the insight moves to the habit left behind → "Reschedule habit →" opens its Edit | HAB-11, 10, 02, 27 |
+| `hab-13-manage-archive-delete.yaml` | Give a habit a reminder → the Habits tab → the gear → Settings → reorder → archive → reminder survives → restore → delete a different habit via Detail's confirm sheet | HAB-13, 12, 09, 03, 27 |
 
 ## Status and coverage (honest version)
 
-- **Last verified run:** 2026-10-05 — 3 of the 5 journeys failed (`hab-06`, `hab-09-10`, `hab-13`). Their selectors have since been **updated from the code but not re-run**: `hab-13` asserts the Manage footnote instead of the old title, `hab-06` asserts category group names (Health / Fitness) instead of "Morning", and `hab-09-10` steps Glass of water's quantity stepper up to its target of 8 (the sheet shows a stepper for quantity habits, not a "done" checkbox). Run `npm run e2e` to confirm; the stepper step size and the category header text are the likeliest things to need another tweak. `hab-11` and `hab-12` passed in the last run.
-- **All five journeys are V1.** Nothing covers V2: no flows for HAB-14 (nav menu), 15 (settings / export), 16 (monthly), 17 (yearly), 18 (off-schedule log, retro-log pinning), 19 (manage rework), 20 (archived / restored detail), 21, 22, 24/25 (categories) or the delete sheet. V1 gaps: HAB-02, 04, 05, 07, 08 have no flow of their own. Highest-value additions: HAB-18, HAB-24/25, the HAB-14–16 navigation, HAB-15 export.
+- **Last verified run: 2026-10-25 — 5 of 5 passed** (`npm run e2e`, 3m 27s), the first all-green run. V3-1 (HAB-27) rewrote all five for the three tabs: every journey starts at `/` instead of `/habits`, the ⋯ menu taps are gone, `hab-11` reaches the weekly summary through the Progress tab and `hab-13` reaches Manage through the Habits tab and Settings through its gear. Three failures left over from the 2026-10-05 run were also real and are fixed here: `hab-06` never picked a category (required since HAB-24, so Save stayed disabled), `hab-13` tapped an active — and therefore swipeable — row on Manage, which the web driver cannot reach, and asserted a reminder summary on an archived habit, which reads "Paused while archived" since HAB-20.
+- **Warm the bundle first.** `scripts/lib/dev-server.mjs` warms `/`; on a cold Metro the five flows run in parallel and all time out at ~19 s. If that happens, run them once and re-run.
+- **All five journeys are V1 + the V3 shell.** Nothing covers the rest of V2: no flows for 15 (settings / export beyond opening Settings), 16 (monthly), 17 (yearly), 18 (off-schedule log, retro-log pinning), 19 (manage rework), 20 (archived / restored detail), 21, 22, 24/25 (categories) or the delete sheet. HAB-14's nav menu no longer exists. V1 gaps: HAB-02, 04, 05, 07, 08 have no flow of their own. Highest-value additions: HAB-18, HAB-24/25, HAB-15 export.
 - Names: a flow leads with the feature IDs it covers; multi-ID names deviate from the single-ID example in `CLAUDE.md` on purpose.
 
 ## Running
@@ -48,7 +49,12 @@ machine, so the journeys drive **Maestro's web driver** against
   habit has been due three times in the week.
 - **Selectors:** on web, Maestro exposes `accessibilityLabel`/`testID` as
   `id:` and only visible text as text. On iOS, labels match as text. An iOS
-  port mostly means turning `id: "<label>"` into `"<label>"`.
+  port mostly means turning `id: "<label>"` into `"<label>"`. Where an element
+  has both, **the `accessibilityLabel` wins and the `testID` is invisible** —
+  Maestro's web `resource-id` is the `aria-label` when there is one. So the
+  tab bar is tapped by label (`id: "Today"`, `"Progress"`, `"Habits"`), not by
+  its `tab-*` testIDs. `id:` never matches plain text, so the Manage screen's
+  "Habits" title does not collide with the tab.
 - **Gestures:** drag-to-reorder and swipe-to-archive can't be driven here.
   Maestro's web driver moves the pointer in a single jump, and
   gesture-handler never activates on that. `hab-13` therefore has `platform: iOS`

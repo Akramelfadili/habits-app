@@ -129,7 +129,7 @@ describe("SettingsScreen (HAB-15)", () => {
 	it("has a plain Categories row that navigates to Manage Categories", async () => {
 		await render(<SettingsScreen />);
 		await fireEvent.press(screen.getByText("Categories"));
-		expect(mockPush).toHaveBeenCalledWith("/habits/categories");
+		expect(mockPush).toHaveBeenCalledWith("/categories");
 	});
 
 	it("summarizes the export and shows the last export", async () => {

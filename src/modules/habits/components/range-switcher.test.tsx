@@ -25,13 +25,13 @@ describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 	it("replaces the screen with its sibling so Back stays Today", async () => {
 		await render(<RangeSwitcher value="week" />);
 		await fireEvent.press(screen.getByText("Month"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/month");
+		expect(mockReplace).toHaveBeenCalledWith("/month");
 	});
 
 	it("goes back to Week from Month", async () => {
 		await render(<RangeSwitcher value="month" />);
 		await fireEvent.press(screen.getByText("Week"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
+		expect(mockReplace).toHaveBeenCalledWith("/week");
 	});
 
 	it("does nothing when the current range is tapped", async () => {
@@ -45,7 +45,7 @@ describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 			mockReplace.mockClear();
 			const { unmount } = await render(<RangeSwitcher value={value} />);
 			await fireEvent.press(screen.getByText("Year"));
-			expect(mockReplace).toHaveBeenCalledWith("/habits/year");
+			expect(mockReplace).toHaveBeenCalledWith("/year");
 			await unmount();
 		}
 	});
@@ -57,9 +57,9 @@ describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 		expect(year.selected).toBe(true);
 		expect(year.disabled).toBeFalsy();
 		await fireEvent.press(screen.getByText("Month"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/month");
+		expect(mockReplace).toHaveBeenCalledWith("/month");
 		await fireEvent.press(screen.getByText("Week"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
+		expect(mockReplace).toHaveBeenCalledWith("/week");
 	});
 
 	it("never pushes — switching replaces, so Back keeps reading Today", async () => {

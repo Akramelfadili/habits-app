@@ -2,7 +2,9 @@
 # different habit falls behind → the insight moves to it → "Reschedule
 # habit" opens that habit's Edit screen.
 # Covers HAB-11 (summary + slipping insight), HAB-10 (retro-log as the way
-# to log past days), HAB-02 (Edit/reschedule as the insight's destination).
+# to log past days), HAB-02 (Edit/reschedule as the insight's destination),
+# HAB-27 (the summary is the Progress tab root; switching tabs keeps each
+# tab's own stack).
 #
 # Seed (default fixtures, clock pinned to Thu 1 Oct 20:00): four habits,
 # nothing logged Mon–Wed; today Read before bed and Glass of water are done.
@@ -10,20 +12,23 @@
 # Mon–Wed for everything except Read before bed leaves Read as the only one
 # behind (1 of 4; today's still-open habits don't count against the week yet) — the insight needs ≥3 scheduled days, which is why the
 # clock is pinned to Thursday rather than left on the real weekday.
-url: ${APP_URL}/habits?clock=2026-10-01T20:00:00
+url: ${APP_URL}/?clock=2026-10-01T20:00:00
 env:
   APP_URL: http://localhost:8081
 tags:
   - journey
 ---
 - launchApp
+
+# HAB-27: the weekly summary is the Progress tab's root — no ⋯ menu.
 - tapOn:
-    id: "More"
-- tapOn: "Weekly summary"
+    id: "Progress"
 - assertVisible: "Your week"
 - assertVisible: "Evening walk is slipping"
 - takeScreenshot: hab-11-before
-- back
+- tapOn:
+    id: "Today"
+- assertVisible: "Today"
 
 # Backfill Mon–Wed from a habit's heatmap: one retro-log sheet per day lists
 # every habit due that day, so several can be ticked at once.
@@ -57,11 +62,12 @@ tags:
 - tapOn: "Save changes"
 - assertVisible:
     id: "Wednesday 30 September, logged"
+# Detail was opened from Today, so Back returns there, not to Progress.
 - back
+- assertVisible: "Today"
 
 - tapOn:
-    id: "More"
-- tapOn: "Weekly summary"
+    id: "Progress"
 - assertVisible: "Read before bed is slipping"
 - assertNotVisible: "Evening walk is slipping"
 - takeScreenshot: hab-11-after

@@ -3,7 +3,8 @@
 # survive → restore it → delete a different habit through Detail's confirm
 # sheet → Today reflects all of it.
 # Covers HAB-13 (reorder, archive, restore, delete), HAB-12 (reminders kept
-# across archive), HAB-09 (Detail as the only place delete lives), HAB-03.
+# across archive), HAB-09 (Detail as the only place delete lives), HAB-03,
+# HAB-27 (the Habits tab root, and Settings behind its gear).
 #
 # Seed (`manage-archive` fixtures, clock pinned to Thu 1 Oct): active Glass of
 # water + Meditate (Morning), Read (Evening), Easy run + Mobility (Training);
@@ -18,7 +19,11 @@
 #     Detail's one-tap "Archive habit". The reorder's persistence is
 #     covered by reorderable-list / habit-repository unit tests, and its lifted
 #     mid-drag state by `npm run visual-check -- manage-habits-dragging`.
-url: ${APP_URL}/habits?fixtures=manage-archive&clock=2026-10-01T09:00:00
+#     An *active* row on Manage is wrapped in SwipeableRow, and the web
+#     driver's single-jump tap never reaches the row underneath it, so the
+#     web branch opens each active habit's Detail from Today instead (those
+#     rows are plain). Archived rows are plain on Manage and tap fine.
+url: ${APP_URL}/?fixtures=manage-archive&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
 tags:
@@ -38,15 +43,24 @@ tags:
 - assertVisible: "1 on · 09:00"
 - back
 
+# HAB-27: Manage & archive is the Habits tab's root — no ⋯ menu.
 - tapOn:
-    id: "More"
-- tapOn: "Manage & archive"
+    id: "Habits"
 - assertVisible: "Archived · 2"
-# The screen's title is "Habits" (HAB-19) — the same word as the tab, so it
-# isn't asserted on its own; the footnote identifies the screen.
+# The screen's title is "Habits", the same word as the tab, so it isn't
+# asserted on its own; the footnote identifies the screen.
 - assertVisible: "Order is set per category and matches Today. To move a habit to another category, edit it."
 # No destructive action on this screen.
 - assertNotVisible: "Delete habit"
+
+# HAB-27 / D3: the gear in the Habits header is the only way into Settings.
+- tapOn:
+    id: "Settings"
+- assertVisible: "Appearance"
+- takeScreenshot: hab-13-settings
+# Settings was pushed inside the Habits tab, so Back returns to Manage.
+- back
+- assertVisible: "Order is set per category and matches Today. To move a habit to another category, edit it."
 
 - runFlow:
     when:
@@ -76,19 +90,24 @@ tags:
     when:
       platform: Web
     commands:
-      # One tap on Detail, no confirmation — returns straight to Manage,
-      # which confirms it with an Undo.
+      # Detail from Today (Manage's active rows are swipeable, see above).
+      # One tap, no confirmation; the toast offers the Undo.
+      - tapOn:
+          id: "Today"
       - tapOn: "Meditate"
       - tapOn: "Archive habit"
       - assertVisible: "Archived 'Meditate'"
+      - tapOn:
+          id: "Habits"
 
 - assertVisible: "Archived · 3"
 - takeScreenshot: hab-13-archived
 
-# Archiving is non-destructive: the reminder row is still there on Detail
-# (and an archived habit isn't offered Archive again).
+# Archiving is non-destructive, but reminders pause with the habit (HAB-20),
+# and an archived habit isn't offered Archive again. Archived rows are plain,
+# so this one opens straight from Manage.
 - tapOn: "Meditate"
-- assertVisible: "1 on · 09:00"
+- assertVisible: "Paused while archived"
 - assertNotVisible: "Archive habit"
 - back
 
@@ -99,7 +118,18 @@ tags:
 - assertVisible: "Restored 'Meditate' — back on Today"
 - assertVisible: "Archived · 2"
 
-# Delete a different habit — only offered on its Detail, behind a confirm sheet.
+# The reminder came back with it, unpaused and unchanged.
+- tapOn:
+    id: "Today"
+- tapOn: "Meditate"
+- assertVisible: "1 on · 09:00"
+- back
+
+# Delete a different habit — only offered on its Detail, behind a confirm
+# sheet. Mobility is active (Mon–Fri, and the clock is a Thursday), so its
+# Detail opens from Today.
+- tapOn:
+    id: "Today"
 - tapOn: "Mobility"
 - tapOn: "Delete habit"
 - assertVisible: "Keep habit"
@@ -108,8 +138,8 @@ tags:
 - assertVisible: "Deleted 'Mobility'"
 - assertNotVisible: "Mobility"
 
-# Today: restored Meditate is back; Mobility is gone.
-- back
+# Today: restored Meditate is back; Mobility is gone. Delete pops Detail
+# back to the tab it was opened from, which is already Today.
 - assertVisible: "Today"
 - assertVisible: "Meditate"
 - assertNotVisible: "Mobility"

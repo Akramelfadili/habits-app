@@ -37,13 +37,15 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
 ```
 /src
   /app                         Expo Router routes ONLY (thin: import and render a module screen)
-    _layout.tsx, index.tsx
+    _layout.tsx                root Stack: the tabs plus the two modals
     new-habit.tsx              root-level modal
     edit-habit/[id].tsx        root-level modal
     (tabs)/
-      _layout.tsx
-      habits/                  nested stack: index (Today), [id] (Detail), manage, categories,
-                               settings, week, month, year, reminders/[id]
+      _layout.tsx              js-tabs + the floating pill tabBar; the shell's one ToastHost
+      (today,progress,habits)/ ONE stack shared by the three tabs (HAB-27, ADR 006):
+                               index (Today — the (today) anchor), week/month/year (Progress,
+                               anchored on week), manage (Habits anchor), settings, categories,
+                               habit/[id] (Detail), reminders/[id]
 
   /modules/habits              everything Habits-specific; nothing outside imports into it
     /screens                   one file per screen
@@ -124,6 +126,12 @@ Modules never import each other (rule 6). Habits is the only module today, but t
 - **Startup:** `DatabaseProvider` shows `DatabaseErrorScreen` (Retry, Copy diagnostics, splash hidden) when migrations fail; once ready, `useStartupActions()` reconciles the OS's scheduled reminders against the database exactly once per launch (never prompting for permission, never scheduling anything an enabled reminder doesn't call for).
 - **Reminders and the OS (`syncHabitReminders`):** capture the habit's current scheduled identifiers → schedule the new set under a fresh generation (identifiers `"<reminder>:<slot>:<HHmm>:<generation>"` never collide with the old ones) → cancel exactly the captured old identifiers. A failure while scheduling cancels what that run created and leaves the old set; a failed cancel of the old set is logged and left to the reconcile. After a database write has already committed, a scheduling failure is logged but does not fail the action (`syncAfterWrite`).
 - **Notifications and file export:** adapters in `lib/` expose this app's own small interface, so the library can be replaced in one file.
+- **Navigation (HAB-27, ADR 006):** three tabs — Today, Progress, Habits — built as expo-router **shared routes**. The three tabs are *groups* of one stack, `(today,progress,habits)/`, so Detail, Reminders, Settings and Categories are pushed inside whichever tab they were opened from: that tab stays selected and Back returns to its root. Each group picks its root with `unstable_settings` (`anchor: "index"`, `progress: { anchor: "week" }`, `habits: { anchor: "manage" }`); each tab keeps its own stack across tab switches. Add/Edit habit are root full-screen modals, outside the tabs; everything else short-lived is a sheet.
+
+  The tab bar is `components/ui/composite/tab-bar-pill.tsx`, passed to the navigator's `tabBar` prop. It is absolutely positioned and takes no layout height, so content scrolls under it: every scrolling screen inside the tabs pays `TAB_BAR_BOTTOM_PADDING` (112 pt, T-25) and the shell's single `ToastHost` sits 12 pt above it. At Dynamic Type AX1 and up the pill gives way to the full-width bar A. Sheets are native Modals, so they cover the pill, dim it with the scrim and make it inert (`openSheets`).
+
+  **URLs have no tab prefix** (`/`, `/week`, `/manage`, `/habit/5`), and a cold link without a group lands on the first tab. Links that must open in a particular tab spell the group out: `/(progress)/week`. In-app navigation keeps the current group, so `router.push`/`replace` needs no prefix. `src/navigation.test.tsx` guards all of this against the real route tree.
+
 - **Navigation params:** typed routes are enabled; each screen declares its params in its own file.
 - **Routes stay thin** (rule 9): a route file changes when addresses change, a screen file when content changes.
 - **Reuse before create** (rule 10): search `components/ui/primitives|composite` and the module's components first; reuse, extend, then create (in `components/ui/` first, with every documented state). Colours, shadows, font sizes/weights, spacing and radii come from `src/theme` tokens. New V3 code uses the V3 tokens (`textStyles`, `space`, `radius`, …); existing screens move onto them in the V3 batch that rebuilds them, and the ratchet (ADR 004) counts what is left.

@@ -139,7 +139,7 @@ describe("MonthlySummaryScreen — ready (C2, C3)", () => {
 	it("opens that habit's Reminders from the single-cause pattern insight", async () => {
 		await render(<MonthlySummaryScreen />);
 		await fireEvent.press(screen.getByText("Add a Saturday reminder →"));
-		expect(mockPush).toHaveBeenCalledWith("/habits/reminders/2?addTime=6");
+		expect(mockPush).toHaveBeenCalledWith("/reminders/2?addTime=6");
 	});
 
 	it("gives only the slipping and pattern cards a tap target — improved and freeze are informational", async () => {
@@ -204,13 +204,13 @@ describe("MonthlySummaryScreen — ready (C2, C3)", () => {
 	it("goes to Weekly from the switcher", async () => {
 		await render(<MonthlySummaryScreen />);
 		await fireEvent.press(screen.getByText("Week"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
+		expect(mockReplace).toHaveBeenCalledWith("/week");
 	});
 
 	it("goes to Yearly from the switcher, replacing the screen (HAB-17)", async () => {
 		await render(<MonthlySummaryScreen />);
 		await fireEvent.press(screen.getByText("Year"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/year");
+		expect(mockReplace).toHaveBeenCalledWith("/year");
 		expect(mockPush).not.toHaveBeenCalled();
 	});
 });
@@ -252,7 +252,7 @@ describe("MonthlySummaryScreen — too early (C6)", () => {
 		await render(<MonthlySummaryScreen />);
 		expect(screen.getByText("Your week is ready")).toBeTruthy();
 		await fireEvent.press(screen.getByText("See week →"));
-		expect(mockReplace).toHaveBeenCalledWith("/habits/week");
+		expect(mockReplace).toHaveBeenCalledWith("/week");
 	});
 });
 

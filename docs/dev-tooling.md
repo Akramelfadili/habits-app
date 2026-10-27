@@ -45,9 +45,17 @@ The WSL box is Ubuntu 20.04 with no sudo:
 
 Known web-only artifacts, not bugs: SF Symbols (`expo-symbols`) render nothing on web (blank icon squares, missing chevrons/tab icons), the system font falls back to a non-SF font, safe-area insets are zero, native stack/modal chrome differs.
 
-### Menu states (`today-menu-open*`)
+### The tab bar in every baseline (HAB-27)
 
-These used to flicker (a popover 74 px lower, audit A10-10) because the popover's anchor was measured after it mounted, and the capture waited a fixed 400 ms. Fixed at the root: `TodayHeader` measures the ⋯ button *before* opening, so `NavMenu` mounts once at its final position, and `waitForMenuSettled` (`scripts/visual-check/screens.mjs`) polls until the popover sits 8 px under the button and has not moved for three frames — it throws, rather than capturing, if it never does. Use it for any new state that opens `NavMenu`. These baselines are ordinary baselines again: recapture them when the menu legitimately changes.
+The floating pill is on every screen inside the tabs, so every baseline shows
+it and every scrolling screen gained the 112 pt bottom padding — a V3-1 change
+re-captured the whole set at once. `?textSize=ax` (dev + web only,
+`src/lib/dev-text-size/`) forces the AX fallback to bar A, because
+react-native-web always reports `fontScale: 1` and the real Dynamic Type
+setting can never reach the app there.
+
+Routes name their tab group (`/(progress)/week`) so a cold load lands on the
+right tab; a plain `/week` would open inside Today.
 
 ### Failure states (audit B6)
 
