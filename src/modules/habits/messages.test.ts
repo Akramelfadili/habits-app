@@ -4,6 +4,7 @@ import {
 	type MessageSpec,
 	messages,
 	messageText,
+	progressCopy,
 	showMessage,
 	todayCopy,
 } from "./messages";
@@ -133,5 +134,59 @@ describe("todayCopy (inline Today copy)", () => {
 	it("counts groups and progress as 'x of y'", () => {
 		expect(todayCopy.groupCount(0, 2)).toBe("0 of 2");
 		expect(todayCopy.progressLabel(1, 5)).toBe("1 of 5 done");
+	});
+});
+
+describe("Progress copy (HAB-35–38)", () => {
+	it("explains why Export cannot run, as an info toast that holds 4 s", () => {
+		expect(messageText(messages.exportNothing)).toBe(
+			"Nothing to export yet. Log a habit on Today first, then come back.",
+		);
+		expect(messages.exportNothing.tone).toBe("info");
+		expect(defaultDurationMs(messages.exportNothing)).toBe(4000);
+	});
+
+	it("counts down the unlock in days, singular at one", () => {
+		expect(progressCopy.unlock.weekTitle(4)).toBe("Insights unlock in 4 days");
+		expect(progressCopy.unlock.weekTitle(1)).toBe("Insights unlock in 1 day");
+		expect(progressCopy.unlock.monthTitle(4)).toBe(
+			"Month summary unlocks in 4 days",
+		);
+		expect(progressCopy.unlock.yearTitle(2)).toBe(
+			"Year view unlocks in 2 days",
+		);
+		expect(progressCopy.unlock.progress(3, 7)).toBe("3 of 7 days");
+	});
+
+	it("says freezes left in the singular too", () => {
+		expect(progressCopy.legend.freezesLeft(1)).toBe("1 freeze left");
+		expect(progressCopy.legend.freezesLeft(0)).toBe("0 freezes left");
+		expect(progressCopy.stats.freezesLeft(2)).toBe("2 freezes left");
+	});
+
+	it("writes a change in whole points with a real minus sign", () => {
+		expect(progressCopy.stats.delta(6, "Sep")).toBe("+6 pts vs Sep");
+		expect(progressCopy.stats.delta(-4, "Sep")).toBe("−4 pts vs Sep");
+		expect(progressCopy.stats.delta(0, "Sep")).toBe("±0 pts vs Sep");
+	});
+
+	it("reads a cell as its day and state, partial always with its percentage", () => {
+		expect(progressCopy.cell.partial(60)).toBe("partial 60 percent");
+		expect(progressCopy.cell.percent(80)).toBe("80 percent");
+	});
+
+	it("uses resisted and slipped for Break habits, never failed (D8)", () => {
+		const words = [
+			progressCopy.cell.resisted,
+			progressCopy.cell.slipped,
+			progressCopy.day.state.resisted,
+			progressCopy.day.state.slipped,
+			progressCopy.month.resisted(20, 23),
+		].join(" ");
+		expect(words).not.toMatch(/fail/i);
+	});
+
+	it("never says 'Success' or 'Oops' (D12)", () => {
+		expect(JSON.stringify(progressCopy)).not.toMatch(/success!|oops/i);
 	});
 });

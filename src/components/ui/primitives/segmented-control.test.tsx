@@ -171,6 +171,7 @@ describe("SegmentedControl — accessibility text sizes (08.6, P6, P11)", () => 
 				onChange={onChange}
 				axLayout="collapse"
 				label="Range"
+				collapsedHint="Opens the list of ranges"
 			/>,
 		);
 		expect(screen.queryByTestId("segmented-stack")).toBeNull();
@@ -178,6 +179,7 @@ describe("SegmentedControl — accessibility text sizes (08.6, P6, P11)", () => 
 		expect(collapsed.props.accessibilityState).toEqual(
 			expect.objectContaining({ expanded: false }),
 		);
+		expect(collapsed.props.accessibilityHint).toBe("Opens the list of ranges");
 
 		await fireEvent.press(collapsed);
 		expect(screen.getByTestId("segmented-stack")).toBeTruthy();

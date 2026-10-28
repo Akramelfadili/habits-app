@@ -200,7 +200,9 @@ export function monthRateRows(
 }
 
 function scheduleLabelFor(habit: Habit): string {
-	return habit.frequency.type === "daily" ? "Daily" : scheduleLabel(habit);
+	return habit.frequency.type === "daily"
+		? progressCopy.daily
+		: scheduleLabel(habit);
 }
 
 // ─── Day detail ───────────────────────────────────────────────────────────────

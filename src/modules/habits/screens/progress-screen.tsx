@@ -146,6 +146,7 @@ export function ProgressScreen() {
 				<SegmentedControl
 					label={progressCopy.rangeLabel}
 					axLayout="collapse"
+					collapsedHint={progressCopy.rangeHint}
 					onOpenChange={setSwitcherOpen}
 					options={[
 						{ value: "week", label: progressCopy.ranges.week },

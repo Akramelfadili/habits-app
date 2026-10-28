@@ -310,6 +310,8 @@ export const progressCopy = {
 	export: "Export",
 	exportLabel: "Export data",
 	rangeLabel: "Range",
+	rangeHint: "Opens the list of ranges",
+	daily: "Daily",
 	ranges: { week: "Week", month: "Month", year: "Year" },
 	positionOf: (index: number, count: number) =>
 		`Insight ${index + 1} of ${count}`,

@@ -34,6 +34,8 @@ type SegmentedControlProps<T extends string> = {
 	 * P11) so the pinned bar stays one line tall.
 	 */
 	axLayout?: "stack" | "collapse";
+	/** What the collapsed button says it does ("Opens the list of ranges"); the caller owns the words. */
+	collapsedHint?: string;
 	/** The collapsed list opened or closed — a pinned bar keeps its slot the same height either way. */
 	onOpenChange?: (open: boolean) => void;
 };
@@ -74,6 +76,7 @@ export function SegmentedControl<T extends string>({
 	size = "full",
 	label,
 	axLayout = "stack",
+	collapsedHint,
 	onOpenChange,
 }: SegmentedControlProps<T>) {
 	const { colors, opacity } = useTheme();
@@ -137,7 +140,7 @@ export function SegmentedControl<T extends string>({
 					accessibilityRole="button"
 					accessibilityLabel={`${label ?? ""} ${selected?.label ?? ""}`.trim()}
 					accessibilityState={{ expanded: open, disabled }}
-					accessibilityHint="Opens the list"
+					accessibilityHint={collapsedHint}
 					disabled={disabled}
 					onPress={() => setOpen(!open)}
 					style={[styles.current, { backgroundColor: colors.inner }]}

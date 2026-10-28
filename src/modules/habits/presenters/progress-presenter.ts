@@ -614,6 +614,8 @@ export function unlockProps(kind: RangeKind, unlock: ProgressUnlock) {
 /** "Daily · your only habit": the one-habit card's line under the name (P5). */
 export function oneHabitSubline(habit: Habit): string {
 	const schedule =
-		habit.frequency.type === "daily" ? "Daily" : scheduleLabel(habit);
+		habit.frequency.type === "daily"
+			? progressCopy.daily
+			: scheduleLabel(habit);
 	return progressCopy.week.onlyHabit(schedule);
 }
