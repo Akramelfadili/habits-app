@@ -41,6 +41,14 @@ describe("frozen-day-repository", () => {
 		]);
 	});
 
+	it("freezing can put a returned freeze back with its original created_at", async () => {
+		const habitId = await seedHabit();
+		const original = new Date("2026-09-16T07:00:00Z");
+		await freezeHabitDay(habitId, DAY, original);
+		const [row] = await mockDb.select().from(frozenDays);
+		expect(row.createdAt).toEqual(original);
+	});
+
 	it("unfreezing removes just that habit's frozen day, returning it to the pool", async () => {
 		const habitId = await seedHabit();
 		const otherId = await seedHabit();

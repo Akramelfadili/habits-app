@@ -186,8 +186,9 @@ describe("HabitTodayRow", () => {
 			});
 		}
 
-		it("tapping the completion control opens the quantity sheet, not onToggle", async () => {
+		it("tapping the circle adds one — not onToggle, and not the sheet", async () => {
 			const onToggle = jest.fn();
+			const onIncrement = jest.fn();
 			const onOpenQuantitySheet = jest.fn();
 			await render(
 				<HabitTodayRow
@@ -195,16 +196,57 @@ describe("HabitTodayRow", () => {
 					completed={false}
 					quantityValue={3}
 					onToggle={onToggle}
+					onIncrement={onIncrement}
 					onOpenQuantitySheet={onOpenQuantitySheet}
 					onPress={jest.fn()}
 				/>,
 			);
 
 			await fireEvent.press(
-				screen.getByLabelText("Log Glass of water, 3 of 8 glasses"),
+				screen.getByLabelText("Add one to Glass of water, 3 of 8 glasses"),
 			);
-			expect(onOpenQuantitySheet).toHaveBeenCalledTimes(1);
+			expect(onIncrement).toHaveBeenCalledTimes(1);
+			expect(onOpenQuantitySheet).not.toHaveBeenCalled();
 			expect(onToggle).not.toHaveBeenCalled();
+		});
+
+		it("long-pressing the circle, or tapping the count, opens the quantity sheet", async () => {
+			const onIncrement = jest.fn();
+			const onOpenQuantitySheet = jest.fn();
+			await render(
+				<HabitTodayRow
+					habit={makeQuantityHabit()}
+					completed={false}
+					quantityValue={3}
+					onToggle={jest.fn()}
+					onIncrement={onIncrement}
+					onOpenQuantitySheet={onOpenQuantitySheet}
+					onPress={jest.fn()}
+				/>,
+			);
+
+			await fireEvent(
+				screen.getByLabelText("Add one to Glass of water, 3 of 8 glasses"),
+				"longPress",
+			);
+			await fireEvent.press(screen.getByText("3/8"));
+			expect(onOpenQuantitySheet).toHaveBeenCalledTimes(2);
+			expect(onIncrement).not.toHaveBeenCalled();
+		});
+
+		it("keeps counting above the target: the count reads 9/8", async () => {
+			await render(
+				<HabitTodayRow
+					habit={makeQuantityHabit()}
+					completed
+					quantityValue={9}
+					onToggle={jest.fn()}
+					onIncrement={jest.fn()}
+					onOpenQuantitySheet={jest.fn()}
+					onPress={jest.fn()}
+				/>,
+			);
+			expect(screen.getByText("9/8")).toBeTruthy();
 		});
 
 		it("uses a button role, not a checkbox, for its completion control", async () => {
@@ -220,7 +262,7 @@ describe("HabitTodayRow", () => {
 			);
 			expect(
 				screen.getByRole("button", {
-					name: "Log Glass of water, 3 of 8 glasses",
+					name: "Add one to Glass of water, 3 of 8 glasses",
 				}),
 			).toBeTruthy();
 		});

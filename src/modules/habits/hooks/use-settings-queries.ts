@@ -5,6 +5,7 @@ import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
 import {
 	EVENING_REVIEW_SETTING_KEY,
+	FREEZE_POOL_SIZE,
 	LAST_EXPORT_SETTING_KEY,
 } from "../constants";
 import {
@@ -12,6 +13,7 @@ import {
 	type ExportSummary,
 	summarizeExport,
 } from "../domain/export-data";
+import { freezesUsedInMonth } from "../domain/streaks";
 import { lastExportLabel } from "../presenters/settings-helpers";
 import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
@@ -35,6 +37,7 @@ export function useSettingsQueries() {
 	const permission = useNotificationPermission();
 	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
 	const { summary } = useExportQueries(DEFAULT_EXPORT_OPTIONS);
+	const frozenDays = useFrozenDays();
 
 	return {
 		themePreference: preference,
@@ -44,6 +47,11 @@ export function useSettingsQueries() {
 		notificationsDenied: permission === "denied",
 		lastExport: lastExportLabel(lastExport ?? null, new Date()),
 		exportSummary: summary,
+		/** The shared monthly pool, counted by missed date (HAB-33, S4) — for the "used this month" row. */
+		freezePool: {
+			size: FREEZE_POOL_SIZE,
+			usedThisMonth: freezesUsedInMonth(frozenDays, new Date()),
+		},
 		/** Version, build and database schema — the About group. */
 		about: getAppInfo(),
 	};

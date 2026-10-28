@@ -4,9 +4,9 @@ import { unfreezeHabitDay } from "../repositories/frozen-day-repository";
 import { applyFreeze as applyFreezeToRepository } from "../services/freeze-service";
 
 /**
- * Resolving the streak-at-risk prompt (HAB-08). "Reset and start today" has
- * no action here — it writes nothing, since the computed streak already
- * reflects an unfrozen miss correctly the next time it's read.
+ * Resolving the streak-at-risk prompt (HAB-08). "Not now" has no action here —
+ * it writes nothing, since the computed streak already reflects an unfrozen
+ * miss correctly the next time it's read.
  */
 export function useStreakActions() {
 	const freeze = useAsyncAction(applyFreezeToRepository, {

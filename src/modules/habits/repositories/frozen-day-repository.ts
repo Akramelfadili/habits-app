@@ -46,6 +46,32 @@ export async function getFreezesUsedInMonth(
 	return rows.length;
 }
 
+/**
+ * A fresh (non-reactive) read of one habit's freeze on `date`, if it has one —
+ * what a log on that day decides on, so it must not trust a stale render.
+ */
+export async function getFrozenDay(
+	habitId: number,
+	date: Date,
+): Promise<FrozenDay | undefined> {
+	const [row] = await db
+		.select()
+		.from(frozenDays)
+		.where(
+			and(eq(frozenDays.habitId, habitId), eq(frozenDays.date, toDayKey(date))),
+		);
+	return row ? rowToFrozenDay(row) : undefined;
+}
+
+/** The habits frozen on `date` — a fresh read, for the day-save path. */
+export async function getFrozenHabitIdsOn(date: Date): Promise<Set<number>> {
+	const rows = await db
+		.select()
+		.from(frozenDays)
+		.where(eq(frozenDays.date, toDayKey(date)));
+	return new Set(rows.map((row) => row.habitId));
+}
+
 /** Takes a freeze back (the Undo for using one) — returns it to the shared pool. A no-op if that day isn't frozen. */
 export async function unfreezeHabitDay(
 	habitId: number,
@@ -58,13 +84,14 @@ export async function unfreezeHabitDay(
 		);
 }
 
-/** Freezes `habitId`'s missed `date` — idempotent, since a day can only be frozen once. */
+/** Freezes `habitId`'s missed `date` — idempotent, since a day can only be frozen once. `createdAt` is for putting a returned freeze back as it was. */
 export async function freezeHabitDay(
 	habitId: number,
 	date: Date,
+	createdAt: Date = new Date(),
 ): Promise<void> {
 	await db
 		.insert(frozenDays)
-		.values({ habitId, date: toDayKey(date), createdAt: new Date() })
+		.values({ habitId, date: toDayKey(date), createdAt })
 		.onConflictDoNothing();
 }

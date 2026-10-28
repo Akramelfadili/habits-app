@@ -4,7 +4,6 @@ import {
 	makeHabit,
 } from "../test-support/habit-builder";
 import {
-	celebratoryHeadline,
 	computeProgress,
 	groupHabitsByCategory,
 	resolveTodayViewState,
@@ -168,13 +167,13 @@ describe("resolveTodayViewState", () => {
 		).toBe("rest-day");
 	});
 
-	it("is day-closed when every due habit is completed", () => {
+	it("stays populated when every due habit is completed (no day-closed state)", () => {
 		expect(
 			resolveTodayViewState({
 				totalHabitCount: 3,
 				progress: { completed: 2, total: 2, fraction: 1 },
 			}),
-		).toBe("day-closed");
+		).toBe("populated");
 	});
 
 	it("is populated when some due habits remain uncompleted", () => {
@@ -184,18 +183,6 @@ describe("resolveTodayViewState", () => {
 				progress: { completed: 1, total: 2, fraction: 0.5 },
 			}),
 		).toBe("populated");
-	});
-});
-
-describe("celebratoryHeadline", () => {
-	it("spells out small counts as words", () => {
-		expect(celebratoryHeadline(6)).toBe("All six done");
-		expect(celebratoryHeadline(7)).toBe("All seven done");
-		expect(celebratoryHeadline(1)).toBe("All one done");
-	});
-
-	it("falls back to digits past the word list", () => {
-		expect(celebratoryHeadline(13)).toBe("All 13 done");
 	});
 });
 

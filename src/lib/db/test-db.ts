@@ -15,15 +15,22 @@ import * as schema from "./schema";
  */
 export function createTestDb({
 	foreignKeys = true,
+	onWrite,
 }: {
 	/** Off reproduces the device: expo-sqlite leaves foreign keys unenforced. */
 	foreignKeys?: boolean;
+	/**
+	 * Called with the table name after every insert/update/delete — what expo-sqlite's
+	 * change listener does for live queries. A screen test passes
+	 * `notifyTableChanged` (test-live-query.ts) so its hooks re-read after a write.
+	 */
+	onWrite?: (table: string) => void;
 } = {}) {
 	const sqlite = new DatabaseSync(":memory:", {
 		enableForeignKeyConstraints: foreignKeys,
 	});
 	applyMigrations(sqlite, migrationTags());
-	return wrap(sqlite);
+	return wrap(sqlite, onWrite);
 }
 
 /**
@@ -83,10 +90,18 @@ function applyMigrations(sqlite: DatabaseSync, tags: string[]) {
 	}
 }
 
-function wrap(sqlite: DatabaseSync) {
+const WRITE_STATEMENT =
+	/^\s*(?:insert\s+into|update|delete\s+from)\s+"?(\w+)"?/i;
+
+function wrap(sqlite: DatabaseSync, onWrite?: (table: string) => void) {
 	return drizzle(
 		async (sqlText, params, method) => {
 			const statement = sqlite.prepare(sqlText);
+			const written = WRITE_STATEMENT.exec(sqlText)?.[1];
+			if (written && onWrite) {
+				// After the statement ran, even when it returned rows (`… returning`).
+				queueMicrotask(() => onWrite(written));
+			}
 
 			if (method === "run") {
 				statement.run(...params);

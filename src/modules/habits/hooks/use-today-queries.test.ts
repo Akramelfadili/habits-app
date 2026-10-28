@@ -57,12 +57,16 @@ let mockEntries: MockEntry[] = [];
 // tests that need streak history further back set this separately.
 let mockAllEntries: MockEntry[] | undefined;
 let mockFrozenDays: MockFrozenDay[] = [];
+let mockEntriesRangeCalls: [Date, Date][] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
 	useActiveHabits: () => ({ habits: mockHabits, loaded: true }),
 }));
 jest.mock("../repositories/entry-repository", () => ({
-	useEntriesInRange: () => mockEntries,
+	useEntriesInRange: (...args: unknown[]) => {
+		mockEntriesRangeCalls.push(args as [Date, Date]);
+		return mockEntries;
+	},
 	useAllEntries: () => mockAllEntries ?? mockEntries,
 }));
 jest.mock("../repositories/category-repository", () => ({
@@ -72,7 +76,7 @@ jest.mock("../repositories/category-repository", () => ({
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozenDays,
 }));
-let mockReminders: Reminder[] = [];
+const mockReminders: Reminder[] = [];
 jest.mock("../repositories/reminder-repository", () => ({
 	useAllReminders: () => mockReminders,
 }));
@@ -87,6 +91,7 @@ describe("useTodayQueries", () => {
 		mockEntries = [];
 		mockAllEntries = undefined;
 		mockFrozenDays = [];
+		mockEntriesRangeCalls = [];
 	});
 
 	afterEach(() => {
@@ -159,14 +164,15 @@ describe("useTodayQueries", () => {
 		expect(result.current.viewState).toBe("rest-day");
 	});
 
-	it("is day-closed once every due-today habit is completed", async () => {
+	it("stays populated at 100% — there is no day-closed screen (PR-01 is Later)", async () => {
 		mockEntries = [
 			{ habitId: 1, date: TODAY_STRING, createdAt: TODAY },
 			{ habitId: 2, date: TODAY_STRING, createdAt: TODAY },
 			{ habitId: 3, date: TODAY_STRING, createdAt: TODAY },
 		];
 		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.viewState).toBe("day-closed");
+		expect(result.current.viewState).toBe("populated");
+		expect(result.current.progress.fraction).toBe(1);
 	});
 
 	it("ignores an off-schedule entry for a habit that isn't due today", async () => {
@@ -259,58 +265,6 @@ describe("useTodayQueries", () => {
 		expect(dueIds).toContain(5);
 	});
 
-	it("includes tomorrow's due habits in tomorrowPreview", async () => {
-		const thursdayOnly = makeHabit({
-			id: 4,
-			name: "Yoga",
-			frequency: { type: "weekdays", days: [4] }, // Thursday — TODAY+1.
-		});
-		mockHabits = [dailyHabit, thursdayOnly];
-		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.tomorrowPreview.map((habit) => habit.id)).toEqual([
-			1, 4,
-		]);
-	});
-
-	describe("tomorrow's reminder times (HAB-14)", () => {
-		const reminder = (
-			overrides: Partial<Reminder> & Pick<Reminder, "habitId">,
-		): Reminder => ({
-			id: 1,
-			hour: 7,
-			minute: 20,
-			weekdays: [1, 2, 3, 4, 5, 6, 7],
-			enabled: true,
-			...overrides,
-		});
-
-		beforeEach(() => {
-			mockReminders = [];
-		});
-
-		it("maps a habit to its earliest enabled reminder that fires tomorrow (Thursday)", async () => {
-			mockReminders = [
-				reminder({ id: 1, habitId: 1, hour: 21, minute: 0 }),
-				reminder({ id: 2, habitId: 1, hour: 7, minute: 5 }),
-				// Not on Thursday — ignored even though it's earlier.
-				reminder({ id: 3, habitId: 1, hour: 6, minute: 0, weekdays: [1, 2] }),
-				// Disabled — ignored even though it's earlier.
-				reminder({ id: 4, habitId: 1, hour: 5, minute: 0, enabled: false }),
-			];
-			const { result } = await renderHook(() => useTodayQueries());
-			expect(result.current.tomorrowReminderTimeByHabitId.get(1)).toBe("07:05");
-		});
-
-		it("leaves a habit with no applicable reminder out of the map", async () => {
-			mockReminders = [
-				reminder({ habitId: 2, weekdays: [1] }),
-				reminder({ id: 2, habitId: 3, enabled: false }),
-			];
-			const { result } = await renderHook(() => useTodayQueries());
-			expect(result.current.tomorrowReminderTimeByHabitId.size).toBe(0);
-		});
-	});
-
 	describe("streak-at-risk (HAB-08)", () => {
 		it("reports the full freeze pool when nothing's been used this month", async () => {
 			const { result } = await renderHook(() => useTodayQueries());
@@ -346,7 +300,7 @@ describe("useTodayQueries", () => {
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
 		});
 
-		it("does not flag a habit when the freeze pool is exhausted — resets silently instead", async () => {
+		it("still flags a habit when the freeze pool is exhausted, so Today can explain it (SR3)", async () => {
 			mockHabits = [dailyHabit];
 			mockAllEntries = [
 				{ habitId: 1, date: "2026-09-14", createdAt: new Date("2026-09-14") },
@@ -356,7 +310,27 @@ describe("useTodayQueries", () => {
 				{ habitId: 2, date: "2026-09-02" },
 			];
 			const { result } = await renderHook(() => useTodayQueries());
-			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+			expect(result.current.atRiskByHabitId.has(1)).toBe(true);
+			expect(result.current.freezesRemainingThisMonth).toBe(0);
+			expect(result.current.freezesUsedThisMonth).toBe(2);
+		});
+
+		it("counts the sheet's pool in the missed day's month: on the 1st that is last month's", async () => {
+			jest.setSystemTime(new Date(2026, 9, 1, 12)); // Thu 1 Oct; yesterday = Wed 30 Sep
+			mockHabits = [dailyHabit];
+			mockAllEntries = ["2026-09-28", "2026-09-29"].map((date) => ({
+				habitId: 1,
+				date,
+				createdAt: new Date(date),
+			}));
+			// September's pool is spent; October's is untouched.
+			mockFrozenDays = [
+				{ habitId: 2, date: "2026-09-10" },
+				{ habitId: 2, date: "2026-09-11" },
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.freezesRemainingThisMonth).toBe(2);
+			expect(result.current.atRiskByHabitId.get(1)?.freezesRemaining).toBe(0);
 		});
 
 		it("does not flag a habit whose missed yesterday is already frozen", async () => {
@@ -392,6 +366,98 @@ describe("useTodayQueries", () => {
 			];
 			const { result } = await renderHook(() => useTodayQueries());
 			expect(result.current.atRiskByHabitId.has(6)).toBe(false);
+		});
+	});
+
+	describe("a selected past day (HAB-30)", () => {
+		// TODAY is Wednesday 16 Sep; Monday 7 Sep is in the week before it.
+		const PAST = "2026-09-07";
+
+		it("keys the week window and the day's reads by the selected day, not today", async () => {
+			mockEntries = [{ habitId: 1, date: PAST, createdAt: TODAY }];
+			const { result } = await renderHook(() => useTodayQueries(PAST));
+
+			const [start, end] = mockEntriesRangeCalls.at(-1) ?? [];
+			expect(formatISO(start as Date, { representation: "date" })).toBe(
+				"2026-09-07",
+			);
+			expect(formatISO(end as Date, { representation: "date" })).toBe(
+				"2026-09-13",
+			);
+			expect(result.current.completedHabitIds.has(1)).toBe(true);
+			expect(
+				formatISO(result.current.selectedDay, { representation: "date" }),
+			).toBe(PAST);
+			// The real today is still reported — streak-at-risk is measured from it.
+			expect(formatISO(result.current.today, { representation: "date" })).toBe(
+				TODAY_STRING,
+			);
+		});
+
+		it("re-reads when the selected day moves to another week", async () => {
+			const { rerender } = await renderHook(
+				(key: string | null) => useTodayQueries(key),
+				{ initialProps: null as string | null },
+			);
+			await rerender(PAST);
+			const starts = mockEntriesRangeCalls.map(([start]) =>
+				formatISO(start, { representation: "date" }),
+			);
+			expect(starts).toContain("2026-09-14");
+			expect(starts.at(-1)).toBe("2026-09-07");
+		});
+
+		it("reads that day's quantity value, not today's", async () => {
+			mockHabits = [quantityHabit];
+			mockEntries = [
+				{ habitId: 4, date: PAST, createdAt: TODAY, value: 12 },
+				{ habitId: 4, date: TODAY_STRING, createdAt: TODAY, value: 3 },
+			];
+			const { result } = await renderHook(() => useTodayQueries(PAST));
+			expect(result.current.quantityValuesByHabitId.get(4)).toBe(12);
+		});
+
+		it("does not list a habit that did not exist yet, or one that was paused that day", async () => {
+			mockHabits = [
+				dailyHabit,
+				makeHabit({ id: 8, name: "New", createdAt: new Date(2026, 8, 10) }),
+				makeHabit({
+					id: 9,
+					name: "Paused",
+					createdAt: new Date(2026, 0, 1),
+					pauses: [{ from: "2026-09-05", to: "2026-09-09" }],
+				}),
+			];
+			const { result } = await renderHook(() => useTodayQueries(PAST));
+			const ids = result.current.groups.flatMap((group) =>
+				group.habits.map((habit) => habit.id),
+			);
+			expect(ids).toEqual([1]);
+		});
+
+		it("does not list a day's not-due habits", async () => {
+			mockHabits = [
+				makeHabit({ id: 1, frequency: { type: "weekdays", days: [3] } }), // Wednesday only
+			];
+			const { result } = await renderHook(() => useTodayQueries(PAST)); // a Monday
+			expect(result.current.viewState).toBe("rest-day");
+		});
+
+		it("never flags streak-at-risk — that belongs to the real today", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = ["2026-09-12", "2026-09-13", "2026-09-14"].map(
+				(date) => ({
+					habitId: 1,
+					date,
+					createdAt: TODAY,
+				}),
+			);
+			// Today: yesterday (15th) was missed with a 3-day streak before it.
+			const followed = await renderHook(() => useTodayQueries());
+			expect(followed.result.current.atRiskByHabitId.size).toBe(1);
+
+			const past = await renderHook(() => useTodayQueries("2026-09-15"));
+			expect(past.result.current.atRiskByHabitId.size).toBe(0);
 		});
 	});
 });

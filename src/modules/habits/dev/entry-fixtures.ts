@@ -3,7 +3,6 @@ import { WEEK_STARTS_ON } from "../constants";
 import type { Entry, EntryNote } from "../types";
 import { HABIT_DETAIL_FROZEN_DAYS_AGO } from "./frozen-day-fixtures";
 import {
-	DAY_CLOSED_DUE_TODAY_IDS,
 	type FixtureScenario,
 	HABIT_DETAIL_ARCHIVED_DAYS_AGO,
 	HABIT_DETAIL_HISTORY_DAYS,
@@ -22,9 +21,7 @@ const STREAK_AT_RISK_DAYS = 24;
  * runs on — already done today, so the Today screen's progress bar and
  * per-group counts render non-zero instead of a flat 0%.
  *
- * `day-closed` instead completes every one of `DAY_CLOSED_DUE_TODAY_IDS`, so
- * the Today screen's Day-closed state (HAB-05) renders; `empty`/`rest-day`
- * have no due-today habits to complete. `quantity-log` logs the quantity
+ * `empty`/`rest-day` have no due-today habits to complete. `quantity-log` logs the quantity
  * fixture habit partway to its target, matching docs/mockups/quantity-log.png
  * exactly (6 of 8), so the sheet screenshot can be compared to it directly.
  *
@@ -37,15 +34,6 @@ export function makeEntryFixtures(
 	scenario: FixtureScenario = "default",
 ): Entry[] {
 	const today = format(new Date(), "yyyy-MM-dd");
-
-	if (scenario === "day-closed") {
-		return DAY_CLOSED_DUE_TODAY_IDS.map((habitId, index) => ({
-			id: index + 1,
-			habitId,
-			date: today,
-			createdAt: new Date(),
-		}));
-	}
 
 	if (
 		scenario === "empty" ||
@@ -117,7 +105,10 @@ export function makeEntryFixtures(
 		return entries;
 	}
 
-	if (scenario === "streak-at-risk") {
+	if (
+		scenario === "streak-at-risk" ||
+		scenario === "streak-at-risk-no-freezes"
+	) {
 		// Day -1 (yesterday) is intentionally left uncompleted — that's the miss
 		// the streak-at-risk sheet is showing. Days -2 through -25 are all
 		// completed, giving a 24-day streak standing before that miss.

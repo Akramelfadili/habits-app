@@ -140,15 +140,13 @@ function referenceDomain() {
 		return streak;
 	}
 
+	// Verbatim, except the pool check: at-risk no longer depends on the pool (HAB-33 SR3).
 	function getStreakAtRisk(
 		habit: Habit,
 		entries: readonly Entry[],
 		frozenDates: ReadonlySet<string>,
-		freezesRemaining: number,
 		today: Date,
 	) {
-		if (freezesRemaining <= 0) return null;
-
 		const yesterday = subDays(startOfDay(today), 1);
 		const yesterdayString = toDayKey(yesterday);
 		if (frozenDates.has(yesterdayString)) return null;
@@ -449,14 +447,11 @@ describe("per-week pre-bucketing is equivalent to the original scans", () => {
 				longest: g.history.calculateLongestStreak(input),
 				rate: g.history.calculateCompletionRate(input),
 				heatmap: g.history.buildHeatmapWeeks(input),
-				atRisk: [0, 1, 2].map((left) =>
-					g.streaks.getStreakAtRisk(
-						h.habit,
-						h.entries,
-						frozenDates,
-						left,
-						h.today,
-					),
+				atRisk: g.streaks.getStreakAtRisk(
+					h.habit,
+					h.entries,
+					frozenDates,
+					h.today,
 				),
 				reset: g.history.streakResetInfo(input, 0),
 				offSchedule: sampled.map((entry) =>

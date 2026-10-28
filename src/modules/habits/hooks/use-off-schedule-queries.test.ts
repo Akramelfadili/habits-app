@@ -75,7 +75,7 @@ afterEach(() => {
 
 describe("useOffScheduleQueries", () => {
 	it("offers only active build habits to the picker", async () => {
-		const { result } = await renderHook(() => useOffScheduleQueries());
+		const { result } = await renderHook(() => useOffScheduleQueries(SUNDAY));
 
 		expect(result.current.eligibleHabits.map((habit) => habit.id)).toEqual([
 			1, 2,
@@ -83,7 +83,7 @@ describe("useOffScheduleQueries", () => {
 	});
 
 	it("reads the entries of the current week, starting at midnight on the week start", async () => {
-		await renderHook(() => useOffScheduleQueries());
+		await renderHook(() => useOffScheduleQueries(SUNDAY));
 
 		const [start, end] = mockUseEntriesInRange.mock.calls[0];
 		expect(start).toEqual(
@@ -99,14 +99,14 @@ describe("useOffScheduleQueries", () => {
 			entry(2, 2, "2026-10-04"), // Walk is daily: a normal log
 			entry(3, 1, "2026-10-02"), // Gym on Friday: not today
 		];
-		const { result } = await renderHook(() => useOffScheduleQueries());
+		const { result } = await renderHook(() => useOffScheduleQueries(SUNDAY));
 
 		expect(result.current.loggedToday.map((log) => log.habit.id)).toEqual([1]);
 		expect(result.current.loggedToday[0].entry.id).toBe(1);
 	});
 
 	it("has no bonus logs when nothing was logged today", async () => {
-		const { result } = await renderHook(() => useOffScheduleQueries());
+		const { result } = await renderHook(() => useOffScheduleQueries(SUNDAY));
 
 		expect(result.current.loggedToday).toEqual([]);
 	});

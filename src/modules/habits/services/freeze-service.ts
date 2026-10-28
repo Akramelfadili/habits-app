@@ -9,12 +9,13 @@ import {
  * The one composite operation this feature needs: freezing a missed day means
  * checking the shared pool's *current* eligibility (a fresh DB read, not
  * whatever a hook last rendered) and then writing the freeze — together, so
- * a stale UI can't push the pool over its monthly limit.
+ * a stale UI can't push the pool over its monthly limit. Resolves with what is
+ * left in the missed day's month, for the toast ("… · 0 left").
  */
 export async function applyFreeze(
 	habitId: number,
 	missedDate: Date,
-): Promise<void> {
+): Promise<{ freezesLeft: number }> {
 	const used = await getFreezesUsedInMonth(
 		startOfMonth(missedDate),
 		endOfMonth(missedDate),
@@ -23,4 +24,5 @@ export async function applyFreeze(
 		throw new Error("No freezes remaining this month");
 	}
 	await freezeHabitDay(habitId, missedDate);
+	return { freezesLeft: FREEZE_POOL_SIZE - used - 1 };
 }

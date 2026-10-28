@@ -1,10 +1,13 @@
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
-import { setHabitQuantityOn } from "../repositories/entry-repository";
+import { setQuantityOnDay } from "../services/day-log-service";
 
-/** Single repository call — no service needed (HAB-07). */
+/**
+ * A quantity write (HAB-07): a service because reaching the target on a
+ * frozen day gives that day's freeze back in the same transaction (PR-11).
+ */
 export function useQuantityLogActions() {
-	const log = useAsyncAction(setHabitQuantityOn, {
+	const log = useAsyncAction(setQuantityOnDay, {
 		scope: "quantity-log",
 		failure: failureMessage("save", "that amount"),
 	});

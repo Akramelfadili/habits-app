@@ -121,11 +121,6 @@ export const SCREENS = {
 		route: "/?fixtures=rest-day",
 		mockup: "docs/mockups/rest-day.png",
 	},
-	"today-day-closed": {
-		feature: "HAB-05",
-		route: "/?fixtures=day-closed",
-		mockup: "docs/mockups/day-closed.png",
-	},
 
 	// HAB-18 — off-schedule log (D1, D2) and retro-log pinning (D4)
 	"rest-day-picker": {
@@ -161,12 +156,6 @@ export const SCREENS = {
 			await page.getByText("Logged 'Read' · off-schedule").waitFor();
 			await page.waitForTimeout(400);
 		},
-	},
-	"today-day-closed-reminders": {
-		feature: "HAB-14",
-		route: "/?fixtures=day-closed",
-		mockup: "docs/mockups/hab-14-a6.png",
-		note: "Day closed: tomorrow rows carry their earliest reminder time; 'Read before bed' has no reminder and no trailing text.",
 	},
 
 	// HAB-01 / HAB-02 / HAB-07 — New / Edit habit
@@ -400,9 +389,9 @@ export const SCREENS = {
 		feature: "HAB-07",
 		route: "/?fixtures=quantity-log",
 		mockup: "docs/mockups/quantity-log.png",
-		note: "Sheet is opened by simulating the tap the mockup can't capture from a static route load.",
+		note: "Sheet is opened from the row's count control (a tap on the circle adds one, D6) — the interaction the mockup can't capture from a static route load.",
 		async interact(page) {
-			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+			await page.getByText("6/8", { exact: true }).click();
 		},
 	},
 	"streak-at-risk": {
@@ -410,6 +399,15 @@ export const SCREENS = {
 		route: "/?fixtures=streak-at-risk",
 		mockup: "docs/mockups/streak-at-risk.png",
 		note: "Sheet is opened by tapping the at-risk habit's row, same as a real 'open this habit' interaction.",
+		async interact(page) {
+			await page.getByText("Meditate").click();
+		},
+	},
+	"streak-at-risk-no-freezes": {
+		feature: "HAB-33",
+		route: "/?fixtures=streak-at-risk-no-freezes",
+		mockup: null,
+		note: "SR3: the same at-risk habit with the month's pool spent — the one-button sheet ('Got it') says the streak restarts and the longest streak is kept. No mockup draws it in this form.",
 		async interact(page) {
 			await page.getByText("Meditate").click();
 		},
@@ -691,6 +689,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/manage-archive.png",
 		touch: true,
 		note: "Read swiped left and archived — \"Archived 'Read'\" toast with Undo, Read now under Archived.",
+		ignoreErrors: [/No handler for tag/],
 		async interact(page) {
 			const { y } = await swipeLeft(
 				page,
@@ -699,6 +698,16 @@ export const SCREENS = {
 			// Every row's Archive action is in the DOM behind it; tap where
 			// Read's was just revealed, at the row's trailing edge.
 			await page.touchscreen.tap(page.viewportSize().width - 60, y);
+			// react-native-web only: the archived row unmounts while Swipeable still
+			// has a queued config update, and gesture-handler's web NodeManager
+			// throws "No handler for tag N" (native ignores the missing handler).
+			// It is a dev-only LogBox toast over the pill, not app behaviour:
+			// dismiss it so the baseline shows the screen.
+			await page
+				.getByText(/No handler for tag/)
+				.waitFor({ timeout: 3000 })
+				.catch(() => {});
+			await page.mouse.click(309, 817);
 		},
 	},
 	"manage-habits-no-active": {
@@ -898,7 +907,7 @@ export const SCREENS = {
 		mockup: null,
 		note: "A failed quantity save: the sheet stays open and the toast shows at the top of the screen, above the sheet (a Modal covers the page-level host).",
 		async interact(page) {
-			await page.getByRole("button", { name: /^Log Glass of water/ }).click();
+			await page.getByText("6/8", { exact: true }).click();
 			await page.getByRole("button", { name: /^Save \d+ of/ }).click();
 			await page.getByText("Couldn't save that amount. Try again.").waitFor();
 		},

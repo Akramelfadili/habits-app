@@ -28,8 +28,8 @@ import type * as NativeHabitRepository from "./habit-repository";
  * (scripts/visual-check.mjs) — so it's backed by in-memory fixtures instead.
  * Hooks and screens import `./habit-repository` either way and never know.
  *
- * Append `?fixtures=empty` (no habits), `?fixtures=rest-day`, or
- * `?fixtures=day-closed` to any URL to render those Today states (HAB-05).
+ * Append `?fixtures=empty` (no habits) or `?fixtures=rest-day` to any URL to
+ * render those Today states (HAB-05).
  */
 
 function initialHabits(): Habit[] {

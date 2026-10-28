@@ -1,6 +1,7 @@
-import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { entries, entryNotes } from "@/lib/db/schema";
+import { entries, entryNotes, frozenDays } from "@/lib/db/schema";
+import { runInTransaction } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import { toDayKey } from "@/utils/day-key";
 import type { DayLog, Entry, EntryNote } from "../types";
@@ -55,17 +56,37 @@ export function useAllEntries(): Entry[] {
 }
 
 /**
- * Marks `habitId` completed/resisted (or un-completed) on `date`. Un-checking
- * is always allowed with no confirmation (HAB-03), so this deletes the row
- * rather than flipping a boolean; completing twice is a no-op, not an error.
+ * What a write does to the habit's freeze on the same day, in the same
+ * transaction as the entry (PR-11): logging a frozen day gives the freeze back
+ * to the pool (`release`), and Undoing that puts it back exactly as it was
+ * (`reinstate`, keeping the original `createdAt`).
  */
-export async function setHabitCompletedOn(
+export type FreezeChange = { release: true } | { reinstate: Date };
+
+async function changeFreeze(
 	habitId: number,
-	date: Date,
+	dateString: string,
+	freeze: FreezeChange,
+): Promise<void> {
+	if ("release" in freeze) {
+		await db
+			.delete(frozenDays)
+			.where(
+				and(eq(frozenDays.habitId, habitId), eq(frozenDays.date, dateString)),
+			);
+		return;
+	}
+	await db
+		.insert(frozenDays)
+		.values({ habitId, date: dateString, createdAt: freeze.reinstate })
+		.onConflictDoNothing();
+}
+
+async function writeCompleted(
+	habitId: number,
+	dateString: string,
 	completed: boolean,
 ): Promise<void> {
-	const dateString = toDayKey(date);
-
 	if (completed) {
 		await db
 			.insert(entries)
@@ -79,21 +100,11 @@ export async function setHabitCompletedOn(
 		.where(and(eq(entries.habitId, habitId), eq(entries.date, dateString)));
 }
 
-/**
- * Sets `habitId`'s logged quantity on `date` (HAB-07). `value <= 0` deletes the
- * row instead of storing a zero — keeping "no entry" as the one signal for
- * "nothing logged," same as `setHabitCompletedOn`, so a zeroed-out quantity
- * habit doesn't spuriously count as a completion anywhere (e.g. per-week
- * scheduling). Otherwise upserts, since a day can be logged more than once as
- * the value is adjusted through the day.
- */
-export async function setHabitQuantityOn(
+async function writeQuantity(
 	habitId: number,
-	date: Date,
+	dateString: string,
 	value: number,
 ): Promise<void> {
-	const dateString = toDayKey(date);
-
 	if (value <= 0) {
 		await db
 			.delete(entries)
@@ -110,6 +121,49 @@ export async function setHabitQuantityOn(
 		});
 }
 
+/**
+ * Marks `habitId` completed/resisted (or un-completed) on `date`. Un-checking
+ * is always allowed with no confirmation (HAB-03), so this deletes the row
+ * rather than flipping a boolean; completing twice is a no-op, not an error.
+ * With `freeze`, the day's freeze changes in the same transaction.
+ */
+export async function setHabitCompletedOn(
+	habitId: number,
+	date: Date,
+	completed: boolean,
+	freeze?: FreezeChange,
+): Promise<void> {
+	const dateString = toDayKey(date);
+	if (!freeze) return writeCompleted(habitId, dateString, completed);
+	await runInTransaction(async () => {
+		await writeCompleted(habitId, dateString, completed);
+		await changeFreeze(habitId, dateString, freeze);
+	});
+}
+
+/**
+ * Sets `habitId`'s logged quantity on `date` (HAB-07). `value <= 0` deletes the
+ * row instead of storing a zero — keeping "no entry" as the one signal for
+ * "nothing logged," same as `setHabitCompletedOn`, so a zeroed-out quantity
+ * habit doesn't spuriously count as a completion anywhere (e.g. per-week
+ * scheduling). Otherwise upserts, since a day can be logged more than once as
+ * the value is adjusted through the day. With `freeze`, the day's freeze
+ * changes in the same transaction.
+ */
+export async function setHabitQuantityOn(
+	habitId: number,
+	date: Date,
+	value: number,
+	freeze?: FreezeChange,
+): Promise<void> {
+	const dateString = toDayKey(date);
+	if (!freeze) return writeQuantity(habitId, dateString, value);
+	await runInTransaction(async () => {
+		await writeQuantity(habitId, dateString, value);
+		await changeFreeze(habitId, dateString, freeze);
+	});
+}
+
 /** Live-query hook — every habit's day notes (HAB-10). Same "small enough to fetch whole" reasoning as `useAllEntries`. */
 export function useEntryNotes(): EntryNote[] {
 	const { data } = useLiveRows<EntryNoteRow>(
@@ -123,39 +177,27 @@ export function useEntryNotes(): EntryNote[] {
  * one transaction, so a half-applied save can't leave the day inconsistent.
  * Values follow the same rules as the single-day writes above: `false`/`0`
  * deletes the entry, `true` inserts a presence row, an amount upserts. An
- * empty (after trimming) note deletes the note row.
- *
- * The callback is deliberately synchronous (`.run()`, no `await`): the
- * expo-sqlite driver's `transaction()` is sync and would commit after the
- * first `await`, leaving the rest outside the transaction. The outer `await`
- * is a no-op there, but lets an async driver (the Jest test db) finish first.
+ * empty (after trimming) note deletes the note row. `releaseFreezeFor` lists
+ * the habits whose freeze on this day goes back to the pool in the same
+ * transaction (PR-11).
  */
-export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
+export async function saveDayLog(
+	date: Date,
+	log: DayLog,
+	releaseFreezeFor: readonly number[] = [],
+): Promise<void> {
 	const dateString = toDayKey(date);
 	const note = log.note.trim();
 	const now = new Date();
 
-	await db.transaction((tx) => {
+	await runInTransaction(async () => {
 		for (const { habitId, value } of log.values) {
-			const sameDay = and(
-				eq(entries.habitId, habitId),
-				eq(entries.date, dateString),
-			);
 			if (value === false || (typeof value === "number" && value <= 0)) {
-				tx.delete(entries).where(sameDay).run();
+				await writeCompleted(habitId, dateString, false);
 			} else if (value === true) {
-				tx.insert(entries)
-					.values({ habitId, date: dateString, createdAt: now })
-					.onConflictDoNothing()
-					.run();
+				await writeCompleted(habitId, dateString, true);
 			} else {
-				tx.insert(entries)
-					.values({ habitId, date: dateString, value, createdAt: now })
-					.onConflictDoUpdate({
-						target: [entries.habitId, entries.date],
-						set: { value },
-					})
-					.run();
+				await writeQuantity(habitId, dateString, value);
 			}
 		}
 
@@ -164,9 +206,10 @@ export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 			eq(entryNotes.date, dateString),
 		);
 		if (note === "") {
-			tx.delete(entryNotes).where(noteOwner).run();
+			await db.delete(entryNotes).where(noteOwner);
 		} else {
-			tx.insert(entryNotes)
+			await db
+				.insert(entryNotes)
 				.values({
 					habitId: log.noteHabitId,
 					date: dateString,
@@ -176,8 +219,18 @@ export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 				.onConflictDoUpdate({
 					target: [entryNotes.habitId, entryNotes.date],
 					set: { note, updatedAt: now },
-				})
-				.run();
+				});
+		}
+
+		if (releaseFreezeFor.length > 0) {
+			await db
+				.delete(frozenDays)
+				.where(
+					and(
+						eq(frozenDays.date, dateString),
+						inArray(frozenDays.habitId, [...releaseFreezeFor]),
+					),
+				);
 		}
 	});
 }

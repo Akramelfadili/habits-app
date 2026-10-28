@@ -23,6 +23,10 @@ jest.mock("expo-router", () => ({
 	},
 }));
 const OK = { ok: true, value: undefined } as const;
+const SAVED = {
+	ok: true,
+	value: { returnedFreezeHabitIds: [], freezesLeft: 2 },
+} as const;
 const mockArchive = jest.fn();
 const mockDelete = jest.fn();
 const mockRestore = jest.fn();
@@ -74,7 +78,7 @@ const habit = makeHabit({
 });
 
 beforeEach(() => {
-	mockSaveDay.mockReset().mockResolvedValue(OK);
+	mockSaveDay.mockReset().mockResolvedValue(SAVED);
 	mockRetroLogQueries
 		.mockReset()
 		.mockImplementation(
@@ -259,12 +263,35 @@ describe("HabitDetailScreen", () => {
 				screen.getByRole("button", { name: "Save changes" }),
 			);
 
-			expect(mockSaveDay).toHaveBeenCalledWith(new Date(2026, 8, 21), {
-				values: [{ habitId: 1, value: 8 }],
-				noteHabitId: 1,
-				note: "Hotel",
-			});
+			expect(mockSaveDay).toHaveBeenCalledWith(
+				new Date(2026, 8, 21),
+				{
+					values: [{ habitId: 1, value: 8 }],
+					noteHabitId: 1,
+					note: "Hotel",
+				},
+				// The shown habits' quantity targets: a partial amount must not return a freeze.
+				expect.any(Map),
+			);
 			expect(screen.queryByText("Save changes")).toBeNull();
+		});
+
+		it("says so when saving a frozen day gave its freeze back (PR-11)", async () => {
+			mockSaveDay.mockResolvedValueOnce({
+				ok: true,
+				value: { returnedFreezeHabitIds: [1], freezesLeft: 1 },
+			});
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
+			await fireEvent.press(screen.getByRole("button", { name: /^Increase/ }));
+			await fireEvent.press(
+				screen.getByRole("button", { name: "Save changes" }),
+			);
+
+			expect(useToastStore.getState().toast?.message).toBe(
+				"Freeze returned for Mon 21 · 1 left",
+			);
 		});
 
 		it("a failed save keeps the sheet open so it can be retried", async () => {

@@ -1,4 +1,3 @@
-import { getISODay } from "date-fns";
 import { WEEKDAY_SHORTCUT, WEEKDAYS } from "../constants";
 import type { IsoWeekday, Reminder } from "../types";
 
@@ -72,22 +71,4 @@ export function remindersSummary(reminders: readonly Reminder[]): string {
 
 export function reminderCountLabel(count: number, cap: number): string {
 	return `${count} of ${cap}`;
-}
-
-/**
- * The time Day closed's tomorrow preview shows beside a habit (HAB-14): its
- * earliest *enabled* reminder that fires on `date`'s weekday, "07:20" — or
- * `undefined` when none does, so the row shows no trailing text at all.
- */
-export function earliestReminderTimeOn(
-	reminders: readonly Reminder[],
-	date: Date,
-): string | undefined {
-	const weekday = getISODay(date) as IsoWeekday;
-	const earliest = reminders
-		.filter(
-			(reminder) => reminder.enabled && reminder.weekdays.includes(weekday),
-		)
-		.sort((a, b) => a.hour - b.hour || a.minute - b.minute)[0];
-	return earliest ? formatReminderTime(earliest) : undefined;
 }

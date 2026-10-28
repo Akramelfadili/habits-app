@@ -9,6 +9,8 @@ const RADIUS = SIZE / 2;
 type CompletionCircleProps = {
 	completed: boolean;
 	onPress: () => void;
+	/** A quantity habit's way to the sheet while a tap adds one (D6). */
+	onLongPress?: () => void;
 	accessibilityLabel: string;
 	/** Build = filled-black-on-done (default). Break = outline-only, never filled (HAB-04). */
 	direction?: HabitDirection;
@@ -25,9 +27,9 @@ type CompletionCircleProps = {
 	 */
 	progress?: number;
 	/**
-	 * "checkbox" (default) toggles instantly. A quantity habit (HAB-07) opens a
-	 * sheet instead, so it's a "button" — checked/unchecked semantics don't
-	 * apply to "open this habit's log."
+	 * "checkbox" (default) toggles instantly. A quantity habit (HAB-07) adds one
+	 * per tap (D6), so it's a "button" — checked/unchecked semantics don't apply
+	 * to "add to this habit's count."
 	 */
 	role?: "checkbox" | "button";
 };
@@ -83,6 +85,7 @@ function PieFill({ progress, color }: { progress: number; color: string }) {
 export function CompletionCircle({
 	completed,
 	onPress,
+	onLongPress,
 	accessibilityLabel,
 	direction = "build",
 	progress,
@@ -103,6 +106,7 @@ export function CompletionCircle({
 			}
 			hitSlop={8}
 			onPress={onPress}
+			onLongPress={onLongPress}
 			style={({ pressed }) => [
 				styles.circle,
 				isBreak

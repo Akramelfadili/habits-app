@@ -1,6 +1,5 @@
 import type { Reminder } from "../types";
 import {
-	earliestReminderTimeOn,
 	formatReminderTime,
 	parseWeekdayParam,
 	reminderCountLabel,
@@ -63,72 +62,19 @@ describe("reminders-helpers", () => {
 	});
 });
 
-describe("earliestReminderTimeOn (HAB-14)", () => {
-	const thursday = new Date(2026, 8, 17);
-	const reminder = (overrides: Partial<Reminder>): Reminder => ({
-		id: 1,
-		habitId: 1,
-		hour: 7,
-		minute: 20,
-		weekdays: [1, 2, 3, 4, 5, 6, 7],
-		enabled: true,
-		...overrides,
+describe("parseWeekdayParam (?addTime=<day>)", () => {
+	it.each([
+		["1", 1],
+		["6", 6],
+		["7", 7],
+	])("reads %s as ISO weekday %i", (value, day) => {
+		expect(parseWeekdayParam(value)).toBe(day);
 	});
 
-	it("picks the earliest reminder", () => {
-		expect(
-			earliestReminderTimeOn(
-				[reminder({ hour: 21, minute: 0 }), reminder({ id: 2, hour: 7 })],
-				thursday,
-			),
-		).toBe("07:20");
-	});
-
-	it("skips reminders that don't fire on that weekday", () => {
-		expect(
-			earliestReminderTimeOn(
-				[
-					reminder({ hour: 6, weekdays: [6, 7] }),
-					reminder({ id: 2, hour: 9, minute: 5, weekdays: [4] }),
-				],
-				thursday,
-			),
-		).toBe("09:05");
-	});
-
-	it("skips disabled reminders", () => {
-		expect(
-			earliestReminderTimeOn(
-				[reminder({ hour: 6, enabled: false }), reminder({ id: 2, hour: 8 })],
-				thursday,
-			),
-		).toBe("08:20");
-	});
-
-	it("is undefined when nothing applies", () => {
-		expect(earliestReminderTimeOn([], thursday)).toBeUndefined();
-		expect(
-			earliestReminderTimeOn([reminder({ weekdays: [1] })], thursday),
-		).toBeUndefined();
-		expect(
-			earliestReminderTimeOn([reminder({ enabled: false })], thursday),
-		).toBeUndefined();
-	});
-
-	describe("parseWeekdayParam (?addTime=<day>)", () => {
-		it.each([
-			["1", 1],
-			["6", 6],
-			["7", 7],
-		])("reads %s as ISO weekday %i", (value, day) => {
-			expect(parseWeekdayParam(value)).toBe(day);
-		});
-
-		it.each([undefined, "", "0", "8", "-1", "2.5", "sat", "NaN"])(
-			"ignores %p",
-			(value) => {
-				expect(parseWeekdayParam(value)).toBeUndefined();
-			},
-		);
-	});
+	it.each([undefined, "", "0", "8", "-1", "2.5", "sat", "NaN"])(
+		"ignores %p",
+		(value) => {
+			expect(parseWeekdayParam(value)).toBeUndefined();
+		},
+	);
 });

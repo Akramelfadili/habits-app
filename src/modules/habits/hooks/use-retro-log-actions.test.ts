@@ -3,8 +3,8 @@ import { useToastStore } from "@/store/toast-store";
 
 const mockSaveDayLog = jest.fn();
 
-jest.mock("../repositories/entry-repository", () => ({
-	saveDayLog: (...args: unknown[]) => mockSaveDayLog(...args),
+jest.mock("../services/day-log-service", () => ({
+	saveDayReturningFreezes: (...args: unknown[]) => mockSaveDayLog(...args),
 }));
 
 import { useRetroLogActions } from "./use-retro-log-actions";
@@ -14,19 +14,20 @@ describe("useRetroLogActions", () => {
 		mockSaveDayLog.mockReset();
 	});
 
-	it("saves the whole day through the repository in one call", async () => {
+	it("saves the whole day through the day-log service in one call", async () => {
 		mockSaveDayLog.mockResolvedValue(undefined);
 		const { result } = await renderHook(() => useRetroLogActions());
 		const date = new Date(2026, 8, 15);
+		const targets = new Map([[1, 8]]);
 		const log = {
 			values: [{ habitId: 1, value: 8 }],
 			noteHabitId: 1,
 			note: "Hotel",
 		};
 
-		await act(() => result.current.saveDay(date, log));
+		await act(() => result.current.saveDay(date, log, targets));
 
-		expect(mockSaveDayLog).toHaveBeenCalledWith(date, log);
+		expect(mockSaveDayLog).toHaveBeenCalledWith(date, log, targets);
 		expect(result.current.isSaving).toBe(false);
 	});
 
@@ -36,11 +37,15 @@ describe("useRetroLogActions", () => {
 		const { result } = await renderHook(() => useRetroLogActions());
 
 		const returned = await act(() =>
-			result.current.saveDay(new Date(2026, 8, 15), {
-				values: [],
-				noteHabitId: 1,
-				note: "",
-			}),
+			result.current.saveDay(
+				new Date(2026, 8, 15),
+				{
+					values: [],
+					noteHabitId: 1,
+					note: "",
+				},
+				new Map(),
+			),
 		);
 
 		expect(returned).toMatchObject({ ok: false });
