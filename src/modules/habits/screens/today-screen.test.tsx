@@ -171,6 +171,31 @@ jest.mock("../hooks/use-first-run-actions", () => ({
 	}),
 }));
 
+// jest's window reports fontScale 2: without this the strip is the one-day AX stand-in.
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => false,
+}));
+
+// Counts the strip's mounts: a remount is what would drop its position and the
+// list's scroll offset along with it.
+let mockStripMounts = 0;
+let mockStripUnmounts = 0;
+jest.mock("../components/week-strip", () => {
+	const { useEffect } = require("react");
+	const actual = jest.requireActual("../components/week-strip");
+	return {
+		WeekStrip: (props: unknown) => {
+			useEffect(() => {
+				mockStripMounts += 1;
+				return () => {
+					mockStripUnmounts += 1;
+				};
+			}, []);
+			return <actual.WeekStrip {...(props as object)} />;
+		},
+	};
+});
+
 import { Alert } from "react-native";
 import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
@@ -958,5 +983,70 @@ describe("TodayScreen", () => {
 
 		expect(mockResetFirstRun).toHaveBeenCalledTimes(1);
 		alertSpy.mockRestore();
+	});
+});
+
+describe("TodayScreen day tap (HAB-30)", () => {
+	async function scrollTo(y: number) {
+		await fireEvent.scroll(screen.getByTestId("today-scroll"), {
+			nativeEvent: { contentOffset: { y } },
+		});
+	}
+
+	beforeEach(() => {
+		mockStripMounts = 0;
+		mockStripUnmounts = 0;
+		mockViewState = "populated";
+		mockGroups = [
+			{ category: morningHabit.category, habits: [morningHabit] },
+			{ category: eveningHabit.category, habits: [eveningHabit] },
+		] as CategoryGroup[];
+		mockProgress = { completed: 0, total: 2, fraction: 0 };
+	});
+
+	it("keeps the strip mounted, shows the bar and leaves the title alone when a past day is chosen", async () => {
+		await render(<TodayScreen />);
+		await scrollTo(10);
+
+		await fireEvent.press(screen.getByTestId("week-strip-day-2026-09-14"));
+
+		expect(screen.getByTestId("past-day-bar")).toBeTruthy();
+		expect(screen.getByTestId("week-strip")).toBeTruthy();
+		expect(mockStripMounts).toBe(1);
+		expect(mockStripUnmounts).toBe(0);
+		expect(screen.queryByTestId("screen-loading")).toBeNull();
+		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+	});
+
+	it("does not collapse the title when the scroll is still inside the title's range", async () => {
+		await render(<TodayScreen />);
+		await scrollTo(20);
+		await fireEvent.press(screen.getByTestId("week-strip-day-2026-09-14"));
+		await scrollTo(20);
+
+		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+	});
+
+	it("'Show today' leaves the strip mounted and the collapse state as the scroll left it", async () => {
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByTestId("week-strip-day-2026-09-14"));
+		await scrollTo(10);
+
+		await fireEvent.press(screen.getByText("Show today"));
+
+		expect(screen.getByTestId("week-strip")).toBeTruthy();
+		expect(mockStripMounts).toBe(1);
+		expect(mockStripUnmounts).toBe(0);
+		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+	});
+
+	it("collapses the title only because the list scrolled, never because a day was chosen", async () => {
+		await render(<TodayScreen />);
+		await scrollTo(200);
+		expect(screen.getByTestId("today-inline-bar")).toBeTruthy();
+
+		await scrollTo(0);
+		await fireEvent.press(screen.getByTestId("week-strip-day-2026-09-14"));
+		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
 	});
 });

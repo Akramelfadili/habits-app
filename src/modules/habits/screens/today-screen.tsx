@@ -9,11 +9,18 @@ import {
 	Text,
 	View,
 } from "react-native";
+import Animated, {
+	FadeIn,
+	FadeOut,
+	LinearTransition,
+	ReduceMotion,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
-import { minTouchTarget, space, textStyles } from "@/theme/theme";
+import { minTouchTarget, motion, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { PastDayBar } from "../components/today/past-day-bar";
@@ -42,8 +49,12 @@ import { FirstRunScreen } from "./first-run-screen";
  */
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
-/** How far (pt) the large title scrolls before the solid inline bar takes over (T5). */
-const COLLAPSE_AT = space[800] + space[800];
+/**
+ * How far (pt) the large title scrolls before the solid inline bar takes over
+ * (T5): the offset at which the week strip's top edge meets the bar's bottom
+ * edge. Any later and the opaque bar covers the strip's day letters.
+ */
+const COLLAPSE_AT = space[800];
 
 /** Thin: reads from the hooks, picks the view state, hands props to the sections in `components/today/`. */
 export function TodayScreen() {
@@ -58,6 +69,21 @@ export function TodayScreen() {
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const dev = useTodayDevActions();
 	const [collapsed, setCollapsed] = useState(false);
+	const reduceMotion = useReducedMotion();
+	// The "Logging for …" bar and the list under it move together over the
+	// state timing (F-07); Reduce Motion crossfades the bar and lets the list
+	// land at once. Without this the list jumped 64 pt when the bar mounted.
+	const barEntering = FadeIn.duration(
+		reduceMotion ? motion.state.reduced.crossfade : motion.state.duration,
+	).reduceMotion(ReduceMotion.Never);
+	const barExiting = FadeOut.duration(
+		reduceMotion ? motion.state.reduced.crossfade : motion.state.duration,
+	).reduceMotion(ReduceMotion.Never);
+	const listLayout = reduceMotion
+		? undefined
+		: LinearTransition.duration(motion.state.duration).reduceMotion(
+				ReduceMotion.Never,
+			);
 
 	const dueHabits = today.groups.flatMap((group) => group.habits);
 	const dueIds = new Set(dueHabits.map((habit) => habit.id));
@@ -141,6 +167,7 @@ export function TodayScreen() {
 			style={[styles.screen, { backgroundColor: colors.bg }]}
 		>
 			<ScrollView
+				testID="today-scroll"
 				contentContainerStyle={styles.content}
 				onScroll={onScroll}
 				scrollEventThrottle={16}
@@ -150,50 +177,54 @@ export function TodayScreen() {
 					{today.viewState === "no-habits" ? null : weekStrip}
 				</View>
 				{day.isPastDay ? (
-					<PastDayBar dayLabel={dayLabel} onShowToday={day.showToday} />
+					<Animated.View entering={barEntering} exiting={barExiting}>
+						<PastDayBar dayLabel={dayLabel} onShowToday={day.showToday} />
+					</Animated.View>
 				) : null}
-				{today.viewState === "no-habits" ? (
-					<TodayEmptyState
-						onAddHabit={() => router.push("/new-habit")}
-						dev={dev}
-					/>
-				) : today.viewState === "rest-day" ? (
-					<TodayRestDay
-						isToday={isToday}
-						notDueHabits={notDueHabits}
-						loggedToday={loggedToday}
-						completedThisWeekByHabitId={today.completedThisWeekByHabitId}
-						eligibleHabits={eligibleHabits}
-						onOpenHabit={openHabit}
-						onLogBonus={logging.logOffSchedule}
-					/>
-				) : (
-					<TodayHabitList
-						progress={today.progress}
-						groups={today.groups}
-						completedHabitIds={today.completedHabitIds}
-						quantityValuesByHabitId={today.quantityValuesByHabitId}
-						completedThisWeekByHabitId={today.completedThisWeekByHabitId}
-						atRiskByHabitId={today.atRiskByHabitId}
-						streakByHabitId={today.streakByHabitId}
-						frozenYesterdayByHabitId={today.frozenYesterdayByHabitId}
-						isToday={isToday}
-						isEvening={new Date().getHours() >= EVENING_STARTS_AT_HOUR}
-						dayLabel={dayLabel}
-						notDueHabits={notDueHabits}
-						loggedBonusIds={loggedBonusIds}
-						bonusValues={bonusValues}
-						onToggle={logging.toggle}
-						onAddOne={logging.addOne}
-						onOpenQuantitySheet={logging.openQuantitySheet}
-						onOpenHabit={openHabit}
-						onOpenAtRisk={freeze.openAtRisk}
-						onLogBonus={logging.logOffSchedule}
-					/>
-				)}
-				{today.viewState === "populated" ? (
-					<TodayDevButtons dev={dev} withClearAll />
-				) : null}
+				<Animated.View layout={listLayout} style={styles.body}>
+					{today.viewState === "no-habits" ? (
+						<TodayEmptyState
+							onAddHabit={() => router.push("/new-habit")}
+							dev={dev}
+						/>
+					) : today.viewState === "rest-day" ? (
+						<TodayRestDay
+							isToday={isToday}
+							notDueHabits={notDueHabits}
+							loggedToday={loggedToday}
+							completedThisWeekByHabitId={today.completedThisWeekByHabitId}
+							eligibleHabits={eligibleHabits}
+							onOpenHabit={openHabit}
+							onLogBonus={logging.logOffSchedule}
+						/>
+					) : (
+						<TodayHabitList
+							progress={today.progress}
+							groups={today.groups}
+							completedHabitIds={today.completedHabitIds}
+							quantityValuesByHabitId={today.quantityValuesByHabitId}
+							completedThisWeekByHabitId={today.completedThisWeekByHabitId}
+							atRiskByHabitId={today.atRiskByHabitId}
+							streakByHabitId={today.streakByHabitId}
+							frozenYesterdayByHabitId={today.frozenYesterdayByHabitId}
+							isToday={isToday}
+							isEvening={new Date().getHours() >= EVENING_STARTS_AT_HOUR}
+							dayLabel={dayLabel}
+							notDueHabits={notDueHabits}
+							loggedBonusIds={loggedBonusIds}
+							bonusValues={bonusValues}
+							onToggle={logging.toggle}
+							onAddOne={logging.addOne}
+							onOpenQuantitySheet={logging.openQuantitySheet}
+							onOpenHabit={openHabit}
+							onOpenAtRisk={freeze.openAtRisk}
+							onLogBonus={logging.logOffSchedule}
+						/>
+					)}
+					{today.viewState === "populated" ? (
+						<TodayDevButtons dev={dev} withClearAll />
+					) : null}
+				</Animated.View>
 			</ScrollView>
 			{collapsed ? (
 				<View
@@ -237,6 +268,10 @@ const styles = StyleSheet.create({
 		paddingHorizontal: space[500],
 		paddingTop: space[300],
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
+		gap: space[500],
+	},
+	/** The list and what follows it: one child, so one layout transition moves them. */
+	body: {
 		gap: space[500],
 	},
 	/** Title and week strip read as one block (T1). */
