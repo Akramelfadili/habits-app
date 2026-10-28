@@ -62,6 +62,9 @@ export function TodayScreen() {
 	const dueIds = new Set(dueHabits.map((habit) => habit.id));
 	const notDueHabits = eligibleHabits.filter((habit) => !dueIds.has(habit.id));
 	const loggedBonusIds = new Set(loggedToday.map(({ habit }) => habit.id));
+	const bonusValues = new Map(
+		loggedToday.map(({ habit, entry }) => [habit.id, entry.value ?? 0]),
+	);
 	const logging = useTodayLogActions({
 		today: today.today,
 		selectedKey: day.selectedKey,
@@ -177,6 +180,7 @@ export function TodayScreen() {
 						dayLabel={dayLabel}
 						notDueHabits={notDueHabits}
 						loggedBonusIds={loggedBonusIds}
+						bonusValues={bonusValues}
 						onToggle={logging.toggle}
 						onAddOne={logging.addOne}
 						onOpenQuantitySheet={logging.openQuantitySheet}

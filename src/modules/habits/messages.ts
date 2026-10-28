@@ -284,6 +284,8 @@ export const todayCopy = {
 	circleBonus: (name: string) => `${name}, not due, bonus`,
 	circleAddOne: (name: string, value: number, target: number) =>
 		`Add one, ${name}, ${value} of ${target}`,
+	circleSetAmount: (name: string, value: number, target: number) =>
+		`Set amount, ${name}, ${value} of ${target}`,
 	countAmount: (value: number, target: number) =>
 		`Amount, ${value} of ${target}`,
 } as const;

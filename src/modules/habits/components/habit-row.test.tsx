@@ -299,3 +299,34 @@ describe("HabitRow", () => {
 		});
 	});
 });
+
+describe("HabitRow circleAction (08.3)", () => {
+	it("says 'Set amount' and opens the sheet in Edit this day", async () => {
+		await render(
+			<HabitRow
+				habit={quantityHabit()}
+				quantityValue={5}
+				completed={false}
+				circleAction="amount"
+				onToggle={jest.fn()}
+				onOpenQuantitySheet={jest.fn()}
+			/>,
+		);
+		const circle = screen.getByLabelText("Set amount, Drink water, 5 of 8");
+		expect(circle.props.accessibilityHint).toBe("Opens the quantity sheet.");
+	});
+
+	it("says it opens details when the circle of a logged bonus does", async () => {
+		await render(
+			<HabitRow
+				habit={makeHabit({ name: "Gym" })}
+				completed
+				circleAction="details"
+				onToggle={jest.fn()}
+			/>,
+		);
+		expect(screen.getByLabelText("Gym, done").props.accessibilityHint).toBe(
+			"Opens details.",
+		);
+	});
+});

@@ -63,15 +63,6 @@ export async function getFrozenDay(
 	return row ? rowToFrozenDay(row) : undefined;
 }
 
-/** The habits frozen on `date` — a fresh read, for the day-save path. */
-export async function getFrozenHabitIdsOn(date: Date): Promise<Set<number>> {
-	const rows = await db
-		.select()
-		.from(frozenDays)
-		.where(eq(frozenDays.date, toDayKey(date)));
-	return new Set(rows.map((row) => row.habitId));
-}
-
 /** Takes a freeze back (the Undo for using one) — returns it to the shared pool. A no-op if that day isn't frozen. */
 export async function unfreezeHabitDay(
 	habitId: number,

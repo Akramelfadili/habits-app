@@ -18,8 +18,7 @@ describe("today-v3 fixtures", () => {
 			todayV3Entries(scenario).some(
 				(entry) =>
 					entry.habitId === 3 &&
-					entry.date ===
-						format(subDays(new Date(), 1), "yyyy-MM-dd"),
+					entry.date === format(subDays(new Date(), 1), "yyyy-MM-dd"),
 			);
 		expect(yesterday("today-v3")).toBe(true);
 		expect(yesterday("today-v3-at-risk")).toBe(false);

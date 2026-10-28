@@ -4,6 +4,7 @@ import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import {
 	habitAccentInk,
 	habitAccentTint,
+	minTouchTarget,
 	space,
 	textStyles,
 } from "@/theme/theme";
@@ -16,7 +17,7 @@ import { categorySymbol } from "./category-symbol";
 import { CompletionCircle } from "./completion-circle";
 
 /** V3-13 / T-18: a flat 60 pt row — 44 pt circle plus `space[200]` above and below. */
-const ROW_MIN_HEIGHT = 60;
+const ROW_MIN_HEIGHT = minTouchTarget + 2 * space[200];
 
 type HabitRowProps = {
 	habit: Habit;
@@ -39,6 +40,12 @@ type HabitRowProps = {
 	atRisk?: boolean;
 	/** Frozen day (RL3): violet circle. */
 	frozen?: boolean;
+	/**
+	 * What the circle does when it isn't the plain log: "amount" opens the quantity
+	 * sheet (Edit this day), "details" opens Detail (a bonus already logged). VoiceOver
+	 * says so instead of "log one more" / "mark done".
+	 */
+	circleAction?: "log" | "amount" | "details";
 	/** Not due on this day (T3, the fold row): a dashed circle; a log is a bonus. */
 	notDue?: boolean;
 };
@@ -112,18 +119,28 @@ export function HabitRow({
 	atRisk = false,
 	frozen = false,
 	notDue = false,
+	circleAction = "log",
 }: HabitRowProps) {
 	const { colors, scheme, opacity } = useTheme();
 	const stacked = useAccessibilityTextSize();
 	const isQuantity = habit.targetType === "quantity" && !notDue;
 	const value = quantityValue ?? 0;
 	const target = habit.targetAmount ?? 0;
-	const circle = circleAccessibility(
+	const base = circleAccessibility(
 		habit,
 		completed,
 		isQuantity ? { value, target } : null,
 		notDue,
 	);
+	const circle =
+		circleAction === "amount"
+			? {
+					label: todayCopy.circleSetAmount(habit.name, value, target),
+					hint: todayCopy.openQuantity,
+				}
+			: circleAction === "details"
+				? { label: base.label, hint: todayCopy.openDetails }
+				: base;
 	const statusColor =
 		status?.tone === "warning"
 			? colors.warnInk

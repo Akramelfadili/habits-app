@@ -233,7 +233,7 @@ These exist in the (external) `habit-components.js` inventory; the meaning below
 |---|---|---|
 | `VAR-02` | Small icon badge, 22px inline — the category picker's header | `IconBadge` `small` |
 | `NEW-15` | Key–value row: label left, value right ("Last export · Never", the export confirm's counts) | `primitives/key-value-row.tsx` |
-| `NEW-22` | Compact logged row on the rest-day screen (HAB-18, D2) | `off-schedule-row.tsx` |
+| `NEW-22` | Compact logged row on the rest-day screen (HAB-18, D2) | `habit-row.tsx` (not-due row, V3-13) |
 | `NEW-30` | Chart axis labels under each column (month initials) | `composite/column-bars.tsx` |
 | `VAR-15` | Monthly freeze-pool card: the pool as 30px swatches | `composite/freeze-pool-card.tsx` |
 

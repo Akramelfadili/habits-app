@@ -46,7 +46,7 @@ type HabitDetailScreenProps = {
 /**
  * Habit Detail (HAB-09): header → streak / longest / 90-day tiles → 10-week
  * heatmap → recent entries, reverse chronological. Tapping a past (or today's)
- * heatmap cell opens the Retro log sheet for that day (HAB-10). The hub for
+ * heatmap cell opens the Edit this day sheet for that day (HAB-10). The hub for
  * everything about one habit: Edit in the header, Reminders, then a one-tap
  * Archive above Delete — Delete lives here only, deliberately last and
  * behind a confirmation (HAB-13).

@@ -37,7 +37,7 @@ export function useQuantitySheetActions({
 	const { logQuantity } = useQuantityLogActions();
 	const { restoreDay } = useTodayActions();
 	const [amount, setAmountState] = useState(initial);
-	const [saving, setSaving] = useState(false);
+	const [pending, setPending] = useState(0);
 	const before = useRef(initial);
 	const saved = useRef(initial);
 	const freeze = useRef<{ freeze: FrozenDay; freezesLeft: number } | null>(
@@ -50,7 +50,7 @@ export function useQuantitySheetActions({
 	function setAmount(next: number) {
 		const clamped = Math.min(MAX_QUANTITY_VALUE, Math.max(0, Math.round(next)));
 		setAmountState(clamped);
-		setSaving(true);
+		setPending((count) => count + 1);
 		queue.current = queue.current.then(async () => {
 			const result = await logQuantity(
 				habit.id,
@@ -70,7 +70,7 @@ export function useQuantitySheetActions({
 				setAmountState(saved.current);
 			}
 		});
-		queue.current = queue.current.then(() => setSaving(false));
+		queue.current = queue.current.then(() => setPending((count) => count - 1));
 	}
 
 	/** One toast for the whole session, then the sheet closes. */
@@ -106,5 +106,5 @@ export function useQuantitySheetActions({
 		onClosed();
 	}
 
-	return { amount, setAmount, close, isSaving: saving, target };
+	return { amount, setAmount, close, isSaving: pending > 0, target };
 }

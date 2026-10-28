@@ -125,4 +125,15 @@ describe("todayRowStatus", () => {
 		});
 		expect(status?.tone).toBe("warning");
 	});
+
+	it("drops the at-risk line once the habit is done today", () => {
+		const status = todayRowStatus({
+			...base,
+			habit: makeHabit({}),
+			completed: true,
+			streak: 14,
+			atRisk: { missedDate: new Date(2026, 9, 22), freezesRemaining: 1 },
+		});
+		expect(status).toEqual({ text: "14-day streak", tone: "default" });
+	});
 });

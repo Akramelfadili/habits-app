@@ -38,6 +38,8 @@ type TodayHabitListProps = {
 	notDueHabits: readonly Habit[];
 	/** Not-due habits logged as a bonus on the shown day. */
 	loggedBonusIds: ReadonlySet<number>;
+	/** A bonus quantity habit's logged amount on the shown day. */
+	bonusValues?: ReadonlyMap<number, number>;
 	onToggle: (habit: Habit) => void;
 	onAddOne: (habit: Habit) => void;
 	onOpenQuantitySheet: (habitId: number) => void;
@@ -64,6 +66,7 @@ export function TodayHabitList({
 	dayLabel,
 	notDueHabits,
 	loggedBonusIds,
+	bonusValues,
 	onToggle,
 	onAddOne,
 	onOpenQuantitySheet,
@@ -168,6 +171,7 @@ export function TodayHabitList({
 						<TodayNotDueCard
 							habits={notDueHabits}
 							loggedBonusIds={loggedBonusIds}
+							bonusValues={bonusValues}
 							completedThisWeekByHabitId={completedThisWeekByHabitId}
 							onLogBonus={onLogBonus}
 							onOpenHabit={onOpenHabit}
@@ -182,6 +186,7 @@ export function TodayHabitList({
 type TodayNotDueCardProps = {
 	habits: readonly Habit[];
 	loggedBonusIds: ReadonlySet<number>;
+	bonusValues?: ReadonlyMap<number, number>;
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	onLogBonus: (habit: Habit) => void;
 	onOpenHabit: (habitId: number) => void;
@@ -191,6 +196,7 @@ type TodayNotDueCardProps = {
 export function TodayNotDueCard({
 	habits,
 	loggedBonusIds,
+	bonusValues,
 	completedThisWeekByHabitId,
 	onLogBonus,
 	onOpenHabit,
@@ -203,12 +209,22 @@ export function TodayNotDueCard({
 					habit.frequency.type === "per-week" &&
 					(completedThisWeekByHabitId.get(habit.id) ?? 0) >=
 						habit.frequency.timesPerWeek;
+				const isQuantity = habit.targetType === "quantity";
+				const amount = bonusValues?.get(habit.id) ?? 0;
+				const target = habit.targetAmount ?? 0;
+				// A quantity bonus is judged by its amount, not by having an entry: 3 of 8 is not done.
+				const done = isQuantity
+					? target > 0 && amount >= target
+					: logged || metThisWeek;
+				const hasLog = isQuantity ? amount > 0 : logged || metThisWeek;
 				return (
 					<HabitRow
 						key={habit.id}
 						habit={habit}
-						completed={logged || metThisWeek}
-						notDue={!logged && !metThisWeek}
+						completed={done}
+						quantityValue={amount}
+						notDue={!hasLog}
+						circleAction={!isQuantity && hasLog ? "details" : "log"}
 						status={{
 							text: bonusRowStatus(
 								habit,
@@ -218,10 +234,12 @@ export function TodayNotDueCard({
 							tone: "default",
 						}}
 						onPress={() => onOpenHabit(habit.id)}
-						// A logged bonus (or a met per-week habit) is undone from Detail.
+						// A logged check bonus is undone from Detail; a quantity one reopens its sheet.
 						onToggle={() =>
-							logged || metThisWeek ? onOpenHabit(habit.id) : onLogBonus(habit)
+							hasLog ? onOpenHabit(habit.id) : onLogBonus(habit)
 						}
+						onIncrement={() => onLogBonus(habit)}
+						onOpenQuantitySheet={() => onLogBonus(habit)}
 					/>
 				);
 			})}

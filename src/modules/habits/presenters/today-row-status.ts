@@ -31,7 +31,8 @@ export function todayRowStatus(input: RowStatusInput): RowStatus | undefined {
 	const { habit, completed, atRisk, frozenYesterday } = input;
 	const streak = input.streak ?? 0;
 
-	if (atRisk) {
+	// A habit done today is no longer waiting on a decision: its row reads like any other.
+	if (atRisk && !completed) {
 		return {
 			text: todayCopy.rowAtRisk(
 				format(atRisk.missedDate, "EEEE"),

@@ -146,6 +146,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-2a, logic only):** the selected day is `useSelectedDayQueries` (named for the hook-naming rule), day-keyed queries and writes, Undo capturing the date, toasts naming the date; **no week strip, bar or eyebrow yet** (V3-2b), so the app never selects a past day itself. Not-due, not-yet-started and paused habits are not listed for a past day.
 
+> **As built (V3-2b):** the strip (`WeekStrip`, `useWeekStripQueries`) shows the week of the selected day until swiped (swipe or Next/Previous at AX sizes; never a wholly future week); today ringed, selected filled, the dot only when something was due and all of it done, future days faint and inert; 160 ms crossfade + 12 pt slide (crossfade only with Reduce Motion). While a past day is selected the eyebrow carries its date and a `PastDayBar` reads "Logging for Wed 21 Oct · Show today". One `ProgressBar` ("1 of 5 done", whole-number %), category groups as flat cards with "0 of 2", the dashed fold row ("1 not due today · Upper body" · Show; two names then "+N"). The large title collapses into a solid inline bar at 64 pt of scroll. The app starts on today; **nothing but the strip selects another day**.
+
 **Implementation notes:** selected-day state lives in a module hook `useSelectedDay(today)` (`null` = follow today) in TodayScreen's own state, not a global store. Writes go to the selected past date, else today with the existing rollover guard. Undo captures the date in its closure (existing rule). Query hooks take the selected date as live-query deps. Streak-at-risk applies only to the real today. The week window is keyed by the selected day.
 
 ---
@@ -166,6 +168,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-2a):** a tap on a quantity circle writes `previous + 1` ("Drink water +1 · 3 of 8 glasses", date named off today) with an Undo that writes the amount captured at tap time; long-press on the circle and a stand-in count control ("3/8") open the sheet. The row's two tap zones, the visible count button, the at-risk dot and status line, and the all-done card are V3-2b.
 
+> **As built (V3-2b):** the row is `HabitRow` (60 pt, hairlines between rows, icon square 32); the **name area opens Detail and the circle always logs**; at-risk rows open the streak sheet from the name area (the decision recorded under "Spec wins over the mockup"). Status line: the streak ("13-day streak"), the amount ("5 of 8 glasses"), "3× per week · 1 done", Break: "Resisting · 4 days strong" / "Resisted today · 5 days strong", at risk (amber) "Missed Thursday · 1 freeze left" ("… · no freezes left" at zero), frozen (violet) "Thu frozen · streak kept at 13". No completion time anywhere. The count button is a 28 pt pill in a 44 pt hit area. The all-done card draws its check (revealed left to right, 600 ms, once; static with Reduce Motion). **Not built:** "Resist tonight" (no time-of-day rule is specified); a plain daily check with no streak yet shows no status line.
+
 **Implementation notes:** there is no step log (one entry per habit per day holds the total). +1 writes `previous + 1`; Undo writes `previous` captured at tap time (as the quantity sheet does today). `entries.created_at` is first-insert time, so no time is shown.
 
 ---
@@ -177,6 +181,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **Empty (T2):** header and + only; week strip and progress hidden; one primary action "Add habit" and a link to suggestions (HAB-46). Shown only after data has loaded (no flash).
 - **Rest day (T3):** "Nothing is due today, so every streak is safe. Anything you log counts as a bonus." Not-due habits reachable via dashed circles; a × per week habit that met its target shows "back Monday".
 - **Loading:** header and date are real immediately; skeleton rows appear after 300 ms; static with Reduce Motion (HAB-47).
+
+> **As built (V3-2b):** the empty state hides the strip and progress (`EmptyState`, V3-28) and offers "Add habit"; **"Browse suggestions" is not shown** until the suggestions screen (HAB-46) exists, because there is nowhere to send it. The rest day (T3) is a state: why nothing is due, then "Not due today · Bonus logs" with the not-due habits on dashed circles (a met × per week habit shows done and "back Monday"). The old "Log something anyway" picker stays reachable below the list as "Log a different habit" (an addition to the frame, kept because the picker is part of HAB-34). **Loading skeleton: not built** (still the neutral blank; backlog).
 
 ---
 
@@ -208,6 +214,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **Edit this day (RL1/RL2):** one sheet for any past day, from Week (tap day header), Month (tap day → detail card → Edit this day), Year (via Month), Detail mini-grid (whole week row is one 44 pt target). Lists every habit due that day with its circle; quantity rows open the quantity sheet for that date. Before-start and paused days are not listed. After a change the toast appears inside the sheet above Done, names the date, offers Undo. (Today's retro-log is a draft + Save transaction; V3 saves per tap with Undo: model change in `retro-log-sheet` and `saveDayLog` usage.)
 - Future days: not editable ("Can't log ahead — pick today or an earlier day").
 - **Habit picker (HP1/HP2):** from the habit chip on Year: All habits, active habits, archived habits; single choice, sheet closes on tap.
+
+> **As built (V3-2b):** *Quantity sheet* — stepper (44 pt), quick +1/+2/+3 and "Fill to N" (disabled at the target), "Set exact value" (number pad, "Set to 6" writes the amount, i.e. logs the difference), every change saved at once, one toast on close whose Undo restores the amount from before the sheet opened; at the target "of 8 glasses · done" and Done. The "up to" limit reads the real maximum (9999), not the mockup's 99. *Edit this day* (`EditDaySheet`) replaces the retro-log sheet: rows are the Today `HabitRow`, a tap saves at once, the toast sits inside the sheet above Done ("Read 20 min logged for Wed 21", Undo), quantity rows open the quantity sheet for that date, a frozen day is a violet circle and logging it returns the freeze. It is opened from Habit Detail's heatmap (the only entry that exists until Progress is rebuilt) and keeps the day's note for the habit it was opened from, saved when the sheet closes (the frames draw no note; it stays so notes remain writable). The off-schedule picker keeps its behaviour on V3 tokens; its Year-chip retarget (HP1/HP2) is a later batch.
 
 **Edge cases:** frozen day in RL3 (PR-11 fallback = read-only); quantity edit on a past day targets that date and Undo too.
 

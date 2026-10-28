@@ -41,6 +41,9 @@ export function TodayRestDay({
 }: TodayRestDayProps) {
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const loggedIds = new Set(loggedToday.map(({ habit }) => habit.id));
+	const bonusValues = new Map(
+		loggedToday.map(({ habit, entry }) => [habit.id, entry.value ?? 0]),
+	);
 
 	return (
 		<>
@@ -62,6 +65,7 @@ export function TodayRestDay({
 					<TodayNotDueCard
 						habits={notDueHabits}
 						loggedBonusIds={loggedIds}
+						bonusValues={bonusValues}
 						completedThisWeekByHabitId={completedThisWeekByHabitId}
 						onLogBonus={onLogBonus}
 						onOpenHabit={onOpenHabit}

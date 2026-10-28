@@ -118,6 +118,7 @@ export function EditDaySheet({ day, onDismiss }: EditDaySheetProps) {
 										habit={habit}
 										completed={done}
 										frozen={frozen && !done}
+										circleAction={isQuantity ? "amount" : "log"}
 										quantityValue={typeof value === "number" ? value : 0}
 										status={editDayRowStatus(habit, value, frozen)}
 										onToggle={() => tap(habit)}

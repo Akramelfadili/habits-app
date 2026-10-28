@@ -112,7 +112,9 @@ export const SCREENS = {
 		mockup: "docs/mockups/today-populated.png",
 		note: "Break habit ticked: resisted caption on the row, plus the completion toast with Undo.",
 		async interact(page) {
-			await page.getByLabel("No phone after 23:00, resisted today?", { exact: true }).click();
+			await page
+				.getByLabel("No phone after 23:00, resisted today?", { exact: true })
+				.click();
 		},
 	},
 	"today-empty": {
@@ -989,7 +991,9 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_06.png",
 		note: "T14 — the Undo toast 12 pt above the pill (T-21). Glass of water is a quantity habit, so a check habit is ticked instead.",
 		async interact(page) {
-			await page.getByLabel("No phone after 23:00, resisted today?", { exact: true }).click();
+			await page
+				.getByLabel("No phone after 23:00, resisted today?", { exact: true })
+				.click();
 		},
 	},
 	"tab-bar-sheet-over-pill": {
@@ -999,7 +1003,7 @@ export const SCREENS = {
 		note: "H8 — a sheet covers the pill and the scrim dims it; the pill is inert until it closes.",
 		async interact(page) {
 			await page
-				.getByLabel(/^Log .*, \d+ of \d+/)
+				.getByLabel(/^Amount, \d+ of \d+/)
 				.first()
 				.click();
 			await page.waitForTimeout(400);
@@ -1164,7 +1168,9 @@ export const SCREENS = {
 		note: "RL2 — a tap saves at once; the toast sits inside the sheet above Done, names the date and offers Undo.",
 		async interact(page, { clock }) {
 			await page.getByLabel(heatmapCellLabel(clock, 3, "logged")).click();
-			await page.getByLabel("Meditate, not done").first().click();
+			const circle = page.getByRole("button", { name: "Mobility, not done" });
+			await circle.scrollIntoViewIfNeeded();
+			await circle.click();
 			await page.getByText(/logged for/).waitFor();
 			await page.waitForTimeout(300);
 		},

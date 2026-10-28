@@ -20,7 +20,7 @@ export type RetroLogDay = {
 };
 
 /**
- * What the Retro log sheet (HAB-10) edits for `date`, opened from `habitId`'s
+ * What the Edit this day sheet (HAB-10) edits for `date`, opened from `habitId`'s
  * heatmap — or null while no day is selected.
  */
 export function useRetroLogQueries(

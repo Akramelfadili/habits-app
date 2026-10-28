@@ -82,15 +82,6 @@ export async function getFrozenDay(
 	);
 }
 
-export async function getFrozenHabitIdsOn(date: Date): Promise<Set<number>> {
-	const dateString = toDayKey(date);
-	return new Set(
-		getFrozenDays()
-			.filter((frozenDay) => frozenDay.date === dateString)
-			.map((frozenDay) => frozenDay.habitId),
-	);
-}
-
 export async function unfreezeHabitDay(
 	habitId: number,
 	date: Date,
@@ -111,7 +102,6 @@ const _sameShape: typeof NativeFrozenDayRepository = {
 	getFreezesUsedInMonth,
 	freezeHabitDay,
 	getFrozenDay,
-	getFrozenHabitIdsOn,
 	unfreezeHabitDay,
 };
 void _sameShape;

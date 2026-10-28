@@ -116,6 +116,26 @@ describe("TodayHabitList", () => {
 			expect(screen.queryByText(/not due/)).toBeNull();
 		});
 
+		it("judges a quantity bonus by its amount: 3 of 8 is not done, and keeps its count button", async () => {
+			const water = makeHabit({
+				id: 7,
+				name: "Water",
+				targetType: "quantity",
+				targetAmount: 8,
+				targetUnit: "glasses",
+				frequency: { type: "weekdays", days: [2] },
+			});
+			const { onLogBonus } = await renderList({
+				notDueHabits: [water],
+				loggedBonusIds: new Set([7]),
+				bonusValues: new Map([[7, 3]]),
+			});
+			await fireEvent.press(screen.getByText("Show"));
+			expect(screen.getByText("3/8")).toBeTruthy();
+			await fireEvent.press(screen.getByLabelText("Add one, Water, 3 of 8"));
+			expect(onLogBonus).toHaveBeenCalledWith(water);
+		});
+
 		it("Show reveals them with dashed circles that log a bonus", async () => {
 			const { onLogBonus } = await renderList({ notDueHabits: [upperBody] });
 			await fireEvent.press(screen.getByText("Show"));
