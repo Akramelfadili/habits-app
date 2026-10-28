@@ -34,6 +34,8 @@ type SegmentedControlProps<T extends string> = {
 	 * P11) so the pinned bar stays one line tall.
 	 */
 	axLayout?: "stack" | "collapse";
+	/** The collapsed list opened or closed — a pinned bar keeps its slot the same height either way. */
+	onOpenChange?: (open: boolean) => void;
 };
 
 /** The selected pill and its track: V3-17 is 40 pt tall to the eye inside a 48 pt hit area (4 pt inset). */
@@ -72,10 +74,15 @@ export function SegmentedControl<T extends string>({
 	size = "full",
 	label,
 	axLayout = "stack",
+	onOpenChange,
 }: SegmentedControlProps<T>) {
 	const { colors, opacity } = useTheme();
 	const largeText = useAccessibilityTextSize();
-	const [open, setOpen] = useState(false);
+	const [open, setOpenState] = useState(false);
+	const setOpen = (next: boolean) => {
+		setOpenState(next);
+		onOpenChange?.(next);
+	};
 	const selected = options.find((option) => option.value === value);
 
 	if (largeText) {
@@ -132,7 +139,7 @@ export function SegmentedControl<T extends string>({
 					accessibilityState={{ expanded: open, disabled }}
 					accessibilityHint="Opens the list"
 					disabled={disabled}
-					onPress={() => setOpen((current) => !current)}
+					onPress={() => setOpen(!open)}
 					style={[styles.current, { backgroundColor: colors.inner }]}
 				>
 					<Text style={[styles.currentLabel, { color: colors.ink }]}>

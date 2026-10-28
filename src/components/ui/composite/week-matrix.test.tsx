@@ -111,6 +111,25 @@ describe("WeekBlocks", () => {
 		expect(screen.getByText("25")).toBeTruthy();
 	});
 
+	it("makes a cell a button when it has a press (the one-habit card opens its day)", async () => {
+		const onPress = jest.fn();
+		await render(
+			<WeekBlocks
+				blocks={[
+					{
+						key: "a",
+						name: "Meditate",
+						dot: "#8855cc",
+						total: "1/7",
+						cells: [{ ...blockCells[0], onPress }],
+					},
+				]}
+			/>,
+		);
+		await fireEvent.press(screen.getByRole("button", { name: "M, done" }));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
 	it("reads every cell on its own", async () => {
 		await render(
 			<WeekBlocks

@@ -335,39 +335,5 @@ export function todayRingShadow(surface: string, scheme: ColorScheme): string {
 	return `0 0 0 1.5px ${surface}, 0 0 0 3px ${surfaceColors[scheme].ink}`;
 }
 
-/** Heatmap shading steps for a completed/partial day — level 0 is the neutral `track`, not a hue. */
+/** A completed or partial day's level in a habit's own history grid (1 partial under half … 3 complete). */
 export type HeatmapLevel = 1 | 2 | 3;
-
-const HEATMAP_RAMP = {
-	light: { l: [0.88, 0.76, 0.6], c: [0.05, 0.09, 0.15] },
-	dark: { l: [0.4, 0.52, 0.66], c: [0.09, 0.12, 0.16] },
-} as const;
-
-const INK_RAMP = {
-	light: [0.8, 0.62, 0.2],
-	dark: [0.38, 0.55, 0.95],
-} as const;
-
-/**
- * The monochrome ramp for grids that aren't one habit's (the Monthly
- * calendar, HAB-16): light grey → near-ink, so a perfect day is the darkest
- * (lightest in dark mode) cell on the page.
- */
-export function inkLevelColor(
-	level: HeatmapLevel,
-	scheme: ColorScheme,
-): string {
-	return oklch(INK_RAMP[scheme][level - 1], 0, 0);
-}
-
-/** One step of an accent's 3-level heatmap ramp (design-system.md). */
-export function heatmapLevelColor(
-	hue: AccentHue,
-	level: HeatmapLevel,
-	scheme: ColorScheme,
-): string {
-	const ramp = HEATMAP_RAMP[scheme];
-	// The neutral accent keeps the same lightness steps with no chroma — grey.
-	const chroma = hue === null ? 0 : ramp.c[level - 1];
-	return oklch(ramp.l[level - 1], chroma, hue ?? 0);
-}

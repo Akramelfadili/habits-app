@@ -13,7 +13,7 @@ import { useTheme } from "@/theme/use-theme";
  */
 export const unstable_settings = {
 	anchor: "index",
-	progress: { anchor: "week" },
+	progress: { anchor: "progress" },
 	habits: { anchor: "manage" },
 };
 
@@ -50,11 +50,8 @@ export default function TabStackLayout({ segment }: { segment: string }) {
 		>
 			{/* The three tab roots draw their own large title as screen content. */}
 			<Stack.Screen name="index" options={{ headerShown: false }} />
-			{/* Week / Month / Year replace one another through the range switcher,
-			    so each is the Progress tab's root — there is nothing to go back to. */}
-			<Stack.Screen name="week" options={{ headerShown: false }} />
-			<Stack.Screen name="month" options={{ headerShown: false }} />
-			<Stack.Screen name="year" options={{ headerShown: false }} />
+			{/* Week / Month / Year are one screen with a range switcher: the Progress tab's root. */}
+			<Stack.Screen name="progress" options={{ headerShown: false }} />
 			<Stack.Screen name="manage" options={{ headerShown: false }} />
 			{/* Pushed from any tab: Back names the tab it was opened from (D4). */}
 			<Stack.Screen name="habit/[id]" options={backTo(rootTitle)} />

@@ -128,6 +128,11 @@ export const messages = {
 		text: (day: string, left: number) =>
 			`Freeze returned for ${day} · ${left} left`,
 	},
+	/** P3: Export tapped while there is nothing to export — says why, in a toast. */
+	exportNothing: {
+		tone: "info",
+		text: "Nothing to export yet. Log a habit on Today first, then come back.",
+	},
 } satisfies Record<
 	string,
 	// biome-ignore lint/suspicious/noExplicitAny: each entry declares its own params
@@ -297,14 +302,230 @@ export const todayCopy = {
 
 /**
  * Progress copy (HAB-35–38, V3-3b): the three ranges' titles, stats, insights,
- * legends and VoiceOver wording. Whole-number percentages everywhere; "Break"
- * habits say resisted, never failed (D8).
+ * legends and VoiceOver wording. Whole-number percentages everywhere; Break
+ * habits say resisted and slipped, never failed (D8).
  */
 export const progressCopy = {
+	screenTitle: "Progress",
+	export: "Export",
+	exportLabel: "Export data",
+	rangeLabel: "Range",
+	ranges: { week: "Week", month: "Month", year: "Year" },
+	positionOf: (index: number, count: number) =>
+		`Insight ${index + 1} of ${count}`,
+	/** The eyebrow over the title; the date is already formatted. */
+	eyebrow: {
+		week: (start: string) => `Week of ${start}`,
+	},
+	backToYear: "Year",
+	backToYearLabel: "Back to Year",
 	legend: {
 		less: "Less",
 		more: "More",
 		frozen: "Frozen",
+		done: "Done",
+		partial: "Partial",
+		missed: "Missed",
+		offSchedule: "Off-schedule",
+		notLogged: "Not logged yet",
+		future: "Future",
+		freezesLeft: (count: number) =>
+			`${count} ${count === 1 ? "freeze" : "freezes"} left`,
+	},
+	/** Words a cell is read as: "Wed, done". */
+	cell: {
+		done: "done",
+		resisted: "resisted",
+		partial: (percent: number) => `partial ${percent} percent`,
+		missed: "missed",
+		slipped: "slipped",
+		frozen: "frozen",
+		bonus: "bonus, not counted",
+		notDue: "not due",
+		beforeStart: "before you started",
+		notLogged: "nothing logged yet",
+		open: "not logged yet",
+		upcoming: "upcoming",
+		percent: (percent: number) => `${percent} percent`,
+		inProgress: "in progress",
+	},
+	week: {
+		cardTitle: "This week",
+		summaryTitle: "Week summary",
+		summaryMeta: "Due habits done per day",
+		perfectDays: "Perfect days",
+		freezesUsed: "Freezes used",
+		bonusLogs: "Bonus logs",
+		outlinedNote: "Outlined = nothing logged yet (not missed)",
+		startedNote: (started: string, before: string) =>
+			`Started ${started} · ${before} before start`,
+		onlyHabit: (schedule: string) => `${schedule} · your only habit`,
+		editDayLabel: (day: string) => `${day}. Edit this day`,
+		rowTotal: (done: number, target: number) => `${done} of ${target}`,
+		barSummary: (best: string | null) =>
+			best
+				? `Due habits done per day, best ${best}`
+				: "Due habits done per day, nothing done yet",
+	},
+	month: {
+		cardMeta: "Daily completion",
+		perHabitTitle: "Per habit",
+		perHabitMeta: (period: string) => period,
+		breakTag: "Break",
+		slipping: "slipping",
+		bonus: (count: number) => `${count} bonus, not counted`,
+		frozen: (count: number) => `${count} frozen`,
+		resisted: (done: number, due: number) => `Resisted ${done} of ${due}`,
+		doneOf: (done: number, due: number) => `${done} of ${due}`,
+		frozenNote: (days: string) => `${days} frozen`,
+		aheadNote: (range: string) => `${range} still ahead`,
+		startedNote: (started: string) =>
+			`Started ${started} · earlier days dashed`,
+		noRate: "—",
+		habitRowLabel: (
+			name: string,
+			rate: string,
+			schedule: string,
+			counted: string,
+		) => `${name}, ${rate}, ${schedule}, ${counted}`,
+	},
+	year: {
+		allHabits: "All habits",
+		cardTitle: (scope: string, year: number) => `${scope} · ${year}`,
+		since: (date: string) => `Since ${date}`,
+		rowsNote: "Rows Mon → Sun · tap a month to open it",
+		monthLabel: (month: string) => `${month} ›`,
+		monthOpens: (month: string, percent: string) =>
+			`${month}, ${percent}. Opens Month.`,
+		noData: "No data",
+		monthsListTitle: (year: number) => `${year} by month`,
+		chipLabel: (scope: string) => `Show habit: ${scope}`,
+		pickerTitle: "Show habit",
+		pickerClose: "Close",
+		pickerActive: (count: number) => `${count} active`,
+		pickerArchived: (count: number) => `Archived · ${count}`,
+		pickerArchivedOn: (category: string, date: string) =>
+			`${category} · archived ${date}`,
+		pickerBreak: (category: string) => `${category} · Break`,
+		archivedNote: "Archived habits keep their history.",
+	},
+	stats: {
+		completion: "Completion",
+		bestStreak: "Best streak",
+		bestDay: "Best day",
+		perfectDays: "Perfect days",
+		bestMonth: "Best month",
+		streak: "Streak",
+		longest: "Longest",
+		freezes: "Freezes",
+		freezesUsed: "Freezes used",
+		noValue: "—",
+		ofDue: (done: number, due: number, soFar: boolean) =>
+			`${done} of ${due}${soFar ? " so far" : ""}`,
+		ofDueFrozen: (done: number, due: number, frozen: string) =>
+			`${done} of ${due} due · ${frozen} frozen`,
+		ofDueFrozenCount: (done: number, due: number, frozen: number) =>
+			frozen > 0 ? `${done} of ${due} · ${frozen} frozen` : `${done} of ${due}`,
+		streakDays: (habit: string | null) => (habit ? `${habit} · days` : "days"),
+		noStreak: "No streak yet",
+		bestDayDone: (done: number, due: number) => `${done} of ${due} done`,
+		nothingDone: "Nothing done yet",
+		delta: (points: number, versus: string) =>
+			`${points > 0 ? "+" : points < 0 ? "−" : "±"}${Math.abs(points)} pts vs ${versus}`,
+		perfectOf: (counted: number, soFar: boolean) =>
+			`of ${counted}${soFar ? " so far" : ""}`,
+		since: (date: string) => `since ${date}`,
+		daysIn: (habit: string | null) => (habit ? `days · ${habit}` : "days"),
+		days: "days",
+		thisYear: "this year",
+		thisMonth: "this month",
+		freezesLeft: (count: number) =>
+			`${count} ${count === 1 ? "freeze" : "freezes"} left`,
+		bestMonthPercent: (percent: number) => `${percent}%`,
+		tile: (label: string, value: string, caption: string) =>
+			`${label}, ${value}, ${caption}`,
+	},
+	insight: {
+		slippingTitle: (habit: string) => `${habit} is slipping`,
+		slippingBody: (
+			done: number,
+			due: number,
+			previousDone: number,
+			previousDue: number,
+			now: string,
+			before: string,
+		) =>
+			`${done} of ${due} ${now}, ${previousDone} of ${previousDue} ${before}.`,
+		upDays: (habit: string, days: number) =>
+			`${habit} is up ${days} ${days === 1 ? "day" : "days"}`,
+		upPoints: (habit: string, points: number) =>
+			`${habit} is up ${points} points`,
+		bestMonthTitle: (month: string) => `${month} was your best month`,
+		bestMonthPerfect: "Every scheduled habit, every day.",
+		bestMonthRate: (percent: number) =>
+			`${percent} % of the days you scheduled were done.`,
+		bestMonthNow: (month: string, percent: number) =>
+			`${month} is at ${percent} % so far.`,
+		nothingTitle: "Nothing to fix",
+		perfectBody: "Every habit was done on every day it was due.",
+		steadyBody: "Nothing is slipping. Every habit is holding steady.",
+		steadyOne: (habit: string) => `${habit} is holding steady.`,
+		changeFrequency: "Change frequency ›",
+		thisWeek: "so far this week",
+		lastWeek: "last week",
+		thisMonth: "this month",
+		inMonth: (month: string) => `in ${month}`,
+		thisYear: "this year",
+		lastYear: "last year",
+	},
+	unlock: {
+		weekTitle: (days: number) =>
+			`Insights unlock in ${days} ${days === 1 ? "day" : "days"}`,
+		monthTitle: (days: number) =>
+			`Month summary unlocks in ${days} ${days === 1 ? "day" : "days"}`,
+		yearTitle: (days: number) =>
+			`Year view unlocks in ${days} ${days === 1 ? "day" : "days"}`,
+		weekBody: (logged: number) =>
+			`They need 7 days of logs. ${logged === 1 ? "Your first day is" : `Your first ${logged} days are`} below.`,
+		monthBody:
+			"Rates and insights need 7 days of logs. Days so far are on the calendar.",
+		yearBody: "It needs 7 days of logs. The current months are shown below.",
+		progress: (logged: number, needed: number) => `${logged} of ${needed} days`,
+	},
+	empty: {
+		noHabitsTitle: "No habits yet",
+		noHabitsBody:
+			"Progress fills in once you add a habit and tick it on Today.",
+		addHabit: "Add habit",
+		nothingLoggedTitle: "Nothing logged yet",
+		nothingLoggedBody: (range: string) =>
+			`Tick a habit on Today and this ${range} starts filling in.`,
+		goToToday: "Go to Today",
+	},
+	day: {
+		title: (date: string) => date,
+		summary: (done: number, due: number, percent: number) =>
+			`${done} of ${due} done · ${percent}%`,
+		nothingDue: "Nothing was due",
+		close: "Close",
+		editThisDay: "Edit this day ›",
+		editThisDayLabel: "Edit this day",
+		state: {
+			done: "Done",
+			resisted: "Resisted",
+			missed: "Missed",
+			slipped: "Slipped",
+			frozen: "Frozen",
+			bonus: "Bonus, not counted",
+			partial: (value: number, target: number) => `${value} of ${target}`,
+			open: "Not logged yet",
+			notLogged: "Nothing logged",
+		},
+		label: (date: string, done: number, due: number) =>
+			`${date}, ${done} of ${due} done`,
+	},
+	monthNotes: {
+		before: (date: string) => date,
 	},
 } as const;
 

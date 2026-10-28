@@ -27,14 +27,8 @@ function mockStub(name: string) {
 jest.mock("@/modules/habits/screens/today-screen", () => ({
 	TodayScreen: mockStub("today"),
 }));
-jest.mock("@/modules/habits/screens/weekly-summary-screen", () => ({
-	WeeklySummaryScreen: mockStub("week"),
-}));
-jest.mock("@/modules/habits/screens/monthly-summary-screen", () => ({
-	MonthlySummaryScreen: mockStub("month"),
-}));
-jest.mock("@/modules/habits/screens/yearly-summary-screen", () => ({
-	YearlySummaryScreen: mockStub("year"),
+jest.mock("@/modules/habits/screens/progress-screen", () => ({
+	ProgressScreen: mockStub("progress"),
 }));
 jest.mock("@/modules/habits/screens/manage-habits-screen", () => ({
 	ManageHabitsScreen: mockStub("manage"),
@@ -91,7 +85,7 @@ function tabGroup(app: { getSegments(): string[] }) {
 describe("the three tab roots", () => {
 	it.each([
 		["/", "(today)", "today"],
-		["/(progress)/week", "(progress)", "week"],
+		["/(progress)/progress", "(progress)", "progress"],
 		["/(habits)/manage", "(habits)", "manage"],
 	])("%s is the %s root and shows %s", async (url, group, marker) => {
 		const app = await renderApp(url);
@@ -103,7 +97,7 @@ describe("the three tab roots", () => {
 describe("Detail opens inside the tab it came from (D4)", () => {
 	it.each([
 		["Today", "/", "(today)"],
-		["Progress", "/(progress)/week", "(progress)"],
+		["Progress", "/(progress)/progress", "(progress)"],
 		["Habits", "/(habits)/manage", "(habits)"],
 	])("from %s", async (_tab, root, group) => {
 		const app = await renderApp(root);
@@ -136,15 +130,6 @@ describe("the other shared routes stay in their tab", () => {
 		await testRouter.push("/categories");
 		expect(screen.getByText("categories")).toBeTruthy();
 		expect(tabGroup(app)).toBe("(habits)");
-	});
-
-	it("Month and Year, replacing Week inside Progress", async () => {
-		const app = await renderApp("/(progress)/week");
-		await testRouter.replace("/month");
-		expect(screen.getByText("month")).toBeTruthy();
-		expect(tabGroup(app)).toBe("(progress)");
-		await testRouter.replace("/year");
-		expect(tabGroup(app)).toBe("(progress)");
 	});
 });
 

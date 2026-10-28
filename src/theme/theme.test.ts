@@ -4,7 +4,6 @@ import {
 	focusRingShadow,
 	habitAccentInk,
 	habitAccentTint,
-	heatmapLevelColor,
 	motion,
 	radius,
 	space,
@@ -41,28 +40,6 @@ describe("habit accent colors", () => {
 		expect(habitAccentTint(null, "light")).toBe(surfaceColors.light.inner);
 		expect(habitAccentInk(null, "dark")).toBe(surfaceColors.dark.sub);
 		expect(habitAccentTint(null, "dark")).toBe(surfaceColors.dark.inner);
-	});
-});
-
-describe("heatmap ramp", () => {
-	it("gives three distinct steps per hue", () => {
-		const levels = ([1, 2, 3] as const).map((level) =>
-			heatmapLevelColor(230, level, "light"),
-		);
-		expect(new Set(levels).size).toBe(3);
-	});
-
-	it("differs between light and dark for the same step", () => {
-		expect(heatmapLevelColor(195, 2, "light")).not.toBe(
-			heatmapLevelColor(195, 2, "dark"),
-		);
-	});
-
-	it("gives the neutral hue three distinct grey steps", () => {
-		const levels = ([1, 2, 3] as const).map((level) =>
-			heatmapLevelColor(null, level, "light"),
-		);
-		expect(new Set(levels).size).toBe(3);
 	});
 });
 

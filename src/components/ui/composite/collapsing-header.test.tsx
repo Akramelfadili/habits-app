@@ -1,6 +1,11 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import Animated, { scrollTo } from "react-native-reanimated";
-import { CollapsedHeaderBar, useCollapsingHeader } from "./collapsing-header";
+import Animated, { scrollTo, useSharedValue } from "react-native-reanimated";
+import {
+	COLLAPSED_BAR_HEIGHT,
+	CollapsedHeaderBar,
+	PinnedBelowBar,
+	useCollapsingHeader,
+} from "./collapsing-header";
 
 jest.mock("react-native-reanimated", () => ({
 	...jest.requireActual("react-native-reanimated"),
@@ -199,5 +204,74 @@ describe("useCollapsingHeader (V3-02, T5)", () => {
 			});
 			expect(scrollTo).not.toHaveBeenCalled();
 		});
+	});
+});
+
+describe("PinnedBelowBar (Progress's range switcher, P1 → P8)", () => {
+	let heights: number[] = [];
+
+	function PinnedHarness() {
+		const header = useCollapsingHeader();
+		const top = useSharedValue(200);
+		return (
+			<>
+				<PinnedBelowBar
+					scrollY={header.scrollY}
+					top={top}
+					onHeight={(height) => heights.push(height)}
+				>
+					<Animated.View testID="switcher" />
+				</PinnedBelowBar>
+				<Animated.ScrollView
+					ref={header.scrollRef}
+					testID="scroller"
+					onScroll={header.onScroll}
+					scrollEventThrottle={16}
+				/>
+			</>
+		);
+	}
+
+	const translateY = () =>
+		screen.getByTestId("pinned-below-bar").props.jestAnimatedStyle?.value
+			?.transform?.[0]?.translateY;
+
+	beforeEach(() => {
+		jest.useFakeTimers();
+		mockReduced = false;
+		heights = [];
+	});
+	afterEach(() => {
+		jest.useRealTimers();
+	});
+
+	it("sits in its own slot until it is scrolled, then follows the content up", async () => {
+		await render(<PinnedHarness />);
+		expect(translateY()).toBe(200);
+		await scrollTo_(60);
+		expect(translateY()).toBe(140);
+	});
+
+	it("stops just under the inline bar and stays there however far the content scrolls", async () => {
+		await render(<PinnedHarness />);
+		await scrollTo_(156);
+		expect(translateY()).toBe(COLLAPSED_BAR_HEIGHT);
+		await scrollTo_(900);
+		expect(translateY()).toBe(COLLAPSED_BAR_HEIGHT);
+	});
+
+	it("fades a hairline in only once it has settled under the bar", async () => {
+		await render(<PinnedHarness />);
+		expect(opacityOf("pinned-below-bar-hairline")).toBe(0);
+		await scrollTo_(156);
+		expect(opacityOf("pinned-below-bar-hairline")).toBe(1);
+	});
+
+	it("reports its own height so the content can keep a slot for it", async () => {
+		await render(<PinnedHarness />);
+		await fireEvent(screen.getByTestId("pinned-below-bar"), "layout", {
+			nativeEvent: { layout: { height: 56, width: 393, x: 0, y: 0 } },
+		});
+		expect(heights).toContain(56);
 	});
 });

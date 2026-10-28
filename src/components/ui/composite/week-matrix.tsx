@@ -213,6 +213,7 @@ export function WeekBlocks({ blocks }: WeekBlocksProps) {
 									today={cell.today}
 									text={cell.text}
 									accessibilityLabel={cell.accessibilityLabel}
+									onPress={cell.onPress}
 								/>
 							</View>
 						))}

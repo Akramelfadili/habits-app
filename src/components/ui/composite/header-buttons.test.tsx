@@ -14,6 +14,7 @@ jest.mock("expo-symbols", () => {
 import {
 	HEADER_BUTTON_MIN_SIZE,
 	HeaderCircleButton,
+	HeaderPillButton,
 	headerActionOptions,
 	headerBackOptions,
 	headerNoBackOptions,
@@ -204,6 +205,40 @@ describe("HeaderCircleButton (V3-02)", () => {
 		);
 
 		await fireEvent.press(screen.getByTestId("header-circle-plus"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("HeaderPillButton", () => {
+	it("is a 44 pt-high pill with its words and a glyph, and presses once", async () => {
+		const onPress = jest.fn();
+		await render(
+			<HeaderPillButton
+				label="Export"
+				symbol="square.and.arrow.up"
+				accessibilityLabel="Export data"
+				onPress={onPress}
+			/>,
+		);
+		const button = screen.getByRole("button", { name: "Export data" });
+		expect(StyleSheet.flatten(button.props.style).minHeight).toBe(
+			HEADER_BUTTON_MIN_SIZE,
+		);
+		expect(screen.getByText("Export")).toBeTruthy();
+		expect(screen.getByTestId("symbol-square.and.arrow.up")).toBeTruthy();
+		await fireEvent.press(button);
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("reads and looks disabled while unavailable, but still takes the tap", async () => {
+		const onPress = jest.fn();
+		await render(
+			<HeaderPillButton label="Export" unavailable onPress={onPress} />,
+		);
+		const button = screen.getByRole("button", { name: "Export" });
+		expect(button.props.accessibilityState).toEqual({ disabled: true });
+		expect(StyleSheet.flatten(button.props.style).opacity).toBe(0.4);
+		await fireEvent.press(button);
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 });

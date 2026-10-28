@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { radius, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { InsightCard, type InsightCardProps } from "./insight-card";
 
 type InsightPagerProps = {
@@ -28,6 +29,7 @@ const DOT = space[150];
  */
 export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 	const { colors } = useTheme();
+	const reduceMotion = useReducedMotion();
 	const scroller = useRef<ScrollViewInstance>(null);
 	const [width, setWidth] = useState(0);
 	const [index, setIndex] = useState(0);
@@ -36,7 +38,7 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 	const goTo = (next: number) => {
 		const clamped = Math.min(count - 1, Math.max(0, next));
 		setIndex(clamped);
-		scroller.current?.scrollTo({ x: clamped * width, animated: true });
+		scroller.current?.scrollTo({ x: clamped * width, animated: !reduceMotion });
 	};
 
 	const onEnd = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {

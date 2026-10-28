@@ -491,119 +491,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-11 — Weekly summary
-	"weekly-summary": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=weekly-summary",
-		mockup: "docs/mockups/weekly-summary.png",
-		// The summary counts up to today only, so pin "now" to the end of a
-		// week — otherwise a Monday run would show an empty week.
-		clock: "2026-09-20T20:00:00",
-		note: "Clock pinned to Sun 20 Sep evening. Mockup's '34 of 42' tile disagrees with its own bars (29).",
-	},
-	"weekly-summary-perfect": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=perfect-week",
-		mockup: "docs/mockups/perfect-week.png",
-		clock: "2026-09-13T20:00:00",
-		note: "Clock pinned to Sun 13 Sep evening. Mockup's '42 of 42' tile disagrees with its own 5/5 and 3/3 bars (36).",
-	},
-	"weekly-summary-too-early": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=weekly-summary",
-		mockup: "docs/mockups/weekly-summary.png",
-		clock: "2026-09-15T20:00:00",
-		note: "Tuesday evening, switched to This week (Tuesday opens on last week): no habit due 3 times yet, so the insight reads 'Too early to call'.",
-		async interact(page) {
-			await page.getByText("This week", { exact: true }).click();
-		},
-	},
-	"weekly-summary-last-week": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=weekly-summary-last-week",
-		mockup: "docs/mockups/weekly-summary.png",
-		clock: "2026-09-21T09:00:00",
-		note: "Monday morning: opens on last week (14–20 Sep), the mockup's week, with the full seven days counted.",
-	},
-	"weekly-summary-empty": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=empty",
-		mockup: null,
-		note: "No habits at all.",
-	},
-
-	// HAB-16 — Monthly summary (C2, C3, C6) + the range switcher on Weekly (C1)
-	"monthly-summary": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=monthly-summary",
-		mockup: "docs/mockups/hab-16-c2.png",
-		// Monthly opens on the current month (D15), so "now" is the evening of 31 Aug:
-		// August is the current month and every day of it is counted.
-		clock: "2026-08-31T21:00:00",
-		note: "August 2026 as the current month. Fixture numbers differ from the mockup's (it's tuned to the insights, not the tiles); freezes are on 7 and 22 Aug.",
-	},
-	"monthly-insights": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=monthly-summary",
-		mockup: "docs/mockups/hab-16-c3.png",
-		clock: "2026-08-31T21:00:00",
-		note: "Scrolled to the insights: slipping → improved → pattern, then the freeze card. The slipping body omits the mockup's 'started when Easy run moved' clause (not derivable).",
-		async interact(page) {
-			await page
-				.getByText("What August says", { exact: true })
-				.evaluate((el) => {
-					el.scrollIntoView({ block: "start" });
-				});
-			await page.waitForTimeout(300);
-		},
-	},
-	"monthly-too-early": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=monthly-too-early",
-		mockup: "docs/mockups/hab-16-c6.png",
-		clock: "2026-09-16T09:00:00",
-		note: "12 days of history (since 4 Sep): since the 7-logged-day gate (V3-3a) that is no longer too early, so this shows the summary; the unlock card returns with the P9 states.",
-	},
-	"monthly-empty": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=empty",
-		mockup: null,
-		note: "No habits at all.",
-	},
-	// HAB-17 — Yearly summary (C4, C5, C7)
-	"yearly-summary": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=yearly-summary",
-		mockup: "docs/mockups/hab-17-c4.png",
-		clock: "2026-09-16T09:00:00",
-		note: "3 March — 16 September 2026. Fixture numbers differ from the mockup's tiles (1,612 / 81%); the insights are tuned to C5. Strips use the 11px year layout; the chart's current month (September) is the lighter bar.",
-	},
-	"yearly-insights": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=yearly-summary",
-		mockup: "docs/mockups/hab-17-c5.png",
-		clock: "2026-09-16T09:00:00",
-		note: "Scrolled to the insights: best month → stuck → never stuck (the only tappable one). The mockup's fourth card (Summer dip) is cut by the max-three rule; copy omits clauses that aren't derivable ('through two schedule changes', 'Travel weeks show up as gaps').",
-		async interact(page) {
-			await page.getByText("What 2026 says", { exact: true }).evaluate((el) => {
-				el.scrollIntoView({ block: "start" });
-			});
-			await page.waitForTimeout(300);
-		},
-	},
-	"yearly-too-early": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=monthly-too-early",
-		mockup: "docs/mockups/hab-17-c7.png",
-		clock: "2026-09-16T09:00:00",
-		note: "12 days of history (since 4 Sep): unlock card ('12 of 91 days' — the real 4 Sep → 4 Dec span; the mockup says 90 and 'from 3 December'), one bar in progress and eleven dashed slots, the week one tap away.",
-	},
-	"yearly-empty": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=empty",
-		mockup: null,
-		note: "No habits at all.",
-	},
 	"edit-habit-focus-frequency": {
 		feature: "HAB-16",
 		route: "/edit-habit/1?focus=frequency",
@@ -1018,7 +905,7 @@ export const SCREENS = {
 	},
 	"tab-bar-progress": {
 		feature: "HAB-27",
-		route: "/(progress)/week?fixtures=weekly-summary",
+		route: "/(progress)/progress?fixtures=weekly-summary",
 		mockup: "docs/mockups/v3/renders/progress/slice_00.png",
 		note: "P1 — the Progress tab root with the pill, Progress active.",
 	},
@@ -1227,12 +1114,6 @@ const DARK_TWINS = [
 	"rest-day-picker",
 	"today-empty",
 	"retro-log",
-	"monthly-summary",
-	"monthly-insights",
-	"monthly-too-early",
-	"yearly-summary",
-	"yearly-insights",
-	"yearly-too-early",
 	"habit-detail",
 	"habit-detail-archived",
 	"habit-detail-restored",
@@ -1273,11 +1154,6 @@ const LONG_NAME_TWINS = [
 	"habit-detail",
 	"habit-detail-archived",
 	"retro-log",
-	"weekly-summary",
-	"monthly-summary",
-	"monthly-insights",
-	"yearly-summary",
-	"yearly-insights",
 	"reminders-at-cap",
 	"manage-habits",
 	"manage-habits-swipe-open",

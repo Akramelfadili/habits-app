@@ -4,7 +4,8 @@ import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ChartCardProps = {
-	title: string;
+	/** Omitted when the body names itself (the one-habit week card, P5). */
+	title?: string;
 	/** Right of the title: "19 – 25 Oct", "Since 3 Mar". */
 	meta?: string;
 	children: ReactNode;
@@ -35,17 +36,21 @@ export function ChartCard({
 				{ backgroundColor: colors.card, borderColor: colors.border },
 			]}
 		>
-			<View style={styles.header}>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					{title}
-				</Text>
-				{meta ? (
-					<Text style={[styles.meta, { color: colors.sub }]}>{meta}</Text>
-				) : null}
-			</View>
+			{title || meta ? (
+				<View style={styles.header}>
+					{title ? (
+						<Text
+							accessibilityRole="header"
+							style={[styles.title, { color: colors.ink }]}
+						>
+							{title}
+						</Text>
+					) : null}
+					{meta ? (
+						<Text style={[styles.meta, { color: colors.sub }]}>{meta}</Text>
+					) : null}
+				</View>
+			) : null}
 			{children}
 			{footer}
 		</View>
