@@ -54,7 +54,7 @@ re-captured the whole set at once. `?textSize=ax` (dev + web only,
 react-native-web always reports `fontScale: 1` and the real Dynamic Type
 setting can never reach the app there.
 
-Routes name their tab group (`/(progress)/week`) so a cold load lands on the
+Routes name their tab group (`/(progress)/progress`) so a cold load lands on the
 right tab; a plain `/week` would open inside Today.
 
 ### The page clock (V3-2a)
