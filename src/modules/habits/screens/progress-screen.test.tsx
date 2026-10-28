@@ -1,4 +1,6 @@
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { useToastStore } from "@/store/toast-store";
 import { buildDayDetail } from "../domain/progress-grid";
 import {
@@ -166,6 +168,26 @@ describe("ProgressScreen — the shell (HAB-35)", () => {
 		await fireEvent.press(screen.getByTestId("segmented-collapsed"));
 		await fireEvent.press(screen.getByRole("tab", { name: "Month" }));
 		expect(useProgressViewStore.getState().range).toBe("month");
+	});
+});
+
+describe("ProgressScreen — under the tab bar (HAB-27, P17)", () => {
+	it("scrolls with the shared 112 pt bottom padding, so the last card clears the pill", async () => {
+		await render(<ProgressScreen />);
+		expect(TAB_BAR_BOTTOM_PADDING).toBe(112);
+		expect(
+			StyleSheet.flatten(
+				screen.getByTestId("progress-scroll").props.contentContainerStyle,
+			).paddingBottom,
+		).toBe(TAB_BAR_BOTTOM_PADDING);
+	});
+
+	it("hangs the inline bar and the pinned range bar from the screen, once each", async () => {
+		await render(<ProgressScreen />);
+		expect(screen.getAllByTestId("progress-range-bar")).toHaveLength(1);
+		expect(screen.getAllByTestId("progress-inline-bar")).toHaveLength(1);
+		// One switcher on screen: the pinned layer is the only one.
+		expect(screen.getAllByLabelText("Range")).toHaveLength(1);
 	});
 });
 
