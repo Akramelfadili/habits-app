@@ -81,7 +81,6 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 - **Browse suggestions link not shown** (T2): HAB-46's suggestions screen does not exist. `TodayEmptyState` takes `onBrowseSuggestions` and shows the link when given one.
 - **Loading skeleton** (HAB-32): rows after 300 ms, static with Reduce Motion — not built; Today shows a neutral blank while loading.
-- **"Resist tonight"** (HAB-31, T5): the copy needs a time-of-day rule the spec does not give; not built.
 - **Fill transitions are not animated**: the circle's 200 ms state fill and the pie sweep (V3-04, F-07) change instantly; the progress bar's 450 ms fill, the strip's day switch and the all-done check are animated. Press is a 92 % scale (opacity with Reduce Motion), without the 100 ms ease.
 - **Edit this day: entry points.** Only Habit Detail's heatmap opens it. Progress (Week day header, Month detail card) comes with V3-3; the "whole week row is one 44 pt target" on Detail with the Detail batch. The Note field is not in RL1/RL2 and is kept only when the sheet is opened from a habit.
 - **Quantity sheet maximum:** 9999 (the existing cap), the mockup's helper says 99. Decide whether 99 is intended.

@@ -15,6 +15,10 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **SY3 determinate progress bar:** built as an indeterminate indicator (the migrator is synchronous).
 - **SR1 "Reset streak" button:** becomes "Not now" (see HAB-33). Undo applies to the freeze only.
 - **At-risk row (T4/SR1):** the at-risk sheet opens from the row's name area / status line, not from the circle. The circle always logs.
+- **Edit this day keeps a Note field** when it is opened from Habit Detail (RL1/RL2 draw none): without it a day's note could no longer be written. Opened from anywhere else there is no note.
+- **"Log a different habit" stays under the rest-day list** (T3 draws no such link): it keeps the off-schedule picker reachable, and the picker is part of HAB-34.
+- **The quantity cap stays 9999** (the existing `MAX_QUANTITY_VALUE`); QS2's helper reads "up to 9999", not the mockup's 99.
+- **"Browse suggestions" (T2) is hidden until HAB-46**: there is no suggestions screen to send it to.
 - **Frames that show tab bar A** are drawn for brevity; build bar B (floating pill) everywhere.
 
 ## Standing decisions (apply to every ticket)
@@ -168,7 +172,7 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-2a):** a tap on a quantity circle writes `previous + 1` ("Drink water +1 · 3 of 8 glasses", date named off today) with an Undo that writes the amount captured at tap time; long-press on the circle and a stand-in count control ("3/8") open the sheet. The row's two tap zones, the visible count button, the at-risk dot and status line, and the all-done card are V3-2b.
 
-> **As built (V3-2b):** the row is `HabitRow` (60 pt, hairlines between rows, icon square 32); the **name area opens Detail and the circle always logs**; at-risk rows open the streak sheet from the name area (the decision recorded under "Spec wins over the mockup"). Status line: the streak ("13-day streak"), the amount ("5 of 8 glasses"), "3× per week · 1 done", Break: "Resisting · 4 days strong" / "Resisted today · 5 days strong", at risk (amber) "Missed Thursday · 1 freeze left" ("… · no freezes left" at zero), frozen (violet) "Thu frozen · streak kept at 13". No completion time anywhere. The count button is a 28 pt pill in a 44 pt hit area. The all-done card draws its check (revealed left to right, 600 ms, once; static with Reduce Motion). **Not built:** "Resist tonight" (no time-of-day rule is specified); a plain daily check with no streak yet shows no status line.
+> **As built (V3-2b):** the row is `HabitRow` (60 pt, hairlines between rows, icon square 32); the **name area opens Detail and the circle always logs**; at-risk rows open the streak sheet from the name area (the decision recorded under "Spec wins over the mockup"). Status line: the streak ("13-day streak"), the amount ("5 of 8 glasses"), "3× per week · 1 done", Break: "Resisting · 4 days strong" / "Resisted today · 5 days strong", at risk (amber) "Missed Thursday · 1 freeze left" ("… · no freezes left" at zero), frozen (violet) "Thu frozen · streak kept at 13". No completion time anywhere. The count button is a 28 pt pill in a 44 pt hit area. The all-done card draws its check (revealed left to right, 600 ms, once; static with Reduce Motion). "Resist tonight" (+ the streak) replaces "Resisting" for an open Break habit on the real today from 18:00 (`EVENING_STARTS_AT_HOUR`; the spec gives no hour). A plain daily check with no streak yet shows no status line.
 
 **Implementation notes:** there is no step log (one entry per habit per day holds the total). +1 writes `previous + 1`; Undo writes `previous` captured at tap time (as the quantity sheet does today). `entries.created_at` is first-insert time, so no time is shown.
 
