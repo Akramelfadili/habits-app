@@ -67,7 +67,13 @@ jest.mock("../hooks/use-today-queries", () => ({
 		selectedDay: mockToday,
 		isLoaded: mockIsLoaded,
 		viewState: mockViewState,
-		atRiskByHabitId: mockAtRiskByHabitId,
+		// The hook adds the missed day's pool to each; the tests set one number.
+		atRiskByHabitId: new Map(
+			[...mockAtRiskByHabitId].map(([id, atRisk]) => [
+				id,
+				{ freezesRemaining: mockFreezesRemainingThisMonth, ...atRisk },
+			]),
+		),
 		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
 	}),
 }));

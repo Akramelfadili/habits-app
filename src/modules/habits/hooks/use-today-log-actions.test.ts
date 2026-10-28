@@ -113,6 +113,26 @@ describe("useTodayLogActions", () => {
 		expect(mockRestore).toHaveBeenLastCalledWith(2, TODAY, 0, null);
 	});
 
+	it("two quick +1 taps before the screen re-reads add up: 1 then 2, each Undo to its own previous", async () => {
+		const { result } = await setup(new Map([[2, 3]]));
+		await act(async () => {
+			await result.current.addOne(water);
+			await result.current.addOne(water);
+		});
+		expect(mockLogQuantity).toHaveBeenNthCalledWith(1, 2, TODAY, 4, 8);
+		expect(mockLogQuantity).toHaveBeenNthCalledWith(2, 2, TODAY, 5, 8);
+		useToastStore.getState().toast?.onAction?.();
+		expect(mockRestore).toHaveBeenLastCalledWith(2, TODAY, 4, null);
+	});
+
+	it("a failed +1 does not leave a phantom amount for the next tap", async () => {
+		mockLogQuantity.mockResolvedValueOnce({ ok: false });
+		const { result } = await setup(new Map([[2, 3]]));
+		await act(() => result.current.addOne(water));
+		await act(() => result.current.addOne(water));
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, TODAY, 4, 8);
+	});
+
 	it("+1 keeps counting above the target", async () => {
 		const { result } = await setup(new Map([[2, 8]]));
 		await act(() => result.current.addOne(water));

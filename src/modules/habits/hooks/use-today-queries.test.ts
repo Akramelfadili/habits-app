@@ -315,6 +315,24 @@ describe("useTodayQueries", () => {
 			expect(result.current.freezesUsedThisMonth).toBe(2);
 		});
 
+		it("counts the sheet's pool in the missed day's month: on the 1st that is last month's", async () => {
+			jest.setSystemTime(new Date(2026, 9, 1, 12)); // Thu 1 Oct; yesterday = Wed 30 Sep
+			mockHabits = [dailyHabit];
+			mockAllEntries = ["2026-09-28", "2026-09-29"].map((date) => ({
+				habitId: 1,
+				date,
+				createdAt: new Date(date),
+			}));
+			// September's pool is spent; October's is untouched.
+			mockFrozenDays = [
+				{ habitId: 2, date: "2026-09-10" },
+				{ habitId: 2, date: "2026-09-11" },
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.freezesRemainingThisMonth).toBe(2);
+			expect(result.current.atRiskByHabitId.get(1)?.freezesRemaining).toBe(0);
+		});
+
 		it("does not flag a habit whose missed yesterday is already frozen", async () => {
 			mockHabits = [dailyHabit];
 			mockAllEntries = [

@@ -33,6 +33,9 @@ import type { Habit } from "../types";
  * key, or `null` to follow today. The week window and every per-day read are
  * keyed by that day; streak-at-risk belongs to the real today only.
  */
+/** A habit at risk, with what is left of the pool for the *missed day's* month — on the 1st that is last month's, the one `applyFreeze` checks. */
+export type TodayAtRisk = StreakAtRisk & { freezesRemaining: number };
+
 export function useTodayQueries(selectedKey: string | null = null): {
 	totalHabitCount: number;
 	groups: CategoryGroup[];
@@ -50,7 +53,7 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	isLoaded: boolean;
 	viewState: TodayViewState;
 	/** Due-today habits currently showing the streak-at-risk prompt (HAB-08), keyed by habit id. */
-	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
+	atRiskByHabitId: ReadonlyMap<number, TodayAtRisk>;
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
 	freezesRemainingThisMonth: number;
 	/** Freezes used this month, by missed date — the same pool, counted the other way (Settings, toast copy). */
@@ -115,7 +118,7 @@ export function useTodayQueries(selectedKey: string | null = null): {
 		frozenDatesByHabit.set(frozenDay.habitId, set);
 	}
 	const freezesRemainingThisMonth = freezesRemainingInMonth(frozenDays, today);
-	const atRiskByHabitId = new Map<number, StreakAtRisk>();
+	const atRiskByHabitId = new Map<number, TodayAtRisk>();
 	// Only the real today can be at risk: the grace window is yesterday, measured from now.
 	for (const habit of selectedKey === null ? dueHabits : []) {
 		const atRisk = getStreakAtRisk(
@@ -124,7 +127,15 @@ export function useTodayQueries(selectedKey: string | null = null): {
 			frozenDatesByHabit.get(habit.id) ?? new Set<string>(),
 			today,
 		);
-		if (atRisk) atRiskByHabitId.set(habit.id, atRisk);
+		if (atRisk) {
+			atRiskByHabitId.set(habit.id, {
+				...atRisk,
+				freezesRemaining: freezesRemainingInMonth(
+					frozenDays,
+					atRisk.missedDate,
+				),
+			});
+		}
 	}
 
 	return {

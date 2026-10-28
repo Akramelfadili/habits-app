@@ -144,7 +144,7 @@ export function TodayScreen() {
 					visible
 					habitName={freeze.atRiskHabit.name}
 					currentStreak={freeze.atRiskInfo.currentStreak}
-					freezesRemaining={today.freezesRemainingThisMonth}
+					freezesRemaining={freeze.atRiskInfo.freezesRemaining}
 					today={today.today}
 					onUseFreeze={freeze.spendFreeze}
 					onNotNow={freeze.dismissAtRisk}

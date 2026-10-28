@@ -84,13 +84,14 @@ export async function unfreezeHabitDay(
 		);
 }
 
-/** Freezes `habitId`'s missed `date` — idempotent, since a day can only be frozen once. */
+/** Freezes `habitId`'s missed `date` — idempotent, since a day can only be frozen once. `createdAt` is for putting a returned freeze back as it was. */
 export async function freezeHabitDay(
 	habitId: number,
 	date: Date,
+	createdAt: Date = new Date(),
 ): Promise<void> {
 	await db
 		.insert(frozenDays)
-		.values({ habitId, date: toDayKey(date), createdAt: new Date() })
+		.values({ habitId, date: toDayKey(date), createdAt })
 		.onConflictDoNothing();
 }

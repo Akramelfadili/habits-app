@@ -73,7 +73,7 @@ async function changeFreeze(
 ): Promise<void> {
 	if (!freeze) return;
 	if ("release" in freeze) await unfreezeHabitDay(habitId, date);
-	else await freezeHabitDay(habitId, date);
+	else await freezeHabitDay(habitId, date, freeze.reinstate);
 }
 
 export async function setHabitCompletedOn(

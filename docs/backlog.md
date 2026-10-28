@@ -88,6 +88,9 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 - **Freeze-pool month is the *missed* day's month** (as before, now documented): a freeze used on 1 Oct for 30 Sep counts against September, and logging 30 Sep returns it to September's pool. The Today pool readout uses today's month, so on the 1st it can differ from the grace day's month by design.
 - **Settings exposes the pool but does not show it.** `useSettingsQueries().freezePool` (size, used this month) is ready for S4's "used this month" row (HAB-44).
 - **Concurrent writes outside `runInTransaction`.** The serialised helper only orders callers that use it; a plain `db` write issued while one of its transactions is open still joins that transaction on the one connection. Same hazard as before (audit A7-03); `habit-repository`'s raw blocks should move onto the helper.
+- **Edit this day's "Freeze returned" toast has no Undo** (spec review): the draft-and-Save sheet saves in one go; Today's logging has the exact Undo. HAB-34 moves Edit this day to per-tap saves with Undo.
+- **`freezesUsedThisMonth` / `freezePool` have no reader yet** (spec review): pre-wiring for S4's "used this month" (HAB-44); delete if HAB-44 changes shape.
+- **A quantity habit with no target** (not creatable today) completes nothing in `saveQuantity`, so its save is silent; `isEntryComplete` already treats it as never complete.
 - **`quantity-log` is opened from the count control** in the visual check (a tap on the circle adds one now).
 
 ## Decided — deviations the reviewers should not re-flag

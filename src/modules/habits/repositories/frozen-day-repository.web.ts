@@ -50,6 +50,7 @@ export async function getFreezesUsedInMonth(
 export async function freezeHabitDay(
 	habitId: number,
 	date: Date,
+	createdAt: Date = new Date(),
 ): Promise<void> {
 	const dateString = toDayKey(date);
 	const frozenDays = getFrozenDays();
@@ -66,7 +67,7 @@ export async function freezeHabitDay(
 		Math.max(0, ...frozenDays.map((frozenDay) => frozenDay.id)) + 1;
 	setFrozenDays([
 		...frozenDays,
-		{ id: nextId, habitId, date: dateString, createdAt: new Date() },
+		{ id: nextId, habitId, date: dateString, createdAt },
 	]);
 }
 

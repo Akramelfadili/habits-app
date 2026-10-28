@@ -17,7 +17,9 @@ import { useTodayFreezeActions } from "./use-today-freeze-actions";
 
 const read = makeHabit({ id: 1, name: "Read" });
 const missedDate = new Date(2026, 9, 3);
-const atRiskByHabitId = new Map([[1, { missedDate, currentStreak: 13 }]]);
+const atRiskByHabitId = new Map([
+	[1, { missedDate, currentStreak: 13, freezesRemaining: 2 }],
+]);
 
 function setup() {
 	return renderHook(() =>

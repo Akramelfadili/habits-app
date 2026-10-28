@@ -1,5 +1,5 @@
 import { format, isSameDay } from "date-fns";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { log } from "@/lib/logger/logger";
 import { currentDay } from "@/lib/today/use-today";
 import { fromDayKey } from "@/utils/day-key";
@@ -37,6 +37,13 @@ export function useTodayLogActions({
 	const { logQuantity, isLogging } = useQuantityLogActions();
 	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
 	const [quantityIsOffSchedule, setQuantityIsOffSchedule] = useState(false);
+	// +1 taps whose write has not come back through the live query yet, so a quick
+	// second tap adds to the first instead of repeating it.
+	const pendingAmounts = useRef(new Map<number, number>());
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a fresh read from the database supersedes any pending amount
+	useEffect(() => {
+		pendingAmounts.current.clear();
+	}, [quantityValuesByHabitId]);
 
 	const quantityHabit = loggableHabits.find(
 		(habit) => habit.id === quantityHabitId,
@@ -138,11 +145,18 @@ export function useTodayLogActions({
 	async function addOne(habit: Habit) {
 		const day = writableDay();
 		if (!day) return;
-		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
+		const previous =
+			pendingAmounts.current.get(habit.id) ??
+			quantityValuesByHabitId.get(habit.id) ??
+			0;
 		if (previous >= MAX_QUANTITY_VALUE) return;
 		const next = previous + 1;
+		pendingAmounts.current.set(habit.id, next);
 		const result = await logQuantity(habit.id, day, next, habit.targetAmount);
-		if (!result.ok) return;
+		if (!result.ok) {
+			pendingAmounts.current.delete(habit.id);
+			return;
+		}
 		confirmWrite(habit, day, result.value, previous, (undo) =>
 			showMessage(
 				messages.quantityAdded,

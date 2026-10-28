@@ -1,14 +1,14 @@
 import { format } from "date-fns";
 import { useState } from "react";
-import type { StreakAtRisk } from "../domain/streaks";
 import { messages, showMessage } from "../messages";
 import type { Habit } from "../types";
 import { useStreakActions } from "./use-streak-actions";
+import type { TodayAtRisk } from "./use-today-queries";
 
 type TodayFreezeInput = {
 	/** The habits on screen — the at-risk one is found among them. */
 	habits: readonly Habit[];
-	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
+	atRiskByHabitId: ReadonlyMap<number, TodayAtRisk>;
 };
 
 /**
