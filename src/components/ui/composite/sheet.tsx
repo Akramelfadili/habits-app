@@ -24,6 +24,12 @@ type SheetProps = PropsWithChildren<{
 	 * explicitly (e.g. Streak at risk, Delete confirmation).
 	 */
 	dismissible?: boolean;
+	/**
+	 * Where a toast raised while the sheet is open shows. "top" (default) is the
+	 * Modal's own host; "inline" leaves it to the caller, who puts a
+	 * `<ToastHost placement="inline" />` above the sheet's last button (HAB-48, RL2).
+	 */
+	toast?: "top" | "inline";
 }>;
 
 /**
@@ -35,6 +41,7 @@ export function Sheet({
 	visible,
 	onDismiss,
 	dismissible = true,
+	toast = "top",
 	children,
 }: SheetProps) {
 	const { colors } = useTheme();
@@ -83,7 +90,7 @@ export function Sheet({
 						</ScrollView>
 					</SafeAreaView>
 				</Container>
-				{visible ? <ToastHost placement="top" /> : null}
+				{visible && toast === "top" ? <ToastHost placement="top" /> : null}
 			</KeyboardAvoidingView>
 		</Modal>
 	);

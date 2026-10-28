@@ -34,11 +34,12 @@ export function toastHoldMs(toast: ToastMessage): number | null {
 type ToastHostProps = {
 	/**
 	 * "bottom" is the page-level host; "top" is the one a `Sheet` mounts inside
-	 * its own Modal — a native Modal covers the page, so a toast raised while a
+	 * its own Modal; "inline" is one the sheet places in its own flow, above its
+	 * last button, so the toast never covers the content it reports on — a native Modal covers the page, so a toast raised while a
 	 * sheet is open (a failed save) would otherwise be invisible. While any
 	 * sheet is open the page-level host steps aside, so there is one toast.
 	 */
-	placement?: "bottom" | "top";
+	placement?: "bottom" | "top" | "inline";
 	/**
 	 * How far above the bottom edge a "bottom" toast floats. The shell passes
 	 * the tab bar's offset (12 pt above the pill, 16 pt above bar A — T-21);
@@ -114,9 +115,9 @@ export function ToastHost({
 			accessibilityActions={[{ name: "dismiss", label: "Dismiss" }]}
 			onAccessibilityAction={() => dismissToast(toast.id)}
 			style={
-				placement === "top"
-					? undefined
-					: [styles.host, { bottom: bottomOffset }]
+				placement === "bottom"
+					? [styles.host, { bottom: bottomOffset }]
+					: undefined
 			}
 		>
 			<Toast

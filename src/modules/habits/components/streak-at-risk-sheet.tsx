@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { Button } from "@/components/ui/primitives/button";
-import { typeScale } from "@/theme/theme";
+import { space, squareRadius, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { pluralise } from "@/utils/format";
 import { FREEZE_POOL_SIZE } from "../constants";
@@ -52,7 +52,11 @@ export function StreakAtRiskSheet({
 	return (
 		<Sheet visible={visible} onDismiss={() => {}} dismissible={false}>
 			<View style={styles.copy}>
-				<Text style={[styles.headline, { color: colors.ink }]}>
+				<Text
+					accessibilityRole="header"
+					accessibilityLabel={`${hasFreeze ? `Keep your ${habitName} streak?` : "No freezes left this month"}. ${freezeCountLabel(freezesRemaining)}.`}
+					style={[styles.headline, { color: colors.ink }]}
+				>
 					{hasFreeze
 						? `Keep your ${habitName} streak?`
 						: "No freezes left this month"}
@@ -113,41 +117,43 @@ export function StreakAtRiskSheet({
 	);
 }
 
+/** The pool's pips are 28 pt squares, the violet freeze token (D5). */
+const PIP = 28;
+
 const styles = StyleSheet.create({
 	copy: {
-		gap: 4,
-		paddingHorizontal: 4,
+		gap: space[100],
+		paddingHorizontal: space[100],
 	},
 	headline: {
-		fontSize: typeScale.section,
-		fontWeight: "600",
+		...textStyles.title,
 	},
 	body: {
-		fontSize: typeScale.rowLabel,
+		...textStyles.callout,
 	},
 	poolRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: space[300],
 	},
 	pips: {
 		flexDirection: "row",
-		gap: 6,
+		gap: space[150],
 	},
 	pip: {
-		width: 28,
-		height: 28,
-		borderRadius: 8,
+		width: PIP,
+		height: PIP,
+		borderRadius: squareRadius(PIP),
 	},
 	poolText: {
 		flex: 1,
-		gap: 2,
+		gap: space[50],
 	},
 	poolCount: {
-		fontSize: typeScale.rowLabel,
+		...textStyles.callout,
 		fontWeight: "500",
 	},
 	poolCaption: {
-		fontSize: typeScale.caption,
+		...textStyles.caption,
 	},
 });

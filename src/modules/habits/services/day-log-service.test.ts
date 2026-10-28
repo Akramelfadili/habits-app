@@ -10,7 +10,6 @@ jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 const {
 	freezesLeftIn,
 	restoreDay,
-	saveDayReturningFreezes,
 	setCheckOnDay,
 	setQuantityOnDay,
 }: typeof DayLogService = require("./day-log-service");
@@ -168,66 +167,6 @@ describe("day-log-service", () => {
 			await restoreDay(id, SEPT_22, false, write.returnedFreeze);
 			expect(await frozenRows()).toHaveLength(1);
 			expect(await entryRows()).toEqual([]);
-		});
-	});
-
-	describe("saving a whole day (Edit this day)", () => {
-		it("gives back the freeze of each habit it completes, in one go, and keeps the note", async () => {
-			const a = await seedHabit("A");
-			const b = await seedHabit("B");
-			const c = await seedHabit("C");
-			await freeze(a);
-			await freeze(b);
-
-			const save = await saveDayReturningFreezes(
-				SEPT_22,
-				{
-					values: [
-						{ habitId: a, value: true },
-						{ habitId: b, value: 5 }, // quantity 5 of 8: still missed
-						{ habitId: c, value: true },
-					],
-					noteHabitId: a,
-					note: "Hotel gym",
-				},
-				new Map([
-					[a, null],
-					[b, 8],
-					[c, null],
-				]),
-			);
-
-			expect(save.returnedFreezeHabitIds).toEqual([a]);
-			expect(save.freezesLeft).toBe(1);
-			expect(await frozenRows()).toEqual([
-				expect.objectContaining({ habitId: b }),
-			]);
-			expect(await entryRows()).toHaveLength(3);
-			expect(await mockDb.select().from(entryNotes)).toEqual([
-				expect.objectContaining({ note: "Hotel gym" }),
-			]);
-		});
-
-		it("is atomic: a failure after the writes rolls back the entry AND the returned freeze", async () => {
-			const a = await seedHabit("A");
-			await freeze(a);
-
-			await expect(
-				saveDayReturningFreezes(
-					SEPT_22,
-					{
-						values: [{ habitId: a, value: true }],
-						// A note for a habit that does not exist fails on its foreign key,
-						// after the entry was written and before the freeze was deleted.
-						noteHabitId: 9999,
-						note: "x",
-					},
-					new Map([[a, null]]),
-				),
-			).rejects.toThrow();
-
-			expect(await entryRows()).toEqual([]);
-			expect(await frozenRows()).toHaveLength(1);
 		});
 	});
 

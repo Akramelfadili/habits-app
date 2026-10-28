@@ -32,7 +32,7 @@ type HabitRowProps = {
 	/** The count button and the circle's long-press open the quantity sheet (HAB-34). */
 	onOpenQuantitySheet?: () => void;
 	/** The name area: opens Detail — or, on an at-risk row, the streak sheet. The circle always logs. */
-	onPress: () => void;
+	onPress?: () => void;
 	/** What the name area opens, for VoiceOver ("Opens details."). */
 	nameHint?: string;
 	/** Streak at risk (HAB-33): the amber dot on the circle. */
@@ -131,17 +131,8 @@ export function HabitRow({
 				? colors.frozenInk
 				: colors.sub;
 
-	const nameArea = (
-		<Pressable
-			accessibilityRole="button"
-			accessibilityLabel={nameLabel(habit, status)}
-			accessibilityHint={nameHint}
-			onPress={onPress}
-			style={({ pressed }) => [
-				styles.nameArea,
-				pressed && { opacity: opacity.pressed },
-			]}
-		>
+	const nameContent = (
+		<>
 			<IconBadge
 				symbol={categorySymbol(habit.category)}
 				accent={{
@@ -157,7 +148,31 @@ export function HabitRow({
 					</Text>
 				) : null}
 			</View>
+		</>
+	);
+	// With no handler (a row in a sheet, where there is no Detail to open) the
+	// name is plain text: one VoiceOver stop, nothing to tap.
+	const nameArea = onPress ? (
+		<Pressable
+			accessibilityRole="button"
+			accessibilityLabel={nameLabel(habit, status)}
+			accessibilityHint={nameHint}
+			onPress={onPress}
+			style={({ pressed }) => [
+				styles.nameArea,
+				pressed && { opacity: opacity.pressed },
+			]}
+		>
+			{nameContent}
 		</Pressable>
+	) : (
+		<View
+			accessible
+			accessibilityLabel={nameLabel(habit, status)}
+			style={styles.nameArea}
+		>
+			{nameContent}
+		</View>
 	);
 
 	const controls = (

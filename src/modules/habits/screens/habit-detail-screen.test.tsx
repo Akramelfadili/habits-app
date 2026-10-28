@@ -57,8 +57,17 @@ jest.mock("../hooks/use-retro-log-queries", () => ({
 	useRetroLogQueries: (habitId: number, date: Date | null) =>
 		mockRetroLogQueries(habitId, date),
 }));
-jest.mock("../hooks/use-retro-log-actions", () => ({
-	useRetroLogActions: () => ({ saveDay: mockSaveDay, isSaving: false }),
+jest.mock("../hooks/use-day-note-actions", () => ({
+	useDayNoteActions: () => ({ saveNote: mockSaveDay, isSavingNote: false }),
+}));
+jest.mock("../hooks/use-today-actions", () => ({
+	useTodayActions: () => ({
+		toggleCompletion: jest.fn(),
+		restoreDay: jest.fn(),
+	}),
+}));
+jest.mock("../hooks/use-quantity-log-actions", () => ({
+	useQuantityLogActions: () => ({ logQuantity: jest.fn() }),
 }));
 
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
@@ -83,7 +92,16 @@ beforeEach(() => {
 		.mockReset()
 		.mockImplementation(
 			(_habitId: number, date: Date | null): RetroLogDay | null =>
-				date ? { date, habits: [habit], values: { 1: 0 }, note: "" } : null,
+				date
+					? {
+							date,
+							habits: [habit],
+							values: { 1: 0 },
+							frozenHabitIds: new Set<number>(),
+							originHabitId: 1,
+							note: "",
+						}
+					: null,
 		);
 });
 
@@ -225,7 +243,7 @@ describe("HabitDetailScreen", () => {
 		it("tapping a past heatmap day opens the log sheet for that date", async () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
-			expect(screen.queryByText("Save changes")).toBeNull();
+			expect(screen.queryByText("Done")).toBeNull();
 
 			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
 
@@ -244,57 +262,44 @@ describe("HabitDetailScreen", () => {
 
 			await fireEvent.press(screen.getByLabelText(/^Friday 25 September/));
 
-			expect(screen.queryByText("Save changes")).toBeNull();
+			expect(screen.queryByText("Done")).toBeNull();
 		});
 
-		it("saving writes the day with this habit as the note's owner, then closes", async () => {
+		it("a quantity row opens the quantity sheet for that date", async () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
 			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
+			await fireEvent.press(screen.getByLabelText("Amount, 0 of 8"));
 
-			// A quantity habit steps up to its amount — here, 8 glasses.
-			for (let step = 0; step < 8; step++) {
-				await fireEvent.press(
-					screen.getByRole("button", { name: /^Increase/ }),
-				);
-			}
+			expect(
+				screen.getByRole("header", { name: "Glass of water · Mon 21 Sep" }),
+			).toBeTruthy();
+		});
+
+		it("saves the note when the sheet closes, owned by this habit, then closes", async () => {
+			mockDetail = detail();
+			await render(<HabitDetailScreen habitId={1} />);
+			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
 			await fireEvent.changeText(screen.getByDisplayValue(""), "Hotel");
-			await fireEvent.press(
-				screen.getByRole("button", { name: "Save changes" }),
-			);
+			await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
 			expect(mockSaveDay).toHaveBeenCalledWith(
 				new Date(2026, 8, 21),
-				{
-					values: [{ habitId: 1, value: 8 }],
-					noteHabitId: 1,
-					note: "Hotel",
-				},
-				// The shown habits' quantity targets: a partial amount must not return a freeze.
-				expect.any(Map),
+				1,
+				"Hotel",
 			);
-			expect(screen.queryByText("Save changes")).toBeNull();
 		});
 
-		it("says so when saving a frozen day gave its freeze back (PR-11)", async () => {
-			mockSaveDay.mockResolvedValueOnce({
-				ok: true,
-				value: { returnedFreezeHabitIds: [1], freezesLeft: 1 },
-			});
+		it("does not touch the note when it was not edited", async () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
 			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
-			await fireEvent.press(screen.getByRole("button", { name: /^Increase/ }));
-			await fireEvent.press(
-				screen.getByRole("button", { name: "Save changes" }),
-			);
+			await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 
-			expect(useToastStore.getState().toast?.message).toBe(
-				"Freeze returned for Mon 21 · 1 left",
-			);
+			expect(mockSaveDay).not.toHaveBeenCalled();
 		});
 
-		it("a failed save keeps the sheet open so it can be retried", async () => {
+		it("a failed note save keeps the sheet open so it can be retried", async () => {
 			mockSaveDay.mockResolvedValueOnce({
 				ok: false,
 				error: new Error("disk"),
@@ -302,28 +307,12 @@ describe("HabitDetailScreen", () => {
 			mockDetail = detail();
 			await render(<HabitDetailScreen habitId={1} />);
 			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
-			await fireEvent.press(screen.getByRole("button", { name: /^Increase/ }));
-			await fireEvent.press(
-				screen.getByRole("button", { name: "Save changes" }),
-			);
+			await fireEvent.changeText(screen.getByDisplayValue(""), "Hotel");
+			await fireEvent.press(screen.getByRole("button", { name: "Done" }));
+			expect(screen.getByRole("button", { name: "Done" })).toBeTruthy();
 
-			expect(screen.getByRole("button", { name: "Save changes" })).toBeTruthy();
-
-			await fireEvent.press(
-				screen.getByRole("button", { name: "Save changes" }),
-			);
+			await fireEvent.press(screen.getByRole("button", { name: "Done" }));
 			expect(mockSaveDay).toHaveBeenCalledTimes(2);
-			expect(screen.queryByText("Save changes")).toBeNull();
-		});
-
-		it("Cancel discards the draft without saving", async () => {
-			mockDetail = detail();
-			await render(<HabitDetailScreen habitId={1} />);
-			await fireEvent.press(screen.getByLabelText(/^Monday 21 September/));
-			await fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
-
-			expect(mockSaveDay).not.toHaveBeenCalled();
-			expect(screen.queryByText("Save changes")).toBeNull();
 		});
 	});
 

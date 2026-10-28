@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
-import { typeScale } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { Habit } from "../types";
 import { HabitPickerRow } from "./habit-picker-row";
@@ -71,10 +71,11 @@ export function HabitPickerSheet({
 
 const styles = StyleSheet.create({
 	intro: {
-		fontSize: typeScale.subtitle,
+		...textStyles.footnote,
+		paddingHorizontal: space[100],
 	},
 	emptyTitle: {
-		fontSize: typeScale.rowLabel,
+		...textStyles.body,
 		fontWeight: "500",
 	},
 	list: {

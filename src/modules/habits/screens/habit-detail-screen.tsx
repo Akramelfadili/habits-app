@@ -17,12 +17,11 @@ import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
 import { DeleteHabitSheet } from "../components/delete-habit-sheet";
+import { EditDaySheet } from "../components/edit-day-sheet";
 import { HabitEntryRow } from "../components/habit-entry-row";
 import { HabitHeatmap } from "../components/habit-heatmap";
-import { RetroLogSheet } from "../components/retro-log-sheet";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
-import { useRetroLogActions } from "../hooks/use-retro-log-actions";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
 import { messages, showMessage } from "../messages";
 import {
@@ -58,10 +57,9 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const { colors, scheme } = useTheme();
 	const router = useRouter();
 	const detail = useHabitDetailQueries(habitId);
-	// Heatmap taps land here; a non-null day opens the Retro log sheet (HAB-10).
+	// Heatmap taps land here; a non-null day opens the Edit this day sheet (HAB-10, HAB-34).
 	const [retroLogDate, setRetroLogDate] = useState<Date | null>(null);
 	const retroLogDay = useRetroLogQueries(habitId, retroLogDate);
-	const { saveDay, isSaving } = useRetroLogActions();
 	const {
 		archiveHabit,
 		isArchiving,
@@ -72,31 +70,6 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 		undoRestoreHabit,
 	} = useHabitDetailActions();
 	const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
-	async function handleSaveDay(values: DayLog["values"], note: string) {
-		if (!retroLogDate) return;
-		const date = retroLogDate;
-		const result = await saveDay(
-			date,
-			{ values, noteHabitId: habitId, note },
-			new Map(
-				(retroLogDay?.habits ?? []).map((habit) => [
-					habit.id,
-					habit.targetAmount,
-				]),
-			),
-		);
-		// A failed save leaves the sheet open (with its error toast) for a retry.
-		if (!result.ok) return;
-		setRetroLogDate(null);
-		// A frozen day that is now done no longer needs its freeze (PR-11).
-		if (result.value.returnedFreezeHabitIds.length > 0) {
-			showMessage(messages.freezeReturned, [
-				format(date, "EEE d"),
-				result.value.freezesLeft,
-			]);
-		}
-	}
 
 	// Either way the habit leaves wherever Detail was opened from — Today, or
 	// Manage's active list — so go back there rather than stay on it. The
@@ -326,12 +299,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 				/>
 			</View>
 
-			<RetroLogSheet
-				day={retroLogDay}
-				onDismiss={() => setRetroLogDate(null)}
-				onSave={handleSaveDay}
-				isSaving={isSaving}
-			/>
+			<EditDaySheet day={retroLogDay} onDismiss={() => setRetroLogDate(null)} />
 			<DeleteHabitSheet
 				visible={isConfirmingDelete}
 				habitName={habit.name}
