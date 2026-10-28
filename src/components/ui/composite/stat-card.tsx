@@ -1,24 +1,26 @@
 import { StyleSheet, Text, View } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 type StatCardProps = {
-	/** Small all-caps eyebrow ("CURRENT", "90 DAYS"). */
+	/** Small all-caps eyebrow ("COMPLETION", "BEST STREAK"). */
 	label: string;
 	/** The large numeral ("24", "87%", "—"). */
 	value: string;
-	/** One short line under the numeral ("day streak", "78 of 90 days"). */
+	/** One short line under the numeral ("day streak", "+6 pts vs Sep"); wraps, never clips. */
 	caption: string;
-	/** "warning" is the amber-tinted flagged variant (e.g. an at-risk count). */
+	/** "warning" is amber for the at-risk fact only (V3-10): the numeral and caption, on the card. */
 	tone?: "default" | "warning";
-	/** Nothing to show yet (zero / dash) — the numeral recedes to secondary ink. */
+	/** Nothing to show yet (zero / dash): the numeral recedes to secondary ink. */
 	muted?: boolean;
 };
 
 /**
- * Large-numeral stat tile (design-system "Stat card") — streaks, rates, week
- * and month totals. One size everywhere (VAR-14, V2): 14px padding, 10px
- * label, 26px numeral.
+ * V3-10 · stat card: one size everywhere — padding 12 (16 at AX sizes), 2 pt
+ * between label, value and sub, no minimum height, no icons. Label caption in
+ * caps, value in the stat style, sub in footnote. A tile is one VoiceOver stop.
+ * At AX sizes the screen lays tiles out 1-up.
  */
 export function StatCard({
 	label,
@@ -28,6 +30,7 @@ export function StatCard({
 	muted = false,
 }: StatCardProps) {
 	const { colors } = useTheme();
+	const largeText = useAccessibilityTextSize();
 	const isWarning = tone === "warning";
 	const valueColor = isWarning
 		? colors.warnInk
@@ -41,25 +44,15 @@ export function StatCard({
 			accessibilityLabel={`${label}: ${value}, ${caption}`}
 			style={[
 				styles.card,
-				isWarning
-					? { backgroundColor: colors.warnTint, borderColor: colors.warnTint }
-					: { backgroundColor: colors.card, borderColor: colors.border },
+				{ backgroundColor: colors.card, borderColor: colors.border },
+				largeText && styles.cardLarge,
 			]}
 		>
-			<Text
-				numberOfLines={1}
-				adjustsFontSizeToFit
-				minimumFontScale={0.8}
-				style={[
-					styles.label,
-					{ color: isWarning ? colors.warnInk : colors.sub },
-				]}
-			>
+			<Text style={[styles.label, { color: colors.sub }]}>
 				{label.toUpperCase()}
 			</Text>
 			<Text style={[styles.value, { color: valueColor }]}>{value}</Text>
 			<Text
-				numberOfLines={1}
 				style={[
 					styles.caption,
 					{ color: isWarning ? colors.warnInk : colors.sub },
@@ -74,21 +67,23 @@ export function StatCard({
 const styles = StyleSheet.create({
 	card: {
 		flex: 1,
-		borderRadius: 16,
+		borderRadius: radius.l,
 		borderWidth: StyleSheet.hairlineWidth,
-		padding: 14,
-		gap: 6,
+		padding: space[300],
+		gap: space[50],
+	},
+	cardLarge: {
+		padding: space[400],
 	},
 	label: {
-		fontSize: typeScale.micro,
-		fontWeight: "500",
-		letterSpacing: 0.8,
+		...textStyles.caption,
+		letterSpacing: 0.6,
 	},
 	value: {
-		fontSize: typeScale.statCompact,
-		fontWeight: "500",
+		...textStyles.stat,
+		fontVariant: ["tabular-nums"],
 	},
 	caption: {
-		fontSize: typeScale.caption,
+		...textStyles.footnote,
 	},
 });
