@@ -16,7 +16,7 @@ import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { TrendRow } from "@/components/ui/composite/trend-row";
 import { UnlockCard } from "@/components/ui/composite/unlock-card";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
-import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
+import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
 import { HabitBadge } from "../components/habit-badge";
@@ -251,7 +251,6 @@ function Insight({
 	summary: YearlySummary;
 	onEditHabit: (habitId: number) => void;
 }) {
-	const { scheme } = useTheme();
 	switch (insight.type) {
 		case "best-month": {
 			const copy = bestMonthCopy(insight);
