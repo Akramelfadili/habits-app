@@ -1,10 +1,11 @@
-import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
+import { useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes, frozenDays } from "@/lib/db/schema";
 import { runInTransaction } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import { toDayKey } from "@/utils/day-key";
-import type { DayLog, Entry, EntryNote } from "../types";
+import type { DayLog, Entry, EntryNote, LoggedDays } from "../types";
 
 type EntryRow = typeof entries.$inferSelect;
 type EntryNoteRow = typeof entryNotes.$inferSelect;
@@ -37,7 +38,32 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 		// render's range would be queried forever.
 		[startDate, endDate],
 	);
-	return data.map(rowToEntry);
+	// Stable between renders until the rows change, so the Progress maths built on
+	// these entries can be memoised.
+	return useMemo(() => data.map(rowToEntry), [data]);
+}
+
+/**
+ * Live-query hook — how many distinct days have a log, and the first one:
+ * one aggregate row, so Progress's "7 days of logs" gate never reads the log.
+ */
+export function useLoggedDays(): LoggedDays {
+	const { data, loaded } = useLiveRows<{
+		count: number | null;
+		first: string | null;
+	}>(
+		db
+			.select({
+				count: sql<number>`count(distinct ${entries.date})`,
+				first: sql<string | null>`min(${entries.date})`,
+			})
+			.from(entries),
+	);
+	return {
+		count: Number(data[0]?.count ?? 0),
+		firstDate: data[0]?.first ?? null,
+		loaded,
+	};
 }
 
 /**
@@ -52,7 +78,7 @@ export function useAllEntries(): Entry[] {
 	const { data } = useLiveRows<EntryRow>(
 		db.select().from(entries).orderBy(asc(entries.date)),
 	);
-	return data.map(rowToEntry);
+	return useMemo(() => data.map(rowToEntry), [data]);
 }
 
 /**

@@ -3,7 +3,7 @@ import { yearlyEntries, yearlyHabitFixtures } from "../dev/yearly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 
-import { historyStart, monthUnlock } from "./monthly-summary";
+import { historyStart } from "./monthly-summary";
 import {
 	buildYearlySummary,
 	YEAR_UNLOCK_MONTHS,
@@ -108,9 +108,6 @@ describe("yearUnlock (HAB-17, C7)", () => {
 		];
 		const first = historyStart(habits) as Date;
 		expect(date(first)).toBe("2026-02-10");
-		expect(date(monthUnlock(first, day(2026, 3, 1)).unlockDate)).toBe(
-			"2026-03-12",
-		);
 		expect(date(yearUnlock(first, day(2026, 3, 1)).unlockDate)).toBe(
 			"2026-05-10",
 		);

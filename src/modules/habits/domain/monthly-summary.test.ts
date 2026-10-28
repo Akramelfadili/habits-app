@@ -7,10 +7,7 @@ import type { Entry, FrozenDay, Habit } from "../types";
 import { MAX_INSIGHTS } from "./monthly-insights";
 import {
 	buildMonthlySummary,
-	defaultSummaryMonth,
 	historyStart,
-	MONTH_UNLOCK_DAYS,
-	monthUnlock,
 	monthWeeks,
 	monthWindowFor,
 	previousMonthWindow,
@@ -72,27 +69,9 @@ describe("month windows", () => {
 		expect(format(previous.start, "yyyy-MM-dd")).toBe("2026-12-01");
 		expect(format(previous.end, "yyyy-MM-dd")).toBe("2026-12-31");
 	});
-
-	it("defaults to the last complete month", () => {
-		const month = defaultSummaryMonth(new Date(2026, 8, 2), longAgo);
-		expect(format(month.start, "yyyy-MM-dd")).toBe("2026-08-01");
-	});
-
-	it("defaults to the previous December from January", () => {
-		const month = defaultSummaryMonth(new Date(2027, 0, 5), longAgo);
-		expect(format(month.start, "yyyy-MM-dd")).toBe("2026-12-01");
-	});
-
-	it("falls back to the current month when the last one ended before any habit existed", () => {
-		const month = defaultSummaryMonth(
-			new Date(2026, 9, 31),
-			new Date(2026, 9, 1),
-		);
-		expect(format(month.start, "yyyy-MM-dd")).toBe("2026-10-01");
-	});
 });
 
-describe("history and unlock", () => {
+describe("history", () => {
 	it("starts at the earliest habit, archived or not", () => {
 		const habits = [
 			daily(1, { createdAt: new Date(2026, 5, 3, 18) }),
@@ -102,20 +81,6 @@ describe("history and unlock", () => {
 			"2026-03-09",
 		);
 		expect(historyStart([])).toBeNull();
-	});
-
-	it("unlocks 30 days after the first day, with progress toward it", () => {
-		const first = new Date(2026, 8, 4);
-		const early = monthUnlock(first, new Date(2026, 8, 16));
-		expect(early).toMatchObject({ trackedDays: 12, isUnlocked: false });
-		expect(format(early.unlockDate, "yyyy-MM-dd")).toBe("2026-10-04");
-
-		expect(monthUnlock(first, new Date(2026, 9, 3)).isUnlocked).toBe(false);
-		const unlocked = monthUnlock(first, new Date(2026, 9, 4));
-		expect(unlocked).toMatchObject({
-			trackedDays: MONTH_UNLOCK_DAYS,
-			isUnlocked: true,
-		});
 	});
 });
 

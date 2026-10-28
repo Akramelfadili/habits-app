@@ -124,6 +124,16 @@ export type Entry = {
 	createdAt: Date;
 };
 
+/** How much has been logged, for Progress's "7 days of logs" gate (V3-3a). */
+export type LoggedDays = {
+	/** Distinct calendar days with at least one entry, any habit, bonus included. */
+	count: number;
+	/** The earliest such day, "yyyy-MM-dd"; null when nothing was ever logged. */
+	firstDate: string | null;
+	/** False until the first result: the gate must not flash "nothing logged". */
+	loaded: boolean;
+};
+
 /**
  * One habit's missed day covered by a freeze (HAB-08) — drawn from the
  * shared monthly pool, not a per-habit allowance.

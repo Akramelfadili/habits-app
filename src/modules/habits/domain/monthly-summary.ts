@@ -1,6 +1,5 @@
 import {
 	addDays,
-	differenceInCalendarDays,
 	endOfMonth,
 	endOfWeek,
 	getISODay,
@@ -16,10 +15,10 @@ import {
 } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
-import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
+import { isPerfectDay } from "./completion-rate";
+import { type CellStatus, habitDayClassifier } from "./day-status";
 import { insightsFor, type MonthlyInsight } from "./monthly-insights";
-import { isEntryComplete } from "./streaks";
 
 /**
  * Monthly Summary's math (HAB-16) — pure functions, same shape as
@@ -39,13 +38,10 @@ import { isEntryComplete } from "./streaks";
  * passes entries for the full Monday-aligned span, `monthEntryRange`).
  *
  * **Perfect day** = a day with at least one counted habit where every counted
- * habit was done. The "of N" under it is the number of days that had at least
+ * habit was done and none was frozen (D14, `isPerfectDay`). The "of N" under it is the number of days that had at least
  * one counted habit (`countedDays`) — not the calendar length, so a month of
  * rest days or a part-month history doesn't read as failure.
  */
-
-/** A month needs this many days of history before the Monthly screen unlocks. */
-export const MONTH_UNLOCK_DAYS = 30;
 
 export type MonthWindow = { start: Date; end: Date };
 
@@ -64,36 +60,6 @@ export function previousMonthWindow({ start }: MonthWindow): MonthWindow {
 export function historyStart(habits: readonly Habit[]): Date | null {
 	if (habits.length === 0) return null;
 	return min(habits.map((habit) => startOfDay(habit.createdAt)));
-}
-
-/**
- * The month Monthly opens on: the last complete one, or — when that ended
- * before any habit existed (31 Oct with a habit made on 1 Oct) — the current one.
- */
-export function defaultSummaryMonth(
-	today: Date,
-	firstDay: Date | null,
-): MonthWindow {
-	const last = monthWindowFor(subMonths(today, 1));
-	if (firstDay && isBefore(last.end, firstDay)) return monthWindowFor(today);
-	return last;
-}
-
-export type MonthUnlock = {
-	/** Days of history before today, capped for display at MONTH_UNLOCK_DAYS. */
-	trackedDays: number;
-	unlockDate: Date;
-	isUnlocked: boolean;
-};
-
-/** "Under one month of history" (C6): 30 full days before today, unlocking on day 31. */
-export function monthUnlock(firstDay: Date, today: Date): MonthUnlock {
-	const elapsed = Math.max(0, differenceInCalendarDays(today, firstDay));
-	return {
-		trackedDays: Math.min(elapsed, MONTH_UNLOCK_DAYS),
-		unlockDate: addDays(firstDay, MONTH_UNLOCK_DAYS),
-		isUnlocked: elapsed >= MONTH_UNLOCK_DAYS,
-	};
 }
 
 /** Entries are needed from the Monday-aligned start of the previous month to the end of this month's last week. */
@@ -194,7 +160,12 @@ function byCreationOrder(a: Habit, b: Habit): number {
 	return a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id;
 }
 
-/** Every counted (habit, day) in `window` — see the file header for what counts. */
+/**
+ * Every counted (habit, day) in `window` — see the file header for what counts.
+ * Built on the shared classifier (`day-status.ts`): done → done, a partial
+ * quantity day counts as missed (due, not done), a freeze is frozen; bonus,
+ * not-due, before-start, future and an open today leave no outcome.
+ */
 export function outcomesFor({
 	habits,
 	entries,
@@ -204,49 +175,57 @@ export function outcomesFor({
 }: Omit<MonthlySummaryInput, "month"> & {
 	window: MonthWindow;
 }): DayOutcome[] {
-	const todayStart = startOfDay(today);
-	const lastCounted = min([todayStart, window.end]);
+	const lastCounted = min([startOfDay(today), window.end]);
+	const entriesByHabit = groupBy(entries, (entry) => entry.habitId);
+	const frozenByHabit = groupBy(frozenDays, (frozen) => frozen.habitId);
 	const outcomes: DayOutcome[] = [];
 
 	for (const habit of habits) {
-		const strategy = getHabitStrategy(habit);
-		const completedSet = new Set(
-			entries
-				.filter(
-					(entry) =>
-						entry.habitId === habit.id && isEntryComplete(habit, entry),
-				)
-				.map((entry) => entry.date),
-		);
-		const frozenSet = new Set(
-			frozenDays
-				.filter((frozen) => frozen.habitId === habit.id)
-				.map((frozen) => frozen.date),
-		);
-		const context = {
-			completedDates: [...completedSet].map((date) => parseISO(date)),
-		};
-		const createdStart = startOfDay(habit.createdAt);
-
+		const classify = habitDayClassifier({
+			habit,
+			entries: entriesByHabit.get(habit.id) ?? [],
+			frozenDates: new Set(
+				(frozenByHabit.get(habit.id) ?? []).map((frozen) => frozen.date),
+			),
+			today,
+		});
 		for (
 			let cursor = window.start;
 			!isAfter(cursor, lastCounted);
 			cursor = addDays(cursor, 1)
 		) {
-			if (isBefore(cursor, createdStart)) continue;
-			if (!strategy.wasScheduledOn(cursor, context)) continue;
-			const date = toDayKey(cursor);
-			const weekday = getISODay(cursor) as IsoWeekday;
-			if (completedSet.has(date)) {
-				outcomes.push({ habitId: habit.id, date, weekday, outcome: "done" });
-			} else if (frozenSet.has(date)) {
-				outcomes.push({ habitId: habit.id, date, weekday, outcome: "frozen" });
-			} else if (!isSameDay(cursor, todayStart)) {
-				outcomes.push({ habitId: habit.id, date, weekday, outcome: "missed" });
-			}
+			const { status, isToday } = classify(cursor);
+			const outcome = outcomeOf(status, isToday);
+			if (!outcome) continue;
+			outcomes.push({
+				habitId: habit.id,
+				date: toDayKey(cursor),
+				weekday: getISODay(cursor) as IsoWeekday,
+				outcome,
+			});
 		}
 	}
 	return outcomes;
+}
+
+function outcomeOf(status: CellStatus, isToday: boolean): Outcome | null {
+	if (status === "done") return "done";
+	if (status === "frozen") return "frozen";
+	// A partial quantity day is a verdict only once the day is over.
+	if ((status === "missed" || status === "partial") && !isToday) {
+		return "missed";
+	}
+	return null;
+}
+
+function groupBy<T>(items: readonly T[], key: (item: T) => number) {
+	const groups = new Map<number, T[]>();
+	for (const item of items) {
+		const group = groups.get(key(item));
+		if (group) group.push(item);
+		else groups.set(key(item), [item]);
+	}
+	return groups;
 }
 
 export function rateOf(completed: number, scheduled: number): number | null {
@@ -381,7 +360,15 @@ export function buildMonthlySummary(
 		const dayCounts = counts(day);
 		if (dayCounts.scheduled === 0) continue;
 		countedDays += 1;
-		if (dayCounts.completed === dayCounts.scheduled) perfectDays += 1;
+		// A frozen day is excused, not perfect (D14): the shared rule decides.
+		const frozen = day.filter(({ outcome }) => outcome === "frozen").length;
+		const tally = {
+			done: dayCounts.completed,
+			due: dayCounts.scheduled,
+			frozen,
+			bonus: 0,
+		};
+		if (isPerfectDay(tally)) perfectDays += 1;
 	}
 
 	const monthStart = toDayKey(month.start);

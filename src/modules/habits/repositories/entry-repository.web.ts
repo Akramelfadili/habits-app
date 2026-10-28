@@ -6,7 +6,7 @@ import {
 } from "../dev/entry-fixtures";
 import { resolveFixtureScenario } from "../dev/habit-fixtures";
 import { assertWritesAllowed } from "../dev/write-failure-fixtures";
-import type { DayLog, Entry, EntryNote } from "../types";
+import type { DayLog, Entry, EntryNote, LoggedDays } from "../types";
 import type * as NativeEntryRepository from "./entry-repository";
 import { freezeHabitDay, unfreezeHabitDay } from "./frozen-day-repository.web";
 
@@ -58,6 +58,21 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	return entries.filter(
 		(entry) => entry.date >= startDate && entry.date <= endDate,
 	);
+}
+
+/** Web counterpart of the native aggregate: distinct logged days and the first. */
+export function useLoggedDays(): LoggedDays {
+	const entries = useSyncExternalStore(
+		subscribe,
+		getEntries,
+		() => [] as Entry[],
+	);
+	const days = new Set(entries.map((entry) => entry.date));
+	return {
+		count: days.size,
+		firstDate: days.size === 0 ? null : [...days].sort()[0],
+		loaded: true,
+	};
 }
 
 /** Web counterpart of the native repository's unbounded live query. */
@@ -175,6 +190,7 @@ export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 const _sameShape: typeof NativeEntryRepository = {
 	useEntriesInRange,
 	useAllEntries,
+	useLoggedDays,
 	setHabitCompletedOn,
 	setHabitQuantityOn,
 	useEntryNotes,

@@ -18,6 +18,7 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 
 const {
 	useEntriesInRange,
+	useLoggedDays,
 }: typeof EntryRepository = require("./entry-repository");
 
 const LAST_WEEK = { start: new Date(2026, 8, 7), end: new Date(2026, 8, 13) };
@@ -80,5 +81,52 @@ describe("useEntriesInRange", () => {
 		await act(async () => {});
 
 		expect(result.current).toHaveLength(2);
+	});
+});
+
+describe("useLoggedDays", () => {
+	beforeEach(async () => {
+		await mockDb.delete(entries);
+		await mockDb.delete(habits);
+	});
+
+	it("reports nothing logged on an empty log", async () => {
+		const { result } = await renderHook(() => useLoggedDays());
+		await waitFor(() => expect(result.current.loaded).toBe(true));
+		expect(result.current).toEqual({
+			count: 0,
+			firstDate: null,
+			loaded: true,
+		});
+	});
+
+	it("counts distinct days across habits, bonus included, and names the first", async () => {
+		const now = new Date();
+		const inserted = await mockDb
+			.insert(habits)
+			.values([
+				{ ...makeHabitInput(), createdAt: now, updatedAt: now },
+				{ ...makeHabitInput({ name: "Two" }), createdAt: now, updatedAt: now },
+			])
+			.returning();
+		await mockDb.insert(entries).values(
+			[
+				[inserted[0].id, "2026-09-15"],
+				[inserted[1].id, "2026-09-15"], // same day, other habit
+				[inserted[0].id, "2026-09-08"],
+				[inserted[1].id, "2026-09-16"],
+			].map(([habitId, date]) => ({
+				habitId: habitId as number,
+				date: date as string,
+				createdAt: now,
+			})),
+		);
+		const { result } = await renderHook(() => useLoggedDays());
+		await waitFor(() => expect(result.current.loaded).toBe(true));
+		expect(result.current).toEqual({
+			count: 3,
+			firstDate: "2026-09-08",
+			loaded: true,
+		});
 	});
 });

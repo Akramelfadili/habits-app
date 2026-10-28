@@ -78,6 +78,7 @@ describe("stat tile copy", () => {
 		const rate = {
 			completed: 78,
 			scheduled: 90,
+			frozen: 0,
 			fraction: 78 / 90,
 			skippedPaused: false,
 		};
@@ -87,6 +88,7 @@ describe("stat tile copy", () => {
 			completionRateValue({
 				completed: 0,
 				scheduled: 0,
+				frozen: 0,
 				fraction: null,
 				skippedPaused: false,
 			}),
@@ -181,6 +183,7 @@ describe("archive and restore copy (HAB-20)", () => {
 			completionRateCaption({
 				completed: 20,
 				scheduled: 30,
+				frozen: 0,
 				fraction: 2 / 3,
 				skippedPaused: true,
 			}),

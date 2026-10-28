@@ -18,6 +18,15 @@ const mockRange = jest.fn();
 jest.mock("../repositories/habit-repository", () => ({
 	useActiveHabits: () => ({ habits: mockHabits, loaded: mockLoaded }),
 }));
+let mockFrozen: {
+	id: number;
+	habitId: number;
+	date: string;
+	createdAt: Date;
+}[] = [];
+jest.mock("../repositories/frozen-day-repository", () => ({
+	useFrozenDaysInRange: () => mockFrozen,
+}));
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) => {
 		mockRange(start, end);
@@ -32,6 +41,7 @@ beforeEach(() => {
 	mockLoaded = true;
 	mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) })];
 	mockEntries = [];
+	mockFrozen = [];
 	mockRange.mockReset();
 });
 
@@ -56,6 +66,13 @@ describe("useWeeklySummaryQueries", () => {
 			hasHabits: true,
 		});
 		expect(result.current.rows).toHaveLength(1);
+	});
+
+	it("leaves a frozen day out of the week's counts (D14)", async () => {
+		mockEntries = [entry(1, "2026-09-14"), entry(1, "2026-09-16")];
+		mockFrozen = [{ id: 1, habitId: 1, date: "2026-09-15", createdAt: TODAY }];
+		const { result } = await renderHook(() => useWeeklySummaryQueries());
+		expect(result.current).toMatchObject({ completed: 2, scheduled: 2 });
 	});
 
 	it("reports when there are no habits at all", async () => {

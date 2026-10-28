@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, lte } from "drizzle-orm";
+import { useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { frozenDays } from "@/lib/db/schema";
 import { useLiveRows } from "@/lib/db/use-live-rows";
@@ -21,7 +22,25 @@ export function useFrozenDays(): FrozenDay[] {
 	const { data } = useLiveRows<FrozenDayRow>(
 		db.select().from(frozenDays).orderBy(asc(frozenDays.date)),
 	);
-	return data.map(rowToFrozenDay);
+	return useMemo(() => data.map(rowToFrozenDay), [data]);
+}
+
+/** Live-query hook — frozen days with a date in `[start, end]`, inclusive, across every habit. */
+export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
+	const startDate = toDayKey(start);
+	const endDate = toDayKey(end);
+	const { data } = useLiveRows<FrozenDayRow>(
+		db
+			.select()
+			.from(frozenDays)
+			.where(
+				and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
+			)
+			.orderBy(asc(frozenDays.date)),
+		// Subscribes once per deps: without them the first range would be read forever.
+		[startDate, endDate],
+	);
+	return useMemo(() => data.map(rowToFrozenDay), [data]);
 }
 
 /**

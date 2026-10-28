@@ -1,14 +1,13 @@
 import { addMonths, format, startOfMonth } from "date-fns";
-import { formatDateRange, formatDayMonth, pluralise } from "@/utils/format";
+import { formatDateRange, pluralise } from "@/utils/format";
 import { FREEZE_POOL_SIZE } from "../constants";
 import type { MonthlyInsight, PatternCause } from "../domain/monthly-insights";
-import {
-	MONTH_UNLOCK_DAYS,
-	type MonthlyHabitRow,
-	type MonthlySummary,
-	type MonthUnlock,
-	type MonthWindow,
+import type {
+	MonthlyHabitRow,
+	MonthlySummary,
+	MonthWindow,
 } from "../domain/monthly-summary";
+import type { ProgressUnlock } from "../domain/progress-unlock";
 
 const WEEKDAY_NAMES = [
 	"Monday",
@@ -148,23 +147,18 @@ export function patternCopy(
 	};
 }
 
-/** The too-early card (C6). */
-export function unlockCopy(unlock: MonthUnlock) {
+/** The too-early card (C6, P9): 7 days of logs, the same gate as Week and Year. */
+export function unlockCopy(unlock: ProgressUnlock) {
 	return {
-		title: `Monthly view unlocks on ${formatDayMonth(unlock.unlockDate)}`,
-		body: `You've tracked for ${pluralise(unlock.trackedDays, "day")}. A month needs a full month — otherwise one rough week looks like a pattern.`,
-		progress: unlock.trackedDays / MONTH_UNLOCK_DAYS,
-		progressLabel: `${unlock.trackedDays} of ${MONTH_UNLOCK_DAYS} days`,
-		remainingLabel: `${MONTH_UNLOCK_DAYS - unlock.trackedDays} to go`,
+		title: `Month summary unlocks in ${pluralise(unlock.remainingDays, "day")}`,
+		body: `Rates and insights need ${unlock.neededDays} days of logs; you've logged ${pluralise(unlock.loggedDays, "day")} so far. Days so far are on the calendar.`,
+		progress: unlock.progress,
+		progressLabel: `${unlock.loggedDays} of ${unlock.neededDays} days`,
+		remainingLabel: `${unlock.remainingDays} to go`,
 	};
 }
 
 /** Today's menu row for this screen — "1 – 31 August · 80% done" (HAB-14). */
 export function monthlyMenuSubline(summary: MonthlySummary): string {
 	return `${monthRangeLabel(summary.month)} · ${percent(summary.rate)} done`;
-}
-
-/** Why the menu row can't open yet — "Unlocks 4 October". */
-export function monthlyMenuLockedReason(unlock: MonthUnlock): string {
-	return `Unlocks ${formatDayMonth(unlock.unlockDate)}`;
 }

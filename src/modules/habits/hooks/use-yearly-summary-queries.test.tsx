@@ -66,6 +66,21 @@ describe("useYearlySummaryQueries (HAB-17)", () => {
 		expect(date(result.current.week.week.start)).toBe("2026-09-14");
 	});
 
+	it("leaves a frozen day out of the too-early week's counts (D14)", async () => {
+		jest.useFakeTimers().setSystemTime(new Date(2026, 8, 16, 9));
+		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 8, 4, 8) })];
+		mockEntries = [
+			{ id: 1, habitId: 1, date: "2026-09-14", createdAt: new Date() },
+			{ id: 2, habitId: 1, date: "2026-09-16", createdAt: new Date() },
+		];
+		mockFrozen = [
+			{ id: 1, habitId: 1, date: "2026-09-15", createdAt: new Date() },
+		];
+		const { result } = await renderHook(() => useYearlySummaryQueries());
+		if (result.current.state !== "too-early") throw new Error("state");
+		expect(result.current.week).toMatchObject({ completed: 2, scheduled: 2 });
+	});
+
 	it("unlocks on the unlock date itself", async () => {
 		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 8, 4, 8) })];
 		jest.useFakeTimers().setSystemTime(new Date(2026, 11, 3, 9));

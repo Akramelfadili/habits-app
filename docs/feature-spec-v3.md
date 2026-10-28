@@ -244,6 +244,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Performance prerequisite:** the per-week streak/heatmap/year maths is O(n) per day and takes seconds on 5 years of data; the **pre-bucketing fix lands in V3-0a before Progress** (no semantic change, with an old-vs-new equivalence test).
 
+> **As built (V3-3a, data layer only — screens are V3-3b):** `useProgressWeekQueries` returns the matrix (`WeekMatrix`: a status per cell, row totals "n/target"), the stats (rate, +N pts, best streak, best day with the daily bars, perfect days, ranked per-habit rows, bonus and freezes listed) and up to three insights, in one of four distinct views: `no-habits` (P3), `nothing-logged` (P4, cells read `nothing-logged`, not `missed`), `too-early` (P2: fewer than 7 distinct logged days, with days remaining and a progress fraction; the matrix still renders) and `ready`. One-habit variant: `habitId`. The rate is one rule everywhere (`domain/completion-rate.ts`). See `docs/progress-data.md` for the interpretations (7 logged days, best streak, row totals).
+
 ---
 
 ## HAB-36 — Progress: Month
@@ -254,6 +256,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Per-habit rates (P8): ranked by rate, slipping last with amber bar; Break habit tagged "Break"; frozen days excluded; bonus logs listed as "not counted".
 - Tap a 40 pt day → rings it and shows a detail card with each habit's state and "Edit this day".
 - Defaults to the **current month** (D15; the V2 "last complete month" rule is retired). Other months open from Year. Too early (P9): unlock card, calendar shows logged days, earlier days dashed. One habit (P10): binary calendar.
+
+> **As built (V3-3a):** `useProgressMonthQueries({ month, habitId })` (current month by default; Monthly's old screen follows suit and now unlocks after 7 logged days, not 30 days of history) returns the calendar (`MonthCalendar`: level 0–3, notch for L1/L2, `perfect`, frozen and open-today statuses) and the summary; `useDayDetailQueries(date, habitId)` gives the day card (each habit's state, done ÷ due, `editable` false for the future) from that date's week only.
 
 ---
 
@@ -268,6 +272,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Check against code:** per-day completion level 0–3 for a full year, all habits or one — query cost.
 
+> **As built (V3-3a):** `useProgressYearQueries({ year, habitId })` returns `YearMap`: 365 day cells (level 0–3, frozen, today), 12 month tiles in three bands, `bestMonth`, and `monthList` (month, whole-number %, bar 0–1) for the VoiceOver / AX3 fallback. One build is ~40 ms for a year of 20 habits (Node), ~80 ms with the previous year for "+N pts"; `domain/year-map.perf.test.ts` keeps a ceiling on it.
+
 ---
 
 ## HAB-38 — Insights
@@ -278,6 +284,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Slipping: action "Change frequency" → Edit habit scrolled to Frequency. Improved and "nothing to fix" are not tappable. Gate order: too-early → perfect/nothing to fix → slipping.
 - Weekday-pattern insight is **Later** (PR-03); do not build.
 - Year-scale insights need ≥ 3 months of history (V2 rule kept).
+
+> **As built (V3-3a):** `domain/progress-insights.ts` ranks slipping → improved → nothing to fix (cap 3). A slipping card carries the action `{ type: "edit-habit", habitId, focus: "frequency" }`; the others `null`. Tones `warning` / `positive` / `neutral` (V3-3b maps `positive` to `InsightCard`'s `success`). Gate order: too-early (no insights) → perfect (only "nothing to fix") → slipping. "Nothing to fix" follows the improved cards whenever nothing is slipping. Year adds a best-month card (improved class). The weekday-pattern insight is not built (PR-03).
 
 ---
 

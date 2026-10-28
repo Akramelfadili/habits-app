@@ -114,6 +114,7 @@ function detail(overrides: Partial<HabitDetail> = {}): HabitDetail {
 		completionRate: {
 			completed: 78,
 			scheduled: 90,
+			frozen: 0,
 			fraction: 78 / 90,
 			skippedPaused: false,
 		},
@@ -189,6 +190,7 @@ describe("HabitDetailScreen", () => {
 			completionRate: {
 				completed: 0,
 				scheduled: 0,
+				frozen: 0,
 				fraction: null,
 				skippedPaused: false,
 			},

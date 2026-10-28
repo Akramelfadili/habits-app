@@ -21,6 +21,8 @@ import {
 } from "../strategies/frequency-strategy";
 import { isPausedOn, restartDays } from "../strategies/paused-schedule";
 import type { Entry, EntryNote, Habit } from "../types";
+import { addToTally, EMPTY_TALLY } from "./completion-rate";
+import { habitDayClassifier } from "./day-status";
 import { offScheduleChecker } from "./off-schedule";
 import { calculateCurrentStreak, isEntryComplete } from "./streaks";
 
@@ -109,30 +111,33 @@ export function calculateLongestStreak({
 
 export type CompletionRate = {
 	completed: number;
+	/** Due days in the window: frozen and bonus days are on neither side (D14). */
 	scheduled: number;
-	/** 0–1, or null when nothing has been scheduled yet (a brand-new habit). */
+	/** Frozen days inside the window — excused, left out of both counts. */
+	frozen: number;
+	/** 0–1, or null when nothing has been due yet (a brand-new habit). */
 	fraction: number | null;
 	/** An archive pause falls inside the window — its days were skipped, not missed (HAB-20). */
 	skippedPaused: boolean;
 };
 
 /**
- * Completion rate over the last 90 days, against **scheduled** days only —
- * clipped to the habit's own creation date rather than padded to 90 (HAB-09
- * edge case). Today joins the denominator only once it's logged, since it
- * can't have been missed yet. A frozen day stays in the denominator but isn't
- * a completion — a freeze protects the streak, not the rate. An archived
- * habit's window ends the day before it was archived, so the rate reads
- * "before archive" rather than decaying over days it was never asked of.
+ * Completion rate over the last 90 days: the shared rule (`completion-rate.ts`,
+ * done ÷ due) over the habit's **scheduled** days only — clipped to the
+ * habit's own creation date rather than padded to 90 (HAB-09 edge case).
+ * Today joins the denominator only once it's logged, since it can't have been
+ * missed yet. A frozen day is excused (D14): it leaves both the completions
+ * and the denominator, as on Progress. An archived habit's window ends the day
+ * before it was archived, so the rate reads "before archive" rather than
+ * decaying over days it was never asked of.
  */
 export function calculateCompletionRate({
 	habit,
 	entries,
+	frozenDates,
 	today,
-}: Omit<History, "frozenDates">): CompletionRate {
-	const strategy = getHabitStrategy(habit);
-	const completed = completedDatesOf(habit, entries);
-	const context = { completedDates: completed.dates };
+}: History): CompletionRate {
+	const classify = habitDayClassifier({ habit, entries, frozenDates, today });
 	const todayStart = startOfDay(today);
 	const windowEnd = habit.archivedAt
 		? subDays(startOfDay(habit.archivedAt), 1)
@@ -143,8 +148,7 @@ export function calculateCompletionRate({
 	]);
 	const closedPauses = habit.pauses;
 
-	let scheduled = 0;
-	let done = 0;
+	const tally = { ...EMPTY_TALLY };
 	let skippedPaused = false;
 	for (
 		let cursor = windowStart;
@@ -152,17 +156,14 @@ export function calculateCompletionRate({
 		cursor = addDays(cursor, 1)
 	) {
 		if (isPausedOn(cursor, closedPauses)) skippedPaused = true;
-		if (!strategy.wasScheduledOn(cursor, context)) continue;
-		const isDone = completed.set.has(toDayKey(cursor));
-		if (isSameDay(cursor, todayStart) && !isDone) continue;
-		scheduled += 1;
-		if (isDone) done += 1;
+		addToTally(tally, classify(cursor));
 	}
 
 	return {
-		completed: done,
-		scheduled,
-		fraction: scheduled === 0 ? null : done / scheduled,
+		completed: tally.done,
+		scheduled: tally.due,
+		frozen: tally.frozen,
+		fraction: tally.due === 0 ? null : tally.done / tally.due,
 		skippedPaused,
 	};
 }

@@ -77,6 +77,7 @@ Numbering continues from V1: **HAB-14 → HAB-25**.
 
 **Edge cases**
 - Under one month of history (C6, "too early"): state when it unlocks and why, show progress toward that, and still render the partial calendar — don't hide the whole screen behind a locked wall.
+- **Superseded by V3 (HAB-35–37, D15):** the gate is 7 days of logs, not a month of history, and Monthly opens on the current month, not the last complete one. Both changed in V3-3a (`domain/progress-unlock.ts`; see `docs/progress-data.md`).
 - Insight gate order matters (carried over from the V1 audit fix): check (1) too-early, (2) perfect/nothing-to-fix, (3) slipping — never declare "nothing to fix" before confirming there's enough scheduled history to judge.
 - A pattern insight only gets an action when **one single habit** explains most of the pattern; a pattern with no single cause is informational only (see HAB-17 for the year-scale equivalent).
 

@@ -6,6 +6,7 @@ import {
 	type WeeklySummary,
 } from "../domain/weekly-summary";
 import { useEntriesInRange } from "../repositories/entry-repository";
+import { useFrozenDaysInRange } from "../repositories/frozen-day-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 
 export type WeeklySummaryView = WeeklySummary & {
@@ -27,9 +28,10 @@ export function useWeeklySummaryQueries(
 	const week = summaryWeekWindow(today, which);
 	const { habits, loaded } = useActiveHabits();
 	const entries = useEntriesInRange(week.start, week.end);
+	const frozenDays = useFrozenDaysInRange(week.start, week.end);
 
 	return {
-		...buildWeeklySummary({ habits, entries, today, week: which }),
+		...buildWeeklySummary({ habits, entries, frozenDays, today, week: which }),
 		hasHabits: habits.length > 0,
 		isLoaded: loaded,
 	};

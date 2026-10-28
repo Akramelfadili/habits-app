@@ -2,12 +2,11 @@ import type {
 	MonthlyHabitRow,
 	MonthlySummary,
 } from "../domain/monthly-summary";
-
+import { progressUnlock } from "../domain/progress-unlock";
 import { makeHabit } from "../test-support/habit-builder";
 import {
 	freezeCardCopy,
 	insightCountLabel,
-	monthlyMenuLockedReason,
 	monthlyMenuSubline,
 	monthlyTiles,
 	monthRangeLabel,
@@ -57,13 +56,6 @@ describe("labels", () => {
 
 	it("words the menu row", () => {
 		expect(monthlyMenuSubline(summary())).toBe("1 – 31 August · 80% done");
-		expect(
-			monthlyMenuLockedReason({
-				trackedDays: 12,
-				unlockDate: new Date(2026, 9, 4),
-				isUnlocked: false,
-			}),
-		).toBe("Unlocks 4 October");
 	});
 });
 
@@ -100,28 +92,27 @@ describe("freezeCardCopy", () => {
 	});
 });
 
+const unlockOf = (count: number) =>
+	progressUnlock({ count, firstDate: count ? "2026-10-21" : null });
+
 describe("unlockCopy", () => {
-	it("says when, why and how far", () => {
-		const copy = unlockCopy({
-			trackedDays: 12,
-			unlockDate: new Date(2026, 9, 4),
-			isUnlocked: false,
-		});
-		expect(copy.title).toBe("Monthly view unlocks on 4 October");
-		expect(copy.progressLabel).toBe("12 of 30 days");
-		expect(copy.remainingLabel).toBe("18 to go");
-		expect(copy.progress).toBeCloseTo(0.4);
+	it("says how many days remain, why and how far (the 7-day gate)", () => {
+		const copy = unlockCopy(unlockOf(3));
+		expect(copy.title).toBe("Month summary unlocks in 4 days");
+		expect(copy.progressLabel).toBe("3 of 7 days");
+		expect(copy.remainingLabel).toBe("4 to go");
+		expect(copy.progress).toBeCloseTo(3 / 7);
 	});
 });
 
 describe("singular counts", () => {
-	it("tracked days and insight counts read '1 day' / '1 insight'", () => {
-		const copy = unlockCopy({
-			trackedDays: 1,
-			unlockDate: new Date(2026, 9, 4),
-			isUnlocked: false,
-		});
-		expect(copy.body).toMatch(/^You've tracked for 1 day\./);
+	it("logged days and insight counts read '1 day' / '1 insight'", () => {
+		const copy = unlockCopy(unlockOf(1));
+		expect(copy.title).toBe("Month summary unlocks in 6 days");
+		expect(copy.body).toContain("you've logged 1 day so far");
+		expect(unlockCopy(unlockOf(6)).title).toBe(
+			"Month summary unlocks in 1 day",
+		);
 		expect(insightCountLabel(1)).toBe("1 insight");
 		expect(insightCountLabel(2)).toBe("2 insights");
 	});

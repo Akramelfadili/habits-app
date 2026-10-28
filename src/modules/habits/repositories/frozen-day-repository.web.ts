@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { toDayKey } from "@/utils/day-key";
 import { makeFrozenDayFixtures } from "../dev/frozen-day-fixtures";
 import { resolveFixtureScenario } from "../dev/habit-fixtures";
@@ -33,6 +33,19 @@ export function useFrozenDays(): FrozenDay[] {
 		subscribe,
 		getFrozenDays,
 		() => [] as FrozenDay[],
+	);
+}
+
+export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
+	const frozenDays = useFrozenDays();
+	const startDate = toDayKey(start);
+	const endDate = toDayKey(end);
+	return useMemo(
+		() =>
+			frozenDays.filter(
+				(frozen) => frozen.date >= startDate && frozen.date <= endDate,
+			),
+		[frozenDays, startDate, endDate],
 	);
 }
 
@@ -99,6 +112,7 @@ export async function unfreezeHabitDay(
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeFrozenDayRepository = {
 	useFrozenDays,
+	useFrozenDaysInRange,
 	getFreezesUsedInMonth,
 	freezeHabitDay,
 	getFrozenDay,
