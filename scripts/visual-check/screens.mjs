@@ -537,15 +537,16 @@ export const SCREENS = {
 		feature: "HAB-16",
 		route: "/(progress)/month?fixtures=monthly-summary",
 		mockup: "docs/mockups/hab-16-c2.png",
-		// 2 Sep → the last complete month is August (1 Aug is a Saturday).
-		clock: "2026-09-02T09:00:00",
-		note: "Last complete month (August 2026). Fixture numbers differ from the mockup's (it's tuned to the insights, not the tiles); freezes are on 7 and 22 Aug.",
+		// Monthly opens on the current month (D15), so "now" is the evening of 31 Aug:
+		// August is the current month and every day of it is counted.
+		clock: "2026-08-31T21:00:00",
+		note: "August 2026 as the current month. Fixture numbers differ from the mockup's (it's tuned to the insights, not the tiles); freezes are on 7 and 22 Aug.",
 	},
 	"monthly-insights": {
 		feature: "HAB-16",
 		route: "/(progress)/month?fixtures=monthly-summary",
 		mockup: "docs/mockups/hab-16-c3.png",
-		clock: "2026-09-02T09:00:00",
+		clock: "2026-08-31T21:00:00",
 		note: "Scrolled to the insights: slipping → improved → pattern, then the freeze card. The slipping body omits the mockup's 'started when Easy run moved' clause (not derivable).",
 		async interact(page) {
 			await page
@@ -561,7 +562,7 @@ export const SCREENS = {
 		route: "/(progress)/month?fixtures=monthly-too-early",
 		mockup: "docs/mockups/hab-16-c6.png",
 		clock: "2026-09-16T09:00:00",
-		note: "12 days of history (since 4 Sep): unlock card, partial September calendar, the week one tap away.",
+		note: "12 days of history (since 4 Sep): since the 7-logged-day gate (V3-3a) that is no longer too early, so this shows the summary; the unlock card returns with the P9 states.",
 	},
 	"monthly-empty": {
 		feature: "HAB-16",
