@@ -57,6 +57,10 @@ setting can never reach the app there.
 Routes name their tab group (`/(progress)/week`) so a cold load lands on the
 right tab; a plain `/week` would open inside Today.
 
+### The page clock (V3-2a)
+
+The harness starts the page's clock at each state's pinned moment with `page.clock.setSystemTime` and lets it run. It must not use `setFixedTime`: that froze React's own clock, so a lazily loaded route never got past its Suspense fallback ("Bundling…") and every such state was captured blank (V3-1 committed ~33 of them). A state may list `ignoreErrors` (regexes) for a known web-only console error. When you recapture, look at the images, not only the diff count: a blank capture equals a blank baseline.
+
 ### Failure states (audit B6)
 
 `?fixtures=migration-fails` (every attempt fails) and `?fixtures=migration-fails-once` (Retry recovers) make the web `DatabaseProvider` show the error screen; `?failWrites=1` makes every web fixture write fail (`write-failure-fixtures.ts`), which renders the error toast, the toast inside a sheet and the New habit error banner. The logger mirrors to `console.log`, so a handled failure never trips the harness's `console.error` check (or raises LogBox in development).
@@ -64,5 +68,7 @@ right tab; a plain `/week` would open inside Today.
 ### Test naming
 
 A test mirrors its source file (`x.ts` + `x.test.ts`). A variant for one aspect adds a suffix: `x.web.test.ts`, `x.live.test.ts` (live-query behaviour), `x.<aspect>.test.ts` (e.g. `category-repository.migration.test.ts`). Tests that cross files, like `src/lib/db/migrations.safety.test.ts`, are named for what they guard. A test that is slow by design (randomised or exhaustive) ends in `.slow.test.ts` so the gate skips it and only CI runs it (see the table above).
+
+`src/lib/db/test-db.ts`'s `createTestDb({ onWrite: notifyTableChanged })` plus the live-query stand-in lets a screen test drive the real hooks over an in-memory database (`today-screen.db.test.tsx`).
 
 Tests that depend on "today" fake `Date` (`jest.useFakeTimers({ now, doNotFake: [...] })`, see `entry-repository.web.test.ts`) so a run that crosses midnight can't flake. `mockMeasureInWindow` (`modules/habits/test-support/`) answers `measureInWindow` for components that wait for a measurement.

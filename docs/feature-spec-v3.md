@@ -143,6 +143,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Selecting a day before a habit's start: that habit is not listed. Archived (paused) days: not listed.
 - Logging beyond the current week: swipe the strip, or use Progress › Edit this day.
 
+> **As built (V3-2a, logic only):** the selected day is `useSelectedDayQueries` (named for the hook-naming rule), day-keyed queries and writes, Undo capturing the date, toasts naming the date; **no week strip, bar or eyebrow yet** (V3-2b), so the app never selects a past day itself. Not-due, not-yet-started and paused habits are not listed for a past day.
+
 **Implementation notes:** selected-day state lives in a module hook `useSelectedDay(today)` (`null` = follow today) in TodayScreen's own state, not a global store. Writes go to the selected past date, else today with the existing rollover guard. Undo captures the date in its closure (existing rule). Query hooks take the selected date as live-query deps. Streak-at-risk applies only to the real today. The week window is keyed by the selected day.
 
 ---
@@ -160,6 +162,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **All done (T8):** quiet card at the top with a check that draws once (600 ms; static with Reduce Motion). No confetti or banner.
 
 **Edge cases:** 5 s Undo window; a new toast replaces the old one; an Undo of +1 removes exactly that entry; off-schedule logs (T3 rest day) are tagged "bonus", never affect streaks.
+
+> **As built (V3-2a):** a tap on a quantity circle writes `previous + 1` ("Drink water +1 · 3 of 8 glasses", date named off today) with an Undo that writes the amount captured at tap time; long-press on the circle and a stand-in count control ("3/8") open the sheet. The row's two tap zones, the visible count button, the at-risk dot and status line, and the all-done card are V3-2b.
 
 **Implementation notes:** there is no step log (one entry per habit per day holds the total). +1 writes `previous + 1`; Undo writes `previous` captured at tap time (as the quantity sheet does today). `entries.created_at` is first-insert time, so no time is shown.
 
@@ -188,6 +192,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **PR-11:** logging a frozen day in Edit this day returns the freeze (one transaction) and the toast says so.
 
 **Edge cases:** only yesterday is in the window; Undo restores the freeze count and at-risk state exactly; the at-risk dot clears when the grace window ends.
+
+> **As built (V3-2a):** SR3 is the one-button "Got it" sheet ("No freezes left this month … Your longest streak is kept"), opened from the row's name area like SR1; SR1 is "Keep your <habit> streak?" with **Use a freeze** / **Not now** (writes nothing); toasts "Freeze used for Thu 22 · 0 left" and, PR-11, "Freeze returned for Thu 22 · 1 left" (a log that completes a frozen day deletes the freeze in the same transaction; Undo restores entry and freeze); `freezesUsedInMonth` is exposed through `useSettingsQueries().freezePool`. **Day closed is removed** (HAB-32 lists only empty, rest day and loading; PR-01 is Later).
 
 **Data:** `frozen_days` (habit, date, created_at) already records each use; the pool counts rows by missed date within the month.
 

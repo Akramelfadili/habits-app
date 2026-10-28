@@ -77,6 +77,19 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 - **`domain/export-json.ts` imports `lib/diagnostics/app-info`** to stamp the build number into the file: the one accepted exception to "`domain/` is pure" (static facts, no I/O; `architecture.md` layer 4). Revisit if `domain/` gets a lint rule: pass the build in from the export service instead.
 - **27 `"yyyy-MM-dd"` format literals remain outside `utils/day-key.ts`** (V3-0a added `DAY_KEY_FORMAT` / `toDayKey`). Production: `domain/export-csv.ts`, `export-json.ts`, `off-schedule.ts`, `yearly-summary.ts` (2), `strategies/frequency-strategy.ts`, `hooks/use-retro-log-queries.ts`, `screens/habit-detail-screen.tsx`; the rest are web twins and `dev/` fixtures (`entry-repository.web.ts` 5, `entry-fixtures.ts` and friends). Move each to `toDayKey` when its file is touched; a later `check-architecture` rule can then forbid the literal.
 
+## Open — V3-2a (Today logic)
+
+- **`useSelectedDay` is `useSelectedDayQueries`.** `check-architecture`'s hook-naming rule requires `use<X>Queries|Actions`; the spec's name would have needed an allowlist entry, which may only shrink. It returns the day and its one write (`selectDay`, `showToday`).
+- **No way to select a past day yet.** The state, queries and writes exist and are tested (hook level, on the in-memory database), but the week strip, the "Logging for … · Show today" bar and the date eyebrow are V3-2b. Nothing in the app calls `selectDay` until then.
+- **At-risk and "No freezes left" open from the row's name area, not the circle.** HAB-31/33 say tapping the circle; today the circle logs and the name opens the sheet (existing behaviour, kept for SR1 and SR3 alike). Decide with the V3-2b row whether a tap on an at-risk circle should open the sheet instead of logging today.
+- **The at-risk dot is still Break-only.** `CompletionCircle` draws the amber ring for Break habits; HAB-31's amber dot and the status "Missed Thursday · 1 freeze left" are V3-2b.
+- **The count control is a stand-in.** `HabitTodayRow` shows a `Chip` ("3/8") beside a quantity habit's circle so the sheet stays reachable; the V3 count button (HAB-31) replaces it in V3-2b.
+- **A freeze is returned only by a log that completes the day.** A quantity amount below the target leaves the freeze (the day is still missed); un-logging a day later does not re-spend it. The returned freeze's Undo restores it with its original `created_at`.
+- **Freeze-pool month is the *missed* day's month** (as before, now documented): a freeze used on 1 Oct for 30 Sep counts against September, and logging 30 Sep returns it to September's pool. The Today pool readout uses today's month, so on the 1st it can differ from the grace day's month by design.
+- **Settings exposes the pool but does not show it.** `useSettingsQueries().freezePool` (size, used this month) is ready for S4's "used this month" row (HAB-44).
+- **Concurrent writes outside `runInTransaction`.** The serialised helper only orders callers that use it; a plain `db` write issued while one of its transactions is open still joins that transaction on the one connection. Same hazard as before (audit A7-03); `habit-repository`'s raw blocks should move onto the helper.
+- **`quantity-log` is opened from the count control** in the visual check (a tap on the circle adds one now).
+
 ## Decided — deviations the reviewers should not re-flag
 
 ### HAB-16 — Monthly

@@ -196,6 +196,8 @@ This is a **visual and copy variant** of the Today row for any habit whose Direc
 
 ## 05 — Day-level states (empty, rest day, day closed)
 
+> **Superseded by V3 (V3-2a):** the Day closed state is removed (PR-01 is Later); everything done is the normal list at 100%. Empty and rest day stand.
+
 **Depends on:** 03
 
 ### User story
