@@ -1,4 +1,4 @@
-import { endOfMonth, startOfMonth } from "date-fns";
+import { endOfMonth, max, startOfMonth } from "date-fns";
 import { useMemo } from "react";
 import { useToday } from "@/lib/today/use-today";
 import { scopeHabits } from "../domain/day-grid";
@@ -69,6 +69,19 @@ export function useProgressBaseQueries(habitId: number | null | undefined) {
 	const isLoaded = loaded && logged.loaded;
 	// One stable object until something it holds changes, so each range's
 	// memoised maths can depend on it.
+	// Too early (P2/P9/P14): the grid shows what was logged, and the days before
+	// the first log read as "before start" (dashed) rather than missed.
+	const firstLog = unlock.firstLogDate;
+	const gridHabits = useMemo(
+		() =>
+			gate === "too-early" && firstLog
+				? scoped.map((habit) => ({
+						...habit,
+						createdAt: max([habit.createdAt, firstLog]),
+					}))
+				: scoped,
+		[gate, firstLog, scoped],
+	);
 	return useMemo(
 		() => ({
 			today,
@@ -76,12 +89,14 @@ export function useProgressBaseQueries(habitId: number | null | undefined) {
 			habits,
 			/** The habits in play: one for a one-habit variant, otherwise all. */
 			scoped,
+			/** `scoped`, with the days before the first log marked before-start while too early. */
+			gridHabits,
 			unlock,
 			gate,
 			nothingLogged: unlock.loggedDays === 0,
 			freezesLeft,
 			firstDay: historyStart(scoped),
 		}),
-		[today, isLoaded, habits, scoped, unlock, gate, freezesLeft],
+		[today, isLoaded, habits, scoped, gridHabits, unlock, gate, freezesLeft],
 	);
 }

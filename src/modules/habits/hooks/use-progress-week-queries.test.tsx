@@ -200,6 +200,22 @@ describe("useProgressWeekQueries", () => {
 		expect("summary" in view).toBe(false);
 	});
 
+	it("dashes the days before the first log while too early (P2)", async () => {
+		const water = await habit({ name: "Water" });
+		await done(water, [2, 3]);
+		const hook = await renderHook(() => useProgressWeekQueries());
+		await waitFor(() => expect(hook.result.current.state).toBe("too-early"));
+		const view = hook.result.current;
+		if (view.state !== "too-early") throw new Error("state");
+		expect(view.grid.rows[0].cells.map((c) => c.status).slice(0, 5)).toEqual([
+			"before-start",
+			"before-start",
+			"done",
+			"done",
+			"today",
+		]);
+	});
+
 	it("is empty with no habits", async () => {
 		const hook = await renderHook(() => useProgressWeekQueries());
 		await waitFor(() => expect(hook.result.current.state).toBe("no-habits"));

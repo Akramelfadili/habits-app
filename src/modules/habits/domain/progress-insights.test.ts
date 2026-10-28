@@ -176,6 +176,20 @@ describe("progressInsights", () => {
 		).toEqual([13, 12, 11]);
 	});
 
+	it("does not call a gain improved when the previous range was a thin sample", () => {
+		const thin = row(meditate, {
+			deltaPoints: 50,
+			rate: 100,
+			previousRate: 50,
+			previous: { done: 1, due: 2 },
+		});
+		expect(
+			progressInsights({ ...base, summary: summary([thin, row(water)]) }).map(
+				(i) => i.kind,
+			),
+		).toEqual(["nothing-to-fix"]);
+	});
+
 	it("does not call a small gain 'improved', or one on too few due days", () => {
 		const small = row(meditate, { deltaPoints: 9, rate: 89, previousRate: 80 });
 		const thin = row(water, {

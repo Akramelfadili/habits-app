@@ -22,8 +22,20 @@ The old Weekly / Monthly / Yearly summary screens keep working on their existing
 - **Best day**: the weekday with the highest done ÷ due over the range (earliest weekday wins a tie). For Week each weekday is one date, so the same numbers are the daily bars (P1).
 - **Row totals** (week matrix): `done / target`, target = days the habit is due in the whole week (future days included; before-start and paused days not); × per week shows `n / timesPerWeek`.
 - **Slipping** is per habit and per range scale (`domain/slipping.ts`, `monthly-insights.ts`): Week and Year = at least 25 points down on the previous week / year with enough due days (3 / 30); Month = Monthly's existing weekly trend (never up week over week, first-to-last drop ≥ 25 %). **Improved** = at least +10 points on the previous range (Monthly's `IMPROVED_MIN_POINTS`) with enough due days (3 / 5 / 30); Year adds the best month. Archived habits are never named.
+- Slipping and improved need a real sample in **both** ranges (due days: Week 3, Month 5 for improved, Year 30), so one done day last week is not a 100 % habit.
+- Too early: the grid marks the days before the first log as before-start (dashed, P9), not missed.
 - **"Nothing to fix"** follows the improved cards whenever nothing is slipping; a perfect range shows only it.
 - A day with a habit still open today is not a perfect day (Monthly's old `perfectDays` still counts it; V3-3b retires that screen).
+
+## Behaviour changes on the old screens
+
+| Change | Where | Tests changed |
+|---|---|---|
+| 90-day rate excludes frozen days (D14) | Habit Detail | `habit-history.test.ts`: calls pass `frozenDates`, +2 frozen tests; `CompletionRate` gained `frozen` (3 fixture objects) |
+| Weekly excludes frozen days | old Weekly, Yearly's too-early week | `weekly-summary.test.ts` +1; both hook tests +1 |
+| Monthly opens on the current month (D15) | old Monthly | `monthly-summary.test.ts` (3 `defaultSummaryMonth` tests removed with the function), `use-monthly-summary-queries.test.tsx` (range 27 Jul–4 Oct, freeze date) |
+| 7 logged days unlock replaces 30 days of history | old Monthly | `monthly-summary.test.ts` (`monthUnlock` test removed), `yearly-summary.test.ts` (dropped a `monthUnlock` assertion), `monthly-summary-helpers.test.ts` (copy), `monthly-summary-screen.test.tsx` (copy: "unlocks in 4 days", "3 of 7 days"), hook test (+2) |
+| A frozen day is no longer a perfect day | old Monthly | none pinned it; the parity test in `range-summary.parity.test.ts` covers it |
 
 ## DN rows → code
 

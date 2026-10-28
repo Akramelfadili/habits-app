@@ -41,7 +41,7 @@ export function useProgressYearQueries({
 		if (base.gate === "no-habits") return { state: "no-habits" };
 		const window = rangeWindowFor("year", fromDayKey(yearKey));
 		const grid = buildYearMap({
-			habits: base.scoped,
+			habits: base.gridHabits,
 			entries,
 			frozenDays,
 			today,

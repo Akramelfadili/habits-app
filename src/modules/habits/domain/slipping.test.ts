@@ -5,11 +5,8 @@ describe("isSlippingVsPrevious", () => {
 		due: number,
 		rate: number | null,
 		previousRate: number | null,
-	) => ({
-		due,
-		rate,
-		previousRate,
-	});
+		previousDue = 30,
+	) => ({ due, rate, previousRate, previous: { due: previousDue } });
 
 	it("flags a fall of at least the minimum points on the previous range", () => {
 		expect(SLIPPING_MIN_DROP_POINTS).toBe(25);
@@ -22,6 +19,11 @@ describe("isSlippingVsPrevious", () => {
 		expect(isSlippingVsPrevious("week", row(2, 0, 100))).toBe(false);
 		expect(isSlippingVsPrevious("year", row(29, 0, 100))).toBe(false);
 		expect(isSlippingVsPrevious("year", row(30, 0, 100))).toBe(true);
+	});
+
+	it("needs a real sample in the previous range too", () => {
+		expect(isSlippingVsPrevious("week", row(5, 0, 100, 1))).toBe(false);
+		expect(isSlippingVsPrevious("week", row(5, 0, 100, 3))).toBe(true);
 	});
 
 	it("has nothing to compare without a rate in both ranges", () => {

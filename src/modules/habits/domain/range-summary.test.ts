@@ -289,4 +289,27 @@ describe("buildRangeSummary — month", () => {
 		expect(result.bestStreak).toMatchObject({ days: 13 });
 		expect(key(result.bestStreak?.endedOn as Date)).toBe("2026-08-13");
 	});
+
+	it("ignores weeks that haven't started when judging the current month", () => {
+		// Today is Sun 20 Sep: the weeks of 21 and 28 Sep are still ahead. Weeks of
+		// 6, 5 and 2 done fall every week; the empty future weeks must not add a
+		// month-to-date "week" (a rise) that hides it.
+		const fading = makeHabit({ id: 1, name: "Fading", createdAt: longAgo });
+		const days = (from: number, count: number) =>
+			Array.from({ length: count }, (_, index) => ({
+				id: 2000 + from + index,
+				habitId: 1,
+				date: format(new Date(2026, 8, from + index), "yyyy-MM-dd"),
+				createdAt: new Date(2026, 8, from + index),
+			}));
+		const result = buildRangeSummary({
+			kind: "month",
+			habits: [fading],
+			entries: [...days(1, 6), ...days(7, 5), ...days(14, 2)],
+			frozenDays: [],
+			today: new Date(2026, 8, 20, 12),
+			window: rangeWindowFor("month", new Date(2026, 8, 1)),
+		});
+		expect(result.habits[0].slipping).toBe(true);
+	});
 });

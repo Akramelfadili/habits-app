@@ -52,7 +52,7 @@ export function useProgressWeekQueries({
 		if (base.gate === "no-habits") return { state: "no-habits" };
 		const week = rangeWindowFor("week", fromDayKey(weekKey));
 		const grid = buildWeekMatrix({
-			habits: base.scoped,
+			habits: base.gridHabits,
 			entries,
 			frozenDays,
 			today,

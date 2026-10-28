@@ -45,7 +45,7 @@ export function useProgressMonthQueries({
 		if (base.gate === "no-habits") return { state: "no-habits" };
 		const window = rangeWindowFor("month", fromDayKey(monthKey));
 		const grid = buildMonthCalendar({
-			habits: base.scoped,
+			habits: base.gridHabits,
 			entries,
 			frozenDays,
 			today,

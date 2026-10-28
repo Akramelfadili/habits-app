@@ -73,6 +73,7 @@ export function useYearlySummaryQueries(): YearlySummaryView {
 		week: buildWeeklySummary({
 			habits: habits.filter((habit) => habit.archivedAt === null),
 			entries,
+			frozenDays,
 			today,
 			week: defaultSummaryWeek(today),
 		}),

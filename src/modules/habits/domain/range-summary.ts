@@ -290,17 +290,22 @@ function isSlipping(
 	// An archived habit is finished, not slipping (insights read active habits only).
 	if (row.habit.archivedAt !== null) return false;
 	if (kind !== "month") return isSlippingVsPrevious(kind, row);
-	const weeks = monthWeeks(window).map((week) => {
-		const from = Math.max(
-			windowFrom,
-			dates.findIndex((date) => !isBefore(date, week.start)),
+	const weeks = monthWeeks(window).flatMap((week) => {
+		const first = dates.findIndex((date) => !isBefore(date, week.start));
+		// A week that hasn't started (or lies before the range) says nothing.
+		if (first === -1) return [];
+		const after = dates.findIndex((date) => isAfter(date, week.end));
+		const tally = tallyCells(
+			cells,
+			Math.max(windowFrom, first),
+			after === -1 ? dates.length : after,
 		);
-		const to = dates.findIndex((date) => isAfter(date, week.end));
-		const tally = tallyCells(cells, from, to === -1 ? dates.length : to);
-		return {
-			scheduled: tally.due,
-			fraction: tally.due > 0 ? tally.done / tally.due : null,
-		};
+		return [
+			{
+				scheduled: tally.due,
+				fraction: tally.due > 0 ? tally.done / tally.due : null,
+			},
+		];
 	});
 	return slippingTrend(weeks) !== null;
 }

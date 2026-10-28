@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { toDayKey } from "@/utils/day-key";
 import { makeFrozenDayFixtures } from "../dev/frozen-day-fixtures";
 import { resolveFixtureScenario } from "../dev/habit-fixtures";
@@ -40,8 +40,12 @@ export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
 	const frozenDays = useFrozenDays();
 	const startDate = toDayKey(start);
 	const endDate = toDayKey(end);
-	return frozenDays.filter(
-		(frozen) => frozen.date >= startDate && frozen.date <= endDate,
+	return useMemo(
+		() =>
+			frozenDays.filter(
+				(frozen) => frozen.date >= startDate && frozen.date <= endDate,
+			),
+		[frozenDays, startDate, endDate],
 	);
 }
 

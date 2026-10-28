@@ -132,7 +132,8 @@ export function progressInsights({
 				!row.slipping &&
 				row.deltaPoints !== null &&
 				row.deltaPoints >= IMPROVED_MIN_POINTS &&
-				row.due >= IMPROVED_MIN_DUE[summary.kind],
+				row.due >= IMPROVED_MIN_DUE[summary.kind] &&
+				row.previous.due >= IMPROVED_MIN_DUE[summary.kind],
 		)
 		.sort((a, b) => (b.deltaPoints ?? 0) - (a.deltaPoints ?? 0));
 
