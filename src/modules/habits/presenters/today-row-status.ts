@@ -19,6 +19,8 @@ type RowStatusInput = {
 	frozenYesterday: { date: Date; streak: number } | undefined;
 	/** False when a past day is shown ("Resisted", not "Resisted today"). */
 	isToday: boolean;
+	/** The real today after `EVENING_STARTS_AT_HOUR`: an open Break habit reads "Resist tonight". */
+	isEvening?: boolean;
 };
 
 /**
@@ -73,7 +75,9 @@ export function todayRowStatus(input: RowStatusInput): RowStatus | undefined {
 		return {
 			text: completed
 				? todayCopy.rowResisted(streak, input.isToday)
-				: todayCopy.rowResisting(streak),
+				: input.isToday && input.isEvening
+					? todayCopy.rowResistTonight(streak)
+					: todayCopy.rowResisting(streak),
 			tone: "default",
 		};
 	}

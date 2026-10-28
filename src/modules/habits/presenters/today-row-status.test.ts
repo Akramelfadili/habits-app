@@ -136,4 +136,30 @@ describe("todayRowStatus", () => {
 		});
 		expect(status).toEqual({ text: "14-day streak", tone: "default" });
 	});
+
+	it("reads 'Resist tonight' for an open Break habit in the evening, today only", () => {
+		const habit = makeHabit({ direction: "break" });
+		expect(
+			todayRowStatus({ ...base, habit, streak: 9, isEvening: true })?.text,
+		).toBe("Resist tonight · 9-day streak");
+		expect(todayRowStatus({ ...base, habit, isEvening: true })?.text).toBe(
+			"Resist tonight",
+		);
+		// Resisted already, a past day, or the daytime: unchanged.
+		expect(
+			todayRowStatus({
+				...base,
+				habit,
+				completed: true,
+				streak: 5,
+				isEvening: true,
+			})?.text,
+		).toBe("Resisted today · 5 days strong");
+		expect(
+			todayRowStatus({ ...base, habit, isToday: false, isEvening: true })?.text,
+		).toBe("Resisting");
+		expect(todayRowStatus({ ...base, habit, streak: 4 })?.text).toBe(
+			"Resisting · 4 days strong",
+		);
+	});
 });

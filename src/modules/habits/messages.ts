@@ -215,6 +215,8 @@ export const todayCopy = {
 		days > 0
 			? `Resisting · ${plural(days, "day", "days")} strong`
 			: "Resisting",
+	rowResistTonight: (days: number) =>
+		days > 0 ? `Resist tonight · ${days}-day streak` : "Resist tonight",
 	rowResisted: (days: number, isToday: boolean) => {
 		const base = isToday ? "Resisted today" : "Resisted";
 		return days > 0 ? `${base} · ${plural(days, "day", "days")} strong` : base;

@@ -277,3 +277,6 @@ export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
 
 /** `app_settings` key for the day of the last successful data export (HAB-15), "yyyy-MM-dd". */
 export const LAST_EXPORT_SETTING_KEY = "habits.lastExport";
+
+/** From this local hour a Break habit that is still open reads "Resist tonight" instead of "Resisting" (HAB-31, T5). */
+export const EVENING_STARTS_AT_HOUR = 18;

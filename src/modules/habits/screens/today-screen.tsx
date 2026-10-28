@@ -23,6 +23,7 @@ import { TodayHabitList } from "../components/today/today-habit-list";
 import { TodayRestDay } from "../components/today/today-rest-day";
 import { TodayHeader } from "../components/today-header";
 import { WeekStrip } from "../components/week-strip";
+import { EVENING_STARTS_AT_HOUR } from "../constants";
 import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useOffScheduleQueries } from "../hooks/use-off-schedule-queries";
 import { useSelectedDayQueries } from "../hooks/use-selected-day-queries";
@@ -177,6 +178,7 @@ export function TodayScreen() {
 						streakByHabitId={today.streakByHabitId}
 						frozenYesterdayByHabitId={today.frozenYesterdayByHabitId}
 						isToday={isToday}
+						isEvening={new Date().getHours() >= EVENING_STARTS_AT_HOUR}
 						dayLabel={dayLabel}
 						notDueHabits={notDueHabits}
 						loggedBonusIds={loggedBonusIds}

@@ -32,6 +32,8 @@ type TodayHabitListProps = {
 	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
 	/** False on a past day: copy drops "today". */
 	isToday: boolean;
+	/** After the evening hour on the real today (T5: "Resist tonight"). */
+	isEvening?: boolean;
 	/** "Wed 21" — the past day, named in the progress line (T10). */
 	dayLabel: string;
 	/** Habits that existed but are not due on the shown day: the fold row (T1). */
@@ -63,6 +65,7 @@ export function TodayHabitList({
 	streakByHabitId,
 	frozenYesterdayByHabitId,
 	isToday,
+	isEvening,
 	dayLabel,
 	notDueHabits,
 	loggedBonusIds,
@@ -143,6 +146,7 @@ export function TodayHabitList({
 											atRisk,
 											frozenYesterday: frozenYesterdayByHabitId.get(habit.id),
 											isToday,
+											isEvening,
 										})}
 										atRisk={atRisk !== undefined}
 										onPress={() =>
