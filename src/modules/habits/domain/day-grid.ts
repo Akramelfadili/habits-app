@@ -144,3 +144,13 @@ export function aggregateDays(
 		};
 	});
 }
+
+/** One habit's slice of the data for the "one habit" variants (P5, P10, P15); all habits when `habitId` is null. */
+export function scopeHabits(
+	habits: readonly Habit[],
+	habitId: number | null | undefined,
+): Habit[] {
+	return habitId == null
+		? [...habits]
+		: habits.filter((habit) => habit.id === habitId);
+}
