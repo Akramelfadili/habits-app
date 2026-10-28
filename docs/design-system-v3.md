@@ -132,6 +132,7 @@ Motion confirms an action; it never decorates. With Reduce Motion nothing moves 
 | sheet / push | iOS spring ≈ 340 ms / iOS default | System crossfade |
 | toast | 240 in / 180 out, rise 12 pt + fade | Fade only |
 | reorder | Lift scale 1.02 + E2 shadow | Shadow only |
+| header collapse | scroll-linked, no duration: title scale 1 → .88 and opacity 1 → 0 over 0–60 % of the range, bar name and buttons 50–100 %, bar background and hairline 70–100 %; settles on the nearer end when scrolling stops inside it (`useCollapsingHeader`) | No interpolation, no settle; 150 ms crossfade at 50 % |
 | celebrate | 600 ms once, check draws | Static check |
 | skeleton | 1.2 s loop, only after 300 ms | Static |
 

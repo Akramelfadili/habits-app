@@ -162,7 +162,7 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 Deferred, each wanted by HAB-27's own rules or raised while building it:
 
-- **V3-02's collapsing large title is not built.** HAB-27 asks for "a large title that collapses into a solid inline bar on scroll (T5)", an eyebrow on each tab root and 2-line-then-truncate. The three tab roots still draw their existing static titles, because V3-1 deliberately did not redesign screen contents — Today, Progress and Habits are rebuilt in V3-2, V3-3 and V3-4, and the header belongs with them. Only the 44 pt header buttons part of V3-02 landed. **Build it with each screen's own batch**, or as one component in HAB-29.
+- **V3-02's collapsing large title: built for Today only (V3-3a, `useCollapsingHeader` + `CollapsedHeaderBar` in `components/ui/composite/collapsing-header.tsx`).** Scroll-linked on the UI thread, settles on the nearer end, Reduce Motion crossfades at the middle of the range. **Progress and Habits still draw static titles**; adopt the hook with each screen's own batch (V3-3b, V3-4) — `HabitsHeader` has not been merged with `TodayHeader` because it would restyle Habits (display title, eyebrow) ahead of its redesign.
 - **One header component.** `today-header.tsx` and `habits-header.tsx` each build their own title row. They should become one V3-02 `Header` (eyebrow, title, ≤ 2 trailing buttons) — fold that into HAB-29 or the first batch that touches both.
 - **Re-tapping the selected tab does nothing.** The pill copies the stock contract (`tabPress` then navigate only when not focused). iOS normally pops that tab to its root. Not in the spec; decide in V3-6.
 - **A cold deep link with no group lands on the first tab.** `/week` opens the weekly summary inside *Today*, not Progress — shared routes have no tab to restore on a cold start (measured; in-app navigation is unaffected). HAB-27's edge case "deep link / back from Detail restores the originating tab" is therefore only met for in-app pushes. If real deep links are added, give them group-qualified hrefs.
@@ -194,7 +194,6 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 
 ## Open — V3-2b review leftovers
 
-- `today-screen.tsx` owns the scroll-collapse state and inline bar; extract `components/today/today-inline-bar.tsx` when the screen next grows.
 - `useWeekStripQueries` also returns the week-moving callbacks (named `…Queries` for the hook rule); a `useWeekStripState` split would remove the explanation.
 - Habit Detail's "Habit not found" / "No entries yet" strings still sit in the screen (pre-V3, moved with Detail's batch).
 - `useQuantitySheetActions.close()` closes even if the last write failed (the sheet shows what is really saved and the error toast stays); the quantity sheet unmounts without a slide-out because the parent drops it.

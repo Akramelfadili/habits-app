@@ -1067,6 +1067,32 @@ export const SCREENS = {
 			await page.waitForTimeout(400);
 		},
 	},
+	"today-v3-collapsing": {
+		feature: "HAB-27",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_02.png",
+		note: "T5 mid-collapse — halfway through the range (16 of 32 pt): the large title is shrunk and faded, the bar's name has not arrived and its background and hairline are still clear; the week strip has not moved off the days.",
+		async interact(page) {
+			await page.mouse.wheel(0, 16);
+			await page.waitForTimeout(500);
+		},
+	},
+	"today-v3-past-day-scrolled": {
+		feature: "HAB-30",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		viewport: { width: 393, height: 640 },
+		mockup: "docs/mockups/v3/renders/today/slice_04.png",
+		note: "T10 + T5 — Wed 21 selected, then the list scrolled past the title: the inline bar is solid over the 'Logging for Wed 21 Oct' bar, which scrolls with the content.",
+		async interact(page) {
+			await page.getByLabel("Wednesday 21", { exact: true }).click();
+			await page.getByText("Logging for Wed 21 Oct").waitFor();
+			await page.waitForTimeout(300);
+			await page.mouse.wheel(0, 120);
+			await page.waitForTimeout(500);
+		},
+	},
 	"today-v3-at-risk": {
 		feature: "HAB-33",
 		route: "/?fixtures=today-v3-at-risk",
@@ -1182,6 +1208,8 @@ const DARK_TWINS = [
 	"today-v3",
 	"today-v3-quantity-plus-one",
 	"today-v3-scrolled",
+	"today-v3-collapsing",
+	"today-v3-past-day-scrolled",
 	"today-v3-at-risk",
 	"today-v3-frozen",
 	"today-v3-all-done",

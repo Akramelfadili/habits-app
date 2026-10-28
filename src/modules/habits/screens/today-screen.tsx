@@ -1,19 +1,26 @@
 import { addDays, format } from "date-fns";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-	type NativeScrollEvent,
-	type NativeSyntheticEvent,
-	ScrollView,
-	StyleSheet,
-	Text,
-	View,
-} from "react-native";
+import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
+import Animated, {
+	FadeIn,
+	FadeOut,
+	LinearTransition,
+	ReduceMotion,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+	CollapsedHeaderBar,
+	collapseRange,
+	HEADER_BLOCK_GAP,
+	HEADER_CONTENT_PADDING_TOP,
+	useCollapsingHeader,
+} from "@/components/ui/composite/collapsing-header";
+import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
-import { minTouchTarget, space, textStyles } from "@/theme/theme";
+import { motion, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { PastDayBar } from "../components/today/past-day-bar";
@@ -42,9 +49,6 @@ import { FirstRunScreen } from "./first-run-screen";
  */
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
-/** How far (pt) the large title scrolls before the solid inline bar takes over (T5). */
-const COLLAPSE_AT = space[800] + space[800];
-
 /** Thin: reads from the hooks, picks the view state, hands props to the sections in `components/today/`. */
 export function TodayScreen() {
 	const router = useRouter();
@@ -57,7 +61,22 @@ export function TodayScreen() {
 	);
 	const { hasSeenFirstRun } = useFirstRunQueries();
 	const dev = useTodayDevActions();
-	const [collapsed, setCollapsed] = useState(false);
+	const header = useCollapsingHeader();
+	const reduceMotion = useReducedMotion();
+	// The "Logging for …" bar and the list under it move together over the
+	// state timing (F-07); Reduce Motion crossfades the bar and lets the list
+	// land at once. Without this the list jumped 64 pt when the bar mounted.
+	const barEntering = FadeIn.duration(
+		reduceMotion ? motion.state.reduced.crossfade : motion.state.duration,
+	).reduceMotion(ReduceMotion.Never);
+	const barExiting = FadeOut.duration(
+		reduceMotion ? motion.state.reduced.crossfade : motion.state.duration,
+	).reduceMotion(ReduceMotion.Never);
+	const listLayout = reduceMotion
+		? undefined
+		: LinearTransition.duration(motion.state.duration).reduceMotion(
+				ReduceMotion.Never,
+			);
 
 	const dueHabits = today.groups.flatMap((group) => group.habits);
 	const dueIds = new Set(dueHabits.map((habit) => habit.id));
@@ -85,17 +104,27 @@ export function TodayScreen() {
 		today.progress.total,
 	);
 
-	const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-		const next = event.nativeEvent.contentOffset.y > COLLAPSE_AT;
-		if (next !== collapsed) setCollapsed(next);
-	};
+	// The strip's top edge (content padding + header + the block's gap) is where
+	// the bar's bottom edge has to end up, so the bar never covers the days.
+	const onHeaderLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
+		header.setRange(
+			collapseRange(
+				HEADER_CONTENT_PADDING_TOP +
+					layout.y +
+					layout.height +
+					HEADER_BLOCK_GAP,
+			),
+		);
 
-	const header = (
-		<TodayHeader
-			day={today.selectedDay}
-			onAddHabit={() => router.push("/new-habit")}
-			titleHidden={collapsed}
-		/>
+	const titleRow = (
+		<View onLayout={onHeaderLayout}>
+			<TodayHeader
+				day={today.selectedDay}
+				onAddHabit={() => router.push("/new-habit")}
+				animatedStyle={header.titleStyle}
+				collapsed={header.collapsed}
+			/>
+		</View>
 	);
 	const weekStrip = (
 		<WeekStrip
@@ -140,78 +169,81 @@ export function TodayScreen() {
 			edges={SCREEN_EDGES}
 			style={[styles.screen, { backgroundColor: colors.bg }]}
 		>
-			<ScrollView
+			<CollapsedHeaderBar
+				testID="today-inline-bar"
+				title={todayCopy.screenTitle}
+				collapsed={header.collapsed}
+				backgroundStyle={header.barBackgroundStyle}
+				contentStyle={header.barContentStyle}
+				trailing={
+					<HeaderCircleButton
+						symbol="plus"
+						accessibilityLabel={todayCopy.addHabit}
+						onPress={() => router.push("/new-habit")}
+					/>
+				}
+			/>
+			<Animated.ScrollView
+				ref={header.scrollRef}
+				testID="today-scroll"
 				contentContainerStyle={styles.content}
-				onScroll={onScroll}
+				onScroll={header.onScroll}
 				scrollEventThrottle={16}
 			>
 				<View style={styles.top}>
-					{header}
+					{titleRow}
 					{today.viewState === "no-habits" ? null : weekStrip}
 				</View>
 				{day.isPastDay ? (
-					<PastDayBar dayLabel={dayLabel} onShowToday={day.showToday} />
+					<Animated.View entering={barEntering} exiting={barExiting}>
+						<PastDayBar dayLabel={dayLabel} onShowToday={day.showToday} />
+					</Animated.View>
 				) : null}
-				{today.viewState === "no-habits" ? (
-					<TodayEmptyState
-						onAddHabit={() => router.push("/new-habit")}
-						dev={dev}
-					/>
-				) : today.viewState === "rest-day" ? (
-					<TodayRestDay
-						isToday={isToday}
-						notDueHabits={notDueHabits}
-						loggedToday={loggedToday}
-						completedThisWeekByHabitId={today.completedThisWeekByHabitId}
-						eligibleHabits={eligibleHabits}
-						onOpenHabit={openHabit}
-						onLogBonus={logging.logOffSchedule}
-					/>
-				) : (
-					<TodayHabitList
-						progress={today.progress}
-						groups={today.groups}
-						completedHabitIds={today.completedHabitIds}
-						quantityValuesByHabitId={today.quantityValuesByHabitId}
-						completedThisWeekByHabitId={today.completedThisWeekByHabitId}
-						atRiskByHabitId={today.atRiskByHabitId}
-						streakByHabitId={today.streakByHabitId}
-						frozenYesterdayByHabitId={today.frozenYesterdayByHabitId}
-						isToday={isToday}
-						isEvening={new Date().getHours() >= EVENING_STARTS_AT_HOUR}
-						dayLabel={dayLabel}
-						notDueHabits={notDueHabits}
-						loggedBonusIds={loggedBonusIds}
-						bonusValues={bonusValues}
-						onToggle={logging.toggle}
-						onAddOne={logging.addOne}
-						onOpenQuantitySheet={logging.openQuantitySheet}
-						onOpenHabit={openHabit}
-						onOpenAtRisk={freeze.openAtRisk}
-						onLogBonus={logging.logOffSchedule}
-					/>
-				)}
-				{today.viewState === "populated" ? (
-					<TodayDevButtons dev={dev} withClearAll />
-				) : null}
-			</ScrollView>
-			{collapsed ? (
-				<View
-					testID="today-inline-bar"
-					style={[
-						styles.inlineBar,
-						{ backgroundColor: colors.bg, borderBottomColor: colors.border },
-					]}
-				>
-					<Text
-						accessibilityElementsHidden
-						importantForAccessibility="no-hide-descendants"
-						style={[styles.inlineTitle, { color: colors.ink }]}
-					>
-						{todayCopy.screenTitle}
-					</Text>
-				</View>
-			) : null}
+				<Animated.View layout={listLayout} style={styles.body}>
+					{today.viewState === "no-habits" ? (
+						<TodayEmptyState
+							onAddHabit={() => router.push("/new-habit")}
+							dev={dev}
+						/>
+					) : today.viewState === "rest-day" ? (
+						<TodayRestDay
+							isToday={isToday}
+							notDueHabits={notDueHabits}
+							loggedToday={loggedToday}
+							completedThisWeekByHabitId={today.completedThisWeekByHabitId}
+							eligibleHabits={eligibleHabits}
+							onOpenHabit={openHabit}
+							onLogBonus={logging.logOffSchedule}
+						/>
+					) : (
+						<TodayHabitList
+							progress={today.progress}
+							groups={today.groups}
+							completedHabitIds={today.completedHabitIds}
+							quantityValuesByHabitId={today.quantityValuesByHabitId}
+							completedThisWeekByHabitId={today.completedThisWeekByHabitId}
+							atRiskByHabitId={today.atRiskByHabitId}
+							streakByHabitId={today.streakByHabitId}
+							frozenYesterdayByHabitId={today.frozenYesterdayByHabitId}
+							isToday={isToday}
+							isEvening={new Date().getHours() >= EVENING_STARTS_AT_HOUR}
+							dayLabel={dayLabel}
+							notDueHabits={notDueHabits}
+							loggedBonusIds={loggedBonusIds}
+							bonusValues={bonusValues}
+							onToggle={logging.toggle}
+							onAddOne={logging.addOne}
+							onOpenQuantitySheet={logging.openQuantitySheet}
+							onOpenHabit={openHabit}
+							onOpenAtRisk={freeze.openAtRisk}
+							onLogBonus={logging.logOffSchedule}
+						/>
+					)}
+					{today.viewState === "populated" ? (
+						<TodayDevButtons dev={dev} withClearAll />
+					) : null}
+				</Animated.View>
+			</Animated.ScrollView>
 			{quantitySheet}
 			{freeze.atRiskInfo && freeze.atRiskHabit ? (
 				<StreakAtRiskSheet
@@ -235,27 +267,16 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		paddingHorizontal: space[500],
-		paddingTop: space[300],
+		paddingTop: HEADER_CONTENT_PADDING_TOP,
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
+		gap: space[500],
+	},
+	/** The list and what follows it: one child, so one layout transition moves them. */
+	body: {
 		gap: space[500],
 	},
 	/** Title and week strip read as one block (T1). */
 	top: {
-		gap: space[200],
-	},
-	/** T5: the large title has scrolled away; a solid bar keeps the screen named. */
-	inlineBar: {
-		position: "absolute",
-		top: 0,
-		left: 0,
-		right: 0,
-		height: minTouchTarget,
-		alignItems: "center",
-		justifyContent: "center",
-		borderBottomWidth: StyleSheet.hairlineWidth,
-	},
-	inlineTitle: {
-		...textStyles.body,
-		fontWeight: "500",
+		gap: HEADER_BLOCK_GAP,
 	},
 });
