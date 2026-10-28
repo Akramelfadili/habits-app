@@ -102,6 +102,8 @@ export type RangeHabitRow = {
 	/** Whole points; null when nothing was due. */
 	rate: number | null;
 	previousRate: number | null;
+	/** What the previous range counted for this habit ("7 of 7 last week"). */
+	previous: { done: number; due: number };
 	/** `rate` − `previousRate`, whole points; null unless both exist. */
 	deltaPoints: number | null;
 	slipping: boolean;
@@ -237,6 +239,7 @@ export function buildRangeSummary(input: RangeSummaryInput): RangeSummary {
 			bonus: own.bonus,
 			rate,
 			previousRate,
+			previous: { done: before.done, due: before.due },
 			deltaPoints:
 				rate !== null && previousRate !== null ? rate - previousRate : null,
 			slipping: false,
