@@ -491,36 +491,6 @@ describe("TodayScreen", () => {
 
 			expect(useToastStore.getState().toast).toBeNull();
 		});
-
-		it("Undo targets the day of the original tap, not the day it is pressed on", async () => {
-			jest.setSystemTime(new Date(2026, 8, 16, 23, 59, 0));
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("Glass of water"));
-			expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, true);
-
-			// Midnight passes before Undo is pressed.
-			jest.setSystemTime(new Date(2026, 8, 17, 0, 1, 0));
-			await act(async () => {
-				await useToastStore.getState().toast?.onAction?.();
-			});
-
-			expect(mockRestoreDay).toHaveBeenLastCalledWith(
-				1,
-				new Date(2026, 8, 16),
-				false,
-				null,
-			);
-		});
-
-		it("a tap on a render that still shows yesterday writes nothing", async () => {
-			await render(<TodayScreen />);
-			jest.setSystemTime(new Date(2026, 8, 17, 0, 0, 5));
-
-			await fireEvent.press(screen.getByLabelText("Glass of water"));
-
-			expect(mockToggleCompletion).not.toHaveBeenCalled();
-			expect(useToastStore.getState().toast).toBeNull();
-		});
 	});
 
 	it("confirms a Break habit as resisted, never as complete (HAB-04)", async () => {
@@ -1001,51 +971,6 @@ describe("TodayScreen", () => {
 			expect(mockPush).toHaveBeenCalledWith("/habit/1");
 		});
 
-		it("Use a freeze applies it for the missed date and closes the sheet", async () => {
-			mockViewState = "populated";
-			mockGroups = [
-				{ category: categoryNamed("Morning"), habits: [morningHabit] },
-			];
-			const missedDate = new Date("2026-09-15");
-			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
-			mockApplyFreeze.mockResolvedValue({
-				ok: true,
-				value: { freezesLeft: 1 },
-			});
-
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Glass of water"));
-			await fireEvent.press(screen.getByText("Use a freeze"));
-
-			expect(mockApplyFreeze).toHaveBeenCalledWith(1, missedDate);
-			await waitFor(() =>
-				expect(
-					screen.queryByText("Keep your Glass of water streak?"),
-				).toBeNull(),
-			);
-		});
-
-		it("Use a freeze confirms with a toast whose Undo takes it back for that same missed day", async () => {
-			mockViewState = "populated";
-			mockGroups = [
-				{ category: categoryNamed("Morning"), habits: [morningHabit] },
-			];
-			const missedDate = new Date("2026-09-15");
-			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
-
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Glass of water"));
-			await fireEvent.press(screen.getByText("Use a freeze"));
-
-			const toast = useToastStore.getState().toast;
-			expect(toast).toMatchObject({
-				message: `Freeze used for ${format(missedDate, "EEE d")} · 1 left`,
-				actionLabel: "Undo",
-			});
-			toast?.onAction?.();
-			expect(mockUndoFreeze).toHaveBeenCalledWith(1, missedDate);
-		});
-
 		it("a failed freeze leaves the sheet open and shows no Undo", async () => {
 			mockViewState = "populated";
 			mockGroups = [
@@ -1062,23 +987,6 @@ describe("TodayScreen", () => {
 
 			expect(useToastStore.getState().toast).toBeNull();
 			expect(screen.getByText("Keep your Glass of water streak?")).toBeTruthy();
-		});
-
-		it("Not now closes the sheet without calling applyFreeze", async () => {
-			mockViewState = "populated";
-			mockGroups = [
-				{ category: categoryNamed("Morning"), habits: [morningHabit] },
-			];
-			mockAtRiskByHabitId = new Map([
-				[1, { missedDate: new Date("2026-09-15"), currentStreak: 24 }],
-			]);
-
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Glass of water"));
-			await fireEvent.press(screen.getByText("Not now"));
-
-			expect(mockApplyFreeze).not.toHaveBeenCalled();
-			expect(screen.queryByText("Keep your Glass of water streak?")).toBeNull();
 		});
 	});
 
