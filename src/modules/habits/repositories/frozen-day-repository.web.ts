@@ -70,6 +70,26 @@ export async function freezeHabitDay(
 	]);
 }
 
+export async function getFrozenDay(
+	habitId: number,
+	date: Date,
+): Promise<FrozenDay | undefined> {
+	const dateString = toDayKey(date);
+	return getFrozenDays().find(
+		(frozenDay) =>
+			frozenDay.habitId === habitId && frozenDay.date === dateString,
+	);
+}
+
+export async function getFrozenHabitIdsOn(date: Date): Promise<Set<number>> {
+	const dateString = toDayKey(date);
+	return new Set(
+		getFrozenDays()
+			.filter((frozenDay) => frozenDay.date === dateString)
+			.map((frozenDay) => frozenDay.habitId),
+	);
+}
+
 export async function unfreezeHabitDay(
 	habitId: number,
 	date: Date,
@@ -89,6 +109,8 @@ const _sameShape: typeof NativeFrozenDayRepository = {
 	useFrozenDays,
 	getFreezesUsedInMonth,
 	freezeHabitDay,
+	getFrozenDay,
+	getFrozenHabitIdsOn,
 	unfreezeHabitDay,
 };
 void _sameShape;

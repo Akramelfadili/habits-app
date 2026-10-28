@@ -5,6 +5,7 @@ import type { Entry, FrozenDay } from "../types";
 import {
 	calculateCurrentStreak,
 	freezesRemainingInMonth,
+	freezesUsedInMonth,
 	getStreakAtRisk,
 	isEntryComplete,
 } from "./streaks";
@@ -178,7 +179,7 @@ describe("getStreakAtRisk", () => {
 			entry(1, "2026-09-14"),
 			// 09-15 (yesterday) missing.
 		];
-		const result = getStreakAtRisk(dailyHabit, entries, new Set(), 2, today);
+		const result = getStreakAtRisk(dailyHabit, entries, new Set(), today);
 		expect(result).toEqual({
 			// Local-midnight of "yesterday," same as the implementation computes
 			// it — not a hardcoded UTC string, which would drift with the runner's timezone.
@@ -189,14 +190,16 @@ describe("getStreakAtRisk", () => {
 
 	it("returns null when yesterday was completed", () => {
 		const entries = [entry(1, yesterday)];
-		const result = getStreakAtRisk(dailyHabit, entries, new Set(), 2, today);
+		const result = getStreakAtRisk(dailyHabit, entries, new Set(), today);
 		expect(result).toBeNull();
 	});
 
-	it("returns null when the freeze pool is exhausted — nothing to offer", () => {
+	it("does not depend on the pool: with none left the habit is still at risk (SR3)", () => {
+		// getStreakAtRisk no longer takes the pool, so an empty one cannot hide the state.
 		const entries = [entry(1, "2026-09-14")];
-		const result = getStreakAtRisk(dailyHabit, entries, new Set(), 0, today);
-		expect(result).toBeNull();
+		expect(
+			getStreakAtRisk(dailyHabit, entries, new Set(), today),
+		).not.toBeNull();
 	});
 
 	it("returns null when yesterday is already frozen", () => {
@@ -205,14 +208,13 @@ describe("getStreakAtRisk", () => {
 			dailyHabit,
 			entries,
 			new Set([yesterday]),
-			2,
 			today,
 		);
 		expect(result).toBeNull();
 	});
 
 	it("returns null when there's no streak standing before the miss", () => {
-		const result = getStreakAtRisk(dailyHabit, [], new Set(), 2, today);
+		const result = getStreakAtRisk(dailyHabit, [], new Set(), today);
 		expect(result).toBeNull();
 	});
 
@@ -223,7 +225,7 @@ describe("getStreakAtRisk", () => {
 			createdAt: HABIT_CREATED,
 		});
 		const entries = [entry(6, "2026-09-09")];
-		const result = getStreakAtRisk(wednesdayOnly, entries, new Set(), 2, today);
+		const result = getStreakAtRisk(wednesdayOnly, entries, new Set(), today);
 		expect(result).toBeNull();
 	});
 });
@@ -258,13 +260,13 @@ describe("after a restore (HAB-20)", () => {
 	// a restored habit has no streak at stake, so it must stay silent.
 	it("getStreakAtRisk raises no prompt for a restored habit with no new streak", () => {
 		expect(
-			getStreakAtRisk(restored, before, noFreezes, 2, new Date(2026, 8, 22)),
+			getStreakAtRisk(restored, before, noFreezes, new Date(2026, 8, 22)),
 		).toBeNull();
 	});
 
 	it("getStreakAtRisk is silent the morning after the restore too — yesterday was paused", () => {
 		expect(
-			getStreakAtRisk(restored, before, noFreezes, 2, new Date(2026, 8, 21)),
+			getStreakAtRisk(restored, before, noFreezes, new Date(2026, 8, 21)),
 		).toBeNull();
 	});
 
@@ -272,7 +274,7 @@ describe("after a restore (HAB-20)", () => {
 		const entries = [...before, entry(1, "2026-09-21")];
 		// Yesterday (22nd) missed after a one-day new streak: a freeze can save it.
 		expect(
-			getStreakAtRisk(restored, entries, noFreezes, 2, new Date(2026, 8, 23)),
+			getStreakAtRisk(restored, entries, noFreezes, new Date(2026, 8, 23)),
 		).toMatchObject({ currentStreak: 1 });
 	});
 });
@@ -295,5 +297,52 @@ describe("freezesRemainingInMonth", () => {
 			{ id: 1, habitId: 1, date: "2026-08-31", createdAt: new Date() },
 		];
 		expect(freezesRemainingInMonth(frozenDays, new Date("2026-09-16"))).toBe(2);
+	});
+});
+
+describe("the freeze pool by calendar month (D13)", () => {
+	const frozen = (
+		id: number,
+		date: string,
+		createdAt = new Date(),
+	): FrozenDay => ({
+		id,
+		habitId: id,
+		date,
+		createdAt,
+	});
+
+	it("counts used freezes by missed date, from the 1st to the last day of the month", () => {
+		const days = [
+			frozen(1, "2026-09-01"),
+			frozen(2, "2026-09-30"),
+			frozen(3, "2026-08-31"),
+			frozen(4, "2026-10-01"),
+		];
+		expect(freezesUsedInMonth(days, new Date("2026-09-16"))).toBe(2);
+		expect(freezesUsedInMonth(days, new Date("2026-10-16"))).toBe(1);
+	});
+
+	it("counts a freeze against the month of the day it covers, not the day it was used", () => {
+		// Used on 1 October for Wednesday 30 September: September's pool pays for it.
+		const days = [frozen(1, "2026-09-30", new Date("2026-10-01T08:00:00"))];
+		expect(freezesUsedInMonth(days, new Date("2026-09-16"))).toBe(1);
+		expect(freezesRemainingInMonth(days, new Date("2026-10-02"))).toBe(2);
+	});
+
+	it("resets on the 1st with no rollover, and never goes below zero", () => {
+		const days = [frozen(1, "2026-09-10"), frozen(2, "2026-09-11")];
+		expect(freezesRemainingInMonth(days, new Date("2026-09-30"))).toBe(0);
+		expect(freezesRemainingInMonth(days, new Date("2026-10-01"))).toBe(2);
+		const over = [...days, frozen(3, "2026-09-12")];
+		expect(freezesRemainingInMonth(over, new Date("2026-09-30"))).toBe(0);
+	});
+
+	it("is shared by every habit: two habits frozen the same day use two", () => {
+		const days = [
+			{ ...frozen(1, "2026-09-10"), habitId: 7 },
+			{ ...frozen(2, "2026-09-10"), habitId: 8 },
+		];
+		expect(freezesUsedInMonth(days, new Date("2026-09-10"))).toBe(2);
 	});
 });

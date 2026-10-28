@@ -1,14 +1,15 @@
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
-import { saveDayLog } from "../repositories/entry-repository";
+import { saveDayReturningFreezes } from "../services/day-log-service";
 
 /**
- * Single repository call — no service needed (HAB-10): the repository writes
- * the whole day in one transaction, and streaks/rate/heatmap are derived from
- * entries on read, so there's nothing else to recalculate or orchestrate.
+ * Saves a whole day (HAB-10) through the service that also gives back the
+ * freeze of any frozen habit the save completes (PR-11). Streaks, rate and
+ * heatmap are derived from entries on read, so there is nothing else to
+ * recalculate.
  */
 export function useRetroLogActions() {
-	const save = useAsyncAction(saveDayLog, {
+	const save = useAsyncAction(saveDayReturningFreezes, {
 		scope: "retro-log",
 		failure: failureMessage("save", "this day"),
 	});

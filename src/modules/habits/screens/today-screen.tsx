@@ -150,14 +150,15 @@ export function TodayScreen() {
 				)}
 			</ScrollView>
 			{today.viewState === "day-closed" ? null : quantitySheet}
-			{freeze.atRiskInfo ? (
+			{freeze.atRiskInfo && freeze.atRiskHabit ? (
 				<StreakAtRiskSheet
 					visible
+					habitName={freeze.atRiskHabit.name}
 					currentStreak={freeze.atRiskInfo.currentStreak}
 					freezesRemaining={today.freezesRemainingThisMonth}
 					today={today.today}
 					onUseFreeze={freeze.spendFreeze}
-					onReset={freeze.dismissAtRisk}
+					onNotNow={freeze.dismissAtRisk}
 					isApplyingFreeze={freeze.isFreezing}
 				/>
 			) : null}

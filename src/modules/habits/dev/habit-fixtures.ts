@@ -48,6 +48,7 @@ export type FixtureScenario =
 	| "first-run"
 	| "quantity-log"
 	| "streak-at-risk"
+	| "streak-at-risk-no-freezes"
 	| "no-freezes"
 	| "habit-detail"
 	| "habit-detail-new"
@@ -80,6 +81,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"first-run",
 	"quantity-log",
 	"streak-at-risk",
+	"streak-at-risk-no-freezes",
 	"no-freezes",
 	"habit-detail",
 	"habit-detail-new",
@@ -758,6 +760,7 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 		case "quantity-log":
 			return QUANTITY_LOG_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "streak-at-risk":
+		case "streak-at-risk-no-freezes":
 			return STREAK_AT_RISK_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "no-freezes":
 			return NO_FREEZES_HABIT_FIXTURES.map((habit) => ({ ...habit }));

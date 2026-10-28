@@ -8,6 +8,9 @@ import { resolveFixtureScenario } from "../dev/habit-fixtures";
 import { assertWritesAllowed } from "../dev/write-failure-fixtures";
 import type { DayLog, Entry, EntryNote } from "../types";
 import type * as NativeEntryRepository from "./entry-repository";
+import { freezeHabitDay, unfreezeHabitDay } from "./frozen-day-repository.web";
+
+export type FreezeChange = NativeEntryRepository.FreezeChange;
 
 /**
  * Web-only stand-in for `entry-repository.ts` (see `habit-repository.web.ts`
@@ -62,12 +65,25 @@ export function useAllEntries(): Entry[] {
 	return useSyncExternalStore(subscribe, getEntries, () => [] as Entry[]);
 }
 
+/** Web counterpart of the native freeze change (PR-11): no real transaction, one store. */
+async function changeFreeze(
+	habitId: number,
+	date: Date,
+	freeze: FreezeChange | undefined,
+): Promise<void> {
+	if (!freeze) return;
+	if ("release" in freeze) await unfreezeHabitDay(habitId, date);
+	else await freezeHabitDay(habitId, date);
+}
+
 export async function setHabitCompletedOn(
 	habitId: number,
 	date: Date,
 	completed: boolean,
+	freeze?: FreezeChange,
 ): Promise<void> {
 	assertWritesAllowed();
+	await changeFreeze(habitId, date, freeze);
 	const dateString = format(date, "yyyy-MM-dd");
 	const entries = getEntries();
 	const existing = entries.find(
@@ -93,8 +109,10 @@ export async function setHabitQuantityOn(
 	habitId: number,
 	date: Date,
 	value: number,
+	freeze?: FreezeChange,
 ): Promise<void> {
 	assertWritesAllowed();
+	await changeFreeze(habitId, date, freeze);
 	const dateString = format(date, "yyyy-MM-dd");
 	const entries = getEntries();
 	const existing = entries.find(
@@ -129,8 +147,15 @@ export function useEntryNotes(): EntryNote[] {
 }
 
 /** Web counterpart of the native transactional day save (HAB-10). */
-export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
+export async function saveDayLog(
+	date: Date,
+	log: DayLog,
+	releaseFreezeFor: readonly number[] = [],
+): Promise<void> {
 	assertWritesAllowed();
+	for (const habitId of releaseFreezeFor) {
+		await unfreezeHabitDay(habitId, date);
+	}
 	for (const { habitId, value } of log.values) {
 		if (typeof value === "boolean") {
 			await setHabitCompletedOn(habitId, date, value);

@@ -414,6 +414,15 @@ export const SCREENS = {
 			await page.getByText("Meditate").click();
 		},
 	},
+	"streak-at-risk-no-freezes": {
+		feature: "HAB-33",
+		route: "/?fixtures=streak-at-risk-no-freezes",
+		mockup: null,
+		note: "SR3: the same at-risk habit with the month's pool spent — the one-button sheet ('Got it') says the streak restarts and the longest streak is kept. No mockup draws it in this form.",
+		async interact(page) {
+			await page.getByText("Meditate").click();
+		},
+	},
 	"habit-detail-no-freezes": {
 		feature: "HAB-20",
 		route: "/(today)/habit/1?fixtures=no-freezes",

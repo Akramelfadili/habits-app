@@ -20,6 +20,17 @@ describe("applyFreeze", () => {
 		expect(mockFreezeHabitDay).toHaveBeenCalledWith(1, new Date("2026-09-15"));
 	});
 
+	it("reports what is left of the missed day's month after the write (the toast's \"· N left\")", async () => {
+		mockGetFreezesUsedInMonth.mockResolvedValue(0);
+		await expect(applyFreeze(1, new Date("2026-09-15"))).resolves.toEqual({
+			freezesLeft: 1,
+		});
+		mockGetFreezesUsedInMonth.mockResolvedValue(1);
+		await expect(applyFreeze(1, new Date("2026-09-15"))).resolves.toEqual({
+			freezesLeft: 0,
+		});
+	});
+
 	it("refuses to write once the shared pool is exhausted", async () => {
 		mockGetFreezesUsedInMonth.mockResolvedValue(2);
 		await expect(applyFreeze(1, new Date("2026-09-15"))).rejects.toThrow();

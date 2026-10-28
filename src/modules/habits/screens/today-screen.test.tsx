@@ -5,6 +5,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import { format } from "date-fns";
 import type { CategoryGroup } from "../presenters/today-screen-helpers";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import { mockMeasureInWindow } from "../test-support/measure-in-window";
@@ -47,7 +48,10 @@ let mockTomorrowReminderTimes = new Map<number, string>();
 let mockCompletedThisWeekByHabitId: Map<number, number> = new Map();
 let mockQuantityValuesByHabitId = new Map<number, number>();
 const mockToday = new Date(2026, 8, 16);
-const OK = { ok: true, value: undefined } as const;
+const OK = {
+	ok: true,
+	value: { returnedFreeze: null, freezesLeft: 2 },
+} as const;
 let mockIsLoaded = true;
 let mockAtRiskByHabitId = new Map<
 	number,
@@ -83,9 +87,11 @@ jest.mock("../hooks/use-off-schedule-queries", () => ({
 }));
 
 const mockToggleCompletion = jest.fn();
+const mockRestoreDay = jest.fn();
 jest.mock("../hooks/use-today-actions", () => ({
 	useTodayActions: () => ({
 		toggleCompletion: mockToggleCompletion,
+		restoreDay: mockRestoreDay,
 		isToggling: false,
 		toggleError: null,
 	}),
@@ -181,10 +187,15 @@ describe("TodayScreen", () => {
 		mockIsLoaded = true;
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset().mockResolvedValue(OK);
+		mockRestoreDay
+			.mockReset()
+			.mockResolvedValue({ ok: true, value: undefined });
 		mockLogQuantity.mockReset().mockResolvedValue(OK);
 		mockClearAllHabits.mockReset();
 		mockResetFirstRun.mockReset();
-		mockApplyFreeze.mockReset().mockResolvedValue(OK);
+		mockApplyFreeze
+			.mockReset()
+			.mockResolvedValue({ ok: true, value: { freezesLeft: 1 } });
 		mockUndoFreeze.mockReset().mockResolvedValue(OK);
 		mockSeedStreakAtRiskHabit.mockReset();
 		mockGroups = [];
@@ -292,12 +303,14 @@ describe("TodayScreen", () => {
 				actionLabel: "Undo",
 			});
 			toast?.onAction?.();
-			expect(mockToggleCompletion).toHaveBeenLastCalledWith(
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(
 				5,
 				mockToday,
 				false,
+				null,
 			);
-			expect(mockToggleCompletion).toHaveBeenCalledTimes(2);
+			expect(mockToggleCompletion).toHaveBeenCalledTimes(1);
+			expect(mockRestoreDay).toHaveBeenCalledTimes(1);
 			// The picker closed.
 			await waitFor(() =>
 				expect(screen.queryByText("Log off-schedule")).toBeNull(),
@@ -321,12 +334,12 @@ describe("TodayScreen", () => {
 			);
 			await fireEvent.press(screen.getByText("Save 1 of 8"));
 
-			expect(mockLogQuantity).toHaveBeenCalledWith(6, mockToday, 1);
+			expect(mockLogQuantity).toHaveBeenCalledWith(6, mockToday, 1, 8);
 			const toast = useToastStore.getState().toast;
 			expect(toast?.message).toBe("Logged 'Glass of water' · off-schedule");
 			toast?.onAction?.();
 			// Nothing was logged before, so Undo writes 0 — which deletes the entry.
-			expect(mockLogQuantity).toHaveBeenLastCalledWith(6, mockToday, 0);
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(6, mockToday, 0, null);
 		});
 
 		it("Undo after a quantity log restores the amount that was there before", async () => {
@@ -345,7 +358,7 @@ describe("TodayScreen", () => {
 			await fireEvent.press(screen.getByText("Save 3 of 8"));
 
 			useToastStore.getState().toast?.onAction?.();
-			expect(mockLogQuantity).toHaveBeenLastCalledWith(6, mockToday, 2);
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(6, mockToday, 2, null);
 		});
 
 		it("lists what was logged today with its time, and a logged row in the picker does nothing", async () => {
@@ -467,7 +480,7 @@ describe("TodayScreen", () => {
 			actionLabel: "Undo",
 		});
 		toast?.onAction?.();
-		expect(mockToggleCompletion).toHaveBeenLastCalledWith(1, mockToday, false);
+		expect(mockRestoreDay).toHaveBeenLastCalledWith(1, mockToday, false, null);
 	});
 
 	it("renders a neutral blank — not the empty state — until habits have loaded (A5-04)", async () => {
@@ -512,10 +525,11 @@ describe("TodayScreen", () => {
 				await useToastStore.getState().toast?.onAction?.();
 			});
 
-			expect(mockToggleCompletion).toHaveBeenLastCalledWith(
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(
 				1,
 				new Date(2026, 8, 16),
 				false,
+				null,
 			);
 		});
 
@@ -572,7 +586,7 @@ describe("TodayScreen", () => {
 			// The app is left open past midnight before Undo is tapped.
 			fakeDate(new Date(2026, 8, 17, 0, 5));
 			toast?.onAction?.();
-			expect(mockToggleCompletion).toHaveBeenLastCalledWith(1, mockToday, true);
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(1, mockToday, true, null);
 		});
 
 		it("words a Break habit's un-tick as 'not resisted'", async () => {
@@ -622,8 +636,8 @@ describe("TodayScreen", () => {
 			expect(screen.getByText("Marked 'Read' not complete")).toBeTruthy();
 
 			await fireEvent.press(screen.getByText("Undo"));
-			expect(mockToggleCompletion).toHaveBeenLastCalledWith(2, mockToday, true);
-			expect(mockToggleCompletion).not.toHaveBeenCalledWith(1, mockToday, true);
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(2, mockToday, true, null);
+			expect(mockRestoreDay).not.toHaveBeenCalledWith(1, mockToday, true, null);
 		});
 
 		it("once the toast has expired Undo is gone, so nothing can be restored late", async () => {
@@ -678,11 +692,11 @@ describe("TodayScreen", () => {
 			}
 			await fireEvent.press(screen.getByText("Save 3 of 8"));
 
-			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3);
+			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3, 8);
 			const toast = useToastStore.getState().toast;
 			expect(toast?.message).toBe("Marked 'Glass of water' not complete");
 			toast?.onAction?.();
-			expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 10);
+			expect(mockRestoreDay).toHaveBeenLastCalledWith(3, mockToday, 10, null);
 		});
 
 		it("a quantity save that stays complete (or stays short) offers nothing", async () => {
@@ -708,7 +722,7 @@ describe("TodayScreen", () => {
 			);
 			await fireEvent.press(screen.getByText("Save 9 of 8"));
 
-			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 9);
+			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 9, 8);
 			expect(useToastStore.getState().toast).toBeNull();
 		});
 	});
@@ -813,12 +827,12 @@ describe("TodayScreen", () => {
 			screen.getByLabelText("Add one to Glass of water, 2 of 8 glasses"),
 		);
 
-		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3);
+		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3, 8);
 		expect(screen.queryByText("Save 3 of 8")).toBeNull();
 		const toast = useToastStore.getState().toast;
 		expect(toast?.message).toBe("Glass of water +1 · 3 of 8 glasses");
 		toast?.onAction?.();
-		expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 2);
+		expect(mockRestoreDay).toHaveBeenLastCalledWith(3, mockToday, 2, null);
 	});
 
 	it("the count control opens the Quantity Log sheet", async () => {
@@ -869,7 +883,7 @@ describe("TodayScreen", () => {
 		);
 		await fireEvent.press(screen.getByText("Save 4 of 8"));
 
-		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 4);
+		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 4, 8);
 		await waitFor(() => expect(screen.queryByText("Save 4 of 8")).toBeNull());
 		// Still short of the target — nothing completed, so nothing to confirm.
 		expect(useToastStore.getState().toast).toBeNull();
@@ -904,7 +918,7 @@ describe("TodayScreen", () => {
 		const toast = useToastStore.getState().toast;
 		expect(toast?.message).toBe("Marked 'Glass of water' complete");
 		toast?.onAction?.();
-		expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 7);
+		expect(mockRestoreDay).toHaveBeenLastCalledWith(3, mockToday, 7, null);
 	});
 
 	it("adds a habit from the header + once habits exist, with no ghost link under the list", async () => {
@@ -1005,10 +1019,10 @@ describe("TodayScreen", () => {
 			await fireEvent.press(screen.getByText("Glass of water"));
 
 			expect(mockPush).not.toHaveBeenCalled();
-			expect(screen.getByText("You missed yesterday")).toBeTruthy();
+			expect(screen.getByText("Keep your Glass of water streak?")).toBeTruthy();
 			expect(
 				screen.getByText(
-					"Use a freeze to keep your 24-day streak, or let it reset and start again today. Either is fine.",
+					"You missed yesterday. Use a freeze to keep your 24-day streak, or let it go: it restarts with your next log.",
 				),
 			).toBeTruthy();
 		});
@@ -1032,7 +1046,10 @@ describe("TodayScreen", () => {
 			];
 			const missedDate = new Date("2026-09-15");
 			mockAtRiskByHabitId = new Map([[1, { missedDate, currentStreak: 24 }]]);
-			mockApplyFreeze.mockResolvedValue(OK);
+			mockApplyFreeze.mockResolvedValue({
+				ok: true,
+				value: { freezesLeft: 1 },
+			});
 
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Glass of water"));
@@ -1040,7 +1057,9 @@ describe("TodayScreen", () => {
 
 			expect(mockApplyFreeze).toHaveBeenCalledWith(1, missedDate);
 			await waitFor(() =>
-				expect(screen.queryByText("You missed yesterday")).toBeNull(),
+				expect(
+					screen.queryByText("Keep your Glass of water streak?"),
+				).toBeNull(),
 			);
 		});
 
@@ -1058,7 +1077,7 @@ describe("TodayScreen", () => {
 
 			const toast = useToastStore.getState().toast;
 			expect(toast).toMatchObject({
-				message: "Used a freeze on 'Glass of water'",
+				message: `Freeze used for ${format(missedDate, "EEE d")} · 1 left`,
 				actionLabel: "Undo",
 			});
 			toast?.onAction?.();
@@ -1080,10 +1099,10 @@ describe("TodayScreen", () => {
 			await fireEvent.press(screen.getByText("Use a freeze"));
 
 			expect(useToastStore.getState().toast).toBeNull();
-			expect(screen.getByText("You missed yesterday")).toBeTruthy();
+			expect(screen.getByText("Keep your Glass of water streak?")).toBeTruthy();
 		});
 
-		it("Reset and start today closes the sheet without calling applyFreeze", async () => {
+		it("Not now closes the sheet without calling applyFreeze", async () => {
 			mockViewState = "populated";
 			mockGroups = [
 				{ category: categoryNamed("Morning"), habits: [morningHabit] },
@@ -1094,10 +1113,10 @@ describe("TodayScreen", () => {
 
 			await render(<TodayScreen />);
 			await fireEvent.press(screen.getByText("Glass of water"));
-			await fireEvent.press(screen.getByText("Reset and start today"));
+			await fireEvent.press(screen.getByText("Not now"));
 
 			expect(mockApplyFreeze).not.toHaveBeenCalled();
-			expect(screen.queryByText("You missed yesterday")).toBeNull();
+			expect(screen.queryByText("Keep your Glass of water streak?")).toBeNull();
 		});
 	});
 

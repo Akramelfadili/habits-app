@@ -10,7 +10,7 @@ import { monthlyFrozenDays } from "./monthly-fixtures";
  */
 export const HABIT_DETAIL_FROZEN_DAYS_AGO = [38, 59];
 
-/** `no-freezes`: the two days this month's freeze pool was spent on. */
+/** `no-freezes` and `streak-at-risk-no-freezes` (SR3): the two days this month's freeze pool was spent on. */
 const NO_FREEZES_SPENT_DAYS_AGO = [3, 6];
 
 /**
@@ -23,7 +23,7 @@ const NO_FREEZES_SPENT_DAYS_AGO = [3, 6];
 export function makeFrozenDayFixtures(
 	scenario: FixtureScenario = "default",
 ): FrozenDay[] {
-	if (scenario === "no-freezes") {
+	if (scenario === "no-freezes" || scenario === "streak-at-risk-no-freezes") {
 		// Both of this month's freezes already spent (on another habit), as
 		// long as "now" is at least a week into the month — the visual check
 		// pins it to the 24th.

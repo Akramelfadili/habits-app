@@ -5,6 +5,7 @@ import { currentDay } from "@/lib/today/use-today";
 import { fromDayKey } from "@/utils/day-key";
 import { MAX_QUANTITY_VALUE } from "../constants";
 import { messages, showMessage } from "../messages";
+import type { DayWrite } from "../services/day-log-service";
 import type { Habit } from "../types";
 import { useQuantityLogActions } from "./use-quantity-log-actions";
 import { useTodayActions } from "./use-today-actions";
@@ -32,7 +33,7 @@ export function useTodayLogActions({
 	quantityValuesByHabitId,
 	loggableHabits,
 }: TodayLogInput) {
-	const { toggleCompletion } = useTodayActions();
+	const { toggleCompletion, restoreDay } = useTodayActions();
 	const { logQuantity, isLogging } = useQuantityLogActions();
 	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
 	const [quantityIsOffSchedule, setQuantityIsOffSchedule] = useState(false);
@@ -74,6 +75,31 @@ export function useTodayLogActions({
 	}
 
 	/**
+	 * Confirms a write. A write that gave a frozen day's freeze back says so
+	 * instead (PR-11, one toast at a time); its Undo puts the day and the freeze
+	 * back exactly. `previous` is what the day held at tap time.
+	 */
+	function confirmWrite(
+		habit: Habit,
+		day: Date,
+		write: DayWrite,
+		previous: boolean | number,
+		confirm: (undo: () => unknown) => void,
+	) {
+		const undo = () =>
+			restoreDay(habit.id, day, previous, write.returnedFreeze ?? null);
+		if (write.returnedFreeze) {
+			showMessage(
+				messages.freezeReturned,
+				[format(day, "EEE d"), write.freezesLeft],
+				undo,
+			);
+		} else {
+			confirm(undo);
+		}
+	}
+
+	/**
 	 * The day a write lands on. A selected past day is that date, however late
 	 * it is now — a past selection stays across midnight. Otherwise it is read
 	 * from the clock at the moment of the tap: if the app was left open across
@@ -96,11 +122,11 @@ export function useTodayLogActions({
 		const completing = !completedHabitIds.has(habit.id);
 		const result = await toggleCompletion(habit.id, day, completing);
 		if (!result.ok) return;
-		if (completing) {
-			confirmCompletion(habit, () => toggleCompletion(habit.id, day, false));
-		} else {
-			confirmUncompletion(habit, () => toggleCompletion(habit.id, day, true));
-		}
+		confirmWrite(habit, day, result.value, !completing, (undo) =>
+			completing
+				? confirmCompletion(habit, undo)
+				: confirmUncompletion(habit, undo),
+		);
 	}
 
 	/**
@@ -115,12 +141,14 @@ export function useTodayLogActions({
 		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
 		if (previous >= MAX_QUANTITY_VALUE) return;
 		const next = previous + 1;
-		const result = await logQuantity(habit.id, day, next);
+		const result = await logQuantity(habit.id, day, next, habit.targetAmount);
 		if (!result.ok) return;
-		showMessage(
-			messages.quantityAdded,
-			[habit.name, next, habit.targetAmount ?? 0, habit.targetUnit, dayLabel],
-			() => logQuantity(habit.id, day, previous),
+		confirmWrite(habit, day, result.value, previous, (undo) =>
+			showMessage(
+				messages.quantityAdded,
+				[habit.name, next, habit.targetAmount ?? 0, habit.targetUnit, dayLabel],
+				undo,
+			),
 		);
 	}
 
@@ -144,7 +172,9 @@ export function useTodayLogActions({
 		if (!day) return;
 		const result = await toggleCompletion(habit.id, day, true);
 		if (!result.ok) return;
-		confirmOffSchedule(habit, () => toggleCompletion(habit.id, day, false));
+		confirmWrite(habit, day, result.value, false, (undo) =>
+			confirmOffSchedule(habit, undo),
+		);
 	}
 
 	async function saveQuantity(value: number) {
@@ -154,25 +184,25 @@ export function useTodayLogActions({
 		if (!day) return;
 		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
 		const target = habit.targetAmount ?? 0;
-		const result = await logQuantity(habit.id, day, value);
+		const result = await logQuantity(habit.id, day, value, habit.targetAmount);
 		// On failure the sheet stays open with its error toast, so a retry is one tap.
 		if (!result.ok) return;
 		dismissQuantitySheet();
-		if (quantityIsOffSchedule) {
-			// Undo restores the amount from before — or removes the entry if none.
-			if (value > 0) {
-				confirmOffSchedule(habit, () => logQuantity(habit.id, day, previous));
+		confirmWrite(habit, day, result.value, previous, (undo) => {
+			if (quantityIsOffSchedule) {
+				// Undo restores the amount from before — or removes the entry if none.
+				if (value > 0) confirmOffSchedule(habit, undo);
+				return;
 			}
-			return;
-		}
-		// Only the save that crosses the target counts as "completing" it — and
-		// the one that drops back below it as "un-completing". Either way Undo
-		// restores the exact amount logged before.
-		if (previous < target && value >= target) {
-			confirmCompletion(habit, () => logQuantity(habit.id, day, previous));
-		} else if (previous >= target && value < target) {
-			confirmUncompletion(habit, () => logQuantity(habit.id, day, previous));
-		}
+			// Only the save that crosses the target counts as "completing" it — and
+			// the one that drops back below it as "un-completing". Either way Undo
+			// restores the exact amount logged before.
+			if (previous < target && value >= target) {
+				confirmCompletion(habit, undo);
+			} else if (previous >= target && value < target) {
+				confirmUncompletion(habit, undo);
+			}
+		});
 	}
 
 	return {

@@ -5,6 +5,7 @@ import { WEEK_STARTS_ON } from "../constants";
 import { isHabitListedOn } from "../domain/selected-day";
 import {
 	freezesRemainingInMonth,
+	freezesUsedInMonth,
 	getStreakAtRisk,
 	isEntryComplete,
 	type StreakAtRisk,
@@ -58,6 +59,8 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
 	freezesRemainingThisMonth: number;
+	/** Freezes used this month, by missed date — the same pool, counted the other way (Settings, toast copy). */
+	freezesUsedThisMonth: number;
 } {
 	const { habits, loaded } = useActiveHabits();
 	const categories = useCategories();
@@ -142,7 +145,6 @@ export function useTodayQueries(selectedKey: string | null = null): {
 			habit,
 			entriesByHabit.get(habit.id) ?? [],
 			frozenDatesByHabit.get(habit.id) ?? new Set<string>(),
-			freezesRemainingThisMonth,
 			today,
 		);
 		if (atRisk) atRiskByHabitId.set(habit.id, atRisk);
@@ -166,5 +168,6 @@ export function useTodayQueries(selectedKey: string | null = null): {
 		tomorrowReminderTimeByHabitId,
 		atRiskByHabitId,
 		freezesRemainingThisMonth,
+		freezesUsedThisMonth: freezesUsedInMonth(frozenDays, today),
 	};
 }

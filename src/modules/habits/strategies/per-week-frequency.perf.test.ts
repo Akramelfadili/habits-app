@@ -103,13 +103,7 @@ describe("history on 5 years × 20 habits", () => {
 		expect(
 			timed(() =>
 				habits.map((habit) =>
-					getStreakAtRisk(
-						habit,
-						byHabit.get(habit.id) ?? [],
-						new Set(),
-						2,
-						today,
-					),
+					getStreakAtRisk(habit, byHabit.get(habit.id) ?? [], new Set(), today),
 				),
 			),
 		).toBeLessThan(1500);

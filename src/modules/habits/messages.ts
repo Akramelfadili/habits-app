@@ -96,6 +96,18 @@ export const messages = {
 		) =>
 			`${habit} +1 · ${count} of ${target}${unit ? ` ${unit}` : ""}${onDay(day)}`,
 	},
+	/** T7: "Freeze used for Thu 22 · 0 left" — Undo takes it back. */
+	freezeUsed: {
+		tone: "success",
+		text: (day: string, left: number) =>
+			`Freeze used for ${day} · ${left} left`,
+	},
+	/** PR-11: logging a frozen day gives its freeze back. */
+	freezeReturned: {
+		tone: "success",
+		text: (day: string, left: number) =>
+			`Freeze returned for ${day} · ${left} left`,
+	},
 } satisfies Record<
 	string,
 	// biome-ignore lint/suspicious/noExplicitAny: each entry declares its own params

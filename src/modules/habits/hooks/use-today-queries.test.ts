@@ -351,7 +351,7 @@ describe("useTodayQueries", () => {
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
 		});
 
-		it("does not flag a habit when the freeze pool is exhausted — resets silently instead", async () => {
+		it("still flags a habit when the freeze pool is exhausted, so Today can explain it (SR3)", async () => {
 			mockHabits = [dailyHabit];
 			mockAllEntries = [
 				{ habitId: 1, date: "2026-09-14", createdAt: new Date("2026-09-14") },
@@ -361,7 +361,9 @@ describe("useTodayQueries", () => {
 				{ habitId: 2, date: "2026-09-02" },
 			];
 			const { result } = await renderHook(() => useTodayQueries());
-			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+			expect(result.current.atRiskByHabitId.has(1)).toBe(true);
+			expect(result.current.freezesRemainingThisMonth).toBe(0);
+			expect(result.current.freezesUsedThisMonth).toBe(2);
 		});
 
 		it("does not flag a habit whose missed yesterday is already frozen", async () => {

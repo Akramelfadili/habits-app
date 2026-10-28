@@ -27,7 +27,9 @@ function setup() {
 
 describe("useTodayFreezeActions", () => {
 	beforeEach(() => {
-		mockApplyFreeze.mockReset().mockResolvedValue({ ok: true });
+		mockApplyFreeze
+			.mockReset()
+			.mockResolvedValue({ ok: true, value: { freezesLeft: 0 } });
 		mockUndoFreeze.mockReset();
 		useToastStore.setState({ toast: null });
 	});
@@ -47,7 +49,7 @@ describe("useTodayFreezeActions", () => {
 		expect(mockApplyFreeze).toHaveBeenCalledWith(1, missedDate);
 		expect(result.current.atRiskInfo).toBeUndefined();
 		const toast = useToastStore.getState().toast;
-		expect(toast?.message).toBe("Used a freeze on 'Read'");
+		expect(toast?.message).toBe("Freeze used for Sat 3 · 0 left");
 		toast?.onAction?.();
 		expect(mockUndoFreeze).toHaveBeenCalledWith(1, missedDate);
 	});
@@ -59,6 +61,12 @@ describe("useTodayFreezeActions", () => {
 		await act(() => result.current.spendFreeze());
 		expect(result.current.atRiskInfo).toBeDefined();
 		expect(useToastStore.getState().toast).toBeNull();
+	});
+
+	it("names the habit whose sheet is open", async () => {
+		const { result } = await setup();
+		await act(() => result.current.openAtRisk(1));
+		expect(result.current.atRiskHabit?.name).toBe("Read");
 	});
 
 	it("dismissing writes nothing", async () => {

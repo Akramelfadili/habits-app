@@ -117,7 +117,10 @@ export function makeEntryFixtures(
 		return entries;
 	}
 
-	if (scenario === "streak-at-risk") {
+	if (
+		scenario === "streak-at-risk" ||
+		scenario === "streak-at-risk-no-freezes"
+	) {
 		// Day -1 (yesterday) is intentionally left uncompleted — that's the miss
 		// the streak-at-risk sheet is showing. Days -2 through -25 are all
 		// completed, giving a 24-day streak standing before that miss.

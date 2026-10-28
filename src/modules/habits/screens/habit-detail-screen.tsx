@@ -24,6 +24,7 @@ import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
 import { useRetroLogActions } from "../hooks/use-retro-log-actions";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
+import { messages, showMessage } from "../messages";
 import {
 	archivedBannerDetail,
 	archivedBannerTitle,
@@ -74,13 +75,27 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 
 	async function handleSaveDay(values: DayLog["values"], note: string) {
 		if (!retroLogDate) return;
-		const result = await saveDay(retroLogDate, {
-			values,
-			noteHabitId: habitId,
-			note,
-		});
+		const date = retroLogDate;
+		const result = await saveDay(
+			date,
+			{ values, noteHabitId: habitId, note },
+			new Map(
+				(retroLogDay?.habits ?? []).map((habit) => [
+					habit.id,
+					habit.targetAmount,
+				]),
+			),
+		);
 		// A failed save leaves the sheet open (with its error toast) for a retry.
-		if (result.ok) setRetroLogDate(null);
+		if (!result.ok) return;
+		setRetroLogDate(null);
+		// A frozen day that is now done no longer needs its freeze (PR-11).
+		if (result.value.returnedFreezeHabitIds.length > 0) {
+			showMessage(messages.freezeReturned, [
+				format(date, "EEE d"),
+				result.value.freezesLeft,
+			]);
+		}
 	}
 
 	// Either way the habit leaves wherever Detail was opened from — Today, or

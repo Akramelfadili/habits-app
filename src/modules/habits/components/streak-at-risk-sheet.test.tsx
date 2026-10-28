@@ -3,102 +3,82 @@ import { StreakAtRiskSheet } from "./streak-at-risk-sheet";
 
 const TODAY = new Date("2026-09-16T12:00:00Z");
 
+async function renderSheet(
+	overrides: Partial<Parameters<typeof StreakAtRiskSheet>[0]> = {},
+) {
+	const onUseFreeze = jest.fn();
+	const onNotNow = jest.fn();
+	const view = await render(
+		<StreakAtRiskSheet
+			visible
+			habitName="Read"
+			currentStreak={24}
+			freezesRemaining={2}
+			today={TODAY}
+			onUseFreeze={onUseFreeze}
+			onNotNow={onNotNow}
+			{...overrides}
+		/>,
+	);
+	return { view, onUseFreeze, onNotNow };
+}
+
 describe("StreakAtRiskSheet", () => {
-	it("shows the missed-yesterday headline and interpolates the streak at stake", async () => {
-		await render(
-			<StreakAtRiskSheet
-				visible
-				currentStreak={24}
-				freezesRemaining={2}
-				today={TODAY}
-				onUseFreeze={jest.fn()}
-				onReset={jest.fn()}
-			/>,
-		);
-		expect(screen.getByText("You missed yesterday")).toBeTruthy();
-		expect(
-			screen.getByText(
-				"Use a freeze to keep your 24-day streak, or let it reset and start again today. Either is fine.",
-			),
-		).toBeTruthy();
+	describe("with a freeze left (SR1)", () => {
+		it("asks to keep the habit's streak and interpolates what is at stake", async () => {
+			await renderSheet();
+			expect(screen.getByText("Keep your Read streak?")).toBeTruthy();
+			expect(
+				screen.getByText(
+					"You missed yesterday. Use a freeze to keep your 24-day streak, or let it go: it restarts with your next log.",
+				),
+			).toBeTruthy();
+		});
+
+		it("shows the plural freeze count and next month's reset date", async () => {
+			await renderSheet({ currentStreak: 5 });
+			expect(screen.getByText("2 freezes left")).toBeTruthy();
+			expect(screen.getByText("Resets on 1 October")).toBeTruthy();
+		});
+
+		it("uses the singular form for exactly one freeze left", async () => {
+			await renderSheet({ freezesRemaining: 1 });
+			expect(screen.getByText("1 freeze left")).toBeTruthy();
+		});
+
+		it("Use a freeze calls onUseFreeze", async () => {
+			const { onUseFreeze, onNotNow } = await renderSheet();
+			await fireEvent.press(screen.getByText("Use a freeze"));
+			expect(onUseFreeze).toHaveBeenCalledTimes(1);
+			expect(onNotNow).not.toHaveBeenCalled();
+		});
+
+		it("offers 'Not now', not 'Reset streak', and it only closes", async () => {
+			const { onUseFreeze, onNotNow } = await renderSheet();
+			expect(screen.queryByText(/reset (and start|streak)/i)).toBeNull();
+			await fireEvent.press(screen.getByText("Not now"));
+			expect(onNotNow).toHaveBeenCalledTimes(1);
+			expect(onUseFreeze).not.toHaveBeenCalled();
+		});
+
+		it("disables Not now while the freeze is being applied", async () => {
+			const { onNotNow } = await renderSheet({ isApplyingFreeze: true });
+			await fireEvent.press(screen.getByText("Not now"));
+			expect(onNotNow).not.toHaveBeenCalled();
+		});
 	});
 
-	it("shows the plural freeze count and next month's reset date", async () => {
-		await render(
-			<StreakAtRiskSheet
-				visible
-				currentStreak={5}
-				freezesRemaining={2}
-				today={TODAY}
-				onUseFreeze={jest.fn()}
-				onReset={jest.fn()}
-			/>,
-		);
-		expect(screen.getByText("2 freezes left")).toBeTruthy();
-		expect(screen.getByText("Resets on 1 October")).toBeTruthy();
-	});
-
-	it("uses the singular form for exactly one freeze left", async () => {
-		await render(
-			<StreakAtRiskSheet
-				visible
-				currentStreak={5}
-				freezesRemaining={1}
-				today={TODAY}
-				onUseFreeze={jest.fn()}
-				onReset={jest.fn()}
-			/>,
-		);
-		expect(screen.getByText("1 freeze left")).toBeTruthy();
-	});
-
-	it("Use a freeze calls onUseFreeze", async () => {
-		const onUseFreeze = jest.fn();
-		await render(
-			<StreakAtRiskSheet
-				visible
-				currentStreak={5}
-				freezesRemaining={2}
-				today={TODAY}
-				onUseFreeze={onUseFreeze}
-				onReset={jest.fn()}
-			/>,
-		);
-		await fireEvent.press(screen.getByText("Use a freeze"));
-		expect(onUseFreeze).toHaveBeenCalledTimes(1);
-	});
-
-	it("Reset and start today calls onReset", async () => {
-		const onReset = jest.fn();
-		await render(
-			<StreakAtRiskSheet
-				visible
-				currentStreak={5}
-				freezesRemaining={2}
-				today={TODAY}
-				onUseFreeze={jest.fn()}
-				onReset={onReset}
-			/>,
-		);
-		await fireEvent.press(screen.getByText("Reset and start today"));
-		expect(onReset).toHaveBeenCalledTimes(1);
-	});
-
-	it("disables the scrim dismiss — this decision can't be swiped away", async () => {
-		const onReset = jest.fn();
-		const onUseFreeze = jest.fn();
-		await render(
-			<StreakAtRiskSheet
-				visible
-				currentStreak={5}
-				freezesRemaining={2}
-				today={TODAY}
-				onUseFreeze={onUseFreeze}
-				onReset={onReset}
-			/>,
-		);
-		await fireEvent.press(screen.getByLabelText("Dismiss"));
-		expect(onReset).not.toHaveBeenCalled();
-		expect(onUseFreeze).not.toHaveBeenCalled();
+	describe("with none left (SR3)", () => {
+		it("explains it in one button, and says the longest streak is kept", async () => {
+			const { onNotNow } = await renderSheet({ freezesRemaining: 0 });
+			expect(screen.getByText("No freezes left this month")).toBeTruthy();
+			expect(screen.getByText(/Your longest streak is kept\./)).toBeTruthy();
+			expect(screen.getByText(/Freezes come back on 1 October\./)).toBeTruthy();
+			expect(screen.getByText("0 freezes left")).toBeTruthy();
+			expect(screen.queryByText("Use a freeze")).toBeNull();
+			expect(screen.queryByText("Not now")).toBeNull();
+			await fireEvent.press(screen.getByText("Got it"));
+			expect(onNotNow).toHaveBeenCalledTimes(1);
+		});
 	});
 });

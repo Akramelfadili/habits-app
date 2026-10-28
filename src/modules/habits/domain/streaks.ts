@@ -103,22 +103,18 @@ export type StreakAtRisk = {
 };
 
 /**
- * Whether `habit` should show the streak-at-risk prompt right now: yesterday
- * was due, wasn't completed, isn't already frozen, there's a nonzero streak
- * at stake, and the shared pool has something left to offer (an exhausted
- * pool means the streak has already silently reset — nothing to prompt for,
- * per HAB-08's "don't show a dead-end dialog" rule). Rest days and
- * off-schedule days never qualify, since `isDueOn` is false for them.
+ * Whether `habit` is at risk right now (HAB-33): yesterday was due, wasn't
+ * completed, isn't already frozen, and there's a nonzero streak at stake. It
+ * does not depend on the pool: with no freeze left the state still exists and
+ * the sheet explains that (SR3) instead of the streak resetting silently. Rest
+ * days and off-schedule days never qualify, since `isDueOn` is false for them.
  */
 export function getStreakAtRisk(
 	habit: Habit,
 	entries: readonly Entry[],
 	frozenDates: ReadonlySet<string>,
-	freezesRemaining: number,
 	today: Date,
 ): StreakAtRisk | null {
-	if (freezesRemaining <= 0) return null;
-
 	const yesterday = subDays(startOfDay(today), 1);
 	const yesterdayString = toDayKey(yesterday);
 	if (frozenDates.has(yesterdayString)) return null;
@@ -145,15 +141,30 @@ export function getStreakAtRisk(
 	return { missedDate: yesterday, currentStreak };
 }
 
-/** Freezes used this month, across every habit — the pool is shared, not per-habit. */
-export function freezesRemainingInMonth(
+/**
+ * Freezes used in `monthDate`'s month, across every habit — the pool is shared,
+ * not per-habit. Counted by the *missed* date of each `frozen_days` row, not
+ * the day it was used, so a freeze spent on the 1st for the 31st counts
+ * against the month that ended.
+ */
+export function freezesUsedInMonth(
 	frozenDays: readonly FrozenDay[],
 	monthDate: Date,
 ): number {
 	const monthStart = toDayKey(startOfMonth(monthDate));
 	const monthEnd = toDayKey(endOfMonth(monthDate));
-	const used = frozenDays.filter(
+	return frozenDays.filter(
 		(frozenDay) => frozenDay.date >= monthStart && frozenDay.date <= monthEnd,
 	).length;
-	return Math.max(0, FREEZE_POOL_SIZE - used);
+}
+
+/** What is left of the month's pool (`FREEZE_POOL_SIZE` minus what was used). */
+export function freezesRemainingInMonth(
+	frozenDays: readonly FrozenDay[],
+	monthDate: Date,
+): number {
+	return Math.max(
+		0,
+		FREEZE_POOL_SIZE - freezesUsedInMonth(frozenDays, monthDate),
+	);
 }
