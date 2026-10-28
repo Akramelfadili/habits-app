@@ -364,6 +364,19 @@ describe("useTodayQueries", () => {
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
 		});
 
+		it("never flags a × per week habit, whatever it logged this week", async () => {
+			mockHabits = [perWeekHabit];
+			mockAllEntries = [
+				{
+					habitId: perWeekHabit.id,
+					date: "2026-09-14",
+					createdAt: new Date("2026-09-14"),
+				},
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(perWeekHabit.id)).toBe(false);
+		});
+
 		it("never flags a habit that wasn't due yesterday, even if due today", async () => {
 			const wednesdayOnly = makeHabit({
 				id: 6,

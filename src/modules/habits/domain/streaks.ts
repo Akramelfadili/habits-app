@@ -115,6 +115,10 @@ export function getStreakAtRisk(
 	frozenDates: ReadonlySet<string>,
 	today: Date,
 ): StreakAtRisk | null {
+	// "× per week" habits have no scheduled day to miss, so they are never at
+	// risk by day (a week-level freeze is Later). Streak semantics are unchanged.
+	if (habit.frequency.type === "per-week") return null;
+
 	const yesterday = subDays(startOfDay(today), 1);
 	const yesterdayString = toDayKey(yesterday);
 	if (frozenDates.has(yesterdayString)) return null;
