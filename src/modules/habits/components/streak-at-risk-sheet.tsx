@@ -7,6 +7,7 @@ import { space, squareRadius, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { pluralise } from "@/utils/format";
 import { FREEZE_POOL_SIZE } from "../constants";
+import { todayCopy } from "../messages";
 
 type StreakAtRiskSheetProps = {
 	visible: boolean;
@@ -48,23 +49,24 @@ export function StreakAtRiskSheet({
 	const { colors } = useTheme();
 	const resetsOn = format(addMonths(startOfMonth(today), 1), "d MMMM");
 	const hasFreeze = freezesRemaining > 0;
+	const title = hasFreeze
+		? todayCopy.atRiskTitle(habitName)
+		: todayCopy.atRiskTitleNone;
 
 	return (
 		<Sheet visible={visible} onDismiss={() => {}} dismissible={false}>
 			<View style={styles.copy}>
 				<Text
 					accessibilityRole="header"
-					accessibilityLabel={`${hasFreeze ? `Keep your ${habitName} streak?` : "No freezes left this month"}. ${freezeCountLabel(freezesRemaining)}.`}
+					accessibilityLabel={`${title}. ${freezeCountLabel(freezesRemaining)}.`}
 					style={[styles.headline, { color: colors.ink }]}
 				>
-					{hasFreeze
-						? `Keep your ${habitName} streak?`
-						: "No freezes left this month"}
+					{title}
 				</Text>
 				<Text style={[styles.body, { color: colors.sub }]}>
 					{hasFreeze
-						? `You missed yesterday. Use a freeze to keep your ${currentStreak}-day streak, or let it go: it restarts with your next log.`
-						: `You missed yesterday, so your ${currentStreak}-day streak for ${habitName} restarts with your next log. Your longest streak is kept. Freezes come back on ${resetsOn}.`}
+						? todayCopy.atRiskBody(currentStreak)
+						: todayCopy.atRiskBodyNone(currentStreak, habitName, resetsOn)}
 				</Text>
 			</View>
 
@@ -90,7 +92,7 @@ export function StreakAtRiskSheet({
 							{freezeCountLabel(freezesRemaining)}
 						</Text>
 						<Text style={[styles.poolCaption, { color: colors.sub }]}>
-							{`Resets on ${resetsOn}`}
+							{todayCopy.atRiskResetsOn(resetsOn)}
 						</Text>
 					</View>
 				</View>
@@ -99,19 +101,19 @@ export function StreakAtRiskSheet({
 			{hasFreeze ? (
 				<>
 					<Button
-						label="Use a freeze"
+						label={todayCopy.atRiskUseFreeze}
 						onPress={onUseFreeze}
 						loading={isApplyingFreeze}
 					/>
 					<Button
-						label="Not now"
+						label={todayCopy.atRiskNotNow}
 						variant="secondary"
 						onPress={onNotNow}
 						disabled={isApplyingFreeze}
 					/>
 				</>
 			) : (
-				<Button label="Got it" onPress={onNotNow} />
+				<Button label={todayCopy.atRiskGotIt} onPress={onNotNow} />
 			)}
 		</Sheet>
 	);

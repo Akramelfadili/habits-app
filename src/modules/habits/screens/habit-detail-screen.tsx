@@ -23,7 +23,6 @@ import { HabitHeatmap } from "../components/habit-heatmap";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
-import { messages, showMessage } from "../messages";
 import {
 	archivedBannerDetail,
 	archivedBannerTitle,
@@ -39,7 +38,6 @@ import {
 	streakResetNote,
 } from "../presenters/habit-detail-helpers";
 import { remindersSummary } from "../presenters/reminders-helpers";
-import type { DayLog } from "../types";
 
 type HabitDetailScreenProps = {
 	habitId: number;

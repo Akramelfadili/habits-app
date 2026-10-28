@@ -144,6 +144,36 @@ const plural = (count: number, one: string, many: string) =>
 	`${count} ${count === 1 ? one : many}`;
 
 export const todayCopy = {
+	/** Week strip VoiceOver actions (08.3). */
+	changeDayLabel: (day: string) => `${day} · Change day`,
+	changeDayTitle: "Change day",
+	previousWeek: "Previous week",
+	nextWeek: "Next week",
+	todayWord: "Today",
+	nextDay: "Next day",
+	previousDay: "Previous day",
+	/** Streak at risk sheets (SR1/SR3, HAB-33). */
+	atRiskTitle: (habit: string) => `Keep your ${habit} streak?`,
+	atRiskTitleNone: "No freezes left this month",
+	atRiskBody: (streak: number) =>
+		`You missed yesterday. Use a freeze to keep your ${streak}-day streak, or let it go: it restarts with your next log.`,
+	atRiskBodyNone: (streak: number, habit: string, resetsOn: string) =>
+		`You missed yesterday, so your ${streak}-day streak for ${habit} restarts with your next log. Your longest streak is kept. Freezes come back on ${resetsOn}.`,
+	atRiskUseFreeze: "Use a freeze",
+	atRiskNotNow: "Not now",
+	atRiskGotIt: "Got it",
+	atRiskResetsOn: (date: string) => `Resets on ${date}`,
+	/** The off-schedule picker (HAB-18). */
+	pickerTitle: "Log off-schedule",
+	pickerIntro:
+		"Nothing is due today. Anything you log counts as a bonus — it can't break or extend a streak.",
+	pickerEmptyTitle: "Nothing to log here",
+	pickerEmptyBody:
+		"Only habits you build can be logged off-schedule. Break habits and archived habits aren't listed.",
+	pickerLogged: (habit: string) => `${habit}, logged off-schedule`,
+	pickerLogQuantity: (habit: string) => `Log ${habit}, set an amount`,
+	pickerLog: (habit: string) => `Log ${habit} off-schedule`,
+	pickerAmount: "Amount",
 	/** Edit this day (RL1–RL3, HAB-34). */
 	editDayIntro:
 		"Tap a circle to set that day. Streaks and rates update when you close.",

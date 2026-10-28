@@ -2,16 +2,14 @@ import { endOfMonth, startOfMonth } from "date-fns";
 import { FREEZE_POOL_SIZE } from "../constants";
 import {
 	type FreezeChange,
-	saveDayLog,
 	setHabitCompletedOn,
 	setHabitQuantityOn,
 } from "../repositories/entry-repository";
 import {
 	getFreezesUsedInMonth,
 	getFrozenDay,
-	getFrozenHabitIdsOn,
 } from "../repositories/frozen-day-repository";
-import type { DayLog, DayLogValue, FrozenDay } from "../types";
+import type { FrozenDay } from "../types";
 
 /**
  * Logging that gives a freeze back (PR-11): a day that was frozen and is now

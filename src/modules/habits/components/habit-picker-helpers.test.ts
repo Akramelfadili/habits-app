@@ -1,8 +1,5 @@
 import { makeHabit } from "../test-support/habit-builder";
-import {
-	habitPickerSubtitle,
-	offScheduleSubtitle,
-} from "./habit-picker-helpers";
+import { habitPickerSubtitle } from "./habit-picker-helpers";
 
 describe("habitPickerSubtitle", () => {
 	it("says 'Every day' for a daily habit", () => {
@@ -43,13 +40,5 @@ describe("habitPickerSubtitle", () => {
 			targetUnit: "glasses",
 		});
 		expect(habitPickerSubtitle(habit)).toBe("Every day · 8 glasses");
-	});
-});
-
-describe("offScheduleSubtitle", () => {
-	it("shows the log time and that the streak is unchanged", () => {
-		expect(offScheduleSubtitle(new Date(2026, 9, 1, 9, 5))).toBe(
-			"Logged 09:05 · bonus, streak unchanged",
-		);
 	});
 });

@@ -4,6 +4,7 @@ import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
 import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { todayCopy } from "../messages";
 import type { Habit } from "../types";
 import { HabitPickerRow } from "./habit-picker-row";
 
@@ -33,22 +34,20 @@ export function HabitPickerSheet({
 	return (
 		<Sheet visible={visible} onDismiss={onDismiss}>
 			<SheetHeader
-				title="Log off-schedule"
-				actionLabel="Close"
+				title={todayCopy.pickerTitle}
+				actionLabel={todayCopy.quantityClose}
 				onAction={onDismiss}
 			/>
 			<Text style={[styles.intro, { color: colors.sub }]}>
-				Nothing is due today. Anything you log counts as a bonus — it can't
-				break or extend a streak.
+				{todayCopy.pickerIntro}
 			</Text>
 			{habits.length === 0 ? (
 				<Container>
 					<Text style={[styles.emptyTitle, { color: colors.ink }]}>
-						Nothing to log here
+						{todayCopy.pickerEmptyTitle}
 					</Text>
 					<Text style={[styles.intro, { color: colors.sub }]}>
-						Only habits you build can be logged off-schedule. Break habits and
-						archived habits aren't listed.
+						{todayCopy.pickerEmptyBody}
 					</Text>
 				</Container>
 			) : (
