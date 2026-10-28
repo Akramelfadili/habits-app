@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
+import { useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes, frozenDays } from "@/lib/db/schema";
 import { runInTransaction } from "@/lib/db/transaction";
@@ -37,7 +38,9 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 		// render's range would be queried forever.
 		[startDate, endDate],
 	);
-	return data.map(rowToEntry);
+	// Stable between renders until the rows change, so the Progress maths built on
+	// these entries can be memoised.
+	return useMemo(() => data.map(rowToEntry), [data]);
 }
 
 /**
@@ -75,7 +78,7 @@ export function useAllEntries(): Entry[] {
 	const { data } = useLiveRows<EntryRow>(
 		db.select().from(entries).orderBy(asc(entries.date)),
 	);
-	return data.map(rowToEntry);
+	return useMemo(() => data.map(rowToEntry), [data]);
 }
 
 /**

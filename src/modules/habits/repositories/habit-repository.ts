@@ -1,4 +1,5 @@
 import { asc, desc, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
+import { useMemo } from "react";
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { db } from "@/lib/db/client";
 import {
@@ -127,17 +128,23 @@ function useHabitsWithCategories(
 	// The two queries resolve independently. Until both have, report what an
 	// unresolved live query always reports — nothing yet, not loaded — rather
 	// than a partial list missing whichever habits' categories haven't arrived.
-	if (!habitsResult.loaded || !categoriesResult.loaded) return NOT_LOADED;
-
-	const byId = new Map(
-		categoriesResult.data.map((row) => [row.id, rowToCategory(row)]),
-	);
-	return {
-		habits: habitsResult.data.map((row) =>
-			rowToHabit(row, resolveHabitCategory(row.categoryId, byId)),
-		),
-		loaded: true,
-	};
+	const ready = habitsResult.loaded && categoriesResult.loaded;
+	const habitRows = habitsResult.data;
+	const categoryRows = categoriesResult.data;
+	// Stable between renders until a row changes, so what is built from the list
+	// (Progress's summaries) can be memoised.
+	return useMemo((): HabitsResult => {
+		if (!ready) return NOT_LOADED;
+		const byId = new Map(
+			categoryRows.map((row) => [row.id, rowToCategory(row)]),
+		);
+		return {
+			habits: habitRows.map((row) =>
+				rowToHabit(row, resolveHabitCategory(row.categoryId, byId)),
+			),
+			loaded: true,
+		};
+	}, [ready, habitRows, categoryRows]);
 }
 
 /** Stable empty result while loading, so consumers' memo deps don't churn. */
