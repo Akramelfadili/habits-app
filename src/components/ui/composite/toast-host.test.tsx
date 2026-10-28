@@ -2,11 +2,10 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { AccessibilityInfo, StyleSheet } from "react-native";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { showToast, useToastStore } from "@/store/toast-store";
-import {
-	TOAST_DURATION_MS,
-	TOAST_SCREEN_READER_DURATION_MS,
-	ToastHost,
-} from "./toast-host";
+import { motion } from "@/theme/theme";
+import { ToastHost, toastHoldMs } from "./toast-host";
+
+const TOAST_DURATION_MS = motion.toast.hold.info;
 
 describe("ToastHost", () => {
 	beforeEach(() => {
@@ -150,7 +149,7 @@ describe("ToastHost", () => {
 			expect(announce).not.toHaveBeenCalled();
 		});
 
-		it("keeps the toast longer with a screen reader on, but not for ever", async () => {
+		it("keeps every toast until it is dismissed with a screen reader on", async () => {
 			jest
 				.spyOn(AccessibilityInfo, "isScreenReaderEnabled")
 				.mockResolvedValue(true);
@@ -158,13 +157,39 @@ describe("ToastHost", () => {
 			await act(async () => {});
 			await act(() => showToast({ message: "Archived 'Read'" }));
 
-			await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS + 100));
+			await act(() => jest.advanceTimersByTime(motion.toast.hold.warning * 4));
 			expect(screen.getByText("Archived 'Read'")).toBeTruthy();
+		});
+	});
 
+	describe("hold times (HAB-48)", () => {
+		it("is 5 s for an Undo, 4 s for info and success, 6 s for a warning, never for an error", () => {
+			expect(toastHoldMs({ message: "m", actionLabel: "Undo" })).toBe(5000);
+			expect(toastHoldMs({ message: "m" })).toBe(4000);
+			expect(toastHoldMs({ message: "m", tone: "success" })).toBe(4000);
+			expect(toastHoldMs({ message: "m", tone: "warning" })).toBe(6000);
+			expect(toastHoldMs({ message: "m", tone: "error" })).toBeNull();
+			expect(
+				toastHoldMs({ message: "m", tone: "error", actionLabel: "Retry" }),
+			).toBeNull();
+		});
+
+		it("keeps an error up until it is dismissed", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Couldn't save", tone: "error" }));
+			await act(() => jest.advanceTimersByTime(60_000));
+			expect(screen.getByText("Couldn't save")).toBeTruthy();
+		});
+
+		it("dismisses through the accessibility dismiss action", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Couldn't save", tone: "error" }));
 			await act(() =>
-				jest.advanceTimersByTime(TOAST_SCREEN_READER_DURATION_MS),
+				screen.getByTestId("toast-host").props.onAccessibilityAction({
+					nativeEvent: { actionName: "dismiss" },
+				}),
 			);
-			expect(screen.queryByText("Archived 'Read'")).toBeNull();
+			expect(screen.queryByText("Couldn't save")).toBeNull();
 		});
 	});
 });

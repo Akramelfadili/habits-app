@@ -5,7 +5,6 @@ import {
 	messages,
 	messageText,
 	showMessage,
-	UNDO_DURATION_MS,
 } from "./messages";
 
 describe("message catalogue", () => {
@@ -83,7 +82,6 @@ describe("message catalogue", () => {
 		});
 
 		it("gives a toast with Undo the 5 s Undo window", () => {
-			expect(UNDO_DURATION_MS).toBe(5000);
 			expect(defaultDurationMs({ tone: "success" }, { hasUndo: true })).toBe(
 				5000,
 			);

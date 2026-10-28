@@ -9,9 +9,10 @@
  * error text in a message; that goes to the log.
  */
 
-import { showToast } from "@/store/toast-store";
+import { toastHoldMs } from "@/components/ui/composite/toast-host";
+import { showToast, type ToastTone } from "@/store/toast-store";
 
-export type MessageTone = "info" | "success" | "warning" | "error";
+export type MessageTone = ToastTone;
 
 export type MessageSpec<Params extends readonly unknown[] = never[]> = {
 	tone: MessageTone;
@@ -24,23 +25,17 @@ export type MessageSpec<Params extends readonly unknown[] = never[]> = {
 	durationMs?: number | null;
 };
 
-/** Default toast durations (HAB-48): Undo 5 s, success/info 4 s, warning 6 s, errors until Retry or swipe. */
-export const UNDO_DURATION_MS = 5000;
-const TONE_DURATION_MS: Record<MessageTone, number | null> = {
-	info: 4000,
-	success: 4000,
-	warning: 6000,
-	error: null,
-};
-
-/** How long `spec` stays on screen; a toast offering Undo always gets the Undo window. */
+/** How long `spec` stays on screen (HAB-48): the host's hold for its tone, or the Undo window when it offers Undo. */
 export function defaultDurationMs(
 	spec: Pick<MessageSpec, "tone" | "durationMs">,
 	{ hasUndo = false }: { hasUndo?: boolean } = {},
 ): number | null {
 	if (spec.durationMs !== undefined) return spec.durationMs;
-	if (hasUndo) return UNDO_DURATION_MS;
-	return TONE_DURATION_MS[spec.tone];
+	return toastHoldMs({
+		message: "",
+		tone: spec.tone,
+		actionLabel: hasUndo ? "Undo" : undefined,
+	});
 }
 
 /** The text of `spec`, with its params filled in. */
@@ -115,6 +110,96 @@ export const messages = {
 >;
 
 /**
+ * Inline Today copy (HAB-30–32): row status lines, group counts, the fold row,
+ * the rest day and the empty state. Plain strings, not toasts, so they sit
+ * beside the toast catalogue rather than inside it. No completion time ever
+ * appears in a status line (spec: "Spec wins over the mockup").
+ */
+const plural = (count: number, one: string, many: string) =>
+	`${count} ${count === 1 ? one : many}`;
+
+export const todayCopy = {
+	screenTitle: "Today",
+	addHabit: "Add habit",
+	rowStreak: (days: number) => `${days}-day streak`,
+	rowResisting: (days: number) =>
+		days > 0
+			? `Resisting · ${plural(days, "day", "days")} strong`
+			: "Resisting",
+	rowResisted: (days: number, isToday: boolean) => {
+		const base = isToday ? "Resisted today" : "Resisted";
+		return days > 0 ? `${base} · ${plural(days, "day", "days")} strong` : base;
+	},
+	rowAmount: (value: number, target: number, unit: string | null) =>
+		`${value} of ${target}${unit ? ` ${unit}` : ""}`,
+	rowPerWeek: (times: number, done: number) =>
+		`${times}× per week · ${done} done`,
+	rowAtRisk: (weekday: string, freezesLeft: number) =>
+		freezesLeft > 0
+			? `Missed ${weekday} · ${plural(freezesLeft, "freeze", "freezes")} left`
+			: `Missed ${weekday} · no freezes left`,
+	rowFrozen: (weekdayShort: string, streak: number) =>
+		`${weekdayShort} frozen · streak kept at ${streak}`,
+	countButton: (value: number, target: number) => `${value}/${target}`,
+	progressLabel: (done: number, total: number) => `${done} of ${total} done`,
+	progressLabelOnDay: (done: number, total: number, day: string) =>
+		`${done} of ${total} done on ${day}`,
+	groupCount: (done: number, total: number) => `${done} of ${total}`,
+	foldSummary: (count: number, names: string) =>
+		`${count} not due today · ${names}`,
+	foldSummaryOnDay: (count: number, names: string) =>
+		`${count} not due · ${names}`,
+	foldShow: "Show",
+	foldHide: "Hide",
+	notDueHeader: "Not due today",
+	notDueHeaderOnDay: "Not due",
+	bonusLogs: "Bonus logs",
+	pickAnother: "Log a different habit",
+	bonusSchedule: (schedule: string) => `${schedule} · tap to log a bonus`,
+	bonusLogged: "Bonus · streak unchanged",
+	backNextWeek: (done: number, times: number) =>
+		`${done} of ${times} this week · back Monday`,
+	restDayTitle: "Rest day",
+	restDayBody:
+		"Nothing is due today, so every streak is safe. Anything you log counts as a bonus.",
+	restDayBodyOnDay:
+		"Nothing was due on this day. Anything you log counts as a bonus.",
+	emptyTitle: "Nothing to track yet",
+	emptyBody: "Add a habit and it shows up here on every day it\u2019s due.",
+	emptyAdd: "Add habit",
+	emptySuggestions: "Browse suggestions",
+	allDoneTitle: "All done for today",
+	allDoneTitleOnDay: (day: string) => `All done on ${day}`,
+	allDoneBody: (total: number, bestStreakName?: string, days?: number) =>
+		bestStreakName && days
+			? `${total} of ${total} · ${bestStreakName} is on a ${days}-day streak`
+			: `${total} of ${total}`,
+	pastDayBar: (day: string) => `Logging for ${day}`,
+	showToday: "Show today",
+	weekStripLabel: (range: string) => `Week of ${range}`,
+	cantLogAhead: "Can\u2019t log ahead \u2014 pick today or an earlier day",
+	/** VoiceOver (08.3). */
+	openDetails: "Opens details.",
+	openStreakOptions: "Opens the streak options.",
+	openQuantity: "Opens the quantity sheet.",
+	logOneMore: "Double-tap to log one more",
+	markDone: "Double-tap to mark done",
+	markNotDone: "Double-tap to mark not done",
+	markResisted: "Double-tap to mark resisted",
+	markNotResisted: "Double-tap to mark not resisted",
+	logBonus: "Double-tap to log a bonus",
+	circleNotDone: (name: string) => `${name}, not done`,
+	circleDone: (name: string) => `${name}, done`,
+	circleNotResisted: (name: string) => `${name}, resisted today?`,
+	circleResisted: (name: string) => `${name}, resisted`,
+	circleBonus: (name: string) => `${name}, not due, bonus`,
+	circleAddOne: (name: string, value: number, target: number) =>
+		`Add one, ${name}, ${value} of ${target}`,
+	countAmount: (value: number, target: number) =>
+		`Amount, ${value} of ${target}`,
+} as const;
+
+/**
  * Shows `spec` as the app's one toast, with an Undo when `undo` is given.
  * Copy and tone come from the catalogue, so a screen never writes its own.
  */
@@ -125,7 +210,7 @@ export function showMessage<Params extends readonly unknown[]>(
 ): void {
 	showToast({
 		message: messageText(spec, ...params),
-		tone: spec.tone === "error" ? "error" : "default",
+		tone: spec.tone,
 		...(undo ? { actionLabel: "Undo", onAction: undo } : {}),
 	});
 }

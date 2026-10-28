@@ -1,30 +1,47 @@
+import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { SFSymbol } from "sf-symbols-typescript";
+import type { ToastTone } from "@/store/toast-store";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ToastProps = {
 	message: string;
-	/** "error" adds a danger dot before the message (design-system.md, Error tone). */
-	tone?: "default" | "error";
+	/** Tone sets the leading glyph, never the surface: the toast is always ink-on-toast (V3-26). */
+	tone?: ToastTone;
 	actionLabel?: string;
 	onAction?: () => void;
 };
 
-/** Floating completion feedback with an optional inline action (e.g. "Undo"). */
+/** The shape that carries the tone, so colour is never the only signal (08.7). */
+const TONE_GLYPH: Record<Exclude<ToastTone, "info">, SFSymbol> = {
+	success: "checkmark.circle.fill",
+	warning: "exclamationmark.triangle.fill",
+	error: "exclamationmark.circle.fill",
+};
+
+/** Floating event feedback with an optional inline action (Undo, Retry). */
 export function Toast({
 	message,
-	tone = "default",
+	tone = "info",
 	actionLabel,
 	onAction,
 }: ToastProps) {
 	const { colors, opacity } = useTheme();
+	const glyph = tone === "info" ? null : TONE_GLYPH[tone];
+	const glyphColor =
+		tone === "error"
+			? colors.dangerBg
+			: tone === "warning"
+				? colors.warnInk
+				: colors.toastInk;
 
 	return (
 		<View style={[styles.base, { backgroundColor: colors.toast }]}>
-			{tone === "error" ? (
-				<View
-					testID="toast-error-marker"
-					style={[styles.marker, { backgroundColor: colors.dangerBg }]}
-				/>
+			{glyph ? (
+				<View testID={`toast-${tone}-marker`}>
+					<SymbolView name={glyph} size={16} tintColor={glyphColor} />
+				</View>
 			) : null}
 			<Text
 				numberOfLines={2}
@@ -59,34 +76,28 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		gap: 12,
-		borderRadius: 999,
-		paddingVertical: 5,
-		paddingLeft: 16,
-		paddingRight: 6,
-	},
-	marker: {
-		width: 10,
-		height: 10,
-		borderRadius: 5,
+		gap: space[300],
+		borderRadius: radius.pill,
+		paddingVertical: space[100],
+		paddingLeft: space[400],
+		paddingRight: space[150],
 	},
 	message: {
 		flex: 1,
-		paddingVertical: 5,
-		fontSize: 14,
-		fontWeight: "500",
+		paddingVertical: space[100],
+		...textStyles.subhead,
 	},
 	actionTouch: {
-		minHeight: 44,
+		minHeight: minTouchTarget,
 		justifyContent: "center",
 	},
 	action: {
-		borderRadius: 999,
-		paddingVertical: 8,
-		paddingHorizontal: 14,
+		borderRadius: radius.pill,
+		paddingVertical: space[200],
+		paddingHorizontal: space[350],
 	},
 	actionLabel: {
-		fontSize: 14,
+		...textStyles.subhead,
 		fontWeight: "600",
 	},
 });

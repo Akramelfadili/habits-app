@@ -1,10 +1,16 @@
 import { create } from "zustand";
 
+export type ToastTone = "info" | "success" | "warning" | "error";
+
 /** One transient message, optionally with a single inline action (e.g. "Undo"). */
 export type ToastMessage = {
 	message: string;
-	/** "error" is the failed-write toast (design-system.md, Error tone). */
-	tone?: "default" | "error";
+	/**
+	 * V3-26 tones. A toast with an action is an Undo and holds 5 s; otherwise
+	 * info and success hold 4 s, warning 6 s, and an error stays until Retry or
+	 * a swipe (HAB-48). Defaults to "info".
+	 */
+	tone?: ToastTone;
 	actionLabel?: string;
 	onAction?: () => void;
 };

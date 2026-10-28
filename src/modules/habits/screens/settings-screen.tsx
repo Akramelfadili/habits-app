@@ -49,7 +49,7 @@ export function SettingsScreen() {
 		const result = await copyDiagnostics();
 		showToast({
 			message: DIAGNOSTICS_RESULT_MESSAGE[result],
-			tone: result === "failed" ? "error" : "default",
+			tone: result === "failed" ? "error" : "info",
 		});
 	}
 
