@@ -265,6 +265,76 @@ export function habitAccentTint(hue: AccentHue, scheme: ColorScheme): string {
 	return scheme === "light" ? oklch(0.93, 0.045, hue) : oklch(0.3, 0.085, hue);
 }
 
+/** A completion level, 0 (nothing / missed) to 3 (complete) — V3-05's intensity steps. */
+export type IntensityLevel = 0 | 1 | 2 | 3;
+
+/** T-05 / F-02: the accent mixed into the track at 0 / 28 / 58 / 100 %. */
+export const intensityMix = [0, 0.28, 0.58, 1] as const;
+
+/** Edge length of a partial cell's corner notch, as a share of the cell (T-24). */
+export const notchShare = 0.22;
+
+function hexChannels(hex: string): [number, number, number] {
+	const value = Number.parseInt(hex.slice(1), 16);
+	return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+function mixHex(from: string, to: string, share: number): string {
+	const [a, b] = [hexChannels(from), hexChannels(to)];
+	const mixed = a.map((channel, index) =>
+		Math.round(channel + (b[index] - channel) * share),
+	);
+	return `rgb(${mixed.join(",")})`;
+}
+
+/**
+ * The fill of a completion cell at `level` (V3-05): the one accent mixed into
+ * the track. One meaning for colour — never a habit or category hue (T-05).
+ */
+export function intensityColor(
+	level: IntensityLevel,
+	scheme: ColorScheme,
+): string {
+	const { track, accent } = surfaceColors[scheme];
+	return mixHex(track, accent, intensityMix[level]);
+}
+
+function luminance([red, green, blue]: [number, number, number]): number {
+	const [r, g, b] = [red, green, blue].map((channel) => {
+		const unit = channel / 255;
+		return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+	});
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG contrast ratio of two `#rrggbb` / `rgb(r,g,b)` colours. */
+export function contrastRatio(first: string, second: string): number {
+	const parse = (color: string): [number, number, number] =>
+		color.startsWith("rgb(")
+			? (color.slice(4, -1).split(",").map(Number) as [number, number, number])
+			: hexChannels(color);
+	const [a, b] = [luminance(parse(first)), luminance(parse(second))].sort(
+		(x, y) => y - x,
+	);
+	return (a + 0.05) / (b + 0.05);
+}
+
+/** The text colour that reads best on `fill`: ink or onAccent, whichever contrasts more. */
+export function readableInk(fill: string, scheme: ColorScheme): string {
+	const { ink, onAccent } = surfaceColors[scheme];
+	return contrastRatio(fill, ink) >= contrastRatio(fill, onAccent)
+		? ink
+		: onAccent;
+}
+
+/**
+ * Today's ring on a cell (V3-05): a gap in the surface colour, then the ink.
+ * A `boxShadow`, so it hugs the cell's radius without taking layout space.
+ */
+export function todayRingShadow(surface: string, scheme: ColorScheme): string {
+	return `0 0 0 1.5px ${surface}, 0 0 0 3px ${surfaceColors[scheme].ink}`;
+}
+
 /** Heatmap shading steps for a completed/partial day — level 0 is the neutral `track`, not a hue. */
 export type HeatmapLevel = 1 | 2 | 3;
 

@@ -11,8 +11,10 @@ describe("FreezePoolCard", () => {
 				body="7 August · pool refilled 1 September"
 			/>,
 		);
-		expect(screen.getAllByTestId("heatmap-cell-frozen")).toHaveLength(1);
-		expect(screen.getAllByTestId("heatmap-cell-outside")).toHaveLength(1);
+		expect(screen.getAllByTestId("completion-cell-frozen")).toHaveLength(1);
+		expect(screen.getAllByTestId("completion-cell-before-start")).toHaveLength(
+			1,
+		);
 		expect(screen.getByText("One freeze used")).toBeTruthy();
 	});
 

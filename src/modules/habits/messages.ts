@@ -296,6 +296,19 @@ export const todayCopy = {
 } as const;
 
 /**
+ * Progress copy (HAB-35–38, V3-3b): the three ranges' titles, stats, insights,
+ * legends and VoiceOver wording. Whole-number percentages everywhere; "Break"
+ * habits say resisted, never failed (D8).
+ */
+export const progressCopy = {
+	legend: {
+		less: "Less",
+		more: "More",
+		frozen: "Frozen",
+	},
+} as const;
+
+/**
  * Shows `spec` as the app's one toast, with an Undo when `undo` is given.
  * Copy and tone come from the catalogue, so a screen never writes its own.
  */

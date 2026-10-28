@@ -233,7 +233,6 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 			) : null}
 
 			<HabitHeatmap
-				habit={habit}
 				weeks={heatmapWeeks}
 				hasEntries={hasEntries}
 				rangeLabel={heatmapRangeLabelFor(habit, firstDay, today)}

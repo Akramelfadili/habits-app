@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { HeatmapCell } from "./heatmap-cell";
+import { CompletionCell } from "./completion-cell";
 
 type FreezePoolCardProps = {
 	/** Freezes in the shared pool per month. */
@@ -37,11 +37,10 @@ export function FreezePoolCard({
 		>
 			<View style={styles.swatches}>
 				{Array.from({ length: poolSize }, (_, index) => (
-					<HeatmapCell
+					<CompletionCell
 						// biome-ignore lint/suspicious/noArrayIndexKey: the pool's slots are positional
 						key={index}
-						state={index < used ? { kind: "frozen" } : { kind: "outside" }}
-						accent={null}
+						state={index < used ? { kind: "frozen" } : { kind: "before-start" }}
 						size={SWATCH}
 					/>
 				))}
