@@ -1,7 +1,6 @@
 import { useToday } from "@/lib/today/use-today";
 import {
 	buildMonthlySummary,
-	defaultSummaryMonth,
 	historyStart,
 	type MonthlySummary,
 	type MonthUnlock,
@@ -46,10 +45,8 @@ export function useMonthlySummaryQueries(): MonthlySummaryView {
 	const frozenDays = useFrozenDays();
 	const firstDay = historyStart(habits);
 	const unlock = firstDay ? monthUnlock(firstDay, today) : null;
-	const month =
-		unlock?.isUnlocked && firstDay
-			? defaultSummaryMonth(today, firstDay)
-			: monthWindowFor(today);
+	// The current month (D15); other months open from Year.
+	const month = monthWindowFor(today);
 	const range = monthEntryRange(month);
 	const entries = useEntriesInRange(range.start, range.end);
 

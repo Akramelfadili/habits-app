@@ -17,6 +17,7 @@ import {
 import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
+import { isPerfectDay } from "./completion-rate";
 import { type CellStatus, habitDayClassifier } from "./day-status";
 import { insightsFor, type MonthlyInsight } from "./monthly-insights";
 
@@ -38,7 +39,7 @@ import { insightsFor, type MonthlyInsight } from "./monthly-insights";
  * passes entries for the full Monday-aligned span, `monthEntryRange`).
  *
  * **Perfect day** = a day with at least one counted habit where every counted
- * habit was done. The "of N" under it is the number of days that had at least
+ * habit was done and none was frozen (D14, `isPerfectDay`). The "of N" under it is the number of days that had at least
  * one counted habit (`countedDays`) — not the calendar length, so a month of
  * rest days or a part-month history doesn't read as failure.
  */
@@ -63,19 +64,6 @@ export function previousMonthWindow({ start }: MonthWindow): MonthWindow {
 export function historyStart(habits: readonly Habit[]): Date | null {
 	if (habits.length === 0) return null;
 	return min(habits.map((habit) => startOfDay(habit.createdAt)));
-}
-
-/**
- * The month Monthly opens on: the last complete one, or — when that ended
- * before any habit existed (31 Oct with a habit made on 1 Oct) — the current one.
- */
-export function defaultSummaryMonth(
-	today: Date,
-	firstDay: Date | null,
-): MonthWindow {
-	const last = monthWindowFor(subMonths(today, 1));
-	if (firstDay && isBefore(last.end, firstDay)) return monthWindowFor(today);
-	return last;
 }
 
 export type MonthUnlock = {
@@ -393,7 +381,15 @@ export function buildMonthlySummary(
 		const dayCounts = counts(day);
 		if (dayCounts.scheduled === 0) continue;
 		countedDays += 1;
-		if (dayCounts.completed === dayCounts.scheduled) perfectDays += 1;
+		// A frozen day is excused, not perfect (D14): the shared rule decides.
+		const frozen = day.filter(({ outcome }) => outcome === "frozen").length;
+		const tally = {
+			done: dayCounts.completed,
+			due: dayCounts.scheduled,
+			frozen,
+			bonus: 0,
+		};
+		if (isPerfectDay(tally)) perfectDays += 1;
 	}
 
 	const monthStart = toDayKey(month.start);

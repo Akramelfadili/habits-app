@@ -7,7 +7,6 @@ import type { Entry, FrozenDay, Habit } from "../types";
 import { MAX_INSIGHTS } from "./monthly-insights";
 import {
 	buildMonthlySummary,
-	defaultSummaryMonth,
 	historyStart,
 	MONTH_UNLOCK_DAYS,
 	monthUnlock,
@@ -71,24 +70,6 @@ describe("month windows", () => {
 		const previous = previousMonthWindow(january);
 		expect(format(previous.start, "yyyy-MM-dd")).toBe("2026-12-01");
 		expect(format(previous.end, "yyyy-MM-dd")).toBe("2026-12-31");
-	});
-
-	it("defaults to the last complete month", () => {
-		const month = defaultSummaryMonth(new Date(2026, 8, 2), longAgo);
-		expect(format(month.start, "yyyy-MM-dd")).toBe("2026-08-01");
-	});
-
-	it("defaults to the previous December from January", () => {
-		const month = defaultSummaryMonth(new Date(2027, 0, 5), longAgo);
-		expect(format(month.start, "yyyy-MM-dd")).toBe("2026-12-01");
-	});
-
-	it("falls back to the current month when the last one ended before any habit existed", () => {
-		const month = defaultSummaryMonth(
-			new Date(2026, 9, 31),
-			new Date(2026, 9, 1),
-		);
-		expect(format(month.start, "yyyy-MM-dd")).toBe("2026-10-01");
 	});
 });
 

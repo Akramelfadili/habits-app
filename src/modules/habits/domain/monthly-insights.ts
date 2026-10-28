@@ -84,29 +84,45 @@ export function insightsFor(input: InsightInput): MonthlyInsight[] {
 		: [{ type: "steady" }];
 }
 
+type WeekShare = { scheduled: number; fraction: number | null };
+
+/**
+ * The month's weekly trend that makes a habit "slipping": enough weeks with
+ * enough counted days, never up week over week, and a first-to-last drop of at
+ * least `SLIPPING_MIN_DROP`. Shared by the insight and by Progress's per-habit
+ * "slipping" tag, so they always agree.
+ */
+export function slippingTrend<W extends WeekShare>(
+	allWeeks: readonly W[],
+): { first: W; last: W; drop: number } | null {
+	const weeks = allWeeks.filter(
+		(week) =>
+			week.scheduled >= SLIPPING_MIN_DAYS_PER_WEEK && week.fraction !== null,
+	);
+	if (weeks.length < SLIPPING_MIN_WEEKS) return null;
+	const fractions = weeks.map((week) => week.fraction as number);
+	const neverUp = fractions.every(
+		(fraction, index) => index === 0 || fraction <= fractions[index - 1],
+	);
+	const drop = fractions[0] - fractions[fractions.length - 1];
+	if (!neverUp || drop < SLIPPING_MIN_DROP) return null;
+	return { first: weeks[0], last: weeks[weeks.length - 1], drop };
+}
+
 function slippingInsight(
 	rows: readonly MonthlyHabitRow[],
 ): Extract<MonthlyInsight, { type: "slipping" }> | null {
 	let worst: Extract<MonthlyInsight, { type: "slipping" }> | null = null;
 	let worstDrop = 0;
 	for (const row of rows) {
-		const weeks = row.weeks.filter(
-			(week) =>
-				week.scheduled >= SLIPPING_MIN_DAYS_PER_WEEK && week.fraction !== null,
-		);
-		if (weeks.length < SLIPPING_MIN_WEEKS) continue;
-		const fractions = weeks.map((week) => week.fraction as number);
-		const neverUp = fractions.every(
-			(fraction, index) => index === 0 || fraction <= fractions[index - 1],
-		);
-		const drop = fractions[0] - fractions[fractions.length - 1];
-		if (!neverUp || drop < SLIPPING_MIN_DROP || drop <= worstDrop) continue;
-		worstDrop = drop;
+		const trend = slippingTrend(row.weeks);
+		if (!trend || trend.drop <= worstDrop) continue;
+		worstDrop = trend.drop;
 		worst = {
 			type: "slipping",
 			row,
-			first: weeks[0],
-			last: weeks[weeks.length - 1],
+			first: trend.first,
+			last: trend.last,
 		};
 	}
 	return worst;

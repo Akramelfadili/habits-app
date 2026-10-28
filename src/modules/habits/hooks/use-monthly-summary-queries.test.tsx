@@ -41,17 +41,17 @@ describe("useMonthlySummaryQueries (HAB-16)", () => {
 		expect(result.current).toEqual({ state: "empty" });
 	});
 
-	it("opens on the last complete month and reads from the previous one's first Monday to the month's last Sunday", async () => {
+	it("opens on the current month (D15) and reads from the previous one's first Monday to the month's last Sunday", async () => {
 		jest.useFakeTimers().setSystemTime(new Date(2026, 8, 2, 9));
 		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) })];
 		const { result } = await renderHook(() => useMonthlySummaryQueries());
 		expect(result.current.state).toBe("ready");
 		if (result.current.state !== "ready") return;
-		expect(date(result.current.summary.month.start)).toBe("2026-08-01");
+		expect(date(result.current.summary.month.start)).toBe("2026-09-01");
 		const [start, end] = mockUseEntriesInRange.mock.calls[0];
-		// 1 Jul 2026 is a Wednesday → Monday 29 Jun; 31 Aug is a Monday → Sunday 6 Sep.
-		expect(date(start)).toBe("2026-06-29");
-		expect(date(end)).toBe("2026-09-06");
+		// 1 Aug 2026 is a Saturday → Monday 27 Jul; 30 Sep is a Wednesday → Sunday 4 Oct.
+		expect(date(start)).toBe("2026-07-27");
+		expect(date(end)).toBe("2026-10-04");
 	});
 
 	it("shows the partial current month, progress and the week while under 30 days of history", async () => {
@@ -90,7 +90,7 @@ describe("useMonthlySummaryQueries (HAB-16)", () => {
 		jest.useFakeTimers().setSystemTime(new Date(2026, 8, 2, 9));
 		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) })];
 		mockFrozen = [
-			{ id: 1, habitId: 1, date: "2026-08-07", createdAt: new Date() },
+			{ id: 1, habitId: 1, date: "2026-09-01", createdAt: new Date() },
 		];
 		const { result } = await renderHook(() => useMonthlySummaryQueries());
 		if (result.current.state !== "ready") throw new Error("state");

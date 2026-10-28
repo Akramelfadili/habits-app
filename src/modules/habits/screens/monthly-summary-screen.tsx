@@ -53,7 +53,7 @@ import type { IsoWeekday } from "../types";
  * Monthly Summary (HAB-16, frames C2/C3/C6): range switcher → Completed /
  * Perfect days / Freezes tiles → daily completion calendar → per-habit weekly
  * trend with a delta vs the previous month → ranked insights (max three) and
- * the freeze card. Opens on the last complete month. Under 30 days of history
+ * the freeze card. Opens on the current month (D15). Under 30 days of history
  * it shows the unlock card and the partial current month instead — never a
  * locked wall.
  */
