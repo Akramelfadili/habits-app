@@ -1,10 +1,16 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
+import { minTouchTarget, motion, radius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
 import type { HabitDirection } from "../types";
 
+/** V3-04: the drawn circle is 28 pt inside a 44 pt hit area (T-11). */
 const SIZE = 28;
-const RADIUS = SIZE / 2;
+const HALF = SIZE / 2;
+const RING = 2;
+const CHECK_SIZE = 14;
+const DOT = 8;
 
 type CompletionCircleProps = {
 	completed: boolean;
@@ -12,26 +18,21 @@ type CompletionCircleProps = {
 	/** A quantity habit's way to the sheet while a tap adds one (D6). */
 	onLongPress?: () => void;
 	accessibilityLabel: string;
-	/** Build = filled-black-on-done (default). Break = outline-only, never filled (HAB-04). */
+	/** What the double-tap does, read after the label ("Double-tap to log one more"). */
+	accessibilityHint?: string;
+	/** Build = filled accent when done. Break = amber outline, an amber check on `warnTint` once resisted (V3-04). */
 	direction?: HabitDirection;
-	/**
-	 * Streak-at-risk (HAB-08): a missed-yesterday day a freeze could still
-	 * cover. Documented only for Break (solid amber ring, no checkmark) — Build
-	 * has no at-risk circle state, so this is ignored when `direction` is "build".
-	 */
+	/** Streak at risk (HAB-33): an amber dot on the circle. The circle still logs. */
 	atRisk?: boolean;
-	/**
-	 * 0–1 fill for a quantity habit logged below its target (HAB-07) — ignored
-	 * once `completed` (done always wins, however it got there), and for Break
-	 * habits (quantity + Break is out of scope for V1).
-	 */
+	/** 0–1 pie fill for a quantity habit below its target; ignored once `completed`. */
 	progress?: number;
-	/**
-	 * "checkbox" (default) toggles instantly. A quantity habit (HAB-07) adds one
-	 * per tap (D6), so it's a "button" — checked/unchecked semantics don't apply
-	 * to "add to this habit's count."
-	 */
+	/** A frozen day (RL3): violet and dashed. Logging it returns the freeze. */
+	frozen?: boolean;
+	/** Not due (rest day, Edit this day): a dashed outline; whatever is logged is a bonus. */
+	notDue?: boolean;
+	/** "checkbox" toggles; a quantity habit's circle adds one per tap, so it is a "button". */
 	role?: "checkbox" | "button";
+	disabled?: boolean;
 };
 
 /**
@@ -75,85 +76,128 @@ function PieFill({ progress, color }: { progress: number; color: string }) {
 }
 
 /**
- * Habit completion control (design-system.md's "Completion circle" — Build
- * and Break variants). Build: empty outline / done filled + checkmark /
- * partial pie-fill for a quantity habit logged below its target (HAB-07).
- * Break: outline-only in both states — dashed when empty, solid ink ring +
- * ink checkmark when resisted — so it can never read as a filled Build circle
- * at a glance, per HAB-04's hard rule (quantity + Break is out of scope).
+ * V3-04, the habit completion control. Build: outline → partial pie →
+ * accent-filled check. Break: amber outline → amber check on `warnTint`
+ * (resisted is a tick, D8). At risk adds an amber dot; frozen is violet and
+ * dashed; not-due is a dashed outline. Every state differs in shape as well as
+ * colour (08.7). The 44 pt hit area is this Pressable; the 28 pt circle sits
+ * inside it.
  */
 export function CompletionCircle({
 	completed,
 	onPress,
 	onLongPress,
 	accessibilityLabel,
+	accessibilityHint,
 	direction = "build",
 	progress,
-	role = "checkbox",
 	atRisk = false,
+	frozen = false,
+	notDue = false,
+	role = "checkbox",
+	disabled = false,
 }: CompletionCircleProps) {
 	const { colors, opacity } = useTheme();
+	const reduceMotion = useReducedMotion();
 	const isBreak = direction === "break";
 	const showPartial = !completed && !isBreak && !!progress && progress > 0;
-	const showAtRisk = !completed && isBreak && atRisk;
+
+	const face = frozen
+		? {
+				backgroundColor: colors.frozenBg,
+				borderWidth: RING,
+				borderStyle: "dashed" as const,
+				borderColor: colors.frozenInk,
+			}
+		: completed
+			? isBreak
+				? {
+						backgroundColor: colors.warnTint,
+						borderWidth: RING,
+						borderColor: colors.warnInk,
+					}
+				: { backgroundColor: colors.accent }
+			: showPartial
+				? { backgroundColor: colors.track, overflow: "hidden" as const }
+				: {
+						borderWidth: RING,
+						borderColor: isBreak ? colors.warnInk : colors.outline,
+						borderStyle: notDue ? ("dashed" as const) : ("solid" as const),
+					};
 
 	return (
 		<Pressable
 			accessibilityRole={role}
 			accessibilityLabel={accessibilityLabel}
-			accessibilityState={
-				role === "checkbox" ? { checked: completed } : undefined
-			}
-			hitSlop={8}
+			accessibilityHint={accessibilityHint}
+			accessibilityState={{
+				...(role === "checkbox" ? { checked: completed } : {}),
+				disabled,
+			}}
+			disabled={disabled}
 			onPress={onPress}
 			onLongPress={onLongPress}
 			style={({ pressed }) => [
-				styles.circle,
-				isBreak
-					? completed
-						? { borderWidth: 2, borderColor: colors.ink }
-						: showAtRisk
-							? { borderWidth: 2, borderColor: colors.warnInk }
-							: {
-									borderWidth: 2,
-									borderStyle: "dashed",
-									borderColor: colors.outline,
-								}
-					: completed
-						? { backgroundColor: colors.ink }
-						: showPartial
-							? { backgroundColor: colors.border, overflow: "hidden" }
-							: { borderWidth: 2, borderColor: colors.outline },
-				pressed && { opacity: opacity.pressed },
+				styles.hit,
+				pressed &&
+					(reduceMotion
+						? { opacity: opacity.pressed }
+						: { transform: [{ scale: motion.press.scale.min }] }),
 			]}
 		>
-			{completed ? (
-				<SymbolView
-					name="checkmark"
-					size={14}
-					tintColor={isBreak ? colors.ink : colors.onAccent}
-					weight="bold"
+			<View testID="completion-circle-face" style={[styles.circle, face]}>
+				{completed ? (
+					<SymbolView
+						name="checkmark"
+						size={CHECK_SIZE}
+						tintColor={isBreak ? colors.warnInk : colors.onAccent}
+						weight="bold"
+					/>
+				) : showPartial ? (
+					<PieFill progress={progress} color={colors.accent} />
+				) : null}
+			</View>
+			{atRisk && !completed ? (
+				<View
+					testID="completion-circle-at-risk"
+					style={[
+						styles.dot,
+						{ backgroundColor: colors.warnInk, borderColor: colors.card },
+					]}
 				/>
-			) : showPartial ? (
-				<PieFill progress={progress} color={colors.ink} />
 			) : null}
 		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
-	circle: {
-		width: SIZE,
-		height: SIZE,
-		borderRadius: RADIUS,
+	hit: {
+		width: minTouchTarget,
+		height: minTouchTarget,
 		alignItems: "center",
 		justifyContent: "center",
 	},
+	circle: {
+		width: SIZE,
+		height: SIZE,
+		borderRadius: radius.pill,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	dot: {
+		position: "absolute",
+		top: (minTouchTarget - SIZE) / 2 - DOT / 4,
+		right: (minTouchTarget - SIZE) / 2 - DOT / 4,
+		width: DOT,
+		height: DOT,
+		borderRadius: radius.pill,
+		borderWidth: 1,
+	},
 	rightHalfClip: {
 		position: "absolute",
-		left: RADIUS,
+		left: HALF,
 		top: 0,
-		width: RADIUS,
+		width: HALF,
 		height: SIZE,
 		overflow: "hidden",
 	},
@@ -161,12 +205,12 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		left: 0,
 		top: 0,
-		width: RADIUS,
+		width: HALF,
 		height: SIZE,
 		overflow: "hidden",
 	},
 	half: {
-		width: RADIUS,
+		width: HALF,
 		height: SIZE,
 	},
 });

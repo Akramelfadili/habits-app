@@ -1,6 +1,6 @@
 import type { NativeStackNavigationOptions } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
 import { radius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -25,6 +25,10 @@ import { useTheme } from "@/theme/use-theme";
  * system long-press back menu. Swipe-back is unaffected: react-native-screens
  * owns that gesture, independent of which button is showing.
  */
+
+/** The drawn `+`: 16 pt across, 2 pt stroke (F-08). */
+const PLUS_SIZE = 16;
+const PLUS_STROKE = 2;
 
 /** Minimum tap target, per the HIG. */
 export const HEADER_BUTTON_MIN_SIZE = 44;
@@ -175,8 +179,38 @@ export function HeaderCircleButton({
 				pressed && { opacity: opacity.pressed },
 			]}
 		>
-			<SymbolView name={symbol} size={18} tintColor={colors.ink} />
+			{symbol === "plus" ? (
+				<PlusGlyph color={colors.ink} />
+			) : (
+				<SymbolView name={symbol} size={18} tintColor={colors.ink} />
+			)}
 		</Pressable>
+	);
+}
+
+/**
+ * The `+`, drawn from two bars: an SF Symbol renders nothing on web, which left
+ * Today's and Habits' header circles blank in the web baselines. Same on every
+ * platform, so the glyph never differs between a phone and a visual check.
+ */
+function PlusGlyph({ color }: { color: string }) {
+	return (
+		<View style={styles.plus} testID="header-circle-plus-glyph">
+			<View
+				style={[
+					styles.plusBar,
+					styles.plusHorizontal,
+					{ backgroundColor: color },
+				]}
+			/>
+			<View
+				style={[
+					styles.plusBar,
+					styles.plusVertical,
+					{ backgroundColor: color },
+				]}
+			/>
+		</View>
 	);
 }
 
@@ -211,6 +245,24 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	plus: {
+		width: PLUS_SIZE,
+		height: PLUS_SIZE,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	plusBar: {
+		position: "absolute",
+		borderRadius: PLUS_STROKE / 2,
+	},
+	plusHorizontal: {
+		width: PLUS_SIZE,
+		height: PLUS_STROKE,
+	},
+	plusVertical: {
+		width: PLUS_STROKE,
+		height: PLUS_SIZE,
 	},
 	/** Matches the system back title it replaces. */
 	backLabel: {

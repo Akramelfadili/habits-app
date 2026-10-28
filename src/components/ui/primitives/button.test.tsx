@@ -103,8 +103,11 @@ describe("Button", () => {
 				onPress={jest.fn()}
 			/>,
 		);
-		expect(screen.getByText("Restore")).toHaveStyle({ fontSize: 13 });
-		expect(screen.getByRole("button")).toHaveStyle({ paddingVertical: 6 });
+		expect(screen.getByText("Restore")).toHaveStyle({ fontSize: 14 });
+		expect(screen.getByRole("button")).toHaveStyle({
+			paddingVertical: 6,
+			minHeight: 0,
+		});
 	});
 });
 
@@ -152,4 +155,24 @@ describe("Button — disabled with reason (VAR-13)", () => {
 			expect(button.props.hitSlop).toBeUndefined();
 		},
 	);
+});
+
+describe("Button — V3-22 geometry", () => {
+	it("gives the full-width pill and the compact pill a 44 pt minimum", async () => {
+		const { rerender } = await render(
+			<Button label="Add habit" onPress={jest.fn()} />,
+		);
+		expect(screen.getByRole("button")).toHaveStyle({ minHeight: 44 });
+		await rerender(
+			<Button label="Add habit" fullWidth={false} onPress={jest.fn()} />,
+		);
+		expect(screen.getByRole("button")).toHaveStyle({ minHeight: 44 });
+	});
+
+	it("fills the primary pill with the accent", async () => {
+		await render(<Button label="Add habit" onPress={jest.fn()} />);
+		expect(screen.getByRole("button")).toHaveStyle({
+			backgroundColor: "#1A1A19",
+		});
+	});
 });
