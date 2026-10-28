@@ -260,14 +260,6 @@ function Insight({
 			return (
 				<InsightCard
 					symbol={habit ? categorySymbol(habit.category) : "chart.bar"}
-					accent={
-						habit
-							? {
-									tint: habitAccentTint(habit.category.hue, scheme),
-									ink: habitAccentInk(habit.category.hue, scheme),
-								}
-							: undefined
-					}
 					title={copy.title}
 					body={copy.body}
 				/>
@@ -279,10 +271,6 @@ function Insight({
 			return (
 				<InsightCard
 					symbol={categorySymbol(category)}
-					accent={{
-						tint: habitAccentTint(category.hue, scheme),
-						ink: habitAccentInk(category.hue, scheme),
-					}}
 					title={copy.title}
 					body={copy.body}
 				/>

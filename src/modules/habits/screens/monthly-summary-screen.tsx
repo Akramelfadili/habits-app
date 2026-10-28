@@ -296,10 +296,6 @@ function Insight({
 			return (
 				<InsightCard
 					symbol={categorySymbol(category)}
-					accent={{
-						tint: habitAccentTint(category.hue, scheme),
-						ink: habitAccentInk(category.hue, scheme),
-					}}
 					title={copy.title}
 					body={copy.body}
 				/>
