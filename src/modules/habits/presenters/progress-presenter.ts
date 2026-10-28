@@ -162,6 +162,7 @@ export function weekMatrixProps(
 	matrix: WeekMatrix,
 	dot: DotColor,
 	onEditDay: (date: Date) => void,
+	today: Date,
 ): { days: MatrixDayHeader[]; rows: MatrixRowData[] } {
 	return {
 		days: matrix.days.map((day) => ({
@@ -171,7 +172,9 @@ export function weekMatrixProps(
 			accessibilityLabel: progressCopy.week.editDayLabel(
 				format(day.date, "EEEE d MMMM"),
 			),
-			onPress: () => onEditDay(day.date),
+			// Days that have not happened cannot be edited ("Can't log ahead"): no target.
+			onPress:
+				day.date > startOfDay(today) ? undefined : () => onEditDay(day.date),
 		})),
 		rows: matrix.rows.map((row) => ({
 			key: String(row.habit.id),
@@ -190,6 +193,7 @@ export function weekBlocksProps(
 	matrix: WeekMatrix,
 	dot: DotColor,
 	onEditDay: (date: Date) => void,
+	today: Date,
 ): WeekBlockData[] {
 	return matrix.rows.map((row) => ({
 		key: String(row.habit.id),
@@ -205,7 +209,12 @@ export function weekBlocksProps(
 			text: format(day.date, "d"),
 			accessibilityLabel: matrixCellLabel(row, day),
 			// 40 pt with a 2 pt slop is a real 44 pt target: here a cell opens its day.
-			onPress: () => onEditDay(day.date),
+			onPress:
+				day.date > startOfDay(today) ? undefined : () => onEditDay(day.date),
+			accessibilityHint:
+				day.date > startOfDay(today)
+					? undefined
+					: progressCopy.week.editDayHint,
 		})),
 	}));
 }

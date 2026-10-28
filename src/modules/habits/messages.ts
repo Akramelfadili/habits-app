@@ -320,6 +320,7 @@ export const progressCopy = {
 		week: (start: string) => `Week of ${start}`,
 	},
 	backToYear: "Year",
+	backLabel: (label: string) => `‹ ${label}`,
 	backToYearLabel: "Back to Year",
 	legend: {
 		less: "Less",
@@ -363,6 +364,7 @@ export const progressCopy = {
 			`Started ${started} · ${before} before start`,
 		onlyHabit: (schedule: string) => `${schedule} · your only habit`,
 		editDayLabel: (day: string) => `${day}. Edit this day`,
+		editDayHint: "Edit this day",
 		rowTotal: (done: number, target: number) => `${done} of ${target}`,
 		barSummary: (best: string | null) =>
 			best

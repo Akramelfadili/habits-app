@@ -23,6 +23,7 @@ import { ProgressHeader } from "../components/progress/progress-header";
 import { ProgressMonth } from "../components/progress/progress-month";
 import { ProgressWeek } from "../components/progress/progress-week";
 import { ProgressYear } from "../components/progress/progress-year";
+import { WEEK_STARTS_ON } from "../constants";
 import { useProgressFilterQueries } from "../hooks/use-progress-filter-queries";
 import { useProgressShellQueries } from "../hooks/use-progress-shell-queries";
 import { useProgressViewActions } from "../hooks/use-progress-view-actions";
@@ -89,17 +90,26 @@ export function ProgressScreen() {
 	const eyebrow =
 		view.range === "week"
 			? progressCopy.eyebrow.week(
-					format(startOfWeek(shell.today, { weekStartsOn: 1 }), "d MMMM"),
+					format(
+						startOfWeek(shell.today, { weekStartsOn: WEEK_STARTS_ON }),
+						"d MMMM",
+					),
 				)
 			: view.range === "month"
 				? format(view.month ?? shell.today, "MMMM yyyy")
 				: String(shell.today.getFullYear());
 
 	// Where the switcher's slot starts is where the bar's bottom edge must end up, so the bar never covers it.
-	const onSlotLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) => {
-		switcherTop.value = layout.y;
-		header.setRange(collapseRange(layout.y));
+	const placeSwitcher = (top: number) => {
+		switcherTop.value = top;
+		header.setRange(collapseRange(top));
 	};
+	const onSlotLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
+		placeSwitcher(layout.y);
+	// The slot can move without resizing (a Back row above the title): on the web
+	// onLayout only fires for size changes, so the header's own height drives it too.
+	const onHeaderLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
+		placeSwitcher(HEADER_CONTENT_PADDING_TOP + layout.height + space[300]);
 
 	if (!shell.loaded) {
 		return (
@@ -164,21 +174,23 @@ export function ProgressScreen() {
 				onScroll={header.onScroll}
 				scrollEventThrottle={16}
 			>
-				<ProgressHeader
-					eyebrow={eyebrow}
-					exportUnavailable={exportUnavailable}
-					onExport={onExport}
-					back={
-						view.range === "month" && view.fromYear
-							? {
-									label: progressCopy.backToYear,
-									onPress: actions.backToYear,
-								}
-							: undefined
-					}
-					animatedStyle={header.titleStyle}
-					collapsed={header.collapsed}
-				/>
+				<View onLayout={onHeaderLayout}>
+					<ProgressHeader
+						eyebrow={eyebrow}
+						exportUnavailable={exportUnavailable}
+						onExport={onExport}
+						back={
+							view.range === "month" && view.fromYear
+								? {
+										label: progressCopy.backToYear,
+										onPress: actions.backToYear,
+									}
+								: undefined
+						}
+						animatedStyle={header.titleStyle}
+						collapsed={header.collapsed}
+					/>
+				</View>
 				<View
 					testID="progress-switcher-slot"
 					onLayout={onSlotLayout}

@@ -67,7 +67,7 @@ export function ProgressWeek({
 	const asBlocks = largeText || oneHabit !== null;
 	const matrix = asBlocks ? (
 		<WeekBlocks
-			blocks={weekBlocksProps(grid, dot, onEditDay).map((block) =>
+			blocks={weekBlocksProps(grid, dot, onEditDay, today).map((block) =>
 				oneHabit
 					? {
 							...block,
@@ -78,7 +78,7 @@ export function ProgressWeek({
 			)}
 		/>
 	) : (
-		<WeekMatrix {...weekMatrixProps(grid, dot, onEditDay)} />
+		<WeekMatrix {...weekMatrixProps(grid, dot, onEditDay, today)} />
 	);
 	const note =
 		view.state === "nothing-logged"

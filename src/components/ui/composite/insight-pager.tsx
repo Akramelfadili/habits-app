@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	type LayoutChangeEvent,
 	type NativeScrollEvent,
@@ -34,6 +34,13 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 	const [width, setWidth] = useState(0);
 	const [index, setIndex] = useState(0);
 	const count = insights.length;
+	const signature = insights.map((insight) => insight.title).join("|");
+	// A different set of insights starts again at the first page.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `signature` is the trigger
+	useEffect(() => {
+		setIndex(0);
+		scroller.current?.scrollTo({ x: 0, animated: false });
+	}, [signature]);
 
 	const goTo = (next: number) => {
 		const clamped = Math.min(count - 1, Math.max(0, next));
@@ -66,7 +73,7 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 			>
 				{insights.map((insight, page) => (
 					<View
-						key={insight.title}
+						key={`${insight.title}|${insight.body}`}
 						style={width > 0 ? { width } : styles.firstPage}
 					>
 						<InsightCard
@@ -87,7 +94,7 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 			>
 				{insights.map((insight, page) => (
 					<View
-						key={insight.title}
+						key={`${insight.title}|${insight.body}`}
 						testID={page === index ? "insight-dot-active" : "insight-dot"}
 						style={[
 							styles.dot,

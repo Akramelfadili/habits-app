@@ -11,6 +11,11 @@ import {
 } from "./category-fixtures";
 import { monthlyHabitFixtures } from "./monthly-fixtures";
 import {
+	PROGRESS_V3_SCENARIOS,
+	type ProgressV3Scenario,
+	progressV3Habits,
+} from "./progress-v3-fixtures";
+import {
 	TODAY_V3_SCENARIOS,
 	type TodayV3Scenario,
 	todayV3Habits,
@@ -44,6 +49,7 @@ const FIXTURE_DATE = new Date("2026-09-16T08:00:00Z");
 
 export type FixtureScenario =
 	| TodayV3Scenario
+	| ProgressV3Scenario
 	| "default"
 	| "empty"
 	| "rest-day"
@@ -78,6 +84,7 @@ export type FixtureScenario =
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	...TODAY_V3_SCENARIOS,
+	...PROGRESS_V3_SCENARIOS,
 	"empty",
 	"rest-day",
 	"rest-day-picker",
@@ -677,6 +684,11 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 		case "today-v3-all-done":
 		case "today-v3-rest":
 			return todayV3Habits(scenario);
+		case "progress-v3":
+		case "progress-v3-too-early":
+		case "progress-v3-nothing-logged":
+		case "progress-v3-one-habit":
+			return progressV3Habits(scenario);
 		case "empty":
 		case "first-run":
 		case "many-categories":

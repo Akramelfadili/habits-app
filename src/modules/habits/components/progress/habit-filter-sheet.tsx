@@ -12,6 +12,9 @@ import { progressCopy } from "../../messages";
 import type { Habit } from "../../types";
 import { HabitBadge } from "../habit-badge";
 
+/** The picker list scrolls past this height, leaving the scrim above the sheet. */
+const SHEET_LIST_MAX_HEIGHT = 520;
+
 type HabitFilterSheetProps = {
 	visible: boolean;
 	active: Habit[];
@@ -119,7 +122,7 @@ export function HabitFilterSheet({
 const styles = StyleSheet.create({
 	list: {
 		flexGrow: 0,
-		maxHeight: 520,
+		maxHeight: SHEET_LIST_MAX_HEIGHT,
 	},
 	archived: {
 		gap: space[150],

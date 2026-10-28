@@ -170,7 +170,12 @@ describe("the week matrix (P1)", () => {
 
 	it("builds the matrix: M…S letters, today bold, totals 'n/target', met rows marked", () => {
 		const onEditDay = jest.fn();
-		const { days, rows } = weekMatrixProps(view.grid, dot, onEditDay);
+		const { days, rows } = weekMatrixProps(
+			view.grid,
+			dot,
+			onEditDay,
+			PROGRESS_TODAY,
+		);
 		expect(days.map((d) => d.letter)).toEqual([
 			"M",
 			"T",
@@ -190,6 +195,9 @@ describe("the week matrix (P1)", () => {
 			false,
 		]);
 		days[2].onPress?.();
+		// Saturday and Sunday have not happened: no Edit this day target.
+		expect(days[5].onPress).toBeUndefined();
+		expect(days[6].onPress).toBeUndefined();
 		expect(onEditDay).toHaveBeenCalledWith(view.grid.days[2].date);
 		expect(days[2].accessibilityLabel).toBe(
 			"Wednesday 21 October. Edit this day",
@@ -208,7 +216,7 @@ describe("the week matrix (P1)", () => {
 
 	it("builds the one-habit / AX3 blocks with 40 pt day numbers and tappable cells", () => {
 		const onEditDay = jest.fn();
-		const [block] = weekBlocksProps(view.grid, dot, onEditDay);
+		const [block] = weekBlocksProps(view.grid, dot, onEditDay, PROGRESS_TODAY);
 		expect(block.cells.map((c) => c.text)).toEqual([
 			"19",
 			"20",
@@ -219,6 +227,9 @@ describe("the week matrix (P1)", () => {
 			"25",
 		]);
 		expect(block.cells[0].accessibilityLabel).toBe("Mon, done");
+		expect(block.cells[1].accessibilityHint).toBe("Edit this day");
+		expect(block.cells[5].onPress).toBeUndefined();
+		expect(block.cells[5].accessibilityHint).toBeUndefined();
 		block.cells[1].onPress?.();
 		expect(onEditDay).toHaveBeenCalledWith(view.grid.days[1].date);
 	});

@@ -49,6 +49,8 @@ type CompletionCellProps = {
 	text?: string;
 	/** Read aloud ("Wed, done"); without one the cell is not a VoiceOver stop. */
 	accessibilityLabel?: string;
+	/** What a press does, read after the label. */
+	accessibilityHint?: string;
 	/** Hide the cell from VoiceOver entirely (the year map's day cells, 08.3). */
 	hidden?: boolean;
 	/** The colour of the surface under the cell, for the notch and the ring's gap. Defaults to the card. */
@@ -75,6 +77,7 @@ export function CompletionCell({
 	selected = false,
 	text,
 	accessibilityLabel,
+	accessibilityHint,
 	hidden = false,
 	surface,
 	onPress,
@@ -211,6 +214,7 @@ export function CompletionCell({
 			testID={testID ?? `completion-cell-${state.kind}`}
 			accessibilityRole="button"
 			accessibilityLabel={accessibilityLabel}
+			accessibilityHint={accessibilityHint}
 			accessibilityState={{ selected }}
 			hitSlop={slop}
 			onPress={onPress}

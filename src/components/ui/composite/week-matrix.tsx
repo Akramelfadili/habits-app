@@ -131,6 +131,8 @@ export function WeekMatrix({ days, rows }: WeekMatrixProps) {
 }
 
 export type WeekBlockCell = CompletionRowsCell & {
+	/** Read after the label when the cell is a button ("Edit this day"). */
+	accessibilityHint?: string;
 	/** The weekday letter above the cell. */
 	letter: string;
 };
@@ -214,6 +216,7 @@ export function WeekBlocks({ blocks }: WeekBlocksProps) {
 									text={cell.text}
 									accessibilityLabel={cell.accessibilityLabel}
 									onPress={cell.onPress}
+									accessibilityHint={cell.accessibilityHint}
 								/>
 							</View>
 						))}

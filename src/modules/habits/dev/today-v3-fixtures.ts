@@ -77,6 +77,16 @@ const UPPER_BODY: FixtureHabit = {
 	frequency: { type: "weekdays", days: [2, 4] },
 };
 
+/** The six habits the Today and Progress frames draw, by name (Progress fixtures re-date them). */
+export const V3_FRAME_HABITS = {
+	water: DRINK_WATER,
+	cold: COLD_SHOWER,
+	meditate: MEDITATE,
+	read: READ,
+	noSocial: NO_SOCIAL,
+	upper: UPPER_BODY,
+};
+
 export function todayV3Habits(scenario: TodayV3Scenario): FixtureHabit[] {
 	if (scenario === "today-v3-rest") {
 		return [

@@ -72,7 +72,7 @@ export function ProgressHeader({
 			{back ? (
 				<View style={styles.back}>
 					<Button
-						label={`‹ ${back.label}`}
+						label={progressCopy.backLabel(back.label)}
 						accessibilityLabel={progressCopy.backToYearLabel}
 						variant="inline"
 						fullWidth={false}
