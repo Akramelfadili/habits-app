@@ -7,6 +7,7 @@ import {
 	type CompletionGridCell,
 } from "@/components/ui/composite/completion-grid";
 import { Container } from "@/components/ui/composite/container";
+import { EmptyState } from "@/components/ui/composite/empty-state";
 import { FreezePoolCard } from "@/components/ui/composite/freeze-pool-card";
 import type { HeatmapCellState } from "@/components/ui/composite/heatmap-cell";
 import { InsightCard } from "@/components/ui/composite/insight-card";
@@ -23,7 +24,6 @@ import { pluralise } from "@/utils/format";
 import { categorySymbol } from "../components/category-symbol";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
-import { TodayStatePanel } from "../components/today-state-panel";
 import { FREEZE_POOL_SIZE } from "../constants";
 import type { MonthlyInsight } from "../domain/monthly-insights";
 import type {
@@ -76,7 +76,7 @@ export function MonthlySummaryScreen() {
 				<View style={styles.emptyHeader}>
 					<Header eyebrow="" />
 				</View>
-				<TodayStatePanel
+				<EmptyState
 					icon="chart.bar"
 					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its month will show up here."

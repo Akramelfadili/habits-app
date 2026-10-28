@@ -30,36 +30,36 @@ tags:
     id: "Today"
 - assertVisible: "Today"
 
-# Backfill Mon–Wed from a habit's heatmap: one retro-log sheet per day lists
+# Backfill Mon–Wed from a habit's heatmap: one Edit this day sheet per day lists
 # every habit due that day, so several can be ticked at once.
 - tapOn: "Glass of water"
 - tapOn:
     id: "Monday 28 September, missed"
 - tapOn:
-    id: "Glass of water, done"
+    id: "Glass of water, not done"
 - tapOn:
-    id: "Evening walk, done"
+    id: "Evening walk, not done"
 - tapOn:
-    id: "No phone after 23:00, resisted"
-- tapOn: "Save changes"
+    id: "No phone after 23:00, resisted[?]"
+- tapOn: "Done"
 - tapOn:
     id: "Tuesday 29 September, missed"
 - tapOn:
-    id: "Glass of water, done"
+    id: "Glass of water, not done"
 - tapOn:
-    id: "Evening walk, done"
+    id: "Evening walk, not done"
 - tapOn:
-    id: "No phone after 23:00, resisted"
-- tapOn: "Save changes"
+    id: "No phone after 23:00, resisted[?]"
+- tapOn: "Done"
 - tapOn:
     id: "Wednesday 30 September, missed"
 - tapOn:
-    id: "Glass of water, done"
+    id: "Glass of water, not done"
 - tapOn:
-    id: "Evening walk, done"
+    id: "Evening walk, not done"
 - tapOn:
-    id: "No phone after 23:00, resisted"
-- tapOn: "Save changes"
+    id: "No phone after 23:00, resisted[?]"
+- tapOn: "Done"
 - assertVisible:
     id: "Wednesday 30 September, logged"
 # Detail was opened from Today, so Back returns there, not to Progress.

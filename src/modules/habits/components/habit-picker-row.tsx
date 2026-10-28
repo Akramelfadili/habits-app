@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/primitives/checkbox";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { habitAccentInk, habitAccentTint } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { todayCopy } from "../messages";
 import type { Habit } from "../types";
 import { categorySymbol } from "./category-symbol";
 import { habitPickerSubtitle } from "./habit-picker-helpers";
@@ -37,10 +38,10 @@ export function HabitPickerRow({
 			onPress={logged ? undefined : onSelect}
 			accessibilityLabel={
 				logged
-					? `${habit.name}, logged off-schedule`
+					? todayCopy.pickerLogged(habit.name)
 					: isQuantity
-						? `Log ${habit.name}, set an amount`
-						: `Log ${habit.name} off-schedule`
+						? todayCopy.pickerLogQuantity(habit.name)
+						: todayCopy.pickerLog(habit.name)
 			}
 			leading={
 				<IconBadge
@@ -51,7 +52,7 @@ export function HabitPickerRow({
 					}}
 				/>
 			}
-			value={showAmount ? "Amount" : undefined}
+			value={showAmount ? todayCopy.pickerAmount : undefined}
 			navigable={showAmount}
 			trailing={
 				showAmount ? undefined : (
@@ -60,8 +61,8 @@ export function HabitPickerRow({
 						onPress={logged ? () => {} : onSelect}
 						accessibilityLabel={
 							logged
-								? `${habit.name}, logged off-schedule`
-								: `Log ${habit.name} off-schedule`
+								? todayCopy.pickerLogged(habit.name)
+								: todayCopy.pickerLog(habit.name)
 						}
 					/>
 				)

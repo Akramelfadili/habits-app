@@ -1,32 +1,45 @@
-import { useEffect } from "react";
-import { AccessibilityInfo, StyleSheet, View } from "react-native";
+import { useEffect, useMemo } from "react";
+import {
+	AccessibilityInfo,
+	PanResponder,
+	StyleSheet,
+	View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useToastStore } from "@/store/toast-store";
+import { type ToastMessage, useToastStore } from "@/store/toast-store";
+import { motion, space } from "@/theme/theme";
 import { UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
 import { useScreenReader } from "@/utils/use-screen-reader";
 import { Toast } from "./toast";
 
 /** Screen margin for a toast with no tab bar under it. */
-const DEFAULT_TOAST_BOTTOM = 16;
+const DEFAULT_TOAST_BOTTOM = space[400];
 
-/** How long a toast — and with it, its Undo — stays up. */
-export const TOAST_DURATION_MS = 4000;
+/** How far (pt) a drag must travel to count as a swipe. */
+const SWIPE_START = space[800];
 
 /**
- * With a screen reader running the toast stays longer — it has to be heard
- * and the Undo found — but still not for ever: a stale Undo is a trap.
+ * How long a toast stays up (HAB-48): an Undo 5 s, success and info 4 s,
+ * warning 6 s; an error has no timer — it stays until Retry or a swipe.
+ * `null` = never auto-dismiss.
  */
-export const TOAST_SCREEN_READER_DURATION_MS = 8000;
+export function toastHoldMs(toast: ToastMessage): number | null {
+	if (toast.tone === "error") return null;
+	if (toast.actionLabel) return motion.toast.hold.undo;
+	if (toast.tone === "warning") return motion.toast.hold.warning;
+	return motion.toast.hold.info;
+}
 
 type ToastHostProps = {
 	/**
 	 * "bottom" is the page-level host; "top" is the one a `Sheet` mounts inside
-	 * its own Modal — a native Modal covers the page, so a toast raised while a
+	 * its own Modal; "inline" is one the sheet places in its own flow, above its
+	 * last button, so the toast never covers the content it reports on — a native Modal covers the page, so a toast raised while a
 	 * sheet is open (a failed save) would otherwise be invisible. While any
 	 * sheet is open the page-level host steps aside, so there is one toast.
 	 */
-	placement?: "bottom" | "top";
+	placement?: "bottom" | "top" | "inline";
 	/**
 	 * How far above the bottom edge a "bottom" toast floats. The shell passes
 	 * the tab bar's offset (12 pt above the pill, 16 pt above bar A — T-21);
@@ -37,7 +50,7 @@ type ToastHostProps = {
 
 /**
  * Renders the current toast (see `@/store/toast-store`) pinned to the bottom
- * of its parent, and dismisses it after TOAST_DURATION_MS. One host per
+ * of its parent, and dismisses it after `toastHoldMs`. One host per
  * navigator, so a toast survives navigating between that navigator's screens.
  * The action runs once, then the toast goes away. A failing action (an Undo
  * that throws or rejects) is logged and answered with an error toast — it
@@ -57,10 +70,10 @@ export function ToastHost({
 
 	useEffect(() => {
 		if (!toast) return;
-		const timer = setTimeout(
-			() => dismissToast(toast.id),
-			screenReader ? TOAST_SCREEN_READER_DURATION_MS : TOAST_DURATION_MS,
-		);
+		const hold = toastHoldMs(toast);
+		// A screen-reader user keeps every toast until they dismiss it (HAB-48).
+		if (hold === null || screenReader) return;
+		const timer = setTimeout(() => dismissToast(toast.id), hold);
 		return () => clearTimeout(timer);
 	}, [toast, screenReader, dismissToast]);
 
@@ -73,6 +86,24 @@ export function ToastHost({
 		if (visible && message) AccessibilityInfo.announceForAccessibility(message);
 	}, [visible, toastId]);
 
+	// A downward or sideways swipe dismisses (HAB-48: an error stays until Retry or a swipe).
+	const swipe = useMemo(
+		() =>
+			PanResponder.create({
+				onMoveShouldSetPanResponder: (_event, gesture) =>
+					Math.max(Math.abs(gesture.dx), Math.abs(gesture.dy)) > SWIPE_START,
+				onPanResponderRelease: (_event, gesture) => {
+					if (
+						toastId !== undefined &&
+						Math.max(Math.abs(gesture.dx), Math.abs(gesture.dy)) > SWIPE_START
+					) {
+						dismissToast(toastId);
+					}
+				},
+			}),
+		[toastId, dismissToast],
+	);
+
 	if (!toast) return null;
 	if (placement === "bottom" && openSheets > 0) return null;
 
@@ -80,10 +111,13 @@ export function ToastHost({
 		<View
 			testID="toast-host"
 			pointerEvents="box-none"
+			{...swipe.panHandlers}
+			accessibilityActions={[{ name: "dismiss", label: "Dismiss" }]}
+			onAccessibilityAction={() => dismissToast(toast.id)}
 			style={
-				placement === "top"
-					? undefined
-					: [styles.host, { bottom: bottomOffset }]
+				placement === "bottom"
+					? [styles.host, { bottom: bottomOffset }]
+					: undefined
 			}
 		>
 			<Toast
@@ -121,12 +155,12 @@ const styles = StyleSheet.create({
 	top: {
 		position: "absolute",
 		top: 0,
-		left: 16,
-		right: 16,
+		left: space[400],
+		right: space[400],
 	},
 	host: {
 		position: "absolute",
-		left: 16,
-		right: 16,
+		left: space[400],
+		right: space[400],
 	},
 });

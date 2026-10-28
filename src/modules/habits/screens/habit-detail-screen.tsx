@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ArchivedBanner } from "@/components/ui/composite/archived-banner";
 import { Container } from "@/components/ui/composite/container";
+import { EmptyState } from "@/components/ui/composite/empty-state";
 import { headerActionOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { StatCard } from "@/components/ui/composite/stat-card";
@@ -16,15 +17,12 @@ import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
 import { DeleteHabitSheet } from "../components/delete-habit-sheet";
+import { EditDaySheet } from "../components/edit-day-sheet";
 import { HabitEntryRow } from "../components/habit-entry-row";
 import { HabitHeatmap } from "../components/habit-heatmap";
-import { RetroLogSheet } from "../components/retro-log-sheet";
-import { TodayStatePanel } from "../components/today-state-panel";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
-import { useRetroLogActions } from "../hooks/use-retro-log-actions";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
-import { messages, showMessage } from "../messages";
 import {
 	archivedBannerDetail,
 	archivedBannerTitle,
@@ -40,7 +38,6 @@ import {
 	streakResetNote,
 } from "../presenters/habit-detail-helpers";
 import { remindersSummary } from "../presenters/reminders-helpers";
-import type { DayLog } from "../types";
 
 type HabitDetailScreenProps = {
 	habitId: number;
@@ -49,7 +46,7 @@ type HabitDetailScreenProps = {
 /**
  * Habit Detail (HAB-09): header → streak / longest / 90-day tiles → 10-week
  * heatmap → recent entries, reverse chronological. Tapping a past (or today's)
- * heatmap cell opens the Retro log sheet for that day (HAB-10). The hub for
+ * heatmap cell opens the Edit this day sheet for that day (HAB-10). The hub for
  * everything about one habit: Edit in the header, Reminders, then a one-tap
  * Archive above Delete — Delete lives here only, deliberately last and
  * behind a confirmation (HAB-13).
@@ -58,10 +55,9 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const { colors, scheme } = useTheme();
 	const router = useRouter();
 	const detail = useHabitDetailQueries(habitId);
-	// Heatmap taps land here; a non-null day opens the Retro log sheet (HAB-10).
+	// Heatmap taps land here; a non-null day opens the Edit this day sheet (HAB-10, HAB-34).
 	const [retroLogDate, setRetroLogDate] = useState<Date | null>(null);
 	const retroLogDay = useRetroLogQueries(habitId, retroLogDate);
-	const { saveDay, isSaving } = useRetroLogActions();
 	const {
 		archiveHabit,
 		isArchiving,
@@ -72,31 +68,6 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 		undoRestoreHabit,
 	} = useHabitDetailActions();
 	const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
-	async function handleSaveDay(values: DayLog["values"], note: string) {
-		if (!retroLogDate) return;
-		const date = retroLogDate;
-		const result = await saveDay(
-			date,
-			{ values, noteHabitId: habitId, note },
-			new Map(
-				(retroLogDay?.habits ?? []).map((habit) => [
-					habit.id,
-					habit.targetAmount,
-				]),
-			),
-		);
-		// A failed save leaves the sheet open (with its error toast) for a retry.
-		if (!result.ok) return;
-		setRetroLogDate(null);
-		// A frozen day that is now done no longer needs its freeze (PR-11).
-		if (result.value.returnedFreezeHabitIds.length > 0) {
-			showMessage(messages.freezeReturned, [
-				format(date, "EEE d"),
-				result.value.freezesLeft,
-			]);
-		}
-	}
 
 	// Either way the habit leaves wherever Detail was opened from — Today, or
 	// Manage's active list — so go back there rather than stay on it. The
@@ -158,7 +129,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	if (!detail) {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
-				<TodayStatePanel
+				<EmptyState
 					icon="questionmark"
 					headline="Habit not found"
 					subtitle="It may have been deleted."
@@ -297,7 +268,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 					</Container>
 				) : (
 					<Container>
-						<TodayStatePanel
+						<EmptyState
 							centered={false}
 							icon="circle.dashed"
 							headline="No entries yet"
@@ -326,12 +297,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 				/>
 			</View>
 
-			<RetroLogSheet
-				day={retroLogDay}
-				onDismiss={() => setRetroLogDate(null)}
-				onSave={handleSaveDay}
-				isSaving={isSaving}
-			/>
+			<EditDaySheet day={retroLogDay} onDismiss={() => setRetroLogDate(null)} />
 			<DeleteHabitSheet
 				visible={isConfirmingDelete}
 				habitName={habit.name}

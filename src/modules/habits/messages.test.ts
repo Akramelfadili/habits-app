@@ -5,7 +5,7 @@ import {
 	messages,
 	messageText,
 	showMessage,
-	UNDO_DURATION_MS,
+	todayCopy,
 } from "./messages";
 
 describe("message catalogue", () => {
@@ -83,7 +83,6 @@ describe("message catalogue", () => {
 		});
 
 		it("gives a toast with Undo the 5 s Undo window", () => {
-			expect(UNDO_DURATION_MS).toBe(5000);
 			expect(defaultDurationMs({ tone: "success" }, { hasUndo: true })).toBe(
 				5000,
 			);
@@ -95,5 +94,44 @@ describe("message catalogue", () => {
 				defaultDurationMs({ tone: "warning", durationMs: null }),
 			).toBeNull();
 		});
+	});
+});
+
+describe("todayCopy (inline Today copy)", () => {
+	it("pluralises days and freezes", () => {
+		expect(todayCopy.rowResisting(1)).toBe("Resisting · 1 day strong");
+		expect(todayCopy.rowResisting(4)).toBe("Resisting · 4 days strong");
+		expect(todayCopy.rowAtRisk("Thursday", 1)).toBe(
+			"Missed Thursday · 1 freeze left",
+		);
+		expect(todayCopy.rowAtRisk("Thursday", 2)).toBe(
+			"Missed Thursday · 2 freezes left",
+		);
+	});
+
+	it("says resisting, resisted and strong — never failed (D8)", () => {
+		const all = [
+			todayCopy.rowResisting(3),
+			todayCopy.rowResisted(3, true),
+			todayCopy.rowResisted(3, false),
+			todayCopy.circleNotResisted("No social media"),
+			todayCopy.circleResisted("No social media"),
+		].join(" ");
+		expect(all).not.toMatch(/fail|miss|break/i);
+	});
+
+	it("never carries a completion time into a status line", () => {
+		const lines = [
+			todayCopy.rowStreak(13),
+			todayCopy.rowPerWeek(3, 1),
+			todayCopy.rowAmount(5, 8, "glasses"),
+			todayCopy.bonusSchedule("Mon–Fri"),
+		];
+		for (const line of lines) expect(line).not.toMatch(/\d\d:\d\d/);
+	});
+
+	it("counts groups and progress as 'x of y'", () => {
+		expect(todayCopy.groupCount(0, 2)).toBe("0 of 2");
+		expect(todayCopy.progressLabel(1, 5)).toBe("1 of 5 done");
 	});
 });

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { TOAST_DURATION_MS } from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
+import { motion } from "@/theme/theme";
 import { REMINDER_CAP_MESSAGE } from "../constants";
 import type {
 	ReminderScreenData,
@@ -222,7 +222,7 @@ describe("RemindersScreen", () => {
 				await fireEvent.press(screen.getByText("Remove"));
 				expect(screen.getByText("Undo")).toBeTruthy();
 
-				await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS));
+				await act(() => jest.advanceTimersByTime(motion.toast.hold.undo));
 
 				expect(screen.queryByText("Undo")).toBeNull();
 				expect(useToastStore.getState().toast).toBeNull();

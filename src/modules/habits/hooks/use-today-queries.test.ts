@@ -343,11 +343,38 @@ describe("useTodayQueries", () => {
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
 		});
 
+		it("reports a covered yesterday with the streak that was kept — the run before it, not counting it (T7)", async () => {
+			mockHabits = [dailyHabit];
+			mockAllEntries = ["2026-09-12", "2026-09-13", "2026-09-14"].map(
+				(date) => ({
+					habitId: 1,
+					date,
+					createdAt: new Date(date),
+				}),
+			);
+			mockFrozenDays = [{ habitId: 1, date: YESTERDAY_STRING }];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.frozenYesterdayByHabitId.get(1)?.streak).toBe(3);
+		});
+
 		it("does not flag a habit with no streak standing before the miss — nothing to lose", async () => {
 			mockHabits = [dailyHabit];
 			mockAllEntries = []; // No history at all — yesterday was due and missed, but streak-before-miss is 0.
 			const { result } = await renderHook(() => useTodayQueries());
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
+		});
+
+		it("never flags a × per week habit, whatever it logged this week", async () => {
+			mockHabits = [perWeekHabit];
+			mockAllEntries = [
+				{
+					habitId: perWeekHabit.id,
+					date: "2026-09-14",
+					createdAt: new Date("2026-09-14"),
+				},
+			];
+			const { result } = await renderHook(() => useTodayQueries());
+			expect(result.current.atRiskByHabitId.has(perWeekHabit.id)).toBe(false);
 		});
 
 		it("never flags a habit that wasn't due yesterday, even if due today", async () => {

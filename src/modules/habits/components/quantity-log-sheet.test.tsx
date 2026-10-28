@@ -1,205 +1,161 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { useToastStore } from "@/store/toast-store";
 import { makeHabit } from "../test-support/habit-builder";
-import { QuantityLogSheet } from "./quantity-log-sheet";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
 
+const mockLogQuantity = jest.fn();
+const mockRestoreDay = jest.fn();
+jest.mock("../hooks/use-quantity-log-actions", () => ({
+	useQuantityLogActions: () => ({ logQuantity: mockLogQuantity }),
+}));
+jest.mock("../hooks/use-today-actions", () => ({
+	useTodayActions: () => ({ restoreDay: mockRestoreDay }),
+}));
+
+import { QuantityLogSheet } from "./quantity-log-sheet";
+
+const DAY = new Date(2026, 9, 23);
 const habit = makeHabit({
-	name: "Glass of water",
+	id: 2,
+	name: "Drink water",
 	targetType: "quantity",
 	targetAmount: 8,
 	targetUnit: "glasses",
-	frequency: { type: "daily" },
 });
+const WROTE = { ok: true, value: { returnedFreeze: null, freezesLeft: 2 } };
 
-describe("QuantityLogSheet", () => {
-	it("the habit's name is the sheet's heading and wraps rather than overflowing (A6-09, A5-15)", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
+async function open(value = 5, extra: Record<string, unknown> = {}) {
+	const onClosed = jest.fn();
+	await render(
+		<QuantityLogSheet
+			habit={habit}
+			value={value}
+			day={DAY}
+			onClosed={onClosed}
+			{...extra}
+		/>,
+	);
+	return { onClosed };
+}
+
+describe("QuantityLogSheet (QS1-QS3)", () => {
+	beforeEach(() => {
+		mockLogQuantity.mockReset().mockResolvedValue(WROTE);
+		mockRestoreDay
+			.mockReset()
+			.mockResolvedValue({ ok: true, value: undefined });
+		useToastStore.setState({ toast: null });
+	});
+
+	it("titles the sheet with the habit name as a heading and shows the amount of the target", async () => {
+		await open();
+		expect(screen.getByRole("header", { name: "Drink water" })).toBeTruthy();
+		expect(screen.getByText("of 8 glasses")).toBeTruthy();
+		expect(screen.getByLabelText("glasses").props.accessibilityValue.now).toBe(
+			5,
 		);
-		const heading = screen.getByRole("header", { name: "Glass of water" });
-		expect(heading.props.numberOfLines).toBe(2);
+	});
+
+	it("names a past day in the title", async () => {
+		await open(5, { dayLabel: "Wed 21 Oct" });
 		expect(
-			screen.getByText("Target 8 glasses · daily").props.numberOfLines,
-		).toBe(2);
+			screen.getByRole("header", { name: "Drink water · Wed 21 Oct" }),
+		).toBeTruthy();
 	});
 
-	it("renders the habit's name and target", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		expect(screen.getByText("Glass of water")).toBeTruthy();
-		expect(screen.getByText("Target 8 glasses · daily")).toBeTruthy();
+	it("steps with 44 pt buttons and saves each change at once", async () => {
+		await open();
+		await fireEvent.press(screen.getByLabelText("Increase glasses"));
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, DAY, 6, 8);
+		await fireEvent.press(screen.getByLabelText("Decrease glasses"));
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, DAY, 5, 8);
 	});
 
-	it("starts the draft from the current value", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		expect(screen.getByText("Save 6 of 8")).toBeTruthy();
+	it("offers +1, +2, +3 and Fill to the target", async () => {
+		await open();
+		await fireEvent.press(screen.getByText("+3"));
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, DAY, 8, 8);
 	});
 
-	it("the stepper's + button increments the draft, reflected in the Save label", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		expect(screen.getByText("Save 7 of 8")).toBeTruthy();
+	it("Fill to 8 jumps to the target", async () => {
+		await open(2);
+		await fireEvent.press(screen.getByText("Fill to 8"));
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, DAY, 8, 8);
 	});
 
-	it("the stepper cannot go below 0", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={0}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
+	it("at the target Fill is disabled, extra amounts still count, and Done closes", async () => {
+		const { onClosed } = await open(8);
+		expect(screen.getByText("of 8 glasses · done")).toBeTruthy();
 		expect(
-			screen.getByLabelText("Decrease Glass of water, glasses").props
-				.accessibilityState.disabled,
+			screen.getByRole("button", { name: "Fill to 8" }).props.accessibilityState
+				.disabled,
 		).toBe(true);
+		expect(
+			screen.getByText(
+				"Target reached — the circle is full. Extra glasses still count.",
+			),
+		).toBeTruthy();
+		await fireEvent.press(screen.getByLabelText("Increase glasses"));
+		expect(mockLogQuantity).toHaveBeenLastCalledWith(2, DAY, 9, 8);
+		await act(async () => {
+			await fireEvent.press(screen.getByText("Done"));
+		});
+		expect(onClosed).toHaveBeenCalledTimes(1);
 	});
 
-	it("a quick-add chip adds to the draft", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		await fireEvent.press(screen.getByText("+2"));
-		expect(screen.getByText("Save 8 of 8")).toBeTruthy();
+	it("closing shows one toast, and Undo restores the amount from before the sheet opened", async () => {
+		const { onClosed } = await open(5);
+		await fireEvent.press(screen.getByLabelText("Increase glasses"));
+		await fireEvent.press(screen.getByLabelText("Increase glasses"));
+		await act(async () => {
+			await fireEvent.press(screen.getByText("Close"));
+		});
+		expect(onClosed).toHaveBeenCalledTimes(1);
+		expect(useToastStore.getState().toast).toMatchObject({
+			message: "Drink water · 7 of 8 glasses",
+			actionLabel: "Undo",
+		});
+		useToastStore.getState().toast?.onAction?.();
+		expect(mockRestoreDay).toHaveBeenCalledWith(2, DAY, 5, null);
 	});
 
-	it("the Full-target chip jumps straight to the target, not adds to it", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={3}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		await fireEvent.press(screen.getByText("Full 8"));
-		expect(screen.getByText("Save 8 of 8")).toBeTruthy();
-	});
+	describe("Set exact value (QS2)", () => {
+		async function openExact(value = 5) {
+			const view = await open(value);
+			await fireEvent.press(screen.getByText("Set exact value"));
+			return view;
+		}
 
-	it("allows the draft to go past the target — over-logging isn't capped", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={8}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		expect(screen.getByText("Save 9 of 8")).toBeTruthy();
-	});
+		it("opens the number pad on a field labelled with the unit, and says the target and the limit", async () => {
+			await openExact();
+			const field = screen.getByLabelText("glasses today");
+			expect(field.props.keyboardType).toBe("number-pad");
+			expect(field.props.autoFocus).toBe(true);
+			expect(screen.getByText("Target 8 · up to 9999")).toBeTruthy();
+		});
 
-	it("shows how far over target the draft is once it passes 100%", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={8}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		expect(screen.getByText("+2 over")).toBeTruthy();
-	});
+		it("'Set to 6' logs the difference and returns to the stepper", async () => {
+			await openExact(5);
+			await fireEvent.changeText(screen.getByLabelText("glasses today"), "6");
+			await fireEvent.press(screen.getByText("Set to 6"));
+			expect(mockLogQuantity).toHaveBeenLastCalledWith(2, DAY, 6, 8);
+			expect(
+				screen.getByLabelText("glasses").props.accessibilityValue.now,
+			).toBe(6);
+		});
 
-	it("shows no overflow indicator at or below target", async () => {
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={8}
-				onDismiss={jest.fn()}
-				onSave={jest.fn()}
-			/>,
-		);
-		expect(screen.queryByText(/over$/)).toBeNull();
-	});
-
-	it("Save calls onSave with the current draft value", async () => {
-		const onSave = jest.fn();
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={jest.fn()}
-				onSave={onSave}
-			/>,
-		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		await fireEvent.press(screen.getByText("Save 7 of 8"));
-		expect(onSave).toHaveBeenCalledWith(7);
-	});
-
-	it("dismissing the scrim calls onDismiss without saving", async () => {
-		const onDismiss = jest.fn();
-		const onSave = jest.fn();
-		await render(
-			<QuantityLogSheet
-				visible
-				habit={habit}
-				value={6}
-				onDismiss={onDismiss}
-				onSave={onSave}
-			/>,
-		);
-		await fireEvent.press(screen.getByLabelText("Dismiss"));
-		expect(onDismiss).toHaveBeenCalledTimes(1);
-		expect(onSave).not.toHaveBeenCalled();
+		it("takes digits only and disables Set while the value is unchanged", async () => {
+			await openExact(5);
+			expect(
+				screen.getByRole("button", { name: "Set to 5" }).props
+					.accessibilityState.disabled,
+			).toBe(true);
+			await fireEvent.changeText(screen.getByLabelText("glasses today"), "1a2");
+			expect(screen.getByLabelText("glasses today").props.value).toBe("12");
+		});
 	});
 });

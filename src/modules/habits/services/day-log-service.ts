@@ -2,16 +2,14 @@ import { endOfMonth, startOfMonth } from "date-fns";
 import { FREEZE_POOL_SIZE } from "../constants";
 import {
 	type FreezeChange,
-	saveDayLog,
 	setHabitCompletedOn,
 	setHabitQuantityOn,
 } from "../repositories/entry-repository";
 import {
 	getFreezesUsedInMonth,
 	getFrozenDay,
-	getFrozenHabitIdsOn,
 } from "../repositories/frozen-day-repository";
-import type { DayLog, DayLogValue, FrozenDay } from "../types";
+import type { FrozenDay } from "../types";
 
 /**
  * Logging that gives a freeze back (PR-11): a day that was frozen and is now
@@ -102,38 +100,4 @@ export async function restoreDay(
 	} else {
 		await setHabitQuantityOn(habitId, date, previous, freeze);
 	}
-}
-
-export type DaySave = {
-	/** Habits whose freeze this save gave back. */
-	returnedFreezeHabitIds: number[];
-	freezesLeft: number;
-};
-
-/**
- * Saves a whole day (Edit this day's path): `saveDayLog`, plus the freeze of
- * every habit that was frozen that day and is now logged as done. `targets`
- * is each shown habit's quantity target (`null` for a check habit), to tell a
- * completing amount from a partial one.
- */
-export async function saveDayReturningFreezes(
-	date: Date,
-	log: DayLog,
-	targets: ReadonlyMap<number, number | null>,
-): Promise<DaySave> {
-	const frozenIds = await getFrozenHabitIdsOn(date);
-	const returnedFreezeHabitIds = log.values
-		.filter(
-			({ habitId, value }) =>
-				frozenIds.has(habitId) &&
-				completesDay(value, targets.get(habitId) ?? null),
-		)
-		.map(({ habitId }) => habitId);
-	await saveDayLog(date, log, returnedFreezeHabitIds);
-	return { returnedFreezeHabitIds, freezesLeft: await freezesLeftIn(date) };
-}
-
-function completesDay(value: DayLogValue, target: number | null): boolean {
-	if (typeof value === "boolean") return value;
-	return target !== null && value >= target;
 }

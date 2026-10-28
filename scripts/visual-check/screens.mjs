@@ -23,6 +23,10 @@ import { format, subDays } from "date-fns";
  */
 export const DEFAULT_CLOCK = "2026-09-24T09:00:00";
 
+/** The Today frames dates: Friday 23 and Saturday 24 October 2026. */
+const V3_FRIDAY = "2026-10-23T09:00:00";
+const V3_SATURDAY = "2026-10-24T09:00:00";
+
 /** A heatmap cell's accessibility label, `daysAgo` days before the screen's clock. */
 function heatmapCellLabel(clock, daysAgo, status) {
 	const day = subDays(new Date(clock), daysAgo);
@@ -100,7 +104,7 @@ export const SCREENS = {
 	today: {
 		feature: "HAB-03",
 		route: "/",
-		mockup: "docs/mockups/today-populated.png",
+		mockup: "docs/mockups/v3/renders/today/slice_00.png",
 	},
 	"today-break-resisted": {
 		feature: "HAB-04",
@@ -108,18 +112,21 @@ export const SCREENS = {
 		mockup: "docs/mockups/today-populated.png",
 		note: "Break habit ticked: resisted caption on the row, plus the completion toast with Undo.",
 		async interact(page) {
-			await page.getByLabel("No phone after 23:00", { exact: true }).click();
+			await page
+				.getByLabel("No phone after 23:00, resisted today?", { exact: true })
+				.click();
 		},
 	},
 	"today-empty": {
 		feature: "HAB-05",
 		route: "/?fixtures=empty",
-		mockup: "docs/mockups/today-empty-state.png",
+		mockup: "docs/mockups/v3/renders/today/slice_01.png",
+		note: "T2 — header and + only, the empty state with one primary action. 'Browse suggestions' waits for HAB-46.",
 	},
 	"today-rest-day": {
 		feature: "HAB-05",
 		route: "/?fixtures=rest-day",
-		mockup: "docs/mockups/rest-day.png",
+		mockup: "docs/mockups/v3/renders/today/slice_01.png",
 	},
 
 	// HAB-18 — off-schedule log (D1, D2) and retro-log pinning (D4)
@@ -129,7 +136,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/hab-18-d1.png",
 		note: "Picker over the rest day: Glass of water (Amount ›) and checks; the Break habit is left out.",
 		async interact(page) {
-			await page.getByText("Log something anyway", { exact: true }).click();
+			await page.getByText("Log a different habit", { exact: true }).click();
 			await page.getByText("Log off-schedule", { exact: true }).waitFor();
 			await page.waitForTimeout(400);
 		},
@@ -140,7 +147,7 @@ export const SCREENS = {
 		mockup: null,
 		note: "Only a Break habit exists: the picker says nothing is eligible instead of listing nothing.",
 		async interact(page) {
-			await page.getByText("Log something anyway", { exact: true }).click();
+			await page.getByText("Log a different habit", { exact: true }).click();
 			await page.getByText("Nothing to log here", { exact: true }).waitFor();
 			await page.waitForTimeout(400);
 		},
@@ -151,7 +158,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/hab-18-d2.png",
 		note: "Read logged off-schedule: toast with Undo over the rest day, which now lists it. 'Logged 10:42' becomes the real time of day.",
 		async interact(page) {
-			await page.getByText("Log something anyway", { exact: true }).click();
+			await page.getByText("Log a different habit", { exact: true }).click();
 			await page.getByLabel("Log Read off-schedule").first().click();
 			await page.getByText("Logged 'Read' · off-schedule").waitFor();
 			await page.waitForTimeout(400);
@@ -886,7 +893,7 @@ export const SCREENS = {
 		mockup: null,
 		note: "A failed tick on Today: error toast (toast pill with a danger dot), the row stays unchecked, no Undo.",
 		async interact(page) {
-			await page.getByLabel("Evening walk").first().click();
+			await page.getByLabel("Evening walk, not done").first().click();
 			await page.getByText("Couldn't update this habit. Try again.").waitFor();
 		},
 	},
@@ -897,7 +904,7 @@ export const SCREENS = {
 		colorScheme: "dark",
 		note: "Same, dark.",
 		async interact(page) {
-			await page.getByLabel("Evening walk").first().click();
+			await page.getByLabel("Evening walk, not done").first().click();
 			await page.getByText("Couldn't update this habit. Try again.").waitFor();
 		},
 	},
@@ -908,7 +915,7 @@ export const SCREENS = {
 		note: "A failed quantity save: the sheet stays open and the toast shows at the top of the screen, above the sheet (a Modal covers the page-level host).",
 		async interact(page) {
 			await page.getByText("6/8", { exact: true }).click();
-			await page.getByRole("button", { name: /^Save \d+ of/ }).click();
+			await page.getByLabel("Increase glasses").click();
 			await page.getByText("Couldn't save that amount. Try again.").waitFor();
 		},
 	},
@@ -984,7 +991,9 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_06.png",
 		note: "T14 — the Undo toast 12 pt above the pill (T-21). Glass of water is a quantity habit, so a check habit is ticked instead.",
 		async interact(page) {
-			await page.getByLabel("No phone after 23:00", { exact: true }).click();
+			await page
+				.getByLabel("No phone after 23:00, resisted today?", { exact: true })
+				.click();
 		},
 	},
 	"tab-bar-sheet-over-pill": {
@@ -994,7 +1003,7 @@ export const SCREENS = {
 		note: "H8 — a sheet covers the pill and the scrim dims it; the pill is inert until it closes.",
 		async interact(page) {
 			await page
-				.getByLabel(/^Log .*, \d+ of \d+/)
+				.getByLabel(/^Amount, \d+ of \d+/)
 				.first()
 				.click();
 			await page.waitForTimeout(400);
@@ -1023,10 +1032,172 @@ export const SCREENS = {
 			await page.waitForTimeout(400);
 		},
 	},
+
+	// V3-2b — Today UI (HAB-30–34). Clock = the mockup's Friday 23 October.
+	"today-v3": {
+		feature: "HAB-30",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_00.png",
+		note: "T1 — populated: week strip, one progress bar, category cards with per-group counts, the dashed fold row.",
+	},
+	"today-v3-quantity-plus-one": {
+		feature: "HAB-31",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_02.png",
+		note: "T4 — a tap on the quantity circle adds one: pie fill, '6 of 8 glasses', toast with Undo.",
+		async interact(page) {
+			await page.getByLabel("Add one, Drink water, 5 of 8").click();
+			await page.getByText("Drink water +1 · 6 of 8 glasses").waitFor();
+			await page.waitForTimeout(300);
+		},
+	},
+	"today-v3-scrolled": {
+		feature: "HAB-27",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		viewport: { width: 393, height: 640 },
+		mockup: "docs/mockups/v3/renders/today/slice_02.png",
+		note: "T5 — the large title has collapsed into the solid inline bar; a Break habit is resisted (toast).",
+		async interact(page) {
+			await page.getByLabel("No social media, resisted today?").click();
+			await page.getByText("Resisted 'No social media'").waitFor();
+			await page.mouse.wheel(0, 260);
+			await page.waitForTimeout(400);
+		},
+	},
+	"today-v3-at-risk": {
+		feature: "HAB-33",
+		route: "/?fixtures=today-v3-at-risk",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_03.png",
+		note: "T6 — Meditate at risk: amber dot on the circle, 'Missed Thursday · 2 freezes left' in amber.",
+	},
+	"today-v3-frozen": {
+		feature: "HAB-33",
+		route: "/?fixtures=today-v3-at-risk",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_03.png",
+		note: "T7 — after Use a freeze: 'Thu frozen · streak kept at 13' in violet, toast with Undo.",
+		async interact(page) {
+			await page.getByText("Meditate", { exact: true }).click();
+			await page.getByText("Use a freeze", { exact: true }).click();
+			await page.getByText(/^Freeze used for Thu 22/).waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"today-v3-all-done": {
+		feature: "HAB-31",
+		route: "/?fixtures=today-v3-all-done",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_04.png",
+		note: "T8 — everything done: the quiet card with the drawn check; no confetti.",
+		async interact(page) {
+			await page.waitForTimeout(900);
+		},
+	},
+	"today-v3-rest": {
+		feature: "HAB-32",
+		route: "/?fixtures=today-v3-rest",
+		clock: V3_SATURDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_01.png",
+		note: "T3 — rest day: why nothing is due, not-due habits on dashed circles, Cold shower 'back Monday'.",
+	},
+	"today-v3-past-day": {
+		feature: "HAB-30",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_04.png",
+		note: "T10 — Wed 21 selected: eyebrow shows the date, 'Logging for Wed 21 Oct · Show today'.",
+		async interact(page) {
+			await page.getByLabel("Wednesday 21", { exact: true }).click();
+			await page.getByText("Logging for Wed 21 Oct").waitFor();
+			await page.waitForTimeout(300);
+		},
+	},
+	"today-v3-ax": {
+		feature: "HAB-49",
+		route: "/?fixtures=today-v3&textSize=ax",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/sheets/slice_00.png",
+		note: "QS0 — at AX sizes the row stacks: name, then the count button and circle on their own line, each 44 pt; the strip collapses to 'Friday 23 · Change day'.",
+	},
+	"quantity-sheet-stepper": {
+		feature: "HAB-34",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/sheets/slice_00.png",
+		note: "QS1 — stepper, +1/+2/+3, Fill to 8, Set exact value.",
+		async interact(page) {
+			await page.getByLabel("Amount, 5 of 8").click();
+			await page.getByLabel("Increase glasses").waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"quantity-sheet-exact": {
+		feature: "HAB-34",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/sheets/slice_01.png",
+		note: "QS2 — Set exact value: number field, helper, 'Set to 6'.",
+		async interact(page) {
+			await page.getByLabel("Amount, 5 of 8").click();
+			await page.getByText("Set exact value", { exact: true }).click();
+			await page.getByLabel("glasses today").fill("6");
+			await page.waitForTimeout(300);
+		},
+	},
+	"quantity-sheet-at-target": {
+		feature: "HAB-34",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/sheets/slice_01.png",
+		note: "QS3 — at target: Fill disabled, 'of 8 glasses · done', extra amounts still count, Done.",
+		async interact(page) {
+			await page.getByLabel("Amount, 5 of 8").click();
+			await page.getByText("Fill to 8", { exact: true }).click();
+			await page.getByText("of 8 glasses · done").waitFor();
+			await page.waitForTimeout(300);
+		},
+	},
+	"edit-day-toast": {
+		feature: "HAB-34",
+		route: "/(today)/habit/1?fixtures=retro-log",
+		mockup: "docs/mockups/v3/renders/sheets/slice_02.png",
+		note: "RL2 — a tap saves at once; the toast sits inside the sheet above Done, names the date and offers Undo.",
+		async interact(page, { clock }) {
+			await page.getByLabel(heatmapCellLabel(clock, 3, "logged")).click();
+			const circle = page.getByRole("button", { name: "Mobility, not done" });
+			await circle.scrollIntoViewIfNeeded();
+			await circle.click();
+			await page.getByText(/logged for/).waitFor();
+			await page.waitForTimeout(300);
+		},
+	},
 };
 
 const DARK_TWINS = [
 	"today",
+	"today-v3",
+	"today-v3-quantity-plus-one",
+	"today-v3-scrolled",
+	"today-v3-at-risk",
+	"today-v3-frozen",
+	"today-v3-all-done",
+	"today-v3-rest",
+	"today-v3-past-day",
+	"today-v3-ax",
+	"quantity-sheet-stepper",
+	"quantity-sheet-exact",
+	"quantity-sheet-at-target",
+	"edit-day-toast",
+	"quantity-log",
+	"streak-at-risk",
+	"streak-at-risk-no-freezes",
+	"rest-day-picker",
+	"today-empty",
+	"retro-log",
 	"monthly-summary",
 	"monthly-insights",
 	"monthly-too-early",

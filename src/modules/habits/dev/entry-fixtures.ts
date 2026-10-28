@@ -9,6 +9,7 @@ import {
 	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
 import { monthlyEntries } from "./monthly-fixtures";
+import { TODAY_V3_SCENARIOS, todayV3Entries } from "./today-v3-fixtures";
 import { yearlyEntries } from "./yearly-fixtures";
 
 /** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
@@ -34,6 +35,10 @@ export function makeEntryFixtures(
 	scenario: FixtureScenario = "default",
 ): Entry[] {
 	const today = format(new Date(), "yyyy-MM-dd");
+
+	for (const name of TODAY_V3_SCENARIOS) {
+		if (scenario === name) return todayV3Entries(name);
+	}
 
 	if (
 		scenario === "empty" ||

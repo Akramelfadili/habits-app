@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes, frozenDays } from "@/lib/db/schema";
 import { runInTransaction } from "@/lib/db/transaction";
@@ -177,15 +177,11 @@ export function useEntryNotes(): EntryNote[] {
  * one transaction, so a half-applied save can't leave the day inconsistent.
  * Values follow the same rules as the single-day writes above: `false`/`0`
  * deletes the entry, `true` inserts a presence row, an amount upserts. An
- * empty (after trimming) note deletes the note row. `releaseFreezeFor` lists
- * the habits whose freeze on this day goes back to the pool in the same
- * transaction (PR-11).
+ * empty (after trimming) note deletes the note row. Edit this day writes only
+ * the note through it now (`useDayNoteActions`); a tap's freeze return is
+ * `day-log-service`.
  */
-export async function saveDayLog(
-	date: Date,
-	log: DayLog,
-	releaseFreezeFor: readonly number[] = [],
-): Promise<void> {
+export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 	const dateString = toDayKey(date);
 	const note = log.note.trim();
 	const now = new Date();
@@ -220,17 +216,6 @@ export async function saveDayLog(
 					target: [entryNotes.habitId, entryNotes.date],
 					set: { note, updatedAt: now },
 				});
-		}
-
-		if (releaseFreezeFor.length > 0) {
-			await db
-				.delete(frozenDays)
-				.where(
-					and(
-						eq(frozenDays.date, dateString),
-						inArray(frozenDays.habitId, [...releaseFreezeFor]),
-					),
-				);
 		}
 	});
 }

@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react-native";
 import { makeHabit } from "../test-support/habit-builder";
-import type { Entry, EntryNote } from "../types";
+import type { Entry, EntryNote, FrozenDay } from "../types";
 
 const mockWater = makeHabit({
 	id: 1,
@@ -23,12 +23,16 @@ const mockArchived = makeHabit({
 
 let mockEntries: Entry[] = [];
 let mockNotes: EntryNote[] = [];
+let mockFrozen: FrozenDay[] = [];
 
 jest.mock("../repositories/habit-repository", () => ({
 	useHabitsList: () => ({
 		habits: [mockWalk, mockWater, mockWeekendOnly, mockArchived],
 		loaded: true,
 	}),
+}));
+jest.mock("../repositories/frozen-day-repository", () => ({
+	useFrozenDays: () => mockFrozen,
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
@@ -46,6 +50,7 @@ function entry(habitId: number, date: string, value?: number): Entry {
 beforeEach(() => {
 	mockEntries = [];
 	mockNotes = [];
+	mockFrozen = [];
 });
 
 describe("useRetroLogQueries", () => {
@@ -61,6 +66,17 @@ describe("useRetroLogQueries", () => {
 		expect(result.current?.habits.map((habit) => habit.id)).toEqual([1, 2]);
 		expect(result.current?.values).toEqual({ 1: 6, 2: false });
 		expect(result.current?.date).toEqual(new Date(2026, 8, 15));
+	});
+
+	it("says which habits' day is frozen, and who owns the note", async () => {
+		mockFrozen = [
+			{ id: 1, habitId: 2, date: "2026-09-15", createdAt: new Date() },
+			{ id: 2, habitId: 1, date: "2026-09-14", createdAt: new Date() },
+		];
+		const { result } = await renderHook(() => useRetroLogQueries(1, TUESDAY));
+
+		expect([...(result.current?.frozenHabitIds ?? [])]).toEqual([2]);
+		expect(result.current?.originHabitId).toBe(1);
 	});
 
 	it("reads the opening habit's note for that day only", async () => {

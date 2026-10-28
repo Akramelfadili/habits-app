@@ -8,39 +8,82 @@ jest.mock("expo-symbols", () => {
 
 import { TodayRestDay } from "./today-rest-day";
 
-const walk = makeHabit({ id: 4, name: "Walk" });
-const TODAY = new Date(2026, 9, 4, 9); // a Sunday
+const walk = makeHabit({
+	id: 4,
+	name: "Walk",
+	frequency: { type: "weekdays", days: [1] },
+});
+const shower = makeHabit({
+	id: 5,
+	name: "Cold shower",
+	frequency: { type: "per-week", timesPerWeek: 3 },
+});
 
-describe("TodayRestDay", () => {
-	it("says what a rest day is and keeps the streaks safe", async () => {
-		await render(
-			<TodayRestDay
-				today={TODAY}
-				eligibleHabits={[walk]}
-				loggedToday={[]}
-				onOpenHabit={jest.fn()}
-				onPickHabit={jest.fn()}
-			/>,
-		);
+function setup(overrides = {}) {
+	const handlers = { onOpenHabit: jest.fn(), onLogBonus: jest.fn() };
+	const view = render(
+		<TodayRestDay
+			isToday
+			notDueHabits={[walk]}
+			loggedToday={[]}
+			completedThisWeekByHabitId={new Map()}
+			eligibleHabits={[walk]}
+			{...handlers}
+			{...overrides}
+		/>,
+	);
+	return { view, ...handlers };
+}
+
+describe("TodayRestDay (T3)", () => {
+	it("says a rest day keeps every streak safe and that a log is a bonus", async () => {
+		await setup().view;
 		expect(screen.getByText("Rest day")).toBeTruthy();
 		expect(
-			screen.getByText("Nothing is scheduled for Sunday. Streaks stay intact."),
+			screen.getByText(
+				"Nothing is due today, so every streak is safe. Anything you log counts as a bonus.",
+			),
+		).toBeTruthy();
+	});
+
+	it("lists the not-due habits under 'Not due today · Bonus logs' with dashed circles", async () => {
+		await setup().view;
+		expect(
+			screen.getByRole("header", { name: "Not due today, Bonus logs" }),
+		).toBeTruthy();
+		expect(screen.getByText("Mon · tap to log a bonus")).toBeTruthy();
+	});
+
+	it("logs a bonus from a dashed circle", async () => {
+		const { view, onLogBonus } = setup();
+		await view;
+		await fireEvent.press(screen.getByLabelText("Walk, not due, bonus"));
+		expect(onLogBonus).toHaveBeenCalledWith(walk);
+	});
+
+	it("shows a per-week habit that met its target as done, 'back Monday'", async () => {
+		await setup({
+			notDueHabits: [shower],
+			completedThisWeekByHabitId: new Map([[5, 3]]),
+		}).view;
+		expect(screen.getByText("3 of 3 this week · back Monday")).toBeTruthy();
+	});
+
+	it("words a past rest day in the past tense", async () => {
+		await setup({ isToday: false }).view;
+		expect(
+			screen.getByText(
+				"Nothing was due on this day. Anything you log counts as a bonus.",
+			),
 		).toBeTruthy();
 	});
 
 	it("opens the picker and hands the pick up once the picker has closed", async () => {
-		const onPickHabit = jest.fn();
-		await render(
-			<TodayRestDay
-				today={TODAY}
-				eligibleHabits={[walk]}
-				loggedToday={[]}
-				onOpenHabit={jest.fn()}
-				onPickHabit={onPickHabit}
-			/>,
-		);
-		await fireEvent.press(screen.getByText("Log something anyway"));
-		await fireEvent.press(screen.getByText("Walk"));
-		expect(onPickHabit).toHaveBeenCalledWith(walk);
+		const { view, onLogBonus } = setup();
+		await view;
+		await fireEvent.press(screen.getByText("Log a different habit"));
+		// The picker lists it after the row already on screen.
+		await fireEvent.press(screen.getAllByText("Walk").at(-1) as never);
+		expect(onLogBonus).toHaveBeenCalledWith(walk);
 	});
 });

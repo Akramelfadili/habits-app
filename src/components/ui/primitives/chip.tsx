@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ChipProps = {
@@ -41,7 +42,7 @@ export function Chip({
 						backgroundColor: "transparent",
 						borderColor: colors.ink,
 					},
-					selected && { backgroundColor: colors.ink },
+					selected && { backgroundColor: colors.accent },
 				]}
 			>
 				<Text
@@ -61,18 +62,17 @@ export function Chip({
 const styles = StyleSheet.create({
 	// The pill is unchanged; its touch area is 44pt tall.
 	touch: {
-		minHeight: 44,
+		minHeight: minTouchTarget,
 		justifyContent: "center",
 	},
 	chip: {
-		borderRadius: 999,
+		borderRadius: radius.pill,
 		borderWidth: 1,
 		borderColor: "transparent",
-		paddingVertical: 8,
-		paddingHorizontal: 14,
+		paddingVertical: space[200],
+		paddingHorizontal: space[350],
 	},
 	label: {
-		fontSize: 13,
-		fontWeight: "500",
+		...textStyles.subhead,
 	},
 });

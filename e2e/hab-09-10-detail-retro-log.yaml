@@ -21,22 +21,24 @@ tags:
     id: "Current: 24, day streak"
 - takeScreenshot: hab-09-10-before
 
-# HAB-10: a past missed day opens the retro-log sheet for that date.
+# HAB-10: a past missed day opens the Edit this day sheet for that date.
 - tapOn:
     id: "Sunday 6 September, missed"
-- assertVisible: "Save changes"
-# Glass of water is a quantity habit (8 glasses): the sheet shows a stepper,
-# not a done checkbox, so step it up to the target.
-- repeat:
-    times: 8
-    commands:
-      - tapOn:
-          id: "Increase Glass of water, glasses"
+- assertVisible: "Tap a circle to set that day. Streaks and rates update when you close."
+# Glass of water is a quantity habit (8 glasses): its row opens the quantity
+# sheet for that date; every change saves at once, so fill it and close.
+- tapOn:
+    id: "Amount, 0 of 8"
+- tapOn: "Fill to 8"
+- assertVisible: "of 8 glasses · done"
+# The amount sheet is stacked on the day sheet: its Done has its own label.
+- tapOn:
+    id: "Done with amount"
+# The note is saved when the day sheet closes.
 - tapOn:
     id: "Note"
 - inputText: "Forgot to log — was on the trail all day."
-- tapOn: "Save changes"
-- assertNotVisible: "Save changes"
+- tapOn: "Done"
 
 # Heatmap cell, streak and Recent entries all reflect the backfilled day.
 - assertVisible:
@@ -49,7 +51,7 @@ tags:
 - tapOn:
     id: "Sunday 6 September, logged"
 - assertVisible: "Forgot to log — was on the trail all day."
-- tapOn: "Cancel"
+- tapOn: "Close"
 
 # HAB-27: Detail was pushed inside the Today tab, so Back lands on Today.
 - back

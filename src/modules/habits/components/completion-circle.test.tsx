@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
-import { semanticColors } from "@/theme/theme";
+import { semanticColors, surfaceColors } from "@/theme/theme";
 import { CompletionCircle } from "./completion-circle";
 
 jest.mock("expo-symbols", () => {
@@ -8,202 +8,180 @@ jest.mock("expo-symbols", () => {
 	return { SymbolView: View };
 });
 
+const light = { ...surfaceColors.light, ...semanticColors.light };
+
+function face() {
+	return StyleSheet.flatten(
+		screen.getByTestId("completion-circle-face").props.style,
+	);
+}
+
 describe("CompletionCircle", () => {
-	it("reports checked via accessibility when completed", async () => {
-		await render(
+	it("reports checked or unchecked to accessibility", async () => {
+		const { rerender } = await render(
 			<CompletionCircle
 				completed
 				onPress={jest.fn()}
-				accessibilityLabel="Glass of water"
+				accessibilityLabel="Water"
 			/>,
 		);
-		expect(
-			screen.getByLabelText("Glass of water").props.accessibilityState,
-		).toEqual({ checked: true });
-	});
-
-	it("reports unchecked via accessibility when not completed", async () => {
-		await render(
+		expect(screen.getByLabelText("Water").props.accessibilityState).toEqual({
+			checked: true,
+			disabled: false,
+		});
+		await rerender(
 			<CompletionCircle
 				completed={false}
 				onPress={jest.fn()}
-				accessibilityLabel="Glass of water"
+				accessibilityLabel="Water"
 			/>,
 		);
-		expect(
-			screen.getByLabelText("Glass of water").props.accessibilityState,
-		).toEqual({ checked: false });
+		expect(screen.getByLabelText("Water").props.accessibilityState).toEqual({
+			checked: false,
+			disabled: false,
+		});
 	});
 
-	it("calls onPress when tapped, regardless of state", async () => {
+	it("calls onPress and onLongPress", async () => {
 		const onPress = jest.fn();
+		const onLongPress = jest.fn();
 		await render(
 			<CompletionCircle
 				completed={false}
 				onPress={onPress}
-				accessibilityLabel="Glass of water"
+				onLongPress={onLongPress}
+				accessibilityLabel="Water"
 			/>,
 		);
-		await fireEvent.press(screen.getByLabelText("Glass of water"));
+		await fireEvent.press(screen.getByLabelText("Water"));
+		await fireEvent(screen.getByLabelText("Water"), "longPress");
+		expect(onPress).toHaveBeenCalledTimes(1);
+		expect(onLongPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("draws 28 pt inside a 44 pt hit area", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="Water"
+			/>,
+		);
+		const hit = StyleSheet.flatten(screen.getByLabelText("Water").props.style);
+		expect([hit.width, hit.height]).toEqual([44, 44]);
+		expect([face().width, face().height]).toEqual([28, 28]);
+	});
+
+	it("fills a done Build habit with the accent", async () => {
+		await render(
+			<CompletionCircle
+				completed
+				onPress={jest.fn()}
+				accessibilityLabel="Read"
+			/>,
+		);
+		expect(face().backgroundColor).toBe(light.accent);
+	});
+
+	it("outlines an empty Break habit in amber, solid", async () => {
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={jest.fn()}
+				accessibilityLabel="No phone"
+				direction="break"
+			/>,
+		);
+		expect(face().borderColor).toBe(light.warnInk);
+		expect(face().borderStyle).toBe("solid");
+		expect(face().backgroundColor).toBeUndefined();
+	});
+
+	it("shows a resisted Break habit as an amber check on warnTint, never accent-filled", async () => {
+		await render(
+			<CompletionCircle
+				completed
+				onPress={jest.fn()}
+				accessibilityLabel="No phone"
+				direction="break"
+			/>,
+		);
+		expect(face().backgroundColor).toBe(light.warnTint);
+		expect(face().borderColor).toBe(light.warnInk);
+	});
+
+	it("shows a pie over the track for a partial quantity, and nothing once done", async () => {
+		const { rerender } = await render(
+			<CompletionCircle
+				completed={false}
+				progress={0.5}
+				role="button"
+				onPress={jest.fn()}
+				accessibilityLabel="Water"
+			/>,
+		);
+		expect(face().backgroundColor).toBe(light.track);
+		await rerender(
+			<CompletionCircle
+				completed
+				progress={0.5}
+				role="button"
+				onPress={jest.fn()}
+				accessibilityLabel="Water"
+			/>,
+		);
+		expect(face().backgroundColor).toBe(light.accent);
+	});
+
+	it("puts an amber dot on an at-risk circle but still logs", async () => {
+		const onPress = jest.fn();
+		await render(
+			<CompletionCircle
+				completed={false}
+				atRisk
+				onPress={onPress}
+				accessibilityLabel="Meditate"
+			/>,
+		);
+		expect(screen.getByTestId("completion-circle-at-risk")).toBeTruthy();
+		await fireEvent.press(screen.getByLabelText("Meditate"));
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
-	it("never fills solid for a Break habit, even when resisted", async () => {
-		await render(
+	it("draws a frozen day violet and dashed, and a not-due day dashed", async () => {
+		const { rerender } = await render(
 			<CompletionCircle
-				completed
+				completed={false}
+				frozen
 				onPress={jest.fn()}
-				accessibilityLabel="No phone in bed"
-				direction="break"
+				accessibilityLabel="Read"
 			/>,
 		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("No phone in bed").props.style,
+		expect(face().borderColor).toBe(light.frozenInk);
+		expect(face().borderStyle).toBe("dashed");
+		await rerender(
+			<CompletionCircle
+				completed={false}
+				notDue
+				onPress={jest.fn()}
+				accessibilityLabel="Read"
+			/>,
 		);
-		expect(flatStyle.backgroundColor).toBeUndefined();
-		expect(flatStyle.borderWidth).toBe(2);
+		expect(face().borderStyle).toBe("dashed");
+		expect(face().borderColor).toBe(light.outline);
 	});
 
-	it("uses a dashed ring for an empty Break habit", async () => {
+	it("passes the hint to VoiceOver", async () => {
 		await render(
 			<CompletionCircle
 				completed={false}
 				onPress={jest.fn()}
-				accessibilityLabel="No phone in bed"
-				direction="break"
+				accessibilityLabel="Water"
+				accessibilityHint="Double-tap to log one more"
 			/>,
 		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("No phone in bed").props.style,
+		expect(screen.getByLabelText("Water").props.accessibilityHint).toBe(
+			"Double-tap to log one more",
 		);
-		expect(flatStyle.borderStyle).toBe("dashed");
-	});
-
-	it("reports checked for a resisted Break habit", async () => {
-		await render(
-			<CompletionCircle
-				completed
-				onPress={jest.fn()}
-				accessibilityLabel="No phone in bed"
-				direction="break"
-			/>,
-		);
-		expect(
-			screen.getByLabelText("No phone in bed").props.accessibilityState,
-		).toEqual({ checked: true });
-	});
-
-	it("uses the plain empty style when not completed and progress is 0", async () => {
-		await render(
-			<CompletionCircle
-				completed={false}
-				onPress={jest.fn()}
-				accessibilityLabel="Glass of water"
-				progress={0}
-			/>,
-		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("Glass of water").props.style,
-		);
-		expect(flatStyle.borderWidth).toBe(2);
-		expect(flatStyle.backgroundColor).toBeUndefined();
-	});
-
-	it("renders the partial pie-fill style when logged below target", async () => {
-		await render(
-			<CompletionCircle
-				completed={false}
-				onPress={jest.fn()}
-				accessibilityLabel="Glass of water"
-				progress={0.6}
-			/>,
-		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("Glass of water").props.style,
-		);
-		expect(flatStyle.backgroundColor).toBeDefined();
-		expect(flatStyle.borderWidth).toBeUndefined();
-	});
-
-	it("shows the filled done style over partial once completed, regardless of progress", async () => {
-		await render(
-			<CompletionCircle
-				completed
-				onPress={jest.fn()}
-				accessibilityLabel="Glass of water"
-				progress={0.6}
-			/>,
-		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("Glass of water").props.style,
-		);
-		expect(flatStyle.backgroundColor).toBeDefined();
-		expect(
-			screen.getByLabelText("Glass of water").props.accessibilityState,
-		).toEqual({ checked: true });
-	});
-
-	it("shows the amber at-risk ring for a Break habit that's due for the prompt", async () => {
-		await render(
-			<CompletionCircle
-				completed={false}
-				onPress={jest.fn()}
-				accessibilityLabel="No phone in bed"
-				direction="break"
-				atRisk
-			/>,
-		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("No phone in bed").props.style,
-		);
-		expect(flatStyle.borderStyle).not.toBe("dashed");
-		expect(flatStyle.borderColor).toBe(semanticColors.light.warnInk);
-	});
-
-	it("ignores atRisk once the Break habit is resisted — the ink ring wins", async () => {
-		await render(
-			<CompletionCircle
-				completed
-				onPress={jest.fn()}
-				accessibilityLabel="No phone in bed"
-				direction="break"
-				atRisk
-			/>,
-		);
-		expect(
-			screen.getByLabelText("No phone in bed").props.accessibilityState,
-		).toEqual({ checked: true });
-	});
-
-	it("has no at-risk visual for a Build habit — none is documented", async () => {
-		await render(
-			<CompletionCircle
-				completed={false}
-				onPress={jest.fn()}
-				accessibilityLabel="Glass of water"
-				direction="build"
-				atRisk
-			/>,
-		);
-		const flatStyle = StyleSheet.flatten(
-			screen.getByLabelText("Glass of water").props.style,
-		);
-		expect(flatStyle.backgroundColor).toBeUndefined();
-		expect(flatStyle.borderWidth).toBe(2);
-	});
-
-	it("uses a button role instead of checkbox when role is 'button'", async () => {
-		await render(
-			<CompletionCircle
-				completed={false}
-				onPress={jest.fn()}
-				accessibilityLabel="Log Glass of water"
-				progress={0.6}
-				role="button"
-			/>,
-		);
-		expect(
-			screen.getByRole("button", { name: "Log Glass of water" }),
-		).toBeTruthy();
 	});
 });

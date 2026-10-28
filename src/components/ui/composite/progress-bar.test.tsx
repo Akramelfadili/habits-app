@@ -27,3 +27,21 @@ describe("ProgressBar", () => {
 		).toBe(0);
 	});
 });
+
+describe("ProgressBar with a label (V3-07)", () => {
+	it("shows the count left and a whole-number percentage right", async () => {
+		await render(<ProgressBar value={0.2} label="1 of 5 done" />);
+		expect(screen.getByText("1 of 5 done")).toBeTruthy();
+		expect(screen.getByText("20%")).toBeTruthy();
+	});
+
+	it("reads count and percentage as one VoiceOver stop", async () => {
+		await render(<ProgressBar value={0.2} label="1 of 5 done" />);
+		expect(screen.getByLabelText("1 of 5 done, 20 percent")).toBeTruthy();
+	});
+
+	it("rounds the percentage to a whole number", async () => {
+		await render(<ProgressBar value={1 / 3} label="2 of 6 done" />);
+		expect(screen.getByText("33%")).toBeTruthy();
+	});
+});

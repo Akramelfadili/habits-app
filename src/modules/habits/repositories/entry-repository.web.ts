@@ -147,15 +147,8 @@ export function useEntryNotes(): EntryNote[] {
 }
 
 /** Web counterpart of the native transactional day save (HAB-10). */
-export async function saveDayLog(
-	date: Date,
-	log: DayLog,
-	releaseFreezeFor: readonly number[] = [],
-): Promise<void> {
+export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 	assertWritesAllowed();
-	for (const habitId of releaseFreezeFor) {
-		await unfreezeHabitDay(habitId, date);
-	}
 	for (const { habitId, value } of log.values) {
 		if (typeof value === "boolean") {
 			await setHabitCompletedOn(habitId, date, value);

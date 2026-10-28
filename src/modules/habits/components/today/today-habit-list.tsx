@@ -1,17 +1,22 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
-import { typeScale } from "@/theme/theme";
-import { useTheme } from "@/theme/use-theme";
-import type { StreakAtRisk } from "../../domain/streaks";
+import { space } from "@/theme/theme";
+import { todayCopy } from "../../messages";
+import { todayRowStatus } from "../../presenters/today-row-status";
 import {
+	allDoneBody,
+	bonusRowStatus,
 	type CategoryGroup,
+	foldSummary,
 	type Progress,
-	todayRowSubtitle,
 } from "../../presenters/today-screen-helpers";
 import type { Habit } from "../../types";
-import { HabitTodayRow } from "../habit-today-row";
+import { HabitRow } from "../habit-row";
+import { TodayAllDoneCard } from "./today-all-done-card";
+import { TodayFoldRow } from "./today-fold-row";
 
 type TodayHabitListProps = {
 	progress: Progress;
@@ -19,15 +24,37 @@ type TodayHabitListProps = {
 	completedHabitIds: ReadonlySet<number>;
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
-	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
+	atRiskByHabitId: ReadonlyMap<
+		number,
+		{ missedDate: Date; freezesRemaining: number }
+	>;
+	streakByHabitId: ReadonlyMap<number, number>;
+	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
+	/** False on a past day: copy drops "today". */
+	isToday: boolean;
+	/** After the evening hour on the real today (T5: "Resist tonight"). */
+	isEvening?: boolean;
+	/** "Wed 21" — the past day, named in the progress line (T10). */
+	dayLabel: string;
+	/** Habits that existed but are not due on the shown day: the fold row (T1). */
+	notDueHabits: readonly Habit[];
+	/** Not-due habits logged as a bonus on the shown day. */
+	loggedBonusIds: ReadonlySet<number>;
+	/** A bonus quantity habit's logged amount on the shown day. */
+	bonusValues?: ReadonlyMap<number, number>;
 	onToggle: (habit: Habit) => void;
 	onAddOne: (habit: Habit) => void;
 	onOpenQuantitySheet: (habitId: number) => void;
 	onOpenHabit: (habitId: number) => void;
 	onOpenAtRisk: (habitId: number) => void;
+	onLogBonus: (habit: Habit) => void;
 };
 
-/** The progress line and one card per category (HAB-30/31). */
+/**
+ * The day's body (HAB-30/31): the all-done card when everything is done, one
+ * progress bar, a flat card per category with its "0 of 2" count, and the one
+ * dashed row the not-due habits fold into.
+ */
 export function TodayHabitList({
 	progress,
 	groups,
@@ -35,26 +62,53 @@ export function TodayHabitList({
 	quantityValuesByHabitId,
 	completedThisWeekByHabitId,
 	atRiskByHabitId,
+	streakByHabitId,
+	frozenYesterdayByHabitId,
+	isToday,
+	isEvening,
+	dayLabel,
+	notDueHabits,
+	loggedBonusIds,
+	bonusValues,
 	onToggle,
 	onAddOne,
 	onOpenQuantitySheet,
 	onOpenHabit,
 	onOpenAtRisk,
+	onLogBonus,
 }: TodayHabitListProps) {
-	const { colors } = useTheme();
+	const [foldOpen, setFoldOpen] = useState(false);
+	const allDone = progress.total > 0 && progress.completed === progress.total;
+	const dueHabits = groups.flatMap((group) => group.habits);
 
 	return (
 		<>
-			<Container>
-				<View style={styles.progressLabelRow}>
-					<Text style={[styles.progressLabel, { color: colors.ink }]}>
-						{progress.completed} of {progress.total} complete
-					</Text>
-					<Text style={[styles.progressLabel, { color: colors.sub }]}>
-						{Math.round(progress.fraction * 100)}%
-					</Text>
+			{allDone ? (
+				<TodayAllDoneCard
+					title={
+						isToday
+							? todayCopy.allDoneTitle
+							: todayCopy.allDoneTitleOnDay(dayLabel)
+					}
+					body={allDoneBody(dueHabits, streakByHabitId)}
+				/>
+			) : null}
+
+			<Container variant="flat">
+				<View style={styles.progress}>
+					<ProgressBar
+						value={progress.fraction}
+						label={
+							isToday
+								? todayCopy.progressLabel(progress.completed, progress.total)
+								: todayCopy.progressLabelOnDay(
+										progress.completed,
+										progress.total,
+										dayLabel,
+									)
+						}
+					/>
 				</View>
-				<ProgressBar value={progress.fraction} />
 			</Container>
 
 			{groups.map((group) => {
@@ -63,45 +117,145 @@ export function TodayHabitList({
 				).length;
 
 				return (
-					<Container key={group.category.id}>
+					<View key={group.category.id} style={styles.group}>
 						<SectionHeader
+							size="eyebrow"
 							title={group.category.name}
-							count={`${completedInGroup}/${group.habits.length}`}
+							count={todayCopy.groupCount(
+								completedInGroup,
+								group.habits.length,
+							)}
 						/>
-						{group.habits.map((habit) => (
-							<HabitTodayRow
-								key={habit.id}
-								habit={habit}
-								completed={completedHabitIds.has(habit.id)}
-								quantityValue={quantityValuesByHabitId.get(habit.id)}
-								subtitle={todayRowSubtitle(
-									habit,
-									completedThisWeekByHabitId.get(habit.id) ?? 0,
-								)}
-								atRisk={atRiskByHabitId.has(habit.id)}
-								onPress={() =>
-									atRiskByHabitId.has(habit.id)
-										? onOpenAtRisk(habit.id)
-										: onOpenHabit(habit.id)
-								}
-								onToggle={() => onToggle(habit)}
-								onIncrement={() => onAddOne(habit)}
-								onOpenQuantitySheet={() => onOpenQuantitySheet(habit.id)}
-							/>
-						))}
-					</Container>
+						<Container variant="flat">
+							{group.habits.map((habit) => {
+								const atRisk = atRiskByHabitId.get(habit.id);
+								const completed = completedHabitIds.has(habit.id);
+								return (
+									<HabitRow
+										key={habit.id}
+										habit={habit}
+										completed={completed}
+										quantityValue={quantityValuesByHabitId.get(habit.id)}
+										status={todayRowStatus({
+											habit,
+											completed,
+											quantityValue: quantityValuesByHabitId.get(habit.id) ?? 0,
+											completedThisWeek:
+												completedThisWeekByHabitId.get(habit.id) ?? 0,
+											streak: streakByHabitId.get(habit.id),
+											atRisk,
+											frozenYesterday: frozenYesterdayByHabitId.get(habit.id),
+											isToday,
+											isEvening,
+										})}
+										atRisk={atRisk !== undefined}
+										onPress={() =>
+											atRisk ? onOpenAtRisk(habit.id) : onOpenHabit(habit.id)
+										}
+										nameHint={atRisk ? todayCopy.openStreakOptions : undefined}
+										onToggle={() => onToggle(habit)}
+										onIncrement={() => onAddOne(habit)}
+										onOpenQuantitySheet={() => onOpenQuantitySheet(habit.id)}
+									/>
+								);
+							})}
+						</Container>
+					</View>
 				);
 			})}
+
+			{notDueHabits.length > 0 ? (
+				<>
+					<TodayFoldRow
+						summary={foldSummary(notDueHabits, isToday)}
+						expanded={foldOpen}
+						onToggle={() => setFoldOpen((open) => !open)}
+					/>
+					{foldOpen ? (
+						<TodayNotDueCard
+							habits={notDueHabits}
+							loggedBonusIds={loggedBonusIds}
+							bonusValues={bonusValues}
+							completedThisWeekByHabitId={completedThisWeekByHabitId}
+							onLogBonus={onLogBonus}
+							onOpenHabit={onOpenHabit}
+						/>
+					) : null}
+				</>
+			) : null}
 		</>
 	);
 }
 
+type TodayNotDueCardProps = {
+	habits: readonly Habit[];
+	loggedBonusIds: ReadonlySet<number>;
+	bonusValues?: ReadonlyMap<number, number>;
+	completedThisWeekByHabitId: ReadonlyMap<number, number>;
+	onLogBonus: (habit: Habit) => void;
+	onOpenHabit: (habitId: number) => void;
+};
+
+/** The not-due habits as dashed-circle rows: a tap logs a bonus, which never touches a streak (D11). Shared by the fold row and the rest day. */
+export function TodayNotDueCard({
+	habits,
+	loggedBonusIds,
+	bonusValues,
+	completedThisWeekByHabitId,
+	onLogBonus,
+	onOpenHabit,
+}: TodayNotDueCardProps) {
+	return (
+		<Container variant="flat">
+			{habits.map((habit) => {
+				const logged = loggedBonusIds.has(habit.id);
+				const metThisWeek =
+					habit.frequency.type === "per-week" &&
+					(completedThisWeekByHabitId.get(habit.id) ?? 0) >=
+						habit.frequency.timesPerWeek;
+				const isQuantity = habit.targetType === "quantity";
+				const amount = bonusValues?.get(habit.id) ?? 0;
+				const target = habit.targetAmount ?? 0;
+				// A quantity bonus is judged by its amount, not by having an entry: 3 of 8 is not done.
+				const done = isQuantity
+					? target > 0 && amount >= target
+					: logged || metThisWeek;
+				const hasLog = isQuantity ? amount > 0 : logged || metThisWeek;
+				return (
+					<HabitRow
+						key={habit.id}
+						habit={habit}
+						completed={done}
+						quantityValue={amount}
+						notDue={!hasLog}
+						circleAction={!isQuantity && hasLog ? "details" : "log"}
+						status={{
+							text: bonusRowStatus(
+								habit,
+								completedThisWeekByHabitId.get(habit.id) ?? 0,
+								logged,
+							),
+							tone: "default",
+						}}
+						onPress={() => onOpenHabit(habit.id)}
+						// A logged check bonus is undone from Detail; a quantity one reopens its sheet.
+						onToggle={() =>
+							hasLog ? onOpenHabit(habit.id) : onLogBonus(habit)
+						}
+						onIncrement={() => onLogBonus(habit)}
+						onOpenQuantitySheet={() => onLogBonus(habit)}
+					/>
+				);
+			})}
+		</Container>
+	);
+}
+
 const styles = StyleSheet.create({
-	progressLabelRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
+	progress: {
+		padding: space[350],
 	},
-	progressLabel: {
-		fontSize: typeScale.rowLabel,
+	group: {
+		gap: space[150],
 	},
 });

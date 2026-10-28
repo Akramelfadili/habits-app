@@ -230,6 +230,61 @@ describe("getStreakAtRisk", () => {
 	});
 });
 
+describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-33)", () => {
+	const threePerWeek = makeHabit({
+		id: 8,
+		frequency: { type: "per-week", timesPerWeek: 3 },
+		createdAt: HABIT_CREATED,
+	});
+	const FRIDAY = new Date(2026, 9, 23, 12);
+	const MONDAY = new Date(2026, 9, 19, 12);
+
+	it("is not at risk with 1 of 3 logged, viewed on Friday", () => {
+		const entries = [entry(8, "2026-10-19")];
+		expect(
+			getStreakAtRisk(threePerWeek, entries, new Set(), FRIDAY),
+		).toBeNull();
+		// The streak itself is unchanged by the gate.
+		expect(
+			calculateCurrentStreak(threePerWeek, entries, new Set(), FRIDAY),
+		).toBe(1);
+	});
+
+	it("is not at risk with 1 of 3 logged last week, viewed on Monday", () => {
+		const entries = [entry(8, "2026-10-12")];
+		expect(
+			getStreakAtRisk(threePerWeek, entries, new Set(), MONDAY),
+		).toBeNull();
+	});
+
+	it("is not at risk after a met week either", () => {
+		const entries = ["2026-10-12", "2026-10-14", "2026-10-16"].map((date) =>
+			entry(8, date),
+		);
+		expect(
+			getStreakAtRisk(threePerWeek, entries, new Set(), MONDAY),
+		).toBeNull();
+	});
+
+	it("leaves a specific-day habit at risk exactly as before", () => {
+		const mondayWednesday = makeHabit({
+			id: 9,
+			frequency: { type: "weekdays", days: [1, 3] },
+			createdAt: HABIT_CREATED,
+		});
+		// Done Wed 14 Oct; missed Mon 19 Oct, viewed Tue 20 Oct.
+		const entries = [entry(9, "2026-10-12"), entry(9, "2026-10-14")];
+		expect(
+			getStreakAtRisk(
+				mondayWednesday,
+				entries,
+				new Set(),
+				new Date(2026, 9, 20, 12),
+			),
+		).toEqual({ missedDate: new Date(2026, 9, 19), currentStreak: 2 });
+	});
+});
+
 describe("after a restore (HAB-20)", () => {
 	// Logged 1–10 Sep, archived 11 Sep, restored 21 Sep (pause 11–20 Sep).
 	const restored = makeHabit({

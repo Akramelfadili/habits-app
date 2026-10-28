@@ -5,6 +5,7 @@ import {
 	Text,
 	View,
 } from "react-native";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { FieldHelper } from "./field-helper";
 
@@ -78,7 +79,7 @@ export function Button({
 				styles.base,
 				fullWidth ? styles.fullWidth : styles.compact,
 				size === "small" && styles.small,
-				variant === "primary" && { backgroundColor: colors.ink },
+				variant === "primary" && { backgroundColor: colors.accent },
 				variant === "secondary" && {
 					backgroundColor: colors.card,
 					borderWidth: 1,
@@ -123,47 +124,50 @@ export function Button({
 
 const styles = StyleSheet.create({
 	withReason: {
-		gap: 12,
+		gap: space[300],
 	},
 	base: {
-		borderRadius: 999,
+		borderRadius: radius.pill,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	fullWidth: {
 		width: "100%",
-		paddingVertical: 14,
+		minHeight: minTouchTarget,
+		paddingVertical: space[350],
 	},
 	compact: {
-		paddingVertical: 10,
-		paddingHorizontal: 20,
+		minHeight: minTouchTarget,
+		paddingVertical: space[250],
+		paddingHorizontal: space[500],
 	},
 	small: {
-		paddingVertical: 6,
-		paddingHorizontal: 14,
+		minHeight: 0,
+		paddingVertical: space[150],
+		paddingHorizontal: space[350],
 	},
 	// Text actions are 44pt tall (touch target), not padded out with a hitSlop
 	// — stacked under a CTA or beside another link, a slop would overlap them.
 	link: {
 		backgroundColor: "transparent",
-		paddingVertical: 4,
+		paddingVertical: space[100],
 		paddingHorizontal: 0,
-		minHeight: 44,
+		minHeight: minTouchTarget,
 	},
 	inline: {
 		alignSelf: "flex-start",
 	},
 	label: {
-		fontSize: 15,
+		...textStyles.body,
 		fontWeight: "500",
 	},
 	inlineLabel: {
 		fontWeight: "600",
 	},
 	destructiveLabel: {
-		fontSize: 13,
+		...textStyles.footnote,
 	},
 	smallLabel: {
-		fontSize: 13,
+		...textStyles.subhead,
 	},
 });

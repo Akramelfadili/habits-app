@@ -6,10 +6,7 @@ jest.mock("expo-symbols", () => {
 	return { SymbolView: View };
 });
 
-import {
-	habitPickerSubtitle,
-	offScheduleSubtitle,
-} from "./habit-picker-helpers";
+import { habitPickerSubtitle } from "./habit-picker-helpers";
 import { HabitPickerSheet } from "./habit-picker-sheet";
 
 const read = makeHabit({
@@ -96,11 +93,5 @@ describe("picker copy", () => {
 				makeHabit({ frequency: { type: "weekdays", days: [2, 4] } }),
 			),
 		).toBe("Tue, Thu");
-	});
-
-	it("says when it was logged, and that no streak moved", () => {
-		expect(offScheduleSubtitle(new Date(2026, 8, 20, 10, 42))).toBe(
-			"Logged 10:42 · bonus, streak unchanged",
-		);
 	});
 });

@@ -26,12 +26,14 @@ describe("Toast", () => {
 		expect(onAction).toHaveBeenCalledTimes(1);
 	});
 
-	it("shows a danger marker only for the error tone", async () => {
+	it("marks every tone but info with its own glyph (colour is never the only signal)", async () => {
 		const { rerender } = await render(<Toast message="Saved" />);
-		expect(screen.queryByTestId("toast-error-marker")).toBeNull();
-
-		await rerender(<Toast message="Couldn't save" tone="error" />);
-		expect(screen.getByTestId("toast-error-marker")).toBeTruthy();
+		for (const tone of ["success", "warning", "error"] as const) {
+			expect(screen.queryByTestId(`toast-${tone}-marker`)).toBeNull();
+			await rerender(<Toast message="Saved" tone={tone} />);
+			expect(screen.getByTestId(`toast-${tone}-marker`)).toBeTruthy();
+			await rerender(<Toast message="Saved" />);
+		}
 	});
 
 	it("limits the message to two lines and keeps the full text for screen readers", async () => {

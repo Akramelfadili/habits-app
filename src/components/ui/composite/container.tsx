@@ -1,5 +1,6 @@
 import { Children, type PropsWithChildren } from "react";
 import { StyleSheet, View } from "react-native";
+import { radius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ContainerProps = PropsWithChildren<{
@@ -7,9 +8,11 @@ type ContainerProps = PropsWithChildren<{
 	 * "outlined" is a card with a hairline border, for a card sitting on a
 	 * card-coloured surface (the category move preview inside a sheet, HAB-25).
 	 * "dashed" is a transparent placeholder outline (Manage's empty Archived
-	 * section, HAB-19).
+	 * section, HAB-19). "flat" is V3's list card (T-18): no padding, a hairline
+	 * border, radius `l`, and a full-bleed hairline between its children — the
+	 * rows carry their own padding.
 	 */
-	variant?: "card" | "inset" | "sheet" | "outlined" | "dashed";
+	variant?: "card" | "inset" | "sheet" | "outlined" | "dashed" | "flat";
 	/**
 	 * Groups direct children into one card, separating them with a full-bleed
 	 * hairline instead of the card's default gap (e.g. Category + Direction
@@ -48,14 +51,16 @@ export function Container({
 	children,
 }: ContainerProps) {
 	const { colors } = useTheme();
-	const sections = dividers ? Children.toArray(children) : null;
+	const flat = variant === "flat";
+	const sections = dividers || flat ? Children.toArray(children) : null;
 
 	return (
 		<View
 			style={[
 				styles.base,
 				variant === "sheet" && styles.sheet,
-				dividers && styles.dividedBase,
+				(dividers || flat) && styles.dividedBase,
+				flat && styles.flat,
 				tight && styles.tight,
 				tight && (variant === "outlined" || lifted) && styles.tightOutlined,
 				variant === "dashed" && styles.dashed,
@@ -68,14 +73,19 @@ export function Container({
 								: colors.card,
 					borderWidth: selected
 						? 1.5
-						: variant === "outlined" || variant === "dashed" || lifted
+						: variant === "outlined" ||
+								variant === "dashed" ||
+								variant === "flat" ||
+								lifted
 							? 1
 							: 0,
 					borderColor: selected
 						? colors.ink
 						: lifted
 							? colors.ink
-							: variant === "outlined" || variant === "dashed"
+							: variant === "outlined" ||
+									variant === "dashed" ||
+									variant === "flat"
 								? colors.border
 								: "transparent",
 				},
@@ -90,13 +100,16 @@ export function Container({
 							// biome-ignore lint/suspicious/noArrayIndexKey: sections are a stable, order-only list of the caller's own child elements
 							key={index}
 							testID="container-section"
-							style={compact ? styles.compactSection : styles.dividedSection}
+							style={
+								flat || compact ? styles.compactSection : styles.dividedSection
+							}
 						>
 							{index > 0 ? (
 								<View
 									style={[
 										styles.divider,
 										compact && styles.compactDivider,
+										flat && styles.flatDivider,
 										{ backgroundColor: colors.border },
 									]}
 								/>
@@ -117,6 +130,14 @@ const styles = StyleSheet.create({
 	},
 	dividedBase: {
 		gap: 0,
+	},
+	flat: {
+		padding: 0,
+		borderRadius: radius.l,
+		overflow: "hidden",
+	},
+	flatDivider: {
+		marginVertical: 0,
 	},
 	tight: {
 		padding: 6,

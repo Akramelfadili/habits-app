@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /** Uppercase eyebrow heading a card's content ("NAME", "ICON & COLOR", "FREQUENCY"). */
@@ -15,8 +15,7 @@ export function SectionLabel({ children }: { children: string }) {
 
 const styles = StyleSheet.create({
 	label: {
-		fontSize: typeScale.caption,
-		fontWeight: "500",
+		...textStyles.caption,
 		letterSpacing: 1.2,
 	},
 });

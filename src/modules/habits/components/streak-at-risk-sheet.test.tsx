@@ -82,3 +82,24 @@ describe("StreakAtRiskSheet", () => {
 		});
 	});
 });
+
+describe("StreakAtRiskSheet — VoiceOver (08.3)", () => {
+	it("reads the question as a heading with the freezes left", async () => {
+		await render(
+			<StreakAtRiskSheet
+				visible
+				habitName="Meditate"
+				currentStreak={13}
+				freezesRemaining={1}
+				today={new Date(2026, 9, 23)}
+				onUseFreeze={jest.fn()}
+				onNotNow={jest.fn()}
+			/>,
+		);
+		expect(
+			screen.getByRole("header", {
+				name: "Keep your Meditate streak?. 1 freeze left.",
+			}),
+		).toBeTruthy();
+	});
+});

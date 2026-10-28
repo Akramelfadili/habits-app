@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AddRow } from "@/components/ui/composite/add-row";
 import { Banner } from "@/components/ui/composite/banner";
+import { EmptyState } from "@/components/ui/composite/empty-state";
 import { headerBackOptions } from "@/components/ui/composite/header-buttons";
 import { MovedSettingPointer } from "@/components/ui/composite/moved-setting-pointer";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
@@ -12,7 +13,6 @@ import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { ReminderCard } from "../components/reminder-card";
 import { ReminderTimeSheet } from "../components/reminder-time-sheet";
-import { TodayStatePanel } from "../components/today-state-panel";
 import { REMINDER_CAP_MESSAGE, REMINDER_HINT } from "../constants";
 import { useReminderActions } from "../hooks/use-reminder-actions";
 import {
@@ -89,7 +89,7 @@ export function RemindersScreen({ habitId, addTime }: RemindersScreenProps) {
 	if (!data) {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
-				<TodayStatePanel
+				<EmptyState
 					icon="questionmark"
 					headline="Habit not found"
 					subtitle="It may have been deleted."

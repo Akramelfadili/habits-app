@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
+import { EmptyState } from "@/components/ui/composite/empty-state";
 import { InsightCard } from "@/components/ui/composite/insight-card";
 import { ProgressRow } from "@/components/ui/composite/progress-row";
 import { SectionHeader } from "@/components/ui/composite/section-header";
@@ -14,7 +15,6 @@ import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
-import { TodayStatePanel } from "../components/today-state-panel";
 import {
 	defaultSummaryWeek,
 	type SummaryWeek,
@@ -92,7 +92,7 @@ export function WeeklySummaryScreen() {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 				<View style={styles.headerPadding}>{header}</View>
-				<TodayStatePanel
+				<EmptyState
 					icon="chart.bar"
 					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its week will show up here."

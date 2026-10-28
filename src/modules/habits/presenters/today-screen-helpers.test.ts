@@ -4,10 +4,12 @@ import {
 	makeHabit,
 } from "../test-support/habit-builder";
 import {
+	allDoneBody,
+	bonusRowStatus,
 	computeProgress,
+	foldSummary,
 	groupHabitsByCategory,
 	resolveTodayViewState,
-	todayRowSubtitle,
 } from "./today-screen-helpers";
 
 describe("groupHabitsByCategory", () => {
@@ -186,42 +188,73 @@ describe("resolveTodayViewState", () => {
 	});
 });
 
-describe("todayRowSubtitle", () => {
-	it("is a quantity habit's target", () => {
-		const habit = makeHabit({
-			targetType: "quantity",
-			targetAmount: 20,
-			targetUnit: "pages",
-		});
-		expect(todayRowSubtitle(habit, 0)).toBe("20 pages");
+describe("foldSummary (T1)", () => {
+	const names = ["Upper body", "Cold shower", "Stretch"].map((name, index) =>
+		makeHabit({ id: index + 1, name }),
+	);
+
+	it("names the one habit not due today", () => {
+		expect(foldSummary(names.slice(0, 1), true)).toBe(
+			"1 not due today · Upper body",
+		);
 	});
 
-	it("is a per-week habit's standing this week", () => {
-		const habit = makeHabit({
-			frequency: { type: "per-week", timesPerWeek: 5 },
-		});
-		expect(todayRowSubtitle(habit, 2)).toBe("2 of 5 this week");
+	it("names two, then counts the rest", () => {
+		expect(foldSummary(names, true)).toBe(
+			"3 not due today · Upper body, Cold shower +1",
+		);
 	});
 
-	it("joins both for a per-week quantity habit", () => {
+	it("drops 'today' on a past day", () => {
+		expect(foldSummary(names.slice(0, 1), false)).toBe(
+			"1 not due · Upper body",
+		);
+	});
+});
+
+describe("bonusRowStatus (T3)", () => {
+	it("invites a bonus log, naming the schedule", () => {
+		const habit = makeHabit({ frequency: { type: "weekdays", days: [2, 4] } });
+		expect(bonusRowStatus(habit, 0, false)).toBe(
+			"Tue, Thu · tap to log a bonus",
+		);
+	});
+
+	it("says a met per-week habit is back Monday", () => {
 		const habit = makeHabit({
-			targetType: "quantity",
-			targetAmount: 5,
-			targetUnit: "km",
 			frequency: { type: "per-week", timesPerWeek: 3 },
 		});
-		expect(todayRowSubtitle(habit, 1)).toBe("5 km · 1 of 3 this week");
+		expect(bonusRowStatus(habit, 3, true)).toBe(
+			"3 of 3 this week · back Monday",
+		);
 	});
 
-	it("is empty for a plain daily or weekday check", () => {
+	it("says a logged bonus changes no streak", () => {
+		expect(bonusRowStatus(makeHabit({}), 0, true)).toBe(
+			"Bonus · streak unchanged",
+		);
+	});
+});
+
+describe("allDoneBody (T8)", () => {
+	const habits = [
+		makeHabit({ id: 1, name: "Meditate" }),
+		makeHabit({ id: 2, name: "Read" }),
+	];
+
+	it("names the longest streak", () => {
 		expect(
-			todayRowSubtitle(makeHabit({ frequency: { type: "daily" } }), 3),
-		).toBeUndefined();
-		expect(
-			todayRowSubtitle(
-				makeHabit({ frequency: { type: "weekdays", days: [1, 3, 5] } }),
-				2,
+			allDoneBody(
+				habits,
+				new Map([
+					[1, 13],
+					[2, 12],
+				]),
 			),
-		).toBeUndefined();
+		).toBe("2 of 2 · Meditate is on a 13-day streak");
+	});
+
+	it("is just the count when nothing has a streak worth naming", () => {
+		expect(allDoneBody(habits, new Map())).toBe("2 of 2");
 	});
 });

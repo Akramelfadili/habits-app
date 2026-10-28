@@ -2,61 +2,91 @@ import { format } from "date-fns";
 import { StyleSheet, Text, View } from "react-native";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
-import { space, typeScale } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
+import { todayCopy } from "../messages";
 
 type TodayHeaderProps = {
-	today: Date;
+	/** The day shown: the eyebrow carries its date, so a past day reads as one (T10). */
+	day: Date;
 	/** Opens New habit — the `+` (V3-02, D3). */
 	onAddHabit: () => void;
+	/** Hide the title: the collapsed inline bar already shows it (T5). */
+	titleHidden?: boolean;
 };
 
 /**
- * Date eyebrow + "Today" title with the `+` button — identical in all four
- * Today states. The `⋯` menu it used to sit beside is gone (HAB-27, D2):
- * summaries moved to the Progress tab, Manage and Settings to the Habits tab.
+ * V3-02 for Today: the date as an eyebrow, the display title, and a trailing
+ * 44 pt circle `+`. At accessibility text sizes the title wraps and the button
+ * moves above it (08.6). Eyebrow and title are one VoiceOver stop: "Today,
+ * heading. Friday 23 October."
  */
-export function TodayHeader({ today, onAddHabit }: TodayHeaderProps) {
+export function TodayHeader({
+	day,
+	onAddHabit,
+	titleHidden,
+}: TodayHeaderProps) {
 	const { colors } = useTheme();
+	const stacked = useAccessibilityTextSize();
 
-	return (
-		<View style={styles.header}>
-			<SectionLabel>{format(today, "EEEE, d MMMM")}</SectionLabel>
-			<View style={styles.titleRow}>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					Today
-				</Text>
-				<View style={styles.buttons}>
-					<HeaderCircleButton
-						symbol="plus"
-						accessibilityLabel="Add habit"
-						onPress={onAddHabit}
-					/>
-				</View>
-			</View>
+	const title = (
+		<View
+			accessible
+			accessibilityRole="header"
+			accessibilityLabel={`${todayCopy.screenTitle}, ${format(day, "EEEE d MMMM")}`}
+			style={[styles.titleBlock, titleHidden && styles.hidden]}
+		>
+			<SectionLabel>{format(day, "EEEE, d MMMM")}</SectionLabel>
+			<Text style={[styles.title, { color: colors.ink }]}>
+				{todayCopy.screenTitle}
+			</Text>
+		</View>
+	);
+	const add = (
+		<HeaderCircleButton
+			symbol="plus"
+			accessibilityLabel={todayCopy.addHabit}
+			onPress={onAddHabit}
+		/>
+	);
+
+	return stacked ? (
+		<View style={styles.stacked}>
+			<View style={styles.buttons}>{add}</View>
+			{title}
+		</View>
+	) : (
+		<View style={styles.row}>
+			{title}
+			<View style={styles.buttons}>{add}</View>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	header: {
-		gap: space[100],
-	},
-	titleRow: {
+	row: {
 		flexDirection: "row",
-		alignItems: "center",
+		alignItems: "flex-end",
 		justifyContent: "space-between",
+		gap: space[300],
+	},
+	stacked: {
+		gap: space[200],
+	},
+	titleBlock: {
+		flex: 1,
+		gap: space[50],
+	},
+	hidden: {
+		opacity: 0,
+	},
+	title: {
+		...textStyles.display,
 	},
 	buttons: {
 		flexDirection: "row",
-		alignItems: "center",
+		justifyContent: "flex-end",
 		gap: space[200],
-	},
-	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
 	},
 });

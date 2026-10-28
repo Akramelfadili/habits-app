@@ -114,7 +114,7 @@ export const DEFAULT_TARGET_AMOUNT = 8;
 export const MAX_TARGET_UNIT_LENGTH = 20;
 
 /** The small +1/+2 quick-add chips shown alongside "Full {target}" (HAB-07). */
-export const QUICK_ADD_STEPS = [1, 2] as const;
+export const QUICK_ADD_STEPS = [1, 2, 3] as const;
 
 /** The Quantity Log stepper's ceiling — high enough that over-logging (HAB-07) is never capped in practice. */
 export const MAX_QUANTITY_VALUE = 9999;
@@ -277,3 +277,10 @@ export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
 
 /** `app_settings` key for the day of the last successful data export (HAB-15), "yyyy-MM-dd". */
 export const LAST_EXPORT_SETTING_KEY = "habits.lastExport";
+
+/**
+ * From this local hour a Break habit that is still open reads "Resist tonight"
+ * instead of "Resisting" (HAB-31, T5). The spec gives no hour: 18:00 is our
+ * choice, and this is the only place it is written.
+ */
+export const EVENING_STARTS_AT_HOUR = 18;

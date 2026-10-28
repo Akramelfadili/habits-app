@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type StepperProps = {
@@ -32,7 +33,6 @@ export function Stepper({
 				accessibilityState={{ disabled }}
 				disabled={disabled}
 				onPress={() => onChange(next)}
-				hitSlop={6}
 				style={({ pressed }) => [
 					isLarge ? styles.buttonLarge : styles.button,
 					{ backgroundColor: colors.inner },
@@ -87,43 +87,41 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 14,
+		gap: space[350],
 	},
 	rowLarge: {
-		gap: 20,
+		gap: space[500],
 	},
+	// T-11: the inline stepper's buttons are 44 pt like every other target.
 	button: {
-		width: 32,
-		height: 32,
-		borderRadius: 16,
+		width: minTouchTarget,
+		height: minTouchTarget,
+		borderRadius: radius.pill,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	buttonLarge: {
-		width: 44,
-		height: 44,
-		borderRadius: 22,
+		width: minTouchTarget,
+		height: minTouchTarget,
+		borderRadius: radius.pill,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	symbol: {
-		fontSize: 18,
-		fontWeight: "500",
+		...textStyles.title,
 	},
 	symbolLarge: {
-		fontSize: 22,
-		fontWeight: "500",
+		...textStyles.title,
 	},
 	value: {
-		minWidth: 20,
+		minWidth: space[500],
 		textAlign: "center",
-		fontSize: 17,
+		...textStyles.bodyLg,
 		fontWeight: "500",
 	},
 	valueLarge: {
-		minWidth: 36,
+		minWidth: space[800] + space[200],
 		textAlign: "center",
-		fontSize: 32,
-		fontWeight: "600",
+		...textStyles.display,
 	},
 });

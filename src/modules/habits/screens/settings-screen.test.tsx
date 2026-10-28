@@ -158,8 +158,8 @@ describe("SettingsScreen (HAB-15)", () => {
 		});
 
 		it.each([
-			["copied", "Diagnostics copied", "default"],
-			["shared", "Diagnostics ready to share", "default"],
+			["copied", "Diagnostics copied", "info"],
+			["shared", "Diagnostics ready to share", "info"],
 			["failed", "Couldn't copy diagnostics. Try again.", "error"],
 		])(
 			"Copy diagnostics (%s) says so in a toast",

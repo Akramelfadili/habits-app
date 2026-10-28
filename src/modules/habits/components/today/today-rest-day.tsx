@@ -1,72 +1,98 @@
-import { format } from "date-fns";
 import { useState } from "react";
-import { Container } from "@/components/ui/composite/container";
+import { StyleSheet, View } from "react-native";
+import { EmptyState } from "@/components/ui/composite/empty-state";
+import { SectionHeader } from "@/components/ui/composite/section-header";
 import { Button } from "@/components/ui/primitives/button";
-import { SectionLabel } from "@/components/ui/primitives/section-label";
+import { space } from "@/theme/theme";
 import type { OffScheduleLog } from "../../domain/off-schedule";
+import { todayCopy } from "../../messages";
 import type { Habit } from "../../types";
 import { HabitPickerSheet } from "../habit-picker-sheet";
-import { OffScheduleRow } from "../off-schedule-row";
-import { TodayStatePanel } from "../today-state-panel";
+import { TodayNotDueCard } from "./today-habit-list";
 
 type TodayRestDayProps = {
-	today: Date;
-	/** Habits the picker offers — no Break or archived habits. */
-	eligibleHabits: readonly Habit[];
-	/** Today's bonus logs, listed above the button and marked in the picker. */
+	/** False on a past day: the copy says "was due", not "is due". */
+	isToday: boolean;
+	/** Habits that existed but aren't due: the rows, each a bonus log (T3). */
+	notDueHabits: readonly Habit[];
+	/** The day's bonus logs, to draw them checked. */
 	loggedToday: readonly OffScheduleLog[];
+	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	onOpenHabit: (habitId: number) => void;
-	/** A pick from the picker; the picker has already closed. */
-	onPickHabit: (habit: Habit) => void;
+	/** A bonus log: a tap on a dashed circle, or a pick from the picker (already closed). */
+	onLogBonus: (habit: Habit) => void;
+	/** Habits the picker offers. */
+	eligibleHabits: readonly Habit[];
 };
 
-/** Rest day (HAB-05 / HAB-32 T3): nothing is due; anything logged is a bonus. Owns the picker's open state. */
+/**
+ * Rest day (HAB-05 / HAB-32 T3): not an empty list but a state. It says why
+ * nothing is due, and keeps the not-due habits one tap away on dashed circles —
+ * anything logged is a bonus and never touches a streak or a rate (D11).
+ */
 export function TodayRestDay({
-	today,
-	eligibleHabits,
+	isToday,
+	notDueHabits,
 	loggedToday,
+	completedThisWeekByHabitId,
 	onOpenHabit,
-	onPickHabit,
+	onLogBonus,
+	eligibleHabits,
 }: TodayRestDayProps) {
 	const [pickerOpen, setPickerOpen] = useState(false);
+	const loggedIds = new Set(loggedToday.map(({ habit }) => habit.id));
+	const bonusValues = new Map(
+		loggedToday.map(({ habit, entry }) => [habit.id, entry.value ?? 0]),
+	);
 
 	return (
 		<>
-			<TodayStatePanel
-				icon="minus"
-				headline="Rest day"
-				subtitle={`Nothing is scheduled for ${format(today, "EEEE")}. Streaks stay intact.`}
-			>
-				{loggedToday.length > 0 ? (
-					<Container>
-						<SectionLabel>Logged today · off-schedule</SectionLabel>
-						{loggedToday.map(({ habit, entry }) => (
-							<OffScheduleRow
-								key={habit.id}
-								habit={habit}
-								entry={entry}
-								onPress={() => onOpenHabit(habit.id)}
-							/>
-						))}
-					</Container>
-				) : null}
-				<Button
-					label="Log something anyway"
-					variant="secondary"
-					fullWidth={false}
-					onPress={() => setPickerOpen(true)}
-				/>
-			</TodayStatePanel>
+			<EmptyState
+				centered={false}
+				icon="circle.dashed"
+				headline={todayCopy.restDayTitle}
+				subtitle={isToday ? todayCopy.restDayBody : todayCopy.restDayBodyOnDay}
+			/>
+			{notDueHabits.length > 0 ? (
+				<View style={styles.group}>
+					<SectionHeader
+						size="eyebrow"
+						title={
+							isToday ? todayCopy.notDueHeader : todayCopy.notDueHeaderOnDay
+						}
+						count={todayCopy.bonusLogs}
+					/>
+					<TodayNotDueCard
+						habits={notDueHabits}
+						loggedBonusIds={loggedIds}
+						bonusValues={bonusValues}
+						completedThisWeekByHabitId={completedThisWeekByHabitId}
+						onLogBonus={onLogBonus}
+						onOpenHabit={onOpenHabit}
+					/>
+				</View>
+			) : null}
+			<Button
+				label={todayCopy.pickAnother}
+				variant="link"
+				onPress={() => setPickerOpen(true)}
+			/>
 			<HabitPickerSheet
 				visible={pickerOpen}
 				habits={[...eligibleHabits]}
-				loggedHabitIds={new Set(loggedToday.map(({ habit }) => habit.id))}
+				loggedHabitIds={loggedIds}
 				onSelect={(habit) => {
 					setPickerOpen(false);
-					onPickHabit(habit);
+					onLogBonus(habit);
 				}}
 				onDismiss={() => setPickerOpen(false)}
 			/>
 		</>
 	);
 }
+
+const styles = StyleSheet.create({
+	group: {
+		gap: space[150],
+	},
+});

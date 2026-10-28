@@ -1,6 +1,7 @@
 import { SymbolView } from "expo-symbols";
 import { StyleSheet, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
+import { squareRadius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type IconBadgeProps = {
@@ -45,40 +46,28 @@ const SYMBOL_SIZES = {
 	large: 24,
 } as const;
 
-const styles = StyleSheet.create({
-	badgeSmall: {
-		width: 22,
-		height: 22,
-		borderRadius: 7,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	badgeCompact: {
-		width: 28,
-		height: 28,
-		borderRadius: 9,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	badge: {
-		width: 32,
-		height: 32,
-		borderRadius: 10,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	badgeLarge: {
-		width: 48,
-		height: 48,
-		borderRadius: 14,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-});
-
-const BADGE_STYLES = {
-	small: styles.badgeSmall,
-	compact: styles.badgeCompact,
-	default: styles.badge,
-	large: styles.badgeLarge,
+/** Square sizes in pt; "default" is V3-32's 32 pt row square (T-18, was 38). */
+const SQUARE_SIZES = {
+	small: 22,
+	compact: 28,
+	default: 32,
+	large: 48,
 } as const;
+
+/** V3-32: the radius follows round(size × 0.31) (F-05), so every size is one rule. */
+const styles = StyleSheet.create(
+	Object.fromEntries(
+		Object.entries(SQUARE_SIZES).map(([size, side]) => [
+			size,
+			{
+				width: side,
+				height: side,
+				borderRadius: squareRadius(side),
+				alignItems: "center" as const,
+				justifyContent: "center" as const,
+			},
+		]),
+	),
+);
+
+const BADGE_STYLES = styles;

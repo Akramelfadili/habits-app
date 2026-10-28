@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/composite/column-bars";
 import { CompletionGrid } from "@/components/ui/composite/completion-grid";
 import { Container } from "@/components/ui/composite/container";
+import { EmptyState } from "@/components/ui/composite/empty-state";
 import { InsightCard } from "@/components/ui/composite/insight-card";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { SectionHeader } from "@/components/ui/composite/section-header";
@@ -20,7 +21,6 @@ import { useTheme } from "@/theme/use-theme";
 import { categorySymbol } from "../components/category-symbol";
 import { HabitBadge } from "../components/habit-badge";
 import { RangeSwitcher } from "../components/range-switcher";
-import { TodayStatePanel } from "../components/today-state-panel";
 import type { YearlyInsight } from "../domain/yearly-insights";
 import type { YearlySummary, YearMonthCell } from "../domain/yearly-summary";
 import {
@@ -73,7 +73,7 @@ export function YearlySummaryScreen() {
 				<View style={styles.emptyHeader}>
 					<Header title="Your year" />
 				</View>
-				<TodayStatePanel
+				<EmptyState
 					icon="chart.bar"
 					headline="Nothing to summarise yet"
 					subtitle="Add a habit and its year will show up here."

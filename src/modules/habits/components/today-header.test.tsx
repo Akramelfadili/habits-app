@@ -1,5 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+// jest's window reports fontScale 2 (accessibility sizes): each test says which layout it wants.
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
+
 jest.mock("expo-symbols", () => {
 	const { View: MockView } = require("react-native");
 	return { SymbolView: MockView };
@@ -7,34 +13,55 @@ jest.mock("expo-symbols", () => {
 
 import { TodayHeader } from "./today-header";
 
-const TODAY = new Date(2026, 9, 1, 9);
+const DAY = new Date(2026, 9, 23, 9);
 
 async function renderHeader() {
 	const onAddHabit = jest.fn();
-	const view = await render(
-		<TodayHeader today={TODAY} onAddHabit={onAddHabit} />,
-	);
+	const view = await render(<TodayHeader day={DAY} onAddHabit={onAddHabit} />);
 	return { view, onAddHabit };
 }
 
-describe("TodayHeader", () => {
+describe("TodayHeader (V3-02)", () => {
 	it("shows the date eyebrow and the Today title", async () => {
 		await renderHeader();
 		expect(screen.getByText("Today")).toBeTruthy();
-		expect(screen.getByText("THURSDAY, 1 OCTOBER")).toBeTruthy();
+		expect(screen.getByText("FRIDAY, 23 OCTOBER")).toBeTruthy();
 	});
 
-	it("has an Add habit +, and the Today title is a heading", async () => {
+	it("is one heading stop: 'Today, Friday 23 October'", async () => {
+		await renderHeader();
+		expect(
+			screen.getByRole("header", { name: "Today, Friday 23 October" }),
+		).toBeTruthy();
+	});
+
+	it("has an Add habit +, drawn so it shows on web too", async () => {
 		const { onAddHabit } = await renderHeader();
 		await fireEvent.press(screen.getByRole("button", { name: "Add habit" }));
 		expect(onAddHabit).toHaveBeenCalledTimes(1);
-		expect(screen.getByRole("header", { name: "Today" })).toBeTruthy();
+		expect(screen.getByTestId("header-circle-plus-glyph")).toBeTruthy();
 	});
 
-	// The ⋯ menu is gone (HAB-27, D2): the header's only action is the +.
+	it("names a past day in the eyebrow", async () => {
+		await render(
+			<TodayHeader day={new Date(2026, 9, 21)} onAddHabit={jest.fn()} />,
+		);
+		expect(screen.getByText("WEDNESDAY, 21 OCTOBER")).toBeTruthy();
+	});
+
 	it("has no ⋯ menu button", async () => {
 		await renderHeader();
-		expect(screen.queryByLabelText("More")).toBeNull();
 		expect(screen.getAllByRole("button")).toHaveLength(1);
+	});
+
+	it("moves the button above the title at accessibility sizes", async () => {
+		mockAccessibilityText = true;
+		await renderHeader();
+		const root = screen.getByRole("button", { name: "Add habit" }).parent
+			?.parent;
+		expect(root?.children[0]).not.toBe(
+			screen.getByRole("header", { name: "Today, Friday 23 October" }),
+		);
+		mockAccessibilityText = false;
 	});
 });
