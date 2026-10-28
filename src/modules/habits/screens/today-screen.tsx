@@ -11,6 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
 	CollapsedHeaderBar,
 	collapseRange,
+	HEADER_BLOCK_GAP,
+	HEADER_CONTENT_PADDING_TOP,
 	useCollapsingHeader,
 } from "@/components/ui/composite/collapsing-header";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
@@ -106,7 +108,12 @@ export function TodayScreen() {
 	// the bar's bottom edge has to end up, so the bar never covers the days.
 	const onHeaderLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
 		header.setRange(
-			collapseRange(space[300] + layout.y + layout.height + space[200]),
+			collapseRange(
+				HEADER_CONTENT_PADDING_TOP +
+					layout.y +
+					layout.height +
+					HEADER_BLOCK_GAP,
+			),
 		);
 
 	const titleRow = (
@@ -260,7 +267,7 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		paddingHorizontal: space[500],
-		paddingTop: space[300],
+		paddingTop: HEADER_CONTENT_PADDING_TOP,
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: space[500],
 	},
@@ -270,6 +277,6 @@ const styles = StyleSheet.create({
 	},
 	/** Title and week strip read as one block (T1). */
 	top: {
-		gap: space[200],
+		gap: HEADER_BLOCK_GAP,
 	},
 });

@@ -19,6 +19,10 @@ import { useReducedMotion } from "@/utils/use-reduced-motion";
 /** The solid inline bar's height under the status bar (T5). */
 export const COLLAPSED_BAR_HEIGHT = minTouchTarget;
 
+/** Where Today-style tab roots start and how far the header sits from what follows it (T1): the screen's own paddingTop and header gap. */
+export const HEADER_CONTENT_PADDING_TOP = space[300];
+export const HEADER_BLOCK_GAP = space[200];
+
 /** A bar this close to the end of its range counts as showing: it takes over the taps and VoiceOver. */
 const BAR_TAKES_OVER_AT = 0.5;
 
@@ -46,6 +50,7 @@ export function useCollapsingHeader() {
 	const reduced = useReducedMotion();
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
 	const scrollY = useSharedValue(0);
+	const maxOffset = useSharedValue(Number.POSITIVE_INFINITY);
 	const range = useSharedValue(
 		collapseRange(space[800] + COLLAPSED_BAR_HEIGHT),
 	);
@@ -57,12 +62,18 @@ export function useCollapsingHeader() {
 		const y = scrollY.value;
 		const end = range.value;
 		if (reduced || y <= 0 || y >= end) return;
-		scrollTo(scrollRef, 0, y < end / 2 ? 0 : end, true);
+		// Content too short to scroll the whole range can only rest at the top.
+		const target = y < end / 2 || maxOffset.value < end ? 0 : end;
+		scrollTo(scrollRef, 0, target, true);
 	};
 
 	const onScroll = useAnimatedScrollHandler({
 		onScroll: (event) => {
 			scrollY.value = event.contentOffset.y;
+			maxOffset.value = Math.max(
+				0,
+				event.contentSize.height - event.layoutMeasurement.height,
+			);
 		},
 		onEndDrag: (event) => {
 			// With velocity a momentum phase follows and settles itself.

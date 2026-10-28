@@ -42,7 +42,11 @@ function Harness() {
 
 async function scrollTo_(y: number) {
 	await fireEvent.scroll(screen.getByTestId("scroller"), {
-		nativeEvent: { contentOffset: { y } },
+		nativeEvent: {
+			contentOffset: { y },
+			contentSize: { height: 2000 },
+			layoutMeasurement: { height: 800 },
+		},
 	});
 	await act(async () => {
 		jest.advanceTimersByTime(300);
@@ -135,6 +139,25 @@ describe("useCollapsingHeader (V3-02, T5)", () => {
 		expect((scrollTo as jest.Mock).mock.calls.at(-1)?.slice(1)).toEqual([
 			0,
 			range,
+			true,
+		]);
+	});
+
+	it("rests at the top when the content is too short to scroll the whole range", async () => {
+		await render(<Harness />);
+		await fireEvent.scroll(screen.getByTestId("scroller"), {
+			nativeEvent: {
+				contentOffset: { y: 25 },
+				contentSize: { height: 900 },
+				layoutMeasurement: { height: 890 },
+			},
+		});
+		await fireEvent(screen.getByTestId("scroller"), "momentumScrollEnd", {
+			nativeEvent: { contentOffset: { y: 25 } },
+		});
+		expect((scrollTo as jest.Mock).mock.calls.at(-1)?.slice(1)).toEqual([
+			0,
+			0,
 			true,
 		]);
 	});
