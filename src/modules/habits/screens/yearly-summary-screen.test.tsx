@@ -71,6 +71,11 @@ beforeEach(() => {
 });
 afterEach(() => jest.useRealTimers());
 
+// jest's window reports fontScale 2, where a segmented control stacks: these tests are about the standard layout.
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => false,
+}));
+
 describe("YearlySummaryScreen — ready (C4)", () => {
 	beforeEach(() => {
 		mockView = readyView();

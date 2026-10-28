@@ -2,6 +2,16 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 import { SegmentedControl } from "./segmented-control";
 
+// jest's window reports fontScale 2, i.e. accessibility sizes: say which one a test wants.
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
+
+beforeEach(() => {
+	mockAccessibilityText = false;
+});
+
 const options: [
 	{ value: "build"; label: string },
 	{ value: "break"; label: string },
@@ -84,13 +94,13 @@ describe("SegmentedControl — accessibility and touch targets (A6-03, A6-05)", 
 		expect(screen.getAllByRole("tab")).toHaveLength(2);
 	});
 
-	it("gives every segment a 44pt-tall touch column that abuts its neighbour (no hitSlop to overlap)", async () => {
+	it("gives every segment a 48 pt-tall touch column that abuts its neighbour (no hitSlop to overlap)", async () => {
 		await render(
 			<SegmentedControl options={options} value="build" onChange={jest.fn()} />,
 		);
 		for (const tab of screen.getAllByRole("tab")) {
 			const style = StyleSheet.flatten(tab.props.style);
-			expect(style.minHeight).toBe(44);
+			expect(style.minHeight).toBe(48);
 			expect(style.flex).toBe(1);
 			expect(tab.props.hitSlop).toBeUndefined();
 		}
@@ -122,5 +132,58 @@ describe("SegmentedControl — one segment disabled (range switcher, HAB-16)", (
 
 		await fireEvent.press(screen.getByText("Month"));
 		expect(onChange).toHaveBeenCalledWith("month");
+	});
+});
+
+describe("SegmentedControl — V3-17 look", () => {
+	it("fills the selected pill with the accent inside a 4 pt inset, so the pill is 40 pt of the 48 pt hit area", async () => {
+		await render(
+			<SegmentedControl options={options} value="build" onChange={jest.fn()} />,
+		);
+		const tab = screen.getByRole("tab", { name: "Build" });
+		expect(StyleSheet.flatten(tab.props.style).padding).toBe(4);
+		expect(screen.getByText("Build")).toHaveStyle({ color: "#FFFFFF" });
+	});
+});
+
+describe("SegmentedControl — accessibility text sizes (08.6, P6, P11)", () => {
+	beforeEach(() => {
+		mockAccessibilityText = true;
+	});
+
+	it("stacks the options in a list with a check on the selected one by default", async () => {
+		const onChange = jest.fn();
+		await render(
+			<SegmentedControl options={options} value="build" onChange={onChange} />,
+		);
+		expect(screen.getByTestId("segmented-stack")).toBeTruthy();
+		expect(screen.getAllByTestId("segmented-check")).toHaveLength(1);
+		await fireEvent.press(screen.getByText("Break"));
+		expect(onChange).toHaveBeenCalledWith("break");
+	});
+
+	it("collapses to the selected range, and a tap opens the stacked list", async () => {
+		const onChange = jest.fn();
+		await render(
+			<SegmentedControl
+				options={options}
+				value="build"
+				onChange={onChange}
+				axLayout="collapse"
+				label="Range"
+			/>,
+		);
+		expect(screen.queryByTestId("segmented-stack")).toBeNull();
+		const collapsed = screen.getByRole("button", { name: "Range Build" });
+		expect(collapsed.props.accessibilityState).toEqual(
+			expect.objectContaining({ expanded: false }),
+		);
+
+		await fireEvent.press(collapsed);
+		expect(screen.getByTestId("segmented-stack")).toBeTruthy();
+		await fireEvent.press(screen.getByRole("tab", { name: "Break" }));
+		expect(onChange).toHaveBeenCalledWith("break");
+		// Choosing closes the list again.
+		expect(screen.queryByTestId("segmented-stack")).toBeNull();
 	});
 });

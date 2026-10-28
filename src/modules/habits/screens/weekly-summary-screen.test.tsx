@@ -81,6 +81,11 @@ function barFillOf(label: string) {
 	return within(rowView).getByTestId("progress-bar").children[0];
 }
 
+// jest's window reports fontScale 2, where a segmented control stacks: these tests are about the standard layout.
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => false,
+}));
+
 describe("WeeklySummaryScreen", () => {
 	it("renders a neutral blank — not 'Nothing to summarise yet' — while habits load (A5-04)", async () => {
 		mockSummary = summary({ hasHabits: false, isLoaded: false, rows: [] });

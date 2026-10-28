@@ -9,6 +9,11 @@ import { RangeSwitcher } from "./range-switcher";
 
 beforeEach(() => mockReplace.mockClear());
 
+// jest's window reports fontScale 2, where a segmented control stacks: these tests are about the standard layout.
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => false,
+}));
+
 describe("RangeSwitcher (HAB-16, HAB-17)", () => {
 	it("marks the screen being shown", async () => {
 		await render(<RangeSwitcher value="month" />);
