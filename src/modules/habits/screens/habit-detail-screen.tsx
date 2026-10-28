@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { ArchivedBanner } from "@/components/ui/composite/archived-banner";
 import { Container } from "@/components/ui/composite/container";
+import { EmptyState } from "@/components/ui/composite/empty-state";
 import { headerActionOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { StatCard } from "@/components/ui/composite/stat-card";
@@ -19,7 +20,6 @@ import { DeleteHabitSheet } from "../components/delete-habit-sheet";
 import { HabitEntryRow } from "../components/habit-entry-row";
 import { HabitHeatmap } from "../components/habit-heatmap";
 import { RetroLogSheet } from "../components/retro-log-sheet";
-import { TodayStatePanel } from "../components/today-state-panel";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
 import { useRetroLogActions } from "../hooks/use-retro-log-actions";
@@ -158,7 +158,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	if (!detail) {
 		return (
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
-				<TodayStatePanel
+				<EmptyState
 					icon="questionmark"
 					headline="Habit not found"
 					subtitle="It may have been deleted."
@@ -297,7 +297,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 					</Container>
 				) : (
 					<Container>
-						<TodayStatePanel
+						<EmptyState
 							centered={false}
 							icon="circle.dashed"
 							headline="No entries yet"

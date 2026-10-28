@@ -1,9 +1,10 @@
-import { endOfWeek, parseISO, startOfWeek } from "date-fns";
+import { endOfWeek, parseISO, startOfWeek, subDays } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import { isHabitListedOn } from "../domain/selected-day";
 import {
+	calculateCurrentStreak,
 	freezesRemainingInMonth,
 	freezesUsedInMonth,
 	getStreakAtRisk,
@@ -25,8 +26,6 @@ import {
 } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
-import { getHabitStrategy } from "../strategies/frequency-strategy";
-import type { Habit } from "../types";
 
 /**
  * `selectedKey` is the day Today shows (`useSelectedDayQueries`): a past day's
@@ -45,6 +44,14 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
 	/** Days completed so far in the shown day's Mon–Sun week — per-week habits' "2 of 5". */
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
+	/**
+	 * The running streak of every listed habit that has one to show (V3-13's status
+	 * line): counted to the shown day when it is done, else to the day before.
+	 * Per-week habits show "3× per week · 1 done" instead and are not counted.
+	 */
+	streakByHabitId: ReadonlyMap<number, number>;
+	/** Habits whose yesterday was covered by a freeze (T7): "Thu frozen · streak kept at 13". Real today only. */
+	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
 	/** The real today — what streak-at-risk is measured against. */
 	today: Date;
 	/** The day being shown: `today`, or the past day selected. */
@@ -138,8 +145,30 @@ export function useTodayQueries(selectedKey: string | null = null): {
 		}
 	}
 
+	const streakByHabitId = new Map<number, number>();
+	const frozenYesterdayByHabitId = new Map<
+		number,
+		{ date: Date; streak: number }
+	>();
+	const yesterday = subDays(today, 1);
+	for (const habit of dueHabits) {
+		if (habit.frequency.type === "per-week") continue;
+		const frozenDates = frozenDatesByHabit.get(habit.id) ?? new Set<string>();
+		const own = entriesByHabit.get(habit.id) ?? [];
+		const asOf = completedHabitIds.has(habit.id)
+			? selectedDay
+			: subDays(selectedDay, 1);
+		const streak = calculateCurrentStreak(habit, own, frozenDates, asOf);
+		if (streak > 0) streakByHabitId.set(habit.id, streak);
+		if (selectedKey === null && frozenDates.has(toDayKey(yesterday))) {
+			frozenYesterdayByHabitId.set(habit.id, { date: yesterday, streak });
+		}
+	}
+
 	return {
 		totalHabitCount: habits.length,
+		streakByHabitId,
+		frozenYesterdayByHabitId,
 		groups: groupHabitsByCategory(dueHabits, categories),
 		progress,
 		completedHabitIds,
