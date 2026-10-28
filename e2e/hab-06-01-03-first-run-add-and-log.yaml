@@ -21,10 +21,10 @@ tags:
 - assertVisible: "Stretch"
 # …created as their subtitles promised: grouped by category (Glass of water
 # under Health, Walk and Stretch under Fitness), and Stretch as a 5-minute
-# quantity habit, which Today's row says.
+# quantity habit, which its status line says ("0 of 5 min").
 - assertVisible: "Health"
 - assertVisible: "Fitness"
-- assertVisible: "5 min"
+- assertVisible: "0 of 5 min"
 
 # HAB-01: add a habit of my own, from the + in Today's header (HAB-27 — the
 # ⋯ menu is gone and the + is an icon button, so it matches by label).
@@ -41,7 +41,7 @@ tags:
 # HAB-03: it shows on Today and can be ticked off.
 - assertVisible: "Floss"
 - tapOn:
-    id: "Floss"
+    id: "Floss, not done"
 - assertVisible:
     id: "Floss, done"
 - assertVisible: "Marked 'Floss' complete"

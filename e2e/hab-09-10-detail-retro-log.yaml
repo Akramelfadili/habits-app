@@ -31,7 +31,9 @@ tags:
     id: "Amount, 0 of 8"
 - tapOn: "Fill to 8"
 - assertVisible: "of 8 glasses · done"
-- tapOn: "Done"
+# The amount sheet is stacked on the day sheet: its Done has its own label.
+- tapOn:
+    id: "Done with amount"
 # The note is saved when the day sheet closes.
 - tapOn:
     id: "Note"
@@ -49,7 +51,7 @@ tags:
 - tapOn:
     id: "Sunday 6 September, logged"
 - assertVisible: "Forgot to log — was on the trail all day."
-- tapOn: "Cancel"
+- tapOn: "Close"
 
 # HAB-27: Detail was pushed inside the Today tab, so Back lands on Today.
 - back

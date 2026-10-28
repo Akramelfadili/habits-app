@@ -46,6 +46,8 @@ type HabitRowProps = {
 	 * says so instead of "log one more" / "mark done".
 	 */
 	circleAction?: "log" | "amount" | "details";
+	/** False for a day in the past (Edit this day): VoiceOver asks "resisted?", not "resisted today?". */
+	isToday?: boolean;
 	/** Not due on this day (T3, the fold row): a dashed circle; a log is a bonus. */
 	notDue?: boolean;
 };
@@ -60,6 +62,7 @@ function circleAccessibility(
 	completed: boolean,
 	quantity: { value: number; target: number } | null,
 	notDue: boolean,
+	isToday: boolean,
 ): { label: string; hint: string } {
 	const isBreak = habit.direction === "break";
 	if (notDue) {
@@ -85,7 +88,7 @@ function circleAccessibility(
 					hint: todayCopy.markNotResisted,
 				}
 			: {
-					label: todayCopy.circleNotResisted(habit.name),
+					label: todayCopy.circleNotResisted(habit.name, isToday),
 					hint: todayCopy.markResisted,
 				};
 	}
@@ -120,6 +123,7 @@ export function HabitRow({
 	frozen = false,
 	notDue = false,
 	circleAction = "log",
+	isToday = true,
 }: HabitRowProps) {
 	const { colors, scheme, opacity } = useTheme();
 	const stacked = useAccessibilityTextSize();
@@ -131,6 +135,7 @@ export function HabitRow({
 		completed,
 		isQuantity ? { value, target } : null,
 		notDue,
+		isToday,
 	);
 	const circle =
 		circleAction === "amount"

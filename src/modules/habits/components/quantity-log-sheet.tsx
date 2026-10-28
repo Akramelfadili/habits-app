@@ -132,7 +132,11 @@ export function QuantityLogSheet({
 							: todayCopy.quantityAutosave}
 					</Text>
 					{atTarget ? (
-						<Button label={todayCopy.quantityDone} onPress={close} />
+						<Button
+							label={todayCopy.quantityDone}
+							accessibilityLabel={todayCopy.quantityDoneLabel}
+							onPress={close}
+						/>
 					) : null}
 				</>
 			) : (

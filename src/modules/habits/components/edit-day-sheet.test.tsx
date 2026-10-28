@@ -113,9 +113,7 @@ describe("EditDaySheet (RL1-RL3)", () => {
 				onDismiss={jest.fn()}
 			/>,
 		);
-		await fireEvent.press(
-			screen.getByLabelText("No social media, resisted today?"),
-		);
+		await fireEvent.press(screen.getByLabelText("No social media, resisted?"));
 		expect(toast()?.message).toBe("No social media resisted on Wed 21");
 	});
 

@@ -36,35 +36,29 @@ tags:
 - tapOn:
     id: "Monday 28 September, missed"
 - tapOn:
-    id: "Amount, 0 of 8"
-- tapOn: "Fill to 8"
-- tapOn: "Done"
+    id: "Glass of water, not done"
 - tapOn:
     id: "Evening walk, not done"
 - tapOn:
-    id: "No phone after 23:00, resisted today?"
+    id: "No phone after 23:00, resisted[?]"
 - tapOn: "Done"
 - tapOn:
     id: "Tuesday 29 September, missed"
 - tapOn:
-    id: "Amount, 0 of 8"
-- tapOn: "Fill to 8"
-- tapOn: "Done"
+    id: "Glass of water, not done"
 - tapOn:
     id: "Evening walk, not done"
 - tapOn:
-    id: "No phone after 23:00, resisted today?"
+    id: "No phone after 23:00, resisted[?]"
 - tapOn: "Done"
 - tapOn:
     id: "Wednesday 30 September, missed"
 - tapOn:
-    id: "Amount, 0 of 8"
-- tapOn: "Fill to 8"
-- tapOn: "Done"
+    id: "Glass of water, not done"
 - tapOn:
     id: "Evening walk, not done"
 - tapOn:
-    id: "No phone after 23:00, resisted today?"
+    id: "No phone after 23:00, resisted[?]"
 - tapOn: "Done"
 - assertVisible:
     id: "Wednesday 30 September, logged"

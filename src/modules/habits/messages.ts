@@ -190,6 +190,8 @@ export const todayCopy = {
 	/** Quantity sheet (QS1–QS3). */
 	quantityClose: "Close",
 	quantityDone: "Done",
+	/** Distinct from the day sheet's "Done" underneath it: two sheets can be stacked (Edit this day → amount). */
+	quantityDoneLabel: "Done with amount",
 	quantityQuickAdd: "Quick add",
 	quantityFill: (target: number) => `Fill to ${target}`,
 	quantityExactTitle: "Set exact value",
@@ -281,7 +283,8 @@ export const todayCopy = {
 	logBonus: "Double-tap to log a bonus",
 	circleNotDone: (name: string) => `${name}, not done`,
 	circleDone: (name: string) => `${name}, done`,
-	circleNotResisted: (name: string) => `${name}, resisted today?`,
+	circleNotResisted: (name: string, isToday = true) =>
+		`${name}, resisted${isToday ? " today" : ""}?`,
 	circleResisted: (name: string) => `${name}, resisted`,
 	circleBonus: (name: string) => `${name}, not due, bonus`,
 	circleAddOne: (name: string, value: number, target: number) =>
