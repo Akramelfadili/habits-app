@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	Animated,
 	Easing,
@@ -9,6 +9,10 @@ import {
 	Text,
 	View,
 } from "react-native";
+import { ListItem } from "@/components/ui/composite/list-item";
+import { Sheet } from "@/components/ui/composite/sheet";
+import { SheetHeader } from "@/components/ui/composite/sheet-header";
+import { Chip } from "@/components/ui/primitives/chip";
 import {
 	minTouchTarget,
 	motion,
@@ -17,8 +21,10 @@ import {
 	textStyles,
 } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import type { WeekStripDay } from "../domain/week-strip";
+import { todayCopy } from "../messages";
 
 type WeekStripProps = {
 	days: readonly WeekStripDay[];
@@ -31,6 +37,8 @@ type WeekStripProps = {
 	onStepDay: (step: -1 | 1) => void;
 	onPreviousWeek: () => void;
 	onNextWeek: () => void;
+	/** False once the shown week is the current one: there is no later week to swipe to. */
+	canShowNext: boolean;
 	/** −1 / +1 after a swipe, so the week slides in from the right side. */
 	direction: number;
 };
@@ -57,10 +65,12 @@ export function WeekStrip({
 	onStepDay,
 	onPreviousWeek,
 	onNextWeek,
+	canShowNext,
 	direction,
 }: WeekStripProps) {
 	const { colors } = useTheme();
 	const reduceMotion = useReducedMotion();
+	const accessibilityText = useAccessibilityTextSize();
 	const fade = useRef(new Animated.Value(1)).current;
 	const slide = useRef(new Animated.Value(0)).current;
 	const weekKey = days[0]?.key;
@@ -107,6 +117,19 @@ export function WeekStrip({
 		? `${format(selected.date, "EEEE d")}${selected.isToday ? ", today" : ""}, selected, ${selectedSummary}`
 		: format(days[0]?.date ?? new Date(), "'Week of' d MMMM");
 
+	if (accessibilityText) {
+		return (
+			<ChangeDayButton
+				days={days}
+				selectedKey={selectedKey}
+				onSelect={onSelect}
+				onPreviousWeek={onPreviousWeek}
+				onNextWeek={onNextWeek}
+				canShowNext={canShowNext}
+			/>
+		);
+	}
+
 	return (
 		<View
 			testID="week-strip"
@@ -114,8 +137,8 @@ export function WeekStrip({
 			accessibilityRole="adjustable"
 			accessibilityLabel={label}
 			accessibilityActions={[
-				{ name: "increment", label: "Next day" },
-				{ name: "decrement", label: "Previous day" },
+				{ name: "increment", label: todayCopy.nextDay },
+				{ name: "decrement", label: todayCopy.previousDay },
 			]}
 			onAccessibilityAction={(event) => {
 				if (event.nativeEvent.actionName === "increment") onStepDay(1);
@@ -193,6 +216,21 @@ export function WeekStrip({
 }
 
 const styles = StyleSheet.create({
+	change: {
+		minHeight: minTouchTarget,
+		borderRadius: radius.pill,
+		borderWidth: 1,
+		paddingHorizontal: space[400],
+		justifyContent: "center",
+	},
+	changeText: {
+		...textStyles.callout,
+		fontWeight: "500",
+	},
+	weekButtons: {
+		flexDirection: "row",
+		gap: space[200],
+	},
 	row: {
 		flexDirection: "row",
 		justifyContent: "space-between",
@@ -223,3 +261,86 @@ const styles = StyleSheet.create({
 		borderRadius: radius.pill,
 	},
 });
+
+type ChangeDayButtonProps = Pick<
+	WeekStripProps,
+	| "days"
+	| "selectedKey"
+	| "onSelect"
+	| "onPreviousWeek"
+	| "onNextWeek"
+	| "canShowNext"
+>;
+
+/**
+ * At accessibility text sizes (AX1+) seven fixed 40 pt days no longer fit, so
+ * the strip becomes one button, "Friday 23 · Change day" (08.6), that opens the
+ * week as a list.
+ */
+function ChangeDayButton({
+	days,
+	selectedKey,
+	onSelect,
+	onPreviousWeek,
+	onNextWeek,
+	canShowNext,
+}: ChangeDayButtonProps) {
+	const { colors, opacity } = useTheme();
+	const [open, setOpen] = useState(false);
+	const selected = days.find((day) => day.key === selectedKey) ?? days[0];
+
+	return (
+		<>
+			<Pressable
+				testID="week-strip-change-day"
+				accessibilityRole="button"
+				accessibilityLabel={todayCopy.changeDayLabel(
+					format(selected.date, "EEEE d"),
+				)}
+				onPress={() => setOpen(true)}
+				style={({ pressed }) => [
+					styles.change,
+					{ backgroundColor: colors.card, borderColor: colors.border },
+					pressed && { opacity: opacity.pressed },
+				]}
+			>
+				<Text style={[styles.changeText, { color: colors.ink }]}>
+					{todayCopy.changeDayLabel(format(selected.date, "EEEE d"))}
+				</Text>
+			</Pressable>
+			{open ? (
+				<Sheet visible onDismiss={() => setOpen(false)}>
+					<SheetHeader
+						title={todayCopy.changeDayTitle}
+						actionLabel={todayCopy.quantityClose}
+						onAction={() => setOpen(false)}
+					/>
+					<View style={styles.weekButtons}>
+						<Chip label={todayCopy.previousWeek} onPress={onPreviousWeek} />
+						<Chip
+							label={todayCopy.nextWeek}
+							onPress={onNextWeek}
+							disabled={!canShowNext}
+						/>
+					</View>
+					{days.map((day) => (
+						<ListItem
+							key={day.key}
+							title={format(day.date, "EEEE d MMMM")}
+							subtitle={day.isToday ? todayCopy.todayWord : undefined}
+							onPress={
+								day.isFuture
+									? undefined
+									: () => {
+											onSelect(day.date);
+											setOpen(false);
+										}
+							}
+							accessibilityLabel={format(day.date, "EEEE d MMMM")}
+						/>
+					))}
+				</Sheet>
+			) : null}
+		</>
+	);
+}

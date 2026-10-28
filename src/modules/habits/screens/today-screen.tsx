@@ -102,6 +102,7 @@ export function TodayScreen() {
 			onStepDay={(step) => day.selectDay(addDays(today.selectedDay, step))}
 			onPreviousWeek={strip.showPreviousWeek}
 			onNextWeek={strip.showNextWeek}
+			canShowNext={strip.canShowNext}
 			direction={strip.direction}
 		/>
 	);

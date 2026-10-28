@@ -1,5 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+// jest's window reports fontScale 2 (accessibility sizes): each test says which layout it wants.
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
+
 jest.mock("expo-symbols", () => {
 	const { View: MockView } = require("react-native");
 	return { SymbolView: MockView };
@@ -46,5 +52,16 @@ describe("TodayHeader (V3-02)", () => {
 	it("has no ⋯ menu button", async () => {
 		await renderHeader();
 		expect(screen.getAllByRole("button")).toHaveLength(1);
+	});
+
+	it("moves the button above the title at accessibility sizes", async () => {
+		mockAccessibilityText = true;
+		await renderHeader();
+		const root = screen.getByRole("button", { name: "Add habit" }).parent
+			?.parent;
+		expect(root?.children[0]).not.toBe(
+			screen.getByRole("header", { name: "Today, Friday 23 October" }),
+		);
+		mockAccessibilityText = false;
 	});
 });

@@ -34,6 +34,7 @@ function setup(
 			days={week(["2026-10-19", "2026-10-20"])}
 			selectedKey="2026-10-23"
 			selectedSummary="1 of 5 done"
+			canShowNext
 			direction={0}
 			{...handlers}
 			{...overrides}
@@ -41,6 +42,12 @@ function setup(
 	);
 	return { view, ...handlers };
 }
+
+// jest's window reports fontScale 2, i.e. accessibility sizes: say which one a test wants.
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
 
 describe("WeekStrip (V3-03)", () => {
 	it("shows seven days Monday first", async () => {
@@ -132,5 +139,30 @@ describe("WeekStrip (V3-03)", () => {
 			screen.getByTestId("week-strip-day-2026-10-19").props.style,
 		);
 		expect(day.minHeight).toBeGreaterThanOrEqual(44);
+	});
+});
+
+describe("WeekStrip at accessibility text sizes (08.6)", () => {
+	beforeEach(() => {
+		mockAccessibilityText = true;
+	});
+	afterEach(() => {
+		mockAccessibilityText = false;
+	});
+
+	it("collapses to one 'Friday 23 · Change day' button", async () => {
+		await setup().view;
+		expect(screen.queryByTestId("week-strip")).toBeNull();
+		expect(
+			screen.getByRole("button", { name: "Friday 23 · Change day" }),
+		).toBeTruthy();
+	});
+
+	it("opens the week as a list and selects from it", async () => {
+		const { view, onSelect } = setup();
+		await view;
+		await fireEvent.press(screen.getByTestId("week-strip-change-day"));
+		await fireEvent.press(screen.getByLabelText("Tuesday 20 October"));
+		expect(onSelect).toHaveBeenCalledWith(new Date(2026, 9, 20));
 	});
 });

@@ -1,6 +1,13 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { makeHabit } from "../test-support/habit-builder";
 import { HabitRow } from "./habit-row";
+
+// jest's window reports fontScale 2 (accessibility sizes): each test says which layout it wants.
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -249,6 +256,46 @@ describe("HabitRow", () => {
 				screen.getByLabelText("Drink water, not due, bonus"),
 			);
 			expect(onToggle).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("layout (T-18, 08.6)", () => {
+		afterEach(() => {
+			mockAccessibilityText = false;
+		});
+
+		function rowStyle() {
+			const circle = screen.getByLabelText("Gym, not done");
+			// hit area → controls row → the row itself
+			const row = circle.parent?.parent;
+			return StyleSheet.flatten(row?.props.style);
+		}
+
+		it("is a flat 60 pt row at standard sizes", async () => {
+			await render(
+				<HabitRow
+					habit={makeHabit({ name: "Gym" })}
+					completed={false}
+					onToggle={jest.fn()}
+					onPress={jest.fn()}
+				/>,
+			);
+			expect(rowStyle().minHeight).toBe(60);
+			expect(rowStyle().flexDirection).toBe("row");
+		});
+
+		it("stacks at accessibility sizes: name first, count button and circle on their own line, 16 pt padding", async () => {
+			mockAccessibilityText = true;
+			await render(
+				<HabitRow
+					habit={makeHabit({ name: "Gym" })}
+					completed={false}
+					onToggle={jest.fn()}
+					onPress={jest.fn()}
+				/>,
+			);
+			expect(rowStyle().flexDirection).toBeUndefined();
+			expect(rowStyle().paddingHorizontal).toBe(16);
 		});
 	});
 });
