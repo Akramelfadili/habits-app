@@ -14,6 +14,7 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **F6 icon and colour pickers:** not built. The category supplies icon and colour (existing rule).
 - **SY3 determinate progress bar:** built as an indeterminate indicator (the migrator is synchronous).
 - **SR1 "Reset streak" button:** becomes "Not now" (see HAB-33). Undo applies to the freeze only.
+- **At-risk row (T4/SR1):** the at-risk sheet opens from the row's name area / status line, not from the circle. The circle always logs.
 - **Frames that show tab bar A** are drawn for brevity; build bar B (floating pill) everywhere.
 
 ## Standing decisions (apply to every ticket)
