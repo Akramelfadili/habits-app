@@ -3,8 +3,6 @@ import {
 	endOfWeek,
 	getISODay,
 	isAfter,
-	isBefore,
-	isSameDay,
 	min,
 	parseISO,
 	startOfDay,
@@ -13,9 +11,9 @@ import {
 } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
-import { getHabitStrategy } from "../strategies/frequency-strategy";
-import type { Entry, Habit } from "../types";
-import { isEntryComplete } from "./streaks";
+import type { Entry, FrozenDay, Habit } from "../types";
+import { addToTally, EMPTY_TALLY } from "./completion-rate";
+import { habitDayClassifier } from "./day-status";
 
 /**
  * Weekly Summary's math (HAB-11) — pure functions over this week's habits and
@@ -98,6 +96,8 @@ type WeeklySummaryInput = {
 	habits: readonly Habit[];
 	/** The summarised week's entries, any habit. */
 	entries: readonly Entry[];
+	/** Freezes in the week, any habit — an excused day leaves the counts (D14). */
+	frozenDays?: readonly FrozenDay[];
 	today: Date;
 	/** Which week to summarise — defaults to the one containing `today`. */
 	week?: SummaryWeek;
@@ -110,6 +110,7 @@ function byCreationOrder(a: Habit, b: Habit): number {
 export function buildWeeklySummary({
 	habits,
 	entries,
+	frozenDays = [],
 	today,
 	week: which = "this",
 }: WeeklySummaryInput): WeeklySummary {
@@ -120,19 +121,16 @@ export function buildWeeklySummary({
 	const rows: WeeklyHabitRow[] = [];
 
 	for (const habit of [...habits].sort(byCreationOrder)) {
-		const strategy = getHabitStrategy(habit);
-		const completedSet = new Set(
-			entries
-				.filter(
-					(entry) =>
-						entry.habitId === habit.id && isEntryComplete(habit, entry),
-				)
-				.map((entry) => entry.date),
-		);
-		const context = {
-			completedDates: [...completedSet].map((date) => parseISO(date)),
-		};
-		const createdStart = startOfDay(habit.createdAt);
+		const classify = habitDayClassifier({
+			habit,
+			entries: entries.filter((entry) => entry.habitId === habit.id),
+			frozenDates: new Set(
+				frozenDays
+					.filter((frozen) => frozen.habitId === habit.id)
+					.map((frozen) => frozen.date),
+			),
+			today,
+		});
 
 		let scheduled = 0;
 		let completed = 0;
@@ -141,18 +139,20 @@ export function buildWeeklySummary({
 			!isAfter(cursor, lastCountedDay);
 			cursor = addDays(cursor, 1)
 		) {
-			if (isBefore(cursor, createdStart)) continue;
-			if (!strategy.wasScheduledOn(cursor, context)) continue;
+			// The shared rule (completion-rate.ts): frozen and bonus days and a
+			// still-open today are not counted.
+			const day = addToTally({ ...EMPTY_TALLY }, classify(cursor));
+			if (day.due === 0) continue;
 			const dateString = toDayKey(cursor);
-			const isDone = completedSet.has(dateString);
-			if (isSameDay(cursor, todayStart) && !isDone) continue;
-
 			scheduled += 1;
-			if (isDone) completed += 1;
-			const day = perDay.get(dateString) ?? { completed: 0, scheduled: 0 };
-			day.scheduled += 1;
-			if (isDone) day.completed += 1;
-			perDay.set(dateString, day);
+			completed += day.done;
+			const perDayCounts = perDay.get(dateString) ?? {
+				completed: 0,
+				scheduled: 0,
+			};
+			perDayCounts.scheduled += 1;
+			perDayCounts.completed += day.done;
+			perDay.set(dateString, perDayCounts);
 		}
 
 		if (scheduled > 0) {

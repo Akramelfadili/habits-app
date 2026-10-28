@@ -366,3 +366,30 @@ describe("defaultSummaryWeek", () => {
 		expect(defaultSummaryWeek(addDays(monday, offset))).toBe(expected);
 	});
 });
+
+describe("buildWeeklySummary and freezes (D14)", () => {
+	const frozen = (habitId: number, dayIndex: number) => ({
+		id: dayIndex,
+		habitId,
+		date: format(addDays(monday, dayIndex), "yyyy-MM-dd"),
+		createdAt: monday,
+	});
+
+	it("leaves a frozen day out of both sides instead of counting it as missed", () => {
+		const input = {
+			habits: [daily(1)],
+			entries: doneOn(1, [0, 1, 3, 4]),
+			today: sunday,
+		};
+		const without = buildWeeklySummary(input);
+		// Sunday (today) is still open, so six days are counted.
+		expect(without).toMatchObject({ completed: 4, scheduled: 6 });
+
+		const withFreeze = buildWeeklySummary({
+			...input,
+			frozenDays: [frozen(1, 2)],
+		});
+		expect(withFreeze).toMatchObject({ completed: 4, scheduled: 5 });
+		expect(withFreeze.rows[0].fraction).toBeCloseTo(4 / 5);
+	});
+});

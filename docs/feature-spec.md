@@ -356,6 +356,7 @@ Reached by tapping a habit's name from Today (Feature 03). Shows, top to bottom:
 
 ### Business rules
 - The 90-day completion rate is calculated only against **scheduled** days for that habit — a habit scheduled 3x/week isn't penalized for the 4 days a week it was never due.
+- **Frozen days are excluded from the rate, on both sides** (V3 D14 supersedes the V1 rule that counted a frozen day as scheduled-but-not-done): a freeze is an excused day, so "78 of 87" is 78 done of 87 due once 3 frozen days are set aside. Bonus (off-schedule) logs never count. It is the same done ÷ due rule Progress uses (`domain/completion-rate.ts`).
 - Heatmap cells are tappable, and tapping one is the entry point into Feature 10 (retroactive logging) — build that navigation hook now even if Feature 10 isn't built yet.
 
 ### Edge cases
@@ -364,7 +365,7 @@ Reached by tapping a habit's name from Today (Feature 03). Shows, top to bottom:
 
 ### Acceptance criteria
 - [ ] Detail screen shows current streak, longest streak, and 90-day rate correctly
-- [ ] 90-day rate only counts scheduled days as the denominator
+- [ ] 90-day rate only counts scheduled days as the denominator, and leaves frozen days out of both the count and the denominator (D14)
 - [ ] 10-week heatmap renders with distinct states for: completed, missed, frozen, not-scheduled
 - [ ] Recent entries list shows correct dates/values in reverse chronological order
 - [ ] Tapping a heatmap cell is wired up as a navigation hook for Feature 10

@@ -125,6 +125,7 @@ describe("calculateCompletionRate", () => {
 		// 3 Sep → 23 Sep scheduled: 4,7,9,11,14,16,18,21,23 — today (23rd) unlogged so excluded → 8.
 		const entries = [entry(19), entry(16), entry(14)]; // 4th, 7th, 9th
 		const rate = calculateCompletionRate({
+			frozenDates: noFreezes,
 			habit: monWedFri,
 			entries,
 			today,
@@ -139,7 +140,12 @@ describe("calculateCompletionRate", () => {
 		});
 		const entries = [entry(9), entry(8), entry(0)];
 		expect(
-			calculateCompletionRate({ habit: young, entries, today }),
+			calculateCompletionRate({
+				frozenDates: noFreezes,
+				habit: young,
+				entries,
+				today,
+			}),
 		).toMatchObject({
 			completed: 3,
 			scheduled: 10,
@@ -150,7 +156,12 @@ describe("calculateCompletionRate", () => {
 	it("caps the window at 90 days", () => {
 		const entries = Array.from({ length: 120 }, (_, index) => entry(index + 1));
 		expect(
-			calculateCompletionRate({ habit: daily, entries, today }).scheduled,
+			calculateCompletionRate({
+				frozenDates: noFreezes,
+				habit: daily,
+				entries,
+				today,
+			}).scheduled,
 		).toBe(89); // 90-day window, today unlogged.
 	});
 
@@ -160,7 +171,12 @@ describe("calculateCompletionRate", () => {
 			createdAt: today,
 		});
 		expect(
-			calculateCompletionRate({ habit: brandNew, entries: [], today }),
+			calculateCompletionRate({
+				frozenDates: noFreezes,
+				habit: brandNew,
+				entries: [],
+				today,
+			}),
 		).toMatchObject({ completed: 0, scheduled: 0, fraction: null });
 	});
 
@@ -171,6 +187,7 @@ describe("calculateCompletionRate", () => {
 			createdAt: subDays(today, 1),
 		});
 		const rate = calculateCompletionRate({
+			frozenDates: noFreezes,
 			habit: quantity,
 			entries: [entry(1, 4)],
 			today,
@@ -178,9 +195,53 @@ describe("calculateCompletionRate", () => {
 		expect(rate).toEqual({
 			completed: 0,
 			scheduled: 1,
+			frozen: 0,
 			fraction: 0,
 			skippedPaused: false,
 		});
+	});
+
+	it("leaves a frozen day out of both sides, not counted as missed (D14)", () => {
+		// 10 days old, logged 8; the 2 misses at 3 and 4 days ago — one of them frozen.
+		const young = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: subDays(today, 9),
+		});
+		const entries = [9, 8, 7, 6, 5, 2, 1, 0].map((daysAgo) => entry(daysAgo));
+		const withoutFreeze = calculateCompletionRate({
+			habit: young,
+			entries,
+			frozenDates: noFreezes,
+			today,
+		});
+		expect(withoutFreeze).toMatchObject({ completed: 8, scheduled: 10 });
+
+		const withFreeze = calculateCompletionRate({
+			habit: young,
+			entries,
+			frozenDates: new Set([dayString(3)]),
+			today,
+		});
+		expect(withFreeze).toMatchObject({
+			completed: 8,
+			scheduled: 9,
+			frozen: 1,
+		});
+		expect(withFreeze.fraction).toBeCloseTo(8 / 9);
+	});
+
+	it("has no fraction when every scheduled day was frozen", () => {
+		const young = makeHabit({
+			frequency: { type: "daily" },
+			createdAt: subDays(today, 1),
+		});
+		const rate = calculateCompletionRate({
+			habit: young,
+			entries: [],
+			frozenDates: new Set([dayString(1)]),
+			today,
+		});
+		expect(rate).toMatchObject({ scheduled: 0, frozen: 1, fraction: null });
 	});
 });
 
@@ -418,6 +479,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 			pauses: [{ from: dayString(4), to: dayString(1) }],
 		});
 		const rate = calculateCompletionRate({
+			frozenDates: noFreezes,
 			habit: restored,
 			entries: loggedRun,
 			today,
@@ -488,20 +550,30 @@ describe("paused days (HAB-20)", () => {
 			createdAt: subDays(today, 25),
 			archivedAt: subDays(today, 5),
 		});
-		const rate = calculateCompletionRate({ habit: young, entries, today });
+		const rate = calculateCompletionRate({
+			frozenDates: noFreezes,
+			habit: young,
+			entries,
+			today,
+		});
 		expect(rate).toMatchObject({ completed: 20, scheduled: 20, fraction: 1 });
 	});
 
 	it("flags a rate that skipped a closed pause", () => {
 		const rate = calculateCompletionRate({
+			frozenDates: noFreezes,
 			habit: restored,
 			entries: [],
 			today,
 		});
 		expect(rate.skippedPaused).toBe(true);
 		expect(
-			calculateCompletionRate({ habit: daily, entries: [], today })
-				.skippedPaused,
+			calculateCompletionRate({
+				frozenDates: noFreezes,
+				habit: daily,
+				entries: [],
+				today,
+			}).skippedPaused,
 		).toBe(false);
 	});
 });

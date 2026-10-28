@@ -16,10 +16,9 @@ import {
 } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
-import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
+import { type CellStatus, habitDayClassifier } from "./day-status";
 import { insightsFor, type MonthlyInsight } from "./monthly-insights";
-import { isEntryComplete } from "./streaks";
 
 /**
  * Monthly Summary's math (HAB-16) — pure functions, same shape as
@@ -194,7 +193,12 @@ function byCreationOrder(a: Habit, b: Habit): number {
 	return a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id;
 }
 
-/** Every counted (habit, day) in `window` — see the file header for what counts. */
+/**
+ * Every counted (habit, day) in `window` — see the file header for what counts.
+ * Built on the shared classifier (`day-status.ts`): done → done, a partial
+ * quantity day counts as missed (due, not done), a freeze is frozen; bonus,
+ * not-due, before-start, future and an open today leave no outcome.
+ */
 export function outcomesFor({
 	habits,
 	entries,
@@ -204,49 +208,57 @@ export function outcomesFor({
 }: Omit<MonthlySummaryInput, "month"> & {
 	window: MonthWindow;
 }): DayOutcome[] {
-	const todayStart = startOfDay(today);
-	const lastCounted = min([todayStart, window.end]);
+	const lastCounted = min([startOfDay(today), window.end]);
+	const entriesByHabit = groupBy(entries, (entry) => entry.habitId);
+	const frozenByHabit = groupBy(frozenDays, (frozen) => frozen.habitId);
 	const outcomes: DayOutcome[] = [];
 
 	for (const habit of habits) {
-		const strategy = getHabitStrategy(habit);
-		const completedSet = new Set(
-			entries
-				.filter(
-					(entry) =>
-						entry.habitId === habit.id && isEntryComplete(habit, entry),
-				)
-				.map((entry) => entry.date),
-		);
-		const frozenSet = new Set(
-			frozenDays
-				.filter((frozen) => frozen.habitId === habit.id)
-				.map((frozen) => frozen.date),
-		);
-		const context = {
-			completedDates: [...completedSet].map((date) => parseISO(date)),
-		};
-		const createdStart = startOfDay(habit.createdAt);
-
+		const classify = habitDayClassifier({
+			habit,
+			entries: entriesByHabit.get(habit.id) ?? [],
+			frozenDates: new Set(
+				(frozenByHabit.get(habit.id) ?? []).map((frozen) => frozen.date),
+			),
+			today,
+		});
 		for (
 			let cursor = window.start;
 			!isAfter(cursor, lastCounted);
 			cursor = addDays(cursor, 1)
 		) {
-			if (isBefore(cursor, createdStart)) continue;
-			if (!strategy.wasScheduledOn(cursor, context)) continue;
-			const date = toDayKey(cursor);
-			const weekday = getISODay(cursor) as IsoWeekday;
-			if (completedSet.has(date)) {
-				outcomes.push({ habitId: habit.id, date, weekday, outcome: "done" });
-			} else if (frozenSet.has(date)) {
-				outcomes.push({ habitId: habit.id, date, weekday, outcome: "frozen" });
-			} else if (!isSameDay(cursor, todayStart)) {
-				outcomes.push({ habitId: habit.id, date, weekday, outcome: "missed" });
-			}
+			const { status, isToday } = classify(cursor);
+			const outcome = outcomeOf(status, isToday);
+			if (!outcome) continue;
+			outcomes.push({
+				habitId: habit.id,
+				date: toDayKey(cursor),
+				weekday: getISODay(cursor) as IsoWeekday,
+				outcome,
+			});
 		}
 	}
 	return outcomes;
+}
+
+function outcomeOf(status: CellStatus, isToday: boolean): Outcome | null {
+	if (status === "done") return "done";
+	if (status === "frozen") return "frozen";
+	// A partial quantity day is a verdict only once the day is over.
+	if ((status === "missed" || status === "partial") && !isToday) {
+		return "missed";
+	}
+	return null;
+}
+
+function groupBy<T>(items: readonly T[], key: (item: T) => number) {
+	const groups = new Map<number, T[]>();
+	for (const item of items) {
+		const group = groups.get(key(item));
+		if (group) group.push(item);
+		else groups.set(key(item), [item]);
+	}
+	return groups;
 }
 
 export function rateOf(completed: number, scheduled: number): number | null {
