@@ -11,6 +11,7 @@ The old Weekly / Monthly / Yearly summary screens keep working on their existing
 | A (habit, day) is exactly one **cell status**: `done`, `partial`, `missed`, `frozen`, `bonus`, `not-due`, `before-start`, `nothing-logged`, `future`, `today` | `domain/day-status.ts` (`classifyHabitDays`) |
 | **Completion rate** = done ÷ due, whole number. Due = `done` + `partial` + `missed`. Frozen leaves both sides (D14), bonus never counts (D11), paused / before-start / future / not-due are not due, today joins only once done. Break habits: a logged day is "resisted" = done (D8, same entry mechanism). × per week habits are due on open days only — `wasScheduledOn` answers, unchanged | `domain/completion-rate.ts` (`completionPercent`, `tally`) |
 | **Perfect day** = at least one due habit, all done, none frozen | `domain/completion-rate.ts` (`isPerfectDay`) |
+| **Slipping / improved** thresholds | `domain/slipping.ts`, `domain/monthly-insights.ts`, `domain/progress-insights.ts` |
 | **Day level** (calendar, year map): done ÷ due → L0 none, L1 1–49 %, L2 50–99 %, L3 100 % | `domain/completion-rate.ts` (`dayLevel`) |
 | Weeks start Monday (`WEEK_STARTS_ON`) | unchanged |
 
@@ -20,7 +21,9 @@ The old Weekly / Monthly / Yearly summary screens keep working on their existing
 - **Best streak**: Week = the highest *current* streak among habits (P1's 13 cannot fit inside a 7-day window); Month and Year = the longest run *inside* the range (P7/P10: 13 days in October, 14–15 missed), as Yearly's `longestOf` already does.
 - **Best day**: the weekday with the highest done ÷ due over the range (earliest weekday wins a tie). For Week each weekday is one date, so the same numbers are the daily bars (P1).
 - **Row totals** (week matrix): `done / target`, target = days the habit is due in the whole week (future days included; before-start and paused days not); × per week shows `n / timesPerWeek`.
-- **Slipping** is per habit and per range scale: Week = lower than last week by ≥ 25 points with ≥ 3 due days this week; Month = Monthly's existing weekly-trend rule; Year = Yearly's existing "never stuck" rule. **Improved**: ≥ +10 points on the previous range (Monthly's `IMPROVED_MIN_POINTS`), Year's best-month / stuck.
+- **Slipping** is per habit and per range scale (`domain/slipping.ts`, `monthly-insights.ts`): Week and Year = at least 25 points down on the previous week / year with enough due days (3 / 30); Month = Monthly's existing weekly trend (never up week over week, first-to-last drop ≥ 25 %). **Improved** = at least +10 points on the previous range (Monthly's `IMPROVED_MIN_POINTS`) with enough due days (3 / 5 / 30); Year adds the best month. Archived habits are never named.
+- **"Nothing to fix"** follows the improved cards whenever nothing is slipping; a perfect range shows only it.
+- A day with a habit still open today is not a perfect day (Monthly's old `perfectDays` still counts it; V3-3b retires that screen).
 
 ## DN rows → code
 
@@ -38,7 +41,7 @@ The old Weekly / Monthly / Yearly summary screens keep working on their existing
 | Year day detail / Month day card (P13, RL1) | `useRetroLogQueries` (unbounded `useAllEntries`), `edit-day-status.ts` | **New** `buildDayDetail` (each habit's state on one date) and a date-bounded hook read | 4, 8 |
 | Per-day year levels, all habits or one (P12, P15) | `buildYearlySummary` month cells only | **New** `buildYearMap` (365 aggregates, month bands, `bestMonth`, month list for the AX fallback); one habit = the same call with `[habit]` (binary falls out: 1 of 1 or 0) | 5 |
 | Streak, longest, 90-day rate (Detail, P1) | `calculateCurrentStreak`, `calculateLongestStreak`, `calculateCompletionRate`; `longestOf` in yearly | **Extend**: 90-day rate excludes frozen (step 2); `bestStreakIn(range)` reuses `calculateLongestStreak` clipped to the range, Week reuses `currentStreakAsOf` | 2–3 |
-| Slipping / improved (P1, P5, P7) | `insightFor` (weekly), `slippingInsight` / `improvedInsight` (monthly), `yearlyInsightsFor` | **Extend**: `progress-insights.ts` ranks slipping → improved → nothing to fix on top of them; pattern is Later (PR-03), not surfaced | 6 |
+| Slipping / improved (P1, P5, P7) | `insightFor` (weekly), `slippingInsight` / `improvedInsight` (monthly), `yearlyInsightsFor` | **Extend**: Monthly's `slippingTrend` is exported and shared with the row tag; `progress-insights.ts` ranks slipping → improved → nothing to fix on the range summary's rows (the old weekly / yearly insight functions stay for their screens); pattern is Later (PR-03), not surfaced | 6 |
 | Best month (P12) | `bestMonth`, `YearMonthCell` | **Extend**: on the year map's month tiles; insight "best month" is an *improved*-class card; year-scale insights need ≥ 3 months of history | 5–6 |
 | Too-early gates (P2, P9, P14) | `monthUnlock` (30 days), `yearUnlock` (3 months), weekly `too-early` insight | **Replace** by one 7-logged-days gate for all three ranges (`progress-unlock.ts`); `monthUnlock` / `MONTH_UNLOCK_DAYS` retire, the old Monthly hook uses the new gate; `yearUnlock` stays only for the ≥ 3-month insight rule | 7 |
 | Nothing logged / no habits (P3, P4) | `state: "empty"` in the summary hooks | **New** distinct view states `no-habits` and `nothing-logged` | 7 |
