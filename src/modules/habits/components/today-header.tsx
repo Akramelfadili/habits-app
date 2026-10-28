@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { space, textStyles } from "@/theme/theme";
@@ -12,8 +13,10 @@ type TodayHeaderProps = {
 	day: Date;
 	/** Opens New habit — the `+` (V3-02, D3). */
 	onAddHabit: () => void;
-	/** Hide the title: the collapsed inline bar already shows it (T5). */
-	titleHidden?: boolean;
+	/** Scroll-linked shrink and fade of the whole row, from `useCollapsingHeader` (T5). */
+	animatedStyle?: object;
+	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
+	collapsed?: boolean;
 };
 
 /**
@@ -25,7 +28,8 @@ type TodayHeaderProps = {
 export function TodayHeader({
 	day,
 	onAddHabit,
-	titleHidden,
+	animatedStyle,
+	collapsed = false,
 }: TodayHeaderProps) {
 	const { colors } = useTheme();
 	const stacked = useAccessibilityTextSize();
@@ -35,7 +39,7 @@ export function TodayHeader({
 			accessible
 			accessibilityRole="header"
 			accessibilityLabel={`${todayCopy.screenTitle}, ${format(day, "EEEE d MMMM")}`}
-			style={[styles.titleBlock, titleHidden && styles.hidden]}
+			style={styles.titleBlock}
 		>
 			<SectionLabel>{format(day, "EEEE, d MMMM")}</SectionLabel>
 			<Text style={[styles.title, { color: colors.ink }]}>
@@ -51,16 +55,25 @@ export function TodayHeader({
 		/>
 	);
 
-	return stacked ? (
-		<View style={styles.stacked}>
-			<View style={styles.buttons}>{add}</View>
-			{title}
-		</View>
-	) : (
-		<View style={styles.row}>
-			{title}
-			<View style={styles.buttons}>{add}</View>
-		</View>
+	return (
+		<Animated.View
+			pointerEvents={collapsed ? "none" : "auto"}
+			accessibilityElementsHidden={collapsed}
+			importantForAccessibility={collapsed ? "no-hide-descendants" : "auto"}
+			style={animatedStyle}
+		>
+			{stacked ? (
+				<View style={styles.stacked}>
+					<View style={styles.buttons}>{add}</View>
+					{title}
+				</View>
+			) : (
+				<View style={styles.row}>
+					{title}
+					<View style={styles.buttons}>{add}</View>
+				</View>
+			)}
+		</Animated.View>
 	);
 }
 
@@ -77,9 +90,6 @@ const styles = StyleSheet.create({
 	titleBlock: {
 		flex: 1,
 		gap: space[50],
-	},
-	hidden: {
-		opacity: 0,
 	},
 	title: {
 		...textStyles.display,

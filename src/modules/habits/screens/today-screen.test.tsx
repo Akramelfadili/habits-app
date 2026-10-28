@@ -993,6 +993,10 @@ describe("TodayScreen day tap (HAB-30)", () => {
 		});
 	}
 
+	/** The inline bar is always mounted; it is "showing" once VoiceOver can reach its name. */
+	const barShowing = () =>
+		screen.queryByRole("header", { name: "Today" }) !== null;
+
 	beforeEach(() => {
 		mockStripMounts = 0;
 		mockStripUnmounts = 0;
@@ -1015,16 +1019,16 @@ describe("TodayScreen day tap (HAB-30)", () => {
 		expect(mockStripMounts).toBe(1);
 		expect(mockStripUnmounts).toBe(0);
 		expect(screen.queryByTestId("screen-loading")).toBeNull();
-		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+		expect(barShowing()).toBe(false);
 	});
 
 	it("does not collapse the title when the scroll is still inside the title's range", async () => {
 		await render(<TodayScreen />);
-		await scrollTo(20);
+		await scrollTo(10);
 		await fireEvent.press(screen.getByTestId("week-strip-day-2026-09-14"));
-		await scrollTo(20);
+		await scrollTo(10);
 
-		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+		expect(barShowing()).toBe(false);
 	});
 
 	it("'Show today' leaves the strip mounted and the collapse state as the scroll left it", async () => {
@@ -1037,16 +1041,16 @@ describe("TodayScreen day tap (HAB-30)", () => {
 		expect(screen.getByTestId("week-strip")).toBeTruthy();
 		expect(mockStripMounts).toBe(1);
 		expect(mockStripUnmounts).toBe(0);
-		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+		expect(barShowing()).toBe(false);
 	});
 
 	it("collapses the title only because the list scrolled, never because a day was chosen", async () => {
 		await render(<TodayScreen />);
 		await scrollTo(200);
-		expect(screen.getByTestId("today-inline-bar")).toBeTruthy();
+		await waitFor(() => expect(barShowing()).toBe(true));
 
 		await scrollTo(0);
 		await fireEvent.press(screen.getByTestId("week-strip-day-2026-09-14"));
-		expect(screen.queryByTestId("today-inline-bar")).toBeNull();
+		expect(barShowing()).toBe(false);
 	});
 });
