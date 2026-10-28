@@ -161,7 +161,16 @@ export function useTodayQueries(selectedKey: string | null = null): {
 		const streak = calculateCurrentStreak(habit, own, frozenDates, asOf);
 		if (streak > 0) streakByHabitId.set(habit.id, streak);
 		if (selectedKey === null && frozenDates.has(toDayKey(yesterday))) {
-			frozenYesterdayByHabitId.set(habit.id, { date: yesterday, streak });
+			// "streak kept at 13": the run before the covered day, not counting it.
+			frozenYesterdayByHabitId.set(habit.id, {
+				date: yesterday,
+				streak: calculateCurrentStreak(
+					habit,
+					own,
+					frozenDates,
+					subDays(yesterday, 1),
+				),
+			});
 		}
 	}
 
