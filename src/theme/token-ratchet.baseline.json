@@ -1,10 +1,10 @@
 {
 	"colour-literals": 1,
 	"shadow-elevation": 0,
-	"font-size-literals": 23,
+	"font-size-literals": 17,
 	"line-height-literals": 8,
 	"font-weight-not-500-600": 0,
-	"spacing-literals": 251,
-	"radius-literals": 53,
-	"off-scale-font-sizes": 56
+	"spacing-literals": 222,
+	"radius-literals": 41,
+	"off-scale-font-sizes": 53
 }

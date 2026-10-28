@@ -66,3 +66,22 @@ describe("SectionHeader", () => {
 		).toBeTruthy();
 	});
 });
+
+describe("SectionHeader — eyebrow (T1 group header)", () => {
+	it("shows a caps title and the count at the far edge", async () => {
+		await render(
+			<SectionHeader size="eyebrow" title="Health" count="0 of 2" />,
+		);
+		expect(screen.getByText("HEALTH")).toBeTruthy();
+		expect(screen.getByText("0 of 2")).toBeTruthy();
+	});
+
+	it("reads as 'Health, 0 of 2 done' and is a heading", async () => {
+		await render(
+			<SectionHeader size="eyebrow" title="Health" count="0 of 2" />,
+		);
+		expect(
+			screen.getByRole("header", { name: "Health, 0 of 2 done" }),
+		).toBeTruthy();
+	});
+});

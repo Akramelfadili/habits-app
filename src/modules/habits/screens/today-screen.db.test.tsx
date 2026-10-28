@@ -7,6 +7,7 @@ import {
 	waitFor,
 } from "@testing-library/react-native";
 import { eq } from "drizzle-orm";
+import { Animated } from "react-native";
 import { appSettings, entries, frozenDays, habits } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { notifyTableChanged } from "@/lib/db/test-live-query";
@@ -59,6 +60,22 @@ function fakeClock(now: Date) {
 			"hrtime",
 		],
 	});
+}
+
+/**
+ * The frozen clock never reaches an animation's end, so a fill or a drawn check
+ * would keep requesting frames for the rest of the file. Motion has its own
+ * tests; here every animation lands at once.
+ */
+function jumpAnimationsToTheirEnd() {
+	jest.spyOn(Animated, "timing").mockImplementation((value, config) => ({
+		start: (done) => {
+			(value as Animated.Value).setValue(config.toValue as number);
+			done?.({ finished: true });
+		},
+		stop: () => {},
+		reset: () => {},
+	}));
 }
 
 const WED_NOON = new Date(2026, 8, 16, 12, 0, 0); // Wed 16 Sep 2026
@@ -116,6 +133,7 @@ const toast = () => useToastStore.getState().toast;
 describe("TodayScreen on the in-memory database", () => {
 	beforeEach(async () => {
 		fakeClock(WED_NOON);
+		jumpAnimationsToTheirEnd();
 		await mockDb.delete(frozenDays);
 		await mockDb.delete(entries);
 		await mockDb.delete(habits);
@@ -132,9 +150,7 @@ describe("TodayScreen on the in-memory database", () => {
 		const id = await addHabit({ name: "Read" });
 		await render(<TodayScreen />);
 
-		await fireEvent.press(
-			await screen.findByRole("checkbox", { name: "Read" }),
-		);
+		await fireEvent.press(await screen.findByLabelText("Read, not done"));
 		await waitFor(async () =>
 			expect(await entryRows()).toEqual([
 				expect.objectContaining({ habitId: id, date: WEDNESDAY }),
@@ -159,7 +175,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await render(<TodayScreen />);
 
 			await fireEvent.press(
-				await screen.findByLabelText("Add one to Water, 0 of 8 glasses"),
+				await screen.findByLabelText("Add one, Water, 0 of 8"),
 			);
 			await waitFor(async () =>
 				expect(await entryRows()).toEqual([
@@ -169,7 +185,7 @@ describe("TodayScreen on the in-memory database", () => {
 			expect(toast()?.message).toBe("Water +1 · 1 of 8 glasses");
 
 			await fireEvent.press(
-				await screen.findByLabelText("Add one to Water, 1 of 8 glasses"),
+				await screen.findByLabelText("Add one, Water, 1 of 8"),
 			);
 			await waitFor(async () =>
 				expect(await entryRows()).toEqual([
@@ -196,7 +212,7 @@ describe("TodayScreen on the in-memory database", () => {
 			});
 			await render(<TodayScreen />);
 			await fireEvent.press(
-				await screen.findByLabelText("Add one to Water, 0 of 8 glasses"),
+				await screen.findByLabelText("Add one, Water, 0 of 8"),
 			);
 			await waitFor(async () => expect(await entryRows()).toHaveLength(1));
 			await act(async () => {
@@ -216,7 +232,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await render(<TodayScreen />);
 
 			await fireEvent.press(
-				await screen.findByLabelText("Add one to Water, 2 of 2 glasses"),
+				await screen.findByLabelText("Add one, Water, 2 of 2"),
 			);
 			await waitFor(async () =>
 				expect(await entryRows()).toEqual([
@@ -240,9 +256,7 @@ describe("TodayScreen on the in-memory database", () => {
 			});
 			await screen.findByText("THURSDAY, 17 SEPTEMBER");
 
-			await fireEvent.press(
-				await screen.findByRole("checkbox", { name: "Read" }),
-			);
+			await fireEvent.press(await screen.findByLabelText("Read, not done"));
 			await waitFor(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ habitId: id, date: "2026-09-17" }),
@@ -253,9 +267,7 @@ describe("TodayScreen on the in-memory database", () => {
 		it("Undo after midnight still targets the day of the tap", async () => {
 			const id = await addHabit({ name: "Read" });
 			await render(<TodayScreen />);
-			await fireEvent.press(
-				await screen.findByRole("checkbox", { name: "Read" }),
-			);
+			await fireEvent.press(await screen.findByLabelText("Read, not done"));
 			await waitFor(async () => expect(await entryRows()).toHaveLength(1));
 
 			// Midnight passes with the toast still up, before the screen re-renders.
@@ -272,7 +284,7 @@ describe("TodayScreen on the in-memory database", () => {
 		it("a tap on a render that still shows yesterday writes nothing", async () => {
 			await addHabit({ name: "Read" });
 			await render(<TodayScreen />);
-			const circle = await screen.findByRole("checkbox", { name: "Read" });
+			const circle = await screen.findByLabelText("Read, not done");
 
 			// The clock passes midnight; the 1 s margin timer has not yet refreshed the screen.
 			jest.setSystemTime(new Date(2026, 8, 17, 0, 0, 0));
@@ -310,9 +322,8 @@ describe("TodayScreen on the in-memory database", () => {
 			expect(streakBefore).toBe(2);
 
 			await render(<TodayScreen />);
-			await fireEvent.press(await screen.findByText("Log something anyway"));
 			await fireEvent.press(
-				await screen.findByRole("checkbox", { name: "Log Gym off-schedule" }),
+				await screen.findByLabelText("Gym, not due, bonus"),
 			);
 			await waitFor(async () => expect(await entryRows()).toHaveLength(3));
 			expect(toast()?.message).toBe("Logged 'Gym' · off-schedule");
@@ -323,6 +334,8 @@ describe("TodayScreen on the in-memory database", () => {
 			expect(calculateCurrentStreak(habit, after, new Set(), asOf)).toBe(
 				streakBefore,
 			);
+			// The row now says it is a bonus that changed nothing.
+			expect(await screen.findByText("Bonus · streak unchanged")).toBeTruthy();
 			// Still a rest day: nothing was due, so nothing became "done" or at risk.
 			expect(await screen.findByText("Rest day")).toBeTruthy();
 			expect(await frozenRows()).toEqual([]);

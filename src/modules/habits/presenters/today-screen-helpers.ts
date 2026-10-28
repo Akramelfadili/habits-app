@@ -1,5 +1,7 @@
 import { OTHER_CATEGORY_NAME } from "../constants";
+import { todayCopy } from "../messages";
 import type { Category, Habit } from "../types";
+import { scheduleLabel } from "./habit-schedule-label";
 
 export type CategoryGroup = {
 	category: Category;
@@ -85,24 +87,57 @@ export function resolveTodayViewState(input: {
 }
 
 /**
- * What a Today row asks of you, under its name (docs/mockups/today-populated.png):
- * a quantity habit's target ("20 pages"), and a per-week habit's standing this
- * week ("2 of 5 this week") — otherwise a 5×/week habit gives no hint whether
- * today is the first or the last it needs. Nothing for a plain daily check:
- * a subtitle that only restates the schedule is noise.
+ * T1's fold row summary: "1 not due today · Upper body". Two names, then "+N".
+ * On a past day it reads "not due" without "today".
  */
-export function todayRowSubtitle(
+export function foldSummary(
+	notDue: readonly Habit[],
+	isToday: boolean,
+): string {
+	const names = notDue.slice(0, 2).map((habit) => habit.name);
+	const rest = notDue.length - names.length;
+	const joined = rest > 0 ? `${names.join(", ")} +${rest}` : names.join(", ");
+	return isToday
+		? todayCopy.foldSummary(notDue.length, joined)
+		: todayCopy.foldSummaryOnDay(notDue.length, joined);
+}
+
+/**
+ * The line under a not-due habit's name (T3, the fold row): a per-week habit
+ * that has met its target says it is back next week; anything else says how it
+ * is scheduled and that a log is a bonus. A logged bonus says it changes no
+ * streak.
+ */
+export function bonusRowStatus(
 	habit: Habit,
 	completedThisWeek: number,
-): string | undefined {
-	const parts: string[] = [];
-	if (habit.targetType === "quantity" && habit.targetAmount !== null) {
-		parts.push(`${habit.targetAmount} ${habit.targetUnit ?? ""}`.trim());
-	}
-	if (habit.frequency.type === "per-week") {
-		parts.push(
-			`${completedThisWeek} of ${habit.frequency.timesPerWeek} this week`,
+	logged: boolean,
+): string {
+	if (
+		habit.frequency.type === "per-week" &&
+		completedThisWeek >= habit.frequency.timesPerWeek
+	) {
+		return todayCopy.backNextWeek(
+			completedThisWeek,
+			habit.frequency.timesPerWeek,
 		);
 	}
-	return parts.length > 0 ? parts.join(" · ") : undefined;
+	return logged
+		? todayCopy.bonusLogged
+		: todayCopy.bonusSchedule(scheduleLabel(habit));
+}
+
+/** T8's second line: "5 of 5 · Meditate is on a 13-day streak" — the longest running streak among today's habits, if any. */
+export function allDoneBody(
+	habits: readonly Habit[],
+	streaks: ReadonlyMap<number, number>,
+): string {
+	let best: { name: string; days: number } | undefined;
+	for (const habit of habits) {
+		const days = streaks.get(habit.id) ?? 0;
+		if (days > 1 && (!best || days > best.days)) {
+			best = { name: habit.name, days };
+		}
+	}
+	return todayCopy.allDoneBody(habits.length, best?.name, best?.days);
 }

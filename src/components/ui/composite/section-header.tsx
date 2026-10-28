@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { space, textStyles, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type SectionHeaderProps = {
@@ -9,9 +9,11 @@ type SectionHeaderProps = {
 	/**
 	 * "small" is a card's own semibold title (Weekly Summary's "Per habit")
 	 * rather than a group header; "group" is the compact label-and-count above
-	 * a list card (Manage Categories' "Built-in 10", HAB-25), count beside it.
+	 * a list card (Manage Categories' "Built-in 10", HAB-25), count beside it;
+	 * "eyebrow" is V3's caps label over a card with its "0 of 2" at the far edge
+	 * (Today's category groups, T1).
 	 */
-	size?: "default" | "small" | "group";
+	size?: "default" | "small" | "group" | "eyebrow";
 	/**
 	 * Trailing note on a "group" header, pushed to the far edge — Manage's
 	 * "Reordering within Training" while a row of that group is lifted (HAB-19).
@@ -22,7 +24,12 @@ type SectionHeaderProps = {
 /** "Morning, 2 of 3" — title and count as one stop, "2/3" spoken as a fraction. */
 function spokenLabel(title: string, count?: string, tag?: string): string {
 	const fraction = count?.match(/^(\d+)\/(\d+)$/);
-	const spokenCount = fraction ? `${fraction[1]} of ${fraction[2]}` : count;
+	// "0 of 2" is a done-count (Today's groups): VoiceOver says "0 of 2 done".
+	const spokenCount = fraction
+		? `${fraction[1]} of ${fraction[2]}`
+		: count?.match(/^\d+ of \d+$/)
+			? `${count} done`
+			: count;
 	return [title, spokenCount, tag].filter(Boolean).join(", ");
 }
 
@@ -39,12 +46,18 @@ export function SectionHeader({
 }: SectionHeaderProps) {
 	const { colors } = useTheme();
 
+	const eyebrow = size === "eyebrow";
+
 	return (
 		<View
 			accessible
 			accessibilityRole="header"
 			accessibilityLabel={spokenLabel(title, count, tag)}
-			style={[styles.row, size === "group" && styles.groupRow]}
+			style={[
+				styles.row,
+				size === "group" && styles.groupRow,
+				eyebrow && styles.eyebrowRow,
+			]}
 		>
 			<Text
 				style={[
@@ -52,17 +65,26 @@ export function SectionHeader({
 						? styles.smallTitle
 						: size === "group"
 							? styles.groupTitle
-							: styles.title,
-					{ color: size === "group" ? colors.sub : colors.ink },
+							: eyebrow
+								? styles.eyebrowTitle
+								: styles.title,
+					{
+						color: eyebrow
+							? colors.faint
+							: size === "group"
+								? colors.sub
+								: colors.ink,
+					},
 				]}
 			>
-				{title}
+				{eyebrow ? title.toUpperCase() : title}
 			</Text>
 			{count ? (
 				<Text
 					style={[
 						size === "group" ? styles.groupCount : styles.count,
-						{ color: size === "group" ? colors.faint : colors.sub },
+						eyebrow && styles.eyebrowCount,
+						{ color: size === "group" || eyebrow ? colors.faint : colors.sub },
 					]}
 				>
 					{count}
@@ -105,6 +127,18 @@ const styles = StyleSheet.create({
 		marginLeft: "auto",
 		fontSize: typeScale.caption,
 		fontWeight: "500",
+	},
+	eyebrowRow: {
+		alignItems: "center",
+		paddingHorizontal: space[100],
+	},
+	eyebrowTitle: {
+		...textStyles.caption,
+		letterSpacing: 1.2,
+	},
+	eyebrowCount: {
+		...textStyles.caption,
+		fontVariant: ["tabular-nums"],
 	},
 	groupCount: {
 		fontSize: typeScale.caption,

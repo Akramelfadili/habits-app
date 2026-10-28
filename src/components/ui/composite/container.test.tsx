@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Container } from "./container";
 
 describe("Container", () => {
@@ -98,5 +98,21 @@ describe("Container", () => {
 			borderStyle: "dashed",
 			backgroundColor: "transparent",
 		});
+	});
+});
+
+describe("Container — flat (V3 list card)", () => {
+	it("has no padding, radius l, and a hairline between its children", async () => {
+		await render(
+			<Container variant="flat">
+				<Text>One</Text>
+				<Text>Two</Text>
+			</Container>,
+		);
+		expect(screen.getAllByTestId("container-section")).toHaveLength(2);
+		const card = screen.getAllByTestId("container-section")[0].parent;
+		const style = StyleSheet.flatten(card?.props.style);
+		expect(style.padding).toBe(0);
+		expect(style.borderRadius).toBe(20);
 	});
 });

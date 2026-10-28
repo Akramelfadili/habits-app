@@ -5,7 +5,6 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
-import { format } from "date-fns";
 import type { CategoryGroup } from "../presenters/today-screen-helpers";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import { mockMeasureInWindow } from "../test-support/measure-in-window";
@@ -44,6 +43,7 @@ let mockCompletedHabitIds = new Set<number>();
 let mockViewState: "no-habits" | "rest-day" | "populated" = "no-habits";
 let mockCompletedThisWeekByHabitId: Map<number, number> = new Map();
 let mockQuantityValuesByHabitId = new Map<number, number>();
+let mockStreakByHabitId = new Map<number, number>();
 const mockToday = new Date(2026, 8, 16);
 const OK = {
 	ok: true,
@@ -63,6 +63,8 @@ jest.mock("../hooks/use-today-queries", () => ({
 		completedHabitIds: mockCompletedHabitIds,
 		quantityValuesByHabitId: mockQuantityValuesByHabitId,
 		completedThisWeekByHabitId: mockCompletedThisWeekByHabitId,
+		streakByHabitId: mockStreakByHabitId,
+		frozenYesterdayByHabitId: new Map(),
 		today: mockToday,
 		selectedDay: mockToday,
 		isLoaded: mockIsLoaded,
@@ -75,6 +77,25 @@ jest.mock("../hooks/use-today-queries", () => ({
 			]),
 		),
 		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
+	}),
+}));
+
+jest.mock("../hooks/use-week-strip-queries", () => ({
+	useWeekStripQueries: () => ({
+		days: Array.from({ length: 7 }, (_, index) => {
+			const date = new Date(2026, 8, 14 + index);
+			return {
+				date,
+				key: `2026-09-${14 + index}`,
+				isToday: index === 2,
+				isFuture: index > 2,
+				allDone: false,
+			};
+		}),
+		canShowNext: false,
+		direction: 0,
+		showPreviousWeek: jest.fn(),
+		showNextWeek: jest.fn(),
 	}),
 }));
 
@@ -151,11 +172,9 @@ jest.mock("../hooks/use-first-run-actions", () => ({
 }));
 
 import { Alert } from "react-native";
-import {
-	TOAST_DURATION_MS,
-	ToastHost,
-} from "@/components/ui/composite/toast-host";
+import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
+import { motion } from "@/theme/theme";
 import { TodayScreen } from "./today-screen";
 
 /** Only Date is faked: writes read the clock and must land on mockToday. */
@@ -203,6 +222,7 @@ describe("TodayScreen", () => {
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
 		mockQuantityValuesByHabitId = new Map();
+		mockStreakByHabitId = new Map();
 		mockCompletedThisWeekByHabitId = new Map();
 		mockViewState = "no-habits";
 		useToastStore.setState({ toast: null });
@@ -223,7 +243,7 @@ describe("TodayScreen", () => {
 		expect(screen.getByText("Nothing to track yet")).toBeTruthy();
 		expect(
 			screen.getByText(
-				"Add your first habit and it will show up here every morning.",
+				"Add a habit and it shows up here on every day it’s due.",
 			),
 		).toBeTruthy();
 	});
@@ -250,7 +270,7 @@ describe("TodayScreen", () => {
 
 		expect(screen.getByText("Rest day")).toBeTruthy();
 		expect(
-			screen.getByText(/Nothing is scheduled for \w+\. Streaks stay intact\./),
+			screen.getByText(/Nothing is due today, so every streak is safe/),
 		).toBeTruthy();
 		expect(screen.queryByText("Nothing to track yet")).toBeNull();
 	});
@@ -274,23 +294,24 @@ describe("TodayScreen", () => {
 		it("opens the habit picker, not New habit", async () => {
 			mockEligibleHabits = [read];
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(screen.getByText("Log a different habit"));
 
 			expect(screen.getByText("Log off-schedule")).toBeTruthy();
-			expect(screen.getByText("Read")).toBeTruthy();
+			// Once on the rest-day card, once in the picker.
+			expect(screen.getAllByText("Read")).toHaveLength(2);
 			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it("shows the 'nothing eligible' state when no habit can be logged", async () => {
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(screen.getByText("Log a different habit"));
 			expect(screen.getByText("Nothing to log here")).toBeTruthy();
 		});
 
 		it("logs a check habit, confirms with a toast, and Undo removes exactly that entry", async () => {
 			mockEligibleHabits = [read];
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(screen.getByText("Log a different habit"));
 			await fireEvent.press(
 				screen.getByRole("checkbox", { name: "Log Read off-schedule" }),
 			);
@@ -320,7 +341,7 @@ describe("TodayScreen", () => {
 			mockEligibleHabits = [water];
 			mockQuantityValuesByHabitId = new Map();
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(screen.getByText("Log a different habit"));
 			await fireEvent.press(
 				screen.getByRole("button", {
 					name: "Log Glass of water, set an amount",
@@ -345,7 +366,7 @@ describe("TodayScreen", () => {
 			mockEligibleHabits = [water];
 			mockQuantityValuesByHabitId = new Map([[6, 2]]);
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(screen.getByText("Log a different habit"));
 			await fireEvent.press(
 				screen.getByRole("button", {
 					name: "Log Glass of water, set an amount",
@@ -360,7 +381,7 @@ describe("TodayScreen", () => {
 			expect(mockRestoreDay).toHaveBeenLastCalledWith(6, mockToday, 2, null);
 		});
 
-		it("lists what was logged today with its time, and a logged row in the picker does nothing", async () => {
+		it("shows a bonus already logged today as logged, and a logged row in the picker does nothing", async () => {
 			mockEligibleHabits = [read];
 			mockLoggedToday = [
 				{
@@ -375,12 +396,9 @@ describe("TodayScreen", () => {
 			];
 			await render(<TodayScreen />);
 
-			expect(screen.getByText("LOGGED TODAY · OFF-SCHEDULE")).toBeTruthy();
-			expect(
-				screen.getByText("Logged 10:42 · bonus, streak unchanged"),
-			).toBeTruthy();
+			expect(screen.getByText("Bonus · streak unchanged")).toBeTruthy();
 
-			await fireEvent.press(screen.getByText("Log something anyway"));
+			await fireEvent.press(screen.getByText("Log a different habit"));
 			await fireEvent.press(
 				screen.getByRole("checkbox", { name: "Read, logged off-schedule" }),
 			);
@@ -399,7 +417,7 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 
-		expect(screen.getByText("1 of 1 complete")).toBeTruthy();
+		expect(screen.getByText("1 of 1 done")).toBeTruthy();
 		expect(screen.getByText("100%")).toBeTruthy();
 		expect(screen.queryByText(/^All .* done$/)).toBeNull();
 		expect(screen.queryByText("TOMORROW")).toBeNull();
@@ -417,10 +435,10 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 
-		expect(screen.getByText("Morning")).toBeTruthy();
-		expect(screen.getByText("1/1")).toBeTruthy();
-		expect(screen.getByText("Evening")).toBeTruthy();
-		expect(screen.getByText("0/1")).toBeTruthy();
+		expect(screen.getByText("MORNING")).toBeTruthy();
+		expect(screen.getByText("1 of 1")).toBeTruthy();
+		expect(screen.getByText("EVENING")).toBeTruthy();
+		expect(screen.getByText("0 of 1")).toBeTruthy();
 		expect(screen.getByText("Glass of water")).toBeTruthy();
 		expect(screen.getByText("Read")).toBeTruthy();
 	});
@@ -434,7 +452,7 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 
-		expect(screen.getByText("1 of 2 complete")).toBeTruthy();
+		expect(screen.getByText("1 of 2 done")).toBeTruthy();
 		expect(screen.getByText("50%")).toBeTruthy();
 	});
 
@@ -445,7 +463,7 @@ describe("TodayScreen", () => {
 		];
 
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByLabelText("Glass of water"));
+		await fireEvent.press(screen.getByLabelText("Glass of water, not done"));
 
 		expect(mockToggleCompletion).toHaveBeenCalledWith(1, mockToday, true);
 	});
@@ -457,7 +475,7 @@ describe("TodayScreen", () => {
 		];
 
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByLabelText("Glass of water"));
+		await fireEvent.press(screen.getByLabelText("Glass of water, not done"));
 
 		const toast = useToastStore.getState().toast;
 		expect(toast).toMatchObject({
@@ -493,7 +511,7 @@ describe("TodayScreen", () => {
 			});
 
 			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByLabelText("Glass of water"));
+			await fireEvent.press(screen.getByLabelText("Glass of water, not done"));
 
 			expect(useToastStore.getState().toast).toBeNull();
 		});
@@ -510,7 +528,9 @@ describe("TodayScreen", () => {
 		mockGroups = [{ category: categoryNamed("Morning"), habits: [breakHabit] }];
 
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByLabelText("No phone in bed"));
+		await fireEvent.press(
+			screen.getByLabelText("No phone in bed, resisted today?"),
+		);
 
 		expect(useToastStore.getState().toast?.message).toBe(
 			"Resisted 'No phone in bed'",
@@ -608,7 +628,7 @@ describe("TodayScreen", () => {
 			expect(screen.getByText("Undo")).toBeTruthy();
 			mockToggleCompletion.mockClear();
 
-			await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS));
+			await act(() => jest.advanceTimersByTime(motion.toast.hold.undo));
 
 			expect(screen.queryByText("Undo")).toBeNull();
 			expect(useToastStore.getState().toast).toBeNull();
@@ -637,7 +657,7 @@ describe("TodayScreen", () => {
 
 			await render(<TodayScreen />);
 			await fireEvent(
-				screen.getByLabelText("Add one to Glass of water, 10 of 8 glasses"),
+				screen.getByLabelText("Add one, Glass of water, 10 of 8"),
 				"longPress",
 			);
 			for (let i = 0; i < 7; i += 1) {
@@ -669,7 +689,7 @@ describe("TodayScreen", () => {
 
 			await render(<TodayScreen />);
 			await fireEvent(
-				screen.getByLabelText("Add one to Glass of water, 10 of 8 glasses"),
+				screen.getByLabelText("Add one, Glass of water, 10 of 8"),
 				"longPress",
 			);
 			await fireEvent.press(
@@ -707,7 +727,7 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/habit/1");
 	});
 
-	it("subtitles a row with what it asks: a quantity target, or a per-week habit's standing", async () => {
+	it("puts the amount or the weekly standing in the status line, and nothing under a plain daily check", async () => {
 		const readHabit = makeHabit({
 			id: 3,
 			name: "Read",
@@ -731,8 +751,8 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 
-		expect(screen.getByText("20 pages")).toBeTruthy();
-		expect(screen.getByText("2 of 3 this week")).toBeTruthy();
+		expect(screen.getByText("0 of 20 pages")).toBeTruthy();
+		expect(screen.getByText("3× per week · 2 done")).toBeTruthy();
 		// A plain daily check has nothing to add under its name.
 		expect(screen.queryByText(/daily/i)).toBeNull();
 	});
@@ -754,7 +774,7 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 		await fireEvent(
-			screen.getByLabelText("Add one to Glass of water, 3 of 8 glasses"),
+			screen.getByLabelText("Add one, Glass of water, 3 of 8"),
 			"longPress",
 		);
 
@@ -779,7 +799,7 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 		await fireEvent.press(
-			screen.getByLabelText("Add one to Glass of water, 2 of 8 glasses"),
+			screen.getByLabelText("Add one, Glass of water, 2 of 8"),
 		);
 
 		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3, 8);
@@ -830,7 +850,7 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 		await fireEvent(
-			screen.getByLabelText("Add one to Glass of water, 3 of 8 glasses"),
+			screen.getByLabelText("Add one, Glass of water, 3 of 8"),
 			"longPress",
 		);
 		await fireEvent.press(
@@ -862,7 +882,7 @@ describe("TodayScreen", () => {
 
 		await render(<TodayScreen />);
 		await fireEvent(
-			screen.getByLabelText("Add one to Glass of water, 7 of 8 glasses"),
+			screen.getByLabelText("Add one, Glass of water, 7 of 8"),
 			"longPress",
 		);
 		await fireEvent.press(
