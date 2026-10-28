@@ -91,6 +91,31 @@ export const messages = {
 		) =>
 			`${habit} +1 · ${count} of ${target}${unit ? ` ${unit}` : ""}${onDay(day)}`,
 	},
+	/** RL2: a tap in Edit this day — "Read 20 min logged for Wed 21" — Undo targets that date. */
+	dayLogged: {
+		tone: "success",
+		text: (habit: string, day: string) => `${habit} logged for ${day}`,
+	},
+	dayCleared: {
+		tone: "info",
+		text: (habit: string, day: string) => `${habit} cleared for ${day}`,
+	},
+	dayResisted: {
+		tone: "success",
+		text: (habit: string, day: string) => `${habit} resisted on ${day}`,
+	},
+	/** QS1: closing the quantity sheet after changes that neither cross the target nor cover a frozen day: "Drink water · 6 of 8 glasses". */
+	quantitySet: {
+		tone: "success",
+		text: (
+			habit: string,
+			count: number,
+			target: number,
+			unit: string | null,
+			day?: string,
+		) =>
+			`${habit} · ${count} of ${target}${unit ? ` ${unit}` : ""}${onDay(day)}`,
+	},
 	/** T7: "Freeze used for Thu 22 · 0 left" — Undo takes it back. */
 	freezeUsed: {
 		tone: "success",
@@ -119,6 +144,40 @@ const plural = (count: number, one: string, many: string) =>
 	`${count} ${count === 1 ? one : many}`;
 
 export const todayCopy = {
+	/** Edit this day (RL1–RL3, HAB-34). */
+	editDayIntro:
+		"Tap a circle to set that day. Streaks and rates update when you close.",
+	editDayDone: "Done",
+	editDayNoteLabel: "Note",
+	editDayNotePlaceholder: "Add a note for this day",
+	editDayNothingDue: "Nothing was due on this day.",
+	editDayRowDone: "Done",
+	editDayRowResisted: "Break · resisted",
+	editDayRowMissed: "Missed · tap to log",
+	editDayRowFrozen: "Frozen · logging it returns the freeze",
+	editDayRowAmount: (value: number, target: number, unit: string | null) =>
+		`${value} of ${target}${unit ? ` ${unit}` : ""} · tap for amount`,
+	/** Quantity sheet (QS1–QS3). */
+	quantityClose: "Close",
+	quantityDone: "Done",
+	quantityQuickAdd: "Quick add",
+	quantityFill: (target: number) => `Fill to ${target}`,
+	quantityExactTitle: "Set exact value",
+	quantityExactBody: "Type how many",
+	quantityExactLabel: (unit: string) =>
+		unit ? `${unit} today` : "Amount today",
+	quantityExactLabelOnDay: (unit: string, day: string) =>
+		unit ? `${unit} on ${day}` : `Amount on ${day}`,
+	quantityExactHelper: (target: number, max: number) =>
+		`Target ${target} · up to ${max}`,
+	quantitySetTo: (value: number) => `Set to ${value}`,
+	quantityAutosave:
+		"Every change saves straight away. Closing shows one toast with Undo.",
+	quantityAtTarget: (unit: string) =>
+		`Target reached — the circle is full. Extra ${unit || "amounts"} still count.`,
+	quantityOf: (target: number, unit: string, done: boolean) =>
+		`of ${target}${unit ? ` ${unit}` : ""}${done ? " · done" : ""}`,
+	quantityTitleOnDay: (name: string, day: string) => `${name} · ${day}`,
 	screenTitle: "Today",
 	addHabit: "Add habit",
 	rowStreak: (days: number) => `${days}-day streak`,
