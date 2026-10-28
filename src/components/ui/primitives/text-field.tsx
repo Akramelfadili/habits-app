@@ -1,5 +1,6 @@
 import { type Ref, useState } from "react";
 import {
+	type KeyboardTypeOptions,
 	type ReturnKeyTypeOptions,
 	StyleSheet,
 	Text,
@@ -39,6 +40,8 @@ type TextFieldProps = {
 	onSubmitEditing?: () => void;
 	/** "next" when Return moves to another field; otherwise "done" whenever there is a handler. */
 	returnKeyType?: ReturnKeyTypeOptions;
+	/** The on-screen keyboard — "number-pad" for a count (QS2). */
+	keyboardType?: KeyboardTypeOptions;
 	/** For a form that moves focus to this field from the previous one. */
 	inputRef?: Ref<TextInputInstance>;
 };
@@ -61,6 +64,7 @@ export function TextField({
 	warning,
 	onSubmitEditing,
 	returnKeyType,
+	keyboardType,
 	inputRef,
 }: TextFieldProps) {
 	const { colors, scheme } = useTheme();
@@ -126,6 +130,7 @@ export function TextField({
 				autoFocus={autoFocus}
 				multiline={multiline}
 				onSubmitEditing={onSubmitEditing}
+				keyboardType={keyboardType}
 				returnKeyType={returnKeyType ?? (onSubmitEditing ? "done" : undefined)}
 				// A single-line field blurs on Return unless told to stay; "next" hands
 				// focus on in the handler, so the keyboard must not drop in between.

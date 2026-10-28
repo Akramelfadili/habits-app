@@ -34,9 +34,14 @@ export function useTodayLogActions({
 	loggableHabits,
 }: TodayLogInput) {
 	const { toggleCompletion, restoreDay } = useTodayActions();
-	const { logQuantity, isLogging } = useQuantityLogActions();
-	const [quantityHabitId, setQuantityHabitId] = useState<number | null>(null);
-	const [quantityIsOffSchedule, setQuantityIsOffSchedule] = useState(false);
+	const { logQuantity } = useQuantityLogActions();
+	// The open quantity sheet: its day is fixed when it opens, so a sheet left
+	// open across midnight keeps its date (HAB-30).
+	const [quantitySession, setQuantitySession] = useState<{
+		habitId: number;
+		day: Date;
+		offSchedule: boolean;
+	} | null>(null);
 	// +1 taps whose write has not come back through the live query yet, so a quick
 	// second tap adds to the first instead of repeating it.
 	const pendingAmounts = useRef(new Map<number, number>());
@@ -46,7 +51,7 @@ export function useTodayLogActions({
 	}, [quantityValuesByHabitId]);
 
 	const quantityHabit = loggableHabits.find(
-		(habit) => habit.id === quantityHabitId,
+		(habit) => habit.id === quantitySession?.habitId,
 	);
 
 	// Names the date in a toast only when it isn't today (T10).
@@ -167,19 +172,26 @@ export function useTodayLogActions({
 	}
 
 	function openQuantitySheet(habitId: number) {
-		setQuantityHabitId(habitId);
+		const day = writableDay();
+		if (!day) return;
+		setQuantitySession({ habitId, day, offSchedule: false });
 	}
 
 	function dismissQuantitySheet() {
-		setQuantityHabitId(null);
-		setQuantityIsOffSchedule(false);
+		setQuantitySession(null);
 	}
 
 	/** The rest-day picker's pick: a quantity habit opens its sheet, anything else logs at once. */
 	async function logOffSchedule(habit: Habit) {
 		if (habit.targetType === "quantity") {
-			setQuantityIsOffSchedule(true);
-			setQuantityHabitId(habit.id);
+			const quantityDay = writableDay();
+			if (quantityDay) {
+				setQuantitySession({
+					habitId: habit.id,
+					day: quantityDay,
+					offSchedule: true,
+				});
+			}
 			return;
 		}
 		const day = writableDay();
@@ -191,45 +203,22 @@ export function useTodayLogActions({
 		);
 	}
 
-	async function saveQuantity(value: number) {
-		if (!quantityHabit) return;
-		const habit = quantityHabit;
-		const day = writableDay();
-		if (!day) return;
-		const previous = quantityValuesByHabitId.get(habit.id) ?? 0;
-		const target = habit.targetAmount ?? 0;
-		const result = await logQuantity(habit.id, day, value, habit.targetAmount);
-		// On failure the sheet stays open with its error toast, so a retry is one tap.
-		if (!result.ok) return;
-		dismissQuantitySheet();
-		confirmWrite(habit, day, result.value, previous, (undo) => {
-			if (quantityIsOffSchedule) {
-				// Undo restores the amount from before — or removes the entry if none.
-				if (value > 0) confirmOffSchedule(habit, undo);
-				return;
-			}
-			// Only the save that crosses the target counts as "completing" it — and
-			// the one that drops back below it as "un-completing". Either way Undo
-			// restores the exact amount logged before.
-			if (previous < target && value >= target) {
-				confirmCompletion(habit, undo);
-			} else if (previous >= target && value < target) {
-				confirmUncompletion(habit, undo);
-			}
-		});
-	}
-
 	return {
 		toggle,
 		addOne,
-		quantityHabit,
-		quantityValue: quantityHabit
-			? (quantityValuesByHabitId.get(quantityHabit.id) ?? 0)
-			: 0,
+		/** The open quantity sheet's inputs, or `null` while it is closed. */
+		quantitySheet:
+			quantityHabit && quantitySession
+				? {
+						habit: quantityHabit,
+						value: quantityValuesByHabitId.get(quantityHabit.id) ?? 0,
+						day: quantitySession.day,
+						dayLabel,
+						offSchedule: quantitySession.offSchedule,
+					}
+				: null,
 		openQuantitySheet,
 		dismissQuantitySheet,
-		saveQuantity,
 		logOffSchedule,
-		isLogging,
 	};
 }

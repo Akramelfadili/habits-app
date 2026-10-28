@@ -337,32 +337,7 @@ describe("TodayScreen", () => {
 			);
 		});
 
-		it("hands a quantity habit off to the Quantity log, closes the picker, and Undo restores the prior amount", async () => {
-			mockEligibleHabits = [water];
-			mockQuantityValuesByHabitId = new Map();
-			await render(<TodayScreen />);
-			await fireEvent.press(screen.getByText("Log a different habit"));
-			await fireEvent.press(
-				screen.getByRole("button", {
-					name: "Log Glass of water, set an amount",
-				}),
-			);
-
-			expect(screen.queryByText("Log off-schedule")).toBeNull();
-			await fireEvent.press(
-				screen.getByLabelText("Increase Glass of water, glasses"),
-			);
-			await fireEvent.press(screen.getByText("Save 1 of 8"));
-
-			expect(mockLogQuantity).toHaveBeenCalledWith(6, mockToday, 1, 8);
-			const toast = useToastStore.getState().toast;
-			expect(toast?.message).toBe("Logged 'Glass of water' · off-schedule");
-			toast?.onAction?.();
-			// Nothing was logged before, so Undo writes 0 — which deletes the entry.
-			expect(mockRestoreDay).toHaveBeenLastCalledWith(6, mockToday, 0, null);
-		});
-
-		it("Undo after a quantity log restores the amount that was there before", async () => {
+		it("hands a quantity habit off to the quantity sheet, closes the picker, and Undo restores the prior amount", async () => {
 			mockEligibleHabits = [water];
 			mockQuantityValuesByHabitId = new Map([[6, 2]]);
 			await render(<TodayScreen />);
@@ -372,12 +347,17 @@ describe("TodayScreen", () => {
 					name: "Log Glass of water, set an amount",
 				}),
 			);
-			await fireEvent.press(
-				screen.getByLabelText("Increase Glass of water, glasses"),
-			);
-			await fireEvent.press(screen.getByText("Save 3 of 8"));
 
-			useToastStore.getState().toast?.onAction?.();
+			expect(screen.queryByText("Log off-schedule")).toBeNull();
+			await fireEvent.press(screen.getByLabelText("Increase glasses"));
+			await act(async () => {
+				await fireEvent.press(screen.getByText("Close"));
+			});
+
+			expect(mockLogQuantity).toHaveBeenCalledWith(6, mockToday, 3, 8);
+			const toast = useToastStore.getState().toast;
+			expect(toast?.message).toBe("Logged 'Glass of water' · off-schedule");
+			toast?.onAction?.();
 			expect(mockRestoreDay).toHaveBeenLastCalledWith(6, mockToday, 2, null);
 		});
 
@@ -661,44 +641,17 @@ describe("TodayScreen", () => {
 				"longPress",
 			);
 			for (let i = 0; i < 7; i += 1) {
-				await fireEvent.press(
-					screen.getByLabelText("Decrease Glass of water, glasses"),
-				);
+				await fireEvent.press(screen.getByLabelText("Decrease glasses"));
 			}
-			await fireEvent.press(screen.getByText("Save 3 of 8"));
+			await act(async () => {
+				await fireEvent.press(screen.getByText("Close"));
+			});
 
-			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3, 8);
+			expect(mockLogQuantity).toHaveBeenLastCalledWith(3, mockToday, 3, 8);
 			const toast = useToastStore.getState().toast;
 			expect(toast?.message).toBe("Marked 'Glass of water' not complete");
 			toast?.onAction?.();
 			expect(mockRestoreDay).toHaveBeenLastCalledWith(3, mockToday, 10, null);
-		});
-
-		it("a quantity save that stays complete (or stays short) offers nothing", async () => {
-			const water = makeHabit({
-				id: 3,
-				name: "Glass of water",
-				category: categoryNamed("Morning"),
-				targetType: "quantity",
-				targetAmount: 8,
-				targetUnit: "glasses",
-			});
-			mockGroups = [{ category: categoryNamed("Morning"), habits: [water] }];
-			mockCompletedHabitIds = new Set([3]);
-			mockQuantityValuesByHabitId = new Map([[3, 10]]);
-
-			await render(<TodayScreen />);
-			await fireEvent(
-				screen.getByLabelText("Add one, Glass of water, 10 of 8"),
-				"longPress",
-			);
-			await fireEvent.press(
-				screen.getByLabelText("Decrease Glass of water, glasses"),
-			);
-			await fireEvent.press(screen.getByText("Save 9 of 8"));
-
-			expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 9, 8);
-			expect(useToastStore.getState().toast).toBeNull();
 		});
 	});
 
@@ -757,7 +710,7 @@ describe("TodayScreen", () => {
 		expect(screen.queryByText(/daily/i)).toBeNull();
 	});
 
-	it("long-pressing a quantity habit's circle opens the Quantity Log sheet instead of toggling", async () => {
+	function quantityRow(value: number) {
 		const quantityHabit = makeHabit({
 			id: 3,
 			name: "Glass of water",
@@ -770,126 +723,61 @@ describe("TodayScreen", () => {
 		mockGroups = [
 			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
 		];
-		mockQuantityValuesByHabitId = new Map([[3, 3]]);
+		mockQuantityValuesByHabitId = new Map([[3, value]]);
+	}
 
+	it("long-pressing a quantity habit's circle opens the quantity sheet instead of toggling", async () => {
+		quantityRow(3);
 		await render(<TodayScreen />);
 		await fireEvent(
 			screen.getByLabelText("Add one, Glass of water, 3 of 8"),
 			"longPress",
 		);
 
-		expect(screen.getByText("Save 3 of 8")).toBeTruthy();
+		expect(screen.getByLabelText("glasses").props.accessibilityValue.now).toBe(
+			3,
+		);
 		expect(mockToggleCompletion).not.toHaveBeenCalled();
 	});
 
 	it("tapping a quantity habit's circle adds one, with an Undo to the amount before", async () => {
-		const quantityHabit = makeHabit({
-			id: 3,
-			name: "Glass of water",
-			category: categoryNamed("Morning"),
-			targetType: "quantity",
-			targetAmount: 8,
-			targetUnit: "glasses",
-		});
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
-		];
-		mockQuantityValuesByHabitId = new Map([[3, 2]]);
-
+		quantityRow(2);
 		await render(<TodayScreen />);
 		await fireEvent.press(
 			screen.getByLabelText("Add one, Glass of water, 2 of 8"),
 		);
 
 		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 3, 8);
-		expect(screen.queryByText("Save 3 of 8")).toBeNull();
+		expect(screen.queryByLabelText("glasses")).toBeNull();
 		const toast = useToastStore.getState().toast;
 		expect(toast?.message).toBe("Glass of water +1 · 3 of 8 glasses");
 		toast?.onAction?.();
 		expect(mockRestoreDay).toHaveBeenLastCalledWith(3, mockToday, 2, null);
 	});
 
-	it("the count control opens the Quantity Log sheet", async () => {
-		const quantityHabit = makeHabit({
-			id: 3,
-			name: "Glass of water",
-			category: categoryNamed("Morning"),
-			targetType: "quantity",
-			targetAmount: 8,
-			targetUnit: "glasses",
-		});
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
-		];
-		mockQuantityValuesByHabitId = new Map([[3, 3]]);
-
+	it("the count button opens the quantity sheet and saves nothing by itself", async () => {
+		quantityRow(3);
 		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("3/8"));
+		await fireEvent.press(screen.getByLabelText("Amount, 3 of 8"));
 
-		expect(screen.getByText("Save 3 of 8")).toBeTruthy();
+		expect(screen.getByLabelText("glasses")).toBeTruthy();
 		expect(mockLogQuantity).not.toHaveBeenCalled();
 	});
 
-	it("saving the Quantity Log sheet logs the value for today and closes it", async () => {
-		const quantityHabit = makeHabit({
-			id: 3,
-			name: "Glass of water",
-			category: categoryNamed("Morning"),
-			targetType: "quantity",
-			targetAmount: 8,
-			targetUnit: "glasses",
-		});
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
-		];
-		mockQuantityValuesByHabitId = new Map([[3, 3]]);
-		mockLogQuantity.mockResolvedValue(OK);
-
-		await render(<TodayScreen />);
-		await fireEvent(
-			screen.getByLabelText("Add one, Glass of water, 3 of 8"),
-			"longPress",
-		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		await fireEvent.press(screen.getByText("Save 4 of 8"));
-
-		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 4, 8);
-		await waitFor(() => expect(screen.queryByText("Save 4 of 8")).toBeNull());
-		// Still short of the target — nothing completed, so nothing to confirm.
-		expect(useToastStore.getState().toast).toBeNull();
-	});
-
-	it("a quantity save that reaches the target confirms it; Undo restores the previous amount", async () => {
-		const quantityHabit = makeHabit({
-			id: 3,
-			name: "Glass of water",
-			category: categoryNamed("Morning"),
-			targetType: "quantity",
-			targetAmount: 8,
-			targetUnit: "glasses",
-		});
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [quantityHabit] },
-		];
-		mockQuantityValuesByHabitId = new Map([[3, 7]]);
-		mockLogQuantity.mockResolvedValue(OK);
-
+	it("a change in the sheet saves at once, and closing with the target reached confirms it; Undo restores the amount from before", async () => {
+		quantityRow(7);
 		await render(<TodayScreen />);
 		await fireEvent(
 			screen.getByLabelText("Add one, Glass of water, 7 of 8"),
 			"longPress",
 		);
-		await fireEvent.press(
-			screen.getByLabelText("Increase Glass of water, glasses"),
-		);
-		await fireEvent.press(screen.getByText("Save 8 of 8"));
+		await fireEvent.press(screen.getByLabelText("Increase glasses"));
+		expect(mockLogQuantity).toHaveBeenCalledWith(3, mockToday, 8, 8);
+		await act(async () => {
+			await fireEvent.press(screen.getByText("Done"));
+		});
 
+		await waitFor(() => expect(screen.queryByLabelText("glasses")).toBeNull());
 		const toast = useToastStore.getState().toast;
 		expect(toast?.message).toBe("Marked 'Glass of water' complete");
 		toast?.onAction?.();

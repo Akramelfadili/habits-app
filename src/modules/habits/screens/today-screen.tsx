@@ -107,14 +107,10 @@ export function TodayScreen() {
 	);
 	const openHabit = (habitId: number) => router.push(`/habit/${habitId}`);
 
-	const quantitySheet = logging.quantityHabit ? (
+	const quantitySheet = logging.quantitySheet ? (
 		<QuantityLogSheet
-			visible
-			habit={logging.quantityHabit}
-			value={logging.quantityValue}
-			onDismiss={logging.dismissQuantitySheet}
-			onSave={logging.saveQuantity}
-			isSaving={logging.isLogging}
+			{...logging.quantitySheet}
+			onClosed={logging.dismissQuantitySheet}
 		/>
 	) : null;
 

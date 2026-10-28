@@ -114,7 +114,7 @@ export const DEFAULT_TARGET_AMOUNT = 8;
 export const MAX_TARGET_UNIT_LENGTH = 20;
 
 /** The small +1/+2 quick-add chips shown alongside "Full {target}" (HAB-07). */
-export const QUICK_ADD_STEPS = [1, 2] as const;
+export const QUICK_ADD_STEPS = [1, 2, 3] as const;
 
 /** The Quantity Log stepper's ceiling — high enough that over-logging (HAB-07) is never capped in practice. */
 export const MAX_QUANTITY_VALUE = 9999;

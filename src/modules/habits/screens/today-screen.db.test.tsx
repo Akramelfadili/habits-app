@@ -40,6 +40,7 @@ jest.mock("expo-router", () => ({
 }));
 
 const { TodayScreen } = require("./today-screen");
+const { QuantityLogSheet } = require("../components/quantity-log-sheet");
 const { useSelectedDayQueries } = require("../hooks/use-selected-day-queries");
 const { useTodayQueries } = require("../hooks/use-today-queries");
 const { useTodayLogActions } = require("../hooks/use-today-log-actions");
@@ -200,6 +201,44 @@ describe("TodayScreen on the in-memory database", () => {
 			});
 			expect(await entryRows()).toEqual([
 				expect.objectContaining({ habitId: id, value: 1 }),
+			]);
+		});
+
+		it("the quantity sheet saves every change at once; closing shows one toast and Undo restores the amount from before it opened", async () => {
+			const id = await addHabit({
+				name: "Water",
+				targetType: "quantity",
+				targetAmount: 8,
+				targetUnit: "glasses",
+			});
+			await log(id, WEDNESDAY, 5);
+			await render(<TodayScreen />);
+
+			await fireEvent.press(await screen.findByLabelText("Amount, 5 of 8"));
+			await fireEvent.press(await screen.findByLabelText("Increase glasses"));
+			await waitFor(async () =>
+				expect(await entryRows()).toEqual([
+					expect.objectContaining({ habitId: id, value: 6 }),
+				]),
+			);
+			await fireEvent.press(await screen.findByText("+2"));
+			await waitFor(async () =>
+				expect(await entryRows()).toEqual([
+					expect.objectContaining({ habitId: id, value: 8 }),
+				]),
+			);
+			// One toast on close, naming the habit complete; nothing before that.
+			expect(toast()).toBeNull();
+			await act(async () => {
+				await fireEvent.press(screen.getByText("Done"));
+			});
+			expect(toast()?.message).toBe("Marked 'Water' complete");
+
+			await act(async () => {
+				await toast()?.onAction?.();
+			});
+			expect(await entryRows()).toEqual([
+				expect.objectContaining({ habitId: id, value: 5 }),
 			]);
 		});
 
@@ -560,8 +599,14 @@ describe("Today for a selected past day, on the in-memory database", () => {
 			expect(await frozenRows()).toHaveLength(1); // 1 of 3: still missed
 
 			await act(() => result.current.logging.openQuantitySheet(id));
-			await act(() => result.current.logging.saveQuantity(3));
+			const sheet = result.current.logging.quantitySheet;
+			expect(sheet).not.toBeNull();
+			await render(<QuantityLogSheet {...sheet} onClosed={jest.fn()} />);
+			await fireEvent.press(screen.getByText("Fill to 3"));
 			await waitFor(async () => expect(await frozenRows()).toEqual([]));
+			await act(async () => {
+				await fireEvent.press(screen.getByText("Done"));
+			});
 			expect(toast()?.message).toBe("Freeze returned for Tue 15 · 2 left");
 		});
 	});

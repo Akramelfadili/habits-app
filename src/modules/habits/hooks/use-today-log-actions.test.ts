@@ -81,18 +81,33 @@ describe("useTodayLogActions", () => {
 		expect(mockToggle).not.toHaveBeenCalled();
 	});
 
-	it("opens and closes the quantity sheet, and a crossing save offers Undo to the previous amount", async () => {
+	it("opens the quantity sheet on today with the day's amount, and closes it", async () => {
 		const { result } = await setup(new Map([[2, 5]]));
 		await act(() => result.current.openQuantitySheet(2));
-		expect(result.current.quantityHabit?.id).toBe(2);
-		expect(result.current.quantityValue).toBe(5);
+		expect(result.current.quantitySheet).toMatchObject({
+			habit: { id: 2 },
+			value: 5,
+			day: TODAY,
+			offSchedule: false,
+		});
+		expect(result.current.quantitySheet?.dayLabel).toBeUndefined();
 
-		await act(() => result.current.saveQuantity(8));
+		await act(() => result.current.dismissQuantitySheet());
+		expect(result.current.quantitySheet).toBeNull();
+	});
 
-		expect(mockLogQuantity).toHaveBeenCalledWith(2, TODAY, 8, 8);
-		expect(result.current.quantityHabit).toBeUndefined();
-		useToastStore.getState().toast?.onAction?.();
-		expect(mockRestore).toHaveBeenLastCalledWith(2, TODAY, 5, null);
+	it("keeps the sheet's day when the clock passes midnight after it opened", async () => {
+		const { result } = await setup(new Map([[2, 5]]));
+		await act(() => result.current.openQuantitySheet(2));
+		jest.setSystemTime(new Date(2026, 9, 15, 0, 1));
+		expect(result.current.quantitySheet?.day).toEqual(TODAY);
+	});
+
+	it("does not open the sheet on a render that still shows yesterday", async () => {
+		const { result } = await setup(new Map([[2, 5]]));
+		jest.setSystemTime(new Date(2026, 9, 15, 0, 1));
+		await act(() => result.current.openQuantitySheet(2));
+		expect(result.current.quantitySheet).toBeNull();
 	});
 
 	it("+1 writes previous + 1 and Undo writes previous, captured at tap time", async () => {
@@ -170,7 +185,10 @@ describe("useTodayLogActions", () => {
 			"Logged 'Read' · off-schedule",
 		);
 		await act(() => result.current.logOffSchedule(water));
-		expect(result.current.quantityHabit?.id).toBe(2);
+		expect(result.current.quantitySheet).toMatchObject({
+			habit: { id: 2 },
+			offSchedule: true,
+		});
 		expect(mockToggle).toHaveBeenCalledTimes(1);
 	});
 
@@ -195,14 +213,13 @@ describe("useTodayLogActions", () => {
 			expect(mockToggle).toHaveBeenCalledWith(1, PAST_DATE, true);
 		});
 
-		it("saves a quantity to that date", async () => {
+		it("opens the quantity sheet on that date, and names it", async () => {
 			const { result } = await setup(new Map([[2, 5]]), PAST);
 			await act(() => result.current.openQuantitySheet(2));
-			await act(() => result.current.saveQuantity(8));
-			expect(mockLogQuantity).toHaveBeenCalledWith(2, PAST_DATE, 8, 8);
-			expect(useToastStore.getState().toast?.message).toBe(
-				"Marked 'Water' complete · Mon 12 Oct",
-			);
+			expect(result.current.quantitySheet).toMatchObject({
+				day: PAST_DATE,
+				dayLabel: "Mon 12 Oct",
+			});
 		});
 	});
 
@@ -230,27 +247,6 @@ describe("useTodayLogActions", () => {
 				new Date(2026, 9, 12),
 				false,
 				FREEZE,
-			);
-		});
-
-		it("also for a quantity amount that reaches the target", async () => {
-			mockLogQuantity.mockResolvedValue({
-				ok: true,
-				value: { returnedFreeze: { ...FREEZE, habitId: 2 }, freezesLeft: 2 },
-			});
-			const { result } = await setup(new Map([[2, 7]]), "2026-10-12");
-			await act(() => result.current.openQuantitySheet(2));
-			await act(() => result.current.saveQuantity(8));
-
-			expect(useToastStore.getState().toast?.message).toBe(
-				"Freeze returned for Mon 12 · 2 left",
-			);
-			useToastStore.getState().toast?.onAction?.();
-			expect(mockRestore).toHaveBeenLastCalledWith(
-				2,
-				new Date(2026, 9, 12),
-				7,
-				expect.objectContaining({ habitId: 2 }),
 			);
 		});
 	});
