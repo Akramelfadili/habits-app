@@ -174,10 +174,16 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 - **The V3-1 recapture committed ~33 blank baselines and four stale ones — one root cause (fixed in V3-2a).** The harness pinned the page clock with Playwright's `setFixedTime`, which froze React's own clock, so a lazily loaded route never revealed past its Suspense fallback ("Bundling…"): Month, Year, Manage, Detail, Settings, Categories, Reminders (and their dark and long-name twins) were captured as an empty page with the pill, and `yearly-insights` timed out waiting for text that never rendered. It went unseen because a blank capture equals a blank baseline. The harness now uses `setSystemTime` (pins the date, lets time run); 37 baselines were recaptured, each one blank or pre-V3-1 before. `manage-habits-archived-toast` is separate: react-native-web only, the archived row unmounts with a queued Swipeable update and gesture-handler's web NodeManager throws "No handler for tag N" (native ignores a missing handler) — the state now ignores that one message and dismisses the dev LogBox toast. **When reviewing a recapture, look at the image, not only the diff count.**
 - **The harness is flaky on this machine under parallel load** (two pages at a time): Metro answers some async route chunks with a 500, leaving a half-rendered capture, and `locator.click` sometimes exceeds 30 s on a page that is actually fine. Re-running a state on its own gives an identical, clean capture. A blank-render detector (`.visual-checks/blankscan.mjs`, gitignored, compares a capture's dominant-colour share with its baseline's) catches the half-rendered ones — worth keeping in the script if this persists.
 
+## Open — V3-2b follow-ups
+
+- **Week-level freeze for × per week habits (Later).** They are never at risk by day (HAB-33). A week that ends below its target still breaks the streak with no prompt; covering it needs a freeze that spans the week (a Sunday-only freeze that the per-week strategy reads as covering it, or a week-level row) — a streak-semantics change with its own ADR.
+- **T2 empty state: the icon square** is `inner`-coloured, the frame draws a white card square with a hairline (V3-6 polish).
+- **SR1 pool pips** are solid lavender squares; the frame draws violet (frozen) squares (V3-6 polish).
+- **"Resist tonight" uses 18:00** (`EVENING_STARTS_AT_HOUR` in `constants.ts`, its only place). The spec gives no hour; confirm or change it there.
+
 ## Open — V3-2b review leftovers
 
 - `today-screen.tsx` owns the scroll-collapse state and inline bar; extract `components/today/today-inline-bar.tsx` when the screen next grows.
 - `useWeekStripQueries` also returns the week-moving callbacks (named `…Queries` for the hook rule); a `useWeekStripState` split would remove the explanation.
 - Habit Detail's "Habit not found" / "No entries yet" strings still sit in the screen (pre-V3, moved with Detail's batch).
 - `useQuantitySheetActions.close()` closes even if the last write failed (the sheet shows what is really saved and the error toast stays); the quantity sheet unmounts without a slide-out because the parent drops it.
-- **Per-week habits can show "Missed <day>" as at risk** (found in the T1 render, fixture `today-v3`: Cold shower, 3× per week, one log this week). `getStreakAtRisk` (V3-2a) treats yesterday as a miss for a per-week habit, which has no scheduled day to miss. Not changed here (strategy/streak semantics are out of this batch's remit); decide whether per-week habits can be at risk at all.

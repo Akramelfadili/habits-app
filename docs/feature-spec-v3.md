@@ -19,6 +19,7 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **"Log a different habit" stays under the rest-day list** (T3 draws no such link): it keeps the off-schedule picker reachable, and the picker is part of HAB-34.
 - **The quantity cap stays 9999** (the existing `MAX_QUANTITY_VALUE`); QS2's helper reads "up to 9999", not the mockup's 99.
 - **"Browse suggestions" (T2) is hidden until HAB-46**: there is no suggestions screen to send it to.
+- **× per week habits are never at risk by day** (HAB-33, T1/T6): the mockup draws no per-week habit at risk, and a one-date freeze cannot cover a week; a week-level freeze is Later.
 - **Frames that show tab bar A** are drawn for brevity; build bar B (floating pill) everywhere.
 
 ## Standing decisions (apply to every ticket)
@@ -201,6 +202,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **No freezes left (SR3):** tapping the at-risk circle opens a one-button sheet explaining it; copy says the longest streak is kept. (Today the streak resets silently: behaviour change.)
 - Violet = freeze everywhere. Settings (S4) states the rule plainly and shows "used this month".
 - **PR-11:** logging a frozen day in Edit this day returns the freeze (one transaction) and the toast says so.
+
+- **× per week habits are never at risk by day** (decided after V3-2b): they have no scheduled day to miss, so they never show the amber dot, the "Missed <day>" status or the at-risk sheet (the gate is in `getStreakAtRisk`; their streak maths is unchanged). A week-level freeze — covering a week that ended below its target — is **Later**.
 
 **Edge cases:** only yesterday is in the window; Undo restores the freeze count and at-risk state exactly; the at-risk dot clears when the grace window ends.
 
