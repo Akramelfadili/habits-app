@@ -7,21 +7,19 @@ import { useTheme } from "@/theme/use-theme";
 
 type TodayStatePanelProps = PropsWithChildren<{
 	icon: SFSymbol;
-	/** Day closed's celebratory treatment — filled black circle, white glyph. */
-	celebratory?: boolean;
 	headline: string;
 	subtitle: string;
-	/** No habits / Rest day sit vertically centered on the screen; Day closed flows from the top, above the tomorrow preview. */
+	/** Vertically centered on the screen by default; `false` flows from the top (inside a card on Habit Detail). */
 	centered?: boolean;
 }>;
 
 /**
- * The centered icon+headline+subtitle layout shared by Today's three
- * non-populated states — No habits yet, Rest day, Day closed (HAB-05).
+ * The centered icon+headline+subtitle layout shared by the non-populated
+ * states — No habits yet and Rest day (HAB-05), and the other screens' empty
+ * panels.
  */
 export function TodayStatePanel({
 	icon,
-	celebratory = false,
 	headline,
 	subtitle,
 	centered = true,
@@ -31,17 +29,8 @@ export function TodayStatePanel({
 
 	return (
 		<View style={centered ? styles.centered : styles.top}>
-			<View
-				style={[
-					celebratory ? styles.iconCircle : styles.iconSquare,
-					{ backgroundColor: celebratory ? colors.ink : colors.inner },
-				]}
-			>
-				<SymbolView
-					name={icon}
-					size={celebratory ? 36 : 28}
-					tintColor={celebratory ? colors.onAccent : colors.faint}
-				/>
+			<View style={[styles.iconSquare, { backgroundColor: colors.inner }]}>
+				<SymbolView name={icon} size={28} tintColor={colors.faint} />
 			</View>
 			<Text style={[styles.headline, { color: colors.ink }]}>{headline}</Text>
 			<Text style={[styles.subtitle, { color: colors.sub }]}>{subtitle}</Text>
@@ -68,14 +57,6 @@ const styles = StyleSheet.create({
 		width: 64,
 		height: 64,
 		borderRadius: 20,
-		alignItems: "center",
-		justifyContent: "center",
-		marginBottom: 4,
-	},
-	iconCircle: {
-		width: 88,
-		height: 88,
-		borderRadius: 44,
 		alignItems: "center",
 		justifyContent: "center",
 		marginBottom: 4,

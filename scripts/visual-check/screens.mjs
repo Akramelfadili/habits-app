@@ -121,11 +121,6 @@ export const SCREENS = {
 		route: "/?fixtures=rest-day",
 		mockup: "docs/mockups/rest-day.png",
 	},
-	"today-day-closed": {
-		feature: "HAB-05",
-		route: "/?fixtures=day-closed",
-		mockup: "docs/mockups/day-closed.png",
-	},
 
 	// HAB-18 — off-schedule log (D1, D2) and retro-log pinning (D4)
 	"rest-day-picker": {
@@ -161,12 +156,6 @@ export const SCREENS = {
 			await page.getByText("Logged 'Read' · off-schedule").waitFor();
 			await page.waitForTimeout(400);
 		},
-	},
-	"today-day-closed-reminders": {
-		feature: "HAB-14",
-		route: "/?fixtures=day-closed",
-		mockup: "docs/mockups/hab-14-a6.png",
-		note: "Day closed: tomorrow rows carry their earliest reminder time; 'Read before bed' has no reminder and no trailing text.",
 	},
 
 	// HAB-01 / HAB-02 / HAB-07 — New / Edit habit

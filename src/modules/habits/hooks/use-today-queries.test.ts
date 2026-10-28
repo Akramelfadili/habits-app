@@ -76,7 +76,7 @@ jest.mock("../repositories/category-repository", () => ({
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozenDays,
 }));
-let mockReminders: Reminder[] = [];
+const mockReminders: Reminder[] = [];
 jest.mock("../repositories/reminder-repository", () => ({
 	useAllReminders: () => mockReminders,
 }));
@@ -164,14 +164,15 @@ describe("useTodayQueries", () => {
 		expect(result.current.viewState).toBe("rest-day");
 	});
 
-	it("is day-closed once every due-today habit is completed", async () => {
+	it("stays populated at 100% — there is no day-closed screen (PR-01 is Later)", async () => {
 		mockEntries = [
 			{ habitId: 1, date: TODAY_STRING, createdAt: TODAY },
 			{ habitId: 2, date: TODAY_STRING, createdAt: TODAY },
 			{ habitId: 3, date: TODAY_STRING, createdAt: TODAY },
 		];
 		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.viewState).toBe("day-closed");
+		expect(result.current.viewState).toBe("populated");
+		expect(result.current.progress.fraction).toBe(1);
 	});
 
 	it("ignores an off-schedule entry for a habit that isn't due today", async () => {
@@ -262,58 +263,6 @@ describe("useTodayQueries", () => {
 			group.habits.map((habit) => habit.id),
 		);
 		expect(dueIds).toContain(5);
-	});
-
-	it("includes tomorrow's due habits in tomorrowPreview", async () => {
-		const thursdayOnly = makeHabit({
-			id: 4,
-			name: "Yoga",
-			frequency: { type: "weekdays", days: [4] }, // Thursday — TODAY+1.
-		});
-		mockHabits = [dailyHabit, thursdayOnly];
-		const { result } = await renderHook(() => useTodayQueries());
-		expect(result.current.tomorrowPreview.map((habit) => habit.id)).toEqual([
-			1, 4,
-		]);
-	});
-
-	describe("tomorrow's reminder times (HAB-14)", () => {
-		const reminder = (
-			overrides: Partial<Reminder> & Pick<Reminder, "habitId">,
-		): Reminder => ({
-			id: 1,
-			hour: 7,
-			minute: 20,
-			weekdays: [1, 2, 3, 4, 5, 6, 7],
-			enabled: true,
-			...overrides,
-		});
-
-		beforeEach(() => {
-			mockReminders = [];
-		});
-
-		it("maps a habit to its earliest enabled reminder that fires tomorrow (Thursday)", async () => {
-			mockReminders = [
-				reminder({ id: 1, habitId: 1, hour: 21, minute: 0 }),
-				reminder({ id: 2, habitId: 1, hour: 7, minute: 5 }),
-				// Not on Thursday — ignored even though it's earlier.
-				reminder({ id: 3, habitId: 1, hour: 6, minute: 0, weekdays: [1, 2] }),
-				// Disabled — ignored even though it's earlier.
-				reminder({ id: 4, habitId: 1, hour: 5, minute: 0, enabled: false }),
-			];
-			const { result } = await renderHook(() => useTodayQueries());
-			expect(result.current.tomorrowReminderTimeByHabitId.get(1)).toBe("07:05");
-		});
-
-		it("leaves a habit with no applicable reminder out of the map", async () => {
-			mockReminders = [
-				reminder({ habitId: 2, weekdays: [1] }),
-				reminder({ id: 2, habitId: 3, enabled: false }),
-			];
-			const { result } = await renderHook(() => useTodayQueries());
-			expect(result.current.tomorrowReminderTimeByHabitId.size).toBe(0);
-		});
 	});
 
 	describe("streak-at-risk (HAB-08)", () => {

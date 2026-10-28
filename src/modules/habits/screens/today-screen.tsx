@@ -5,7 +5,6 @@ import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { useTheme } from "@/theme/use-theme";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
-import { TodayDayClosed } from "../components/today/today-day-closed";
 import { TodayDevButtons } from "../components/today/today-dev-buttons";
 import { TodayEmptyState } from "../components/today/today-empty-state";
 import { TodayHabitList } from "../components/today/today-habit-list";
@@ -124,32 +123,22 @@ export function TodayScreen() {
 		>
 			<ScrollView contentContainerStyle={styles.content}>
 				{header}
-				{today.viewState === "day-closed" ? (
-					<TodayDayClosed
-						total={today.progress.total}
-						tomorrowPreview={today.tomorrowPreview}
-						tomorrowReminderTimeByHabitId={today.tomorrowReminderTimeByHabitId}
-					/>
-				) : (
-					<>
-						<TodayHabitList
-							progress={today.progress}
-							groups={today.groups}
-							completedHabitIds={today.completedHabitIds}
-							quantityValuesByHabitId={today.quantityValuesByHabitId}
-							completedThisWeekByHabitId={today.completedThisWeekByHabitId}
-							atRiskByHabitId={today.atRiskByHabitId}
-							onToggle={logging.toggle}
-							onAddOne={logging.addOne}
-							onOpenQuantitySheet={logging.openQuantitySheet}
-							onOpenHabit={openHabit}
-							onOpenAtRisk={freeze.openAtRisk}
-						/>
-						<TodayDevButtons dev={dev} withClearAll />
-					</>
-				)}
+				<TodayHabitList
+					progress={today.progress}
+					groups={today.groups}
+					completedHabitIds={today.completedHabitIds}
+					quantityValuesByHabitId={today.quantityValuesByHabitId}
+					completedThisWeekByHabitId={today.completedThisWeekByHabitId}
+					atRiskByHabitId={today.atRiskByHabitId}
+					onToggle={logging.toggle}
+					onAddOne={logging.addOne}
+					onOpenQuantitySheet={logging.openQuantitySheet}
+					onOpenHabit={openHabit}
+					onOpenAtRisk={freeze.openAtRisk}
+				/>
+				<TodayDevButtons dev={dev} withClearAll />
 			</ScrollView>
-			{today.viewState === "day-closed" ? null : quantitySheet}
+			{quantitySheet}
 			{freeze.atRiskInfo && freeze.atRiskHabit ? (
 				<StreakAtRiskSheet
 					visible

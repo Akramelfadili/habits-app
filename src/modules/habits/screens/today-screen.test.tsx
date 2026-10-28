@@ -41,10 +41,7 @@ const eveningHabit = makeHabit({
 let mockGroups: CategoryGroup[] = [];
 let mockProgress = { completed: 0, total: 0, fraction: 0 };
 let mockCompletedHabitIds = new Set<number>();
-let mockViewState: "no-habits" | "rest-day" | "day-closed" | "populated" =
-	"no-habits";
-let mockTomorrowPreview: Habit[] = [];
-let mockTomorrowReminderTimes = new Map<number, string>();
+let mockViewState: "no-habits" | "rest-day" | "populated" = "no-habits";
 let mockCompletedThisWeekByHabitId: Map<number, number> = new Map();
 let mockQuantityValuesByHabitId = new Map<number, number>();
 const mockToday = new Date(2026, 8, 16);
@@ -70,8 +67,6 @@ jest.mock("../hooks/use-today-queries", () => ({
 		selectedDay: mockToday,
 		isLoaded: mockIsLoaded,
 		viewState: mockViewState,
-		tomorrowPreview: mockTomorrowPreview,
-		tomorrowReminderTimeByHabitId: mockTomorrowReminderTimes,
 		atRiskByHabitId: mockAtRiskByHabitId,
 		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
 	}),
@@ -204,8 +199,6 @@ describe("TodayScreen", () => {
 		mockQuantityValuesByHabitId = new Map();
 		mockCompletedThisWeekByHabitId = new Map();
 		mockViewState = "no-habits";
-		mockTomorrowPreview = [];
-		mockTomorrowReminderTimes = new Map();
 		useToastStore.setState({ toast: null });
 		mockHasSeenFirstRun = true;
 		mockAtRiskByHabitId = new Map();
@@ -244,7 +237,7 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
 
-	it("shows the rest-day state distinctly from empty and day-closed", async () => {
+	it("shows the rest-day state distinctly from empty and populated", async () => {
 		mockViewState = "rest-day";
 
 		await render(<TodayScreen />);
@@ -390,35 +383,21 @@ describe("TodayScreen", () => {
 		});
 	});
 
-	it("shows the day-closed celebratory state with tomorrow's preview", async () => {
-		mockViewState = "day-closed";
-		mockProgress = { completed: 3, total: 3, fraction: 1 };
-		mockTomorrowPreview = [morningHabit, eveningHabit];
-
-		await render(<TodayScreen />);
-
-		expect(screen.getByText("All three done")).toBeTruthy();
-		expect(screen.getByText("TOMORROW")).toBeTruthy();
-		expect(screen.getByText("Glass of water")).toBeTruthy();
-		expect(screen.getByText("Read")).toBeTruthy();
-	});
-
-	it("omits the tomorrow preview card when nothing is due tomorrow", async () => {
-		mockViewState = "day-closed";
+	it("everything done is still the normal list at 100% — no day-closed screen", async () => {
+		mockViewState = "populated";
 		mockProgress = { completed: 1, total: 1, fraction: 1 };
-		mockTomorrowPreview = [];
+		mockGroups = [
+			{ category: categoryNamed("Morning"), habits: [morningHabit] },
+		];
+		mockCompletedHabitIds = new Set([1]);
 
 		await render(<TodayScreen />);
 
+		expect(screen.getByText("1 of 1 complete")).toBeTruthy();
+		expect(screen.getByText("100%")).toBeTruthy();
+		expect(screen.queryByText(/^All .* done$/)).toBeNull();
 		expect(screen.queryByText("TOMORROW")).toBeNull();
-	});
-
-	it("Day closed doesn't conjure an Undo from an earlier visit's entries", async () => {
-		mockViewState = "day-closed";
-		mockProgress = { completed: 1, total: 1, fraction: 1 };
-
-		await render(<TodayScreen />);
-
+		// Nothing conjures an Undo from an earlier visit's entries.
 		expect(useToastStore.getState().toast).toBeNull();
 	});
 
@@ -934,25 +913,8 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
 
-	it("shows each tomorrow habit's reminder time, and nothing for one without a reminder", async () => {
-		mockViewState = "day-closed";
-		mockProgress = { completed: 3, total: 3, fraction: 1 };
-		mockTomorrowPreview = [morningHabit, eveningHabit];
-		mockTomorrowReminderTimes = new Map([[1, "07:00"]]);
-
-		await render(<TodayScreen />);
-
-		expect(screen.getByText("07:00")).toBeTruthy();
-		expect(screen.queryAllByText(/^\d\d:\d\d$/)).toHaveLength(1);
-	});
-
 	describe("header (HAB-27)", () => {
-		const states = [
-			"no-habits",
-			"rest-day",
-			"day-closed",
-			"populated",
-		] as const;
+		const states = ["no-habits", "rest-day", "populated"] as const;
 
 		beforeEach(() => {
 			mockGroups = [

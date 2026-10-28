@@ -1,4 +1,4 @@
-import { addDays, endOfWeek, parseISO, startOfWeek } from "date-fns";
+import { endOfWeek, parseISO, startOfWeek } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
@@ -10,7 +10,6 @@ import {
 	isEntryComplete,
 	type StreakAtRisk,
 } from "../domain/streaks";
-import { earliestReminderTimeOn } from "../presenters/reminders-helpers";
 import {
 	type CategoryGroup,
 	computeProgress,
@@ -26,7 +25,6 @@ import {
 } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
-import { useAllReminders } from "../repositories/reminder-repository";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
 
@@ -51,10 +49,6 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	/** False until the habit list has loaded — Today shows a neutral blank, not "Nothing to track yet" (audit A5-04). */
 	isLoaded: boolean;
 	viewState: TodayViewState;
-	/** Habits due tomorrow — only meaningful for the Day closed preview (HAB-05). */
-	tomorrowPreview: Habit[];
-	/** Each tomorrow habit's earliest enabled reminder time ("07:20"); habits with none are absent. */
-	tomorrowReminderTimeByHabitId: ReadonlyMap<number, string>;
 	/** Due-today habits currently showing the streak-at-risk prompt (HAB-08), keyed by habit id. */
 	atRiskByHabitId: ReadonlyMap<number, StreakAtRisk>;
 	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
@@ -65,14 +59,12 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	const { habits, loaded } = useActiveHabits();
 	const categories = useCategories();
 	const today = useToday();
-	const tomorrow = addDays(today, 1);
 	const selectedDay = selectedKey === null ? today : fromDayKey(selectedKey);
 	const weekStart = startOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON });
 	const weekEnd = endOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON });
 	const entries = useEntriesInRange(weekStart, weekEnd);
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
-	const allReminders = useAllReminders();
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 
 	const completedDatesByHabit = new Map<number, Date[]>();
@@ -102,21 +94,6 @@ export function useTodayQueries(selectedKey: string | null = null): {
 			completedDatesByHabit.get(habit.id) ?? [],
 		),
 	);
-	const tomorrowPreview = habits.filter((habit) =>
-		getHabitStrategy(habit).isDueOn(tomorrow, {
-			completedDates: completedDatesByHabit.get(habit.id) ?? [],
-		}),
-	);
-
-	const tomorrowReminderTimeByHabitId = new Map<number, string>();
-	for (const habit of tomorrowPreview) {
-		const time = earliestReminderTimeOn(
-			allReminders.filter((reminder) => reminder.habitId === habit.id),
-			tomorrow,
-		);
-		if (time) tomorrowReminderTimeByHabitId.set(habit.id, time);
-	}
-
 	const progress = computeProgress(dueHabits, completedHabitIds);
 	const completedThisWeekByHabitId = new Map(
 		[...completedDatesByHabit].map(([habitId, dates]) => [
@@ -164,8 +141,6 @@ export function useTodayQueries(selectedKey: string | null = null): {
 			totalHabitCount: habits.length,
 			progress,
 		}),
-		tomorrowPreview,
-		tomorrowReminderTimeByHabitId,
 		atRiskByHabitId,
 		freezesRemainingThisMonth,
 		freezesUsedThisMonth: freezesUsedInMonth(frozenDays, today),

@@ -44,7 +44,6 @@ export type FixtureScenario =
 	| "rest-day-picker"
 	| "rest-day-logged"
 	| "rest-day-ineligible"
-	| "day-closed"
 	| "first-run"
 	| "quantity-log"
 	| "streak-at-risk"
@@ -77,7 +76,6 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"rest-day-picker",
 	"rest-day-logged",
 	"rest-day-ineligible",
-	"day-closed",
 	"first-run",
 	"quantity-log",
 	"streak-at-risk",
@@ -237,83 +235,6 @@ function restDayPickerFixtures(onlyBreak: boolean): FixtureHabit[] {
 	];
 	return onlyBreak ? habits.filter((habit) => habit.id === 5) : habits;
 }
-
-/** Habit ids due today, all completed, for the Day closed scenario. */
-export const DAY_CLOSED_DUE_TODAY_IDS = [1, 2, 3];
-
-/**
- * Three daily habits (due today, completed via `entry-fixtures.ts`) plus two
- * due only tomorrow (HAB-05's Day closed "Tomorrow" preview) — tomorrow's
- * weekday is computed at render time, same reasoning as Rest day above.
- */
-const DAY_CLOSED_HABIT_FIXTURES: FixtureHabit[] = [
-	{
-		id: 1,
-		name: "Glass of water",
-		category: MORNING_FIXTURE,
-		direction: "build",
-		targetType: "simple",
-		targetAmount: null,
-		targetUnit: null,
-		frequency: { type: "daily" },
-		createdAt: FIXTURE_DATE,
-		updatedAt: FIXTURE_DATE,
-	},
-	{
-		id: 2,
-		name: "Read before bed",
-		category: EVENING_FIXTURE,
-		direction: "build",
-		targetType: "simple",
-		targetAmount: null,
-		targetUnit: null,
-		frequency: { type: "daily" },
-		createdAt: FIXTURE_DATE,
-		updatedAt: FIXTURE_DATE,
-	},
-	{
-		id: 3,
-		name: "No phone after 23:00",
-		category: OTHER_FIXTURE,
-		direction: "break",
-		targetType: "simple",
-		targetAmount: null,
-		targetUnit: null,
-		frequency: { type: "daily" },
-		createdAt: FIXTURE_DATE,
-		updatedAt: FIXTURE_DATE,
-	},
-	{
-		id: 4,
-		name: "Meditate",
-		category: MORNING_FIXTURE,
-		direction: "build",
-		targetType: "simple",
-		targetAmount: null,
-		targetUnit: null,
-		frequency: {
-			type: "weekdays",
-			days: [((getISODay(new Date()) % 7) + 1) as IsoWeekday],
-		},
-		createdAt: FIXTURE_DATE,
-		updatedAt: FIXTURE_DATE,
-	},
-	{
-		id: 5,
-		name: "Easy run",
-		category: EVENING_FIXTURE,
-		direction: "build",
-		targetType: "simple",
-		targetAmount: null,
-		targetUnit: null,
-		frequency: {
-			type: "weekdays",
-			days: [((getISODay(new Date()) % 7) + 1) as IsoWeekday],
-		},
-		createdAt: FIXTURE_DATE,
-		updatedAt: FIXTURE_DATE,
-	},
-];
 
 /**
  * A single quantity habit matching docs/mockups/quantity-log.png exactly
@@ -755,8 +676,6 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return restDayPickerFixtures(false);
 		case "rest-day-ineligible":
 			return restDayPickerFixtures(true);
-		case "day-closed":
-			return DAY_CLOSED_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "quantity-log":
 			return QUANTITY_LOG_HABIT_FIXTURES.map((habit) => ({ ...habit }));
 		case "streak-at-risk":

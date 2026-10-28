@@ -67,12 +67,8 @@ export function computeProgress(
 	return { completed, total, fraction: total === 0 ? 0 : completed / total };
 }
 
-/** Today's four mutually-exclusive display states (HAB-05). */
-export type TodayViewState =
-	| "no-habits"
-	| "rest-day"
-	| "day-closed"
-	| "populated";
+/** Today's three mutually-exclusive display states (HAB-05, HAB-32). Everything done is still "populated": no extra "day closed" screen (PR-01 is Later). */
+export type TodayViewState = "no-habits" | "rest-day" | "populated";
 
 /**
  * "No habits yet" always wins over "rest day" when both could apply (a brand
@@ -85,31 +81,7 @@ export function resolveTodayViewState(input: {
 }): TodayViewState {
 	if (input.totalHabitCount === 0) return "no-habits";
 	if (input.progress.total === 0) return "rest-day";
-	if (input.progress.completed === input.progress.total) return "day-closed";
 	return "populated";
-}
-
-const NUMBER_WORDS = [
-	"zero",
-	"one",
-	"two",
-	"three",
-	"four",
-	"five",
-	"six",
-	"seven",
-	"eight",
-	"nine",
-	"ten",
-	"eleven",
-	"twelve",
-];
-
-/** Day closed's celebratory headline, e.g. "All six done." (HAB-05). */
-export function celebratoryHeadline(total: number): string {
-	const count =
-		total < NUMBER_WORDS.length ? NUMBER_WORDS[total] : String(total);
-	return `All ${count} done`;
 }
 
 /**
