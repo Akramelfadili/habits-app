@@ -24,6 +24,24 @@ export function useFrozenDays(): FrozenDay[] {
 	return data.map(rowToFrozenDay);
 }
 
+/** Live-query hook — frozen days with a date in `[start, end]`, inclusive, across every habit. */
+export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
+	const startDate = toDayKey(start);
+	const endDate = toDayKey(end);
+	const { data } = useLiveRows<FrozenDayRow>(
+		db
+			.select()
+			.from(frozenDays)
+			.where(
+				and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
+			)
+			.orderBy(asc(frozenDays.date)),
+		// Subscribes once per deps: without them the first range would be read forever.
+		[startDate, endDate],
+	);
+	return data.map(rowToFrozenDay);
+}
+
 /**
  * A one-off (non-reactive) count of freezes used in `[monthStart, monthEnd]`,
  * across every habit — the shared pool's write-time eligibility check

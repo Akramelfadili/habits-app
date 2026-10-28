@@ -1,6 +1,5 @@
 import {
 	addDays,
-	differenceInCalendarDays,
 	endOfMonth,
 	endOfWeek,
 	getISODay,
@@ -44,9 +43,6 @@ import { insightsFor, type MonthlyInsight } from "./monthly-insights";
  * rest days or a part-month history doesn't read as failure.
  */
 
-/** A month needs this many days of history before the Monthly screen unlocks. */
-export const MONTH_UNLOCK_DAYS = 30;
-
 export type MonthWindow = { start: Date; end: Date };
 
 export function monthWindowFor(date: Date): MonthWindow {
@@ -64,23 +60,6 @@ export function previousMonthWindow({ start }: MonthWindow): MonthWindow {
 export function historyStart(habits: readonly Habit[]): Date | null {
 	if (habits.length === 0) return null;
 	return min(habits.map((habit) => startOfDay(habit.createdAt)));
-}
-
-export type MonthUnlock = {
-	/** Days of history before today, capped for display at MONTH_UNLOCK_DAYS. */
-	trackedDays: number;
-	unlockDate: Date;
-	isUnlocked: boolean;
-};
-
-/** "Under one month of history" (C6): 30 full days before today, unlocking on day 31. */
-export function monthUnlock(firstDay: Date, today: Date): MonthUnlock {
-	const elapsed = Math.max(0, differenceInCalendarDays(today, firstDay));
-	return {
-		trackedDays: Math.min(elapsed, MONTH_UNLOCK_DAYS),
-		unlockDate: addDays(firstDay, MONTH_UNLOCK_DAYS),
-		isUnlocked: elapsed >= MONTH_UNLOCK_DAYS,
-	};
 }
 
 /** Entries are needed from the Monday-aligned start of the previous month to the end of this month's last week. */

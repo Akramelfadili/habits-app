@@ -1,11 +1,16 @@
 import { renderHook } from "@testing-library/react-native";
 import { makeHabit } from "../test-support/habit-builder";
-import type { Entry, FrozenDay, Habit } from "../types";
+import type { Entry, FrozenDay, Habit, LoggedDays } from "../types";
 
 let mockLoaded = true;
 let mockHabits: Habit[] = [];
 let mockEntries: Entry[] = [];
 let mockFrozen: FrozenDay[] = [];
+let mockLogged: LoggedDays = {
+	count: 30,
+	firstDate: "2026-01-01",
+	loaded: true,
+};
 const mockUseEntriesInRange = jest.fn(
 	(_start: Date, _end: Date) => mockEntries,
 );
@@ -15,6 +20,7 @@ jest.mock("../repositories/habit-repository", () => ({
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date, end: Date) =>
 		mockUseEntriesInRange(start, end),
+	useLoggedDays: () => mockLogged,
 }));
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockFrozen,
@@ -30,6 +36,7 @@ beforeEach(() => {
 	mockHabits = [];
 	mockEntries = [];
 	mockFrozen = [];
+	mockLogged = { count: 30, firstDate: "2026-01-01", loaded: true };
 	mockUseEntriesInRange.mockClear();
 });
 afterEach(() => jest.useRealTimers());
@@ -54,13 +61,17 @@ describe("useMonthlySummaryQueries (HAB-16)", () => {
 		expect(date(end)).toBe("2026-10-04");
 	});
 
-	it("shows the partial current month, progress and the week while under 30 days of history", async () => {
+	it("shows the partial current month, progress and the week while under 7 days of logs (replaces the 30-day unlock)", async () => {
 		jest.useFakeTimers().setSystemTime(new Date(2026, 8, 16, 9));
 		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 8, 4, 8) })];
+		mockLogged = { count: 3, firstDate: "2026-09-12", loaded: true };
 		const { result } = await renderHook(() => useMonthlySummaryQueries());
 		expect(result.current.state).toBe("too-early");
 		if (result.current.state !== "too-early") return;
-		expect(result.current.unlock.trackedDays).toBe(12);
+		expect(result.current.unlock).toMatchObject({
+			loggedDays: 3,
+			remainingDays: 4,
+		});
 		expect(date(result.current.summary.month.start)).toBe("2026-09-01");
 		expect(date(result.current.week.week.start)).toBe("2026-09-14");
 	});
@@ -78,12 +89,31 @@ describe("useMonthlySummaryQueries (HAB-16)", () => {
 		mockEntries = [
 			{ id: 1, habitId: 2, date: "2026-09-05", createdAt: new Date() },
 		];
+		mockLogged = { count: 1, firstDate: "2026-09-05", loaded: true };
 		const { result } = await renderHook(() => useMonthlySummaryQueries());
 		if (result.current.state !== "too-early") throw new Error("state");
 		expect(
 			result.current.summary.rows.map((row) => row.habit.id).sort(),
 		).toEqual([1, 2]);
 		expect(result.current.week.rows.map((row) => row.habit.id)).toEqual([1]);
+	});
+
+	it("unlocks on the seventh logged day, however new the habit is", async () => {
+		jest.useFakeTimers().setSystemTime(new Date(2026, 8, 16, 9));
+		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 8, 10, 8) })];
+		mockLogged = { count: 6, firstDate: "2026-09-10", loaded: true };
+		const six = await renderHook(() => useMonthlySummaryQueries());
+		expect(six.result.current.state).toBe("too-early");
+		mockLogged = { count: 7, firstDate: "2026-09-10", loaded: true };
+		const seven = await renderHook(() => useMonthlySummaryQueries());
+		expect(seven.result.current.state).toBe("ready");
+	});
+
+	it("waits for the logged-day count before choosing a state", async () => {
+		mockHabits = [makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) })];
+		mockLogged = { count: 0, firstDate: null, loaded: false };
+		const { result } = await renderHook(() => useMonthlySummaryQueries());
+		expect(result.current).toEqual({ state: "loading" });
 	});
 
 	it("counts the shared freeze pool's days in the month", async () => {

@@ -8,8 +8,6 @@ import { MAX_INSIGHTS } from "./monthly-insights";
 import {
 	buildMonthlySummary,
 	historyStart,
-	MONTH_UNLOCK_DAYS,
-	monthUnlock,
 	monthWeeks,
 	monthWindowFor,
 	previousMonthWindow,
@@ -73,7 +71,7 @@ describe("month windows", () => {
 	});
 });
 
-describe("history and unlock", () => {
+describe("history", () => {
 	it("starts at the earliest habit, archived or not", () => {
 		const habits = [
 			daily(1, { createdAt: new Date(2026, 5, 3, 18) }),
@@ -83,20 +81,6 @@ describe("history and unlock", () => {
 			"2026-03-09",
 		);
 		expect(historyStart([])).toBeNull();
-	});
-
-	it("unlocks 30 days after the first day, with progress toward it", () => {
-		const first = new Date(2026, 8, 4);
-		const early = monthUnlock(first, new Date(2026, 8, 16));
-		expect(early).toMatchObject({ trackedDays: 12, isUnlocked: false });
-		expect(format(early.unlockDate, "yyyy-MM-dd")).toBe("2026-10-04");
-
-		expect(monthUnlock(first, new Date(2026, 9, 3)).isUnlocked).toBe(false);
-		const unlocked = monthUnlock(first, new Date(2026, 9, 4));
-		expect(unlocked).toMatchObject({
-			trackedDays: MONTH_UNLOCK_DAYS,
-			isUnlocked: true,
-		});
 	});
 });
 

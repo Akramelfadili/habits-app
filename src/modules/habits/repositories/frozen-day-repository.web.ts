@@ -36,6 +36,15 @@ export function useFrozenDays(): FrozenDay[] {
 	);
 }
 
+export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
+	const frozenDays = useFrozenDays();
+	const startDate = toDayKey(start);
+	const endDate = toDayKey(end);
+	return frozenDays.filter(
+		(frozen) => frozen.date >= startDate && frozen.date <= endDate,
+	);
+}
+
 export async function getFreezesUsedInMonth(
 	monthStart: Date,
 	monthEnd: Date,
@@ -99,6 +108,7 @@ export async function unfreezeHabitDay(
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeFrozenDayRepository = {
 	useFrozenDays,
+	useFrozenDaysInRange,
 	getFreezesUsedInMonth,
 	freezeHabitDay,
 	getFrozenDay,

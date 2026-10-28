@@ -19,11 +19,8 @@ jest.mock("../hooks/use-monthly-summary-queries", () => ({
 	useMonthlySummaryQueries: () => mockView,
 }));
 
-import {
-	buildMonthlySummary,
-	monthUnlock,
-	monthWindowFor,
-} from "../domain/monthly-summary";
+import { buildMonthlySummary, monthWindowFor } from "../domain/monthly-summary";
+import { progressUnlock } from "../domain/progress-unlock";
 import { buildWeeklySummary } from "../domain/weekly-summary";
 import { MonthlySummaryScreen } from "./monthly-summary-screen";
 
@@ -48,7 +45,7 @@ function tooEarlyView(): MonthlySummaryView {
 	return {
 		state: "too-early",
 		firstDay,
-		unlock: monthUnlock(firstDay, today),
+		unlock: progressUnlock({ count: 3, firstDate: "2026-09-12" }),
 		summary: buildMonthlySummary({
 			habits,
 			entries,
@@ -223,15 +220,15 @@ describe("MonthlySummaryScreen — too early (C6)", () => {
 	it("says when it unlocks and how far along it is, without hiding the screen", async () => {
 		await render(<MonthlySummaryScreen />);
 		expect(screen.getByText("SINCE 4 SEPTEMBER")).toBeTruthy();
-		expect(screen.getByText("Monthly view unlocks on 4 October")).toBeTruthy();
-		expect(screen.getByText("12 of 30 days")).toBeTruthy();
-		expect(screen.getByText("18 to go")).toBeTruthy();
+		expect(screen.getByText("Month summary unlocks in 4 days")).toBeTruthy();
+		expect(screen.getByText("3 of 7 days")).toBeTruthy();
+		expect(screen.getByText("4 to go")).toBeTruthy();
 	});
 
 	it("still renders the partial calendar of the current month", async () => {
 		await render(<MonthlySummaryScreen />);
 		expect(screen.getByText("September so far")).toBeTruthy();
-		expect(screen.getByText("12 days tracked")).toBeTruthy();
+		expect(screen.getByText("3 days logged")).toBeTruthy();
 		expect(screen.getByTestId("completion-grid-month")).toBeTruthy();
 		// 1–3 Sep are before the first habit, 16–30 Sep still ahead.
 		expect(
