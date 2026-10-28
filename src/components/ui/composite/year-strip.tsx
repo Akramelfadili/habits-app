@@ -1,26 +1,30 @@
-import { StyleSheet, View } from "react-native";
-import { cellRadius, intensityColor, space } from "@/theme/theme";
+import { StyleSheet, Text, View } from "react-native";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { CompletionCell, type CompletionCellState } from "./completion-cell";
 
-/** V3-06's compact year strip (T-10): twelve month cells, 12 wide × 24 tall. */
-export const YEAR_STRIP_WIDTH = 12;
-export const YEAR_STRIP_HEIGHT = 24;
+/** V3-06's compact year strip (T-10): twelve 24 pt month cells. */
+export const YEAR_STRIP_CELL = 24;
 
 export type YearStripMonth = {
 	key: string;
-	/** 0–3 by the month's rate; null when nothing was counted (a dashed slot). */
-	level: 0 | 1 | 2 | 3 | null;
+	/** The month's rate as a cell: a level, dashed before the first log, a hairline ahead. */
+	state: CompletionCellState;
+	/** "J", "F", … */
+	initial: string;
+	/** The month still running: ringed, its initial in ink. */
+	current?: boolean;
 };
 
 type YearStripProps = {
 	months: YearStripMonth[];
-	/** One summary for VoiceOver ("Meditate, September 100 percent …"): the strip is one stop. */
+	/** One summary for VoiceOver ("Meditate, 2026, best month September 100 percent"): the strip is a single stop. */
 	accessibilityLabel: string;
 };
 
-/** V3-06 · compact year strip: a habit's twelve months in one short row. */
+/** V3-06 · compact year strip: a habit's twelve months in one short row, initials underneath. */
 export function YearStrip({ months, accessibilityLabel }: YearStripProps) {
-	const { colors, scheme } = useTheme();
+	const { colors } = useTheme();
 
 	return (
 		<View
@@ -31,16 +35,22 @@ export function YearStrip({ months, accessibilityLabel }: YearStripProps) {
 			style={styles.row}
 		>
 			{months.map((month) => (
-				<View
-					key={month.key}
-					testID={`year-strip-${month.level === null ? "empty" : month.level}`}
-					style={[
-						styles.cell,
-						month.level === null
-							? { borderColor: colors.outline, borderStyle: "dashed" }
-							: { backgroundColor: intensityColor(month.level, scheme) },
-					]}
-				/>
+				<View key={month.key} style={styles.column}>
+					<CompletionCell
+						state={month.state}
+						size={YEAR_STRIP_CELL}
+						today={month.current}
+					/>
+					<Text
+						style={[
+							styles.initial,
+							{ color: month.current ? colors.ink : colors.faint },
+							month.current && styles.current,
+						]}
+					>
+						{month.initial}
+					</Text>
+				</View>
 			))}
 		</View>
 	);
@@ -49,13 +59,16 @@ export function YearStrip({ months, accessibilityLabel }: YearStripProps) {
 const styles = StyleSheet.create({
 	row: {
 		flexDirection: "row",
-		gap: space[50],
+		justifyContent: "space-between",
 	},
-	cell: {
-		width: YEAR_STRIP_WIDTH,
-		height: YEAR_STRIP_HEIGHT,
-		borderRadius: cellRadius(YEAR_STRIP_WIDTH),
-		borderWidth: 1,
-		borderColor: "transparent",
+	column: {
+		alignItems: "center",
+		gap: space[100],
+	},
+	initial: {
+		...textStyles.caption,
+	},
+	current: {
+		fontWeight: "600",
 	},
 });

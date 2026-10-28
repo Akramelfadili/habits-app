@@ -1,34 +1,67 @@
 import { render, screen } from "@testing-library/react-native";
-import { intensityColor } from "@/theme/theme";
-import { YearStrip } from "./year-strip";
+import { YearStrip, type YearStripMonth } from "./year-strip";
+
+const INITIALS = "JFMAMJJASOND".split("");
+
+function months(): YearStripMonth[] {
+	return INITIALS.map((initial, index) => ({
+		key: `m${index}`,
+		initial,
+		current: index === 9,
+		state:
+			index < 2
+				? { kind: "before-start" }
+				: index < 9
+					? { kind: "level", level: index % 2 === 0 ? 1 : 3 }
+					: index === 9
+						? { kind: "level", level: 2 }
+						: { kind: "future" },
+	}));
+}
 
 describe("YearStrip", () => {
-	it("draws twelve 12 × 24 months, a dashed slot where nothing was counted", async () => {
-		const months = Array.from({ length: 12 }, (_, index) => ({
-			key: `m${index}`,
-			level: index < 9 ? (3 as const) : null,
-		}));
+	it("draws twelve 24 pt month cells with their initials, partial months notched", async () => {
 		await render(
-			<YearStrip months={months} accessibilityLabel="Meditate, 2026" />,
+			<YearStrip months={months()} accessibilityLabel="Meditate, 2026" />,
 		);
-		expect(screen.getAllByTestId("year-strip-3")).toHaveLength(9);
-		expect(screen.getAllByTestId("year-strip-empty")).toHaveLength(3);
-		expect(screen.getAllByTestId("year-strip-3")[0]).toHaveStyle({
-			width: 12,
-			height: 24,
-			backgroundColor: intensityColor(3, "light"),
+		expect(
+			screen.getAllByTestId(/^completion-cell-/, {
+				includeHiddenElements: true,
+			}),
+		).toBeTruthy();
+		const level = screen.getAllByTestId("completion-cell-level", {
+			includeHiddenElements: true,
 		});
-		expect(screen.getAllByTestId("year-strip-empty")[0]).toHaveStyle({
-			borderStyle: "dashed",
+		expect(level[0]).toHaveStyle({ width: 24, height: 24 });
+		expect(
+			screen.getAllByTestId("completion-cell-before-start", {
+				includeHiddenElements: true,
+			}),
+		).toHaveLength(2);
+		expect(
+			screen.getAllByTestId("completion-cell-future", {
+				includeHiddenElements: true,
+			}),
+		).toHaveLength(2);
+		expect(
+			screen.getAllByTestId("completion-cell-notch", {
+				includeHiddenElements: true,
+			}).length,
+		).toBeGreaterThan(0);
+	});
+
+	it("sets the current month's initial in ink and heavier", async () => {
+		await render(
+			<YearStrip months={months()} accessibilityLabel="Meditate, 2026" />,
+		);
+		expect(screen.getByText("O", { includeHiddenElements: true })).toHaveStyle({
+			fontWeight: "600",
 		});
 	});
 
 	it("is one VoiceOver stop", async () => {
 		await render(
-			<YearStrip
-				months={[{ key: "m", level: 2 }]}
-				accessibilityLabel="Meditate, 2026"
-			/>,
+			<YearStrip months={months()} accessibilityLabel="Meditate, 2026" />,
 		);
 		expect(screen.getByLabelText("Meditate, 2026").props.accessible).toBe(true);
 	});
