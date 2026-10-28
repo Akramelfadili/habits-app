@@ -10,6 +10,11 @@ import {
 	TRAINING_FIXTURE,
 } from "./category-fixtures";
 import { monthlyHabitFixtures } from "./monthly-fixtures";
+import {
+	TODAY_V3_SCENARIOS,
+	type TodayV3Scenario,
+	todayV3Habits,
+} from "./today-v3-fixtures";
 import { yearlyHabitFixtures } from "./yearly-fixtures";
 
 /**
@@ -38,6 +43,7 @@ function withLifecycle(habit: FixtureHabit): Habit {
 const FIXTURE_DATE = new Date("2026-09-16T08:00:00Z");
 
 export type FixtureScenario =
+	| TodayV3Scenario
 	| "default"
 	| "empty"
 	| "rest-day"
@@ -71,6 +77,7 @@ export type FixtureScenario =
 	| "categories-in-use";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
+	...TODAY_V3_SCENARIOS,
 	"empty",
 	"rest-day",
 	"rest-day-picker",
@@ -665,6 +672,11 @@ function manageCategoriesFixtures(withCustomsInUse: boolean): FixtureHabit[] {
 
 function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 	switch (scenario) {
+		case "today-v3":
+		case "today-v3-at-risk":
+		case "today-v3-all-done":
+		case "today-v3-rest":
+			return todayV3Habits(scenario);
 		case "empty":
 		case "first-run":
 		case "many-categories":
