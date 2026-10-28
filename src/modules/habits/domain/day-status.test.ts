@@ -1,7 +1,8 @@
 import { addDays, format } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, Habit } from "../types";
-import { type CellStatus, habitDayClassifier } from "./day-status";
+import { type CellStatus, fastDayKey, habitDayClassifier } from "./day-status";
 
 // Wednesday 16 Sep 2026; the week is Mon 14 – Sun 20.
 const today = new Date(2026, 8, 16, 12);
@@ -181,5 +182,19 @@ describe("habitDayClassifier", () => {
 			"nothing-logged",
 			"today",
 		]);
+	});
+});
+
+describe("fastDayKey", () => {
+	it("is toDayKey, faster: the local calendar day as yyyy-MM-dd", () => {
+		for (const date of [
+			new Date(2026, 0, 5),
+			new Date(2026, 9, 24, 23, 59, 59),
+			new Date(2024, 1, 29, 12),
+			new Date(2026, 11, 31),
+			new Date(2026, 2, 29, 1), // DST night in much of Europe
+		]) {
+			expect(fastDayKey(date)).toBe(toDayKey(date));
+		}
 	});
 });

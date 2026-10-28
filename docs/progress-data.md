@@ -34,7 +34,7 @@ The old Weekly / Monthly / Yearly summary screens keep working on their existing
 | Best day, daily bars (P1) | `bestDay` in `buildWeeklySummary` — most completions, not a ratio | **New** `bestWeekday` + `weekdayBars` in `range-summary.ts` (done ÷ due per weekday); old Weekly keeps its field until V3-3b | 3 |
 | Per-habit month rates, bonus listed (P8) | `MonthlyHabitRow` (rate, weeks, `deltaPoints`) | **Extend**: `RangeHabitRow` = rate in whole points, `isBreak`, `frozen`, `bonus` (listed, "not counted"), `slipping`, ranked best → worst, slipping last | 3 |
 | Week matrix, row totals (P1, P2, P4, P5) | Detail's `buildHeatmapWeeks` (one habit, 10 weeks) | **New** `buildWeekMatrix` on the shared classifier; partial level 1/2 via `heatmapLevelFor`'s ratio rule | 4 |
-| Month calendar, day level, perfect (P7, P9, P10) | `buildCalendar` inside `buildMonthlySummary` (level 1–3) | **Extend**: `buildMonthCalendar` on day aggregates, level 0–3 + `perfect`; Monthly's calendar derives from it | 4 |
+| Month calendar, day level, perfect (P7, P9, P10) | `buildCalendar` inside `buildMonthlySummary` (level 1–3) | **New** `buildMonthCalendar` on day aggregates, level 0–3 + `perfect`; Monthly keeps its own `buildCalendar` until V3-3b retires the screen (rewiring it now would classify the month twice) | 4 |
 | Year day detail / Month day card (P13, RL1) | `useRetroLogQueries` (unbounded `useAllEntries`), `edit-day-status.ts` | **New** `buildDayDetail` (each habit's state on one date) and a date-bounded hook read | 4, 8 |
 | Per-day year levels, all habits or one (P12, P15) | `buildYearlySummary` month cells only | **New** `buildYearMap` (365 aggregates, month bands, `bestMonth`, month list for the AX fallback); one habit = the same call with `[habit]` (binary falls out: 1 of 1 or 0) | 5 |
 | Streak, longest, 90-day rate (Detail, P1) | `calculateCurrentStreak`, `calculateLongestStreak`, `calculateCompletionRate`; `longestOf` in yearly | **Extend**: 90-day rate excludes frozen (step 2); `bestStreakIn(range)` reuses `calculateLongestStreak` clipped to the range, Week reuses `currentStreakAsOf` | 2–3 |
@@ -51,4 +51,21 @@ Every Progress hook reads **bounded** ranges: entries for the Monday-aligned spa
 
 ## Performance
 
-Completions are bucketed once per habit (`strategies/completion-index.ts`); the classifier builds one context per habit and answers each day in O(1). No per-day scan of entries. Timings (5 years × 20 habits, Node): see the perf smoke test `domain/year-map.perf.test.ts` and the step-5 note below.
+Completions are bucketed once per habit (`strategies/completion-index.ts`); the classifier builds one context per habit and answers each day in O(1). No per-day scan of entries; the classifier keys days without date-fns' formatter (`fastDayKey`) because formatting dominated the first version.
+
+Measured in Jest on Node (not Hermes; a phone is slower, the prior audit estimated 2–5×), 20 habits (12 daily, 4 on specific days, 4 × per week) over 5 years, 29,331 entries; `domain/year-map.perf.test.ts` asserts generous ceilings and prints these with `PERF_REPORT=1`:
+
+| Call | Time |
+|---|---|
+| `buildYearlySummary`, year-bounded entries — **before** (V3-0a code, same data as the "after" row) | 193–256 ms |
+| `buildYearlySummary`, same input — **after** (now on the shared classifier) | 197–265 ms (within noise) |
+| `buildMonthlySummary` — before / after | 84–86 ms / 95–111 ms |
+| `buildYearMap` (new), year-bounded entries (4,893) | 36–42 ms |
+| `buildYearMap`, a year plus the year before (10,725 entries) | 75–81 ms |
+| `buildYearMap`, all five years of entries handed in | 167 ms |
+| `buildRangeSummary` year (this year + previous year) | 186–204 ms |
+| `buildMonthCalendar` | 55–59 ms |
+| One habit's year map | 9–10 ms |
+| Classify + aggregate five whole years × 20 habits | ~195 ms |
+
+The first version of the classifier made Monthly and Yearly about 1.5–2× slower (parsing every entry three times, `format` per day); that is what the table's "after" no longer shows.

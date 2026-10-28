@@ -1,5 +1,4 @@
-import { isAfter, isBefore, isSameDay, parseISO, startOfDay } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
+import { parseISO, startOfDay } from "date-fns";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, Habit } from "../types";
 import { offScheduleChecker } from "./off-schedule";
@@ -74,53 +73,89 @@ export function habitDayClassifier({
 	nothingLogged = false,
 }: DayStatusInput): (date: Date) => HabitDayCell {
 	const strategy = getHabitStrategy(habit);
-	const entryByDay = new Map(entries.map((entry) => [entry.date, entry]));
-	const completedDates = entries
-		.filter((entry) => isEntryComplete(habit, entry))
-		.map((entry) => parseISO(entry.date));
+	const entryByDay = new Map<string, Entry>();
+	// One parse per completed entry, shared by the strategy's context and the bonus check.
+	const completedDates: Date[] = [];
+	const completedDateByDay = new Map<string, Date>();
+	for (const entry of entries) {
+		entryByDay.set(entry.date, entry);
+		if (!isEntryComplete(habit, entry)) continue;
+		const day = parseISO(entry.date);
+		completedDates.push(day);
+		completedDateByDay.set(entry.date, day);
+	}
 	const context = { completedDates };
-	const isOffSchedule = offScheduleChecker(habit, entries);
-	const todayStart = startOfDay(today);
-	const createdStart = startOfDay(habit.createdAt);
+	// Only a half-logged day needs the full off-schedule check (the entry counts
+	// as done for its own day); built on first use.
+	let partialChecker: ((entry: Entry) => boolean) | undefined;
+	const isPartialOffSchedule = (entry: Entry) => {
+		partialChecker ??= offScheduleChecker(habit, entries);
+		return partialChecker(entry);
+	};
+	const todayKey = fastDayKey(today);
+	const todayTime = startOfDay(today).getTime();
+	const createdTime = startOfDay(habit.createdAt).getTime();
 
 	return (date) => {
-		const isToday = isSameDay(date, todayStart);
-		const cell = (
-			status: CellStatus,
-			level: HabitDayCell["level"] = 0,
-			value?: number,
-		): HabitDayCell => ({
-			status,
-			level,
-			isToday,
-			...(value === undefined ? {} : { value }),
-		});
+		const time = date.getTime();
+		const key = fastDayKey(date);
+		const isToday = key === todayKey;
 
-		if (isBefore(date, createdStart)) return cell("before-start");
-		if (isAfter(date, todayStart)) return cell("future");
+		if (time < createdTime) return makeCell("before-start", 0, isToday);
+		if (time > todayTime) return makeCell("future", 0, isToday);
 
-		const key = toDayKey(date);
 		const entry = entryByDay.get(key);
 		const frozen = frozenDates.has(key);
 
-		if (entry && isEntryComplete(habit, entry)) {
-			// A frozen day is never a bonus: the freeze says it was owed.
-			return !frozen && isOffSchedule(entry)
-				? cell("bonus", 3, entry.value)
-				: cell("done", 3, entry.value);
-		}
-		if (frozen) return cell("frozen", 0, entry?.value);
 		if (entry) {
-			return isOffSchedule(entry)
-				? cell("bonus", 0, entry.value)
-				: cell("partial", partialLevel(habit, entry), entry.value);
+			const completedOn = completedDateByDay.get(key);
+			if (completedOn) {
+				// A frozen day is never a bonus: the freeze says it was owed. A
+				// completed day is already in the context, so one strategy call says
+				// whether it was owed.
+				const bonus = !frozen && !strategy.wasScheduledOn(completedOn, context);
+				return makeCell(bonus ? "bonus" : "done", 3, isToday, entry.value);
+			}
+			if (frozen) return makeCell("frozen", 0, isToday, entry.value);
+			return isPartialOffSchedule(entry)
+				? makeCell("bonus", 0, isToday, entry.value)
+				: makeCell("partial", partialLevel(habit, entry), isToday, entry.value);
 		}
+		if (frozen) return makeCell("frozen", 0, isToday);
 		if (isToday) {
-			return strategy.isDueOn(date, context) ? cell("today") : cell("not-due");
+			return makeCell(
+				strategy.isDueOn(date, context) ? "today" : "not-due",
+				0,
+				true,
+			);
 		}
-		if (!strategy.wasScheduledOn(date, context)) return cell("not-due");
-		return cell(nothingLogged ? "nothing-logged" : "missed");
+		if (!strategy.wasScheduledOn(date, context)) {
+			return makeCell("not-due", 0, false);
+		}
+		return makeCell(nothingLogged ? "nothing-logged" : "missed", 0, false);
 	};
+}
+
+function makeCell(
+	status: CellStatus,
+	level: HabitDayCell["level"],
+	isToday: boolean,
+	value?: number,
+): HabitDayCell {
+	return value === undefined
+		? { status, level, isToday }
+		: { status, level, isToday, value };
+}
+
+/**
+ * `toDayKey` without date-fns' formatter: the classifier keys every day of
+ * every habit, and formatting dominated its cost on a five-year grid. Same
+ * "yyyy-MM-dd" local calendar day (`day-status.test.ts` pins the equivalence).
+ */
+export function fastDayKey(date: Date): string {
+	const month = date.getMonth() + 1;
+	const day = date.getDate();
+	return `${date.getFullYear()}-${month < 10 ? "0" : ""}${month}-${day < 10 ? "0" : ""}${day}`;
 }
 
 /** Under half the target is level 1, at least half (but not all) level 2 — Detail's heatmap rule. */
