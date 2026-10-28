@@ -140,13 +140,15 @@ function referenceDomain() {
 		return streak;
 	}
 
-	// Verbatim, except the pool check: at-risk no longer depends on the pool (HAB-33 SR3).
+	// Verbatim, except the pool check (at-risk no longer depends on the pool, HAB-33 SR3)
+	// and the per-week gate (× per week habits are never at risk by day, HAB-33).
 	function getStreakAtRisk(
 		habit: Habit,
 		entries: readonly Entry[],
 		frozenDates: ReadonlySet<string>,
 		today: Date,
 	) {
+		if (habit.frequency.type === "per-week") return null;
 		const yesterday = subDays(startOfDay(today), 1);
 		const yesterdayString = toDayKey(yesterday);
 		if (frozenDates.has(yesterdayString)) return null;
