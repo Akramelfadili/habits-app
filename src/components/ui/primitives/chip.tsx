@@ -37,7 +37,7 @@ export function Chip({
 			<View
 				style={[
 					styles.chip,
-					{ backgroundColor: colors.inner },
+					{ backgroundColor: colors.card, borderColor: colors.border },
 					isOutline && {
 						backgroundColor: "transparent",
 						borderColor: colors.ink,

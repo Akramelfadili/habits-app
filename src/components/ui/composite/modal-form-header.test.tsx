@@ -30,7 +30,7 @@ describe("useModalFormHeaderOptions", () => {
 		expect(result.current.unstable_headerLeftItems?.({} as never)).toEqual([]);
 	});
 
-	it("dismisses the form through Cancel on iOS — the glass-free nav-bar item", async () => {
+	it("dismisses the form through Close on iOS — the glass-free nav-bar item", async () => {
 		const { result } = await renderHook(() =>
 			useModalFormHeaderOptions("Edit habit"),
 		);
@@ -43,11 +43,11 @@ describe("useModalFormHeaderOptions", () => {
 		expect(item.hidesSharedBackground).toBe(true);
 
 		await render(item.element as ReactElement);
-		await fireEvent.press(screen.getByText("Cancel"));
+		await fireEvent.press(screen.getByText("Close"));
 		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 
-	it("dismisses the form through Cancel on web/Android too", async () => {
+	it("dismisses the form through Close on web/Android too", async () => {
 		const { result } = await renderHook(() =>
 			useModalFormHeaderOptions("Edit habit"),
 		);
@@ -55,7 +55,7 @@ describe("useModalFormHeaderOptions", () => {
 		if (!HeaderRight) throw new Error("headerRight was not set");
 
 		await render(<HeaderRight canGoBack tintColor="#000" />);
-		await fireEvent.press(screen.getByText("Cancel"));
+		await fireEvent.press(screen.getByText("Close"));
 		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 });

@@ -191,6 +191,9 @@ export type Reminder = {
 
 export type CreateReminderInput = Omit<Reminder, "id">;
 
+/** A reminder queued on the New habit form, written with the habit when Save is tapped (F7). */
+export type ReminderDraft = Pick<Reminder, "hour" | "minute" | "weekdays">;
+
 /** Any subset of a reminder's editable fields. */
 export type ReminderPatch = Partial<
 	Pick<Reminder, "hour" | "minute" | "weekdays" | "enabled">

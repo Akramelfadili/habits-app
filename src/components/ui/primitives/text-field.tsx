@@ -178,6 +178,9 @@ const styles = StyleSheet.create({
 	input: {
 		paddingVertical: space[50],
 		...textStyles.bodyLg,
+		// The card's own outline is the focus ring; drop the browser's on web.
+		outlineWidth: 0,
+		outlineColor: "transparent",
 	},
 	multiline: {
 		// No fixed height: grows with the text, starting at one line.

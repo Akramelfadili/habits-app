@@ -242,6 +242,23 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **Maestro `hab-13-manage-archive-delete` still describes the old Manage screen** and was not run (V3-6 rewrites the flows for the three tabs).
 - **Scenarios left in the web fixtures:** `manage-archive` still backs Today's long-list state and `manage-all-archived` the all-archived Habits state; `habit-detail`, `habit-detail-new`, `habit-detail-bonus`, `habit-detail-archived` and `no-freezes` are no longer used by a visual-check state (dev seeds still read `habit-detail`). `manage-nothing-archived` was removed.
 
+## Open — V3-4b (Add / Edit habit form, Categories)
+
+Deviations from the mockup / spec and what was left out; each is deliberate unless marked. Steps 4–6 (Reminders, Settings, Export) add their own entries.
+
+- **Frequency has three options — Daily, Specific days, × per week — not the mockup's four.** F1–F10 draw a "Weekdays" chip; HAB-41 lists three and the old "Weekdays shortcut" is gone. Mon–Fri is two taps on the weekday chips. (Spec wins; owner's decision.)
+- **No icon / colour row (F2, F6).** The category supplies both; the mockup's "Icon and colour · tap to change" row and the F6 pickers are not built (spec wins).
+- **All categories show in the form, not five (F1, F2).** The frames truncate to five chips for brevity; every category is a chip, then "New category". F6 draws the full set.
+- **A picked category clears with a second tap**, since the category is optional; no habit is ever saved without one (it goes to Other).
+- **The duplicate-name check includes archived habits** (case- and space-insensitive), so a restore never leaves two habits with one name.
+- **Reminders are queued on New habit only.** Edit habit has no Reminders section: its reminders are the Reminders screen's (HAB-43, step 4). The queued times are written after the habit; if one fails, the habit stays and a warning toast says so.
+- **The "Discard changes?" prompt is drawn in-app (`AlertDialog`), not the system alert**, so web and the Maestro flows see it too. It follows the frame: Keep editing bold first, Discard in danger red, a scrim tap does nothing.
+- **The header button says "Close"** (was "Cancel") on both modals, as the frames do.
+- **Suggestion prefill arrives as the `prefill` route param** (a JSON string, `parseHabitPrefill`) or the `prefill` prop; HAB-46 only has to push `/new-habit?prefill=…`.
+- **Unit error appears once the unit has been left**; until then Save says "Add a unit to save" and the issue count does not include it.
+- **Type is locked in Edit** with "Build and Break can’t be switched after saving." (the frame F9 draws it enabled; direction is fixed at creation, HAB-01).
+- **The live example uses `min(5, target − 1)`** ("5 of 8 glasses"; "1 of 1" for a target of 1).
+
 ## V3-6 audit list (touch targets and known layout exceptions)
 
 Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.

@@ -18,6 +18,7 @@ import { headerActionOptions, headerNoBackOptions } from "./header-buttons";
  */
 export function useModalFormHeaderOptions(
 	title: string,
+	closeLabel = "Close",
 ): NativeStackNavigationOptions {
 	const router = useRouter();
 
@@ -26,6 +27,6 @@ export function useModalFormHeaderOptions(
 		presentation: "fullScreenModal",
 		headerTitleAlign: "left",
 		...headerNoBackOptions(),
-		...headerActionOptions({ label: "Cancel", onPress: () => router.back() }),
+		...headerActionOptions({ label: closeLabel, onPress: () => router.back() }),
 	};
 }

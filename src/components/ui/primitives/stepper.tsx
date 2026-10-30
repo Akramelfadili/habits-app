@@ -13,6 +13,8 @@ type StepperProps = {
 	size?: "default" | "large";
 	/** The unit or the target under the value ("glasses a day", "of 8 glasses", V3-18). */
 	caption?: string;
+	/** "field" is the full-width card a form draws (F3, F4): the buttons at the ends, the value between. */
+	layout?: "inline" | "field";
 };
 
 /** −/+ control around a center numeral; each side disables at its bound. */
@@ -24,6 +26,7 @@ export function Stepper({
 	accessibilityLabel,
 	size = "default",
 	caption,
+	layout = "inline",
 }: StepperProps) {
 	const { colors, opacity } = useTheme();
 	const isLarge = size === "large";
@@ -56,7 +59,16 @@ export function Stepper({
 	}
 
 	return (
-		<View style={[styles.row, isLarge && styles.rowLarge]}>
+		<View
+			style={[
+				styles.row,
+				isLarge && styles.rowLarge,
+				layout === "field" && [
+					styles.field,
+					{ backgroundColor: colors.card, borderColor: colors.border },
+				],
+			]}
+		>
 			{renderButton("−", value - 1, value <= min)}
 			<View style={styles.valueColumn}>
 				<Text
@@ -121,8 +133,15 @@ const styles = StyleSheet.create({
 	symbolLarge: {
 		...textStyles.title,
 	},
+	field: {
+		justifyContent: "space-between",
+		borderWidth: 1,
+		borderRadius: radius.l,
+		padding: space[100],
+	},
 	valueColumn: {
 		alignItems: "center",
+		flexShrink: 1,
 	},
 	caption: {
 		...textStyles.footnote,

@@ -6,8 +6,15 @@ const mockDeleteAllHabits = jest.fn();
 const mockSeedStreakAtRisk = jest.fn();
 const mockSeedHistory = jest.fn();
 
+const mockEnsurePermission = jest.fn();
+jest.mock("@/lib/notifications/use-notification-permission", () => ({
+	ensureNotificationPermission: (...args: unknown[]) =>
+		mockEnsurePermission(...args),
+}));
+jest.mock("../services/habit-create-service", () => ({
+	createHabitWithReminders: (...args: unknown[]) => mockCreateHabit(...args),
+}));
 jest.mock("../repositories/habit-repository", () => ({
-	createHabit: (...args: unknown[]) => mockCreateHabit(...args),
 	deleteAllHabits: (...args: unknown[]) => mockDeleteAllHabits(...args),
 }));
 jest.mock("../services/reminder-service", () => ({
@@ -34,7 +41,7 @@ describe("useHabitActions", () => {
 	});
 
 	it("calls the repository's createHabit and reports loading state", async () => {
-		mockCreateHabit.mockResolvedValue(habit);
+		mockCreateHabit.mockResolvedValue({ habit, remindersFailed: false });
 		const { result } = await renderHook(() => useHabitActions());
 
 		const created = await act(() =>
@@ -42,8 +49,20 @@ describe("useHabitActions", () => {
 		);
 
 		expect(mockCreateHabit).toHaveBeenCalledTimes(1);
-		expect(created).toEqual(habit);
+		expect(created).toEqual({ habit, remindersFailed: false });
 		expect(result.current.isCreating).toBe(false);
+		expect(mockEnsurePermission).not.toHaveBeenCalled();
+	});
+
+	it("asks the OS for notification permission only when reminders are queued", async () => {
+		mockCreateHabit.mockResolvedValue({ habit, remindersFailed: false });
+		const { result } = await renderHook(() => useHabitActions());
+		const queued = [{ hour: 7, minute: 0, weekdays: [1 as const] }];
+
+		await act(() => result.current.createHabit(makeHabitInput(), queued));
+
+		expect(mockEnsurePermission).toHaveBeenCalledTimes(1);
+		expect(mockCreateHabit).toHaveBeenCalledWith(makeHabitInput(), queued);
 	});
 
 	it("saves an edit through the reminder-syncing update, with the habit id and input", async () => {

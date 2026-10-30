@@ -36,4 +36,18 @@ describe("FieldHelper", () => {
 		});
 		expect(screen.queryByRole("alert")).toBeNull();
 	});
+
+	it("drops the dot for a plain note but keeps the '!' on an error", async () => {
+		const { toJSON, rerender } = await render(
+			<FieldHelper plain>Optional — goes to Other.</FieldHelper>,
+		);
+		const withDot = JSON.stringify(toJSON()).includes("borderRadius");
+		expect(withDot).toBe(false);
+		await rerender(
+			<FieldHelper plain tone="error">
+				Pick at least one day
+			</FieldHelper>,
+		);
+		expect(screen.getByText("!")).toBeTruthy();
+	});
 });

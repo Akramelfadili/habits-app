@@ -168,46 +168,134 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-01 / HAB-02 / HAB-07 — New / Edit habit
-	"new-habit": {
-		feature: "HAB-01",
-		route: "/new-habit",
-		mockup: "docs/mockups/new-habit-form.png",
+	// HAB-41 — Add / Edit habit (F1–F10, BS2)
+	"form-new-empty": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/forms/slice_01.png",
+		note: "F1 — Type, Name (focused), Category, Goal, Frequency, Reminders; Save off with 'Add a name to save'.",
 	},
-	"new-habit-weekdays": {
-		feature: "HAB-02",
-		route: "/new-habit",
-		mockup: "docs/mockups/new-habit-form.png",
-		note: "Specific weekdays chosen — weekday picker revealed.",
+	"form-new-filled": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/forms/slice_01.png",
+		note: "F2 — Build · Check · Daily, filled: Learning picked (accent fill, check). No icon/colour row: the category supplies both (spec wins).",
 		async interact(page) {
-			await page.getByText("Specific weekdays", { exact: true }).click();
+			await typeHabitName(page, "Read 20 min");
+			await categoryChip(page, "Learning").click();
 		},
 	},
-	"new-habit-quantity": {
-		feature: "HAB-07",
-		route: "/new-habit",
-		mockup: "docs/mockups/new-habit-form.png",
-		note: "Target type Quantity — Amount/Unit fields revealed (scrolled into view).",
+	"form-new-quantity": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/forms/slice_02.png",
+		note: "F3 — Quantity: daily target stepper, unit and the live example.",
 		async interact(page) {
-			const quantity = page.getByText("Quantity", { exact: true });
-			await quantity.scrollIntoViewIfNeeded();
-			await quantity.click();
+			await typeHabitName(page, "Drink water");
+			await page.getByText("Quantity", { exact: true }).click();
+			await page.getByLabel("Unit", { exact: true }).fill("glasses");
+			await page.waitForTimeout(300);
 		},
 	},
-	"edit-habit": {
-		feature: "HAB-02",
-		route: "/edit-habit/1",
-		mockup: "docs/mockups/new-habit-form.png",
-		note: "Mockup shows create mode; edit mode should match except Direction is locked.",
+	"form-new-per-week": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/forms/slice_02.png",
+		note: "F4 — × per week: stepper, the Monday–Sunday rule and 'leaves Today once met'.",
+		async interact(page) {
+			await typeHabitName(page, "Cold shower");
+			await page.getByText("× per week", { exact: true }).click();
+			await page.waitForTimeout(300);
+		},
+	},
+	"form-new-break": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/forms/slice_03.png",
+		note: "F5 — Break: one line on resisting, Quantity off with its reason.",
+		async interact(page) {
+			await typeHabitName(page, "No social media");
+			await page.getByText("Break", { exact: true }).click();
+			await page.waitForTimeout(300);
+		},
+	},
+	"form-new-specific-days": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/forms/slice_04.png",
+		note: "F7 — Specific days (Tue, Thu) with one queued reminder at 09:00 on those days.",
+		async interact(page) {
+			await typeHabitName(page, "Upper body");
+			await page.getByText("Specific days", { exact: true }).click();
+			await page.getByLabel("Tuesday", { exact: true }).click();
+			await page.getByLabel("Thursday", { exact: true }).click();
+			await page.getByLabel("Add time", { exact: true }).click();
+			await page.getByText("Save time", { exact: true }).click();
+			await page.waitForTimeout(500);
+		},
+	},
+	"form-new-errors": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/forms/slice_04.png",
+		note: "F8 — a duplicate name and no days picked, both inline; Save says 'Fix 2 issues to save'.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 min");
+			await page.getByText("Specific days", { exact: true }).click();
+			await page.waitForTimeout(300);
+		},
+	},
+	"form-edit-discard": {
+		feature: "HAB-41",
+		route: "/(today)/habit/1?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/forms/slice_05.png",
+		note: "F9 — Detail → Edit, one edit, Close: 'Discard changes?', Keep editing bold, Discard in danger.",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Edit/ }).first().click();
+			await page.getByLabel("Name", { exact: true }).first().waitFor();
+			await page
+				.getByLabel("Name", { exact: true })
+				.first()
+				.fill("Read 30 min");
+			await page.getByText("Close", { exact: true }).first().click();
+			await page.waitForTimeout(800);
+			await page.waitForTimeout(300);
+		},
+	},
+	"form-edit": {
+		feature: "HAB-41",
+		route: "/edit-habit/1?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/forms/slice_05.png",
+		note: "Edit habit — same form; Type is locked with its reason, Save changes, and the Archive entry at the foot.",
+	},
+	"form-new-ax": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=empty&textSize=ax",
+		mockup: "docs/mockups/v3/renders/forms/slice_05.png",
+		note: "F10 — AX3: segmented controls stack, chips wrap, Save full width.",
+		async interact(page) {
+			await typeHabitName(page, "Drink water");
+		},
+	},
+	"form-new-suggestion": {
+		feature: "HAB-41",
+		route: `/new-habit?fixtures=empty&prefill=${encodeURIComponent(
+			JSON.stringify({
+				name: "Drink water",
+				category: "Health",
+				direction: "build",
+				target: { amount: 8, unit: "glasses" },
+				frequency: { type: "daily" },
+			}),
+		)}`,
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS2 — prefilled from a suggestion: banner says where from; nothing saves until Save.",
 	},
 
-	// HAB-22 — New habit: empty & near-limit polish
-	"new-habit-empty": {
-		feature: "HAB-22",
-		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-22-e5.png",
-		note: "E5 — focused on open, example placeholder, no counter, Save disabled with the name reason. Mockup still draws V1's Icon & colour picker (removed by HAB-24) and the sheet chrome; the real form keeps Category/Direction/Target type.",
-	},
+	// HAB-22 — New habit: polish
 	"new-habit-near-limit": {
 		feature: "HAB-22",
 		route: "/new-habit?fixtures=empty",
@@ -258,25 +346,6 @@ export const SCREENS = {
 	},
 
 	// HAB-24 — Categories: pick & add (the New habit form's category card + add sheet)
-	"category-picker-empty": {
-		feature: "HAB-24",
-		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f1a.png",
-		note: "F1a — nothing selected: built-ins only, Save blocked with the category reason. Mockup's sheet shows only Name/Category/Frequency; the real form keeps Direction and Target type.",
-		async interact(page) {
-			await typeHabitName(page, "Write three lines");
-		},
-	},
-	"category-picker-selected": {
-		feature: "HAB-24",
-		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f1b.png",
-		note: "F1b — Learning picked: filled chip with check, header badge, Save enabled.",
-		async interact(page) {
-			await typeHabitName(page, "Read 20 pages");
-			await categoryChip(page, "Learning").click();
-		},
-	},
 	"category-picker-many": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=many-categories",
@@ -1475,10 +1544,20 @@ const DARK_TWINS = [
 	"delete-deleting",
 	"delete-failed",
 	"delete-confirm-ax",
-	"category-picker-selected",
 	"add-category-empty",
 	"manage-categories-in-use",
 	"new-habit-near-limit",
+	"form-new-empty",
+	"form-new-filled",
+	"form-new-quantity",
+	"form-new-per-week",
+	"form-new-break",
+	"form-new-specific-days",
+	"form-new-errors",
+	"form-edit-discard",
+	"form-edit",
+	"form-new-ax",
+	"form-new-suggestion",
 	"tab-bar-today",
 	"tab-bar-long-list-end",
 	"tab-bar-toast",

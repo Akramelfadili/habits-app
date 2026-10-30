@@ -143,6 +143,11 @@ export const messages = {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
 	},
+	/** F7: the habit saved, but a reminder queued on the form did not. */
+	habitSavedReminderFailed: {
+		tone: "warning",
+		text: "Saved, but a reminder couldn’t be set. Add it from the habit’s Reminders.",
+	},
 	/** P3: Export tapped while there is nothing to export — says why, in a toast. */
 	exportNothing: {
 		tone: "info",
@@ -804,6 +809,112 @@ export const detailCopy = {
 		title: "Habit not found",
 		body: "It may have been deleted.",
 	},
+} as const;
+
+/**
+ * The Add / Edit habit form (HAB-41, F1–F10, BS2): headers, field labels,
+ * helpers, inline errors, the Save reason and the discard prompt. Errors sit
+ * next to their fields, never in an alert (F8).
+ */
+export const formCopy = {
+	newTitle: "New habit",
+	editTitle: "Edit habit",
+	close: "Close",
+	loading: "Loading…",
+	type: {
+		label: "Type",
+		build: "Build",
+		break: "Break",
+		/** F5: said once Break is picked. */
+		breakNote:
+			"A Break habit counts the days you resist. Tick the circle on each day you held off.",
+		/** Edit: the direction is fixed at creation (HAB-01) — a streak means the opposite. */
+		locked: "Build and Break can’t be switched after saving.",
+	},
+	name: {
+		label: "Name",
+		placeholder: "e.g. Drink water",
+		limit: (limit: number) => `${limit} characters max`,
+		duplicate: (name: string) =>
+			`You already have a habit called ${name}. Choose another name.`,
+		/** An edited V1 name still over the cap (HAB-22). */
+		tooLong: (limit: number) => `Shorten the name to ${limit} characters.`,
+	},
+	category: {
+		label: "Category",
+		optional: "Optional — habits without one go to Other.",
+		newCategory: "New category",
+	},
+	goal: {
+		label: "Goal",
+		check: "Check",
+		quantity: "Quantity",
+		/** F5: Quantity is off for a Break habit, with its reason. */
+		breakReason: "Break habits are yes or no, so Quantity is off.",
+		target: "Daily target",
+		targetCaption: (unit: string) => `${unit || "units"} a day`,
+		unit: "Unit",
+		unitPlaceholder: "glasses",
+		unitMissing: "Give this target a unit, e.g. “glasses”.",
+		unitTooLong: (limit: number) => `Keep the unit under ${limit} characters.`,
+		/** F3: the live example of how Today reads. */
+		example: (target: number, unit: string) =>
+			`Shown after the number: ${Math.max(1, Math.min(5, target - 1))} of ${target}${unit ? ` ${unit}` : ""}`,
+	},
+	frequency: {
+		label: "Frequency",
+		daily: "Daily",
+		specificDays: "Specific days",
+		perWeek: "× per week",
+		noDays: "Pick at least one day",
+		timesPerWeek: "Times per week",
+		timesCaption: "times a week",
+		/** F4: the Monday–Sunday rule (D9) and when it leaves Today. */
+		perWeekRule: (times: number) =>
+			`Weeks run Monday to Sunday. Once you reach ${times}, it leaves Today until the next week starts.`,
+	},
+	reminders: {
+		label: "Reminders",
+		add: "Add time",
+		hint: "24-hour times. Each time can repeat on its own days.",
+		remove: (time: string) => `Remove reminder at ${time}`,
+		editDays: (time: string) => `Change days for the reminder at ${time}`,
+	},
+	save: {
+		new: "Save habit",
+		edit: "Save changes",
+		needsName: "Add a name to save",
+		needsUnit: "Add a unit to save",
+		issues: (count: number) =>
+			`Fix ${count} ${count === 1 ? "issue" : "issues"} to save`,
+	},
+	archive: {
+		title: "Archive habit",
+		body: "Hides it from Today and keeps every logged day. Restore it any time.",
+	},
+	discard: {
+		title: "Discard changes?",
+		bodyEdit: (habit: string) => `Your edits to ${habit} won’t be saved.`,
+		bodyNew: "Your new habit won’t be saved.",
+		keep: "Keep editing",
+		discard: "Discard",
+	},
+	/** BS2: where the filled-in fields came from. */
+	prefill: {
+		title: "From a suggestion",
+		body: (name: string) =>
+			`${name} is filled in. Change anything before saving.`,
+	},
+} as const;
+
+/** The reminder sheet (F7, R3): the time wheel and the days a time repeats on. */
+export const reminderSheetCopy = {
+	add: "Add time",
+	edit: "Reminder time",
+	cancel: "Cancel",
+	save: "Save time",
+	repeatOn: "Repeat on",
+	noDays: "Pick at least one day",
 } as const;
 
 /**
