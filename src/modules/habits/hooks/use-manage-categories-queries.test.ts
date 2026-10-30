@@ -41,8 +41,18 @@ describe("useManageCategoriesQueries (HAB-25)", () => {
 			TEST_BUILT_IN_CATEGORIES,
 		);
 		expect(result.current.customs).toEqual([
-			{ category: mockMusic, habitNames: ["Piano", "Scales"] },
-			{ category: mockGarden, habitNames: [] },
+			{
+				category: mockMusic,
+				habitNames: ["Piano", "Scales"],
+				activeCount: 1,
+				archivedCount: 1,
+			},
+			{
+				category: mockGarden,
+				habitNames: [],
+				activeCount: 0,
+				archivedCount: 0,
+			},
 		]);
 		expect(result.current.categories).toHaveLength(12);
 	});

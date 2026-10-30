@@ -15,6 +15,8 @@ const {
 	getCategories,
 	renameCategory,
 	deleteCategory,
+	reorderCategories,
+	restoreCategory,
 }: typeof CategoryRepository = require("./category-repository");
 const { createHabit, getHabit, setHabitArchived }: typeof HabitRepository =
 	require("./habit-repository");
@@ -217,6 +219,88 @@ describe("category-repository", () => {
 			await expect(deleteCategory(OTHER.id)).rejects.toThrow("built-in");
 			expect((await getHabit(habit.id))?.category).toEqual(HEALTH);
 			expect(await getCategories()).toHaveLength(BUILT_IN_CATEGORIES.length);
+		});
+	});
+
+	describe("reorderCategories (C2)", () => {
+		const names = async () => (await getCategories()).map((c) => c.name);
+
+		it("stores the new order for custom and built-in alike, with Other kept last", async () => {
+			const music = await newCustom("Music");
+			const garden = await newCustom("Garden");
+			const all = await getCategories();
+			const movable = all.filter((c) => c.name !== "Other").map((c) => c.id);
+			// Garden first, Music second, then the built-ins as they were.
+			const reordered = [
+				garden.id,
+				music.id,
+				...movable.filter((id) => id !== music.id && id !== garden.id),
+			];
+
+			await reorderCategories(reordered);
+
+			expect((await names()).slice(0, 4)).toEqual([
+				"Garden",
+				"Music",
+				"Health",
+				"Fitness",
+			]);
+			expect((await names()).at(-1)).toBe("Other");
+		});
+
+		it("lets Health move below a custom category, and a later new category still lands after Other", async () => {
+			const music = await newCustom("Music");
+			const all = await getCategories();
+			const movable = all.filter((c) => c.name !== "Other").map((c) => c.id);
+			await reorderCategories([
+				music.id,
+				...movable.filter((id) => id !== music.id),
+			]);
+			expect((await names())[0]).toBe("Music");
+
+			await newCustom("Garden");
+			const after = await names();
+			expect(after.at(-1)).toBe("Garden");
+			expect(after.indexOf("Other")).toBe(after.length - 2);
+		});
+
+		it("is atomic: a failure part-way leaves the order unchanged", async () => {
+			const music = await newCustom("Music");
+			const before = await names();
+			const movable = (await getCategories())
+				.filter((c) => c.name !== "Other")
+				.map((c) => c.id);
+			const spy = jest.spyOn(mockDb, "update").mockImplementationOnce(() => {
+				throw new Error("disk full");
+			});
+			await expect(
+				reorderCategories([
+					music.id,
+					...movable.filter((id) => id !== music.id),
+				]),
+			).rejects.toThrow("disk full");
+			spy.mockRestore();
+			expect(await names()).toEqual(before);
+		});
+	});
+
+	describe("deleting an unused category and undoing it (DC6)", () => {
+		it("hands back what it removed, and restoreCategory puts it back in the same place", async () => {
+			const music = await newCustom("Music");
+			const garden = await newCustom("Garden");
+			const before = (await getCategories()).map((c) => c.name);
+
+			const deleted = await deleteCategory(music.id);
+			expect(deleted.category).toEqual(music);
+			expect((await getCategories()).some((c) => c.id === music.id)).toBe(
+				false,
+			);
+
+			const restored = await restoreCategory(deleted);
+			expect(restored).toEqual(music);
+			const after = await getCategories();
+			expect(after.map((c) => c.name)).toEqual(before);
+			expect(after.find((c) => c.id === garden.id)).toBeDefined();
 		});
 	});
 });

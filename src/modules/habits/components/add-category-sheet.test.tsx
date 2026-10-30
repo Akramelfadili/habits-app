@@ -18,7 +18,10 @@ jest.mock("expo-symbols", () => {
 	return { SymbolView: View };
 });
 
-import { AddCategorySheet, CREATE_FAILED_MESSAGE } from "./add-category-sheet";
+import { categoriesCopy } from "../messages";
+import { AddCategorySheet } from "./add-category-sheet";
+
+const CREATE_FAILED_MESSAGE = categoriesCopy.addSheet.failed;
 
 const music = makeCategory({ id: 11, name: "Music", ...CATEGORY_ROTATION[0] });
 const categories = [...TEST_BUILT_IN_CATEGORIES, music];
@@ -90,9 +93,7 @@ describe("AddCategorySheet", () => {
 
 		await fireEvent.changeText(nameField(), "MUSIC ");
 		expect(
-			screen.getByText(
-				"You already have Music. Pick it from the list instead.",
-			),
+			screen.getByText("Music already exists. Choose another name."),
 		).toBeTruthy();
 		expect(screen.queryByTestId("category-preview")).toBeNull();
 		expect(isAddDisabled()).toBe(true);
@@ -161,11 +162,11 @@ describe("AddCategorySheet", () => {
 		expect(screen.queryByText(CREATE_FAILED_MESSAGE)).toBeNull();
 	});
 
-	it("Cancel dismisses without creating", async () => {
+	it("Close dismisses without creating", async () => {
 		const create = jest.fn();
 		const onDismiss = jest.fn();
 		await render(<Harness create={create} onDismiss={onDismiss} />);
-		await fireEvent.press(screen.getByText("Cancel"));
+		await fireEvent.press(screen.getByText("Close"));
 		expect(onDismiss).toHaveBeenCalled();
 		expect(create).not.toHaveBeenCalled();
 	});

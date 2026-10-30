@@ -143,6 +143,17 @@ export const messages = {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
 	},
+	/** DC6: a category nobody used is gone at once; Undo puts it back (5 s). */
+	categoryDeleted: {
+		tone: "success",
+		text: (name: string) => `${name} deleted`,
+	},
+	/** C5: a category in use is gone; its habits moved to Other and keep their history. */
+	categoryDeletedMoved: {
+		tone: "success",
+		text: (name: string, count: number) =>
+			`${name} deleted · ${count} ${count === 1 ? "habit" : "habits"} moved to Other`,
+	},
 	/** F7: the habit saved, but a reminder queued on the form did not. */
 	habitSavedReminderFailed: {
 		tone: "warning",
@@ -904,6 +915,94 @@ export const formCopy = {
 		title: "From a suggestion",
 		body: (name: string) =>
 			`${name} is filled in. Change anything before saving.`,
+	},
+} as const;
+
+/**
+ * Categories (HAB-42, C1–C6, DC6): the screen's header and groups, the rows,
+ * the inline rename, the add sheet and the two delete confirms. Counts always
+ * include archived habits.
+ */
+export const categoriesCopy = {
+	title: "Categories",
+	/** The eyebrow: "10 built-in · 2 custom", or just the built-ins before any custom exists (C6). */
+	eyebrow: (builtIn: number, custom: number) =>
+		custom > 0
+			? `${builtIn} built-in · ${custom} custom`
+			: `${builtIn} built-in`,
+	/** 08.3: "Categories, heading. 10 built-in, 2 custom." */
+	headerLabel: (builtIn: number, custom: number) =>
+		custom > 0
+			? `Categories, ${builtIn} built-in, ${custom} custom`
+			: `Categories, ${builtIn} built-in`,
+	reorder: "Reorder",
+	reorderHint: "Opens the list to drag categories into a new order.",
+	done: "Done",
+	add: "Add category",
+	customHeader: (count: number) => `Custom · ${count}`,
+	builtInHeader: (count: number) => `Built-in · ${count}`,
+	builtInNote: "Built-ins can’t be renamed or deleted.",
+	builtInTag: "Built-in",
+	/** "2 habits", "2 habits · 1 archived", "1 archived", or "Not used" — archived habits are counted (C1). */
+	count: (active: number, archived: number) => {
+		if (active === 0 && archived === 0) return "Not used";
+		const habits = `${active} ${active === 1 ? "habit" : "habits"}`;
+		if (archived === 0) return habits;
+		return active === 0
+			? `${archived} archived`
+			: `${habits} · ${archived} archived`;
+	},
+	rename: "Rename",
+	renameLabel: (name: string) => `Rename ${name}`,
+	deleteLabel: (name: string) => `Delete ${name}`,
+	delete: "Delete",
+	/** C6: the empty custom section teaches the feature. */
+	empty: { title: "Add a category", body: "Group habits your own way" },
+	reorderMode: {
+		eyebrow: "Reorder · sets group order",
+		note: "Groups on Today and Habits follow this order. Other stays last.",
+		handle: (name: string) => `Reorder ${name}`,
+		moveUp: "Move up",
+		moveDown: "Move down",
+		/** VoiceOver after a move: the new place. */
+		moved: (name: string, place: number, total: number) =>
+			`${name}, ${place} of ${total}`,
+	},
+	/** The inline rename (C3). */
+	renameField: {
+		label: (name: string) => `Rename ${name}`,
+		save: "Done",
+		saveLabel: (name: string) => `Save new name for ${name}`,
+		failed: "Couldn’t rename this category. Try again.",
+	},
+	/** Rename and add share one rule: no two groups with the same name (C3). */
+	duplicate: (name: string) => `${name} already exists. Choose another name.`,
+	addSheet: {
+		title: "New category",
+		close: "Close",
+		name: "Name",
+		placeholder: "e.g. Journaling",
+		preview: "Preview",
+		previewPlaceholder: "Your category",
+		note: "Icon and colour are picked for you from those not in use.",
+		submit: "Add category",
+		needsName: "Add a name to create this category",
+		failed: "Couldn’t add this category. Try again.",
+	},
+	deleteSheet: {
+		headline: (name: string) => `Delete ${name}?`,
+		/** C5: names how many habits move, and that nothing about them is lost. */
+		inUse: (count: number) =>
+			count === 1
+				? "1 habit uses it. It moves to Other — its history and streak are kept."
+				: `${count} habits use it. They move to Other — their history and streaks are kept.`,
+		/** DC6: nothing is lost, so one button. */
+		unused: "No habit uses it, so nothing else changes.",
+		move: (from: string, to: string) => `${from} → ${to}`,
+		confirmUnused: "Delete category",
+		confirmInUse: (count: number) =>
+			`Delete and move ${count} ${count === 1 ? "habit" : "habits"}`,
+		cancel: "Cancel",
 	},
 } as const;
 

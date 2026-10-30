@@ -9,7 +9,7 @@ import {
 	habitFixturesFor,
 	resolveFixtureScenario,
 } from "../dev/habit-fixtures";
-import type { Category, CreateCategoryInput } from "../types";
+import type { Category, CreateCategoryInput, DeletedCategory } from "../types";
 import type * as NativeCategoryRepository from "./category-repository";
 import {
 	applyCategoryChange,
@@ -93,14 +93,48 @@ export async function renameCategory(
 	return renamed;
 }
 
-export async function deleteCategory(id: number): Promise<void> {
-	customCategory(id, "delete");
+export async function deleteCategory(id: number): Promise<DeletedCategory> {
+	const category = customCategory(id, "delete");
+	const sortOrder = getCategoriesNow().findIndex((c) => c.id === id);
 	const other = getCategoriesNow().find(
 		(c) => c.builtIn && c.name === OTHER_CATEGORY_NAME,
 	);
 	if (!other) throw new Error("The built-in Other category is missing");
 	reassignHabitsToCategory(id, other);
 	setCategories(getCategoriesNow().filter((c) => c.id !== id));
+	return { category, sortOrder };
+}
+
+/** Puts a deleted category back where it stood (DC6's Undo). */
+export async function restoreCategory(
+	deleted: DeletedCategory,
+): Promise<Category> {
+	const existing = getCategoriesNow();
+	const at = Math.min(deleted.sortOrder, existing.length);
+	setCategories([
+		...existing.slice(0, at),
+		deleted.category,
+		...existing.slice(at),
+	]);
+	return deleted.category;
+}
+
+/**
+ * The stored order is the array order here: the movable categories in the new
+ * order, then Other last (C2). Unknown ids are ignored.
+ */
+export async function reorderCategories(orderedIds: number[]): Promise<void> {
+	const existing = getCategoriesNow();
+	const byId = new Map(existing.map((c) => [c.id, c]));
+	const moved = orderedIds.flatMap((id) => {
+		const category = byId.get(id);
+		return category ? [category] : [];
+	});
+	const rest = existing.filter(
+		(c) => !orderedIds.includes(c.id) && c.name !== OTHER_CATEGORY_NAME,
+	);
+	const other = existing.filter((c) => c.name === OTHER_CATEGORY_NAME);
+	setCategories([...moved, ...rest, ...other]);
 }
 
 // Compile-time guard: same exports as the native repository.
@@ -110,5 +144,7 @@ const _sameShape: typeof NativeCategoryRepository = {
 	createCategory,
 	renameCategory,
 	deleteCategory,
+	restoreCategory,
+	reorderCategories,
 };
 void _sameShape;

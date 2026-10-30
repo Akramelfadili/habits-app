@@ -1,4 +1,4 @@
-import { CATEGORY_ROTATION } from "../constants";
+import { CATEGORY_ROTATION, OTHER_CATEGORY_NAME } from "../constants";
 import type {
 	Category,
 	CategoryAppearance,
@@ -69,20 +69,29 @@ export function categoryUsage(
 	categories: readonly Category[],
 	habits: readonly Habit[],
 ): CategoryUsage[] {
-	return categories.map((category) => ({
-		category,
-		habitNames: habits
-			.filter((habit) => habit.category.id === category.id)
-			.map((habit) => habit.name),
-	}));
+	return categories.map((category) => {
+		const inCategory = habits.filter(
+			(habit) => habit.category.id === category.id,
+		);
+		const archivedCount = inCategory.filter(
+			(habit) => habit.archivedAt !== null,
+		).length;
+		return {
+			category,
+			habitNames: inCategory.map((habit) => habit.name),
+			activeCount: inCategory.length - archivedCount,
+			archivedCount,
+		};
+	});
 }
 
 /**
- * Categories in creation order (HAB-24): the migration-seeded built-ins in
- * their fixed order, then customs as they were made — autoincrement ids carry
- * both. The picker and Manage Categories list in this order; Today and
- * Manage habits group by the stored order instead (HAB-42).
+ * The categories a person can put in a new order (C2): all but the built-in
+ * Other, which always stays last. Custom and built-in mix freely — the order
+ * is the one Today and Habits group by.
  */
-export function inCreationOrder(categories: readonly Category[]): Category[] {
-	return [...categories].sort((a, b) => a.id - b.id);
+export function movableCategories(categories: readonly Category[]): Category[] {
+	return categories.filter(
+		(category) => !(category.builtIn && category.name === OTHER_CATEGORY_NAME),
+	);
 }

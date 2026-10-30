@@ -228,4 +228,19 @@ describe("Button — compact (V3-22)", () => {
 		await fireEvent.press(screen.getByText("Restore"));
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
+
+	it("rowAction is a quiet ink text action; dangerLink the same in danger red (C1)", async () => {
+		await render(
+			<>
+				<Button label="Rename" variant="rowAction" onPress={jest.fn()} />
+				<Button label="Delete" variant="dangerLink" onPress={jest.fn()} />
+			</>,
+		);
+		expect(screen.getByText("Rename")).toHaveStyle({
+			color: surfaceColors.light.ink,
+		});
+		expect(screen.getByText("Delete")).toHaveStyle({
+			color: semanticColors.light.dangerBg,
+		});
+	});
 });

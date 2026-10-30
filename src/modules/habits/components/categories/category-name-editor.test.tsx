@@ -4,14 +4,14 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import { categoriesCopy } from "../../messages";
 import {
 	makeCategory,
 	TEST_BUILT_IN_CATEGORIES,
-} from "../test-support/habit-builder";
-import {
-	RENAME_FAILED_MESSAGE,
-	RenameCategoryField,
-} from "./rename-category-field";
+} from "../../test-support/habit-builder";
+import { CategoryNameEditor } from "./category-name-editor";
+
+const RENAME_FAILED_MESSAGE = categoriesCopy.renameField.failed;
 
 const music = makeCategory({ id: 11, name: "Music" });
 const garden = makeCategory({ id: 12, name: "Garden" });
@@ -20,7 +20,7 @@ const categories = [...TEST_BUILT_IN_CATEGORIES, music, garden];
 function renderField(onRename = jest.fn().mockResolvedValue(undefined)) {
 	const onDone = jest.fn();
 	return render(
-		<RenameCategoryField
+		<CategoryNameEditor
 			category={music}
 			categories={categories}
 			onRename={onRename}
@@ -33,7 +33,7 @@ const field = () => screen.getByLabelText("Rename Music");
 const save = () =>
 	screen.getByRole("button", { name: "Save new name for Music" });
 
-describe("RenameCategoryField (HAB-25)", () => {
+describe("CategoryNameEditor (C3)", () => {
 	it("starts from the current name and saves a new one, trimmed", async () => {
 		const { onRename, onDone } = await renderField();
 		expect(field().props.value).toBe("Music");
@@ -50,7 +50,9 @@ describe("RenameCategoryField (HAB-25)", () => {
 		await fireEvent.changeText(field(), " health ");
 
 		expect(
-			screen.getByText("You already have Health. Choose a different name."),
+			screen.getByRole("alert", {
+				name: "Health already exists. Choose another name.",
+			}),
 		).toBeTruthy();
 		expect(save().props.accessibilityState.disabled).toBe(true);
 		await fireEvent.press(save());
@@ -67,7 +69,7 @@ describe("RenameCategoryField (HAB-25)", () => {
 		const { onRename } = await renderField();
 		await fireEvent.changeText(field(), "music");
 
-		expect(screen.queryByText(/already have/)).toBeNull();
+		expect(screen.queryByText(/already exists/)).toBeNull();
 		await fireEvent.press(save());
 		await waitFor(() => expect(onRename).toHaveBeenCalledWith("music"));
 	});
@@ -99,16 +101,6 @@ describe("RenameCategoryField (HAB-25)", () => {
 		expect(onRename).not.toHaveBeenCalled();
 	});
 
-	it("Cancel leaves edit mode without writing", async () => {
-		const { onRename, onDone } = await renderField();
-		await fireEvent.changeText(field(), "Piano");
-		await fireEvent.press(
-			screen.getByRole("button", { name: "Cancel renaming Music" }),
-		);
-		expect(onDone).toHaveBeenCalled();
-		expect(onRename).not.toHaveBeenCalled();
-	});
-
 	it("a failed write keeps edit mode open with the name and says so", async () => {
 		const { onDone } = await renderField(
 			jest.fn().mockRejectedValue(new Error("disk full")),
@@ -119,5 +111,11 @@ describe("RenameCategoryField (HAB-25)", () => {
 		expect(await screen.findByText(RENAME_FAILED_MESSAGE)).toBeTruthy();
 		expect(field().props.value).toBe("Piano");
 		expect(onDone).not.toHaveBeenCalled();
+	});
+
+	it("hides the caps label but keeps the field named for VoiceOver", async () => {
+		await renderField();
+		expect(screen.queryByText("RENAME MUSIC")).toBeNull();
+		expect(field()).toBeTruthy();
 	});
 });

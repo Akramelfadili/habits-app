@@ -34,4 +34,20 @@ describe("AddRow", () => {
 			borderWidth: 0,
 		});
 	});
+
+	it("says its subtitle as part of the one button (C6)", async () => {
+		await render(
+			<AddRow
+				label="Add a category"
+				subtitle="Group habits your own way"
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(screen.getByText("Group habits your own way")).toBeTruthy();
+		expect(
+			screen.getByRole("button", {
+				name: "Add a category, Group habits your own way",
+			}),
+		).toBeTruthy();
+	});
 });

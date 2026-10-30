@@ -405,62 +405,91 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-25 — Categories: manage & delete (temporarily pushed from Manage habits until Settings, HAB-15)
-	"manage-categories-built-in-only": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-built-in-only",
-		mockup: "docs/mockups/hab-25-f3a.png",
-		note: "F3a — built-ins only: locked tinted chips, counts, Built-in tag, no actions; Yours holds only Add category. Back reads 'Manage' until Settings (HAB-15) exists.",
+	// HAB-42 — Categories (C1–C6, DC6)
+	"categories-list": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/forms/slice_06.png",
+		note: "C1 — custom first with Rename and Delete, built-ins locked under their note with a tag; counts include archived (Music 3 habits · 1 archived).",
 	},
-	"manage-categories-one-custom": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-one-custom",
-		mockup: "docs/mockups/hab-25-f3b.png",
-		note: "F3b — one custom (Music), not used: outline chip, Rename + red Delete.",
-	},
-	"manage-categories-in-use": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-in-use",
-		mockup: "docs/mockups/hab-25-f3c.png",
-		note: "F3c — Music 3 habits (one archived — counts include archived), Language 1, Garden not used; creation order.",
-	},
-	"delete-category-unused": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-in-use",
-		mockup: "docs/mockups/hab-25-f4a.png",
-		note: "F4a — plain confirm, no mention of reassignment.",
+	"categories-reorder": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/forms/slice_07.png",
+		note: "C2 — Reorder: one list of every category but Other, handles on the right, 'Other stays last' in the note.",
 		async interact(page) {
-			await page.getByRole("button", { name: "Delete Garden" }).click();
+			await page.getByRole("button", { name: "Reorder", exact: true }).click();
+			await page.waitForTimeout(400);
 		},
 	},
-	"delete-category-in-use": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-in-use",
-		mockup: "docs/mockups/hab-25-f4b.png",
-		note: "F4b — names the count, Music → Other move preview with every affected habit, 'Delete and move 3 habits'.",
-		async interact(page) {
-			await page.getByRole("button", { name: "Delete Music" }).click();
-		},
-	},
-	"rename-category-editing": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-in-use",
-		mockup: null,
-		note: "No mockup — proposed inline rename: the row becomes the add-sheet's name field (counter from 16/20) with Cancel / Save.",
+	"categories-rename-editing": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/forms/slice_07.png",
+		note: "C3 — inline rename: the row's name is a field with the counter from 16/20 and Done; the other buttons wait.",
 		async interact(page) {
 			await page.getByRole("button", { name: "Rename Language" }).click();
 			await page.getByLabel("Rename Language").fill("Languages & more");
 		},
 	},
-	"rename-category-duplicate": {
-		feature: "HAB-25",
-		route: "/(habits)/categories?fixtures=categories-in-use",
-		mockup: null,
-		note: "No mockup — proposed: renaming to a built-in's name ('health') shows the amber duplicate helper and blocks Save.",
+	"categories-rename-duplicate": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/forms/slice_07.png",
+		note: "C3 — renaming to 'health' clashes with a built-in (case ignored): red outline, '! Health already exists. Choose another name.', Done off.",
 		async interact(page) {
 			await page.getByRole("button", { name: "Rename Language" }).click();
 			await page.getByLabel("Rename Language").fill("health");
 		},
+	},
+	"categories-add": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/forms/slice_08.png",
+		note: "C4 — New category sheet: name, the preview chip with the auto-assigned icon and colour, the note, Add category.",
+		async interact(page) {
+			await page
+				.getByRole("button", { name: "Add category", exact: true })
+				.click();
+			await page.getByPlaceholder("e.g. Journaling").fill("Journaling");
+			await page.waitForTimeout(300);
+		},
+	},
+	"categories-delete-in-use": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/forms/slice_08.png",
+		note: "C5 — delete in use: how many habits move to Other, history and streaks kept, each habit with its move, 'Delete and move 3 habits', Cancel. No Close (V3-25); the frame draws one.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Delete Music" }).click();
+		},
+	},
+	"categories-delete-unused": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/sheets/slice_03.png",
+		note: "DC6 — nothing uses it: one destructive 'Delete category' and Cancel.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Delete Garden" }).click();
+		},
+	},
+	"categories-delete-undo": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
+		mockup: "docs/mockups/v3/renders/sheets/slice_03.png",
+		note: "DC6 — after the delete: Garden is gone and the toast says so with Undo (5 s).",
+		async interact(page) {
+			await page.getByRole("button", { name: "Delete Garden" }).click();
+			await page.getByText("Delete category", { exact: true }).click();
+			await page.getByText("Garden deleted").waitFor();
+			await page.waitForTimeout(300);
+		},
+	},
+	"categories-empty-custom": {
+		feature: "HAB-42",
+		route: "/(habits)/categories?from=habits&fixtures=categories-built-in-only",
+		mockup: "docs/mockups/v3/renders/forms/slice_09.png",
+		note: "C6 — no custom categories: 'Add a category · Group habits your own way', no Reorder.",
 	},
 
 	// HAB-07 / HAB-08 — Sheets over Today
@@ -1545,7 +1574,14 @@ const DARK_TWINS = [
 	"delete-failed",
 	"delete-confirm-ax",
 	"add-category-empty",
-	"manage-categories-in-use",
+	"categories-list",
+	"categories-reorder",
+	"categories-rename-duplicate",
+	"categories-add",
+	"categories-delete-in-use",
+	"categories-delete-unused",
+	"categories-delete-undo",
+	"categories-empty-custom",
 	"new-habit-near-limit",
 	"form-new-empty",
 	"form-new-filled",

@@ -24,6 +24,8 @@ type TextFieldProps = {
 	error?: string;
 	/** What the field does or shows ("Shown after the number: 5 of 8 glasses"). */
 	helper?: string;
+	/** An inline field with no caps label above it (the category rename, C3): the name stays for VoiceOver. */
+	hideLabel?: boolean;
 	/** Locked, with the reason under the card ("Built-in categories can't be renamed"). */
 	disabled?: boolean;
 	maxLength?: number;
@@ -61,6 +63,7 @@ export function TextField({
 	placeholder,
 	error,
 	helper,
+	hideLabel = false,
 	disabled = false,
 	maxLength,
 	autoFocus,
@@ -94,8 +97,8 @@ export function TextField({
 					disabled && { opacity: opacity.disabled },
 				]}
 			>
-				<View style={styles.labelRow}>
-					<SectionLabel>{label}</SectionLabel>
+				<View style={[styles.labelRow, hideLabel && styles.counterOnly]}>
+					{hideLabel ? null : <SectionLabel>{label}</SectionLabel>}
 					{maxLength !== undefined && !disabled ? (
 						<CharacterCounter length={value.length} limit={maxLength} />
 					) : null}
@@ -174,6 +177,9 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
+	},
+	counterOnly: {
+		justifyContent: "flex-end",
 	},
 	input: {
 		paddingVertical: space[50],

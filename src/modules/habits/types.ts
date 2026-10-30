@@ -53,6 +53,15 @@ export type CategoryUsage = {
 	category: Category;
 	/** Every habit in the category, in manual order. */
 	habitNames: string[];
+	/** How many of them are active; the rest are archived (the count line says both). */
+	activeCount: number;
+	archivedCount: number;
+};
+
+/** A deleted custom category and where it stood in the stored order, so Undo can put it back exactly (DC6). */
+export type DeletedCategory = {
+	category: Category;
+	sortOrder: number;
 };
 
 /** Icon and color are never user-chosen — the caller passes the rotation's pick. */

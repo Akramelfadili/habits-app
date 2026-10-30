@@ -1,10 +1,10 @@
-import { useMemo } from "react";
-import { inCreationOrder } from "../domain/category-rules";
 import { useCategories } from "../repositories/category-repository";
 
-/** Every category, in picker order (HAB-24): built-ins, then customs by creation. */
+/**
+ * Every category in the stored group order (HAB-42) — the order the form's
+ * chips, the Categories screen and the Today and Habits groups all follow.
+ */
 export function useCategoryQueries() {
-	const stored = useCategories();
-	const categories = useMemo(() => inCreationOrder(stored), [stored]);
+	const categories = useCategories();
 	return { categories };
 }
