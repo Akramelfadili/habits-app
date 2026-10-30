@@ -203,7 +203,7 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 Deviations from the mockup / spec and what was left out; each is deliberate unless marked.
 
 - **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design-system-v3.md`).
-- **Delete candidates at the end of V3-4: `sparkline`, `mini-month`, `year-strip`** (components in `components/ui/composite`, with tests). Built for V3-06 / V3-08 but no frame uses them: the Detail frames' "V3-06 mini" (D1–D4) is the 24 pt history grid, which is `CompletionRows` and already in use; the sparkline needs weekly data per habit that `RangeHabitRow` does not carry; the compact year strip appears only in a V3-06 specimen. `deadcode` lists all three. Delete them when V3-4 ships unless Detail picks one up.
+- **Delete candidates at the end of V3-4 (sparkline, mini month, year strip): deleted in V3-4a.**
 - **Month, one habit (P10): tiles are Completion / Longest / Freezes used**, not the mockup's Streak (current streak is not in the month data; Week's tile reads the whole log, Month's does not). Add `streakHistory` to the month hook for a single habit if the current streak is wanted.
 - **Week day headers are 44 pt high but 28 pt wide** (the cell pitch): a 44 pt-wide target would overlap its neighbour. The mockup asks for 44.
 - **Month calendar: VoiceOver reads day by day** ("Wednesday 14 October, 100 percent", each a button), not per week row as 08.3 words it: every day is the entry to its detail card.
@@ -217,6 +217,29 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **P1 week matrix order follows creation order** (the mockup lists Read second); the fixtures create all six on one day, so ids decide.
 - **Performance:** Year (5 y × 20 habits, through the real hooks) opens in ~260–300 ms cold and ~220 ms warm in Node, from 375–460 / 330–350 before the heat map and the summary shared one classification of the days (`classifyRangeDays`). On Hermes expect 2–5×; if it is felt on a device the next step is classifying once for the previous year only when "+N pts" needs it. Week fell 727 → 169 ms earlier by making `fromDayKey` read the three fields instead of `parseISO`.
 - **Maestro `hab-11` is rewritten for the new screen but was not run.**
+
+## Open — V3-4a (Habits tab, Habit Detail, delete and archive sheets)
+
+Deviations from the mockup / spec and what was left out; each is deliberate unless marked.
+
+- **Which day a week row opens (HAB-34, D1).** The spec says the whole week row is one 44 pt target that opens Edit this day, but a day sheet needs a day. It opens the latest day of that week that is due and unlogged (missed, reset, or today still open), else the latest day that can be edited; a week before the habit started or still ahead is not a button. Decide whether the sheet should instead let the person pick the day inside it.
+- **History has no "See all" (D2).** The frame draws a "See all" link; the spec lists none. History shows the latest ten days that say something (done, partial, missed, frozen, bonus, or a day with a note). A longer list needs its own screen.
+- **"+N pts" on the 90-day rate (D1).** The frame draws it; the spec only says "90-day rate". Built as the rate minus the rate over the 90 days before it, only for a habit older than 90 days whose earlier window has at least 7 due days; otherwise the tile says "N of M days" (Break: "resisted"). A rate under 7 due days reads "—, after 7 days" (D3).
+- **Stat tile VoiceOver reads "Streak: 9, in a row"**, not 08.3's "Streak, 9 in a row": `StatCard` (V3-10) joins label and value with a colon for every screen. Change it there if the wording matters.
+- **Library row subtitles name a streak only for a daily Build habit** (H1 draws "Daily · 13-day streak" and nothing for the per-week, weekday and Break rows). The mockup's data is not consistent with any wider rule.
+- **Group order follows the stored category order** (HAB-42), not the frame's: the fixtures' categories happen to match H1, but a person's own order wins.
+- **Habits header buttons stay in the collapsed inline bar** (F-07 says the bar carries "name and buttons"; H5's crop draws the bar without them). The gear and + are reachable at any scroll.
+- **Restore is `Button variant="compact"`** (V3-22's 36 pt pill on the inset surface). Other small buttons (`size="small"`: Categories' Rename and Delete, the category picker's Add) are still the old outlined pill until V3-4b moves them. Secondary buttons are still hairline-outlined, not the 3:1 outline V3-22 draws (Cancel on DC1, Keep habit); V3-6.
+- **"Add “Yoga” as a habit" and other `link` buttons are secondary ink**, V3-22's link is ink; the variant is shared with First Run's "Start from scratch" (V3-4b/V3-6).
+- **The Archived row's icon square is the inset neutral, dimmed with the row**, so on a white card it is close to invisible in light mode; the frame draws a visible grey square. Revisit with the V3-6 polish (a `dimmed` that keeps the icon at full opacity).
+- **After a delete, Detail pops to wherever it was opened from** (Today, Progress or Habits) with "<Habit> deleted"; DC3 says "pops Detail to Habits" because it is drawn from Habits. Popping to another tab would switch tabs under the person.
+- **DC5's body is DC5's** ("…restore it any time from Habits › Archived."), not H8's shorter line.
+- **Categories' Back says "Habits" when opened from the Habits tab** (`/categories?from=habits`) and "Settings" otherwise; the Categories screen itself is V3-4b.
+- **`EmptyState`'s icon square is `inner`**, as T2 (see V3-2b); H3 and H6 draw a white square with a hairline.
+- **The empty Habits tab (H6) has no "Browse suggestions"** until HAB-46; its body reads "Add your first habit to start tracking." instead of the frame's "…or start from a suggestion."
+- **The Habits tab with every habit archived** (not drawn) shows "No active habits" with Add habit and the Archived section below.
+- **Maestro `hab-13-manage-archive-delete` still describes the old Manage screen** and was not run (V3-6 rewrites the flows for the three tabs).
+- **Scenarios left in the web fixtures:** `manage-archive` still backs Today's long-list state and `manage-all-archived` the all-archived Habits state; `habit-detail`, `habit-detail-new`, `habit-detail-bonus`, `habit-detail-archived` and `no-freezes` are no longer used by a visual-check state (dev seeds still read `habit-detail`). `manage-nothing-archived` was removed.
 
 ## V3-6 audit list (touch targets and known layout exceptions)
 

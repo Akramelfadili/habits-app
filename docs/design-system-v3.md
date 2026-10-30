@@ -171,10 +171,10 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-19 | Chip · weekday chip | V1-09 | 44 pt |
 | V3-20 | Toggle | V1-07 | Off track outline; knob onAccent; whole row toggles |
 | V3-21 | Checkbox | new | |
-| V3-22 | Buttons | V1-03/04/05 + VAR-13 | Primary, secondary, destructive, disabled-with-reason, compact (44 hit) |
+| V3-22 | Buttons | V1-03/04/05 + VAR-13 | Primary, secondary, destructive, disabled-with-reason, compact (44 hit). **Built:** destructive is the outlined red pill and `variant="compact"` the 36 pt inset pill (V3-4a); secondary is still the hairline pill, not the 3:1 outline, and `link` is secondary ink (V3-6) |
 | V3-23 | List item | V1-14 + VAR-05/08 | |
 | V3-24 | Sheet | V1-15 + VAR-03 | Grabber, title, Close (swipe = Close); confirm sheets drop Close and end with Cancel |
-| V3-25 | Destructive confirm | NEW-12 + V1-16 | Archive-first variant, move-preview variant |
+| V3-25 | Destructive confirm | NEW-12 + V1-16 | Archive-first variant, move-preview variant. **Built (V3-4a):** `DestructiveConfirmSheet` — safe action first and focused, outlined red pill, hint, Cancel last, in-sheet error banner, busy state; Archive's one-tap sheet (DC5) is its own, lighter sheet |
 | V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 4 s success+info / 6 s warning / errors until Retry or swipe |
 | V3-27 | Inline banner | V1-19 + NEW-13 | States that last |
 | V3-28 | Empty state | V1-21 | |

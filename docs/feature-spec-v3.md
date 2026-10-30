@@ -318,6 +318,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Check against code:** existing Manage & archive screen (HAB-19) is replaced; reuse the reorder-within-category logic.
 
+> **As built (V3-4a):** *Habits tab* — route `manage` renders `HabitsScreen`. Header: counts as the eyebrow ("7 active · 2 archived", "No habits", "Reorder · drag within a category"), gear and + (Done while reordering), collapsing into the inline bar (which keeps the buttons). Search matches names, case- and accent-folded, across active and archived; results split by status, archived ones have Restore; no results says what was searched and offers "Add “Yoga” as a habit" (`/new-habit?name=Yoga`). Rows: icon square, name, "Daily · 8 glasses" / "3× per week" / "Tue, Thu" / "Break · daily", with "13-day streak" only on a daily Build habit; VoiceOver actions Reorder and Archive. Reorder keeps a lifted row in its category (VoiceOver Move up / Move down on the grip). Archived is collapsed ("Show"/"Hide"), Restore is instant ("<Habit> is back on Today", Undo restores the archive date and pauses) and a line explains the fresh streak. Categories row (count) at the end, its Back reads Habits. H6 hides "Browse suggestions" until HAB-46. Deviations: `docs/backlog.md`, "V3-4a".
+
 ---
 
 ## HAB-40 — Habit Detail
@@ -332,6 +334,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Break habits (D7): resistance copy throughout.
 
 **Edge cases:** repeated archive/restore must not stack duplicate reminder notifications; reminders resume at the next scheduled occurrence.
+
+> **As built (V3-4a):** title row (eyebrow, name, Edit pill); archived banner with Restore (D4) or "Restored today" for the day of a restore (D5); tiles Streak / Longest / 90-day rate ("+4 pts" against the 90 days before, only for a habit older than 90 days whose earlier window has 7 due days; Break habits say "resisted"; under 7 due days "after 7 days"), and in the month of a streak reset the third tile is the amber Freezes tile (D6); "Last 5 weeks" on `CompletionRows` with a legend of only the states drawn; each week row is one 44 pt button reading the whole week and opening Edit this day for the latest due-and-unlogged day that week, else the latest editable day; paused days are hatched; Reminders row ("07:00 · Tue, Thu", "None", "Paused"); History lists the latest ten days that are done, partial, missed, frozen, bonus ("Done · off-schedule, not counted", Bonus tag) or carry a note, newest first, no times and no "See all"; Archive and Delete last, each behind a sheet. A repeated archive/restore cycle leaves one notification per reminder (`habit-lifecycle-service.cycles.test.ts`).
 
 ---
 
@@ -397,6 +401,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **Delete habit (DC1):** names what is lost ("Deletes Read 20 min and its 214 logs"), offers **Archive instead** first (default focus), then **Delete permanently**; no Close, Cancel ends it. Deleting (DC3) disables Cancel; success pops Detail to Habits with a toast (no Undo). Failure (DC4): banner inside the sheet "Nothing was changed. Try again."
 - **Archive (DC5):** one tap, Archive habit (primary) / Cancel; afterwards Detail pops and the toast offers Undo.
 - Delete category: HAB-42.
+
+> **As built (V3-4a):** `DestructiveConfirmSheet` (V3-25) is shared with Delete category: Archive instead is a navigable row that takes the screen reader's focus when the sheet has settled (`useInitialFocus`), Delete permanently an outlined red pill with "One tap deletes. This can’t be undone." (read as its hint at accessibility sizes), Cancel last; the scrim and swipe-down are Cancel until the delete runs. DC3: "Deleting…", Cancel disabled, no dismissal; success pops Detail to where it was opened from with "<Habit> deleted" and no Undo. DC4: an alert banner ("Couldn’t delete / Nothing was changed. Try again.") and Delete stays available; `deleteHabitAndHistory` is one `runInTransaction`. DC5: `ArchiveHabitSheet`, Archive habit / Cancel; afterwards Detail pops and "<Habit> archived" offers Undo.
 
 **Change vs today:** today's sheet is single-confirm with Keep as primary and an Archive card; V3 makes Archive-instead the default-focus primary, ends with Cancel, names the log count, and shows failure as an in-sheet banner (DC4).
 
