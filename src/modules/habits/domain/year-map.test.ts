@@ -1,8 +1,18 @@
 import { addDays, format } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
+import {
+	PROGRESS_TODAY,
+	progressEntries,
+	progressFrozen,
+	progressHabits,
+} from "../test-support/progress-views";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { scopeHabits } from "./day-grid";
-import { rangeWindowFor } from "./range-summary";
+import {
+	buildRangeSummary,
+	classifyRangeDays,
+	rangeWindowFor,
+} from "./range-summary";
 import { buildYearMap } from "./year-map";
 
 // Wednesday 21 Oct 2026.
@@ -152,5 +162,34 @@ describe("buildYearMap", () => {
 			result.days.every((d) => d.status === "rest" || d.status === "future"),
 		).toBe(true);
 		expect(result.bestMonth).toBeNull();
+	});
+});
+
+describe("one classification shared by the year map and the range summary", () => {
+	const habits = progressHabits;
+	const entries = progressEntries();
+	const today = PROGRESS_TODAY;
+	const window = rangeWindowFor("year", today);
+	const common = { habits, entries, frozenDays: progressFrozen, today };
+	const classified = classifyRangeDays({ kind: "year", ...common, window });
+
+	it("gives the year map exactly what it builds on its own", () => {
+		expect(buildYearMap({ ...common, year: window, classified })).toEqual(
+			buildYearMap({ ...common, year: window }),
+		);
+	});
+
+	it("gives the range summary exactly what it builds on its own", () => {
+		expect(
+			buildRangeSummary({ kind: "year", ...common, window, classified }),
+		).toEqual(buildRangeSummary({ kind: "year", ...common, window }));
+	});
+
+	it("covers the previous year and this one, in one run of days", () => {
+		expect(classified.dates[0]).toEqual(new Date(2025, 0, 1));
+		expect(classified.dates.at(-1)).toEqual(new Date(2026, 11, 31));
+		for (const { cells } of classified.perHabit) {
+			expect(cells).toHaveLength(classified.dates.length);
+		}
 	});
 });

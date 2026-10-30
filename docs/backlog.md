@@ -215,7 +215,7 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **The per-habit rates list includes an archived habit that had days in the range** (never in insights, D11).
 - **Export is "unavailable" with no habits or no logs** (tap = toast); the mockup draws only the no-habits case disabled.
 - **P1 week matrix order follows creation order** (the mockup lists Read second); the fixtures create all six on one day, so ids decide.
-- **Performance:** Year (5 y × 20 habits) opens in ~310 ms in Node (year summary ~200 ms + year map ~100 ms, each classifying the same habits over the same days). On Hermes expect 2–5×: build both from one classification pass if it is felt on a device. Week fell 727 → 169 ms by making `fromDayKey` read the three fields instead of `parseISO`.
+- **Performance:** Year (5 y × 20 habits, through the real hooks) opens in ~260–300 ms cold and ~220 ms warm in Node, from 375–460 / 330–350 before the heat map and the summary shared one classification of the days (`classifyRangeDays`). On Hermes expect 2–5×; if it is felt on a device the next step is classifying once for the previous year only when "+N pts" needs it. Week fell 727 → 169 ms earlier by making `fromDayKey` read the three fields instead of `parseISO`.
 - **Maestro `hab-11` is rewritten for the new screen but was not run.**
 
 ## V3-6 audit list (touch targets and known layout exceptions)

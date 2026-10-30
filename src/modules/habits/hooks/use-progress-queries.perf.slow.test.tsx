@@ -128,7 +128,7 @@ describe("Progress hooks on 5 years × 20 habits", () => {
 		const { elapsed } = await timed("Year (all habits, warm)", () =>
 			useProgressYearQueries(),
 		);
-		expect(elapsed).toBeLessThan(1000);
+		expect(elapsed).toBeLessThan(600);
 	});
 
 	it("Year filtered to one habit is quicker still", async () => {

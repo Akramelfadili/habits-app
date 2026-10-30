@@ -1,5 +1,6 @@
 import {
 	addMonths,
+	differenceInCalendarDays,
 	endOfMonth,
 	format,
 	isAfter,
@@ -12,7 +13,7 @@ import { percentOf } from "./completion-rate";
 import { aggregateDays, classifyHabits, daysIn } from "./day-grid";
 import { historyStart } from "./monthly-summary";
 import { type CalendarDay, calendarDayOf } from "./progress-grid";
-import type { RangeWindow } from "./range-summary";
+import type { ClassifiedDays, RangeWindow } from "./range-summary";
 import { bestMonth, isJudgeable } from "./yearly-insights";
 import type { YearMonthCell } from "./yearly-summary";
 
@@ -70,20 +71,35 @@ type YearMapInput = {
 	year: RangeWindow;
 	/** Nothing has ever been logged: due past days read `nothing-logged`. */
 	nothingLogged?: boolean;
+	/**
+	 * The cells for the previous year and this one, classified once by
+	 * `classifyRangeDays({ kind: "year", … })` and shared with the year's range
+	 * summary, so the days are walked once. This year's days are read out of it.
+	 */
+	classified?: ClassifiedDays;
 };
 
 export function buildYearMap(input: YearMapInput): YearMap {
 	const { year, today } = input;
 	const todayStart = startOfDay(today);
 	const dates = daysIn(year.start, year.end);
-	const perHabit = classifyHabits({
-		habits: input.habits,
-		entries: input.entries,
-		frozenDays: input.frozenDays,
-		today,
-		dates,
-		nothingLogged: input.nothingLogged,
-	});
+	const { classified } = input;
+	const offset = classified
+		? differenceInCalendarDays(year.start, classified.dates[0])
+		: 0;
+	const perHabit = classified
+		? classified.perHabit.map(({ habit, cells }) => ({
+				habit,
+				cells: cells.slice(offset, offset + dates.length),
+			}))
+		: classifyHabits({
+				habits: input.habits,
+				entries: input.entries,
+				frozenDays: input.frozenDays,
+				today,
+				dates,
+				nothingLogged: input.nothingLogged,
+			});
 	const aggregates = aggregateDays(perHabit, dates, today);
 	const days = aggregates.map((day) => calendarDayOf(day, perHabit.length));
 	const firstDay = historyStart(input.habits);
