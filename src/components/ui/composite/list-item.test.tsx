@@ -60,6 +60,22 @@ describe("ListItem", () => {
 		expect(screen.getByText("Check")).not.toHaveStyle({ opacity: 0.5 });
 	});
 
+	it("with keepLeading fades the text but leaves the leading icon opaque (H2)", async () => {
+		await render(
+			<ListItem
+				title="Meditate"
+				dimmed
+				keepLeading
+				leading={<Text>Icon</Text>}
+			/>,
+		);
+		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({
+			opacity: 0.5,
+		});
+		expect(screen.getByText("Icon")).not.toHaveStyle({ opacity: 0.5 });
+		expect(screen.getByText("Meditate").parent).toHaveStyle({ opacity: 0.5 });
+	});
+
 	it("is fully opaque by default", async () => {
 		await render(<ListItem title="Meditate" />);
 		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({

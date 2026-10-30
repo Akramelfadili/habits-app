@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
-import { habitAccentInk } from "@/theme/theme";
+import { habitAccentInk, surfaceColors } from "@/theme/theme";
 import { builtInCategory, makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
@@ -29,6 +29,16 @@ describe("HabitBadge", () => {
 		await render(<HabitBadge habit={makeHabit({ category })} muted />);
 		expect(screen.getByTestId("symbol").props.tintColor).not.toBe(
 			habitAccentInk(category.hue, "light"),
+		);
+	});
+
+	it("muted draws the track square with sub ink, visible on a white card (H2)", async () => {
+		await render(<HabitBadge habit={makeHabit()} size="default" muted />);
+		expect(screen.toJSON()).toHaveStyle({
+			backgroundColor: surfaceColors.light.track,
+		});
+		expect(screen.getByTestId("symbol").props.tintColor).toBe(
+			surfaceColors.light.sub,
 		);
 	});
 });

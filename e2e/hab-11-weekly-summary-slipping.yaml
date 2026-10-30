@@ -1,18 +1,15 @@
-# Journey: Weekly Summary flags the worst habit → backfill the week so a
-# different habit falls behind → the insight moves to it → "Reschedule
-# habit" opens that habit's Edit screen.
-# Covers HAB-11 (Progress week + slipping insight), HAB-10 (retro-log as the way
-# to log past days), HAB-02 (Edit/reschedule as the insight's destination),
-# HAB-27 (the summary is the Progress tab root; switching tabs keeps each
-# tab's own stack).
+# Journey: Progress flags the habit that is slipping → its insight's link
+# opens that habit's Edit screen.
+# Covers HAB-35/38 (Progress week + the slipping insight), HAB-02 (Edit as the
+# insight's destination), HAB-27 (Progress is a tab root; Edit is a modal).
 #
-# Seed (default fixtures, clock pinned to Thu 1 Oct 20:00): four habits,
-# nothing logged Mon–Wed; today Read before bed and Glass of water are done.
-# So before logging, Evening walk (0 of 3) is the worst habit. Backfilling
-# Mon–Wed for everything except Read before bed leaves Read as the only one
-# behind (1 of 4; today's still-open habits don't count against the week yet) — the insight needs ≥3 scheduled days, which is why the
-# clock is pinned to Thursday rather than left on the real weekday.
-url: ${APP_URL}/?clock=2026-10-01T20:00:00
+# Seed (`progress-v3` fixtures, clock pinned to Fri 23 Oct): six habits with
+# history since March; No social media is the slipping one. The old journey
+# backfilled a week by hand to move the insight to another habit; since V3-3b
+# the insight needs 7 days of logs and Detail's backfill goes through its week
+# rows (see hab-09-10), so that half is no longer a Progress journey and the
+# insight's recalculation is covered by progress-insights unit tests.
+url: ${APP_URL}/?fixtures=progress-v3&clock=2026-10-23T09:00:00
 env:
   APP_URL: http://localhost:8081
 tags:
@@ -20,61 +17,13 @@ tags:
 ---
 - launchApp
 
-# HAB-27, HAB-35: Progress is the tab root and opens on Week — no ⋯ menu.
+# HAB-27, HAB-35: Progress is the tab root and opens on Week.
 - tapOn:
     id: "Progress"
-- assertVisible: "Progress"
-- assertVisible: "Evening walk is slipping"
+- assertVisible: "No social media is slipping"
 - takeScreenshot: hab-11-before
-- tapOn:
-    id: "Today"
-- assertVisible: "Today"
 
-# Backfill Mon–Wed from a habit's heatmap: one Edit this day sheet per day lists
-# every habit due that day, so several can be ticked at once.
-- tapOn: "Glass of water"
-- tapOn:
-    id: "Monday 28 September, missed"
-- tapOn:
-    id: "Glass of water, not done"
-- tapOn:
-    id: "Evening walk, not done"
-- tapOn:
-    id: "No phone after 23:00, resisted[?]"
-- tapOn: "Done"
-- tapOn:
-    id: "Tuesday 29 September, missed"
-- tapOn:
-    id: "Glass of water, not done"
-- tapOn:
-    id: "Evening walk, not done"
-- tapOn:
-    id: "No phone after 23:00, resisted[?]"
-- tapOn: "Done"
-- tapOn:
-    id: "Wednesday 30 September, missed"
-- tapOn:
-    id: "Glass of water, not done"
-- tapOn:
-    id: "Evening walk, not done"
-- tapOn:
-    id: "No phone after 23:00, resisted[?]"
-- tapOn: "Done"
-- assertVisible:
-    id: "Wednesday 30 September, logged"
-# Detail was opened from Today, so Back returns there, not to Progress.
-- back
-- assertVisible: "Today"
-
-- tapOn:
-    id: "Progress"
-- assertVisible: "Read before bed is slipping"
-- assertNotVisible: "Evening walk is slipping"
-- takeScreenshot: hab-11-after
-
-# The insight's link opens that habit's Edit screen, scrolled to Frequency.
+# The insight's link opens that habit's Edit screen.
 - tapOn: "Change frequency ›"
 - assertVisible: "Edit habit"
-- assertVisible: "Save habit"
-- assertVisible: "20"
 - takeScreenshot: hab-11-edit

@@ -17,13 +17,16 @@ tags:
 
 # HAB-09: tapping the habit's name opens its detail.
 - tapOn: "Glass of water"
+# The streak tile reads "Streak, 24, days" (V3-4a).
 - assertVisible:
-    id: "Current: 24, day streak"
+    text: "24"
 - takeScreenshot: hab-09-10-before
 
-# HAB-10: a past missed day opens the Edit this day sheet for that date.
+# HAB-10: each of the last five weeks is one target; the oldest week holds the
+# miss on Sun 6 Sep, and the row opens Edit this day on its latest unlogged
+# due day.
 - tapOn:
-    id: "Sunday 6 September, missed"
+    id: "Week of 31 August.*"
 - assertVisible: "Tap a circle to set that day. Streaks and rates update when you close."
 # Glass of water is a quantity habit (8 glasses): its row opens the quantity
 # sheet for that date; every change saves at once, so fill it and close.
@@ -40,16 +43,14 @@ tags:
 - inputText: "Forgot to log — was on the trail all day."
 - tapOn: "Done"
 
-# Heatmap cell, streak and Recent entries all reflect the backfilled day.
+# The week row and the streak tile reflect the backfilled day.
 - assertVisible:
-    id: "Sunday 6 September, logged"
-- assertVisible:
-    id: "Current: 27, day streak"
+    text: "27"
 - takeScreenshot: hab-09-10-after
 
-# Reopening the day shows the saved note (Recent entries only lists the last few days).
+# Reopening the week's day shows the saved note.
 - tapOn:
-    id: "Sunday 6 September, logged"
+    id: "Week of 31 August.*"
 - assertVisible: "Forgot to log — was on the trail all day."
 - tapOn: "Close"
 

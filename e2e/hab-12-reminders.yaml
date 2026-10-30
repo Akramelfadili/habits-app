@@ -21,8 +21,9 @@ tags:
 ---
 - launchApp
 - tapOn: "Evening walk"
-- assertVisible: "None set"
-- tapOn: "Reminders"
+- assertVisible: "None"
+# The row's value: "Reminders" would match the section label above it.
+- tapOn: "None"
 - assertVisible:
     id: "Add a time, 0 of 4"
 
@@ -62,7 +63,7 @@ tags:
 
 # Detail summarises only the reminders that are on.
 - back
-- assertVisible: "1 on · 09:00"
+- assertVisible: "09:00 · Weekdays"
 
 # Reminders never gate Today. Both screens were pushed inside the Today tab,
 # so Back walks straight back out to it (HAB-27).

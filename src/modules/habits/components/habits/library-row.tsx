@@ -83,6 +83,7 @@ export function ArchivedLibraryRow({
 	return (
 		<ListItem
 			dimmed
+			keepLeading
 			title={habit.name}
 			subtitle={subtitle}
 			leading={<HabitBadge habit={habit} size="default" muted />}
