@@ -43,7 +43,7 @@ export function DeleteHabitSheet({
 			visible={visible}
 			headline={deleteHeadline(habitName)}
 			body={deleteConsequence(loggedDays)}
-			action={
+			safeAction={
 				canArchive
 					? {
 							title: "Archive instead",
@@ -52,9 +52,9 @@ export function DeleteHabitSheet({
 						}
 					: undefined
 			}
-			keepLabel="Keep habit"
 			confirmLabel="Delete permanently"
-			onKeep={onKeep}
+			cancelLabel="Cancel"
+			onCancel={onKeep}
 			onConfirm={onDelete}
 			isWorking={isWorking}
 		/>

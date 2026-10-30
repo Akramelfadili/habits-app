@@ -57,6 +57,6 @@ describe("DeleteCategorySheet (HAB-25)", () => {
 
 	it("is closed while there's nothing to delete", async () => {
 		await renderSheet(null);
-		expect(screen.queryByText("Keep category")).toBeNull();
+		expect(screen.queryByText("Cancel")).toBeNull();
 	});
 });

@@ -10,10 +10,10 @@ import type { Category, CategoryUsage } from "../types";
 import { categorySymbol } from "./category-symbol";
 import {
 	affectedHabitsLine,
+	CANCEL_LABEL,
 	deleteCategoryBody,
 	deleteCategoryConfirmLabel,
 	deleteCategoryHeadline,
-	KEEP_CATEGORY_LABEL,
 } from "./delete-category-sheet-helpers";
 
 type DeleteCategorySheetProps = {
@@ -82,9 +82,9 @@ export function DeleteCategorySheet({
 					</Container>
 				) : undefined
 			}
-			keepLabel={KEEP_CATEGORY_LABEL}
+			cancelLabel={CANCEL_LABEL}
 			confirmLabel={deleteCategoryConfirmLabel(habitCount)}
-			onKeep={onKeep}
+			onCancel={onKeep}
 			onConfirm={onConfirm}
 			isWorking={isWorking}
 		/>

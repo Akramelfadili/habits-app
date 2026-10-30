@@ -505,9 +505,7 @@ describe("HabitDetailScreen", () => {
 				expect(
 					screen.getByRole("button", { name: /^Archive instead\./ }),
 				).toBeEnabled();
-				expect(
-					screen.getByRole("button", { name: "Keep habit" }),
-				).toBeEnabled();
+				expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
 				expect(
 					screen.getByRole("button", { name: "Delete permanently" }),
 				).toBeEnabled();
@@ -573,7 +571,7 @@ describe("HabitDetailScreen", () => {
 			await render(<HabitDetailScreen habitId={1} />);
 
 			await fireEvent.press(screen.getByText("Delete habit"));
-			await fireEvent.press(screen.getByText("Keep habit"));
+			await fireEvent.press(screen.getByText("Cancel"));
 
 			expect(screen.queryByText("Delete “Glass of water”?")).toBeNull();
 			expect(mockDelete).not.toHaveBeenCalled();

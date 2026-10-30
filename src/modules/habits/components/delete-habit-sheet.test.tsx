@@ -41,16 +41,12 @@ describe("DeleteHabitSheet", () => {
 		).toBeTruthy();
 	});
 
-	it("E7: exactly three controls, safe-first — Archive card, Keep, then Delete last", async () => {
+	it("DC1: exactly three controls, safe-first — Archive instead, Delete permanently, Cancel last", async () => {
 		await renderSheet();
 		const order = screen
-			.getAllByText(/^(Archive instead|Keep habit|Delete permanently)$/)
+			.getAllByText(/^(Archive instead|Cancel|Delete permanently)$/)
 			.map((node) => node.props.children);
-		expect(order).toEqual([
-			"Archive instead",
-			"Keep habit",
-			"Delete permanently",
-		]);
+		expect(order).toEqual(["Archive instead", "Delete permanently", "Cancel"]);
 		expect(sheetControls()).toHaveLength(3);
 		expect(screen.queryByText("Archive instead — keeps history")).toBeNull();
 	});
@@ -66,9 +62,9 @@ describe("DeleteHabitSheet", () => {
 		expect(props.onDelete).not.toHaveBeenCalled();
 	});
 
-	it("routes Keep and Delete", async () => {
+	it("routes Cancel and Delete", async () => {
 		const props = await renderSheet();
-		await fireEvent.press(screen.getByText("Keep habit"));
+		await fireEvent.press(screen.getByText("Cancel"));
 		await fireEvent.press(screen.getByText("Delete permanently"));
 		expect(props.onKeep).toHaveBeenCalledTimes(1);
 		expect(props.onDelete).toHaveBeenCalledTimes(1);
@@ -77,7 +73,7 @@ describe("DeleteHabitSheet", () => {
 	it("offers no archive card for a habit that's already archived", async () => {
 		await renderSheet({ canArchive: false });
 		expect(screen.queryByText("Archive instead")).toBeNull();
-		expect(screen.queryByTestId("action-card")).toBeNull();
+		expect(sheetControls()).toHaveLength(2);
 		expect(sheetControls()).toHaveLength(2);
 		expect(screen.getByText("Delete permanently")).toBeTruthy();
 	});
@@ -85,7 +81,7 @@ describe("DeleteHabitSheet", () => {
 	it("while working: the card, Keep and Delete are all inert", async () => {
 		const props = await renderSheet({ isWorking: true });
 		await fireEvent.press(screen.getByText("Archive instead"));
-		await fireEvent.press(screen.getByText("Keep habit"));
+		await fireEvent.press(screen.getByText("Cancel"));
 		await fireEvent.press(screen.getByText("Delete permanently"));
 		expect(props.onArchive).not.toHaveBeenCalled();
 		expect(props.onKeep).not.toHaveBeenCalled();

@@ -77,7 +77,7 @@ describe("Button", () => {
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
-	it("renders the destructive variant as red text with no fill", async () => {
+	it("renders the destructive variant as red text on an outlined pill, never filled", async () => {
 		const onPress = jest.fn();
 		await render(
 			<Button
@@ -89,6 +89,11 @@ describe("Button", () => {
 
 		const label = screen.getByText("Delete permanently");
 		expect(label).toHaveStyle({ color: semanticColors.light.dangerBg });
+		expect(screen.getByRole("button")).toHaveStyle({
+			backgroundColor: surfaceColors.light.card,
+			borderWidth: 1,
+			borderColor: surfaceColors.light.border,
+		});
 		await fireEvent.press(label);
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
@@ -144,7 +149,7 @@ describe("Button — disabled with reason (VAR-13)", () => {
 		expect(screen.getByRole("button", { name: "Rename Music" })).toBeTruthy();
 	});
 
-	it.each(["link", "inline", "destructive"] as const)(
+	it.each(["link", "inline"] as const)(
 		"%s text actions are 44pt tall, and don't lean on a hitSlop that stacked buttons would share",
 		async (variant) => {
 			await render(

@@ -12,10 +12,9 @@ import { FieldHelper } from "./field-helper";
 /**
  * `link` is a centered, secondary-ink text action under a primary CTA ("Start
  * from scratch"); `inline` is an ink text action that sits flush-left inside a
- * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is the
- * design system's text-only red link for a permanent action — always the
- * smallest option on screen, never a filled red button (Delete confirmation,
- * HAB-13).
+ * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is
+ * V3-22's outlined pill with red text for a permanent action — never filled
+ * until armed, and never the default focus (Delete confirmation, DC1).
  */
 export type ButtonVariant =
 	| "primary"
@@ -86,10 +85,12 @@ export function Button({
 					borderColor: colors.border,
 				},
 				variant === "ghost" && { backgroundColor: "transparent" },
-				(variant === "link" ||
-					variant === "inline" ||
-					variant === "destructive") &&
-					styles.link,
+				variant === "destructive" && {
+					backgroundColor: colors.card,
+					borderWidth: 1,
+					borderColor: colors.border,
+				},
+				(variant === "link" || variant === "inline") && styles.link,
 				variant === "inline" && styles.inline,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },
@@ -102,7 +103,6 @@ export function Button({
 					style={[
 						styles.label,
 						variant === "inline" && styles.inlineLabel,
-						variant === "destructive" && styles.destructiveLabel,
 						size === "small" && styles.smallLabel,
 						{ color: textColor },
 					]}
@@ -163,9 +163,6 @@ const styles = StyleSheet.create({
 	},
 	inlineLabel: {
 		fontWeight: "600",
-	},
-	destructiveLabel: {
-		...textStyles.footnote,
 	},
 	smallLabel: {
 		...textStyles.subhead,

@@ -250,6 +250,6 @@ describe("ManageCategoriesScreen (HAB-25)", () => {
 		]);
 		await screen.rerender(<ManageCategoriesScreen />);
 
-		expect(screen.queryByText("Keep category")).toBeNull();
+		expect(screen.queryByText("Cancel")).toBeNull();
 	});
 });
