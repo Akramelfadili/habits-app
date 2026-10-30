@@ -366,7 +366,7 @@ export const SCREENS = {
 		note: "F2a — add sheet stacked over the picker: empty name, placeholder preview, Add blocked.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
-			await categoryChip(page, "Add category").click();
+			await categoryChip(page, "New category").click();
 		},
 	},
 	"add-category-typing": {
@@ -376,7 +376,7 @@ export const SCREENS = {
 		note: "F2b — name typed: live preview on rotation slot 1, Add enabled.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
-			await categoryChip(page, "Add category").click();
+			await categoryChip(page, "New category").click();
 			await page.getByPlaceholder("e.g. Journaling").fill("Journaling");
 		},
 	},
@@ -387,7 +387,7 @@ export const SCREENS = {
 		note: "F2c — duplicate of a built-in: amber field + helper, preview hidden, Add blocked.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
-			await categoryChip(page, "Add category").click();
+			await categoryChip(page, "New category").click();
 			await page.getByPlaceholder("e.g. Journaling").fill("Fitness");
 		},
 	},
@@ -398,7 +398,7 @@ export const SCREENS = {
 		note: "F2d — after Add: sheet closed, new chip in its creation-order slot, auto-selected, no toast.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
-			await categoryChip(page, "Add category").click();
+			await categoryChip(page, "New category").click();
 			await page.getByPlaceholder("e.g. Journaling").fill("Journaling");
 			await page.getByRole("button", { name: "Add category" }).last().click();
 			await page.waitForTimeout(500);
