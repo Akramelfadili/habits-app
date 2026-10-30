@@ -579,6 +579,8 @@ export const habitsCopy = {
 	reorderHint:
 		"Habits move within their category. To change a category, use Edit.",
 	reorderHandle: (habit: string) => `Reorder ${habit}`,
+	moveUp: "Move up",
+	moveDown: "Move down",
 	archiveAction: "Archive",
 	/** What a library row's tap does, for VoiceOver (08.3). */
 	rowHint: "Opens details.",
@@ -701,6 +703,8 @@ export const detailCopy = {
 	reminders: {
 		header: "Reminders",
 		label: "Reminders",
+		/** 08.3: "Reminders, 07:00, Tuesday and Thursday." */
+		spoken: (time: string, days: string) => `Reminders, ${time}, ${days}`,
 		none: "None",
 		paused: "Paused",
 	},

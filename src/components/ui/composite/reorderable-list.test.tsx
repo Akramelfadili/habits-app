@@ -23,6 +23,7 @@ async function renderList(onReorder = jest.fn()) {
 			keyOf={(row) => row.id}
 			groupOf={(row) => row.group}
 			handleLabel={(row) => `Reorder ${row.id}`}
+			moveLabels={{ up: "Move up", down: "Move down" }}
 			onReorder={onReorder}
 			renderItem={(row, handle) => (
 				<View>
@@ -80,6 +81,7 @@ describe("ReorderableList", () => {
 					keyOf={(row) => row.id}
 					groupOf={(row) => row.group}
 					handleLabel={(row) => `Reorder ${row.id}`}
+					moveLabels={{ up: "Move up", down: "Move down" }}
 					onReorder={onReorder}
 					renderGroup={(key, children, { isDragging }) => (
 						<View testID={`group-${key}`}>

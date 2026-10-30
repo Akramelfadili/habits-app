@@ -9,6 +9,7 @@ import type { Reminder } from "../types";
 import {
 	detailEyebrow,
 	detailHeaderLabel,
+	detailRemindersLabel,
 	detailRemindersValue,
 	detailTiles,
 	gridLegend,
@@ -275,6 +276,46 @@ describe("the Reminders row's value", () => {
 				reminder(),
 			]),
 		).toBe("Paused");
+	});
+});
+
+describe("the Reminders row, spoken (08.3)", () => {
+	const one: Reminder = {
+		id: 1,
+		habitId: 1,
+		hour: 7,
+		minute: 0,
+		weekdays: [2, 4],
+		enabled: true,
+	};
+
+	it("'Reminders, 07:00, Tuesday and Thursday'", () => {
+		expect(detailRemindersLabel(upper, [one])).toBe(
+			"Reminders, 07:00, Tuesday and Thursday",
+		);
+	});
+
+	it("three days read 'Monday, Wednesday and Friday'; every day reads daily", () => {
+		expect(detailRemindersLabel(upper, [{ ...one, weekdays: [1, 3, 5] }])).toBe(
+			"Reminders, 07:00, Monday, Wednesday and Friday",
+		);
+		expect(
+			detailRemindersLabel(upper, [
+				{ ...one, weekdays: [1, 2, 3, 4, 5, 6, 7] },
+			]),
+		).toBe("Reminders, 07:00, daily");
+	});
+
+	it("none, several and archived say what the row shows", () => {
+		expect(detailRemindersLabel(upper, [])).toBe("Reminders, None");
+		expect(
+			detailRemindersLabel(upper, [one, { ...one, id: 2, hour: 21 }]),
+		).toBe("Reminders, 2 on · 07:00, 21:00");
+		expect(
+			detailRemindersLabel(makeHabit({ archivedAt: new Date(2026, 9, 12) }), [
+				one,
+			]),
+		).toBe("Reminders, Paused");
 	});
 });
 

@@ -211,6 +211,31 @@ export function detailRemindersValue(
 	return `${formatReminderTime(on[0])} · ${days === "Every day" ? "daily" : days}`;
 }
 
+/**
+ * What VoiceOver says for the Reminders row (08.3): "Reminders, 07:00, Tuesday
+ * and Thursday." With none, several, all off or while archived it says the value
+ * the row shows.
+ */
+export function detailRemindersLabel(
+	habit: Habit,
+	reminders: readonly Reminder[],
+): string {
+	const on = reminders.filter((reminder) => reminder.enabled);
+	if (habit.archivedAt || on.length !== 1) {
+		return `${detailCopy.reminders.label}, ${detailRemindersValue(habit, reminders)}`;
+	}
+	const [only] = on;
+	const days = [...new Set(only.weekdays)].sort((a, b) => a - b);
+	const spoken =
+		days.length === 7
+			? "daily"
+			: days
+					.map((day) => FULL_DAY[day])
+					.join(", ")
+					.replace(/, ([^,]*)$/, " and $1");
+	return detailCopy.reminders.spoken(formatReminderTime(only), spoken);
+}
+
 /** "Created today" or the cadence — the right of the grid card's title (D1, D3). */
 export function gridRangeLabel(habit: Habit, today: Date): string {
 	return startOfDay(habit.createdAt).getTime() === startOfDay(today).getTime()

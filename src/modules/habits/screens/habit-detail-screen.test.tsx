@@ -215,7 +215,11 @@ describe("D1 — the default Detail", () => {
 	it("lists Reminders with the time and days, and opens them", async () => {
 		await render(<HabitDetailScreen habitId={1} />);
 		expect(screen.getByText("07:00 · Tue, Thu")).toBeTruthy();
-		await fireEvent.press(screen.getByRole("button", { name: /^Reminders/ }));
+		await fireEvent.press(
+			screen.getByRole("button", {
+				name: "Reminders, 07:00, Tuesday and Thursday",
+			}),
+		);
 		expect(mockPush).toHaveBeenCalledWith("/reminders/1");
 	});
 

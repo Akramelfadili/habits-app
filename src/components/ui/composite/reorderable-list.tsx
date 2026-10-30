@@ -43,6 +43,8 @@ type ReorderableListProps<T> = {
 	) => ReactNode;
 	/** Accessibility label for a row's grip, e.g. "Reorder Meditate". */
 	handleLabel: (item: T) => string;
+	/** The grip's VoiceOver actions ("Move up", "Move down"): the caller's own words. */
+	moveLabels: { up: string; down: string };
 	/** The moved item's group, in its new order — only that group changed. */
 	onReorder: (groupKeys: string[]) => void;
 };
@@ -60,6 +62,7 @@ export function ReorderableList<T>({
 	renderItem,
 	renderGroup,
 	handleLabel,
+	moveLabels,
 	onReorder,
 }: ReorderableListProps<T>) {
 	// Optimistic order after a drop, shown only while `items` is still the
@@ -152,8 +155,8 @@ export function ReorderableList<T>({
 							accessibilityRole="adjustable"
 							accessibilityLabel={handleLabel(item)}
 							accessibilityActions={[
-								{ name: "moveUp", label: "Move up" },
-								{ name: "moveDown", label: "Move down" },
+								{ name: "moveUp", label: moveLabels.up },
+								{ name: "moveDown", label: moveLabels.down },
 							]}
 							onAccessibilityAction={(event) => {
 								const to =

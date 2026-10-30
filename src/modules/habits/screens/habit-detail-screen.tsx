@@ -32,6 +32,7 @@ import { detailCopy, messages, showMessage } from "../messages";
 import {
 	detailEyebrow,
 	detailHeaderLabel,
+	detailRemindersLabel,
 	detailRemindersValue,
 	detailTiles,
 	gridLegend,
@@ -201,6 +202,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 						value={detailRemindersValue(habit, detail.reminders)}
 						leading={<IconBadge symbol="bell" />}
 						navigable
+						accessibilityLabel={detailRemindersLabel(habit, detail.reminders)}
 						onPress={() => router.push(`/reminders/${habit.id}`)}
 					/>
 				</Container>
