@@ -202,7 +202,8 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 
 Deviations from the mockup / spec and what was left out; each is deliberate unless marked.
 
-- **RateRing, Sparkline, MiniMonth, YearStrip are built and tested but have no screen yet.** P7 draws the month's rate as a tile, not a ring (V3-09's "once per Month overview" and the brief's "overall rate ring" disagree with it); V3-11's per-habit sparkline needs weekly data per habit that `RangeHabitRow` does not carry; the mini month and the year strip are for Habit Detail (HAB-40). Wire them there; `deadcode` lists them until then.
+- **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design-system-v3.md`).
+- **Delete candidates at the end of V3-4: `sparkline`, `mini-month`, `year-strip`** (components in `components/ui/composite`, with tests). Built for V3-06 / V3-08 but no frame uses them: the Detail frames' "V3-06 mini" (D1–D4) is the 24 pt history grid, which is `CompletionRows` and already in use; the sparkline needs weekly data per habit that `RangeHabitRow` does not carry; the compact year strip appears only in a V3-06 specimen. `deadcode` lists all three. Delete them when V3-4 ships unless Detail picks one up.
 - **Month, one habit (P10): tiles are Completion / Longest / Freezes used**, not the mockup's Streak (current streak is not in the month data; Week's tile reads the whole log, Month's does not). Add `streakHistory` to the month hook for a single habit if the current streak is wanted.
 - **Week day headers are 44 pt high but 28 pt wide** (the cell pitch): a 44 pt-wide target would overlap its neighbour. The mockup asks for 44.
 - **Month calendar: VoiceOver reads day by day** ("Wednesday 14 October, 100 percent", each a button), not per week row as 08.3 words it: every day is the entry to its detail card.
