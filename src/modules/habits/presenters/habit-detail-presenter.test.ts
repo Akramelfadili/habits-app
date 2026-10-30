@@ -215,7 +215,7 @@ describe("the three tiles", () => {
 				habit: phone,
 				currentStreak: 9,
 				longest: longest(22),
-				rateDelta: null,
+				rateDelta: 5,
 				rate: rate({ completed: 73, scheduled: 90, fraction: 0.81 }),
 			}),
 		);

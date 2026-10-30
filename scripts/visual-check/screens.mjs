@@ -49,6 +49,16 @@ async function openJuly14(page) {
 	await scrollProgress(page, 360);
 }
 
+/** Scrolls Habit Detail back to its top, so a sheet opened from its last rows is drawn over the title, as the frames are. */
+async function detailToTop(page) {
+	await page.evaluate(() => {
+		document
+			.querySelector('[data-testid="habit-detail-scroll"]')
+			?.scrollTo(0, 0);
+	});
+	await page.waitForTimeout(300);
+}
+
 const PROGRESS = "/(progress)/progress?fixtures=";
 
 /**
@@ -691,7 +701,7 @@ export const SCREENS = {
 		note: "DC5 / H8 — Archive habit from Detail: one tap, Archive habit as the primary and Cancel under it, and what archiving keeps. The sheet covers the pill.",
 		async interact(page) {
 			await page.getByRole("button", { name: /^Archive habit/ }).click();
-			await page.waitForTimeout(400);
+			await detailToTop(page);
 		},
 	},
 	"delete-confirm": {
@@ -702,7 +712,7 @@ export const SCREENS = {
 		note: "DC1 — Delete Read 20 min?: names its 214 logs, Archive instead first (the default focus), Delete permanently as an outlined red pill, its hint, then Cancel. No Close.",
 		async interact(page) {
 			await page.getByRole("button", { name: /^Delete habit/ }).click();
-			await page.waitForTimeout(500);
+			await detailToTop(page);
 		},
 	},
 	"delete-confirm-archived": {
@@ -713,7 +723,7 @@ export const SCREENS = {
 		note: "An already-archived habit: no Archive instead and no claim that archiving keeps anything — just Delete permanently and Cancel. No frame draws this.",
 		async interact(page) {
 			await page.getByRole("button", { name: /^Delete habit/ }).click();
-			await page.waitForTimeout(500);
+			await detailToTop(page);
 		},
 	},
 	"delete-deleting": {
@@ -726,6 +736,7 @@ export const SCREENS = {
 			await page.getByRole("button", { name: /^Delete habit/ }).click();
 			await page.getByText("Delete permanently").click();
 			await page.getByText("Deleting…").waitFor();
+			await detailToTop(page);
 		},
 	},
 	"delete-failed": {
@@ -738,6 +749,7 @@ export const SCREENS = {
 			await page.getByRole("button", { name: /^Delete habit/ }).click();
 			await page.getByText("Delete permanently").click();
 			await page.getByText("Couldn’t delete").waitFor();
+			await detailToTop(page);
 		},
 	},
 	"delete-confirm-ax": {
@@ -748,7 +760,7 @@ export const SCREENS = {
 		note: "DC7 — AX3: the labels wrap inside their buttons and the buttons grow; the hint is read by VoiceOver instead of shown.",
 		async interact(page) {
 			await page.getByRole("button", { name: /^Delete habit/ }).click();
-			await page.waitForTimeout(500);
+			await detailToTop(page);
 		},
 	},
 

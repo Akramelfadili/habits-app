@@ -181,10 +181,10 @@ function rateTile(input: TileInput): StatTileData {
 			? stats.untilArchive(formatDayMonthShort(habit.archivedAt))
 			: rate.skippedPaused
 				? stats.pausedDaysExcluded
-				: input.rateDelta !== null
-					? stats.delta(input.rateDelta)
-					: habit.direction === "break"
-						? stats.resisted
+				: habit.direction === "break"
+					? stats.resisted
+					: input.rateDelta !== null
+						? stats.delta(input.rateDelta)
 						: stats.ofDays(rate.completed, rate.scheduled);
 		result = tile("rate", value, caption, false);
 	}

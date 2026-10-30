@@ -157,9 +157,9 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 			add(habitId, ago(daysAgo));
 	};
 
-	// Drink water: 8 of 8 for three weeks, 5 of 8 today.
+	// Drink water: 8 of 8 for months, 5 of 8 today.
 	add(1, ago(0), 5);
-	for (let daysAgo = 1; daysAgo <= 21; daysAgo++) add(1, ago(daysAgo), 8);
+	for (let daysAgo = 1; daysAgo <= 200; daysAgo++) add(1, ago(daysAgo), 8);
 
 	// Cold shower (3× a week): Monday and Wednesday so far this week, and most weeks before.
 	const monday = key(startOfWeek(now, { weekStartsOn: WEEK_STARTS_ON }));
