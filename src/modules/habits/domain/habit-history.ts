@@ -13,7 +13,7 @@ import {
 	subDays,
 } from "date-fns";
 import type { HeatmapLevel } from "@/theme/theme";
-import { toDayKey } from "@/utils/day-key";
+import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import {
 	getHabitStrategy,
@@ -48,7 +48,7 @@ type History = {
 function completedDatesOf(habit: Habit, entries: readonly Entry[]) {
 	const complete = entries.filter((entry) => isEntryComplete(habit, entry));
 	return {
-		dates: complete.map((entry) => parseISO(entry.date)),
+		dates: complete.map((entry) => fromDayKey(entry.date)),
 		set: new Set(complete.map((entry) => entry.date)),
 	};
 }

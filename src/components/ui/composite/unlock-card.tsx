@@ -1,22 +1,26 @@
-import { SymbolView } from "expo-symbols";
 import { StyleSheet, Text, View } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { ProgressBar } from "./progress-bar";
 
 type UnlockCardProps = {
-	/** "Monthly view unlocks on 4 October". */
+	/** "Insights unlock in 4 days". */
 	title: string;
-	/** Why it waits. */
+	/** Why it waits: "They need 7 days of logs. Your first 3 days are below." */
 	body: string;
-	/** 0–1 toward unlocking. */
+	/** 0–1 toward the 7 days of logs. */
 	progress: number;
-	/** Left and right of the bar: "12 of 30 days", "18 to go". */
+	/** Over the bar: "3 of 7 days". */
 	progressLabel: string;
-	remainingLabel: string;
+	/** Right of the progress label, when there is one ("18 to go"). */
+	remainingLabel?: string;
 };
 
-/** The "month locked" card (NEW-11): states when it unlocks, why, and how far along it is. */
+/**
+ * V3-29 · unlock card: progress toward 7 days of logs. Left-aligned title,
+ * body, then "3 of 7 days" over a 6 pt bar (which fills over the "fill"
+ * token). The same card on Week, Month and Year, so it is learned once.
+ */
 export function UnlockCard({
 	title,
 	body,
@@ -27,22 +31,34 @@ export function UnlockCard({
 	const { colors } = useTheme();
 
 	return (
-		<View style={[styles.card, { backgroundColor: colors.card }]}>
-			<View style={[styles.icon, { backgroundColor: colors.inner }]}>
-				<SymbolView name="calendar" size={22} tintColor={colors.faint} />
+		<View
+			testID="unlock-card"
+			style={[
+				styles.card,
+				{ backgroundColor: colors.card, borderColor: colors.border },
+			]}
+		>
+			<View style={styles.text}>
+				<Text
+					accessibilityRole="header"
+					style={[styles.title, { color: colors.ink }]}
+				>
+					{title}
+				</Text>
+				<Text style={[styles.body, { color: colors.sub }]}>{body}</Text>
 			</View>
-			<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
-			<Text style={[styles.body, { color: colors.sub }]}>{body}</Text>
 			<View style={styles.progress}>
-				<ProgressBar value={progress} />
 				<View style={styles.labels}>
 					<Text style={[styles.label, { color: colors.sub }]}>
 						{progressLabel}
 					</Text>
-					<Text style={[styles.label, { color: colors.sub }]}>
-						{remainingLabel}
-					</Text>
+					{remainingLabel ? (
+						<Text style={[styles.label, { color: colors.sub }]}>
+							{remainingLabel}
+						</Text>
+					) : null}
 				</View>
+				<ProgressBar value={progress} />
 			</View>
 		</View>
 	);
@@ -50,38 +66,30 @@ export function UnlockCard({
 
 const styles = StyleSheet.create({
 	card: {
-		borderRadius: 16,
-		padding: 16,
-		alignItems: "center",
-		gap: 10,
+		borderRadius: radius.l,
+		borderWidth: StyleSheet.hairlineWidth,
+		padding: space[350],
+		gap: space[300],
 	},
-	icon: {
-		width: 48,
-		height: 48,
-		borderRadius: 14,
-		alignItems: "center",
-		justifyContent: "center",
+	text: {
+		gap: space[50],
 	},
 	title: {
-		fontSize: typeScale.rowLabel,
-		fontWeight: "600",
-		textAlign: "center",
+		...textStyles.callout,
+		fontWeight: "500",
 	},
 	body: {
-		fontSize: typeScale.subtitle,
-		lineHeight: 18,
-		textAlign: "center",
+		...textStyles.footnote,
 	},
 	progress: {
-		alignSelf: "stretch",
-		gap: 6,
-		marginTop: 4,
+		gap: space[150],
 	},
 	labels: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 	},
 	label: {
-		fontSize: typeScale.caption,
+		...textStyles.footnote,
+		fontVariant: ["tabular-nums"],
 	},
 });

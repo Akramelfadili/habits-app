@@ -80,10 +80,10 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 ## Open — V3-3a (Progress data layer)
 
 - **Interpretations to confirm** (the mockup is ambiguous; `docs/progress-data.md` lists them): "7 days of logs" = 7 distinct logged calendar days over all history; Week's *best streak* is the highest current streak among active habits while Month and Year show the longest run inside the range; row totals "n/target" count the habit's due days in the whole week, future included; *slipping* is "≥ 25 points down on the previous range with enough due days" for Week and Year and Monthly's weekly trend for Month; *improved* is "≥ 10 points up".
-- **Old summary code kept until V3-3b retires the screens**: `buildWeeklySummary`'s count-based `bestDay` and `too-early` insight, `buildCalendar` in `buildMonthlySummary`, Monthly's weekday `pattern` insight (PR-03 is Later and the new ranker never surfaces it), `yearUnlock` (3 months; still decides "year-scale insights need 3 months"), `yearlyInsightsFor`'s stuck / never-stuck / seasonal cards. Monthly's `perfectDays` stopped counting frozen days as perfect in V3-3a (D14; listed in `docs/progress-data.md`); it still counts an open today with some habits done as perfect; the new day grid does not (a day with a habit still open is not a verdict).
+- **Old summary code kept (V3-3b retired the screens, not the builders)** — still the oracle of `range-summary.parity.test.ts` and imported for shared constants by `range-summary.ts`, `progress-grid.ts` and `year-map.ts`; delete the dead builders with the parity tests once V3-3b is accepted: `buildWeeklySummary`'s count-based `bestDay` and `too-early` insight, `buildCalendar` in `buildMonthlySummary`, Monthly's weekday `pattern` insight (PR-03 is Later and the new ranker never surfaces it), `yearUnlock` (3 months; still decides "year-scale insights need 3 months"), `yearlyInsightsFor`'s stuck / never-stuck / seasonal cards. Monthly's `perfectDays` stopped counting frozen days as perfect in V3-3a (D14; listed in `docs/progress-data.md`); it still counts an open today with some habits done as perfect; the new day grid does not (a day with a habit still open is not a verdict).
 - **Week's streak tile reads the whole log** (`useAllEntries` + `useFrozenDays`) because the streak reaches back past the week. Everything else is range-bounded. If it shows up in a profile: cache by `(habitId, lastEntryDate)`.
-- **Insight tone `positive`** is the spec's word; `InsightCard`'s prop is `success`. V3-3b maps one to the other.
-- **No UI yet reads the new hooks** (`useProgress{Week,Month,Year}Queries`, `useDayDetailQueries`); `deadcode` will list them until V3-3b. The week hook takes an `anchor` date, but there is no week pager in the spec.
+- **Insight tone `positive`** is the spec's word; `InsightCard`'s prop is `success`. `presenters/progress-presenter.ts` maps one to the other.
+- The Progress tab reads the new hooks (V3-3b). The week hook takes an `anchor` date, but there is no week pager in the spec, so nothing passes one.
 - **`fastDayKey`** in `domain/day-status.ts` repeats `toDayKey`'s format without date-fns' formatter (formatting dominated a five-year grid); a test pins the equivalence. Fold it into `utils/day-key.ts` if `toDayKey` is ever allowed to stop throwing on an invalid date.
 - **Frozen-and-partial day**: a quantity day logged below target on a frozen date reads `frozen` (excused), as Monthly always did; Detail's heatmap shows the log. A *completed* frozen day reads `done` and PR-11 returns the freeze.
 - **Not verified on a device or in the browser**: Hermes timings (Node numbers only), the visual-check fixtures for `monthly-too-early` / `weekly-summary*` (the gate numbers they show changed), and React Compiler memoisation of the new hooks (explicit `useMemo` is used).
@@ -162,7 +162,7 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 Deferred, each wanted by HAB-27's own rules or raised while building it:
 
-- **V3-02's collapsing large title: built for Today only (V3-3a, `useCollapsingHeader` + `CollapsedHeaderBar` in `components/ui/composite/collapsing-header.tsx`).** Scroll-linked on the UI thread, settles on the nearer end, Reduce Motion crossfades at the middle of the range. **Progress and Habits still draw static titles**; adopt the hook with each screen's own batch (V3-3b, V3-4) — `HabitsHeader` has not been merged with `TodayHeader` because it would restyle Habits (display title, eyebrow) ahead of its redesign.
+- **V3-02's collapsing large title: built for Today only (V3-3a, `useCollapsingHeader` + `CollapsedHeaderBar` in `components/ui/composite/collapsing-header.tsx`).** Scroll-linked on the UI thread, settles on the nearer end, Reduce Motion crossfades at the middle of the range. **Progress adopted it in V3-3b; Habits still draws a static title**; adopt the hook with its own batch (V3-4) — `HabitsHeader` has not been merged with `TodayHeader` because it would restyle Habits (display title, eyebrow) ahead of its redesign.
 - **One header component.** `today-header.tsx` and `habits-header.tsx` each build their own title row. They should become one V3-02 `Header` (eyebrow, title, ≤ 2 trailing buttons) — fold that into HAB-29 or the first batch that touches both.
 - **Re-tapping the selected tab does nothing.** The pill copies the stock contract (`tabPress` then navigate only when not focused). iOS normally pops that tab to its root. Not in the spec; decide in V3-6.
 - **A cold deep link with no group lands on the first tab.** `/week` opens the weekly summary inside *Today*, not Progress — shared routes have no tab to restore on a cold start (measured; in-app navigation is unaffected). HAB-27's edge case "deep link / back from Detail restores the originating tab" is therefore only met for in-app pushes. If real deep links are added, give them group-qualified hrefs.
@@ -197,3 +197,33 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 - `useWeekStripQueries` also returns the week-moving callbacks (named `…Queries` for the hook rule); a `useWeekStripState` split would remove the explanation.
 - Habit Detail's "Habit not found" / "No entries yet" strings still sit in the screen (pre-V3, moved with Detail's batch).
 - `useQuantitySheetActions.close()` closes even if the last write failed (the sheet shows what is really saved and the error toast stays); the quantity sheet unmounts without a slide-out because the parent drops it.
+
+## Open — V3-3b (Progress UI)
+
+Deviations from the mockup / spec and what was left out; each is deliberate unless marked.
+
+- **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design-system-v3.md`).
+- **Delete candidates at the end of V3-4: `sparkline`, `mini-month`, `year-strip`** (components in `components/ui/composite`, with tests). Built for V3-06 / V3-08 but no frame uses them: the Detail frames' "V3-06 mini" (D1–D4) is the 24 pt history grid, which is `CompletionRows` and already in use; the sparkline needs weekly data per habit that `RangeHabitRow` does not carry; the compact year strip appears only in a V3-06 specimen. `deadcode` lists all three. Delete them when V3-4 ships unless Detail picks one up.
+- **Month, one habit (P10): tiles are Completion / Longest / Freezes used**, not the mockup's Streak (current streak is not in the month data; Week's tile reads the whole log, Month's does not). Add `streakHistory` to the month hook for a single habit if the current streak is wanted.
+- **Week day headers are 44 pt high but 28 pt wide** (the cell pitch): a 44 pt-wide target would overlap its neighbour. The mockup asks for 44.
+- **Month calendar: VoiceOver reads day by day** ("Wednesday 14 October, 100 percent", each a button), not per week row as 08.3 words it: every day is the entry to its detail card.
+- **One-habit and AX3 week blocks: the 40 pt day cells are buttons** that open Edit this day (hint "Edit this day"); the spec only gives the matrix's day headers that role, and those blocks have no headers. Days that have not happened offer nothing.
+- **The AX3 range list overlays the content** instead of pushing it down (P11): the pinned layer is one element and its slot keeps its closed height.
+- **Year, one habit (P15): the chip is always shown** (as "All habits"), though P12 draws none; with exactly one habit and no archived habit there is nothing to pick and it is hidden. The Year filter applies to Year only; Month opened from a filtered Year shows all habits.
+- **Year too-early and nothing-logged gates are global** (all-history log counts), so a habit filtered to one with no logs shows a ready year of empty cells.
+- **"Best streak" on Week/Year can name an archived habit** (the fixture's archived run shows 223 days on Year); the data layer counts archived habits' history for longest runs. Decide whether Progress should limit it to active habits.
+- **The per-habit rates list includes an archived habit that had days in the range** (never in insights, D11).
+- **Export is "unavailable" with no habits or no logs** (tap = toast); the mockup draws only the no-habits case disabled.
+- **P1 week matrix order follows creation order** (the mockup lists Read second); the fixtures create all six on one day, so ids decide.
+- **Performance:** Year (5 y × 20 habits, through the real hooks) opens in ~260–300 ms cold and ~220 ms warm in Node, from 375–460 / 330–350 before the heat map and the summary shared one classification of the days (`classifyRangeDays`). On Hermes expect 2–5×; if it is felt on a device the next step is classifying once for the previous year only when "+N pts" needs it. Week fell 727 → 169 ms earlier by making `fromDayKey` read the three fields instead of `parseISO`.
+- **Maestro `hab-11` is rewritten for the new screen but was not run.**
+
+## V3-6 audit list (touch targets and known layout exceptions)
+
+Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.
+
+- **Week matrix day headers: 44 pt high, 28 pt wide** (Progress, P1). Documented under "Spec wins over the mockup" in `feature-spec-v3.md`.
+- **Week matrix cells (24 pt), Year cells (16 pt):** below 44 by design, not tappable (08.2).
+- **Year month labels: 44 pt high through hitSlop**, so the hit areas of labels in the band above overlap the last row of cells (not tappable) and the 12 pt gap.
+- **AX3 stacked range list overlays the content** (P11) instead of pushing it down.
+- **One-habit and AX3 week blocks: 40 pt cells with a 2 pt hitSlop** (44 pt in effect), buttons that open Edit this day.

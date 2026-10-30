@@ -1,8 +1,7 @@
-import { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
-import { motion, radius, space, textStyles } from "@/theme/theme";
+import { Animated, StyleSheet, Text, View } from "react-native";
+import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { useReducedMotion } from "@/utils/use-reduced-motion";
+import { useFillAnimation } from "@/utils/use-fill-animation";
 
 type ProgressBarProps = {
 	/** 0–1. Values outside that range are clamped. */
@@ -26,25 +25,9 @@ export function ProgressBar({
 	label,
 }: ProgressBarProps) {
 	const { colors } = useTheme();
-	const reduceMotion = useReducedMotion();
 	const fraction = Math.min(1, Math.max(0, value));
 	const percent = Math.round(fraction * PERCENT);
-	const animated = useRef(new Animated.Value(fraction)).current;
-
-	useEffect(() => {
-		if (reduceMotion) {
-			animated.setValue(fraction);
-			return;
-		}
-		const run = Animated.timing(animated, {
-			toValue: fraction,
-			duration: motion.fill.duration,
-			easing: Easing.bezier(...motion.fill.easing),
-			useNativeDriver: false,
-		});
-		run.start();
-		return () => run.stop();
-	}, [fraction, reduceMotion, animated]);
+	const animated = useFillAnimation(fraction);
 
 	const bar = (
 		<View

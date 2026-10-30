@@ -158,7 +158,7 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-06 | Completion grid | NEW-07 | Week matrix (24 pt), Month calendar (40 pt with day number), year heat map (16 pt, 3 bands × 4 months), per-habit mini month (16 pt), compact year strip (12 × 24), AX3 list fallback |
 | V3-07 | Progress bar | V1-11 | 6 pt track, count left, whole-number % right |
 | V3-08 | Column bar · sparkline | NEW-17/08/09 | Sparkline 6 × 24; chart 12 columns × 96, radius min(w/2, 6) |
-| V3-09 | Rate ring | new | Whole-number %, solid accent, 10 pt stroke; once per Month overview |
+| V3-09 | Rate ring | new | **Not built: P7 uses a stat tile for the month's rate (V3-3b).** Spec was: whole-number %, solid accent, 10 pt stroke; once per Month overview. The ring was built, found to have no frame, and deleted; the "Was" mapping stays in CL.1 |
 | V3-10 | Stat card | VAR-14 + NEW-20 | Padding 12, 2 pt between label/value/sub, no min height; no icons; AX 1-up |
 | V3-11 | Chart card | NEW-32/31/21 | Shared container |
 | V3-12 | Insight card | VAR-04 | Tones warning/positive/neutral; pager dots; body never tappable, only its link |
@@ -191,5 +191,6 @@ Frame groups (details in `feature-spec-v3.md`): **Today** T1–T15 · **Progress
 
 - Do not invent values: spacing, radius, elevation, focus and motion tokens are new — add them as real tokens and let the ratchet enforce them.
 - "Other" has no hue (V2 rule stands). Category hues never appear as text or fills.
+- **V3-09 rate ring: not built** — no frame draws it (P7 shows the rate as a tile); built and deleted in V3-3b, see `docs/backlog.md`.
 - Built-in V2 deltas (cell 18/6/5, stat card 14/10/26, chart padding 16) are superseded by T-10, T-14, T-18 above.
 - Everything marked **Later** in the mockup is out of V3; do not build its frames.

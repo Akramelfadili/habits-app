@@ -165,6 +165,8 @@ type RangeSummaryInput = {
 	today: Date;
 	window: RangeWindow;
 	nothingLogged?: boolean;
+	/** Cells already classified over these days (`classifyRangeDays`): skips classifying again. */
+	classified?: ClassifiedDays;
 	/**
 	 * Week's streak tile is the streak as it stands, which reaches back past the
 	 * week: pass every entry and freeze for it. Defaults to the range's own.
@@ -174,6 +176,46 @@ type RangeSummaryInput = {
 		frozenDays: readonly FrozenDay[];
 	};
 };
+
+/**
+ * Every habit's cell for every day from the previous range's first day to the
+ * range's last — classified once, so a screen that needs both the summary and
+ * a grid over the same days (Year: the summary and the heat map) does not walk
+ * them twice. `buildRangeSummary` reads the prefix up to today; `buildYearMap`
+ * reads its own year.
+ */
+export type ClassifiedDays = {
+	/** The previous range's first day → the range's last day, future included. */
+	dates: Date[];
+	perHabit: HabitCells[];
+};
+
+export function classifyRangeDays(
+	input: Pick<
+		RangeSummaryInput,
+		| "kind"
+		| "habits"
+		| "entries"
+		| "frozenDays"
+		| "today"
+		| "window"
+		| "nothingLogged"
+	>,
+): ClassifiedDays {
+	const previous = previousRangeWindow(input.kind, input.window);
+	const dates = daysIn(previous.start, input.window.end);
+	return {
+		dates,
+		perHabit: classifyHabits({
+			habits: [...input.habits].sort(byCreationOrder),
+			entries: input.entries,
+			frozenDays: input.frozenDays,
+			today: input.today,
+			dates,
+			nothingLogged: input.nothingLogged,
+		}),
+	};
+}
 
 function byCreationOrder(a: Habit, b: Habit): number {
 	return a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id;
@@ -202,14 +244,19 @@ export function buildRangeSummary(input: RangeSummaryInput): RangeSummary {
 		differenceInCalendarDays(window.start, previousWindow.start),
 		dates.length,
 	);
-	const perHabit = classifyHabits({
-		habits: ordered,
-		entries: input.entries,
-		frozenDays,
-		today,
-		dates,
-		nothingLogged: input.nothingLogged,
-	});
+	const perHabit = input.classified
+		? input.classified.perHabit.map(({ habit, cells }) => ({
+				habit,
+				cells: cells.slice(0, dates.length),
+			}))
+		: classifyHabits({
+				habits: ordered,
+				entries: input.entries,
+				frozenDays,
+				today,
+				dates,
+				nothingLogged: input.nothingLogged,
+			});
 
 	const total = { ...EMPTY_TALLY };
 	const previousTotal = { ...EMPTY_TALLY };

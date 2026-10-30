@@ -100,6 +100,12 @@ beforeEach(() => {
 	mockCreateCategory.mockReset();
 });
 
+// jest's window reports fontScale 2, i.e. accessibility sizes, where a segmented control stacks:
+// these tests are about the standard layout.
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => false,
+}));
+
 describe("HabitFormScreen — create mode", () => {
 	beforeEach(() => {
 		mockBack.mockReset();

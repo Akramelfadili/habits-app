@@ -27,6 +27,31 @@ export const DEFAULT_CLOCK = "2026-09-24T09:00:00";
 const V3_FRIDAY = "2026-10-23T09:00:00";
 const V3_SATURDAY = "2026-10-24T09:00:00";
 
+/** The Progress tab's range switcher — a tab per range; at AX sizes a collapsed button first. */
+async function showRange(page, range) {
+	await page.getByRole("tab", { name: range }).click();
+	await page.waitForTimeout(500);
+}
+
+/** Scrolls the Progress tab by `top` pt (or to the end) with the wheel, and waits out the bar's crossfade. */
+async function scrollProgress(page, top) {
+	await page.mouse.move(200, 400);
+	await page.mouse.wheel(0, top === "end" ? 6000 : top);
+	await page.waitForTimeout(600);
+}
+
+/** Year → the year's July label → that month, with 14 July ringed (P13). */
+async function openJuly14(page) {
+	await showRange(page, "Year");
+	await page.getByRole("button", { name: /^July,/ }).click();
+	await page.waitForTimeout(500);
+	await page.getByRole("button", { name: /^Tuesday 14 July,/ }).click();
+	await page.waitForTimeout(400);
+	await scrollProgress(page, 360);
+}
+
+const PROGRESS = "/(progress)/progress?fixtures=";
+
 /** A heatmap cell's accessibility label, `daysAgo` days before the screen's clock. */
 function heatmapCellLabel(clock, daysAgo, status) {
 	const day = subDays(new Date(clock), daysAgo);
@@ -491,118 +516,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-11 — Weekly summary
-	"weekly-summary": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=weekly-summary",
-		mockup: "docs/mockups/weekly-summary.png",
-		// The summary counts up to today only, so pin "now" to the end of a
-		// week — otherwise a Monday run would show an empty week.
-		clock: "2026-09-20T20:00:00",
-		note: "Clock pinned to Sun 20 Sep evening. Mockup's '34 of 42' tile disagrees with its own bars (29).",
-	},
-	"weekly-summary-perfect": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=perfect-week",
-		mockup: "docs/mockups/perfect-week.png",
-		clock: "2026-09-13T20:00:00",
-		note: "Clock pinned to Sun 13 Sep evening. Mockup's '42 of 42' tile disagrees with its own 5/5 and 3/3 bars (36).",
-	},
-	"weekly-summary-too-early": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=weekly-summary",
-		mockup: "docs/mockups/weekly-summary.png",
-		clock: "2026-09-15T20:00:00",
-		note: "Tuesday evening, switched to This week (Tuesday opens on last week): no habit due 3 times yet, so the insight reads 'Too early to call'.",
-		async interact(page) {
-			await page.getByText("This week", { exact: true }).click();
-		},
-	},
-	"weekly-summary-last-week": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=weekly-summary-last-week",
-		mockup: "docs/mockups/weekly-summary.png",
-		clock: "2026-09-21T09:00:00",
-		note: "Monday morning: opens on last week (14–20 Sep), the mockup's week, with the full seven days counted.",
-	},
-	"weekly-summary-empty": {
-		feature: "HAB-11",
-		route: "/(progress)/week?fixtures=empty",
-		mockup: null,
-		note: "No habits at all.",
-	},
-
-	// HAB-16 — Monthly summary (C2, C3, C6) + the range switcher on Weekly (C1)
-	"monthly-summary": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=monthly-summary",
-		mockup: "docs/mockups/hab-16-c2.png",
-		// 2 Sep → the last complete month is August (1 Aug is a Saturday).
-		clock: "2026-09-02T09:00:00",
-		note: "Last complete month (August 2026). Fixture numbers differ from the mockup's (it's tuned to the insights, not the tiles); freezes are on 7 and 22 Aug.",
-	},
-	"monthly-insights": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=monthly-summary",
-		mockup: "docs/mockups/hab-16-c3.png",
-		clock: "2026-09-02T09:00:00",
-		note: "Scrolled to the insights: slipping → improved → pattern, then the freeze card. The slipping body omits the mockup's 'started when Easy run moved' clause (not derivable).",
-		async interact(page) {
-			await page
-				.getByText("What August says", { exact: true })
-				.evaluate((el) => {
-					el.scrollIntoView({ block: "start" });
-				});
-			await page.waitForTimeout(300);
-		},
-	},
-	"monthly-too-early": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=monthly-too-early",
-		mockup: "docs/mockups/hab-16-c6.png",
-		clock: "2026-09-16T09:00:00",
-		note: "12 days of history (since 4 Sep): unlock card, partial September calendar, the week one tap away.",
-	},
-	"monthly-empty": {
-		feature: "HAB-16",
-		route: "/(progress)/month?fixtures=empty",
-		mockup: null,
-		note: "No habits at all.",
-	},
-	// HAB-17 — Yearly summary (C4, C5, C7)
-	"yearly-summary": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=yearly-summary",
-		mockup: "docs/mockups/hab-17-c4.png",
-		clock: "2026-09-16T09:00:00",
-		note: "3 March — 16 September 2026. Fixture numbers differ from the mockup's tiles (1,612 / 81%); the insights are tuned to C5. Strips use the 11px year layout; the chart's current month (September) is the lighter bar.",
-	},
-	"yearly-insights": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=yearly-summary",
-		mockup: "docs/mockups/hab-17-c5.png",
-		clock: "2026-09-16T09:00:00",
-		note: "Scrolled to the insights: best month → stuck → never stuck (the only tappable one). The mockup's fourth card (Summer dip) is cut by the max-three rule; copy omits clauses that aren't derivable ('through two schedule changes', 'Travel weeks show up as gaps').",
-		async interact(page) {
-			await page.getByText("What 2026 says", { exact: true }).evaluate((el) => {
-				el.scrollIntoView({ block: "start" });
-			});
-			await page.waitForTimeout(300);
-		},
-	},
-	"yearly-too-early": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=monthly-too-early",
-		mockup: "docs/mockups/hab-17-c7.png",
-		clock: "2026-09-16T09:00:00",
-		note: "12 days of history (since 4 Sep): unlock card ('12 of 91 days' — the real 4 Sep → 4 Dec span; the mockup says 90 and 'from 3 December'), one bar in progress and eleven dashed slots, the week one tap away.",
-	},
-	"yearly-empty": {
-		feature: "HAB-17",
-		route: "/(progress)/year?fixtures=empty",
-		mockup: null,
-		note: "No habits at all.",
-	},
 	"edit-habit-focus-frequency": {
 		feature: "HAB-16",
 		route: "/edit-habit/1?focus=frequency",
@@ -1017,9 +930,234 @@ export const SCREENS = {
 	},
 	"tab-bar-progress": {
 		feature: "HAB-27",
-		route: "/(progress)/week?fixtures=weekly-summary",
+		route: "/(progress)/progress?fixtures=weekly-summary",
 		mockup: "docs/mockups/v3/renders/progress/slice_00.png",
 		note: "P1 — the Progress tab root with the pill, Progress active.",
+	},
+
+	// HAB-35–38 — Progress (V3-3b): P1–P17, the habit picker HP1/HP2, Edit this day RL1/RL2
+	"progress-week": {
+		feature: "HAB-35",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_00.png",
+		clock: V3_FRIDAY,
+		note: "P1 — Week, populated: three tiles, the slipping insight with its pager dots, the matrix (partial water, bonus Upper body Monday, frozen Meditate Tuesday, Cold shower open days, the Break habit's resisted days) and the legend.",
+	},
+	"progress-week-too-early": {
+		feature: "HAB-35",
+		route: `${PROGRESS}progress-v3-too-early`,
+		mockup: "docs/mockups/v3/renders/progress/slice_01.png",
+		clock: V3_FRIDAY,
+		note: "P2 — three days of logs: the unlock card replaces tiles and insights; the matrix stays, Mon–Tue dashed.",
+	},
+	"progress-week-no-habits": {
+		feature: "HAB-35",
+		route: `${PROGRESS}empty`,
+		mockup: "docs/mockups/v3/renders/progress/slice_01.png",
+		clock: V3_FRIDAY,
+		note: "P3 — no habits: the empty state with Add habit; Export reads disabled.",
+	},
+	"progress-week-nothing-logged": {
+		feature: "HAB-35",
+		route: `${PROGRESS}progress-v3-nothing-logged`,
+		mockup: "docs/mockups/v3/renders/progress/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "P4 — habits, nothing logged: outlined cells (not missed) and a link to Today.",
+	},
+	"progress-week-one-habit": {
+		feature: "HAB-35",
+		route: `${PROGRESS}progress-v3-one-habit`,
+		mockup: "docs/mockups/v3/renders/progress/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "P5 — one habit: stats for it, and the matrix becomes one card of seven 40 pt days.",
+	},
+	"progress-week-ax": {
+		feature: "HAB-35",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: "docs/mockups/v3/renders/progress/slice_03.png",
+		clock: V3_FRIDAY,
+		note: "P6 — Week at AX3, scrolled: only the compact bar with the collapsed range ('Week ⌄') is pinned; the matrix is one block per habit.",
+		async interact(page) {
+			await scrollProgress(page, 700);
+		},
+	},
+	"progress-month": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_03.png",
+		clock: V3_FRIDAY,
+		note: "P7 — Month, populated: calendar with notched partial days, frozen 7 Oct and 20 Oct, today ringed, future hairline.",
+		async interact(page) {
+			await showRange(page, "Month");
+		},
+	},
+	"progress-month-rates": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_04.png",
+		clock: V3_FRIDAY,
+		note: "P8 — Month scrolled to the per-habit rates: ranked, slipping last on the amber bar, the Break habit tagged, frozen days and bonus logs named.",
+		async interact(page) {
+			await showRange(page, "Month");
+			await scrollProgress(page, 760);
+		},
+	},
+	"progress-month-too-early": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3-too-early`,
+		mockup: "docs/mockups/v3/renders/progress/slice_04.png",
+		clock: V3_FRIDAY,
+		note: "P9 — Month too early: the unlock card; the calendar shows the 3 logged days, earlier days dashed.",
+		async interact(page) {
+			await showRange(page, "Month");
+		},
+	},
+	"progress-month-one-habit": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3-one-habit`,
+		mockup: "docs/mockups/v3/renders/progress/slice_05.png",
+		clock: V3_FRIDAY,
+		note: "P10 — Month, one habit: a binary calendar (14–15 Oct missed, 7 and 20 Oct frozen).",
+		async interact(page) {
+			await showRange(page, "Month");
+		},
+	},
+	"progress-month-ax": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: "docs/mockups/v3/renders/progress/slice_05.png",
+		clock: V3_FRIDAY,
+		note: "P11 — Month at AX3: the range is a stacked list with a check, the tiles go 1-up.",
+		async interact(page) {
+			await page.getByTestId("segmented-collapsed").click();
+			await page.getByRole("tab", { name: "Month" }).click();
+			await page.waitForTimeout(400);
+			await page.getByTestId("segmented-collapsed").click();
+			await page.waitForTimeout(400);
+		},
+	},
+	"progress-year": {
+		feature: "HAB-37",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "P12 — Year, populated: three 4-month bands, month labels, Less → More legend, best-month insight, the habit chip.",
+		async interact(page) {
+			await showRange(page, "Year");
+		},
+	},
+	"progress-month-day": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "P13 — opened from Year › Jul: Month for July with Back to Year, 14 July ringed and its detail card with Edit this day.",
+		async interact(page) {
+			await openJuly14(page);
+		},
+	},
+	"progress-year-too-early": {
+		feature: "HAB-37",
+		route: `${PROGRESS}progress-v3-too-early`,
+		mockup: "docs/mockups/v3/renders/progress/slice_07.png",
+		clock: V3_FRIDAY,
+		note: "P14 — Year too early: the unlock card and only the current band.",
+		async interact(page) {
+			await showRange(page, "Year");
+		},
+	},
+	"progress-year-one-habit": {
+		feature: "HAB-37",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "P15 — Year filtered to Meditate through the chip: binary cells, frozen days violet.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await page.getByTestId("habit-filter-chip").click();
+			await page.getByText("Meditate", { exact: true }).click();
+			await page.waitForTimeout(500);
+		},
+	},
+	"progress-year-ax": {
+		feature: "HAB-37",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: "docs/mockups/v3/renders/progress/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "P16 — Year at AX3, scrolled: a month list with bars and whole-number %, 'Year ⌄' pinned.",
+		async interact(page) {
+			await page.getByTestId("segmented-collapsed").click();
+			await page.getByRole("tab", { name: "Year" }).click();
+			await page.waitForTimeout(500);
+			await scrollProgress(page, 700);
+		},
+	},
+	"progress-month-end": {
+		feature: "HAB-27",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_09.png",
+		clock: V3_FRIDAY,
+		viewport: { width: 393, height: 640 },
+		note: "P17 — Month scrolled to the end: the last card stops above the pill, the compact bar with the range pinned.",
+		async interact(page) {
+			await showRange(page, "Month");
+			await scrollProgress(page, "end");
+		},
+	},
+	"progress-habit-picker": {
+		feature: "HAB-34",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/sheets/slice_09.png",
+		clock: V3_FRIDAY,
+		note: "HP1 — Show habit: All habits first, then the active habits, then the archived one.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await page.getByTestId("habit-filter-chip").click();
+			await page.waitForTimeout(500);
+		},
+	},
+	"progress-habit-picker-one": {
+		feature: "HAB-34",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/sheets/slice_09.png",
+		clock: V3_FRIDAY,
+		note: "HP2 — Meditate chosen: the picker reopened with the check on Meditate.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await page.getByTestId("habit-filter-chip").click();
+			await page.getByText("Meditate", { exact: true }).click();
+			await page.waitForTimeout(500);
+			await page.getByTestId("habit-filter-chip").click();
+			await page.waitForTimeout(500);
+		},
+	},
+	"progress-month-edit-day": {
+		feature: "HAB-34",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/sheets/slice_07.png",
+		clock: V3_FRIDAY,
+		note: "RL1 — Month › a day › Edit this day: every habit due that day with its circle; no note field from Progress.",
+		async interact(page) {
+			await showRange(page, "Month");
+			await page
+				.getByRole("button", { name: /^Wednesday 14 October,/ })
+				.click();
+			await page.getByRole("button", { name: "Edit this day" }).click();
+			await page.waitForTimeout(600);
+		},
+	},
+	"progress-week-edit-day": {
+		feature: "HAB-34",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/sheets/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "RL2 — Week › a day header › Edit this day (Wednesday 21 Oct).",
+		async interact(page) {
+			await page
+				.getByRole("button", { name: "Wednesday 21 October. Edit this day" })
+				.click();
+			await page.waitForTimeout(600);
+		},
 	},
 	"tab-bar-habits-end": {
 		feature: "HAB-27",
@@ -1226,12 +1364,6 @@ const DARK_TWINS = [
 	"rest-day-picker",
 	"today-empty",
 	"retro-log",
-	"monthly-summary",
-	"monthly-insights",
-	"monthly-too-early",
-	"yearly-summary",
-	"yearly-insights",
-	"yearly-too-early",
 	"habit-detail",
 	"habit-detail-archived",
 	"habit-detail-restored",
@@ -1251,6 +1383,27 @@ const DARK_TWINS = [
 	"tab-bar-ax-bar-a",
 	"tab-bar-progress",
 	"tab-bar-habits-end",
+	"progress-week",
+	"progress-week-too-early",
+	"progress-week-no-habits",
+	"progress-week-nothing-logged",
+	"progress-week-one-habit",
+	"progress-week-ax",
+	"progress-month",
+	"progress-month-rates",
+	"progress-month-too-early",
+	"progress-month-one-habit",
+	"progress-month-ax",
+	"progress-year",
+	"progress-month-day",
+	"progress-year-too-early",
+	"progress-year-one-habit",
+	"progress-year-ax",
+	"progress-month-end",
+	"progress-habit-picker",
+	"progress-habit-picker-one",
+	"progress-month-edit-day",
+	"progress-week-edit-day",
 ];
 for (const name of DARK_TWINS) {
 	const light = SCREENS[name];
@@ -1272,16 +1425,14 @@ const LONG_NAME_TWINS = [
 	"habit-detail",
 	"habit-detail-archived",
 	"retro-log",
-	"weekly-summary",
-	"monthly-summary",
-	"monthly-insights",
-	"yearly-summary",
-	"yearly-insights",
 	"reminders-at-cap",
 	"manage-habits",
 	"manage-habits-swipe-open",
 	"delete-confirm",
 	"export-ready",
+	"progress-week",
+	"progress-month-rates",
+	"progress-habit-picker",
 ];
 for (const name of LONG_NAME_TWINS) {
 	const base = SCREENS[name];

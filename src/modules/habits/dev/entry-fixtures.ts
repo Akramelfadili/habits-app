@@ -9,6 +9,10 @@ import {
 	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
 import { monthlyEntries } from "./monthly-fixtures";
+import {
+	PROGRESS_V3_SCENARIOS,
+	progressV3Entries,
+} from "./progress-v3-fixtures";
 import { TODAY_V3_SCENARIOS, todayV3Entries } from "./today-v3-fixtures";
 import { yearlyEntries } from "./yearly-fixtures";
 
@@ -38,6 +42,9 @@ export function makeEntryFixtures(
 
 	for (const name of TODAY_V3_SCENARIOS) {
 		if (scenario === name) return todayV3Entries(name);
+	}
+	for (const name of PROGRESS_V3_SCENARIOS) {
+		if (scenario === name) return progressV3Entries(name);
 	}
 
 	if (

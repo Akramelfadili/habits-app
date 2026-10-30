@@ -1,3 +1,4 @@
+import { addDays, parseISO } from "date-fns";
 import { DAY_KEY_FORMAT, fromDayKey, toDayKey } from "./day-key";
 
 describe("day keys", () => {
@@ -21,5 +22,27 @@ describe("day keys", () => {
 
 	it("round-trips", () => {
 		expect(toDayKey(fromDayKey("2024-02-29"))).toBe("2024-02-29");
+	});
+});
+
+describe("fromDayKey — the fast path", () => {
+	it("gives local midnight, the same as parseISO, for every day of a leap year", () => {
+		for (
+			let day = new Date(2024, 0, 1);
+			day.getFullYear() === 2024;
+			day = addDays(day, 1)
+		) {
+			const key = toDayKey(day);
+			expect(fromDayKey(key).getTime()).toBe(parseISO(key).getTime());
+		}
+	});
+
+	it("does not roll an impossible date into the next month", () => {
+		expect(Number.isNaN(fromDayKey("2026-02-31").getTime())).toBe(true);
+		expect(Number.isNaN(fromDayKey("2026-13-01").getTime())).toBe(true);
+	});
+
+	it("falls back to parseISO for anything that is not yyyy-MM-dd", () => {
+		expect(fromDayKey("2026-10-24T09:00:00").getHours()).toBe(9);
 	});
 });

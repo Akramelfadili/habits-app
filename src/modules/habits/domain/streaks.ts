@@ -6,7 +6,7 @@ import {
 	startOfMonth,
 	subDays,
 } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
+import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { FREEZE_POOL_SIZE } from "../constants";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import { restartDays } from "../strategies/paused-schedule";
@@ -59,7 +59,7 @@ function completionsOf(habit: Habit, entries: readonly Entry[]): Completions {
 		isEntryComplete(habit, entry),
 	);
 	return {
-		dates: completedEntries.map((entry) => parseISO(entry.date)),
+		dates: completedEntries.map((entry) => fromDayKey(entry.date)),
 		set: new Set(completedEntries.map((entry) => entry.date)),
 	};
 }

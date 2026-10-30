@@ -15,7 +15,6 @@ function renderHeatmap({
 	const weeks = buildHeatmapWeeks({ habit, entries, frozenDates, today });
 	return render(
 		<HabitHeatmap
-			habit={habit}
 			weeks={weeks}
 			hasEntries={hasEntries}
 			rangeLabel="Jul — Sep"
@@ -28,7 +27,10 @@ function renderHeatmap({
 describe("HabitHeatmap", () => {
 	it("renders 70 cells with distinct completed, missed, frozen, and blank states", async () => {
 		await renderHeatmap();
-		expect(screen.getAllByTestId(/^heatmap-cell-/).length).toBe(70 + 5); // + legend swatches
+		expect(
+			screen.getAllByTestId(/^completion-cell-(?!notch|bonus-dot|quiet-dot)/)
+				.length,
+		).toBe(70 + 5); // + legend swatches
 		expect(screen.getByLabelText("Tuesday 22 September, logged")).toBeTruthy();
 		expect(screen.getByLabelText("Monday 21 September, frozen")).toBeTruthy();
 		expect(screen.getByLabelText("Sunday 20 September, missed")).toBeTruthy();

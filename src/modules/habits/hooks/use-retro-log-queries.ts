@@ -13,18 +13,23 @@ export type RetroLogDay = {
 	values: Record<string, DayLogValue>;
 	/** Habits whose day is a frozen one: their circle is violet, and logging it gives the freeze back (PR-11). */
 	frozenHabitIds: ReadonlySet<number>;
-	/** The habit the sheet was opened from: it owns the day's note. */
-	originHabitId: number;
+	/**
+	 * The habit the sheet was opened from: it owns the day's note. Absent when
+	 * the sheet opens from Progress, which has no habit of its own — and then
+	 * there is no note field (spec: "Spec wins over the mockup").
+	 */
+	originHabitId?: number;
 	/** The opening habit's saved note for the day — "" when there isn't one. */
 	note: string;
 };
 
 /**
  * What the Edit this day sheet (HAB-10) edits for `date`, opened from `habitId`'s
- * heatmap — or null while no day is selected.
+ * heatmap — or from Progress with `habitId` null — or null while no day is
+ * selected.
  */
 export function useRetroLogQueries(
-	habitId: number,
+	habitId: number | null,
 	date: Date | null,
 ): RetroLogDay | null {
 	const { habits: allHabits } = useHabitsList();
@@ -51,10 +56,12 @@ export function useRetroLogQueries(
 		values[habit.id] = dayLogValueFor(habit, entry);
 	}
 	const note =
-		notes.find(
-			(candidate) =>
-				candidate.habitId === habitId && candidate.date === dateString,
-		)?.note ?? "";
+		habitId === null
+			? ""
+			: (notes.find(
+					(candidate) =>
+						candidate.habitId === habitId && candidate.date === dateString,
+				)?.note ?? "");
 
 	const frozenHabitIds = new Set(
 		frozenDays
@@ -67,7 +74,7 @@ export function useRetroLogQueries(
 		habits,
 		values,
 		frozenHabitIds,
-		originHabitId: habitId,
+		...(habitId === null ? {} : { originHabitId: habitId }),
 		note,
 	};
 }

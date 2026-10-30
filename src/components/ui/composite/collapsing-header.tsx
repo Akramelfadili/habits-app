@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import Animated, {
 	Extrapolation,
 	interpolate,
+	type SharedValue,
 	scrollTo,
 	useAnimatedReaction,
 	useAnimatedRef,
@@ -146,6 +147,7 @@ export function useCollapsingHeader() {
 
 	return {
 		scrollRef,
+		scrollY,
 		onScroll,
 		setRange,
 		collapsed,
@@ -214,7 +216,96 @@ export function CollapsedHeaderBar({
 	);
 }
 
+type PinnedBelowBarProps = {
+	children: ReactNode;
+	/** The scroll offset from `useCollapsingHeader`. */
+	scrollY: SharedValue<number>;
+	/**
+	 * Where the content's own slot for this control starts, in scroll-content
+	 * coordinates. The control follows the content up to just under the bar,
+	 * then stays there.
+	 */
+	top: SharedValue<number>;
+	/** The control's own height, reported so the screen can keep its slot in the content. */
+	onHeight: (height: number) => void;
+	testID?: string;
+};
+
+/**
+ * A control that scrolls with the content until it meets the inline bar, then
+ * pins just under it (Progress's range switcher, P1 → P8). One element, moved
+ * on the UI thread — a translation of the scroll offset clamped at the bar's
+ * bottom edge — so it is never drawn twice. Render it right after the bar and
+ * before the scroller, like the bar itself, and leave an empty slot of its
+ * height in the content.
+ */
+export function PinnedBelowBar({
+	children,
+	scrollY,
+	top,
+	onHeight,
+	testID = "pinned-below-bar",
+}: PinnedBelowBarProps) {
+	const { colors } = useTheme();
+	const layer = useAnimatedStyle(() => ({
+		transform: [
+			{ translateY: Math.max(top.value - scrollY.value, COLLAPSED_BAR_HEIGHT) },
+		],
+	}));
+	// A hairline arrives as the control settles under the bar, so content can
+	// be seen to pass beneath it.
+	const hairline = useAnimatedStyle(() => ({
+		opacity: interpolate(
+			top.value - scrollY.value - COLLAPSED_BAR_HEIGHT,
+			[0, space[100]],
+			[1, 0],
+			Extrapolation.CLAMP,
+		),
+	}));
+
+	return (
+		<View style={styles.pinnedAnchor} pointerEvents="box-none">
+			<Animated.View
+				testID={testID}
+				pointerEvents="box-none"
+				onLayout={({ nativeEvent }) => onHeight(nativeEvent.layout.height)}
+				style={[styles.pinned, { backgroundColor: colors.bg }, layer]}
+			>
+				{children}
+				<Animated.View
+					testID={`${testID}-hairline`}
+					pointerEvents="none"
+					style={[
+						styles.pinnedHairline,
+						{ backgroundColor: colors.border },
+						hairline,
+					]}
+				/>
+			</Animated.View>
+		</View>
+	);
+}
+
 const styles = StyleSheet.create({
+	pinnedAnchor: {
+		height: 0,
+		zIndex: 1,
+	},
+	pinned: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		paddingHorizontal: space[500],
+		paddingBottom: space[200],
+	},
+	pinnedHairline: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		height: StyleSheet.hairlineWidth,
+	},
 	anchor: {
 		height: 0,
 		zIndex: 1,

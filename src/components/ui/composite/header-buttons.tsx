@@ -2,7 +2,7 @@ import type { NativeStackNavigationOptions } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { radius } from "@/theme/theme";
+import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -188,6 +188,56 @@ export function HeaderCircleButton({
 	);
 }
 
+type HeaderPillButtonProps = {
+	label: string;
+	/** A glyph before the label (Progress's Export arrow). */
+	symbol?: SFSymbol;
+	/** What it does, when the visible label alone is ambiguous — "Export data". */
+	accessibilityLabel?: string;
+	/**
+	 * Looks and reads as disabled, but still takes the tap: Progress's Export
+	 * explains why it can't run in a toast (P3) instead of going silent.
+	 */
+	unavailable?: boolean;
+	onPress: () => void;
+};
+
+/**
+ * A labelled trailing button in a screen's own large-title header (Progress's
+ * Export, P1): the same 44 pt-high card pill with a hairline as the circles,
+ * with its words beside the glyph.
+ */
+export function HeaderPillButton({
+	label,
+	symbol,
+	accessibilityLabel,
+	unavailable = false,
+	onPress,
+}: HeaderPillButtonProps) {
+	const { colors, opacity } = useTheme();
+
+	return (
+		<Pressable
+			testID="header-pill"
+			accessibilityRole="button"
+			accessibilityLabel={accessibilityLabel ?? label}
+			accessibilityState={{ disabled: unavailable }}
+			onPress={onPress}
+			style={({ pressed }) => [
+				styles.pill,
+				{ backgroundColor: colors.card, borderColor: colors.border },
+				unavailable && { opacity: opacity.disabled },
+				pressed && { opacity: opacity.pressed },
+			]}
+		>
+			{symbol ? (
+				<SymbolView name={symbol} size={16} tintColor={colors.ink} />
+			) : null}
+			<Text style={[styles.pillLabel, { color: colors.ink }]}>{label}</Text>
+		</Pressable>
+	);
+}
+
 /**
  * The `+`, drawn from two bars: an SF Symbol renders nothing on web, which left
  * Today's and Habits' header circles blank in the web baselines. Same on every
@@ -245,6 +295,19 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	pill: {
+		minHeight: HEADER_BUTTON_MIN_SIZE,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: space[150],
+		paddingHorizontal: space[400],
+		borderRadius: radius.pill,
+		borderWidth: 1,
+	},
+	pillLabel: {
+		...textStyles.subhead,
 	},
 	plus: {
 		width: PLUS_SIZE,

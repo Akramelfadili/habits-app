@@ -13,7 +13,22 @@ export function toDayKey(date: Date): string {
 	return format(date, DAY_KEY_FORMAT);
 }
 
-/** Local midnight of a day key — the inverse of `toDayKey`. */
+/**
+ * Local midnight of a day key — the inverse of `toDayKey`. Read straight off the
+ * three fields: `parseISO` is general and ~30× slower, which showed once
+ * Progress parsed five years of entries (tens of thousands) per open. A string
+ * that is not "yyyy-MM-dd" falls back to `parseISO`.
+ */
 export function fromDayKey(key: string): Date {
+	if (key.length === 10 && key[4] === "-" && key[7] === "-") {
+		const year = Number(key.slice(0, 4));
+		const month = Number(key.slice(5, 7));
+		const day = Number(key.slice(8, 10));
+		if (year > 0 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+			const date = new Date(year, month - 1, day);
+			// 2026-02-31 must not roll over into March: let parseISO call it invalid.
+			if (date.getMonth() === month - 1) return date;
+		}
+	}
 	return parseISO(key);
 }

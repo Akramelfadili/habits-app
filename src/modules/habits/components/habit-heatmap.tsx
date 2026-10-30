@@ -1,17 +1,16 @@
 import { format } from "date-fns";
 import { StyleSheet, Text, View } from "react-native";
-import { CompletionGrid } from "@/components/ui/composite/completion-grid";
+import type { CompletionCellState } from "@/components/ui/composite/completion-cell";
+import { CompletionLegend } from "@/components/ui/composite/completion-legend";
+import { CompletionRows } from "@/components/ui/composite/completion-rows";
 import { Container } from "@/components/ui/composite/container";
-import type { HeatmapCellState } from "@/components/ui/composite/heatmap-cell";
-import { HeatmapLegend } from "@/components/ui/composite/heatmap-legend";
 import { Caption } from "@/components/ui/primitives/caption";
-import { typeScale } from "@/theme/theme";
+import { space, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { HeatmapDay } from "../domain/habit-history";
-import type { Habit } from "../types";
+import { progressCopy } from "../messages";
 
 type HabitHeatmapProps = {
-	habit: Habit;
 	/** Week columns, oldest first, each Monday → Sunday. */
 	weeks: HeatmapDay[][];
 	/** Nothing logged yet — swaps the range and legend for first-run copy. */
@@ -23,6 +22,9 @@ type HabitHeatmapProps = {
 	/** A past (or today's) cell was tapped — the entry point into retro logging (HAB-10). */
 	onSelectDay: (date: Date) => void;
 };
+
+/** The V3 mini-grid cell (D1): 24 pt. */
+const HEATMAP_CELL = 24;
 
 const STATUS_LABEL: Record<HeatmapDay["status"], string> = {
 	"not-scheduled": "not scheduled",
@@ -36,30 +38,31 @@ const STATUS_LABEL: Record<HeatmapDay["status"], string> = {
 	future: "upcoming",
 };
 
-function cellStateFor(day: HeatmapDay): HeatmapCellState {
+function cellStateFor(day: HeatmapDay): CompletionCellState {
 	switch (day.status) {
 		case "logged":
 			return { kind: "level", level: day.level ?? 3 };
 		case "bonus":
 			return { kind: "bonus" };
 		case "missed":
-			return { kind: "missed" };
+			return { kind: "level", level: 0 };
 		case "frozen":
 			return { kind: "frozen" };
 		case "paused":
 			return { kind: "paused" };
 		case "reset":
 			return { kind: "reset" };
+		case "pending":
+			return { kind: "nothing-logged" };
+		case "future":
+			return { kind: "future" };
 		default:
-			// Pending today and future days can't have been missed yet — they
-			// read as blank, same as a day that was never scheduled.
-			return { kind: "not-scheduled" };
+			return { kind: "not-due" };
 	}
 }
 
 /** Habit Detail's 10-week heatmap card (HAB-09) — rows are weekdays, columns are weeks. */
 export function HabitHeatmap({
-	habit,
 	weeks,
 	hasEntries,
 	rangeLabel,
@@ -84,9 +87,9 @@ export function HabitHeatmap({
 					{hasEntries ? rangeLabel : "Nothing logged yet"}
 				</Text>
 			</View>
-			<CompletionGrid
-				layout="detail"
-				accent={habit.category.hue}
+			<CompletionRows
+				size={HEATMAP_CELL}
+				gap={space[100]}
 				rows={weekdayRows.map((row) =>
 					row.map((day) => ({
 						key: day.date.toISOString(),
@@ -97,7 +100,14 @@ export function HabitHeatmap({
 				)}
 			/>
 			{hasEntries ? (
-				<HeatmapLegend accent={habit.category.hue} frozenLabel={frozenLabel} />
+				<CompletionLegend
+					entries={[]}
+					scale={{
+						less: progressCopy.legend.less,
+						more: progressCopy.legend.more,
+						frozenLabel: frozenLabel ?? progressCopy.legend.frozen,
+					}}
+				/>
 			) : (
 				<Caption>Cells fill in as you log — the first one is today.</Caption>
 			)}

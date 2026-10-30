@@ -21,6 +21,11 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **"Browse suggestions" (T2) is hidden until HAB-46**: there is no suggestions screen to send it to.
 - **× per week habits are never at risk by day** (HAB-33, T1/T6): the mockup draws no per-week habit at risk, and a one-date freeze cannot cover a week; a week-level freeze is Later.
 - **Frames that show tab bar A** are drawn for brevity; build bar B (floating pill) everywhere.
+- **P10 (Month, one habit) tiles are Completion / Longest / Freezes used**, not Completion / Streak / Longest: the current streak is not in the month data (V3-3b).
+- **P12 (Year) always shows the habit chip** ("All habits" when unfiltered), unless exactly one habit exists; the mockup draws the chip only once a habit is chosen (P15).
+- **The per-habit rates list (P8) includes an archived habit that had days in the range**; insights never name one (D11).
+- **The AX3 stacked range list overlays the content** instead of pushing it down (P11); known, revisit in V3-6.
+- **Week day headers are 44 pt high and 28 pt wide** (P1): the cell pitch is 28 pt, so a 44 pt-wide target would overlap its neighbours. A touch-target exception, on the V3-6 audit list in `docs/backlog.md`.
 
 ## Standing decisions (apply to every ticket)
 
@@ -228,6 +233,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Edge cases:** frozen day in RL3 (PR-11 fallback = read-only); quantity edit on a past day targets that date and Undo too.
 
+> **As built (V3-3b):** Edit this day opens from Progress too (Week day header, Month day card) with no origin habit — `useRetroLogQueries(null, date)` — so it has no note field. The Year chip's picker is `HabitFilterSheet` ("Show habit").
+
 ---
 
 ## HAB-35 — Progress: shell and Week
@@ -243,6 +250,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **One habit (P5):** the matrix becomes one card with seven 40 pt day cells.
 
 **Edge cases:** AX3 collapses matrix to one block per habit and the switcher to a stacked list (P6, P11).
+
+> **As built (V3-3b):** `screens/progress-screen.tsx` is the one Progress tab root (route `progress`, anchor of the Progress group). The large title collapses into the inline bar (`useCollapsingHeader`), and the Week / Month / Year control is **one element pinned under the bar** (`PinnedBelowBar`); at AX sizes it collapses to the selected range and a tap opens a stacked list (`SegmentedControl axLayout="collapse"`). Header: eyebrow ("Week of 19 October"), title, Export pill; Export opens the export sheet, or — with no habits or no logs — reads disabled and toasts why. Week: three tiles (Completion, Best streak, Best day; one habit: Completion, Streak, Freezes), the insight pager, the matrix card with its legend, then Week summary (daily bars, perfect days, freezes used, bonus logs). Matrix cells are 24 pt and not tappable; each day header is a 44 pt-high button opening Edit this day (not for days that have not happened); a row is one VoiceOver stop ("Drink water, 3 of 7. Monday, done. …"), partial always with its %. One habit (exactly one exists) or AX3: blocks of seven 40 pt cells with the date, each its own stop ("Wed, done") and a button. Too early (P2): unlock card in place of tiles and insights, matrix stays, "Started Wed 21 Oct · Mon–Tue before start". No habits (P3), nothing logged (P4: outlined cells, link to Today). Deviations are in `docs/backlog.md` → V3-3b.
 
 **Performance prerequisite:** the per-week streak/heatmap/year maths is O(n) per day and takes seconds on 5 years of data; the **pre-bucketing fix lands in V3-0a before Progress** (no semantic change, with an old-vs-new equivalence test).
 
@@ -263,6 +272,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 ---
 
+> **As built (V3-3b):** the calendar is 40 pt day cells with their number (accent tints, a 22 % notch on partial days, frozen violet dashed, today and the tapped day ringed, future hairline, before-start dashed) under a Monday-first axis; a day is a button that rings it and shows its detail card ("4 of 5 done · 80%", each habit's state in words, "Edit this day" unless the day has not happened). Tiles: Completion (+N pts vs the previous month), Perfect days ("of N so far"), Best streak; then the insight pager, the calendar with Less → More and "N freezes left" and a note ("22 Oct frozen · 24–31 still ahead"), then per-habit rates (ranked, slipping last on the amber bar, the Break tag, frozen and bonus named). Month from the range switcher is the current month, in place (D15). A Year month label pushes that month as its own route (`/month/2026-07-01`) inside the Progress stack: Back and the iOS swipe-back return to Year with its filter and scroll kept.
+
 ## HAB-37 — Progress: Year
 **Frames:** P12, P14–P16
 
@@ -278,6 +289,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 ---
 
+> **As built (V3-3b):** the year is three bands of four months, a column per week and a row per weekday (Mon on top), 16 pt cells (the gap drops from 2 pt to 1 pt when a band has 19 weeks so it still fits), month labels ("Jan ›") the only buttons (44 pt high through hitSlop) and the cells hidden from VoiceOver. Tiles: Completion since the first log, Best streak, Best month (one habit: Completion, Longest, Freezes used). The habit chip (always shown unless only one habit exists) opens "Show habit" — All habits, the active habits, then the archived ones — and closes on a choice. VoiceOver and AX sizes get the month list (bar + whole-number %, each a button). Too early shows the unlock card and only the current band.
+
 ## HAB-38 — Insights
 **Frames:** P1, P5, P7, P10, P12 · **Component:** V3-12
 
@@ -290,6 +303,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 > **As built (V3-3a):** `domain/progress-insights.ts` ranks slipping → improved → nothing to fix (cap 3). A slipping card carries the action `{ type: "edit-habit", habitId, focus: "frequency" }`; the others `null`. Tones `warning` / `positive` / `neutral` (V3-3b maps `positive` to `InsightCard`'s `success`). Gate order: too-early (no insights) → perfect (only "nothing to fix") → slipping. "Nothing to fix" follows the improved cards whenever nothing is slipping. Year adds a best-month card (improved class). The weekday-pattern insight is not built (PR-03).
 
 ---
+
+> **As built (V3-3b):** the pager is `InsightPager` over `InsightCard` (icon square, title, body, an inline link; padding 14, radius 20): one card with dots for up to three, each read "Insight 1 of 3" and adjustable; only a slipping card's "Change frequency ›" is a target and opens Edit habit scrolled to Frequency. Wording is in `progressCopy`; "is up N days" uses the done-day difference, falling back to points.
 
 ## HAB-39 — Habits tab: library
 **Frames:** H1–H7 · **Components:** V3-13, V3-23

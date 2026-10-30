@@ -27,14 +27,11 @@ function mockStub(name: string) {
 jest.mock("@/modules/habits/screens/today-screen", () => ({
 	TodayScreen: mockStub("today"),
 }));
-jest.mock("@/modules/habits/screens/weekly-summary-screen", () => ({
-	WeeklySummaryScreen: mockStub("week"),
+jest.mock("@/modules/habits/screens/progress-screen", () => ({
+	ProgressScreen: mockStub("progress"),
 }));
-jest.mock("@/modules/habits/screens/monthly-summary-screen", () => ({
-	MonthlySummaryScreen: mockStub("month"),
-}));
-jest.mock("@/modules/habits/screens/yearly-summary-screen", () => ({
-	YearlySummaryScreen: mockStub("year"),
+jest.mock("@/modules/habits/screens/progress-month-screen", () => ({
+	ProgressMonthScreen: mockStub("progress-month"),
 }));
 jest.mock("@/modules/habits/screens/manage-habits-screen", () => ({
 	ManageHabitsScreen: mockStub("manage"),
@@ -91,7 +88,7 @@ function tabGroup(app: { getSegments(): string[] }) {
 describe("the three tab roots", () => {
 	it.each([
 		["/", "(today)", "today"],
-		["/(progress)/week", "(progress)", "week"],
+		["/(progress)/progress", "(progress)", "progress"],
 		["/(habits)/manage", "(habits)", "manage"],
 	])("%s is the %s root and shows %s", async (url, group, marker) => {
 		const app = await renderApp(url);
@@ -103,7 +100,7 @@ describe("the three tab roots", () => {
 describe("Detail opens inside the tab it came from (D4)", () => {
 	it.each([
 		["Today", "/", "(today)"],
-		["Progress", "/(progress)/week", "(progress)"],
+		["Progress", "/(progress)/progress", "(progress)"],
 		["Habits", "/(habits)/manage", "(habits)"],
 	])("from %s", async (_tab, root, group) => {
 		const app = await renderApp(root);
@@ -117,6 +114,26 @@ describe("Detail opens inside the tab it came from (D4)", () => {
 		await testRouter.back();
 		expect(tabGroup(app)).toBe(group);
 		expect(app.getPathname()).toBe(root.replace(/^\/\([a-z]+\)/, "") || "/");
+	});
+});
+
+describe("a Year month is a pushed route inside Progress (P13)", () => {
+	it("opens in the Progress tab and Back returns to Progress's root", async () => {
+		const app = await renderApp("/(progress)/progress");
+		await testRouter.push("/month/2026-07-01");
+		expect(screen.getByText("progress-month")).toBeTruthy();
+		expect(tabGroup(app)).toBe("(progress)");
+		expect(app.getPathname()).toBe("/month/2026-07-01");
+		await testRouter.back();
+		expect(screen.getByText("progress")).toBeTruthy();
+		expect(tabGroup(app)).toBe("(progress)");
+		expect(app.getPathname()).toBe("/progress");
+	});
+
+	it("passes the month through to the screen", async () => {
+		const app = await renderApp("/(progress)/progress");
+		await testRouter.push("/month/2026-07-01");
+		expect(app.getPathname()).toBe("/month/2026-07-01");
 	});
 });
 
@@ -136,15 +153,6 @@ describe("the other shared routes stay in their tab", () => {
 		await testRouter.push("/categories");
 		expect(screen.getByText("categories")).toBeTruthy();
 		expect(tabGroup(app)).toBe("(habits)");
-	});
-
-	it("Month and Year, replacing Week inside Progress", async () => {
-		const app = await renderApp("/(progress)/week");
-		await testRouter.replace("/month");
-		expect(screen.getByText("month")).toBeTruthy();
-		expect(tabGroup(app)).toBe("(progress)");
-		await testRouter.replace("/year");
-		expect(tabGroup(app)).toBe("(progress)");
 	});
 });
 

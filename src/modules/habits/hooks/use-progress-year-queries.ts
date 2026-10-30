@@ -4,6 +4,7 @@ import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { progressInsights } from "../domain/progress-insights";
 import {
 	buildRangeSummary,
+	classifyRangeDays,
 	rangeEntrySpan,
 	rangeWindowFor,
 } from "../domain/range-summary";
@@ -40,16 +41,35 @@ export function useProgressYearQueries({
 		if (!base.loaded) return { state: "loading" };
 		if (base.gate === "no-habits") return { state: "no-habits" };
 		const window = rangeWindowFor("year", fromDayKey(yearKey));
+		const { unlock } = base;
+		if (base.gate !== "ready") {
+			const grid = buildYearMap({
+				habits: base.gridHabits,
+				entries,
+				frozenDays,
+				today,
+				year: window,
+				nothingLogged: base.nothingLogged,
+			});
+			return { state: base.gate, unlock, grid };
+		}
+		// Ready: the heat map and the summary read the same days — classify them once.
+		const classified = classifyRangeDays({
+			kind: "year",
+			habits: base.scoped,
+			entries,
+			frozenDays,
+			today,
+			window,
+		});
 		const grid = buildYearMap({
-			habits: base.gridHabits,
+			habits: base.scoped,
 			entries,
 			frozenDays,
 			today,
 			year: window,
-			nothingLogged: base.nothingLogged,
+			classified,
 		});
-		const { unlock } = base;
-		if (base.gate !== "ready") return { state: base.gate, unlock, grid };
 		const summary = buildRangeSummary({
 			kind: "year",
 			habits: base.scoped,
@@ -57,6 +77,7 @@ export function useProgressYearQueries({
 			frozenDays,
 			today,
 			window,
+			classified,
 		});
 		return {
 			state: "ready",

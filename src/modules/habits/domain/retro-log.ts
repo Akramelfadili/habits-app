@@ -15,13 +15,13 @@ import { isEntryComplete } from "./streaks";
  * The habits a retro-logged `date` shows: each one that existed then and was
  * due that day (per its FrequencyStrategy, with only earlier completions
  * counting — what Today would have shown) or has something logged that day.
- * The habit the sheet was opened from always shows, first.
+ * The habit the sheet was opened from, if any, always shows, first.
  */
 export function habitsForDay(
 	habits: readonly Habit[],
 	entries: readonly Entry[],
 	date: Date,
-	focusHabitId: number,
+	focusHabitId: number | null,
 ): Habit[] {
 	const day = startOfDay(date);
 	const dateString = toDayKey(day);

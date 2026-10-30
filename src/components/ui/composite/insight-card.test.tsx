@@ -7,8 +7,10 @@ jest.mock("expo-symbols", () => {
 	return { SymbolView: View };
 });
 
+const light = { ...surfaceColors.light, ...semanticColors.light };
+
 describe("InsightCard", () => {
-	it("renders the title and body", async () => {
+	it("renders the title and body, with nothing tappable", async () => {
 		await render(
 			<InsightCard symbol="clock" title="Too early to call" body="Not yet." />,
 		);
@@ -17,50 +19,67 @@ describe("InsightCard", () => {
 		expect(screen.queryByRole("button")).toBeNull();
 	});
 
-	it("uses the amber icon square for the warning tone and fires its action", async () => {
+	it("uses the amber icon square for the warning tone and fires only its link", async () => {
 		const onPress = jest.fn();
 		await render(
 			<InsightCard
 				tone="warning"
-				symbol="diamond.fill"
-				title="Mobility is slipping"
-				body="Two of seven days."
-				action={{ label: "Reschedule habit →", onPress }}
+				symbol="exclamationmark.circle"
+				title="Read 20 min is slipping"
+				body="3 of 5 so far this week, 7 of 7 last week."
+				action={{ label: "Change frequency ›", onPress }}
 			/>,
 		);
 		expect(screen.getByTestId("insight-card-icon")).toHaveStyle({
-			backgroundColor: semanticColors.light.warnTint,
+			backgroundColor: light.warnTint,
 		});
-		await fireEvent.press(screen.getByText("Reschedule habit →"));
+		// The body is never a target; only the link is.
+		expect(screen.getAllByRole("button")).toHaveLength(1);
+		await fireEvent.press(screen.getByText("Change frequency ›"));
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
-	it("uses a filled ink icon square for the success tone", async () => {
+	it("keeps success and neutral on the quiet square, told apart by the glyph's ink", async () => {
 		await render(
-			<InsightCard
-				tone="success"
-				symbol="checkmark"
-				title="Perfect week"
-				body="Nothing to fix."
-			/>,
+			<>
+				<InsightCard tone="success" symbol="chart.bar" title="a" body="b" />
+				<InsightCard tone="neutral" symbol="checkmark" title="c" body="d" />
+			</>,
 		);
-		expect(screen.getByTestId("insight-card-icon")).toHaveStyle({
-			backgroundColor: surfaceColors.light.ink,
+		const [success, neutral] = screen.getAllByTestId("insight-card-icon");
+		expect(success).toHaveStyle({ backgroundColor: light.inner });
+		expect(neutral).toHaveStyle({ backgroundColor: light.inner });
+	});
+
+	it("is a 20 pt card with a hairline and 14 pt padding", async () => {
+		await render(<InsightCard symbol="clock" title="a" body="b" />);
+		expect(screen.getByTestId("insight-card")).toHaveStyle({
+			borderRadius: 20,
+			padding: 14,
+			backgroundColor: light.card,
 		});
 	});
 
-	it("takes a habit's own colours for the icon square without gaining a tap target (HAB-16)", async () => {
+	it("reads its position first and steps with swipe up and down inside a pager", async () => {
+		const onStep = jest.fn();
 		await render(
 			<InsightCard
-				symbol="book"
-				title="Read is sticking"
-				body="82%, up 11 points on July."
-				accent={{ tint: "#ffe0c8", ink: "#b55300" }}
+				symbol="clock"
+				title="Read 20 min is slipping"
+				body="3 of 5."
+				position={{ label: "Insight 1 of 3", onStep }}
 			/>,
 		);
-		expect(screen.getByTestId("insight-card-icon")).toHaveStyle({
-			backgroundColor: "#ffe0c8",
+		const text = screen.getByLabelText(
+			"Insight 1 of 3. Read 20 min is slipping. 3 of 5.",
+		);
+		expect(text.props.accessibilityRole).toBe("adjustable");
+		await fireEvent(text, "accessibilityAction", {
+			nativeEvent: { actionName: "increment" },
 		});
-		expect(screen.queryAllByRole("button")).toHaveLength(0);
+		await fireEvent(text, "accessibilityAction", {
+			nativeEvent: { actionName: "decrement" },
+		});
+		expect(onStep.mock.calls).toEqual([[1], [-1]]);
 	});
 });
