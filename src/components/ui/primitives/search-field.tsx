@@ -151,6 +151,8 @@ const styles = StyleSheet.create({
 		...textStyles.bodyLg,
 		flex: 1,
 		paddingVertical: space[200],
+		// The field draws its own focus outline (the ink border); the browser's must not stack on it.
+		outlineWidth: 0,
 	},
 	clear: {
 		width: minTouchTarget,

@@ -128,6 +128,21 @@ export const messages = {
 		text: (day: string, left: number) =>
 			`Freeze returned for ${day} · ${left} left`,
 	},
+	/** H5, D5: Restore is instant, so the toast carries the Undo. */
+	habitRestored: {
+		tone: "success",
+		text: (habit: string) => `${habit} is back on Today`,
+	},
+	/** DC5: after Archive habit, Detail pops and the toast offers Undo. */
+	habitArchived: {
+		tone: "success",
+		text: (habit: string) => `${habit} archived`,
+	},
+	/** DC3: permanent, so no Undo. */
+	habitDeleted: {
+		tone: "success",
+		text: (habit: string) => `${habit} deleted`,
+	},
 	/** P3: Export tapped while there is nothing to export — says why, in a toast. */
 	exportNothing: {
 		tone: "info",
@@ -529,6 +544,76 @@ export const progressCopy = {
 	},
 	monthNotes: {
 		before: (date: string) => date,
+	},
+} as const;
+
+/**
+ * The Habits tab (HAB-39, V3-4a): its header, search, library, archived section
+ * and empty states, with the VoiceOver wording of 08.3. "Weeks start Monday"
+ * and every date style follow the rest of the app; nothing here says "failed".
+ */
+export const habitsCopy = {
+	screenTitle: "Habits",
+	settings: "Settings",
+	addHabit: "Add habit",
+	/** The eyebrow over the title: "7 active · 2 archived", "No habits", or the reorder line. */
+	eyebrow: {
+		counts: (active: number, archived: number) =>
+			archived > 0
+				? `${active} active · ${archived} archived`
+				: `${active} active`,
+		none: "No habits",
+		reorder: "Reorder · drag within a category",
+	},
+	/** 08.3: "Habits, heading. 7 active, 1 archived." */
+	headerLabel: (counts: string) => `Habits, heading. ${counts}`,
+	search: {
+		label: "Search habits",
+		cancel: "Cancel",
+		clear: "Clear text",
+	},
+	activeHeader: (count: number) => `Active · ${count}`,
+	reorder: "Reorder",
+	reorderLabel: "Reorder habits",
+	reorderDone: "Done",
+	reorderHint:
+		"Habits move within their category. To change a category, use Edit.",
+	reorderHandle: (habit: string) => `Reorder ${habit}`,
+	archiveAction: "Archive",
+	/** What a library row's tap does, for VoiceOver (08.3). */
+	rowHint: "Opens details.",
+	archived: {
+		header: (count: number) => `Archived · ${count}`,
+		show: "Show",
+		hide: "Hide",
+		/** 08.3: "Archived, 2, collapsed. Button." */
+		toggleLabel: (count: number, expanded: boolean) =>
+			`Archived, ${count}, ${expanded ? "expanded" : "collapsed"}`,
+		restore: "Restore",
+		restoreLabel: (habit: string) => `Restore ${habit}`,
+		since: (date: string) => `Archived ${date}`,
+		bestStreak: (days: number) => `best streak ${days}`,
+		/** 08.3: "Morning run, archived 12 October. Restore, button." */
+		rowLabel: (habit: string, date: string) => `${habit}, archived ${date}`,
+		note: "A restored habit starts a fresh streak. Paused days stay paused.",
+	},
+	categories: "Categories",
+	categoriesLabel: (count: number) => `Categories, ${count}`,
+	noResults: {
+		title: (query: string) => `No habits match “${query}”`,
+		body: "Search looks through active and archived habits.",
+		add: (name: string) => `Add “${name}” as a habit`,
+	},
+	/** H6: no habits at all. The suggestions link joins it with HAB-46. */
+	empty: {
+		title: "No habits yet",
+		body: "Add your first habit to start tracking.",
+		add: "Add habit",
+	},
+	/** Every habit is archived: Today is empty, Restore is below. */
+	allArchived: {
+		title: "No active habits",
+		body: "Everything is archived, so Today is empty. Restore one below or add a new habit.",
 	},
 } as const;
 

@@ -33,8 +33,8 @@ jest.mock("@/modules/habits/screens/progress-screen", () => ({
 jest.mock("@/modules/habits/screens/progress-month-screen", () => ({
 	ProgressMonthScreen: mockStub("progress-month"),
 }));
-jest.mock("@/modules/habits/screens/manage-habits-screen", () => ({
-	ManageHabitsScreen: mockStub("manage"),
+jest.mock("@/modules/habits/screens/habits-screen", () => ({
+	HabitsScreen: mockStub("manage"),
 }));
 jest.mock("@/modules/habits/screens/manage-categories-screen", () => ({
 	ManageCategoriesScreen: mockStub("categories"),

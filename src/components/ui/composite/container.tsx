@@ -35,8 +35,9 @@ type ContainerProps = PropsWithChildren<{
 	 */
 	tight?: boolean;
 	/**
-	 * A list card with a row held mid-drag: ink outline on the card, the
-	 * layout unchanged (Manage's scoped reorder, HAB-19).
+	 * A list card with a row held mid-drag, the layout unchanged. A tight card
+	 * takes an ink outline; a flat one (V3's library, H4) lets the lifted row's
+	 * shadow out instead of clipping it.
 	 */
 	lifted?: boolean;
 }>;
@@ -61,6 +62,7 @@ export function Container({
 				variant === "sheet" && styles.sheet,
 				(dividers || flat) && styles.dividedBase,
 				flat && styles.flat,
+				flat && lifted && styles.flatLifted,
 				tight && styles.tight,
 				tight && (variant === "outlined" || lifted) && styles.tightOutlined,
 				variant === "dashed" && styles.dashed,
@@ -81,7 +83,7 @@ export function Container({
 							: 0,
 					borderColor: selected
 						? colors.ink
-						: lifted
+						: lifted && !flat
 							? colors.ink
 							: variant === "outlined" ||
 									variant === "dashed" ||
@@ -135,6 +137,10 @@ const styles = StyleSheet.create({
 		padding: 0,
 		borderRadius: radius.l,
 		overflow: "hidden",
+	},
+	flatLifted: {
+		overflow: "visible",
+		zIndex: 1,
 	},
 	flatDivider: {
 		marginVertical: 0,

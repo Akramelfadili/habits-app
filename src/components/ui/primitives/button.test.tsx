@@ -181,3 +181,51 @@ describe("Button — V3-22 geometry", () => {
 		});
 	});
 });
+
+describe("Button — compact (V3-22)", () => {
+	it("is a 36 pt pill on the inset surface with a hit area of 44", async () => {
+		await render(
+			<Button
+				label="Restore"
+				variant="compact"
+				fullWidth={false}
+				onPress={jest.fn()}
+			/>,
+		);
+		const button = screen.getByRole("button", { name: "Restore" });
+		expect(button).toHaveStyle({
+			backgroundColor: surfaceColors.light.inner,
+			minHeight: 36,
+		});
+		expect(button.props.hitSlop).toBe(4);
+		expect(screen.getByText("Restore")).toHaveStyle({
+			color: surfaceColors.light.ink,
+			fontSize: 14,
+		});
+	});
+
+	it("presses, and goes inert while disabled", async () => {
+		const onPress = jest.fn();
+		const { rerender } = await render(
+			<Button
+				label="Restore"
+				variant="compact"
+				fullWidth={false}
+				onPress={onPress}
+			/>,
+		);
+		await fireEvent.press(screen.getByText("Restore"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+		await rerender(
+			<Button
+				label="Restore"
+				variant="compact"
+				fullWidth={false}
+				disabled
+				onPress={onPress}
+			/>,
+		);
+		await fireEvent.press(screen.getByText("Restore"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+});

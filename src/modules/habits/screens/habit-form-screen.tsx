@@ -76,9 +76,15 @@ type HabitFormScreenProps = {
 	habitId?: number;
 	/** Opens scrolled to this section — "frequency", from an insight's "Reschedule habit" action (HAB-16). */
 	focus?: "frequency";
+	/** Opens New habit with this name already in the field — "Add “Yoga” as a habit" from a search with no results (H3). */
+	name?: string;
 };
 
-export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
+export function HabitFormScreen({
+	habitId,
+	focus,
+	name,
+}: HabitFormScreenProps) {
 	const scrollRef = useRef<ScrollViewInstance>(null);
 	const unitRef = useRef<TextInputInstance>(null);
 	const hasFocused = useRef(false);
@@ -120,7 +126,7 @@ export function HabitFormScreen({ habitId, focus }: HabitFormScreenProps) {
 			zodResolver(schemaRef.current)(values, context, options),
 		mode: "onBlur",
 		defaultValues: {
-			name: "",
+			name: name ?? "",
 			categoryId: null,
 			direction: "build",
 			targetType: "simple",

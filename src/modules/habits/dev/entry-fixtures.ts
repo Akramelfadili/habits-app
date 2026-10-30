@@ -8,6 +8,7 @@ import {
 	HABIT_DETAIL_HISTORY_DAYS,
 	MANAGE_ARCHIVE_ARCHIVED_AT,
 } from "./habit-fixtures";
+import { HABITS_V3_SCENARIOS, habitsV3Entries } from "./habits-v3-fixtures";
 import { monthlyEntries } from "./monthly-fixtures";
 import {
 	PROGRESS_V3_SCENARIOS,
@@ -45,6 +46,9 @@ export function makeEntryFixtures(
 	}
 	for (const name of PROGRESS_V3_SCENARIOS) {
 		if (scenario === name) return progressV3Entries(name);
+	}
+	for (const name of HABITS_V3_SCENARIOS) {
+		if (scenario === name) return habitsV3Entries(name);
 	}
 
 	if (

@@ -1,6 +1,7 @@
 import { format, subDays } from "date-fns";
 import type { FrozenDay } from "../types";
 import type { FixtureScenario } from "./habit-fixtures";
+import { HABITS_V3_SCENARIOS, habitsV3FrozenDays } from "./habits-v3-fixtures";
 import { monthlyFrozenDays } from "./monthly-fixtures";
 import {
 	PROGRESS_V3_SCENARIOS,
@@ -41,6 +42,9 @@ export function makeFrozenDayFixtures(
 	if (scenario === "monthly-summary") return monthlyFrozenDays();
 	for (const name of PROGRESS_V3_SCENARIOS) {
 		if (scenario === name) return progressV3FrozenDays(name);
+	}
+	for (const name of HABITS_V3_SCENARIOS) {
+		if (scenario === name) return habitsV3FrozenDays(name);
 	}
 	if (
 		scenario !== "habit-detail" &&

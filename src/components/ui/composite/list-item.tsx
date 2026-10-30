@@ -47,11 +47,6 @@ type ListItemProps = {
 	 */
 	dimmed?: boolean;
 	/**
-	 * Denser padding for rows stacked in a `tight` list card (Manage &
-	 * Archive's reorder and archived rows, HAB-13).
-	 */
-	compact?: boolean;
-	/**
 	 * Held mid-drag in a reorderable list (V3-23 "Reorder · lifted"): the E2
 	 * shadow, and in dark a lighter surface, since height reads as lightness
 	 * there (F-06).
@@ -81,7 +76,6 @@ export function ListItem({
 	trailing,
 	embedded = false,
 	dimmed = false,
-	compact = false,
 	lifted = false,
 	accessibilityLabel,
 	accessibilityHint,
@@ -128,12 +122,7 @@ export function ListItem({
 				onPress={onPress}
 				style={({ pressed }) => [
 					styles.pressable,
-					!embedded &&
-						(compact
-							? styles.compactPadded
-							: largeText
-								? styles.paddedLarge
-								: styles.padded),
+					!embedded && (largeText ? styles.paddedLarge : styles.padded),
 					trailing ? styles.paddedBeforeTrailing : null,
 					// V3-23 "Pressed": the inset surface, not a fade.
 					pressed && onPress && { backgroundColor: colors.inner },
@@ -197,13 +186,7 @@ export function ListItem({
 				{trailing ? null : chevron}
 			</Pressable>
 			{trailing ? (
-				<View
-					style={[
-						styles.trailing,
-						!embedded &&
-							(compact ? styles.compactTrailingPadded : styles.trailingPadded),
-					]}
-				>
+				<View style={[styles.trailing, !embedded && styles.trailingPadded]}>
 					{trailing}
 					{chevron}
 				</View>
@@ -239,10 +222,6 @@ const styles = StyleSheet.create({
 		paddingVertical: space[400],
 		paddingHorizontal: space[400],
 	},
-	compactPadded: {
-		paddingVertical: space[200],
-		paddingHorizontal: space[250],
-	},
 	paddedBeforeTrailing: {
 		paddingRight: space[300],
 	},
@@ -267,9 +246,6 @@ const styles = StyleSheet.create({
 	},
 	trailingPadded: {
 		paddingRight: space[350],
-	},
-	compactTrailingPadded: {
-		paddingRight: space[250],
 	},
 	text: {
 		flex: 1,
