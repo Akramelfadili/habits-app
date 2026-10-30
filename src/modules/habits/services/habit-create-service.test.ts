@@ -1,6 +1,11 @@
 const mockCreateHabit = jest.fn();
 const mockCreateReminder = jest.fn();
 const mockSync = jest.fn();
+const mockEnsurePermission = jest.fn();
+jest.mock("@/lib/notifications/use-notification-permission", () => ({
+	ensureNotificationPermission: (...args: unknown[]) =>
+		mockEnsurePermission(...args),
+}));
 
 jest.mock("../repositories/habit-repository", () => ({
 	createHabit: (...args: unknown[]) => mockCreateHabit(...args),
@@ -36,6 +41,23 @@ describe("createHabitWithReminders", () => {
 		expect(result.remindersFailed).toBe(false);
 		expect(mockCreateReminder).not.toHaveBeenCalled();
 		expect(mockSync).not.toHaveBeenCalled();
+		expect(mockEnsurePermission).not.toHaveBeenCalled();
+	});
+
+	it("asks the OS for notification permission, once, before saving a habit with reminders", async () => {
+		const order: string[] = [];
+		mockEnsurePermission.mockImplementation(async () => {
+			order.push("permission");
+		});
+		mockCreateHabit.mockImplementation(async () => {
+			order.push("habit");
+			return makeHabit({ id: 7 });
+		});
+		await createHabitWithReminders(input, [
+			{ hour: 7, minute: 0, weekdays: [1] },
+		]);
+		expect(order).toEqual(["permission", "habit"]);
+		expect(mockEnsurePermission).toHaveBeenCalledTimes(1);
 	});
 
 	it("writes each queued reminder on its own days, then syncs once", async () => {

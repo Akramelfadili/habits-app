@@ -79,7 +79,7 @@ function ReminderSheetContent({
 				<WeekdayPicker
 					days={WEEKDAYS}
 					selected={weekdays}
-					onChange={(days) => setWeekdays(days.sort((a, b) => a - b))}
+					onChange={(days) => setWeekdays([...days].sort((a, b) => a - b))}
 				/>
 				{noDays ? (
 					<FieldHelper tone="error">{reminderSheetCopy.noDays}</FieldHelper>

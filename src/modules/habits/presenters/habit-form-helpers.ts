@@ -6,7 +6,7 @@ export type FormIssues = {
 	count: number;
 	/** The reason Save is off, shown under it — undefined when Save can go. */
 	reason: string | undefined;
-	/** Which fields have an error, in form order (the first takes focus). */
+	/** Which fields have an error, in form order. */
 	fields: ("name" | "weekdays" | "unit")[];
 };
 

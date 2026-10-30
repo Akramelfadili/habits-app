@@ -267,6 +267,9 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **`Button` gained `rowAction` / `dangerLink`** (quiet ink and danger text actions inside a row); `Rename` and `Delete` are no longer the old outlined small pills.
 - **The Categories screen draws its own large title** (eyebrow, title, Reorder / +), under the native Back ("Habits" or "Settings"); it does not collapse (Habits' collapsing header is still its own).
 
+- **Two reminder time sheets for now.** `ReminderSheet` (time wheel + days; used by the form) and the older `ReminderTimeSheet` (time only; the Reminders screen) coexist until step 4 rebuilds Reminders on `ReminderSheet` and deletes the old one. Likewise the form's red remove button (`ReminderDrafts`) is hand-drawn until step 4 extracts it for the Reminders list.
+- **The form does not move focus to the first error** (spec review): Save stays off while any issue exists and each error is next to its field, so there is nothing to submit into. Focus-to-first-error is part of step 7's accessibility pass.
+
 ## V3-6 audit list (touch targets and known layout exceptions)
 
 Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.

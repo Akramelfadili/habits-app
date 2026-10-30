@@ -1,4 +1,5 @@
 import { log } from "@/lib/logger/logger";
+import { ensureNotificationPermission } from "@/lib/notifications/use-notification-permission";
 import { REMINDER_CAP } from "../constants";
 import { createHabit } from "../repositories/habit-repository";
 import { createReminder } from "../repositories/reminder-repository";
@@ -23,6 +24,9 @@ export async function createHabitWithReminders(
 	input: CreateHabitInput,
 	reminders: readonly ReminderDraft[] = [],
 ): Promise<CreatedHabit> {
+	// Turning a reminder on first makes sure the OS has been asked; a denial
+	// never blocks the save (HAB-12).
+	if (reminders.length > 0) await ensureNotificationPermission();
 	const habit = await createHabit(input);
 	if (reminders.length === 0) return { habit, remindersFailed: false };
 

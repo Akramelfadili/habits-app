@@ -1,23 +1,14 @@
-import { ensureNotificationPermission } from "@/lib/notifications/use-notification-permission";
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { seedHabitWithHistory, seedStreakAtRiskHabit } from "../dev/dev-seeds";
 import { deleteAllHabits } from "../repositories/habit-repository";
 import { createHabitWithReminders } from "../services/habit-create-service";
 import { updateHabitAndSyncReminders } from "../services/reminder-service";
-import type { CreateHabitInput, ReminderDraft } from "../types";
-
-/** Turning a reminder on first makes sure the OS has been asked; a denial never blocks the save (HAB-12). */
-async function createWithReminders(
-	input: CreateHabitInput,
-	reminders: readonly ReminderDraft[] = [],
-) {
-	if (reminders.length > 0) await ensureNotificationPermission();
-	return createHabitWithReminders(input, reminders);
-}
 
 export function useHabitActions() {
-	const create = useAsyncAction(createWithReminders, { scope: "habit-form" });
+	const create = useAsyncAction(createHabitWithReminders, {
+		scope: "habit-form",
+	});
 	// A schedule change moves which reminder days are real (HAB-12), so an
 	// edit re-syncs the habit's notifications along with the write.
 	const update = useAsyncAction(updateHabitAndSyncReminders, {
