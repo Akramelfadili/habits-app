@@ -2,7 +2,7 @@ import { pluralise } from "@/utils/format";
 
 /** Delete-category copy (HAB-25) — docs/mockups/hab-25-f4a.png, hab-25-f4b.png. */
 
-export const KEEP_CATEGORY_LABEL = "Keep category";
+export const CANCEL_LABEL = "Cancel";
 
 export function deleteCategoryHeadline(name: string): string {
 	return `Delete “${name}”?`;

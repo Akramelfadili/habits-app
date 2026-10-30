@@ -111,6 +111,23 @@ describe("archive → restore → undo → restore", () => {
 		expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
 	});
 
+	it("five archive and restore cycles in a row never stack: one notification when active, none when archived, always the latest generation (HAB-40)", async () => {
+		const seen = new Set<string>();
+		for (let cycle = 1; cycle <= 5; cycle++) {
+			await archiveHabit(3);
+			expect(fake.scheduled.size).toBe(0);
+			setNow(addDays(DAY_ONE, cycle * 3));
+			await restoreHabit(3);
+			expect(fake.scheduled.size).toBe(1);
+			const [identifier] = [...fake.scheduled.keys()];
+			// Every restore rebuilds under a fresh identifier: nothing from a past cycle survives.
+			expect(seen.has(identifier)).toBe(false);
+			seen.add(identifier);
+			expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
+		}
+		expect(seen.size).toBe(5);
+	});
+
 	it("archiving still succeeds when cancelling the notifications fails — the habit is archived, the failure is logged", async () => {
 		await archiveHabit(3);
 		await restoreHabit(3);

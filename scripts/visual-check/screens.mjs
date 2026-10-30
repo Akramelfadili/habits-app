@@ -14,7 +14,6 @@
  * "dark" — the emulated OS scheme, which the Appearance setting's default
  * "System" follows, HAB-15), and `interact(page, ctx)` for states only reachable by a tap or gesture.
  */
-import { format, subDays } from "date-fns";
 
 /**
  * "Now" for every screen unless it sets its own: a Thursday late in a month,
@@ -50,13 +49,17 @@ async function openJuly14(page) {
 	await scrollProgress(page, 360);
 }
 
-const PROGRESS = "/(progress)/progress?fixtures=";
-
-/** A heatmap cell's accessibility label, `daysAgo` days before the screen's clock. */
-function heatmapCellLabel(clock, daysAgo, status) {
-	const day = subDays(new Date(clock), daysAgo);
-	return `${format(day, "EEEE d MMMM")}, ${status}`;
+/** Scrolls Habit Detail back to its top, so a sheet opened from its last rows is drawn over the title, as the frames are. */
+async function detailToTop(page) {
+	await page.evaluate(() => {
+		document
+			.querySelector('[data-testid="habit-detail-scroll"]')
+			?.scrollTo(0, 0);
+	});
+	await page.waitForTimeout(300);
 }
+
+const PROGRESS = "/(progress)/progress?fixtures=";
 
 /**
  * A real pointer drag in small steps — gesture-handler's pans only activate
@@ -70,31 +73,6 @@ async function drag(page, locator, { dx = 0, dy = 0, release = true }) {
 	await page.mouse.down();
 	await page.mouse.move(x + dx, y + dy, { steps: 12 });
 	if (release) await page.mouse.up();
-}
-
-/**
- * A horizontal touch swipe through CDP (needs `touch: true` on the state).
- * On web, a mouse drag across a pressable row is claimed by the Pressable
- * as a tap before gesture-handler's swipe sees it; real touch events aren't.
- */
-async function swipeLeft(page, locator, distance = 160) {
-	const cdp = await page.context().newCDPSession(page);
-	const box = await locator.boundingBox();
-	const x = box.x + 150;
-	const y = box.y + box.height / 2;
-	const touch = (type, px) =>
-		cdp.send("Input.dispatchTouchEvent", {
-			type,
-			touchPoints: type === "touchEnd" ? [] : [{ x: px, y }],
-		});
-	await touch("touchStart", x);
-	for (let step = 1; step <= 16; step++) {
-		await touch("touchMove", x - (distance * step) / 16);
-		await page.waitForTimeout(16);
-	}
-	await touch("touchEnd");
-	await page.waitForTimeout(400);
-	return { y };
 }
 
 /** The New habit form's own Name field (the add-category sheet has its own). */
@@ -444,75 +422,108 @@ export const SCREENS = {
 			await page.getByText("Meditate").click();
 		},
 	},
-	"habit-detail-no-freezes": {
-		feature: "HAB-20",
-		route: "/(today)/habit/1?fixtures=no-freezes",
-		mockup: "docs/mockups/hab-20-d6.png",
-		note: "D6: pool spent, yesterday missed, today done — streak reset to 1. The month's reset note, the legend's '0 freezes left' and the outlined missed day (HAB-20). Supersedes streak-reset-no-freezes.png.",
-	},
-
-	// HAB-09 / HAB-10 — Habit detail + retro log
+	// HAB-40 — Habit Detail (V3-4a): D1–D8, H8. Clock = the mockup's Friday 23 October.
 	"habit-detail": {
-		feature: "HAB-09",
-		route: "/(today)/habit/1?fixtures=habit-detail",
-		mockup: "docs/mockups/habit-detail.png",
+		feature: "HAB-40",
+		route: "/(today)/habit/3?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "D1 — Upper body: eyebrow, three tiles (the 90-day rate with its change), the last five weeks with the bonus Mon 19 and the frozen Thu 15 (each week one target), the legend, Reminders. The fixture's numbers differ from the frame's (streak 5, not 9): the history is built from the dates D2 lists.",
+	},
+	"habit-detail-history": {
+		feature: "HAB-40",
+		route: "/(today)/habit/3?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_07.png",
+		clock: V3_FRIDAY,
+		note: "D2 — scrolled to the end: Reminders, History by date (done, bonus 'not counted', frozen, missed; no times), Archive habit and Delete habit last. The habit's name has joined the navigation bar.",
+		async interact(page) {
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 4000);
+			await page.waitForTimeout(600);
+		},
 	},
 	"habit-detail-pushed-header": {
 		feature: "Header buttons",
-		route: "/?fixtures=habit-detail",
-		mockup: "docs/mockups/habit-detail.png",
-		note: "Pushed from Today, so there's history: the plain '‹ Today' back button (header-buttons.tsx) and Edit. Web can't show the iOS 26 Liquid Glass capsule this guards against — that's device-only; the chevron is an SF Symbol (blank on web).",
+		route: "/?fixtures=today-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Pushed from Today, so there's history: the plain '‹ Today' back button (header-buttons.tsx) and Edit in the title row. Web can't show the iOS 26 Liquid Glass capsule this guards against — that's device-only; the chevron is an SF Symbol (blank on web).",
 		async interact(page) {
-			await page.getByText("Glass of water", { exact: true }).click();
-			await page.getByText("Last 10 weeks").waitFor();
+			await page.getByText("Meditate", { exact: true }).click();
+			await page.getByText("Last 5 weeks").waitFor();
 		},
 	},
 	"habit-detail-new": {
-		feature: "HAB-09",
-		route: "/(today)/habit/1?fixtures=habit-detail-new",
-		mockup: "docs/mockups/habit-detail-new.png",
+		feature: "HAB-40",
+		route: "/(today)/habit/1?fixtures=habits-v3-new",
+		mockup: "docs/mockups/v3/renders/habits/slice_07.png",
+		clock: V3_FRIDAY,
+		note: "D3 — a habit created today: the tiles say when they start, the grid is 'before start' with today ringed, History says 'No logs yet. Tick it on Today to start.'",
 	},
 	"habit-detail-archived": {
-		feature: "HAB-20",
-		route: "/(today)/habit/1?fixtures=habit-detail-archived",
-		mockup: "docs/mockups/hab-20-d5.png",
-		note: "D5: banner with the archive date and Restore, Current '—' paused, 'Before archive' rate, dotted paused cells, 'Paused while archived' on Reminders. The mockup's Edit-habit row isn't built (Edit lives in the header).",
+		feature: "HAB-40",
+		route: "/(today)/habit/8?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "D4 — Morning run, archived 12 Oct: the banner with its date and Restore, the streak paused, the rate 'until 12 Oct', the last two weeks hatched (paused, never missed), Reminders paused.",
 	},
 	"habit-detail-restored": {
-		feature: "HAB-20",
-		route: "/(today)/habit/1?fixtures=habit-detail-archived",
-		mockup: "docs/mockups/hab-20-e1.png",
-		note: "E1: Restore tapped — banner collapses in place, toast 'Restored 'Cold shower' — back on Today' with Undo, Current 0, paused span in the heatmap range, Reminders back to 07:00 · daily.",
+		feature: "HAB-40",
+		route: "/(today)/habit/8?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "D5 — Restore tapped: the one-time 'Restored today' banner, a fresh streak, the paused days left out of the rate, and the toast 'Morning run is back on Today' with Undo.",
 		async interact(page) {
-			await page.getByText("Restore", { exact: true }).click();
-			await page.getByText("Restored 'Cold shower' — back on Today").waitFor();
+			await page.getByRole("button", { name: "Restore", exact: true }).click();
+			await page.getByText("Morning run is back on Today").waitFor();
 		},
 	},
 	"habit-detail-restore-undone": {
-		feature: "HAB-20",
-		route: "/(today)/habit/1?fixtures=habit-detail-archived",
-		mockup: "docs/mockups/hab-20-d5.png",
+		feature: "HAB-40",
+		route: "/(today)/habit/8?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_08.png",
+		clock: V3_FRIDAY,
 		note: "Restore then Undo: must be pixel-identical to habit-detail-archived (same archive date, same paused cells).",
 		async interact(page) {
-			await page.getByText("Restore", { exact: true }).click();
-			await page.getByText("Restored 'Cold shower' — back on Today").waitFor();
+			await page.getByRole("button", { name: "Restore", exact: true }).click();
+			await page.getByText("Morning run is back on Today").waitFor();
 			await page.getByText("Undo", { exact: true }).click();
 			await page.getByText("Archived on", { exact: false }).waitFor();
 		},
 	},
-	"habit-detail-bonus": {
-		feature: "HAB-18",
-		route: "/(today)/habit/1?fixtures=habit-detail-bonus",
-		mockup: null,
-		note: "Glass of water scheduled Mon–Fri only, so the weekend logs in its history draw as NEW-16 bonus dots (no mockup — the dot has none).",
+	"habit-detail-reset": {
+		feature: "HAB-40",
+		route: "/(progress)/habit/4?fixtures=habits-v3-reset",
+		mockup: "docs/mockups/v3/renders/habits/slice_09.png",
+		clock: V3_FRIDAY,
+		note: "D6 — Meditate with the month's freezes spent and Wed 14 Oct missed: the reset day outlined in amber, the notice under the legend, the third tile the amber freeze count.",
 	},
+	"habit-detail-break": {
+		feature: "HAB-40",
+		route: "/(today)/habit/7?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_09.png",
+		clock: V3_FRIDAY,
+		note: "D7 — a Break habit: 'Resisting · nights in a row', 'Resisted' and 'Slipped' in the legend and history, never 'failed'.",
+	},
+	"habit-detail-ax": {
+		feature: "HAB-49",
+		route: "/(today)/habit/3?fixtures=habits-v3&textSize=ax",
+		mockup: "docs/mockups/v3/renders/habits/slice_10.png",
+		clock: V3_FRIDAY,
+		note: "D8 — AX3: Edit above the title, the title and eyebrow wrap, the stat tiles one under another, bar A.",
+	},
+
+	// HAB-10 — retro log from Habit Detail
 	"retro-log": {
 		feature: "HAB-10",
 		route: "/(today)/habit/1?fixtures=retro-log",
 		mockup: "docs/mockups/hab-18-d4.png",
 		note: "Origin habit pinned first in the ringed card (HAB-18 D4), the rest under 'Also on <weekday>'. Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
-		async interact(page, { clock }) {
-			await page.getByLabel(heatmapCellLabel(clock, 3, "logged")).click();
+		async interact(page) {
+			await page
+				.getByRole("button", { name: /^Week of/ })
+				.last()
+				.click();
 		},
 	},
 
@@ -574,106 +585,182 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-13 — Manage, archive, delete (reworked by HAB-19; judged against D3)
-	"manage-habits": {
-		feature: "HAB-13",
-		route: "/(habits)/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/hab-19-d3.png",
-		note: "Resting state; the mockup's lifted row and toasts are the next two states.",
+	// HAB-39 — the Habits tab (V3-4a): H1–H6, H9, H10. Clock = the mockup's Friday 23 October.
+	"habits-tab": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_01.png",
+		clock: V3_FRIDAY,
+		note: "H1 — populated: seven active habits by category in the stored order, Archived collapsed, Categories. The chevrons and tab icons are SF Symbols (blank on web).",
 	},
-	"manage-habits-dragging": {
-		feature: "HAB-13",
-		route: "/(habits)/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/hab-19-d3.png",
-		note: "Meditate's grip held mid-drag, not yet released — the mockup's lifted row.",
+	"habits-search": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_01.png",
+		clock: V3_FRIDAY,
+		note: "H2 — 'in' matches active and archived habits, split by status; the archived result has Restore.",
 		async interact(page) {
-			await drag(page, page.getByLabel("Reorder Meditate"), {
+			await page.getByLabel("Search habits").fill("in");
+			await page.waitForTimeout(300);
+		},
+	},
+	"habits-search-none": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "H3 — nothing matches 'yoga': says what was searched and offers to add it.",
+		async interact(page) {
+			await page.getByLabel("Search habits").fill("yoga");
+			await page.waitForTimeout(300);
+		},
+	},
+	"habits-reorder": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "H4 — Reorder mode: grips and Done, the hint, no search, Archived or Categories.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Reorder habits" }).click();
+			await page.waitForTimeout(300);
+		},
+	},
+	"habits-reorder-lifted": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "H4 — Cold shower's grip held mid-drag, not yet released: the E2 lift, inside its own category.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Reorder habits" }).click();
+			await page.waitForTimeout(300);
+			await drag(page, page.getByLabel("Reorder Cold shower"), {
 				dy: -20,
 				release: false,
 			});
 		},
 	},
-	"manage-habits-swipe-open": {
-		feature: "HAB-13",
-		route: "/(habits)/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/hab-19-d3.png",
-		touch: true,
-		note: "Read swiped left, Archive action revealed — no mockup draws this state.",
+	"habits-archived": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/habits/slice_03.png",
+		clock: V3_FRIDAY,
+		note: "H5 — Archived opened in place, Journal 5 min restored: its toast names it and offers Undo; Morning run is still archived. The copy explains the fresh streak and the paused days.",
 		async interact(page) {
-			await swipeLeft(page, page.getByText("Read", { exact: true }));
-		},
-	},
-	"manage-habits-archived-toast": {
-		feature: "HAB-13",
-		route: "/(habits)/manage?fixtures=manage-archive",
-		mockup: "docs/mockups/manage-archive.png",
-		touch: true,
-		note: "Read swiped left and archived — \"Archived 'Read'\" toast with Undo, Read now under Archived.",
-		ignoreErrors: [/No handler for tag/],
-		async interact(page) {
-			const { y } = await swipeLeft(
-				page,
-				page.getByText("Read", { exact: true }),
-			);
-			// Every row's Archive action is in the DOM behind it; tap where
-			// Read's was just revealed, at the row's trailing edge.
-			await page.touchscreen.tap(page.viewportSize().width - 60, y);
-			// react-native-web only: the archived row unmounts while Swipeable still
-			// has a queued config update, and gesture-handler's web NodeManager
-			// throws "No handler for tag N" (native ignores the missing handler).
-			// It is a dev-only LogBox toast over the pill, not app behaviour:
-			// dismiss it so the baseline shows the screen.
 			await page
-				.getByText(/No handler for tag/)
-				.waitFor({ timeout: 3000 })
-				.catch(() => {});
-			await page.mouse.click(309, 817);
+				.getByRole("button", { name: /^Archived, 2, collapsed/ })
+				.click();
+			await page.getByRole("button", { name: "Restore Journal 5 min" }).click();
+			await page.getByText("Journal 5 min is back on Today").waitFor();
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 4000);
+			await page.waitForTimeout(600);
 		},
 	},
-	"manage-habits-no-active": {
-		feature: "HAB-19",
-		route: "/(habits)/manage?fixtures=manage-all-archived",
-		mockup: "docs/mockups/hab-19-e2.png",
-		note: "E2 — everything archived: category sections gone, empty card with Add habit, Restore below.",
-	},
-	"manage-habits-nothing-archived": {
-		feature: "HAB-19",
-		route: "/(habits)/manage?fixtures=manage-nothing-archived",
-		mockup: "docs/mockups/hab-19-e3.png",
-		note: "E3 — Archived header stays over a dashed placeholder.",
-	},
-	"manage-habits-no-habits": {
-		feature: "HAB-19",
+	"habits-empty": {
+		feature: "HAB-39",
 		route: "/(habits)/manage?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/habits/slice_03.png",
+		clock: V3_FRIDAY,
+		note: "H6 — no habits: the empty state with Add habit, Categories still reachable. The suggestions link stays hidden until HAB-46.",
+	},
+	"habits-all-archived": {
+		feature: "HAB-39",
+		route: "/(habits)/manage?fixtures=manage-all-archived",
 		mockup: null,
-		note: "No habits at all: E2 card with copy that doesn't claim anything was archived, plus the E3 placeholder. No mockup draws this combination.",
+		note: "Every habit archived: 'No active habits' with Add habit, Archived below. No frame draws this; the spec's H6 is the no-habits case.",
+	},
+	"habits-ax": {
+		feature: "HAB-49",
+		route: "/(habits)/manage?fixtures=habits-v3&textSize=ax",
+		mockup: "docs/mockups/v3/renders/habits/slice_04.png",
+		clock: V3_FRIDAY,
+		note: "H7 — AX3: the header's buttons above the title, rows stacked (badge, name and status, chevron), bar A.",
+	},
+	"habits-ax-toast": {
+		feature: "HAB-49",
+		route: "/(habits)/manage?fixtures=habits-v3&textSize=ax",
+		mockup: "docs/mockups/v3/renders/habits/slice_05.png",
+		clock: V3_FRIDAY,
+		note: "H10 — AX3 falls back to bar A and the Restore toast goes back to 16 pt above it.",
+		async interact(page) {
+			await page
+				.getByRole("button", { name: /^Archived, 2, collapsed/ })
+				.click();
+			await page.getByRole("button", { name: "Restore Journal 5 min" }).click();
+			await page.getByText("Journal 5 min is back on Today").waitFor();
+		},
+	},
+	// HAB-45 — Destructive confirms (V3-4a): DC1, DC3, DC4, DC5, DC7 and H8.
+	"archive-confirm": {
+		feature: "HAB-45",
+		route: "/(today)/habit/3?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/sheets/slice_03.png",
+		clock: V3_FRIDAY,
+		note: "DC5 / H8 — Archive habit from Detail: one tap, Archive habit as the primary and Cancel under it, and what archiving keeps. The sheet covers the pill.",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Archive habit/ }).click();
+			await detailToTop(page);
+		},
 	},
 	"delete-confirm": {
-		feature: "HAB-23",
-		route: "/(today)/habit/1?fixtures=habit-detail",
-		mockup: "docs/mockups/hab-23-e7.png",
-		note: "E7 light (NEW-33 · with archive action): the whole 'Archive instead' card is the button (chevron is an SF Symbol, blank on web); no separate archive button. Opened from 'Delete habit' on Habit Detail — E7's 'from Edit habit' label isn't built (docs/backlog.md).",
+		feature: "HAB-45",
+		route: "/(today)/habit/5?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/sheets/slice_01.png",
+		clock: V3_FRIDAY,
+		note: "DC1 — Delete Read 20 min?: names its 214 logs, Archive instead first (the default focus), Delete permanently as an outlined red pill, its hint, then Cancel. No Close.",
 		async interact(page) {
-			await page.getByText("Delete habit").click();
-		},
-	},
-	"delete-confirm-dark": {
-		feature: "HAB-23",
-		route: "/(today)/habit/1?fixtures=habit-detail",
-		mockup: "docs/mockups/hab-23-e7.png",
-		colorScheme: "dark",
-		note: "E7 dark half: OS emulated dark, Appearance on System.",
-		async interact(page) {
-			await page.getByText("Delete habit").click();
+			await page.getByRole("button", { name: /^Delete habit/ }).click();
+			await detailToTop(page);
 		},
 	},
 	"delete-confirm-archived": {
-		feature: "HAB-23",
-		route: "/(today)/habit/1?fixtures=habit-detail-archived",
+		feature: "HAB-45",
+		route: "/(today)/habit/8?fixtures=habits-v3",
 		mockup: null,
-		note: "Already-archived habit: NEW-33 plain state — no archive card, just Keep habit and Delete permanently. No mockup draws this.",
+		clock: V3_FRIDAY,
+		note: "An already-archived habit: no Archive instead and no claim that archiving keeps anything — just Delete permanently and Cancel. No frame draws this.",
 		async interact(page) {
-			await page.getByText("Delete habit").click();
+			await page.getByRole("button", { name: /^Delete habit/ }).click();
+			await detailToTop(page);
+		},
+	},
+	"delete-deleting": {
+		feature: "HAB-45",
+		route: "/(today)/habit/5?fixtures=habits-v3&slowWrites=1",
+		mockup: "docs/mockups/v3/renders/sheets/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "DC3 — the delete is running (a write that never finishes): 'Deleting…', 'Keep the app open — this takes a moment.', Cancel disabled, the sheet cannot be swiped away.",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Delete habit/ }).click();
+			await page.getByText("Delete permanently").click();
+			await page.getByText("Deleting…").waitFor();
+			await detailToTop(page);
+		},
+	},
+	"delete-failed": {
+		feature: "HAB-45",
+		route: "/(today)/habit/5?fixtures=habits-v3&failWrites=1",
+		mockup: "docs/mockups/v3/renders/sheets/slice_02.png",
+		clock: V3_FRIDAY,
+		note: "DC4 — the delete failed: an alert banner in the sheet, 'Nothing was changed. Try again.', and Delete permanently is still there.",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Delete habit/ }).click();
+			await page.getByText("Delete permanently").click();
+			await page.getByText("Couldn’t delete").waitFor();
+			await detailToTop(page);
+		},
+	},
+	"delete-confirm-ax": {
+		feature: "HAB-49",
+		route: "/(today)/habit/5?fixtures=habits-v3&textSize=ax",
+		mockup: "docs/mockups/v3/renders/sheets/slice_04.png",
+		clock: V3_FRIDAY,
+		note: "DC7 — AX3: the labels wrap inside their buttons and the buttons grow; the hint is read by VoiceOver instead of shown.",
+		async interact(page) {
+			await page.getByRole("button", { name: /^Delete habit/ }).click();
+			await detailToTop(page);
 		},
 	},
 
@@ -1161,13 +1248,20 @@ export const SCREENS = {
 	},
 	"tab-bar-habits-end": {
 		feature: "HAB-27",
-		route: "/(habits)/manage?fixtures=manage-archive",
+		route: "/(habits)/manage?fixtures=habits-v3",
 		mockup: "docs/mockups/v3/renders/habits/slice_05.png",
+		clock: V3_FRIDAY,
 		viewport: { width: 393, height: 640 },
-		note: "H9 — the Habits tab scrolled to the end: the last row stops above the pill, Habits active.",
+		note: "H9 — the Habits tab scrolled to the end with Archived open: Categories, the last row, stops above the pill, and the restore toast sits 12 pt above it.",
 		async interact(page) {
+			await page
+				.getByRole("button", { name: /^Archived, 2, collapsed/ })
+				.click();
+			await page.getByRole("button", { name: "Restore Journal 5 min" }).click();
+			await page.getByText("Journal 5 min is back on Today").waitFor();
+			await page.mouse.move(200, 300);
 			await page.mouse.wheel(0, 4000);
-			await page.waitForTimeout(400);
+			await page.waitForTimeout(600);
 		},
 	},
 
@@ -1330,8 +1424,11 @@ export const SCREENS = {
 		route: "/(today)/habit/1?fixtures=retro-log",
 		mockup: "docs/mockups/v3/renders/sheets/slice_02.png",
 		note: "RL2 — a tap saves at once; the toast sits inside the sheet above Done, names the date and offers Undo.",
-		async interact(page, { clock }) {
-			await page.getByLabel(heatmapCellLabel(clock, 3, "logged")).click();
+		async interact(page) {
+			await page
+				.getByRole("button", { name: /^Week of/ })
+				.last()
+				.click();
 			const circle = page.getByRole("button", { name: "Mobility, not done" });
 			await circle.scrollIntoViewIfNeeded();
 			await circle.click();
@@ -1365,13 +1462,19 @@ const DARK_TWINS = [
 	"today-empty",
 	"retro-log",
 	"habit-detail",
+	"habit-detail-history",
+	"habit-detail-new",
 	"habit-detail-archived",
 	"habit-detail-restored",
-	"manage-habits",
-	"manage-habits-dragging",
-	"manage-habits-no-active",
-	"manage-habits-nothing-archived",
-	"manage-habits-no-habits",
+	"habit-detail-reset",
+	"habit-detail-break",
+	"habit-detail-ax",
+	"archive-confirm",
+	"delete-confirm",
+	"delete-confirm-archived",
+	"delete-deleting",
+	"delete-failed",
+	"delete-confirm-ax",
 	"category-picker-selected",
 	"add-category-empty",
 	"manage-categories-in-use",
@@ -1383,6 +1486,14 @@ const DARK_TWINS = [
 	"tab-bar-ax-bar-a",
 	"tab-bar-progress",
 	"tab-bar-habits-end",
+	"habits-tab",
+	"habits-search",
+	"habits-search-none",
+	"habits-reorder",
+	"habits-reorder-lifted",
+	"habits-archived",
+	"habits-empty",
+	"habits-ax",
 	"progress-week",
 	"progress-week-too-early",
 	"progress-week-no-habits",
@@ -1422,13 +1533,9 @@ for (const name of DARK_TWINS) {
  */
 const LONG_NAME_TWINS = [
 	"today",
-	"habit-detail",
-	"habit-detail-archived",
 	"retro-log",
 	"reminders-at-cap",
-	"manage-habits",
-	"manage-habits-swipe-open",
-	"delete-confirm",
+	"habits-tab",
 	"export-ready",
 	"progress-week",
 	"progress-month-rates",
@@ -1447,3 +1554,23 @@ for (const name of LONG_NAME_TWINS) {
 		note: `${name} with a 40-char V1 name and a 32-char name (HAB-22).`,
 	};
 }
+
+/**
+ * Detail and its delete sheet with a long name (HAB-22). The Habits frames' habits
+ * are not the fixture's first two, so these point at one that is: Drink water.
+ */
+const LONG_DETAIL = "/(today)/habit/1?fixtures=habits-v3&longNames=1";
+SCREENS["habit-detail-long-names"] = {
+	...SCREENS["habit-detail"],
+	feature: "HAB-22",
+	route: LONG_DETAIL,
+	mockup: null,
+	note: "habit-detail with a 40-char V1 name (HAB-22): the title wraps to two lines, then truncates.",
+};
+SCREENS["delete-confirm-long-names"] = {
+	...SCREENS["delete-confirm"],
+	feature: "HAB-22",
+	route: LONG_DETAIL,
+	mockup: null,
+	note: "delete-confirm with a 40-char V1 name (HAB-22): the title and the consequence wrap inside the sheet.",
+};

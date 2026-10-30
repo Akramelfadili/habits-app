@@ -77,7 +77,7 @@ describe("Button", () => {
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
-	it("renders the destructive variant as red text with no fill", async () => {
+	it("renders the destructive variant as red text on an outlined pill, never filled", async () => {
 		const onPress = jest.fn();
 		await render(
 			<Button
@@ -89,6 +89,11 @@ describe("Button", () => {
 
 		const label = screen.getByText("Delete permanently");
 		expect(label).toHaveStyle({ color: semanticColors.light.dangerBg });
+		expect(screen.getByRole("button")).toHaveStyle({
+			backgroundColor: surfaceColors.light.card,
+			borderWidth: 1,
+			borderColor: surfaceColors.light.border,
+		});
 		await fireEvent.press(label);
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
@@ -144,7 +149,7 @@ describe("Button — disabled with reason (VAR-13)", () => {
 		expect(screen.getByRole("button", { name: "Rename Music" })).toBeTruthy();
 	});
 
-	it.each(["link", "inline", "destructive"] as const)(
+	it.each(["link", "inline"] as const)(
 		"%s text actions are 44pt tall, and don't lean on a hitSlop that stacked buttons would share",
 		async (variant) => {
 			await render(
@@ -174,5 +179,53 @@ describe("Button — V3-22 geometry", () => {
 		expect(screen.getByRole("button")).toHaveStyle({
 			backgroundColor: "#1A1A19",
 		});
+	});
+});
+
+describe("Button — compact (V3-22)", () => {
+	it("is a 36 pt pill on the inset surface with a hit area of 44", async () => {
+		await render(
+			<Button
+				label="Restore"
+				variant="compact"
+				fullWidth={false}
+				onPress={jest.fn()}
+			/>,
+		);
+		const button = screen.getByRole("button", { name: "Restore" });
+		expect(button).toHaveStyle({
+			backgroundColor: surfaceColors.light.inner,
+			minHeight: 36,
+		});
+		expect(button.props.hitSlop).toBe(4);
+		expect(screen.getByText("Restore")).toHaveStyle({
+			color: surfaceColors.light.ink,
+			fontSize: 14,
+		});
+	});
+
+	it("presses, and goes inert while disabled", async () => {
+		const onPress = jest.fn();
+		const { rerender } = await render(
+			<Button
+				label="Restore"
+				variant="compact"
+				fullWidth={false}
+				onPress={onPress}
+			/>,
+		);
+		await fireEvent.press(screen.getByText("Restore"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+		await rerender(
+			<Button
+				label="Restore"
+				variant="compact"
+				fullWidth={false}
+				disabled
+				onPress={onPress}
+			/>,
+		);
+		await fireEvent.press(screen.getByText("Restore"));
+		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 });

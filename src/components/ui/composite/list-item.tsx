@@ -1,14 +1,27 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { Ref } from "react";
+import {
+	type HostInstance,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 /**
- * Long names and large text wrap to this many lines, then end in "…" — the
- * full text stays in the accessibility label, so nothing is lost to a screen
- * reader and no control is pushed out of the row (audit A5-15).
+ * Long names wrap to this many lines, then end in "…" — the full text stays in
+ * the accessibility label, so nothing is lost to a screen reader and no control
+ * is pushed out of the row (audit A5-15). At accessibility text sizes nothing
+ * truncates at all (08.6).
  */
 const TITLE_LINES = 2;
 const SUBTITLE_LINES = 2;
+
+/** V3-23 / T-18: a flat 60 pt row — 44 pt control plus `space[200]` above and below. */
+const ROW_MIN_HEIGHT = minTouchTarget + 2 * space[200];
 
 type ListItemProps = {
 	title: string;
@@ -34,17 +47,19 @@ type ListItemProps = {
 	 */
 	dimmed?: boolean;
 	/**
-	 * Denser padding for rows stacked in a `tight` list card (Manage &
-	 * Archive's reorder and archived rows, HAB-13).
-	 */
-	compact?: boolean;
-	/**
-	 * Held mid-drag in a reorderable list (design-system "List item —
-	 * reorder", HAB-13) — shown on the recessed surface, lifted off the card.
+	 * Held mid-drag in a reorderable list (V3-23 "Reorder · lifted"): the E2
+	 * shadow, and in dark a lighter surface, since height reads as lightness
+	 * there (F-06).
 	 */
 	lifted?: boolean;
 	/** Overrides the default accessibility label (the title). */
 	accessibilityLabel?: string;
+	/** The row does something that cannot be undone ("Delete habit"): its title reads in the danger ink. */
+	destructive?: boolean;
+	/** What a tap does, for VoiceOver ("Opens details."). */
+	accessibilityHint?: string;
+	/** The row's button, for a sheet that starts the screen reader's focus on it (`useInitialFocus`). */
+	buttonRef?: Ref<HostInstance>;
 	/**
 	 * Extra VoiceOver actions on the row — the accessible route to anything a
 	 * gesture does (e.g. swipe-to-archive, HAB-13).
@@ -63,12 +78,16 @@ export function ListItem({
 	trailing,
 	embedded = false,
 	dimmed = false,
-	compact = false,
 	lifted = false,
 	accessibilityLabel,
+	destructive = false,
+	accessibilityHint,
+	buttonRef,
 	accessibilityActions,
 }: ListItemProps) {
-	const { colors, opacity } = useTheme();
+	const { colors, scheme, elevation, opacity } = useTheme();
+	const titleColor = destructive ? colors.dangerBg : colors.ink;
+	const largeText = useAccessibilityTextSize();
 
 	const chevron = navigable ? (
 		<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
@@ -83,12 +102,18 @@ export function ListItem({
 			style={[
 				styles.row,
 				embedded ? styles.embedded : { backgroundColor: colors.card },
-				lifted && { backgroundColor: colors.inner },
+				lifted && [
+					styles.lifted,
+					{ backgroundColor: scheme === "dark" ? colors.inner : colors.card },
+					elevation.lifted,
+				],
 			]}
 		>
 			<Pressable
+				ref={buttonRef}
 				accessibilityRole={onPress ? "button" : undefined}
 				accessibilityLabel={accessibilityLabel}
+				accessibilityHint={accessibilityHint}
 				accessibilityActions={accessibilityActions?.map(({ label }) => ({
 					name: label,
 					label,
@@ -101,25 +126,31 @@ export function ListItem({
 				onPress={onPress}
 				style={({ pressed }) => [
 					styles.pressable,
-					!embedded && (compact ? styles.compactPadded : styles.padded),
+					!embedded && (largeText ? styles.paddedLarge : styles.padded),
 					trailing ? styles.paddedBeforeTrailing : null,
-					pressed && onPress && { opacity: opacity.pressed },
+					// V3-23 "Pressed": the inset surface, not a fade.
+					pressed && onPress && { backgroundColor: colors.inner },
 				]}
 			>
 				<View
 					testID="list-item-content"
-					style={[styles.content, dimmed && { opacity: opacity.dimmed }]}
+					style={[
+						styles.content,
+						// Accessibility sizes stack: the icon, then the text, then the value.
+						largeText && styles.contentStacked,
+						dimmed && { opacity: opacity.dimmed },
+					]}
 				>
 					{leading}
 					<View style={styles.text}>
 						{titleAccessory ? (
 							<View style={styles.titleRow}>
 								<Text
-									numberOfLines={TITLE_LINES}
+									numberOfLines={largeText ? undefined : TITLE_LINES}
 									style={[
 										styles.title,
 										styles.shrinkable,
-										{ color: colors.ink },
+										{ color: titleColor },
 									]}
 								>
 									{title}
@@ -128,15 +159,15 @@ export function ListItem({
 							</View>
 						) : (
 							<Text
-								numberOfLines={TITLE_LINES}
-								style={[styles.title, { color: colors.ink }]}
+								numberOfLines={largeText ? undefined : TITLE_LINES}
+								style={[styles.title, { color: titleColor }]}
 							>
 								{title}
 							</Text>
 						)}
 						{subtitle ? (
 							<Text
-								numberOfLines={SUBTITLE_LINES}
+								numberOfLines={largeText ? undefined : SUBTITLE_LINES}
 								style={[styles.subtitle, { color: colors.sub }]}
 							>
 								{subtitle}
@@ -145,8 +176,12 @@ export function ListItem({
 					</View>
 					{value ? (
 						<Text
-							numberOfLines={1}
-							style={[styles.value, { color: colors.sub }]}
+							numberOfLines={largeText ? undefined : 1}
+							style={[
+								styles.value,
+								largeText && styles.valueStacked,
+								{ color: colors.sub },
+							]}
 						>
 							{value}
 						</Text>
@@ -155,13 +190,7 @@ export function ListItem({
 				{trailing ? null : chevron}
 			</Pressable>
 			{trailing ? (
-				<View
-					style={[
-						styles.trailing,
-						!embedded &&
-							(compact ? styles.compactTrailingPadded : styles.trailingPadded),
-					]}
-				>
+				<View style={[styles.trailing, !embedded && styles.trailingPadded]}>
 					{trailing}
 					{chevron}
 				</View>
@@ -174,30 +203,42 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: "row",
 		alignItems: "center",
-		borderRadius: 14,
+		borderRadius: radius.m,
+	},
+	lifted: {
+		// Held mid-drag: nothing else on the row changes size.
+		zIndex: 1,
 	},
 	pressable: {
 		flex: 1,
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: space[300],
+		borderRadius: radius.m,
 	},
 	padded: {
-		paddingVertical: 12,
-		paddingHorizontal: 16,
+		minHeight: ROW_MIN_HEIGHT,
+		paddingVertical: space[250],
+		paddingHorizontal: space[350],
 	},
-	compactPadded: {
-		paddingVertical: 8,
-		paddingHorizontal: 10,
+	paddedLarge: {
+		minHeight: ROW_MIN_HEIGHT,
+		paddingVertical: space[400],
+		paddingHorizontal: space[400],
 	},
 	paddedBeforeTrailing: {
-		paddingRight: 12,
+		paddingRight: space[300],
 	},
 	content: {
 		flex: 1,
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: space[300],
+	},
+	contentStacked: {
+		flexDirection: "column",
+		alignItems: "flex-start",
+		gap: space[200],
 	},
 	embedded: {
 		borderRadius: 0,
@@ -205,35 +246,35 @@ const styles = StyleSheet.create({
 	trailing: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: space[300],
 	},
 	trailingPadded: {
-		paddingRight: 16,
-	},
-	compactTrailingPadded: {
-		paddingRight: 10,
+		paddingRight: space[350],
 	},
 	text: {
 		flex: 1,
-		gap: 2,
+		gap: space[50],
 	},
 	titleRow: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 8,
+		gap: space[200],
 	},
 	title: {
-		fontSize: 15,
-		fontWeight: "500",
+		...textStyles.body,
 	},
 	subtitle: {
-		fontSize: 12.5,
+		...textStyles.footnote,
 	},
 	value: {
-		fontSize: 15,
+		...textStyles.callout,
 		flexShrink: 1,
 		maxWidth: "45%",
 		textAlign: "right",
+	},
+	valueStacked: {
+		maxWidth: "100%",
+		textAlign: "left",
 	},
 	shrinkable: {
 		flexShrink: 1,

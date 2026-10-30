@@ -88,20 +88,28 @@ describe("Container", () => {
 		});
 	});
 
-	it("dashed: a transparent card with a dashed border (HAB-19)", async () => {
-		await render(
-			<Container variant="dashed">
-				<Text>Empty</Text>
+	it("flat and lifted: the card keeps its hairline and lets a held row's shadow out (H4)", async () => {
+		const view = await render(
+			<Container variant="flat">
+				<Text>Row</Text>
 			</Container>,
 		);
-		expect(screen.getByText("Empty").parent).toHaveStyle({
-			borderStyle: "dashed",
-			backgroundColor: "transparent",
-		});
+		const resting = StyleSheet.flatten(
+			screen.getByTestId("container-section").parent?.props.style,
+		);
+		expect(resting.overflow).toBe("hidden");
+		await view.rerender(
+			<Container variant="flat" lifted>
+				<Text>Row</Text>
+			</Container>,
+		);
+		const lifted = StyleSheet.flatten(
+			screen.getByTestId("container-section").parent?.props.style,
+		);
+		expect(lifted.overflow).toBe("visible");
+		expect(lifted.borderColor).toBe(resting.borderColor);
 	});
-});
 
-describe("Container — flat (V3 list card)", () => {
 	it("has no padding, radius l, and a hairline between its children", async () => {
 		await render(
 			<Container variant="flat">

@@ -1,5 +1,6 @@
 import type { Reminder } from "../types";
 import type { FixtureScenario } from "./habit-fixtures";
+import { HABITS_V3_SCENARIOS, habitsV3Reminders } from "./habits-v3-fixtures";
 
 /**
  * Static fake reminders backing the web-only repository
@@ -22,6 +23,9 @@ export function makeReminderFixtures(
 		enabled = true,
 	): Reminder => ({ id, habitId: 1, hour, minute, weekdays, enabled });
 
+	for (const name of HABITS_V3_SCENARIOS) {
+		if (scenario === name) return habitsV3Reminders(name);
+	}
 	// Archived/restored Detail (HAB-20): the schedule Restore brings back.
 	if (scenario === "habit-detail-archived") {
 		return [reminder(1, 7, 0, [1, 2, 3, 4, 5, 6, 7])];

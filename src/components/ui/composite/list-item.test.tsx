@@ -5,7 +5,16 @@ import {
 	within,
 } from "@testing-library/react-native";
 import { StyleSheet, Text } from "react-native";
-import { surfaceColors } from "@/theme/theme";
+import { elevation, semanticColors, surfaceColors } from "@/theme/theme";
+
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
+
+beforeEach(() => {
+	mockAccessibilityText = false;
+});
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
@@ -97,11 +106,43 @@ describe("ListItem", () => {
 		expect(onRowPress).not.toHaveBeenCalled();
 	});
 
-	it("shows the lifted state on the recessed surface", async () => {
+	it("lifted: the E2 shadow on the card, so height reads in light", async () => {
 		await render(<ListItem title="Meditate" lifted />);
-		expect(screen.getByTestId("list-item")).toHaveStyle({
-			backgroundColor: surfaceColors.light.inner,
+		const row = StyleSheet.flatten(screen.getByTestId("list-item").props.style);
+		expect(row.backgroundColor).toBe(surfaceColors.light.card);
+		expect(row.boxShadow).toBe(elevation.light.lifted.boxShadow);
+	});
+
+	it("is a 60 pt row, with the 14 pt side padding of T-18", async () => {
+		await render(<ListItem title="Drink water" onPress={jest.fn()} />);
+		expect(
+			StyleSheet.flatten(screen.getByRole("button").props.style),
+		).toMatchObject({ minHeight: 60, paddingHorizontal: 14 });
+	});
+
+	it("destructive: the title reads in the danger ink, the subtitle does not", async () => {
+		await render(
+			<ListItem title="Delete habit" subtitle="Cannot be undone" destructive />,
+		);
+		expect(screen.getByText("Delete habit")).toHaveStyle({
+			color: semanticColors.light.dangerBg,
 		});
+		expect(screen.getByText("Cannot be undone")).not.toHaveStyle({
+			color: semanticColors.light.dangerBg,
+		});
+	});
+
+	it("passes its hint to VoiceOver", async () => {
+		await render(
+			<ListItem
+				title="Drink water"
+				onPress={jest.fn()}
+				accessibilityHint="Opens details."
+			/>,
+		);
+		expect(screen.getByRole("button").props.accessibilityHint).toBe(
+			"Opens details.",
+		);
 	});
 
 	describe("long names and large text (A5-15)", () => {
@@ -161,6 +202,33 @@ describe("ListItem", () => {
 					name: "A habit name that goes on and on and on",
 				}),
 			).toBeTruthy();
+		});
+	});
+
+	describe("accessibility text sizes (08.6)", () => {
+		it("never truncates: the title and subtitle wrap freely and the row stacks", async () => {
+			mockAccessibilityText = true;
+			await render(
+				<ListItem
+					title="A habit name that goes on and on and on"
+					subtitle="Training · every single day of the week"
+					value="07:00"
+					leading={<Text>icon</Text>}
+				/>,
+			);
+			expect(
+				screen.getByText("A habit name that goes on and on and on").props
+					.numberOfLines,
+			).toBeUndefined();
+			expect(
+				screen.getByText("Training · every single day of the week").props
+					.numberOfLines,
+			).toBeUndefined();
+			expect(screen.getByText("07:00").props.numberOfLines).toBeUndefined();
+			expect(
+				StyleSheet.flatten(screen.getByTestId("list-item-content").props.style)
+					.flexDirection,
+			).toBe("column");
 		});
 	});
 });

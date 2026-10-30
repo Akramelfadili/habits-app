@@ -1,14 +1,16 @@
+import { addDays, format, parseISO } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import {
 	buildHeatmapWeeks,
 	type CompletionRate,
 	calculateCompletionRate,
 	calculateLongestStreak,
+	completionRateDelta,
 	currentStreakAsOf,
 	type HeatmapDay,
+	type HistoryRow,
+	habitHistoryRows,
 	type LongestStreak,
-	type RecentEntry,
-	recentEntries,
 	type StreakReset,
 	streakResetInfo,
 } from "../domain/habit-history";
@@ -24,29 +26,35 @@ export type HabitDetail = {
 	currentStreak: number;
 	longestStreak: LongestStreak;
 	completionRate: CompletionRate;
-	/** 10 Mon→Sun columns, oldest first (HAB-09's heatmap). */
+	/** The 90-day rate against the 90 days before it, in whole points; null with nothing to compare (D1). */
+	rateDelta: number | null;
+	/** 5 Mon→Sun weeks, oldest first (D1's last five weeks). */
 	heatmapWeeks: HeatmapDay[][];
-	/** Logged and/or noted days (HAB-10), newest first. */
-	recentEntries: RecentEntry[];
-	/** Nothing has ever been logged — drives the new-habit variant's copy. */
+	/** Days that were done, missed, frozen or a bonus, with their notes, newest first (D2). */
+	history: HistoryRow[];
+	/** Anything has ever been logged — drives the new-habit variant (D3). */
 	hasEntries: boolean;
-	/** Every logged day — what a delete would erase (HAB-13). */
-	loggedDays: number;
-	/** For the Reminders row's summary (HAB-12). */
+	/** Every log: what a delete would erase, and names in its sheet (DC1). */
+	logCount: number;
+	/** For the Reminders row's value (D1). */
 	reminders: Reminder[];
-	/** The shared pool's remaining freezes this month — the legend's "N freezes left" (HAB-20). */
+	/** The shared pool's remaining freezes this month — the D6 tile. */
 	freezesRemaining: number;
-	/** Set only in the month a streak reset with the pool empty (HAB-20 / D6). */
+	/** Set only in the month a streak reset with the pool empty (D6). */
 	streakReset: StreakReset | null;
+	/** Restored today (its last pause ended yesterday): the one-time banner (D5). */
+	restoredToday: boolean;
+	/** Restored and not yet logged since: a streak of 0 is a fresh start, not a loss (D5). */
+	freshStart: boolean;
 	today: Date;
 };
 
 /**
- * Everything Habit Detail (HAB-09) shows for one habit, or null when the id
- * doesn't resolve (deleted, or a stale link), or undefined while loading. Reads the same live, unbounded
- * entry/freeze queries Today uses and narrows them here — history needs
- * everything since the habit was created anyway, so a per-habit query would
- * save nothing worth a second set of repository functions.
+ * Everything Habit Detail shows for one habit, or null when the id doesn't
+ * resolve (deleted, or a stale link), or undefined while loading. Reads the same
+ * live, unbounded entry/freeze queries Today uses and narrows them here —
+ * history needs everything since the habit was created anyway, so a per-habit
+ * query would save nothing worth a second set of repository functions.
  */
 export function useHabitDetailQueries(
 	habitId: number,
@@ -73,22 +81,37 @@ export function useHabitDetailQueries(
 	const history = { habit, entries, frozenDates, today };
 	const freezesRemaining = freezesRemainingInMonth(frozenDays, today);
 	const streakReset = streakResetInfo(history, freezesRemaining);
+	const currentStreak = currentStreakAsOf(history);
+
+	const lastPause = habit.pauses.at(-1);
+	const restoredOn = lastPause
+		? format(addDays(parseISO(lastPause.to), 1), "yyyy-MM-dd")
+		: null;
+	const latestEntry = entries.reduce(
+		(latest, entry) => (entry.date > latest ? entry.date : latest),
+		"",
+	);
 
 	return {
 		habit,
-		currentStreak: currentStreakAsOf(history),
+		currentStreak,
 		longestStreak: calculateLongestStreak(history),
 		completionRate: calculateCompletionRate(history),
+		rateDelta: completionRateDelta(history),
 		heatmapWeeks: buildHeatmapWeeks(history, streakReset?.missedDate ?? null),
-		recentEntries: recentEntries(
-			entries,
+		history: habitHistoryRows(
+			history,
 			notes.filter((note) => note.habitId === habitId),
 		),
 		hasEntries: entries.length > 0,
-		loggedDays: entries.length,
+		logCount: entries.length,
 		reminders,
 		freezesRemaining,
 		streakReset,
+		restoredToday:
+			restoredOn !== null && restoredOn === format(today, "yyyy-MM-dd"),
+		freshStart:
+			restoredOn !== null && currentStreak === 0 && latestEntry < restoredOn,
 		today,
 	};
 }

@@ -10,7 +10,7 @@ import {
 	habits,
 	reminders,
 } from "@/lib/db/schema";
-import { rollbackQuietly } from "@/lib/db/transaction";
+import { rollbackQuietly, runInTransaction } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import type {
 	Category,
@@ -366,18 +366,15 @@ export async function setHabitRestored(
  * foreign-key enforcement on).
  */
 export async function deleteHabitAndHistory(id: number): Promise<void> {
-	await db.run(sql`begin`);
-	try {
+	// One serialised transaction (HAB-45): a failure anywhere leaves every row as
+	// it was, so Delete's "Nothing was changed. Try again." is true.
+	await runInTransaction(async () => {
 		await db.delete(entries).where(eq(entries.habitId, id));
 		await db.delete(entryNotes).where(eq(entryNotes.habitId, id));
 		await db.delete(frozenDays).where(eq(frozenDays.habitId, id));
 		await db.delete(reminders).where(eq(reminders.habitId, id));
 		await db.delete(habits).where(eq(habits.id, id));
-		await db.run(sql`commit`);
-	} catch (err) {
-		await rollbackQuietly();
-		throw err;
-	}
+	});
 }
 
 /** Dev-only escape hatch for clearing out test data — refuses to run outside `__DEV__`. */

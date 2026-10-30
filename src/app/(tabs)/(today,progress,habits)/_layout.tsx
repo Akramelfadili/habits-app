@@ -36,6 +36,27 @@ const backTo =
 		...headerBackOptions({ title, onPress: () => navigation.goBack() }),
 	});
 
+/**
+ * Categories is reached from Settings and from the Habits tab's Categories row
+ * (`?from=habits`); Back names the one it came from.
+ */
+const categoriesBack = ({
+	navigation,
+	route,
+}: {
+	navigation: { goBack: () => void };
+	route: { params?: object };
+}) => ({
+	title: "",
+	...headerBackOptions({
+		title:
+			(route.params as { from?: string } | undefined)?.from === "habits"
+				? "Habits"
+				: "Settings",
+		onPress: () => navigation.goBack(),
+	}),
+});
+
 export default function TabStackLayout({ segment }: { segment: string }) {
 	const { colors } = useTheme();
 	const rootTitle = ROOT_TITLE[segment] ?? "Today";
@@ -61,7 +82,7 @@ export default function TabStackLayout({ segment }: { segment: string }) {
 			<Stack.Screen name="reminders/[id]" options={backTo("")} />
 			{/* Settings opens from the Habits gear, but Reminders can reach it too. */}
 			<Stack.Screen name="settings" options={backTo(rootTitle)} />
-			<Stack.Screen name="categories" options={backTo("Settings")} />
+			<Stack.Screen name="categories" options={categoriesBack} />
 		</Stack>
 	);
 }

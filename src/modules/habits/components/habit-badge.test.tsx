@@ -18,4 +18,17 @@ describe("HabitBadge", () => {
 			habitAccentInk(category.hue, "light"),
 		);
 	});
+
+	it("the default size is the 32 pt row square (V3-32)", async () => {
+		await render(<HabitBadge habit={makeHabit()} size="default" />);
+		expect(screen.toJSON()).toHaveStyle({ width: 32, height: 32 });
+	});
+
+	it("muted drops the category colour for the neutral ink, so an archived habit reads as set aside", async () => {
+		const category = builtInCategory("Fitness");
+		await render(<HabitBadge habit={makeHabit({ category })} muted />);
+		expect(screen.getByTestId("symbol").props.tintColor).not.toBe(
+			habitAccentInk(category.hue, "light"),
+		);
+	});
 });

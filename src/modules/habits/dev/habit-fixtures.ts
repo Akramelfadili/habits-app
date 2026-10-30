@@ -9,6 +9,11 @@ import {
 	OTHER_FIXTURE,
 	TRAINING_FIXTURE,
 } from "./category-fixtures";
+import {
+	HABITS_V3_SCENARIOS,
+	type HabitsV3Scenario,
+	habitsV3Habits,
+} from "./habits-v3-fixtures";
 import { monthlyHabitFixtures } from "./monthly-fixtures";
 import {
 	PROGRESS_V3_SCENARIOS,
@@ -50,6 +55,7 @@ const FIXTURE_DATE = new Date("2026-09-16T08:00:00Z");
 export type FixtureScenario =
 	| TodayV3Scenario
 	| ProgressV3Scenario
+	| HabitsV3Scenario
 	| "default"
 	| "empty"
 	| "rest-day"
@@ -76,7 +82,6 @@ export type FixtureScenario =
 	| "reminders-at-cap"
 	| "manage-archive"
 	| "manage-all-archived"
-	| "manage-nothing-archived"
 	| "many-categories"
 	| "categories-built-in-only"
 	| "categories-one-custom"
@@ -85,6 +90,7 @@ export type FixtureScenario =
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	...TODAY_V3_SCENARIOS,
 	...PROGRESS_V3_SCENARIOS,
+	...HABITS_V3_SCENARIOS,
 	"empty",
 	"rest-day",
 	"rest-day-picker",
@@ -110,7 +116,6 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"reminders-at-cap",
 	"manage-archive",
 	"manage-all-archived",
-	"manage-nothing-archived",
 	"many-categories",
 	"categories-built-in-only",
 	"categories-one-custom",
@@ -689,6 +694,10 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 		case "progress-v3-nothing-logged":
 		case "progress-v3-one-habit":
 			return progressV3Habits(scenario);
+		case "habits-v3":
+		case "habits-v3-new":
+		case "habits-v3-reset":
+			return habitsV3Habits(scenario);
 		case "empty":
 		case "first-run":
 		case "many-categories":
@@ -744,8 +753,6 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return manageArchiveFixtures();
 		case "manage-all-archived":
 			return manageArchiveFixtures().filter((habit) => habit.archivedAt);
-		case "manage-nothing-archived":
-			return manageArchiveFixtures().filter((habit) => !habit.archivedAt);
 		case "categories-built-in-only":
 		case "categories-one-custom":
 			return manageCategoriesFixtures(false);

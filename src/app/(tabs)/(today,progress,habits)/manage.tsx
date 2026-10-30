@@ -1,5 +1,5 @@
-import { ManageHabitsScreen } from "@/modules/habits/screens/manage-habits-screen";
+import { HabitsScreen } from "@/modules/habits/screens/habits-screen";
 
-export default function ManageHabits() {
-	return <ManageHabitsScreen />;
+export default function Habits() {
+	return <HabitsScreen />;
 }

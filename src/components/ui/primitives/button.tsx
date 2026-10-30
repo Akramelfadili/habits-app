@@ -12,14 +12,16 @@ import { FieldHelper } from "./field-helper";
 /**
  * `link` is a centered, secondary-ink text action under a primary CTA ("Start
  * from scratch"); `inline` is an ink text action that sits flush-left inside a
- * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is the
- * design system's text-only red link for a permanent action — always the
- * smallest option on screen, never a filled red button (Delete confirmation,
- * HAB-13).
+ * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is
+ * V3-22's outlined pill with red text for a permanent action — never filled
+ * until armed, and never the default focus (Delete confirmation, DC1);
+ * `compact` is V3-22's 36 pt pill on the inset surface — a row's Restore (H5) —
+ * with the 44 pt hit area the other compact buttons get from their hit slop.
  */
 export type ButtonVariant =
 	| "primary"
 	| "secondary"
+	| "compact"
 	| "ghost"
 	| "link"
 	| "inline"
@@ -56,6 +58,7 @@ export function Button({
 }: ButtonProps) {
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
+	const isCompact = variant === "compact";
 	const textColor =
 		variant === "primary"
 			? colors.onAccent
@@ -74,11 +77,12 @@ export function Button({
 			accessibilityState={{ disabled: isDisabled, busy: loading }}
 			onPress={onPress}
 			disabled={isDisabled}
-			hitSlop={fullWidth ? undefined : 8}
+			hitSlop={fullWidth ? undefined : isCompact ? COMPACT_HIT_SLOP : 8}
 			style={({ pressed }) => [
 				styles.base,
 				fullWidth ? styles.fullWidth : styles.compact,
-				size === "small" && styles.small,
+				(size === "small" || isCompact) && styles.small,
+				isCompact && [styles.compactPill, { backgroundColor: colors.inner }],
 				variant === "primary" && { backgroundColor: colors.accent },
 				variant === "secondary" && {
 					backgroundColor: colors.card,
@@ -86,10 +90,12 @@ export function Button({
 					borderColor: colors.border,
 				},
 				variant === "ghost" && { backgroundColor: "transparent" },
-				(variant === "link" ||
-					variant === "inline" ||
-					variant === "destructive") &&
-					styles.link,
+				variant === "destructive" && {
+					backgroundColor: colors.card,
+					borderWidth: 1,
+					borderColor: colors.border,
+				},
+				(variant === "link" || variant === "inline") && styles.link,
 				variant === "inline" && styles.inline,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },
@@ -102,8 +108,7 @@ export function Button({
 					style={[
 						styles.label,
 						variant === "inline" && styles.inlineLabel,
-						variant === "destructive" && styles.destructiveLabel,
-						size === "small" && styles.smallLabel,
+						(size === "small" || isCompact) && styles.smallLabel,
 						{ color: textColor },
 					]}
 				>
@@ -121,6 +126,9 @@ export function Button({
 		</View>
 	);
 }
+
+/** A compact pill is 36 pt tall; this much on each side makes its hit area 44. */
+const COMPACT_HIT_SLOP = 4;
 
 const styles = StyleSheet.create({
 	withReason: {
@@ -140,6 +148,9 @@ const styles = StyleSheet.create({
 		minHeight: minTouchTarget,
 		paddingVertical: space[250],
 		paddingHorizontal: space[500],
+	},
+	compactPill: {
+		minHeight: 36,
 	},
 	small: {
 		minHeight: 0,
@@ -163,9 +174,6 @@ const styles = StyleSheet.create({
 	},
 	inlineLabel: {
 		fontWeight: "600",
-	},
-	destructiveLabel: {
-		...textStyles.footnote,
 	},
 	smallLabel: {
 		...textStyles.subhead,

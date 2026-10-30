@@ -90,6 +90,37 @@ describe("orphan check with foreign keys off (the device)", () => {
 		expect((await mockDb.select().from(entries))[0].habitId).toBe(keeper.id);
 	});
 
+	it("a failed delete changes nothing: it is one transaction, so every child row is still there (HAB-45, DC4)", async () => {
+		const habit = await seedHabitWithEveryKindOfChild();
+		const children = async () => [
+			(await mockDb.select().from(entries)).length,
+			(await mockDb.select().from(entryNotes)).length,
+			(await mockDb.select().from(frozenDays)).length,
+			(await mockDb.select().from(reminders)).length,
+		];
+		const before = await children();
+		expect(before.every((count) => count > 0)).toBe(true);
+
+		// The last statement of the delete — the habit row itself — fails.
+		await mockDb.run(
+			sql`CREATE TRIGGER block_habit_delete BEFORE DELETE ON habits BEGIN SELECT RAISE(ABORT, 'blocked'); END`,
+		);
+		try {
+			await expect(deleteHabitAndHistory(habit.id)).rejects.toThrow();
+			expect(await children()).toEqual(before);
+			expect(
+				await mockDb.select().from(habits).where(eq(habits.id, habit.id)),
+			).toHaveLength(1);
+		} finally {
+			await mockDb.run(sql`DROP TRIGGER block_habit_delete`);
+		}
+
+		// And once the failure is gone, the same delete goes through whole.
+		await deleteHabitAndHistory(habit.id);
+		expect(await children()).toEqual([0, 0, 0, 0]);
+		expect(await orphans()).toEqual([]);
+	});
+
 	it("deleting a custom category re-homes its habits to Other first — no habit is left on a deleted category", async () => {
 		const custom = await createCategory({
 			name: "Garden",
