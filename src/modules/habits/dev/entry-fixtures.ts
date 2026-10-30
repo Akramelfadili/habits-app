@@ -91,11 +91,7 @@ export function makeEntryFixtures(
 			.map(({ value: _value, ...entry }) => entry);
 	}
 
-	if (
-		scenario === "manage-archive" ||
-		scenario === "manage-all-archived" ||
-		scenario === "manage-nothing-archived"
-	) {
+	if (scenario === "manage-archive" || scenario === "manage-all-archived") {
 		return manageArchiveEntries();
 	}
 

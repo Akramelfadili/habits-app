@@ -7,12 +7,11 @@ type ContainerProps = PropsWithChildren<{
 	/**
 	 * "outlined" is a card with a hairline border, for a card sitting on a
 	 * card-coloured surface (the category move preview inside a sheet, HAB-25).
-	 * "dashed" is a transparent placeholder outline (Manage's empty Archived
-	 * section, HAB-19). "flat" is V3's list card (T-18): no padding, a hairline
+	 * "flat" is V3's list card (T-18): no padding, a hairline
 	 * border, radius `l`, and a full-bleed hairline between its children — the
 	 * rows carry their own padding.
 	 */
-	variant?: "card" | "inset" | "sheet" | "outlined" | "dashed" | "flat";
+	variant?: "card" | "inset" | "sheet" | "outlined" | "flat";
 	/**
 	 * Groups direct children into one card, separating them with a full-bleed
 	 * hairline instead of the card's default gap (e.g. Category + Direction
@@ -65,29 +64,18 @@ export function Container({
 				flat && lifted && styles.flatLifted,
 				tight && styles.tight,
 				tight && (variant === "outlined" || lifted) && styles.tightOutlined,
-				variant === "dashed" && styles.dashed,
 				{
-					backgroundColor:
-						variant === "inset"
-							? colors.inner
-							: variant === "dashed"
-								? "transparent"
-								: colors.card,
+					backgroundColor: variant === "inset" ? colors.inner : colors.card,
 					borderWidth: selected
 						? 1.5
-						: variant === "outlined" ||
-								variant === "dashed" ||
-								variant === "flat" ||
-								lifted
+						: variant === "outlined" || variant === "flat" || lifted
 							? 1
 							: 0,
 					borderColor: selected
 						? colors.ink
 						: lifted && !flat
 							? colors.ink
-							: variant === "outlined" ||
-									variant === "dashed" ||
-									variant === "flat"
+							: variant === "outlined" || variant === "flat"
 								? colors.border
 								: "transparent",
 				},
@@ -152,9 +140,6 @@ const styles = StyleSheet.create({
 	// The 1px outline replaces 1px of padding, so lifting a card doesn't shift its rows.
 	tightOutlined: {
 		padding: 5,
-	},
-	dashed: {
-		borderStyle: "dashed",
 	},
 	dividedSection: {
 		gap: 16,

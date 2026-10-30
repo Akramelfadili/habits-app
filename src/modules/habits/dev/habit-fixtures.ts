@@ -82,7 +82,6 @@ export type FixtureScenario =
 	| "reminders-at-cap"
 	| "manage-archive"
 	| "manage-all-archived"
-	| "manage-nothing-archived"
 	| "many-categories"
 	| "categories-built-in-only"
 	| "categories-one-custom"
@@ -117,7 +116,6 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"reminders-at-cap",
 	"manage-archive",
 	"manage-all-archived",
-	"manage-nothing-archived",
 	"many-categories",
 	"categories-built-in-only",
 	"categories-one-custom",
@@ -755,8 +753,6 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			return manageArchiveFixtures();
 		case "manage-all-archived":
 			return manageArchiveFixtures().filter((habit) => habit.archivedAt);
-		case "manage-nothing-archived":
-			return manageArchiveFixtures().filter((habit) => !habit.archivedAt);
 		case "categories-built-in-only":
 		case "categories-one-custom":
 			return manageCategoriesFixtures(false);

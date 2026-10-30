@@ -99,7 +99,7 @@ type TileInput = {
 };
 
 /** Below this many due days the 90-day rate says when it starts instead (D3). */
-export const RATE_MIN_DUE_DAYS = 7;
+const RATE_MIN_DUE_DAYS = 7;
 
 /**
  * The three tiles under the title (D1–D7). Build habits say streak and days;

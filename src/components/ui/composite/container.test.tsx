@@ -110,20 +110,6 @@ describe("Container", () => {
 		expect(lifted.borderColor).toBe(resting.borderColor);
 	});
 
-	it("dashed: a transparent card with a dashed border (HAB-19)", async () => {
-		await render(
-			<Container variant="dashed">
-				<Text>Empty</Text>
-			</Container>,
-		);
-		expect(screen.getByText("Empty").parent).toHaveStyle({
-			borderStyle: "dashed",
-			backgroundColor: "transparent",
-		});
-	});
-});
-
-describe("Container — flat (V3 list card)", () => {
 	it("has no padding, radius l, and a hairline between its children", async () => {
 		await render(
 			<Container variant="flat">
