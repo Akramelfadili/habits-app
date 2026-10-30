@@ -21,6 +21,11 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **"Browse suggestions" (T2) is hidden until HAB-46**: there is no suggestions screen to send it to.
 - **× per week habits are never at risk by day** (HAB-33, T1/T6): the mockup draws no per-week habit at risk, and a one-date freeze cannot cover a week; a week-level freeze is Later.
 - **Frames that show tab bar A** are drawn for brevity; build bar B (floating pill) everywhere.
+- **P10 (Month, one habit) tiles are Completion / Longest / Freezes used**, not Completion / Streak / Longest: the current streak is not in the month data (V3-3b).
+- **P12 (Year) always shows the habit chip** ("All habits" when unfiltered), unless exactly one habit exists; the mockup draws the chip only once a habit is chosen (P15).
+- **The per-habit rates list (P8) includes an archived habit that had days in the range**; insights never name one (D11).
+- **The AX3 stacked range list overlays the content** instead of pushing it down (P11); known, revisit in V3-6.
+- **Week day headers are 44 pt high and 28 pt wide** (P1): the cell pitch is 28 pt, so a 44 pt-wide target would overlap its neighbours. A touch-target exception, on the V3-6 audit list in `docs/backlog.md`.
 
 ## Standing decisions (apply to every ticket)
 

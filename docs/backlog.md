@@ -217,3 +217,13 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **P1 week matrix order follows creation order** (the mockup lists Read second); the fixtures create all six on one day, so ids decide.
 - **Performance:** Year (5 y × 20 habits) opens in ~310 ms in Node (year summary ~200 ms + year map ~100 ms, each classifying the same habits over the same days). On Hermes expect 2–5×: build both from one classification pass if it is felt on a device. Week fell 727 → 169 ms by making `fromDayKey` read the three fields instead of `parseISO`.
 - **Maestro `hab-11` is rewritten for the new screen but was not run.**
+
+## V3-6 audit list (touch targets and known layout exceptions)
+
+Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.
+
+- **Week matrix day headers: 44 pt high, 28 pt wide** (Progress, P1). Documented under "Spec wins over the mockup" in `feature-spec-v3.md`.
+- **Week matrix cells (24 pt), Year cells (16 pt):** below 44 by design, not tappable (08.2).
+- **Year month labels: 44 pt high through hitSlop**, so the hit areas of labels in the band above overlap the last row of cells (not tappable) and the 12 pt gap.
+- **AX3 stacked range list overlays the content** (P11) instead of pushing it down.
+- **One-habit and AX3 week blocks: 40 pt cells with a 2 pt hitSlop** (44 pt in effect), buttons that open Edit this day.
