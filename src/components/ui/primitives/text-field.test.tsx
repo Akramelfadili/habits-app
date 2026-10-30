@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
-import { semanticColors } from "@/theme/theme";
+import { semanticColors, surfaceColors } from "@/theme/theme";
 import { TextField } from "./text-field";
 
 const borderColor = () =>
@@ -48,15 +48,15 @@ describe("TextField", () => {
 				onBlur={onBlur}
 			/>,
 		);
-		expect(borderColor()).toBe("transparent");
+		expect(borderColor()).toBe(surfaceColors.light.border);
 
 		await fireEvent(screen.getByDisplayValue("Gym"), "focus");
 		expect(onFocus).toHaveBeenCalledTimes(1);
-		expect(borderColor()).not.toBe("transparent");
+		expect(borderColor()).toBe(surfaceColors.light.accent);
 
 		await fireEvent(screen.getByDisplayValue("Gym"), "blur");
 		expect(onBlur).toHaveBeenCalledTimes(1);
-		expect(borderColor()).toBe("transparent");
+		expect(borderColor()).toBe(surfaceColors.light.border);
 	});
 
 	it("keeps the error outline while focused", async () => {
@@ -68,13 +68,13 @@ describe("TextField", () => {
 				error="Give this habit a name."
 			/>,
 		);
-		const errorColor = borderColor();
+		expect(borderColor()).toBe(semanticColors.light.dangerBg);
 
 		await fireEvent(screen.getByDisplayValue(""), "focus");
-		expect(borderColor()).toBe(errorColor);
+		expect(borderColor()).toBe(semanticColors.light.dangerBg);
 	});
 
-	it("shows a character counter only near the cap", async () => {
+	it("shows the counter from 80 % of the cap only", async () => {
 		const { rerender } = await render(
 			<TextField
 				label="Note"
@@ -83,17 +83,17 @@ describe("TextField", () => {
 				maxLength={280}
 			/>,
 		);
-		expect(screen.queryByText(/\/280$/)).toBeNull();
+		expect(screen.queryByText(/ \/ 280$/)).toBeNull();
 
 		await rerender(
 			<TextField
 				label="Note"
-				value={"a".repeat(250)}
+				value={"a".repeat(224)}
 				onChangeText={() => {}}
 				maxLength={280}
 			/>,
 		);
-		expect(screen.getByText("250/280")).toBeTruthy();
+		expect(screen.getByText("224 / 280")).toBeTruthy();
 	});
 
 	it("passes the cap and multiline through to the input", async () => {
@@ -121,7 +121,6 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				value=""
 				onChangeText={onChangeText}
 				maxLength={20}
-				nearLimitCounter
 			/>,
 		);
 		await fireEvent.changeText(
@@ -140,7 +139,6 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				value={legacy}
 				onChangeText={onChangeText}
 				maxLength={32}
-				nearLimitCounter
 			/>,
 		);
 		await fireEvent.changeText(
@@ -158,7 +156,6 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				value={"x".repeat(15)}
 				onChangeText={jest.fn()}
 				maxLength={20}
-				nearLimitCounter
 			/>,
 		);
 		expect(screen.queryByText(/ \/ 20$/)).toBeNull();
@@ -169,26 +166,89 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				value={"x".repeat(16)}
 				onChangeText={jest.fn()}
 				maxLength={20}
-				nearLimitCounter
 			/>,
 		);
 		expect(screen.getByText("16 / 20")).toBeTruthy();
 	});
 
-	it("outlines a warning in amber with the helper under the field", async () => {
+	it("draws a duplicate-name error in danger with the message under the card (F8)", async () => {
 		await render(
 			<TextField
 				label="Name"
-				value="Fitness"
+				value="Read 20 min"
 				onChangeText={jest.fn()}
-				warning="You already have Fitness. Pick it from the list instead."
+				error="You already have a habit called Read 20 min. Choose another name."
 			/>,
 		);
-		expect(borderColor()).toBe(semanticColors.light.warnInk);
+		expect(borderColor()).toBe(semanticColors.light.dangerBg);
 		expect(
-			screen.getByText(
-				"You already have Fitness. Pick it from the list instead.",
-			),
+			screen.getByRole("alert", {
+				name: "You already have a habit called Read 20 min. Choose another name.",
+			}),
+		).toBeTruthy();
+	});
+
+	it("shows a helper under the card when nothing is wrong", async () => {
+		await render(
+			<TextField
+				label="Unit"
+				value="glasses"
+				onChangeText={jest.fn()}
+				helper="Shown after the number: 5 of 8 glasses"
+			/>,
+		);
+		expect(
+			screen.getByText("Shown after the number: 5 of 8 glasses"),
+		).toBeTruthy();
+		expect(screen.queryByRole("alert")).toBeNull();
+	});
+
+	it("says the limit in amber at the cap, and the error outranks it", async () => {
+		const limit = (n: number) => `${n} characters max`;
+		const { rerender } = await render(
+			<TextField
+				label="Name"
+				value={"x".repeat(32)}
+				onChangeText={jest.fn()}
+				maxLength={32}
+				limitMessage={limit}
+			/>,
+		);
+		expect(screen.getByText("32 characters max")).toHaveStyle({
+			color: semanticColors.light.warnInk,
+		});
+		expect(screen.getByText("32 / 32")).toHaveStyle({
+			color: semanticColors.light.warnInk,
+		});
+
+		await rerender(
+			<TextField
+				label="Name"
+				value={"x".repeat(32)}
+				onChangeText={jest.fn()}
+				maxLength={32}
+				limitMessage={limit}
+				error="Taken."
+			/>,
+		);
+		expect(screen.queryByText("32 characters max")).toBeNull();
+		expect(screen.getByText("Taken.")).toBeTruthy();
+	});
+
+	it("locks the input and shows its reason when disabled", async () => {
+		await render(
+			<TextField
+				label="Category name"
+				value="Fitness"
+				onChangeText={jest.fn()}
+				disabled
+				helper="Built-in categories can’t be renamed"
+				maxLength={20}
+			/>,
+		);
+		expect(screen.getByLabelText("Category name").props.editable).toBe(false);
+		expect(
+			screen.getByText("Built-in categories can’t be renamed"),
 		).toBeTruthy();
 	});
 
@@ -215,9 +275,9 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 				error="Give this habit a name."
 			/>,
 		);
-		expect(screen.getByRole("alert")).toHaveTextContent(
-			"Give this habit a name.",
-		);
+		expect(
+			screen.getByRole("alert", { name: "Give this habit a name." }),
+		).toBeTruthy();
 	});
 
 	it("shows 'Next' and keeps the keyboard up when Return hands focus on", async () => {

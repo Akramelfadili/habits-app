@@ -123,8 +123,7 @@ function AddCategoryForm({
 							}}
 							onBlur={field.onBlur}
 							maxLength={MAX_CATEGORY_NAME_LENGTH}
-							nearLimitCounter
-							warning={
+							error={
 								duplicate
 									? duplicateCategoryMessage(duplicate)
 									: errors.name?.message

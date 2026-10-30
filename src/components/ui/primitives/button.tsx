@@ -15,6 +15,8 @@ import { FieldHelper } from "./field-helper";
  * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is
  * V3-22's outlined pill with red text for a permanent action — never filled
  * until armed, and never the default focus (Delete confirmation, DC1);
+ * `dangerLink` is the same permanent action as plain red text inside a row
+ * (a category's Delete, C1);
  * `compact` is V3-22's 36 pt pill on the inset surface — a row's Restore (H5) —
  * with the 44 pt hit area the other compact buttons get from their hit slop.
  */
@@ -25,6 +27,7 @@ export type ButtonVariant =
 	| "ghost"
 	| "link"
 	| "inline"
+	| "dangerLink"
 	| "destructive";
 
 type ButtonProps = {
@@ -66,7 +69,7 @@ export function Button({
 				? colors.faint
 				: variant === "link"
 					? colors.sub
-					: variant === "destructive"
+					: variant === "destructive" || variant === "dangerLink"
 						? colors.dangerBg
 						: colors.ink;
 
@@ -95,7 +98,10 @@ export function Button({
 					borderWidth: 1,
 					borderColor: colors.border,
 				},
-				(variant === "link" || variant === "inline") && styles.link,
+				(variant === "link" ||
+					variant === "inline" ||
+					variant === "dangerLink") &&
+					styles.link,
 				variant === "inline" && styles.inline,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },

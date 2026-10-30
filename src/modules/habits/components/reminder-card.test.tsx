@@ -50,9 +50,10 @@ describe("ReminderCard", () => {
 
 		expect(screen.getByText("07:20")).toBeTruthy();
 		expect(screen.getByText("Weekdays")).toBeTruthy();
-		expect(screen.getByLabelText("Reminder at 07:20 on").props.value).toBe(
-			true,
-		);
+		expect(
+			screen.getByLabelText("Reminder at 07:20 on").props.accessibilityState
+				.checked,
+		).toBe(true);
 		expect(screen.queryByLabelText("Monday")).toBeNull();
 		expect(screen.queryByText("Remove")).toBeNull();
 	});
@@ -82,11 +83,7 @@ describe("ReminderCard", () => {
 	it("toggling reports the new state", async () => {
 		const handlers = await renderCard();
 
-		await fireEvent(
-			screen.getByLabelText("Reminder at 07:20 on"),
-			"valueChange",
-			false,
-		);
+		await fireEvent.press(screen.getByLabelText("Reminder at 07:20 on"));
 		expect(handlers.onChangeEnabled).toHaveBeenCalledWith(false);
 	});
 

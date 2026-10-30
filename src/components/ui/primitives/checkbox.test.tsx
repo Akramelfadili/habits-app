@@ -52,7 +52,7 @@ describe("Checkbox", () => {
 		).toBe(false);
 	});
 
-	it("has a 44pt touch box around its 24pt circle — a layout-neutral margin, not a hitSlop that could steal a neighbour's taps", async () => {
+	it("has a 44pt touch box around its 24pt square — a layout-neutral margin, not a hitSlop that could steal a neighbour's taps", async () => {
 		await render(
 			<Checkbox
 				checked={false}
@@ -85,5 +85,17 @@ describe("Checkbox", () => {
 		).toMatchObject({
 			borderColor: surfaceColors.light.outline,
 		});
+	});
+
+	it("is a rounded square by the radius rule (a circle is a habit done)", async () => {
+		await render(
+			<Checkbox checked onPress={jest.fn()} accessibilityLabel="Read" />,
+		);
+		const [box] = screen.getByLabelText("Read").children;
+		expect(
+			StyleSheet.flatten(
+				(box as unknown as { props: { style: object } }).props.style,
+			),
+		).toMatchObject({ width: 24, height: 24, borderRadius: 8 });
 	});
 });

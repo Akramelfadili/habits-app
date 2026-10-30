@@ -81,11 +81,7 @@ describe("ExportSheet (HAB-15)", () => {
 
 	it("the archived toggle updates the counts and the button", async () => {
 		await render(<ExportSheet visible onClose={() => {}} />);
-		await fireEvent(
-			screen.getByLabelText("Include archived habits"),
-			"valueChange",
-			false,
-		);
+		await fireEvent.press(screen.getByLabelText("Include archived habits"));
 		expect(screen.getByText("2 active")).toBeTruthy();
 		expect(screen.getByText("Export 3 entries")).toBeTruthy();
 	});

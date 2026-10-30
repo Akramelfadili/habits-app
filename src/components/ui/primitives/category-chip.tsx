@@ -1,6 +1,7 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -33,7 +34,7 @@ type CategoryChipProps = {
 /**
  * Category chip — icon + label in the category's *own* color, unlike `Chip`,
  * which fills with the app accent (kept separate on purpose, per
- * design-system). Selected fills with the category's ink and gains a
+ * design-system). Selected fills with the accent (V3-14) and gains a
  * check; long labels truncate rather than wrap, so a 2-up grid stays aligned.
  * Locked fills with the category's tint instead of an outline.
  */
@@ -55,13 +56,13 @@ export function CategoryChip({
 	const tint = accent?.tint ?? colors.inner;
 
 	const iconBackground = isSelected
-		? "rgba(255,255,255,0.22)"
+		? colors.card
 		: isAdd
 			? colors.inner
 			: isLocked
 				? "transparent"
 				: tint;
-	const iconColor = isSelected ? colors.onAccent : isAdd ? colors.sub : ink;
+	const iconColor = isSelected ? colors.ink : isAdd ? colors.sub : ink;
 	const labelColor = isSelected
 		? colors.onAccent
 		: isAdd
@@ -107,9 +108,13 @@ export function CategoryChip({
 		styles.chip,
 		isCompact && styles.compactChip,
 		{ backgroundColor: colors.card, borderColor: colors.border },
-		isSelected && { backgroundColor: ink, borderColor: ink },
+		// V3-14: selected is the one accent, not the category's own colour.
+		isSelected && {
+			backgroundColor: colors.accent,
+			borderColor: colors.accent,
+		},
 		isAdd && styles.add,
-		isAdd && { backgroundColor: "transparent" },
+		isAdd && { backgroundColor: "transparent", borderColor: colors.outline },
 		isLocked && { backgroundColor: tint, borderColor: tint },
 	];
 
@@ -145,29 +150,32 @@ export function CategoryChip({
 	);
 }
 
+const ICON = 24;
+const COMPACT_ICON = 20;
+
 const styles = StyleSheet.create({
 	// An interactive chip's touch area is 44pt tall around the 36pt pill.
 	touch: {
-		minHeight: 44,
+		minHeight: minTouchTarget,
 		justifyContent: "center",
 	},
 	chip: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 8,
+		gap: space[200],
 		minHeight: 36,
-		borderRadius: 999,
+		borderRadius: radius.pill,
 		borderWidth: 1,
-		paddingLeft: 6,
-		paddingRight: 12,
-		paddingVertical: 5,
+		paddingLeft: space[150],
+		paddingRight: space[300],
+		paddingVertical: space[100],
 	},
 	compactChip: {
 		minHeight: 28,
-		gap: 6,
-		paddingLeft: 4,
-		paddingRight: 10,
-		paddingVertical: 2,
+		gap: space[150],
+		paddingLeft: space[100],
+		paddingRight: space[250],
+		paddingVertical: space[50],
 	},
 	add: {
 		borderStyle: "dashed",
@@ -176,26 +184,26 @@ const styles = StyleSheet.create({
 		alignSelf: "flex-start",
 	},
 	icon: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
+		width: ICON,
+		height: ICON,
+		borderRadius: ICON / 2,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	compactIcon: {
-		width: 20,
-		height: 20,
-		borderRadius: 10,
+		width: COMPACT_ICON,
+		height: COMPACT_ICON,
+		borderRadius: COMPACT_ICON / 2,
 	},
 	label: {
-		fontSize: 13.5,
-		fontWeight: "500",
+		...textStyles.subhead,
 	},
 	compactLabel: {
-		fontSize: 13,
+		...textStyles.footnote,
+		fontWeight: "500",
 	},
 	labelFill: {
-		flex: 1,
+		flexShrink: 1,
 	},
 	labelHug: {
 		flexShrink: 1,

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
+import { surfaceColors } from "@/theme/theme";
 import { WeekdayChip } from "./weekday-chip";
 
 describe("WeekdayChip", () => {
@@ -52,7 +53,7 @@ describe("WeekdayChip", () => {
 		expect(onPress).not.toHaveBeenCalled();
 	});
 
-	it("owns an equal 44pt-tall column, so neighbouring chips' touch areas abut and never overlap", async () => {
+	it("is a 44 pt circle with no hitSlop, so neighbouring touch areas abut and never overlap", async () => {
 		await render(
 			<WeekdayChip
 				letter="M"
@@ -62,9 +63,38 @@ describe("WeekdayChip", () => {
 			/>,
 		);
 		const chip = screen.getByRole("checkbox", { name: "Monday" });
-		const style = StyleSheet.flatten(chip.props.style);
-		expect(style.minHeight).toBe(44);
-		expect(style.flex).toBe(1);
+		expect(StyleSheet.flatten(chip.props.style)).toMatchObject({
+			width: 44,
+			height: 44,
+			borderRadius: 999,
+		});
 		expect(chip.props.hitSlop).toBeUndefined();
+	});
+
+	it("draws off as a 3:1 outline and selected as the accent fill", async () => {
+		const { rerender } = await render(
+			<WeekdayChip
+				letter="M"
+				accessibilityLabel="Monday"
+				selected={false}
+				onPress={jest.fn()}
+			/>,
+		);
+		const style = () =>
+			StyleSheet.flatten(
+				screen.getByRole("checkbox", { name: "Monday" }).props.style,
+			);
+		expect(style()).toMatchObject({ borderColor: surfaceColors.light.outline });
+		await rerender(
+			<WeekdayChip
+				letter="M"
+				accessibilityLabel="Monday"
+				selected
+				onPress={jest.fn()}
+			/>,
+		);
+		expect(style()).toMatchObject({
+			backgroundColor: surfaceColors.light.accent,
+		});
 	});
 });

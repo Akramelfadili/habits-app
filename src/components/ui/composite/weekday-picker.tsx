@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { WeekdayChip } from "@/components/ui/primitives/weekday-chip";
+import { space } from "@/theme/theme";
 
 type WeekdayOption<T extends number> = {
 	day: T;
@@ -47,11 +48,10 @@ export function WeekdayPicker<T extends number>({
 }
 
 const styles = StyleSheet.create({
-	// Each chip is a 44pt column wider than its 36pt circle; pulling the row out
-	// 4pt each side keeps the first and last circles near the content edge.
+	// 44 pt circles that wrap at accessibility sizes (F10) instead of squeezing.
 	row: {
 		flexDirection: "row",
-		justifyContent: "space-between",
-		marginHorizontal: -4,
+		flexWrap: "wrap",
+		gap: space[100],
 	},
 });

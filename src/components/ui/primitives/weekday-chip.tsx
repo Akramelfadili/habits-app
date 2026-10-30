@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
+import { minTouchTarget, radius, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type WeekdayChipProps = {
@@ -11,7 +12,11 @@ type WeekdayChipProps = {
 	disabled?: boolean;
 };
 
-/** 36px day circle — filled when selected — in a 44pt-tall touch column. */
+/**
+ * V3-19: a 44 pt day circle (the touch target itself, so neighbours abut and
+ * never overlap). Off is the card with a 3:1 outline; selected is the accent
+ * fill. The letter is the second signal, the checked state the third.
+ */
 export function WeekdayChip({
 	letter,
 	accessibilityLabel,
@@ -29,49 +34,38 @@ export function WeekdayChip({
 			onPress={onPress}
 			disabled={disabled}
 			style={({ pressed }) => [
-				styles.touch,
+				styles.circle,
+				selected
+					? { backgroundColor: colors.accent, borderColor: colors.accent }
+					: { backgroundColor: colors.card, borderColor: colors.outline },
 				disabled && { opacity: opacity.disabled },
-				pressed && !disabled && { opacity: opacity.pressed },
+				// "Pressed: inner fill" (V3-19), not a fade.
+				pressed && !disabled && !selected && { backgroundColor: colors.inner },
 			]}
 		>
-			<View
+			<Text
 				style={[
-					styles.circle,
-					{ backgroundColor: selected ? colors.ink : colors.inner },
+					styles.letter,
+					{ color: selected ? colors.onAccent : colors.ink },
+					disabled && { color: colors.faint },
 				]}
 			>
-				<Text
-					style={[
-						styles.letter,
-						{ color: selected ? colors.onAccent : colors.sub },
-						disabled && { color: colors.faint },
-					]}
-				>
-					{letter}
-				</Text>
-			</View>
+				{letter}
+			</Text>
 		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
-	// Each chip owns an equal column (flex 1) at least 44pt tall: the touch
-	// areas abut, never overlap, and the 36pt circle sits centred in its own.
-	touch: {
-		flex: 1,
-		minHeight: 44,
-		alignItems: "center",
-		justifyContent: "center",
-	},
 	circle: {
-		width: 36,
-		height: 36,
-		borderRadius: 18,
+		width: minTouchTarget,
+		height: minTouchTarget,
+		borderRadius: radius.pill,
+		borderWidth: 1.5,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	letter: {
-		fontSize: 13,
-		fontWeight: "500",
+		...textStyles.subhead,
 	},
 });

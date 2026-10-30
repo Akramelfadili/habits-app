@@ -3,11 +3,11 @@ import {
 	type KeyboardTypeOptions,
 	type ReturnKeyTypeOptions,
 	StyleSheet,
-	Text,
 	TextInput,
 	type TextInputInstance,
 	View,
 } from "react-native";
+import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { CharacterCounter } from "./character-counter";
 import { FieldHelper } from "./field-helper";
@@ -20,22 +20,16 @@ type TextFieldProps = {
 	onBlur?: () => void;
 	onFocus?: () => void;
 	placeholder?: string;
+	/** Input that can't be used as-is — danger outline, "!" and words under the card (F8, C3). */
 	error?: string;
+	/** What the field does or shows ("Shown after the number: 5 of 8 glasses"). */
+	helper?: string;
+	/** Locked, with the reason under the card ("Built-in categories can't be renamed"). */
+	disabled?: boolean;
 	maxLength?: number;
 	autoFocus?: boolean;
 	/** Wraps onto more lines as the text grows — for short free text like a note. */
 	multiline?: boolean;
-	/**
-	 * VAR-12 name-field behavior (HAB-22/HAB-24): the NEW-23 counter from 80%
-	 * of `maxLength`, amber at the limit — instead of the remaining-characters
-	 * counter below.
-	 */
-	nearLimitCounter?: boolean;
-	/**
-	 * Input that can't be used as-is but isn't a hard error (a duplicate name):
-	 * amber outline plus a NEW-24 helper under the field.
-	 */
-	warning?: string;
 	/** Return key — e.g. saving an inline rename (HAB-25). Dismisses the keyboard unless the handler moves focus. */
 	onSubmitEditing?: () => void;
 	/** "next" when Return moves to another field; otherwise "done" whenever there is a handler. */
@@ -44,11 +38,20 @@ type TextFieldProps = {
 	keyboardType?: KeyboardTypeOptions;
 	/** For a form that moves focus to this field from the previous one. */
 	inputRef?: Ref<TextInputInstance>;
+	/** What "N characters max" reads at the cap; the field announces it when typing stops. */
+	limitMessage?: (limit: number) => string;
 };
 
-/** How close to `maxLength` the remaining-characters counter starts showing. */
-const COUNTER_THRESHOLD = 40;
+/** The focused outline is 1.5 pt of accent (V3-16). */
+const FOCUS_WIDTH = 1.5;
 
+/**
+ * V3-16 text field: a card with the label (caption caps) and the counter on
+ * one row, the value under it, and one helper line under the card — hint,
+ * blocking reason, amber limit notice or a red error, in that order of
+ * rank. The counter shows from 80 % of `maxLength` and turns amber at it;
+ * typing stops there and a longer paste is trimmed to fit.
+ */
 export function TextField({
 	label,
 	value,
@@ -57,155 +60,127 @@ export function TextField({
 	onFocus,
 	placeholder,
 	error,
+	helper,
+	disabled = false,
 	maxLength,
 	autoFocus,
 	multiline = false,
-	nearLimitCounter = false,
-	warning,
 	onSubmitEditing,
 	returnKeyType,
 	keyboardType,
 	inputRef,
+	limitMessage,
 }: TextFieldProps) {
-	const { colors, scheme } = useTheme();
+	const { colors, scheme, opacity } = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
-	// Error outranks warning outranks focus: a field being corrected keeps its outline.
+	// Error outranks focus: a field being corrected keeps its outline.
 	const borderColor = error
 		? colors.dangerBg
-		: warning
-			? colors.warnInk
-			: isFocused
-				? colors.ink
-				: "transparent";
-	// Only surfaces near the cap, so a short note doesn't carry a counter;
-	// the input itself stops at `maxLength` rather than truncating later.
-	const remaining =
-		maxLength !== undefined ? maxLength - value.length : undefined;
-	const showCounter =
-		!nearLimitCounter &&
-		remaining !== undefined &&
-		remaining <= COUNTER_THRESHOLD;
+		: isFocused
+			? colors.accent
+			: colors.border;
+	const borderWidth = error || !isFocused ? 1 : FOCUS_WIDTH;
+	const atLimit = maxLength !== undefined && value.length >= maxLength;
+	const showLimit =
+		atLimit && limitMessage !== undefined && !error && !disabled;
 
-	const field = (
-		<View testID="text-field" style={[styles.container, { borderColor }]}>
-			{nearLimitCounter && maxLength !== undefined ? (
-				// E6 draws NEW-23 on the label row, so its appearing never moves the input.
+	return (
+		<View style={styles.root}>
+			<View
+				testID="text-field"
+				style={[
+					styles.card,
+					{ backgroundColor: colors.card, borderColor, borderWidth },
+					disabled && { opacity: opacity.disabled },
+				]}
+			>
 				<View style={styles.labelRow}>
 					<SectionLabel>{label}</SectionLabel>
-					<CharacterCounter length={value.length} limit={maxLength} />
+					{maxLength !== undefined && !disabled ? (
+						<CharacterCounter length={value.length} limit={maxLength} />
+					) : null}
 				</View>
-			) : (
-				<SectionLabel>{label}</SectionLabel>
-			)}
-			<TextInput
-				ref={inputRef}
-				// The visible label is a sibling Text, not associated with the input —
-				// without this, VoiceOver announces an unnamed text field.
-				accessibilityLabel={label}
-				// The on-screen keyboard follows the app's Appearance choice, not just iOS's.
-				keyboardAppearance={scheme}
-				value={value}
-				// `maxLength` stops typing; slicing too covers a paste that arrives
-				// over the limit, so it's trimmed to fit rather than rejected. A value
-				// already over the limit (a V1 habit name) is never cut by an edit —
-				// deleting shortens it one character at a time as usual.
-				onChangeText={(text) =>
-					onChangeText(
-						maxLength !== undefined
-							? text.slice(0, Math.max(maxLength, value.length))
-							: text,
-					)
-				}
-				onFocus={() => {
-					setIsFocused(true);
-					onFocus?.();
-				}}
-				onBlur={() => {
-					setIsFocused(false);
-					onBlur?.();
-				}}
-				placeholder={placeholder}
-				placeholderTextColor={colors.faint}
-				maxLength={maxLength}
-				autoFocus={autoFocus}
-				multiline={multiline}
-				onSubmitEditing={onSubmitEditing}
-				keyboardType={keyboardType}
-				returnKeyType={returnKeyType ?? (onSubmitEditing ? "done" : undefined)}
-				// A single-line field blurs on Return unless told to stay; "next" hands
-				// focus on in the handler, so the keyboard must not drop in between.
-				submitBehavior={returnKeyType === "next" ? "submit" : undefined}
-				style={[
-					styles.input,
-					multiline && styles.multiline,
-					{ color: colors.ink },
-				]}
-			/>
-			{showCounter ? (
-				<Text
-					accessibilityLiveRegion="polite"
+				<TextInput
+					ref={inputRef}
+					// The visible label is a sibling Text, not associated with the input —
+					// without this, VoiceOver announces an unnamed text field.
+					accessibilityLabel={label}
+					accessibilityState={{ disabled }}
+					editable={!disabled}
+					// The on-screen keyboard follows the app's Appearance choice, not just iOS's.
+					keyboardAppearance={scheme}
+					value={value}
+					// `maxLength` stops typing; slicing too covers a paste that arrives
+					// over the limit, so it's trimmed to fit rather than rejected. A value
+					// already over the limit (a V1 habit name) is never cut by an edit —
+					// deleting shortens it one character at a time as usual.
+					onChangeText={(text) =>
+						onChangeText(
+							maxLength !== undefined
+								? text.slice(0, Math.max(maxLength, value.length))
+								: text,
+						)
+					}
+					onFocus={() => {
+						setIsFocused(true);
+						onFocus?.();
+					}}
+					onBlur={() => {
+						setIsFocused(false);
+						onBlur?.();
+					}}
+					placeholder={placeholder}
+					placeholderTextColor={colors.faint}
+					maxLength={maxLength}
+					autoFocus={autoFocus}
+					multiline={multiline}
+					onSubmitEditing={onSubmitEditing}
+					keyboardType={keyboardType}
+					returnKeyType={
+						returnKeyType ?? (onSubmitEditing ? "done" : undefined)
+					}
+					// A single-line field blurs on Return unless told to stay; "next" hands
+					// focus on in the handler, so the keyboard must not drop in between.
+					submitBehavior={returnKeyType === "next" ? "submit" : undefined}
 					style={[
-						styles.counter,
-						{ color: remaining === 0 ? colors.ink : colors.faint },
+						styles.input,
+						multiline && styles.multiline,
+						{ color: colors.ink },
 					]}
-				>
-					{`${value.length}/${maxLength}`}
-				</Text>
-			) : null}
+				/>
+			</View>
 			{error ? (
-				<Text
-					accessibilityRole="alert"
-					style={[styles.error, { color: colors.dangerBg }]}
-				>
-					{error}
-				</Text>
+				<FieldHelper tone="error">{error}</FieldHelper>
+			) : showLimit && limitMessage ? (
+				<FieldHelper tone="limit">{limitMessage(maxLength ?? 0)}</FieldHelper>
+			) : helper ? (
+				<FieldHelper tone="hint">{helper}</FieldHelper>
 			) : null}
-		</View>
-	);
-
-	if (!warning) return field;
-	return (
-		<View style={styles.withWarning}>
-			{field}
-			<FieldHelper tone="error">{warning}</FieldHelper>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	// Label and value sit flush with the surrounding card's content edge; the
-	// padding/negative-margin pair gives the error outline room around them
-	// without shifting that alignment.
-	container: {
-		gap: 6,
-		borderWidth: 1,
-		borderRadius: 12,
-		padding: 10,
-		margin: -10,
+	root: {
+		gap: space[150],
 	},
-	input: {
-		paddingVertical: 2,
-		fontSize: 15,
-	},
-	multiline: {
-		// No fixed height: grows with the text, starting at one line.
-		textAlignVertical: "top",
-	},
-	counter: {
-		alignSelf: "flex-end",
-		fontSize: 11,
-		fontVariant: ["tabular-nums"],
-	},
-	error: {
-		fontSize: 11,
+	card: {
+		gap: space[50],
+		borderRadius: radius.l,
+		paddingHorizontal: space[350],
+		paddingVertical: space[250],
 	},
 	labelRow: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
 	},
-	withWarning: {
-		// Clears the field's -10 outline margin so the helper sits under the box.
-		gap: 18,
+	input: {
+		paddingVertical: space[50],
+		...textStyles.bodyLg,
+	},
+	multiline: {
+		// No fixed height: grows with the text, starting at one line.
+		textAlignVertical: "top",
 	},
 });

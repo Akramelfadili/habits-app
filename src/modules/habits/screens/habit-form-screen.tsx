@@ -298,7 +298,6 @@ export function HabitFormScreen({
 								onBlur={field.onBlur}
 								error={fieldState.error?.message}
 								maxLength={MAX_HABIT_NAME_LENGTH}
-								nearLimitCounter
 								autoFocus={mode === "create"}
 								// Return goes on to Unit when a quantity habit has one; otherwise
 								// it just puts the keyboard away — never saves a half-filled form.

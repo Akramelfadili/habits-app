@@ -101,11 +101,7 @@ describe("SettingsScreen (HAB-15)", () => {
 		await render(<SettingsScreen />);
 		expect(screen.getByText("Evening review")).toBeTruthy();
 		expect(screen.getByText("All habits")).toBeTruthy();
-		await fireEvent(
-			screen.getByLabelText("Evening review"),
-			"valueChange",
-			true,
-		);
+		await fireEvent.press(screen.getByLabelText("Evening review"));
 		expect(mockSetEvening).toHaveBeenCalledWith(true);
 	});
 
@@ -116,7 +112,9 @@ describe("SettingsScreen (HAB-15)", () => {
 		expect(
 			screen.getByText(/Notifications are off for Habits in iOS/),
 		).toBeTruthy();
-		expect(screen.getByLabelText("Evening review").props.value).toBe(true);
+		expect(
+			screen.getByLabelText("Evening review").props.accessibilityState.checked,
+		).toBe(true);
 		await fireEvent.press(screen.getByText("Open iOS Settings →"));
 		expect(mockOpenSettings).toHaveBeenCalled();
 	});

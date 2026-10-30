@@ -93,8 +93,7 @@ export function RenameCategoryField({
 						onBlur={field.onBlur}
 						onSubmitEditing={blocked ? undefined : save}
 						maxLength={MAX_CATEGORY_NAME_LENGTH}
-						nearLimitCounter
-						warning={
+						error={
 							duplicate
 								? duplicateRenameMessage(duplicate)
 								: errors.name?.type === "rename"

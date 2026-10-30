@@ -11,6 +11,8 @@ type StepperProps = {
 	accessibilityLabel: string;
 	/** "large" is design-system.md's "large stepper" (Quantity Log, HAB-07). */
 	size?: "default" | "large";
+	/** The unit or the target under the value ("glasses a day", "of 8 glasses", V3-18). */
+	caption?: string;
 };
 
 /** −/+ control around a center numeral; each side disables at its bound. */
@@ -21,6 +23,7 @@ export function Stepper({
 	max,
 	accessibilityLabel,
 	size = "default",
+	caption,
 }: StepperProps) {
 	const { colors, opacity } = useTheme();
 	const isLarge = size === "large";
@@ -55,29 +58,34 @@ export function Stepper({
 	return (
 		<View style={[styles.row, isLarge && styles.rowLarge]}>
 			{renderButton("−", value - 1, value <= min)}
-			<Text
-				// Swipe up/down on the value to step it (VoiceOver / TalkBack), as well
-				// as the −/+ buttons either side.
-				accessible
-				accessibilityRole="adjustable"
-				accessibilityLabel={accessibilityLabel}
-				accessibilityValue={{ min, max, now: value }}
-				accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
-				onAccessibilityAction={(event) => {
-					if (event.nativeEvent.actionName === "increment" && value < max) {
-						onChange(value + 1);
-					}
-					if (event.nativeEvent.actionName === "decrement" && value > min) {
-						onChange(value - 1);
-					}
-				}}
-				style={[
-					isLarge ? styles.valueLarge : styles.value,
-					{ color: colors.ink },
-				]}
-			>
-				{value}
-			</Text>
+			<View style={styles.valueColumn}>
+				<Text
+					// Swipe up/down on the value to step it (VoiceOver / TalkBack), as well
+					// as the −/+ buttons either side.
+					accessible
+					accessibilityRole="adjustable"
+					accessibilityLabel={accessibilityLabel}
+					accessibilityValue={{ min, max, now: value }}
+					accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+					onAccessibilityAction={(event) => {
+						if (event.nativeEvent.actionName === "increment" && value < max) {
+							onChange(value + 1);
+						}
+						if (event.nativeEvent.actionName === "decrement" && value > min) {
+							onChange(value - 1);
+						}
+					}}
+					style={[
+						isLarge ? styles.valueLarge : styles.value,
+						{ color: colors.ink },
+					]}
+				>
+					{value}
+				</Text>
+				{caption ? (
+					<Text style={[styles.caption, { color: colors.sub }]}>{caption}</Text>
+				) : null}
+			</View>
 			{renderButton("+", value + 1, value >= max)}
 		</View>
 	);
@@ -112,6 +120,13 @@ const styles = StyleSheet.create({
 	},
 	symbolLarge: {
 		...textStyles.title,
+	},
+	valueColumn: {
+		alignItems: "center",
+	},
+	caption: {
+		...textStyles.footnote,
+		textAlign: "center",
 	},
 	value: {
 		minWidth: space[500],
