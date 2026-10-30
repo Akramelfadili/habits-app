@@ -51,16 +51,6 @@ describe("ProgressHeader (V3-02, P1)", () => {
 		expect(onExport).toHaveBeenCalledTimes(1);
 	});
 
-	it("offers the way back to Year when a month was opened from it (P13)", async () => {
-		const onPress = jest.fn();
-		await render(
-			<ProgressHeader {...props} back={{ label: "Year", onPress }} />,
-		);
-		await fireEvent.press(screen.getByRole("button", { name: "Back to Year" }));
-		expect(onPress).toHaveBeenCalledTimes(1);
-		expect(screen.getByText("‹ Year")).toBeTruthy();
-	});
-
 	it("takes no taps and leaves VoiceOver once the inline bar has taken over", async () => {
 		await render(<ProgressHeader {...props} collapsed />);
 		expect(screen.queryByRole("button", { name: "Export data" })).toBeNull();

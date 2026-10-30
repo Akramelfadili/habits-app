@@ -212,7 +212,6 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **Year too-early and nothing-logged gates are global** (all-history log counts), so a habit filtered to one with no logs shows a ready year of empty cells.
 - **"Best streak" on Week/Year can name an archived habit** (the fixture's archived run shows 223 days on Year); the data layer counts archived habits' history for longest runs. Decide whether Progress should limit it to active habits.
 - **The per-habit rates list includes an archived habit that had days in the range** (never in insights, D11).
-- **Back to Year is a button in the header, not a navigation push**: the iOS swipe-back gesture does not return to Year.
 - **Export is "unavailable" with no habits or no logs** (tap = toast); the mockup draws only the no-habits case disabled.
 - **P1 week matrix order follows creation order** (the mockup lists Read second); the fixtures create all six on one day, so ids decide.
 - **Performance:** Year (5 y × 20 habits) opens in ~310 ms in Node (year summary ~200 ms + year map ~100 ms, each classifying the same habits over the same days). On Hermes expect 2–5×: build both from one classification pass if it is felt on a device. Week fell 727 → 169 ms by making `fromDayKey` read the three fields instead of `parseISO`.

@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { HeaderPillButton } from "@/components/ui/composite/header-buttons";
-import { Button } from "@/components/ui/primitives/button";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -14,8 +13,6 @@ type ProgressHeaderProps = {
 	/** Export can't run yet (no habits, nothing logged): it says why when tapped. */
 	exportUnavailable: boolean;
 	onExport: () => void;
-	/** A month opened from Year: the way back to it (P13). */
-	back?: { label: string; onPress: () => void };
 	/** Scroll-linked shrink and fade of the whole row, from `useCollapsingHeader`. */
 	animatedStyle?: object;
 	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
@@ -32,7 +29,6 @@ export function ProgressHeader({
 	eyebrow,
 	exportUnavailable,
 	onExport,
-	back,
 	animatedStyle,
 	collapsed = false,
 }: ProgressHeaderProps) {
@@ -69,17 +65,6 @@ export function ProgressHeader({
 			importantForAccessibility={collapsed ? "no-hide-descendants" : "auto"}
 			style={[styles.block, animatedStyle]}
 		>
-			{back ? (
-				<View style={styles.back}>
-					<Button
-						label={progressCopy.backLabel(back.label)}
-						accessibilityLabel={progressCopy.backToYearLabel}
-						variant="inline"
-						fullWidth={false}
-						onPress={back.onPress}
-					/>
-				</View>
-			) : null}
 			{stacked ? (
 				<View style={styles.stacked}>
 					<View style={styles.buttons}>{exportButton}</View>
@@ -98,9 +83,6 @@ export function ProgressHeader({
 const styles = StyleSheet.create({
 	block: {
 		gap: space[100],
-	},
-	back: {
-		alignItems: "flex-start",
 	},
 	row: {
 		flexDirection: "row",

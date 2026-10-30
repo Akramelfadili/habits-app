@@ -319,9 +319,8 @@ export const progressCopy = {
 	eyebrow: {
 		week: (start: string) => `Week of ${start}`,
 	},
+	/** A month opened from Year is a pushed screen: Back names the screen it returns to. */
 	backToYear: "Year",
-	backLabel: (label: string) => `‹ ${label}`,
-	backToYearLabel: "Back to Year",
 	legend: {
 		less: "Less",
 		more: "More",

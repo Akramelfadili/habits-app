@@ -30,6 +30,9 @@ jest.mock("@/modules/habits/screens/today-screen", () => ({
 jest.mock("@/modules/habits/screens/progress-screen", () => ({
 	ProgressScreen: mockStub("progress"),
 }));
+jest.mock("@/modules/habits/screens/progress-month-screen", () => ({
+	ProgressMonthScreen: mockStub("progress-month"),
+}));
 jest.mock("@/modules/habits/screens/manage-habits-screen", () => ({
 	ManageHabitsScreen: mockStub("manage"),
 }));
@@ -111,6 +114,26 @@ describe("Detail opens inside the tab it came from (D4)", () => {
 		await testRouter.back();
 		expect(tabGroup(app)).toBe(group);
 		expect(app.getPathname()).toBe(root.replace(/^\/\([a-z]+\)/, "") || "/");
+	});
+});
+
+describe("a Year month is a pushed route inside Progress (P13)", () => {
+	it("opens in the Progress tab and Back returns to Progress's root", async () => {
+		const app = await renderApp("/(progress)/progress");
+		await testRouter.push("/month/2026-07-01");
+		expect(screen.getByText("progress-month")).toBeTruthy();
+		expect(tabGroup(app)).toBe("(progress)");
+		expect(app.getPathname()).toBe("/month/2026-07-01");
+		await testRouter.back();
+		expect(screen.getByText("progress")).toBeTruthy();
+		expect(tabGroup(app)).toBe("(progress)");
+		expect(app.getPathname()).toBe("/progress");
+	});
+
+	it("passes the month through to the screen", async () => {
+		const app = await renderApp("/(progress)/progress");
+		await testRouter.push("/month/2026-07-01");
+		expect(app.getPathname()).toBe("/month/2026-07-01");
 	});
 });
 

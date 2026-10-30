@@ -13,30 +13,23 @@ describe("the Progress view hooks", () => {
 		const { result } = await renderHook(() => useProgressViewQueries());
 		expect(result.current).toEqual({
 			range: "week",
-			month: null,
-			fromYear: false,
 			habitId: null,
 			selectedKey: null,
 			selectedDay: null,
 		});
 	});
 
-	it("follows the actions: a Year month opens Month on that month, with a way back", async () => {
+	it("follows the actions: a ringed day comes back as a date", async () => {
 		const queries = await renderHook(() => useProgressViewQueries());
 		const actions = await renderHook(() => useProgressViewActions());
-		await act(async () =>
-			actions.result.current.openMonthFromYear(new Date(2026, 6, 1)),
-		);
-		expect(queries.result.current.range).toBe("month");
-		expect(queries.result.current.month).toEqual(new Date(2026, 6, 1));
-		expect(queries.result.current.fromYear).toBe(true);
+		await act(async () => actions.result.current.setRange("month"));
 		await act(async () =>
 			actions.result.current.selectDay(new Date(2026, 6, 14)),
 		);
+		expect(queries.result.current.range).toBe("month");
 		expect(queries.result.current.selectedDay).toEqual(new Date(2026, 6, 14));
-		await act(async () => actions.result.current.backToYear());
-		expect(queries.result.current.range).toBe("year");
-		expect(queries.result.current.month).toBeNull();
+		await act(async () => actions.result.current.selectDay(null));
+		expect(queries.result.current.selectedDay).toBeNull();
 	});
 
 	it("keeps the range and filter across a remount (a tab switch)", async () => {

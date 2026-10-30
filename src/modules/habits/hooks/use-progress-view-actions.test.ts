@@ -14,18 +14,6 @@ describe("useProgressViewActions", () => {
 		expect(useProgressViewStore.getState().range).toBe("month");
 	});
 
-	it("opens a Year month, and goes back to Year", async () => {
-		const { result } = await renderHook(() => useProgressViewActions());
-		await act(async () =>
-			result.current.openMonthFromYear(new Date(2026, 6, 1)),
-		);
-		expect(useProgressViewStore.getState()).toEqual(
-			expect.objectContaining({ range: "month", fromYear: true }),
-		);
-		await act(async () => result.current.backToYear());
-		expect(useProgressViewStore.getState().range).toBe("year");
-	});
-
 	it("sets and clears the habit filter, and rings and releases a day", async () => {
 		const { result } = await renderHook(() => useProgressViewActions());
 		await act(async () => result.current.setHabit(3));

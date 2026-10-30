@@ -247,7 +247,7 @@ describe("ProgressScreen — navigation inside Progress (HAB-34)", () => {
 		expect(screen.queryByTestId("day-detail-card")).toBeNull();
 	});
 
-	it("opens a Year month in Month, with Back returning to Year (D15)", async () => {
+	it("pushes a Year month as its own route, leaving Year where it is (P13)", async () => {
 		await render(<ProgressScreen />);
 		await fireEvent.press(screen.getByRole("tab", { name: "Year" }));
 		await fireEvent.press(
@@ -255,20 +255,19 @@ describe("ProgressScreen — navigation inside Progress (HAB-34)", () => {
 				name: /^October, \d+ percent\. Opens Month\.$/,
 			}),
 		);
-		expect(useProgressViewStore.getState()).toEqual(
-			expect.objectContaining({ range: "month", fromYear: true }),
-		);
-		expect(screen.getByTestId("month-calendar")).toBeTruthy();
-		await fireEvent.press(screen.getByRole("button", { name: "Back to Year" }));
+		expect(mockPush).toHaveBeenCalledWith("/month/2026-10-01");
+		// Nothing changes in place: Year stays the range, with no Back row of its own.
+		expect(useProgressViewStore.getState().range).toBe("year");
 		expect(screen.getByTestId("year-heat-map")).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "Back to Year" })).toBeNull();
 	});
 
-	it("shows the current month when Month is picked from the switcher, with no Back", async () => {
+	it("shows the current month, in place, when Month is picked from the switcher (D15)", async () => {
 		await render(<ProgressScreen />);
 		await fireEvent.press(screen.getByRole("tab", { name: "Month" }));
-		expect(screen.queryByRole("button", { name: "Back to Year" })).toBeNull();
-		expect(useProgressViewStore.getState().monthKey).toBeNull();
+		expect(
+			screen.getByRole("header", { name: "Progress. October 2026" }),
+		).toBeTruthy();
+		expect(mockPush).not.toHaveBeenCalled();
 	});
 
 	it("opens Edit habit scrolled to Frequency from a slipping insight", async () => {

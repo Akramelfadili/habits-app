@@ -55,6 +55,8 @@ export default function TabStackLayout({ segment }: { segment: string }) {
 			<Stack.Screen name="manage" options={{ headerShown: false }} />
 			{/* Pushed from any tab: Back names the tab it was opened from (D4). */}
 			<Stack.Screen name="habit/[id]" options={backTo(rootTitle)} />
+			{/* A Year month label pushes its month here: Back (and the swipe) return to Year. */}
+			<Stack.Screen name="month/[month]" options={backTo("Year")} />
 			{/* A bare chevron until the screen relabels it with the habit's name. */}
 			<Stack.Screen name="reminders/[id]" options={backTo("")} />
 			{/* Settings opens from the Habits gear, but Reminders can reach it too. */}

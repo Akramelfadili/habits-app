@@ -16,6 +16,7 @@ import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { habitAccentInk, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { toDayKey } from "@/utils/day-key";
 import { EditDaySheet } from "../components/edit-day-sheet";
 import { ExportSheet } from "../components/export-sheet";
 import { HabitFilterSheet } from "../components/progress/habit-filter-sheet";
@@ -96,7 +97,7 @@ export function ProgressScreen() {
 					),
 				)
 			: view.range === "month"
-				? format(view.month ?? shell.today, "MMMM yyyy")
+				? format(shell.today, "MMMM yyyy")
 				: String(shell.today.getFullYear());
 
 	// Where the switcher's slot starts is where the bar's bottom edge must end up, so the bar never covers it.
@@ -179,14 +180,6 @@ export function ProgressScreen() {
 						eyebrow={eyebrow}
 						exportUnavailable={exportUnavailable}
 						onExport={onExport}
-						back={
-							view.range === "month" && view.fromYear
-								? {
-										label: progressCopy.backToYear,
-										onPress: actions.backToYear,
-									}
-								: undefined
-						}
 						animatedStyle={header.titleStyle}
 						collapsed={header.collapsed}
 					/>
@@ -209,7 +202,7 @@ export function ProgressScreen() {
 				) : view.range === "month" ? (
 					<ProgressMonth
 						oneHabit={oneHabit}
-						month={view.month}
+						month={null}
 						selectedKey={view.selectedKey}
 						selectedDay={view.selectedDay}
 						dot={dot}
@@ -226,7 +219,7 @@ export function ProgressScreen() {
 						oneHabit={oneHabit}
 						today={shell.today}
 						onOpenPicker={() => setPickerOpen(true)}
-						onOpenMonth={actions.openMonthFromYear}
+						onOpenMonth={(month) => router.push(`/month/${toDayKey(month)}`)}
 						onChangeFrequency={onChangeFrequency}
 						onAddHabit={onAddHabit}
 						onGoToToday={onGoToToday}
