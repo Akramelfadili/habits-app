@@ -73,10 +73,8 @@ describe("the Habits tab for VoiceOver (08.3, 08.4)", () => {
 		await render(<HabitsScreen />, { wrapper: GestureHandlerRootView });
 		const order = readingOrder();
 		const at = (label: string) => order.indexOf(label);
-		expect(at("Habits, heading. 1 active, 1 archived")).toBeGreaterThanOrEqual(
-			0,
-		);
-		expect(at("Habits, heading. 1 active, 1 archived")).toBeLessThan(
+		expect(at("Habits, 1 active, 1 archived")).toBeGreaterThanOrEqual(0);
+		expect(at("Habits, 1 active, 1 archived")).toBeLessThan(
 			at("Search habits"),
 		);
 		expect(at("Search habits")).toBeLessThan(at("Reorder habits"));

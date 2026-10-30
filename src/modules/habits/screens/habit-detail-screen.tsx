@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
 	type NativeScrollEvent,
 	type NativeSyntheticEvent,
@@ -66,12 +66,24 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const [archiveOpen, setArchiveOpen] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [titleScrolled, setTitleScrolled] = useState(false);
+	// Set before the delete runs: the habit leaves the live list a moment before
+	// the pop, and Detail must not flash "Habit not found" in between.
+	const deleting = useRef(false);
 
 	const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) =>
 		setTitleScrolled(nativeEvent.contentOffset.y > TITLE_SCROLLED_AT);
 
 	// Still loading: a neutral blank, never a "not found" flash (audit A5-04).
 	if (detail === undefined) {
+		return (
+			<View
+				testID="screen-loading"
+				style={[styles.screen, { backgroundColor: colors.bg }]}
+			/>
+		);
+	}
+
+	if (!detail && deleting.current) {
 		return (
 			<View
 				testID="screen-loading"
@@ -111,8 +123,12 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 
 	// Permanent, so the toast has no Undo (DC3). A failure stays in the sheet (DC4).
 	async function handleDelete() {
+		deleting.current = true;
 		const result = await actions.deleteHabit(habitId);
-		if (!result.ok) return;
+		if (!result.ok) {
+			deleting.current = false;
+			return;
+		}
 		setDeleteOpen(false);
 		showMessage(messages.habitDeleted, [habit.name]);
 		router.back();

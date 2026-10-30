@@ -23,7 +23,7 @@ async function renderHeader(
 	await render(
 		<HabitsHeader
 			eyebrow="7 active · 2 archived"
-			accessibilityLabel="Habits, heading. 7 active, 2 archived"
+			accessibilityLabel="Habits, 7 active, 2 archived"
 			reordering={false}
 			{...handlers}
 			{...props}
@@ -37,11 +37,9 @@ beforeEach(() => {
 });
 
 describe("HabitsHeader", () => {
-	it("is one heading: the counts over the title, read as 'Habits, heading. 7 active, 2 archived'", async () => {
+	it("is one heading: the counts over the title, read as 'Habits, 7 active, 2 archived'", async () => {
 		await renderHeader();
-		expect(
-			screen.getByLabelText("Habits, heading. 7 active, 2 archived"),
-		).toBeTruthy();
+		expect(screen.getByLabelText("Habits, 7 active, 2 archived")).toBeTruthy();
 		expect(screen.getByText("7 ACTIVE · 2 ARCHIVED")).toBeTruthy();
 		expect(screen.getByText("Habits")).toBeTruthy();
 	});
@@ -79,10 +77,9 @@ describe("HabitsHeader", () => {
 
 	it("a collapsed header takes no taps and leaves VoiceOver (the inline bar has them)", async () => {
 		await renderHeader({ collapsed: true });
-		const block = screen.getByLabelText(
-			"Habits, heading. 7 active, 2 archived",
-			{ hidden: true },
-		).parent?.parent;
+		const block = screen.getByLabelText("Habits, 7 active, 2 archived", {
+			hidden: true,
+		}).parent?.parent;
 		expect(block?.props.pointerEvents).toBe("none");
 		expect(block?.props.accessibilityElementsHidden).toBe(true);
 	});
@@ -90,9 +87,7 @@ describe("HabitsHeader", () => {
 	it("at accessibility sizes the buttons move above the title (H10)", async () => {
 		mockLargeText = true;
 		await renderHeader();
-		const title = screen.getByLabelText(
-			"Habits, heading. 7 active, 2 archived",
-		);
+		const title = screen.getByLabelText("Habits, 7 active, 2 archived");
 		const row = title.parent;
 		expect(StyleSheet.flatten(row?.props.style).flexDirection).not.toBe("row");
 	});

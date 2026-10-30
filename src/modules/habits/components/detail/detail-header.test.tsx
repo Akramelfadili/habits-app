@@ -16,7 +16,7 @@ function renderHeader(onEdit = jest.fn()) {
 		<DetailHeader
 			eyebrow="Fitness · Tue, Thu"
 			title="Upper body"
-			accessibilityLabel="Upper body, heading. Fitness, Tuesday and Thursday."
+			accessibilityLabel="Upper body. Fitness, Tuesday and Thursday."
 			onEdit={onEdit}
 		/>,
 	).then(() => onEdit);
@@ -29,7 +29,7 @@ describe("DetailHeader", () => {
 		expect(screen.getByText("Upper body")).toBeTruthy();
 		expect(
 			screen.getByRole("header", {
-				name: "Upper body, heading. Fitness, Tuesday and Thursday.",
+				name: "Upper body. Fitness, Tuesday and Thursday.",
 			}),
 		).toBeTruthy();
 	});

@@ -6,7 +6,7 @@ import { scheduleLabel } from "./habit-schedule-label";
 /** "Daily", "Tue, Thu", "3× per week" — a habit's cadence as the library words it, lowercase after another word. */
 function cadence(habit: Habit): string {
 	const { frequency } = habit;
-	if (frequency.type === "daily") return "Daily";
+	if (frequency.type === "daily") return habitsCopy.daily;
 	// `scheduleLabel` says "Every day" for a daily habit and "3× per week" for a per-week one.
 	return scheduleLabel(habit);
 }
@@ -31,7 +31,7 @@ function targetLabel(habit: Habit): string | null {
  */
 function streakDetail(habit: Habit, streak: number): string | null {
 	const plain = habit.direction === "build" && habit.frequency.type === "daily";
-	return plain && streak >= 2 ? `${streak}-day streak` : null;
+	return plain && streak >= 2 ? habitsCopy.streakDays(streak) : null;
 }
 
 /**
@@ -44,7 +44,7 @@ export function libraryRowSubtitle(habit: Habit, streak = 0): string {
 	const detail = targetLabel(habit) ?? streakDetail(habit, streak);
 	const parts =
 		habit.direction === "break"
-			? ["Break", lowerFirst(cadence(habit))]
+			? [habitsCopy.breakWord, lowerFirst(cadence(habit))]
 			: [cadence(habit)];
 	if (detail) parts.push(detail);
 	return upperFirst(parts.join(" · "));
@@ -56,7 +56,7 @@ export function libraryRowLabel(habit: Habit, streak = 0): string {
 	const parts = [
 		habit.name,
 		habit.category.name,
-		habit.direction === "break" ? "break" : null,
+		habit.direction === "break" ? habitsCopy.breakLower : null,
 		lowerFirst(cadence(habit)),
 		target ?? streakDetail(habit, streak),
 	];
@@ -69,10 +69,15 @@ export function libraryRowLabel(habit: Habit, streak = 0): string {
  */
 export function resultRowSubtitle(habit: Habit): string {
 	if (habit.archivedAt) {
-		return `${habit.category.name} · archived ${formatDayMonthShort(habit.archivedAt)}`;
+		return habitsCopy.resultArchived(
+			habit.category.name,
+			formatDayMonthShort(habit.archivedAt),
+		);
 	}
 	const how =
-		habit.direction === "break" ? "break" : lowerFirst(cadence(habit));
+		habit.direction === "break"
+			? habitsCopy.breakLower
+			: lowerFirst(cadence(habit));
 	return `${habit.category.name} · ${how}`;
 }
 
@@ -131,7 +136,5 @@ export function libraryEyebrow(active: number, archived: number): string {
 /** "7 active, 1 archived" — the header's VoiceOver count line (08.3). */
 export function libraryCountsLabel(active: number, archived: number): string {
 	if (active === 0 && archived === 0) return habitsCopy.eyebrow.none;
-	return archived > 0
-		? `${active} active, ${archived} archived`
-		: `${active} active`;
+	return habitsCopy.counts(active, archived);
 }

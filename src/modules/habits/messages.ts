@@ -565,8 +565,18 @@ export const habitsCopy = {
 		none: "No habits",
 		reorder: "Reorder · drag within a category",
 	},
-	/** 08.3: "Habits, heading. 7 active, 1 archived." */
-	headerLabel: (counts: string) => `Habits, heading. ${counts}`,
+	/** 08.3: "Habits, heading. 7 active, 1 archived." — VoiceOver adds "heading" from the role. */
+	headerLabel: (counts: string) => `Habits, ${counts}`,
+	counts: (active: number, archived: number) =>
+		archived > 0
+			? `${active} active, ${archived} archived`
+			: `${active} active`,
+	streakDays: (days: number) => `${days}-day streak`,
+	resultArchived: (category: string, date: string) =>
+		`${category} · archived ${date}`,
+	daily: "Daily",
+	breakWord: "Break",
+	breakLower: "break",
 	search: {
 		label: "Search habits",
 		cancel: "Cancel",
@@ -628,6 +638,26 @@ export const habitsCopy = {
  */
 export const detailCopy = {
 	edit: "Edit",
+	/** The eyebrow and VoiceOver's cadence (08.3). */
+	words: {
+		daily: "Daily",
+		dailySpoken: "daily",
+		break: "Break",
+		breakSpoken: "break",
+		archived: "Archived",
+		archivedSpoken: "archived",
+		perWeekSpoken: (times: number) => `${times} times per week`,
+		and: " and ",
+		weekdays: [
+			"Monday",
+			"Tuesday",
+			"Wednesday",
+			"Thursday",
+			"Friday",
+			"Saturday",
+			"Sunday",
+		],
+	},
 	/** The tiles. Build habits say streak; Break habits say resisting. */
 	stats: {
 		streak: "Streak",
@@ -703,6 +733,9 @@ export const detailCopy = {
 	reminders: {
 		header: "Reminders",
 		label: "Reminders",
+		allOff: "All off",
+		nOn: (count: number, times: string) => `${count} on · ${times}`,
+		timeDays: (time: string, days: string) => `${time} · ${days}`,
 		/** 08.3: "Reminders, 07:00, Tuesday and Thursday." */
 		spoken: (time: string, days: string) => `Reminders, ${time}, ${days}`,
 		none: "None",
@@ -721,6 +754,8 @@ export const detailCopy = {
 		partial: (value: number, target: number, unit: string | null) =>
 			`${value} of ${target}${unit ? ` ${unit}` : ""}`,
 		notLogged: "Not logged",
+		/** A day that only carries a note (never "Slipped": nothing was due or lost). */
+		noted: "Note",
 	},
 	archive: {
 		row: "Archive habit",
@@ -747,8 +782,9 @@ export const detailCopy = {
 				logs === 0
 					? `Deletes ${habit}. It has no logs yet.`
 					: `Deletes ${habit} and its ${logs} ${logs === 1 ? "log" : "logs"}.`;
+			const keeps = logs > 1 ? "them" : "it";
 			return canArchive
-				? `${what} Archiving keeps them and can be undone.`
+				? `${what} Archiving keeps ${keeps} and can be undone.`
 				: `${what} This can’t be undone.`;
 		},
 		archiveInstead: "Archive instead",

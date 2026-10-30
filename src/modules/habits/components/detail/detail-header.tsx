@@ -10,7 +10,7 @@ type DetailHeaderProps = {
 	/** "FITNESS · TUE, THU" — the caps line over the title. */
 	eyebrow: string;
 	title: string;
-	/** "Upper body, heading. Fitness, Tuesday and Thursday." */
+	/** "Upper body. Fitness, Tuesday and Thursday." */
 	accessibilityLabel: string;
 	onEdit: () => void;
 };

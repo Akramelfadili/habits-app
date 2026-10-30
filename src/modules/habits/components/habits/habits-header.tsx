@@ -13,7 +13,7 @@ import { habitsCopy } from "../../messages";
 type HabitsHeaderProps = {
 	/** "7 active · 2 archived", "No habits", or the reorder line. */
 	eyebrow: string;
-	/** What VoiceOver says for the title block: "Habits, heading. 7 active, 1 archived." */
+	/** What VoiceOver says for the title block: "Habits, 7 active, 1 archived." */
 	accessibilityLabel: string;
 	/** Reorder mode: Done replaces the gear and the plus (H4). */
 	reordering: boolean;

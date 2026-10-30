@@ -88,9 +88,7 @@ beforeEach(() => {
 describe("HabitsScreen — the library (H1)", () => {
 	it("counts what there is over the title, and groups the active habits by category", async () => {
 		await renderScreen();
-		expect(
-			screen.getByLabelText("Habits, heading. 3 active, 1 archived"),
-		).toBeTruthy();
+		expect(screen.getByLabelText("Habits, 3 active, 1 archived")).toBeTruthy();
 		expect(screen.getByText("3 ACTIVE · 1 ARCHIVED")).toBeTruthy();
 		expect(screen.getByText("ACTIVE · 3")).toBeTruthy();
 		expect(screen.getByText("MORNING")).toBeTruthy();

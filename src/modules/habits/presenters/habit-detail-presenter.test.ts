@@ -55,13 +55,13 @@ describe("the title block (D1, D3, D4, D7)", () => {
 
 	it("VoiceOver reads the name as a heading, then the category and the days in words", () => {
 		expect(detailHeaderLabel(upper)).toBe(
-			"Upper body, heading. Fitness, Tuesday and Thursday.",
+			"Upper body. Fitness, Tuesday and Thursday.",
 		);
 		expect(detailHeaderLabel(water)).toBe(
-			"Drink water, heading. Health, daily, 8 glasses.",
+			"Drink water. Health, daily, 8 glasses.",
 		);
 		expect(detailHeaderLabel(phone)).toBe(
-			"No phone in bed, heading. Home, break, daily.",
+			"No phone in bed. Home, break, daily.",
 		);
 	});
 });
@@ -539,9 +539,12 @@ describe("history rows (D2)", () => {
 		expect(view.accessibilityLabel).toBe("Thursday 22 October, done. Easy day");
 	});
 
-	it("a noted day with nothing else says Not logged", () => {
+	it("a noted day with nothing else just says Note — never Slipped, even for a Break habit (D8, D11)", () => {
 		expect(
 			historyRowView(upper, row({ kind: "noted", note: "Rest" })).status,
-		).toBe("Not logged");
+		).toBe("Note");
+		expect(
+			historyRowView(phone, row({ kind: "noted", note: "Rest" })).status,
+		).toBe("Note");
 	});
 });

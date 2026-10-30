@@ -181,9 +181,7 @@ describe("D1 — the default Detail", () => {
 		expect(screen.getByText("FITNESS · TUE, THU")).toBeTruthy();
 		expect(screen.getByText("Upper body")).toBeTruthy();
 		expect(
-			screen.getByLabelText(
-				"Upper body, heading. Fitness, Tuesday and Thursday.",
-			),
+			screen.getByLabelText("Upper body. Fitness, Tuesday and Thursday."),
 		).toBeTruthy();
 		await fireEvent.press(screen.getByRole("button", { name: "Edit" }));
 		expect(mockPush).toHaveBeenCalledWith("/edit-habit/1");
@@ -546,6 +544,21 @@ describe("Delete habit (DC1–DC4)", () => {
 		expect(useToastStore.getState().toast).toBeNull();
 		await fireEvent.press(screen.getByText("Delete permanently"));
 		expect(mockDelete).toHaveBeenCalledTimes(2);
+	});
+
+	it("once the habit leaves the list mid-delete, Detail shows the neutral blank, not 'Habit not found'", async () => {
+		let release: (value: unknown) => void = () => {};
+		mockDelete.mockReturnValueOnce(
+			new Promise((resolve) => (release = resolve)),
+		);
+		const view = await render(<HabitDetailScreen habitId={1} />);
+		await fireEvent.press(screen.getByText("Delete habit"));
+		await fireEvent.press(screen.getByText("Delete permanently"));
+		mockDetail = null;
+		await view.rerender(<HabitDetailScreen habitId={1} />);
+		expect(screen.queryByText("Habit not found")).toBeNull();
+		expect(screen.getByTestId("screen-loading")).toBeTruthy();
+		release(OK);
 	});
 
 	it("Archive instead archives (not deletes) and pops with the Undo toast", async () => {

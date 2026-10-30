@@ -16,15 +16,7 @@ import { scheduleLabel } from "./habit-schedule-label";
 import type { StatTileData } from "./progress-presenter";
 import { formatReminderTime, reminderDaysLabel } from "./reminders-helpers";
 
-const FULL_DAY: Record<IsoWeekday, string> = {
-	1: "Monday",
-	2: "Tuesday",
-	3: "Wednesday",
-	4: "Thursday",
-	5: "Friday",
-	6: "Saturday",
-	7: "Sunday",
-};
+const fullDay = (day: IsoWeekday) => detailCopy.words.weekdays[day - 1];
 
 const lowerFirst = (text: string) =>
 	text.charAt(0).toLowerCase() + text.slice(1);
@@ -38,20 +30,22 @@ function targetLabel(habit: Habit): string | null {
 
 /** "Daily", "Tue, Thu", "3× per week". */
 function cadenceLabel(habit: Habit): string {
-	return habit.frequency.type === "daily" ? "Daily" : scheduleLabel(habit);
+	return habit.frequency.type === "daily"
+		? detailCopy.words.daily
+		: scheduleLabel(habit);
 }
 
 /** "Tuesday and Thursday", "daily", "3 times per week" — the cadence as VoiceOver says it. */
 function spokenCadence(habit: Habit): string {
 	const { frequency } = habit;
-	if (frequency.type === "daily") return "daily";
+	if (frequency.type === "daily") return detailCopy.words.dailySpoken;
 	if (frequency.type === "per-week") {
-		return `${frequency.timesPerWeek} times per week`;
+		return detailCopy.words.perWeekSpoken(frequency.timesPerWeek);
 	}
 	const names = [...frequency.days]
 		.sort((a, b) => a - b)
-		.map((day) => FULL_DAY[day]);
-	if (names.length === 7) return "daily";
+		.map((day) => fullDay(day));
+	if (names.length === 7) return detailCopy.words.dailySpoken;
 	if (names.length <= 1) return names.join("");
 	return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
@@ -62,24 +56,24 @@ function spokenCadence(habit: Habit): string {
  */
 export function detailEyebrow(habit: Habit): string {
 	const parts = [habit.category.name];
-	if (habit.direction === "break") parts.push("Break");
+	if (habit.direction === "break") parts.push(detailCopy.words.break);
 	parts.push(cadenceLabel(habit));
 	const target = targetLabel(habit);
 	if (target) parts.push(target);
-	if (habit.archivedAt) parts.push("Archived");
+	if (habit.archivedAt) parts.push(detailCopy.words.archived);
 	return parts.join(" · ");
 }
 
-/** "Upper body, heading. Fitness, Tuesday and Thursday." — the title block as one VoiceOver stop (08.3). */
+/** "Upper body. Fitness, Tuesday and Thursday." (the role adds "heading") — the title block as one VoiceOver stop (08.3). */
 export function detailHeaderLabel(habit: Habit): string {
 	const parts = [
 		habit.category.name,
-		habit.direction === "break" ? "break" : null,
+		habit.direction === "break" ? detailCopy.words.breakSpoken : null,
 		spokenCadence(habit),
 		targetLabel(habit),
-		habit.archivedAt ? "archived" : null,
+		habit.archivedAt ? detailCopy.words.archivedSpoken : null,
 	].filter(Boolean);
-	return `${habit.name}, heading. ${parts.join(", ")}.`;
+	return `${habit.name}. ${parts.join(", ")}.`;
 }
 
 type TileInput = {
@@ -203,12 +197,18 @@ export function detailRemindersValue(
 	if (habit.archivedAt) return detailCopy.reminders.paused;
 	if (reminders.length === 0) return detailCopy.reminders.none;
 	const on = reminders.filter((reminder) => reminder.enabled);
-	if (on.length === 0) return "All off";
+	if (on.length === 0) return detailCopy.reminders.allOff;
 	if (on.length > 1) {
-		return `${on.length} on · ${on.map(formatReminderTime).join(", ")}`;
+		return detailCopy.reminders.nOn(
+			on.length,
+			on.map(formatReminderTime).join(", "),
+		);
 	}
 	const days = reminderDaysLabel(on[0].weekdays);
-	return `${formatReminderTime(on[0])} · ${days === "Every day" ? "daily" : days}`;
+	return detailCopy.reminders.timeDays(
+		formatReminderTime(on[0]),
+		days === "Every day" ? detailCopy.words.dailySpoken : days,
+	);
 }
 
 /**
@@ -230,7 +230,7 @@ export function detailRemindersLabel(
 		days.length === 7
 			? "daily"
 			: days
-					.map((day) => FULL_DAY[day])
+					.map((day) => fullDay(day))
 					.join(", ")
 					.replace(/, ([^,]*)$/, " and $1");
 	return detailCopy.reminders.spoken(formatReminderTime(only), spoken);
@@ -326,7 +326,7 @@ export function weekRows(habit: Habit, weeks: HeatmapDay[][]): WeekRow[] {
 		const spoken = week.flatMap((day) => {
 			const word = statusWord(habit, day);
 			return word
-				? [`${FULL_DAY[(day.date.getDay() || 7) as IsoWeekday]} ${word}`]
+				? [`${fullDay((day.date.getDay() || 7) as IsoWeekday)} ${word}`]
 				: [];
 		});
 		const editable = week.filter((day) => day.selectable);
@@ -441,7 +441,7 @@ export function historyRowView(habit: Habit, row: HistoryRow): HistoryRowView {
 			tag = copy.bonusTag;
 			break;
 		default:
-			status = isBreak ? copy.slipped : copy.notLogged;
+			status = copy.noted;
 	}
 	const spoken = `${format(day, "EEEE d MMMM")}, ${lowerFirst(status)}${row.note ? `. ${row.note}` : ""}`;
 	return {
