@@ -13,3 +13,14 @@ function failWritesRequested(): boolean {
 export function assertWritesAllowed(): void {
 	if (failWritesRequested()) throw new Error("Simulated write failure");
 }
+
+/**
+ * `?slowWrites=1`: a write that never finishes, so the in-flight state of a
+ * sheet (Delete habit's "Deleting…", DC3) can be captured without a timer.
+ */
+export function holdWriteIfSlow(): Promise<void> {
+	const search = globalThis.location?.search ?? "";
+	return new URLSearchParams(search).get("slowWrites") === "1"
+		? new Promise(() => {})
+		: Promise.resolve();
+}

@@ -6,7 +6,6 @@ import {
 	isBefore,
 	isSameDay,
 	max,
-	parseISO,
 	startOfDay,
 	startOfMonth,
 	startOfWeek,
@@ -22,7 +21,7 @@ import {
 import { isPausedOn, restartDays } from "../strategies/paused-schedule";
 import type { Entry, EntryNote, Habit } from "../types";
 import { addToTally, EMPTY_TALLY } from "./completion-rate";
-import { habitDayClassifier } from "./day-status";
+import { type HabitDayCell, habitDayClassifier } from "./day-status";
 import { offScheduleChecker } from "./off-schedule";
 import { calculateCurrentStreak, isEntryComplete } from "./streaks";
 
@@ -34,7 +33,7 @@ import { calculateCurrentStreak, isEntryComplete } from "./streaks";
  */
 
 const COMPLETION_RATE_WINDOW_DAYS = 90;
-export const HEATMAP_WEEKS = 10;
+export const HEATMAP_WEEKS = 5;
 
 type History = {
 	habit: Habit;
@@ -146,18 +145,12 @@ export function calculateCompletionRate({
 		subDays(windowEnd, COMPLETION_RATE_WINDOW_DAYS - 1),
 		startOfDay(habit.createdAt),
 	]);
-	const closedPauses = habit.pauses;
-
-	const tally = { ...EMPTY_TALLY };
-	let skippedPaused = false;
-	for (
-		let cursor = windowStart;
-		!isAfter(cursor, windowEnd);
-		cursor = addDays(cursor, 1)
-	) {
-		if (isPausedOn(cursor, closedPauses)) skippedPaused = true;
-		addToTally(tally, classify(cursor));
-	}
+	const { tally, skippedPaused } = tallyWindow(
+		classify,
+		habit,
+		windowStart,
+		windowEnd,
+	);
 
 	return {
 		completed: tally.done,
@@ -166,6 +159,66 @@ export function calculateCompletionRate({
 		fraction: tally.due === 0 ? null : tally.done / tally.due,
 		skippedPaused,
 	};
+}
+
+/** Adds every day of `start`–`end` to one tally; `skippedPaused` says a pause fell inside. */
+function tallyWindow(
+	classify: (date: Date) => HabitDayCell,
+	habit: Habit,
+	start: Date,
+	end: Date,
+) {
+	const tally = { ...EMPTY_TALLY };
+	let skippedPaused = false;
+	for (let cursor = start; !isAfter(cursor, end); cursor = addDays(cursor, 1)) {
+		if (isPausedOn(cursor, habit.pauses)) skippedPaused = true;
+		addToTally(tally, classify(cursor));
+	}
+	return { tally, skippedPaused };
+}
+
+/**
+ * The fewest due days the earlier window needs before the 90-day rate is
+ * compared with it: a tile that says "+4 pts" over two days would be noise.
+ */
+const MIN_DUE_FOR_DELTA = 7;
+
+/**
+ * The 90-day rate minus the rate over the 90 days before it, in whole points
+ * (D1's "+4 pts"); null when there is nothing fair to compare: a habit younger
+ * than 90 days, an earlier window with fewer than 7 due days, no rate yet, or an
+ * archived habit (its tile says "until <date>" instead). Both windows use the one
+ * rate rule, so frozen days and bonus logs leave both sides (D14).
+ */
+export function completionRateDelta({
+	habit,
+	entries,
+	frozenDates,
+	today,
+}: History): number | null {
+	if (habit.archivedAt) return null;
+	const created = startOfDay(habit.createdAt);
+	const currentEnd = startOfDay(today);
+	const currentStart = subDays(currentEnd, COMPLETION_RATE_WINDOW_DAYS - 1);
+	const previousEnd = subDays(currentStart, 1);
+	if (isBefore(previousEnd, created)) return null;
+	const classify = habitDayClassifier({ habit, entries, frozenDates, today });
+	const previousStart = max([
+		subDays(previousEnd, COMPLETION_RATE_WINDOW_DAYS - 1),
+		created,
+	]);
+	const previous = tallyWindow(
+		classify,
+		habit,
+		previousStart,
+		previousEnd,
+	).tally;
+	const current = tallyWindow(classify, habit, currentStart, currentEnd).tally;
+	if (previous.due < MIN_DUE_FOR_DELTA || current.due === 0) return null;
+	const percent = (done: number, due: number) => Math.round((done / due) * 100);
+	return (
+		percent(current.done, current.due) - percent(previous.done, previous.due)
+	);
 }
 
 /**
@@ -184,11 +237,15 @@ export type HeatmapDayStatus =
 	/** The unfrozen missed day that reset a streak with no freezes left (HAB-20). */
 	| "reset"
 	| "pending"
-	| "future";
+	| "future"
+	/** Before the habit was created: drawn dashed, "before start" (D3). */
+	| "before-start";
 
 export type HeatmapDay = {
 	date: Date;
 	status: HeatmapDayStatus;
+	/** The cell is today — it is ringed whatever its status. */
+	isToday: boolean;
 	/** Shading for a `logged` day — how much of the target it reached. */
 	level?: HeatmapLevel;
 	/** Past and today are the entry point into retro logging (HAB-10); future and pre-creation days aren't. */
@@ -230,6 +287,12 @@ export function buildHeatmapWeeks(
 	);
 
 	function dayFor(date: Date): HeatmapDay {
+		const isToday = isSameDay(date, todayStart);
+		const day = dayStatusFor(date);
+		return { ...day, isToday };
+	}
+
+	function dayStatusFor(date: Date): Omit<HeatmapDay, "isToday"> {
 		const dateString = toDayKey(date);
 		const entry = entriesByDate.get(dateString);
 		const isFuture = isAfter(date, todayStart);
@@ -258,7 +321,8 @@ export function buildHeatmapWeeks(
 		if (!beforeCreation && isPausedOn(date, pauses)) {
 			return { date, status: "paused", selectable };
 		}
-		if (beforeCreation || !strategy.wasScheduledOn(date, context)) {
+		if (beforeCreation) return { date, status: "before-start", selectable };
+		if (!strategy.wasScheduledOn(date, context)) {
 			return { date, status: "not-scheduled", selectable };
 		}
 		if (isSameDay(date, todayStart)) {
@@ -277,35 +341,77 @@ export function buildHeatmapWeeks(
 	);
 }
 
-/**
- * One line of Habit Detail's "Recent entries": a day with a log, a note, or
- * both. A note on a day that wasn't logged (HAB-10) still gets its own line —
- * otherwise it would only ever be visible from inside the Retro log sheet.
- */
-export type RecentEntry = {
+export type HistoryKind =
+	| "done"
+	/** A quantity day logged below its target. */
+	| "partial"
+	| "missed"
+	| "frozen"
+	/** Logged on a day that was not due (D11): shown, tagged "not counted". */
+	| "bonus"
+	/** A day with a note and nothing else to say. */
+	| "noted";
+
+/** One line of Habit Detail's history (D2). */
+export type HistoryRow = {
 	/** "yyyy-MM-dd". */
 	date: string;
-	entry: Entry | null;
+	kind: HistoryKind;
+	/** The logged amount (a quantity habit's bonus or partial day), when there is one. */
+	value: number | null;
 	note: string | null;
 };
 
-/** This habit's logged and/or noted days, newest first — Habit Detail's "Recent entries". */
-export function recentEntries(
-	entries: readonly Entry[],
+/** How many lines History lists: the latest days that have something to say. */
+const HISTORY_LIMIT = 10;
+
+/**
+ * Habit Detail's History (D2): the latest days that were done, missed, frozen or
+ * an off-schedule bonus — and a day that carries a note — newest first. A day
+ * that was not due, a paused day and today while still open say nothing. A habit
+ * nothing has ever been logged for lists no missed days: it has not started
+ * (D3). Every answer comes from the one day classifier, so History can never
+ * disagree with the grid or the rate about what a day was.
+ */
+export function habitHistoryRows(
+	history: History,
 	notes: readonly EntryNote[],
-	limit = 10,
-): RecentEntry[] {
-	const byDate = new Map<string, RecentEntry>();
-	for (const entry of entries) {
-		byDate.set(entry.date, { date: entry.date, entry, note: null });
+	limit = HISTORY_LIMIT,
+): HistoryRow[] {
+	const { habit, entries, today } = history;
+	const classify = habitDayClassifier(history);
+	const noteByDate = new Map(notes.map(({ date, note }) => [date, note]));
+	const entryByDate = new Map(entries.map((entry) => [entry.date, entry]));
+	const started = entries.length > 0;
+	const first = startOfDay(habit.createdAt);
+	const rows: HistoryRow[] = [];
+
+	for (
+		let cursor = startOfDay(today);
+		!isBefore(cursor, first) && rows.length < limit;
+		cursor = subDays(cursor, 1)
+	) {
+		const date = toDayKey(cursor);
+		const cell = classify(cursor);
+		const note = noteByDate.get(date) ?? null;
+		const value = entryByDate.get(date)?.value ?? null;
+		const kind: HistoryKind | null =
+			cell.status === "done"
+				? "done"
+				: cell.status === "partial"
+					? "partial"
+					: cell.status === "bonus"
+						? "bonus"
+						: cell.status === "frozen"
+							? "frozen"
+							: cell.status === "missed" && started
+								? "missed"
+								: note
+									? "noted"
+									: null;
+		if (kind) rows.push({ date, kind, value, note });
 	}
-	for (const { date, note } of notes) {
-		const existing = byDate.get(date);
-		byDate.set(date, { date, entry: existing?.entry ?? null, note });
-	}
-	return [...byDate.values()]
-		.sort((a, b) => b.date.localeCompare(a.date))
-		.slice(0, limit);
+	return rows;
 }
 
 export type StreakReset = {

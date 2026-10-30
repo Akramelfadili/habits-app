@@ -54,6 +54,8 @@ type ListItemProps = {
 	lifted?: boolean;
 	/** Overrides the default accessibility label (the title). */
 	accessibilityLabel?: string;
+	/** The row does something that cannot be undone ("Delete habit"): its title reads in the danger ink. */
+	destructive?: boolean;
 	/** What a tap does, for VoiceOver ("Opens details."). */
 	accessibilityHint?: string;
 	/** The row's button, for a sheet that starts the screen reader's focus on it (`useInitialFocus`). */
@@ -78,11 +80,13 @@ export function ListItem({
 	dimmed = false,
 	lifted = false,
 	accessibilityLabel,
+	destructive = false,
 	accessibilityHint,
 	buttonRef,
 	accessibilityActions,
 }: ListItemProps) {
 	const { colors, scheme, elevation, opacity } = useTheme();
+	const titleColor = destructive ? colors.dangerBg : colors.ink;
 	const largeText = useAccessibilityTextSize();
 
 	const chevron = navigable ? (
@@ -146,7 +150,7 @@ export function ListItem({
 									style={[
 										styles.title,
 										styles.shrinkable,
-										{ color: colors.ink },
+										{ color: titleColor },
 									]}
 								>
 									{title}
@@ -156,7 +160,7 @@ export function ListItem({
 						) : (
 							<Text
 								numberOfLines={largeText ? undefined : TITLE_LINES}
-								style={[styles.title, { color: colors.ink }]}
+								style={[styles.title, { color: titleColor }]}
 							>
 								{title}
 							</Text>

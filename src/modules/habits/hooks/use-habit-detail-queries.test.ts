@@ -69,12 +69,21 @@ describe("useHabitDetailQueries", () => {
 		const { result } = await renderHook(() => useHabitDetailQueries(1));
 
 		expect(result.current?.currentStreak).toBe(3); // 20 frozen + 21 + 22
-		expect(result.current?.recentEntries.map((e) => e.date)).toEqual([
-			"2026-09-22",
-			"2026-09-21",
+		expect(result.current?.history.map((row) => [row.date, row.kind])).toEqual([
+			["2026-09-22", "done"],
+			["2026-09-21", "done"],
+			["2026-09-20", "frozen"],
+			// 19 Sep and before: nothing was logged, so missed.
+			["2026-09-19", "missed"],
+			["2026-09-18", "missed"],
+			["2026-09-17", "missed"],
+			["2026-09-16", "missed"],
+			["2026-09-15", "missed"],
+			["2026-09-14", "missed"],
+			["2026-09-13", "missed"],
 		]);
 		expect(result.current?.hasEntries).toBe(true);
-		expect(result.current?.loggedDays).toBe(2); // habit 2's entry isn't counted
+		expect(result.current?.logCount).toBe(2); // habit 2's entry isn't counted
 		const statuses = result.current?.heatmapWeeks.flat().map((d) => d.status);
 		expect(statuses?.filter((s) => s === "frozen")).toHaveLength(1);
 	});
@@ -84,13 +93,16 @@ describe("useHabitDetailQueries", () => {
 		expect(result.current).toMatchObject({
 			currentStreak: 0,
 			longestStreak: { days: 0, endedOn: null },
-			recentEntries: [],
+			history: [],
 			hasEntries: false,
-			loggedDays: 0,
+			logCount: 0,
+			rateDelta: null,
+			restoredToday: false,
+			freshStart: false,
 		});
 	});
 
-	it("merges this habit's notes into recent entries — including note-only days — but not other habits'", async () => {
+	it("merges this habit's notes into its history — including note-only days — but not other habits'", async () => {
 		mockEntries = [entry(1, "2026-09-22")];
 		mockNotes = [
 			{ habitId: 1, date: "2026-09-22", note: "Easy day" },
@@ -98,16 +110,49 @@ describe("useHabitDetailQueries", () => {
 			{ habitId: 2, date: "2026-09-20", note: "Not mine" },
 		];
 		const { result } = await renderHook(() => useHabitDetailQueries(1));
-		expect(
-			result.current?.recentEntries.map((row) => [
-				row.date,
-				row.entry !== null,
-				row.note,
-			]),
-		).toEqual([
-			["2026-09-22", true, "Easy day"],
-			["2026-09-21", false, "Skipped, sick"],
+		const rows = result.current?.history.slice(0, 2);
+		expect(rows?.map((row) => [row.date, row.kind, row.note])).toEqual([
+			["2026-09-22", "done", "Easy day"],
+			["2026-09-21", "missed", "Skipped, sick"],
 		]);
+		expect(result.current?.history.some((row) => row.note === "Not mine")).toBe(
+			false,
+		);
+	});
+
+	it("restored today: the one-time banner flag, and a fresh start until something is logged since", async () => {
+		const restored = makeHabit({
+			id: 1,
+			frequency: { type: "daily" },
+			createdAt: new Date(2026, 8, 1),
+			pauses: [{ from: "2026-09-10", to: "2026-09-22" }],
+		});
+		mockHabits = [restored, otherHabit];
+		mockEntries = [entry(1, "2026-09-09")];
+		const { result, rerender } = await renderHook(() =>
+			useHabitDetailQueries(1),
+		);
+		expect(result.current).toMatchObject({
+			restoredToday: true,
+			freshStart: true,
+		});
+
+		mockEntries = [...mockEntries, entry(1, "2026-09-23")];
+		await rerender({});
+		expect(result.current?.freshStart).toBe(false);
+	});
+
+	it("restored yesterday is not 'restored today'", async () => {
+		mockHabits = [
+			makeHabit({
+				id: 1,
+				createdAt: new Date(2026, 8, 1),
+				pauses: [{ from: "2026-09-10", to: "2026-09-21" }],
+			}),
+			otherHabit,
+		];
+		const { result } = await renderHook(() => useHabitDetailQueries(1));
+		expect(result.current?.restoredToday).toBe(false);
 	});
 
 	it("a retro-logged past day updates the heatmap and 90-day rate on the next render (HAB-10)", async () => {

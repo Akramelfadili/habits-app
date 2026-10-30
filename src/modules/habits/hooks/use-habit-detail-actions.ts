@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { failureMessage, UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import {
@@ -8,12 +9,14 @@ import {
 } from "../services/habit-lifecycle-service";
 
 /**
- * Habit Detail's lifecycle writes (HAB-13): one-tap Archive, Delete (only
- * offered here, behind a confirmation), and Restore — which backs the
- * archive toast's Undo after Detail has already closed, and is itself
- * instant with its own Undo (`undoRestoreHabit`, HAB-20).
+ * Habit Detail's lifecycle writes (HAB-40, HAB-45): Archive (behind its sheet),
+ * Delete (behind its own, where a failure is shown in the sheet — DC4 — and not
+ * as a toast), and Restore, which is instant and has its own Undo
+ * (`undoRestoreHabit`, HAB-20). Archive also backs the archive toast's Undo,
+ * after Detail has closed, through Restore.
  */
 export function useHabitDetailActions() {
+	const [deleteFailed, setDeleteFailed] = useState(false);
 	const archive = useAsyncAction(archiveHabit, {
 		scope: "habit-detail",
 		failure: failureMessage("archive", "this habit"),
@@ -21,6 +24,8 @@ export function useHabitDetailActions() {
 	const remove = useAsyncAction(deleteHabit, {
 		scope: "habit-detail",
 		failure: failureMessage("delete", "this habit"),
+		// The sheet says it (DC4): nothing was changed, try again.
+		onFailure: () => setDeleteFailed(true),
 	});
 	const restore = useAsyncAction(restoreHabit, {
 		scope: "habit-detail",
@@ -36,8 +41,14 @@ export function useHabitDetailActions() {
 		/** For a screen with no ToastHost (the Edit modal) that shows the failure inline itself. */
 		archiveHabitOrThrow: archive.execute,
 		isArchiving: archive.isLoading,
-		deleteHabit: remove.run,
+		/** Clears an earlier failure first, so the banner goes while the next try runs. */
+		deleteHabit: (habitId: number) => {
+			setDeleteFailed(false);
+			return remove.run(habitId);
+		},
 		isDeleting: remove.isLoading,
+		deleteFailed,
+		clearDeleteFailure: () => setDeleteFailed(false),
 		restoreHabit: restore.run,
 		isRestoring: restore.isLoading,
 		undoRestoreHabit: undoRestore.run,

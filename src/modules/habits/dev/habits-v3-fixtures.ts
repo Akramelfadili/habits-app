@@ -191,8 +191,8 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 
 	// Meditate: 13 days in a row up to yesterday; Wed 14 Oct is missed in the reset scenario only.
 	if (scenario === "habits-v3-reset") {
-		for (let daysAgo = 1; daysAgo <= 8; daysAgo++) add(4, ago(daysAgo));
-		for (let daysAgo = 10; daysAgo <= 22; daysAgo++) add(4, ago(daysAgo));
+		addRun(4, 1, 8);
+		addRun(4, 10, 80);
 	} else {
 		addRun(4, 1, 13);
 	}

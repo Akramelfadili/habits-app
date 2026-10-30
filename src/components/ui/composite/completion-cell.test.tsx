@@ -118,16 +118,20 @@ describe("CompletionCell", () => {
 		});
 	});
 
-	it("draws a paused day dotted and a streak reset with an amber outline", async () => {
+	it("draws a paused day hatched and a streak reset with an amber outline", async () => {
 		await render(
 			<>
 				<CompletionCell state={{ kind: "paused" }} size={18} />
 				<CompletionCell state={{ kind: "reset" }} size={18} />
 			</>,
 		);
-		expect(screen.getByTestId("completion-cell-paused")).toHaveStyle({
-			borderStyle: "dotted",
-		});
+		const paused = screen.getByTestId("completion-cell-paused");
+		expect(paused).toHaveStyle({ backgroundColor: "transparent" });
+		// Diagonal lines, clipped to the rounded square, in the outline colour (D4).
+		expect(paused).toHaveStyle({ overflow: "hidden" });
+		const lines = screen.getByTestId("completion-cell-hatch").children;
+		expect(lines.length).toBeGreaterThan(5);
+		expect(screen.queryByTestId("completion-cell-hatch")).toBeTruthy();
 		expect(screen.getByTestId("completion-cell-reset")).toHaveStyle({
 			backgroundColor: light.track,
 			borderColor: light.warnInk,

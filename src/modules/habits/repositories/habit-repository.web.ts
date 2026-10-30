@@ -9,7 +9,10 @@ import {
 	habitFixturesFor,
 	resolveFixtureScenario,
 } from "../dev/habit-fixtures";
-import { assertWritesAllowed } from "../dev/write-failure-fixtures";
+import {
+	assertWritesAllowed,
+	holdWriteIfSlow,
+} from "../dev/write-failure-fixtures";
 import type {
 	Category,
 	CreateHabitInput,
@@ -305,6 +308,8 @@ export function reassignHabitsToCategory(fromId: number, to: Category): void {
 
 /** Web has no related rows to clear — the fixture entry stores just ignore an unknown habit id. */
 export async function deleteHabitAndHistory(id: number): Promise<void> {
+	assertWritesAllowed();
+	await holdWriteIfSlow();
 	setHabits(getHabits().filter((h) => h.id !== id));
 }
 

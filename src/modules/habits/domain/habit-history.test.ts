@@ -6,10 +6,11 @@ import {
 	buildHeatmapWeeks,
 	calculateCompletionRate,
 	calculateLongestStreak,
+	completionRateDelta,
 	currentStreakAsOf,
 	HEATMAP_WEEKS,
+	habitHistoryRows,
 	heatmapLevelFor,
-	recentEntries,
 	streakResetInfo,
 } from "./habit-history";
 
@@ -275,7 +276,7 @@ describe("buildHeatmapWeeks", () => {
 	const find = (grid: ReturnType<typeof weeks>, daysAgo: number) =>
 		grid.flat().find((day) => isSameDay(day.date, subDays(today, daysAgo)));
 
-	it("is 10 Mon→Sun columns ending with the current week", () => {
+	it("is 5 Mon→Sun weeks ending with the current one (D1)", () => {
 		const grid = weeks({});
 		expect(grid).toHaveLength(HEATMAP_WEEKS);
 		for (const column of grid) expect(column).toHaveLength(7);
@@ -310,60 +311,248 @@ describe("buildHeatmapWeeks", () => {
 		expect(find(grid, 2)?.status).toBe("missed");
 	});
 
-	it("renders a brand-new habit with no logs as all blank, not an error", () => {
+	it("marks today and only today", () => {
+		const grid = weeks({});
+		const ringed = grid.flat().filter((day) => day.isToday);
+		expect(ringed).toHaveLength(1);
+		expect(isSameDay(ringed[0].date, today)).toBe(true);
+	});
+
+	it("renders a brand-new habit with no logs as 'before start' up to today, not an error (D3)", () => {
 		const brandNew = makeHabit({ createdAt: today });
 		const grid = weeks({ habit: brandNew });
 		const statuses = new Set(grid.flat().map((day) => day.status));
-		expect([...statuses].sort()).toEqual([
-			"future",
-			"not-scheduled",
-			"pending",
-		]);
+		expect([...statuses].sort()).toEqual(["before-start", "future", "pending"]);
+		expect(find(grid, 1)?.status).toBe("before-start");
 		// Days before the habit existed aren't a way into retro logging.
 		expect(find(grid, 1)?.selectable).toBe(false);
 		expect(find(grid, 0)?.selectable).toBe(true);
 	});
 });
 
-describe("recentEntries", () => {
+describe("habitHistoryRows (D2)", () => {
 	const note = (daysAgo: number, text: string) => ({
 		habitId: 1,
 		date: dayString(daysAgo),
 		note: text,
 	});
-
-	it("returns newest first, capped", () => {
-		const entries = [entry(5), entry(1), entry(3), entry(2)];
-		expect(recentEntries(entries, [], 3).map((e) => e.date)).toEqual([
-			dayString(1),
-			dayString(2),
-			dayString(3),
-		]);
+	const history = (
+		overrides: Partial<Parameters<typeof habitHistoryRows>[0]> = {},
+	) => ({
+		habit: daily,
+		entries: [] as Entry[],
+		frozenDates: noFreezes,
+		today,
+		...overrides,
 	});
+	const kinds = (rows: ReturnType<typeof habitHistoryRows>) =>
+		rows.map((row) => [row.date, row.kind]);
 
-	it("attaches a day's note to its entry", () => {
-		expect(recentEntries([entry(1, 8)], [note(1, "Easy day")])).toEqual([
-			{ date: dayString(1), entry: entry(1, 8), note: "Easy day" },
-		]);
-	});
-
-	it("lists a noted day with no entry too, in date order, so a note is never hidden", () => {
-		const result = recentEntries(
-			[entry(1), entry(3)],
-			[note(2, "Sick, skipped it")],
+	it("lists done, missed and frozen days, newest first", () => {
+		const rows = habitHistoryRows(
+			history({
+				entries: [entry(1), entry(4)],
+				frozenDates: new Set([dayString(2)]),
+			}),
+			[],
+			4,
 		);
-		expect(
-			result.map((row) => [row.date, row.entry !== null, row.note]),
-		).toEqual([
-			[dayString(1), true, null],
-			[dayString(2), false, "Sick, skipped it"],
-			[dayString(3), true, null],
+		expect(kinds(rows)).toEqual([
+			[dayString(1), "done"],
+			[dayString(2), "frozen"],
+			[dayString(3), "missed"],
+			[dayString(4), "done"],
 		]);
 	});
 
-	it("counts note-only days toward the cap", () => {
-		const result = recentEntries([entry(3)], [note(1, "a"), note(2, "b")], 2);
-		expect(result.map((row) => row.date)).toEqual([dayString(1), dayString(2)]);
+	it("says nothing about today while it is open, and nothing about a day not due", () => {
+		const weekdays = makeHabit({
+			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			createdAt: longAgo,
+		});
+		// Wed 23 Sep: today. 20 Sep (Sun) and 19 Sep (Sat) are not due.
+		const rows = habitHistoryRows(
+			history({ habit: weekdays, entries: [entry(4)] }),
+			[],
+			4,
+		);
+		expect(rows.map((row) => row.date)).not.toContain(dayString(0));
+		expect(rows.map((row) => row.date)).not.toContain(dayString(3));
+	});
+
+	it("a habit nothing has ever been logged for lists no missed days — it has not started (D3)", () => {
+		expect(habitHistoryRows(history(), [])).toEqual([]);
+	});
+
+	it("tags an off-schedule log a bonus, with its amount", () => {
+		const weekdays = makeHabit({
+			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			createdAt: longAgo,
+		});
+		// 20 Sep 2026 was a Sunday, three days ago.
+		const rows = habitHistoryRows(
+			history({ habit: weekdays, entries: [entry(3, 5), entry(4)] }),
+			[],
+			10,
+		);
+		expect(rows.find((row) => row.date === dayString(3))).toEqual({
+			date: dayString(3),
+			kind: "bonus",
+			value: 5,
+			note: null,
+		});
+	});
+
+	it("a quantity day below its target is partial", () => {
+		const quantity = makeHabit({
+			targetType: "quantity",
+			targetAmount: 8,
+			createdAt: longAgo,
+		});
+		const rows = habitHistoryRows(
+			history({ habit: quantity, entries: [entry(1, 3)] }),
+			[],
+			1,
+		);
+		expect(rows[0]).toMatchObject({ kind: "partial", value: 3 });
+	});
+
+	it("attaches a day's note to its row", () => {
+		const [row] = habitHistoryRows(
+			history({ entries: [entry(1)] }),
+			[note(1, "Easy day")],
+			1,
+		);
+		expect(row).toMatchObject({ kind: "done", note: "Easy day" });
+	});
+
+	it("lists a noted day that would otherwise be silent, so a note is never hidden", () => {
+		const weekdays = makeHabit({
+			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			createdAt: longAgo,
+		});
+		// 20 Sep 2026 was a Sunday: not due, nothing logged — only its note speaks.
+		const rows = habitHistoryRows(
+			history({ habit: weekdays, entries: [entry(4)] }),
+			[note(3, "Rest day")],
+			10,
+		);
+		expect(rows.find((row) => row.date === dayString(3))).toMatchObject({
+			kind: "noted",
+			note: "Rest day",
+		});
+	});
+
+	it("caps at the limit", () => {
+		const rows = habitHistoryRows(history({ entries: [entry(30)] }), [], 3);
+		expect(rows).toHaveLength(3);
+	});
+
+	it("never lists a paused day as missed (HAB-20)", () => {
+		const restored = makeHabit({
+			createdAt: longAgo,
+			pauses: [{ from: dayString(6), to: dayString(2) }],
+		});
+		const rows = habitHistoryRows(
+			history({ habit: restored, entries: [entry(7), entry(0)] }),
+			[],
+			8,
+		);
+		for (const daysAgo of [2, 3, 4, 5, 6]) {
+			expect(rows.map((row) => row.date)).not.toContain(dayString(daysAgo));
+		}
+	});
+});
+
+describe("completionRateDelta (D1's '+N pts')", () => {
+	const young = (daysOld: number) =>
+		makeHabit({
+			createdAt: subDays(today, daysOld),
+			frequency: { type: "daily" },
+		});
+	const logAll = (from: number, to: number, except: number[] = []) =>
+		Array.from({ length: from - to + 1 }, (_, index) => to + index)
+			.filter((daysAgo) => !except.includes(daysAgo))
+			.map((daysAgo) => entry(daysAgo));
+
+	it("is the 90-day rate minus the rate over the 90 days before, in whole points", () => {
+		// Days 0–89: every day. Days 90–179: every other day → 50%.
+		const entries = [
+			...logAll(89, 0),
+			...logAll(179, 90).filter((e) => Number(e.date.slice(-2)) % 2 === 0),
+		];
+		const delta = completionRateDelta({
+			habit: young(200),
+			entries,
+			frozenDates: noFreezes,
+			today,
+		});
+		expect(delta).not.toBeNull();
+		expect(delta as number).toBeGreaterThan(40);
+	});
+
+	it("is negative when the rate has fallen", () => {
+		const entries = [
+			...logAll(179, 90),
+			...logAll(89, 0).filter((e) => Number(e.date.slice(-2)) % 2 === 0),
+		];
+		expect(
+			completionRateDelta({
+				habit: young(200),
+				entries,
+				frozenDates: noFreezes,
+				today,
+			}) as number,
+		).toBeLessThan(0);
+	});
+
+	it("is null for a habit younger than 90 days: there is nothing to compare", () => {
+		expect(
+			completionRateDelta({
+				habit: young(60),
+				entries: logAll(59, 0),
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBeNull();
+	});
+
+	it("is null when the earlier window has fewer than seven due days", () => {
+		expect(
+			completionRateDelta({
+				habit: young(94),
+				entries: logAll(93, 0),
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBeNull();
+	});
+
+	it("is null for an archived habit: its tile says 'until <date>' instead", () => {
+		expect(
+			completionRateDelta({
+				habit: makeHabit({
+					createdAt: subDays(today, 200),
+					archivedAt: subDays(today, 5),
+				}),
+				entries: logAll(199, 6),
+				frozenDates: noFreezes,
+				today,
+			}),
+		).toBeNull();
+	});
+
+	it("leaves frozen days out of both windows (D14)", () => {
+		const entries = logAll(179, 0, [100, 20]);
+		const frozen = new Set([dayString(100), dayString(20)]);
+		expect(
+			completionRateDelta({
+				habit: young(200),
+				entries,
+				frozenDates: frozen,
+				today,
+			}),
+		).toBe(0);
 	});
 });
 

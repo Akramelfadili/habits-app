@@ -618,6 +618,155 @@ export const habitsCopy = {
 } as const;
 
 /**
+ * Habit Detail (HAB-40, V3-4a) and its two confirm sheets (HAB-45): the tiles,
+ * the five-week grid, the history rows, the archived and restored banners and
+ * the delete and archive sheets, with the VoiceOver wording of 08.3. A Break
+ * habit says resisting, resisted and slipped — never failed (D8, D7). No time
+ * ever appears in the history (per-entry timestamps may not exist).
+ */
+export const detailCopy = {
+	edit: "Edit",
+	/** The tiles. Build habits say streak; Break habits say resisting. */
+	stats: {
+		streak: "Streak",
+		resisting: "Resisting",
+		longest: "Longest",
+		rate: "90-day rate",
+		freezes: "Freezes",
+		inARow: "in a row",
+		nightsInARow: "nights in a row",
+		days: "days",
+		nights: "nights",
+		/** D3: nothing has been logged yet. */
+		startsWithFirstLog: "starts with your first log",
+		noneYet: "none yet",
+		afterSevenDays: "after 7 days",
+		/** D4: archived — the streak is paused, not zero. */
+		paused: "paused",
+		untilArchive: (date: string) => `until ${date}`,
+		/** D5: restored — a fresh start, and the rate leaves the paused days out. */
+		freshStart: "fresh start",
+		pausedDaysExcluded: "paused days excluded",
+		resisted: "resisted",
+		/** D6: the freezes tile. */
+		freezesLeft: (count: number) =>
+			`${count} ${count === 1 ? "freeze" : "freezes"} left`,
+		delta: (points: number) =>
+			points === 0
+				? "no change"
+				: `${points > 0 ? "+" : "−"}${Math.abs(points)} pts`,
+		/** The rate's fallback line when there is nothing to compare it with. */
+		ofDays: (done: number, due: number) =>
+			`${done} of ${due} ${due === 1 ? "day" : "days"}`,
+	},
+	grid: {
+		title: "Last 5 weeks",
+		/** The right of the title: "Tue, Thu", "Daily", or "Created today". */
+		createdToday: "Created today",
+		daily: "Daily",
+		legend: {
+			done: "Done",
+			resisted: "Resisted",
+			missed: "Missed",
+			slipped: "Slipped",
+			frozen: "Frozen",
+			bonus: "Bonus",
+			notDue: "Not due",
+			paused: "Paused",
+			reset: "Reset",
+			beforeStart: "Before start",
+		},
+		/** 08.3: "Week of 19 October: Monday bonus, Tuesday done, Thursday not logged yet. Button. Opens Edit this day." */
+		weekLabel: (start: string, days: string) => `Week of ${start}: ${days}`,
+		weekHint: "Opens Edit this day.",
+		status: {
+			done: "done",
+			resisted: "resisted",
+			partial: "partial",
+			missed: "missed",
+			slipped: "slipped",
+			frozen: "frozen",
+			bonus: "bonus",
+			notDue: "not due",
+			paused: "paused",
+			reset: "missed, streak reset",
+			beforeStart: "before start",
+			notLoggedYet: "not logged yet",
+			upcoming: "upcoming",
+		},
+		/** D6: shown only in the month the streak reset. */
+		resetNotice: (date: string) =>
+			`Streak reset on ${date} — no freezes were left.`,
+	},
+	reminders: {
+		header: "Reminders",
+		label: "Reminders",
+		none: "None",
+		paused: "Paused",
+	},
+	history: {
+		header: "History",
+		empty: "No logs yet. Tick it on Today to start.",
+		done: "Done",
+		resisted: "Resisted",
+		missed: "Missed",
+		slipped: "Slipped · not logged",
+		frozen: "Frozen · streak kept",
+		bonus: "off-schedule, not counted",
+		bonusTag: "Bonus",
+		partial: (value: number, target: number, unit: string | null) =>
+			`${value} of ${target}${unit ? ` ${unit}` : ""}`,
+		notLogged: "Not logged",
+	},
+	archive: {
+		row: "Archive habit",
+		rowBody: "Hide from Today, keep history",
+	},
+	delete: {
+		row: "Delete habit",
+	},
+	banner: {
+		archivedTitle: (date: string) => `Archived on ${date}`,
+		archivedBody:
+			"Hidden from Today. Paused days stay paused and never count as missed.",
+		restore: "Restore",
+		restoredTitle: "Restored today",
+		restoredBody:
+			"Your streak starts fresh with the next log. Paused days stay paused.",
+	},
+	/** DC1–DC5: the delete and archive confirms. */
+	confirm: {
+		cancel: "Cancel",
+		deleteTitle: (habit: string) => `Delete ${habit}?`,
+		deleteBody: (habit: string, logs: number, canArchive: boolean) => {
+			const what =
+				logs === 0
+					? `Deletes ${habit}. It has no logs yet.`
+					: `Deletes ${habit} and its ${logs} ${logs === 1 ? "log" : "logs"}.`;
+			return canArchive
+				? `${what} Archiving keeps them and can be undone.`
+				: `${what} This can’t be undone.`;
+		},
+		archiveInstead: "Archive instead",
+		archiveInsteadBody: "Hide from Today, keep history",
+		deletePermanently: "Delete permanently",
+		deleteHint: "One tap deletes. This can’t be undone.",
+		deleting: "Deleting…",
+		deletingHint: "Keep the app open — this takes a moment.",
+		deleteFailedTitle: "Couldn’t delete",
+		deleteFailedBody: "Nothing was changed. Try again.",
+		archiveTitle: (habit: string) => `Archive ${habit}?`,
+		archiveBody:
+			"It leaves Today and its reminders pause. History and streaks are kept — restore it any time from Habits › Archived.",
+		archiveConfirm: "Archive habit",
+	},
+	notFound: {
+		title: "Habit not found",
+		body: "It may have been deleted.",
+	},
+} as const;
+
+/**
  * Shows `spec` as the app's one toast, with an Undo when `undo` is given.
  * Copy and tone come from the catalogue, so a screen never writes its own.
  */

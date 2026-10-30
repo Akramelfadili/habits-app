@@ -1,120 +1,73 @@
-import { addDays, format, parseISO } from "date-fns";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { ArchivedBanner } from "@/components/ui/composite/archived-banner";
+import {
+	type NativeScrollEvent,
+	type NativeSyntheticEvent,
+	ScrollView,
+	StyleSheet,
+	View,
+} from "react-native";
+import { Banner } from "@/components/ui/composite/banner";
 import { Container } from "@/components/ui/composite/container";
 import { EmptyState } from "@/components/ui/composite/empty-state";
-import { headerActionOptions } from "@/components/ui/composite/header-buttons";
 import { ListItem } from "@/components/ui/composite/list-item";
-import { StatCard } from "@/components/ui/composite/stat-card";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
-import { Button } from "@/components/ui/primitives/button";
-import { Caption } from "@/components/ui/primitives/caption";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { showToast } from "@/store/toast-store";
-import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
+import { SectionLabel } from "@/components/ui/primitives/section-label";
+import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { categorySymbol } from "../components/category-symbol";
-import { DeleteHabitSheet } from "../components/delete-habit-sheet";
+import { formatDayMonth } from "@/utils/format";
+import { ArchiveHabitSheet } from "../components/detail/archive-habit-sheet";
+import { DeleteHabitSheet } from "../components/detail/delete-habit-sheet";
+import { DetailActions } from "../components/detail/detail-actions";
+import { DetailHeader } from "../components/detail/detail-header";
+import { DetailHistory } from "../components/detail/detail-history";
+import { WeekHistoryCard } from "../components/detail/week-history-card";
 import { EditDaySheet } from "../components/edit-day-sheet";
-import { HabitEntryRow } from "../components/habit-entry-row";
-import { HabitHeatmap } from "../components/habit-heatmap";
+import { ProgressStatTiles } from "../components/progress/progress-stat-tiles";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitDetailQueries } from "../hooks/use-habit-detail-queries";
 import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
+import { detailCopy, messages, showMessage } from "../messages";
 import {
-	archivedBannerDetail,
-	archivedBannerTitle,
-	completionRateCaption,
-	completionRateLabel,
-	completionRateValue,
-	currentStreakTile,
-	habitSubtitle,
-	heatmapRangeLabelFor,
-	legendFrozenLabel,
-	longestStreakCaption,
-	restoredToastMessage,
-	streakResetNote,
-} from "../presenters/habit-detail-helpers";
-import { remindersSummary } from "../presenters/reminders-helpers";
+	detailEyebrow,
+	detailHeaderLabel,
+	detailRemindersValue,
+	detailTiles,
+	gridLegend,
+	gridRangeLabel,
+	historyRowView,
+	resetNotice,
+	weekRows,
+} from "../presenters/habit-detail-presenter";
 
 type HabitDetailScreenProps = {
 	habitId: number;
 };
 
+/** How far the title block scrolls before its name moves into the navigation bar. */
+const TITLE_SCROLLED_AT = 96;
+
 /**
- * Habit Detail (HAB-09): header → streak / longest / 90-day tiles → 10-week
- * heatmap → recent entries, reverse chronological. Tapping a past (or today's)
- * heatmap cell opens the Edit this day sheet for that day (HAB-10). The hub for
- * everything about one habit: Edit in the header, Reminders, then a one-tap
- * Archive above Delete — Delete lives here only, deliberately last and
- * behind a confirmation (HAB-13).
+ * Habit Detail (HAB-40, V3-4a): the header with Edit, the archived or restored
+ * banner, three stat tiles, the last five weeks (each week one tap into Edit
+ * this day), Reminders, History by date, and Archive and Delete last, each
+ * behind its own confirm sheet. Pushed from any tab, so Back names the tab it
+ * came from; the habit's name joins the bar once the title scrolls away.
  */
 export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
-	const { colors, scheme } = useTheme();
+	const { colors } = useTheme();
 	const router = useRouter();
 	const detail = useHabitDetailQueries(habitId);
-	// Heatmap taps land here; a non-null day opens the Edit this day sheet (HAB-10, HAB-34).
-	const [retroLogDate, setRetroLogDate] = useState<Date | null>(null);
-	const retroLogDay = useRetroLogQueries(habitId, retroLogDate);
-	const {
-		archiveHabit,
-		isArchiving,
-		deleteHabit,
-		isDeleting,
-		restoreHabit,
-		isRestoring,
-		undoRestoreHabit,
-	} = useHabitDetailActions();
-	const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+	const [editDate, setEditDate] = useState<Date | null>(null);
+	const editDay = useRetroLogQueries(habitId, editDate);
+	const actions = useHabitDetailActions();
+	const [archiveOpen, setArchiveOpen] = useState(false);
+	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [titleScrolled, setTitleScrolled] = useState(false);
 
-	// Either way the habit leaves wherever Detail was opened from — Today, or
-	// Manage's active list — so go back there rather than stay on it. The
-	// toast is shown on that screen, so the habit doesn't just vanish.
-	// A failed write leaves everything as it was: Detail and any open
-	// confirmation stay put, so retrying is one tap (HAB-23). The hook has
-	// already logged it and shown the error toast.
-	async function handleArchive() {
-		if (!detail) return;
-		const { name } = detail.habit;
-		const result = await archiveHabit(habitId);
-		if (!result.ok) return;
-		setIsConfirmingDelete(false);
-		showToast({
-			message: `Archived '${name}'`,
-			actionLabel: "Undo",
-			onAction: () => restoreHabit(habitId),
-		});
-		router.back();
-	}
-
-	// Instant, no confirmation — it's fully reversible (HAB-20). The user stays
-	// on Detail: the banner collapses in place as the habit goes live again.
-	// Undo puts back the archive date and pauses captured here, not a new
-	// archive dated today.
-	async function handleRestore() {
-		if (!detail) return;
-		const { name, archivedAt, pauses } = detail.habit;
-		const result = await restoreHabit(habitId);
-		if (!result.ok) return;
-		showToast({
-			message: restoredToastMessage(name),
-			actionLabel: "Undo",
-			onAction: () => undoRestoreHabit(habitId, { archivedAt, pauses }),
-		});
-	}
-
-	// Unrecoverable by design (HAB-13), so the toast confirms with no Undo.
-	async function handleDelete() {
-		if (!detail) return;
-		const { name } = detail.habit;
-		const result = await deleteHabit(habitId);
-		if (!result.ok) return;
-		setIsConfirmingDelete(false);
-		showToast({ message: `Deleted '${name}'` });
-		router.back();
-	}
+	const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) =>
+		setTitleScrolled(nativeEvent.contentOffset.y > TITLE_SCROLLED_AT);
 
 	// Still loading: a neutral blank, never a "not found" flash (audit A5-04).
 	if (detail === undefined) {
@@ -131,182 +84,159 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 				<EmptyState
 					icon="questionmark"
-					headline="Habit not found"
-					subtitle="It may have been deleted."
+					headline={detailCopy.notFound.title}
+					subtitle={detailCopy.notFound.body}
 				/>
 			</View>
 		);
 	}
 
-	const {
+	const { habit, today } = detail;
+	const archived = habit.archivedAt !== null;
+
+	// Archive pops Detail to where it was opened from and the toast offers Undo
+	// (DC5). A failed write leaves everything as it was: the sheet stays, the hook
+	// has already shown the error toast, and trying again is one tap.
+	async function handleArchive() {
+		const result = await actions.archiveHabit(habitId);
+		if (!result.ok) return;
+		setArchiveOpen(false);
+		setDeleteOpen(false);
+		showMessage(messages.habitArchived, [habit.name], () =>
+			actions.restoreHabit(habitId),
+		);
+		router.back();
+	}
+
+	// Permanent, so the toast has no Undo (DC3). A failure stays in the sheet (DC4).
+	async function handleDelete() {
+		const result = await actions.deleteHabit(habitId);
+		if (!result.ok) return;
+		setDeleteOpen(false);
+		showMessage(messages.habitDeleted, [habit.name]);
+		router.back();
+	}
+
+	// Instant, no confirmation: it is fully reversible (D5). Undo puts back the
+	// archive date and pauses captured here, not a new archive dated today.
+	async function handleRestore() {
+		const { archivedAt, pauses } = habit;
+		const result = await actions.restoreHabit(habitId);
+		if (!result.ok) return;
+		showMessage(messages.habitRestored, [habit.name], () =>
+			actions.undoRestoreHabit(habitId, { archivedAt, pauses }),
+		);
+	}
+
+	const tiles = detailTiles({
 		habit,
-		currentStreak,
-		longestStreak,
-		completionRate,
-		heatmapWeeks,
-		recentEntries,
-		hasEntries,
-		loggedDays,
-		reminders,
-		freezesRemaining,
-		streakReset,
-		today,
-	} = detail;
-	const lastPause = habit.pauses.at(-1);
-	const restoredOn = lastPause
-		? format(addDays(parseISO(lastPause.to), 1), "yyyy-MM-dd")
-		: null;
-	const currentTile = currentStreakTile(
-		habit,
-		currentStreak,
-		restoredOn !== null && (recentEntries[0]?.date ?? "") >= restoredOn,
-	);
-	const firstDay = heatmapWeeks[0]?.[0]?.date ?? today;
+		currentStreak: detail.currentStreak,
+		longest: detail.longestStreak,
+		rate: detail.completionRate,
+		rateDelta: detail.rateDelta,
+		freezesRemaining: detail.freezesRemaining,
+		streakReset: detail.streakReset,
+		hasEntries: detail.hasEntries,
+		freshStart: detail.freshStart,
+	});
 
 	return (
 		<ScrollView
+			testID="habit-detail-scroll"
 			style={[styles.screen, { backgroundColor: colors.bg }]}
 			contentContainerStyle={styles.content}
+			scrollEventThrottle={32}
+			onScroll={onScroll}
 		>
-			<Stack.Screen
-				options={headerActionOptions({
-					label: "Edit",
-					onPress: () => router.push(`/edit-habit/${habit.id}`),
-				})}
+			<Stack.Screen options={{ title: titleScrolled ? habit.name : "" }} />
+			<DetailHeader
+				eyebrow={detailEyebrow(habit)}
+				title={habit.name}
+				accessibilityLabel={detailHeaderLabel(habit)}
+				onEdit={() => router.push(`/edit-habit/${habit.id}`)}
 			/>
-			<View style={styles.header}>
-				<IconBadge
-					size="large"
-					symbol={categorySymbol(habit.category)}
-					accent={{
-						tint: habitAccentTint(habit.category.hue, scheme),
-						ink: habitAccentInk(habit.category.hue, scheme),
+
+			{archived && habit.archivedAt ? (
+				<Banner
+					tone="neutral"
+					symbol="archivebox"
+					title={detailCopy.banner.archivedTitle(
+						formatDayMonth(habit.archivedAt),
+					)}
+					button={{
+						label: detailCopy.banner.restore,
+						onPress: handleRestore,
+						disabled: actions.isRestoring,
 					}}
-				/>
-				<View style={styles.headerText}>
-					<Text
-						accessibilityRole="header"
-						numberOfLines={2}
-						style={[styles.name, { color: colors.ink }]}
-					>
-						{habit.name}
-					</Text>
-					<Text style={[styles.subtitle, { color: colors.sub }]}>
-						{habitSubtitle(habit, today)}
-					</Text>
+				>
+					{detailCopy.banner.archivedBody}
+				</Banner>
+			) : detail.restoredToday ? (
+				<Banner
+					tone="neutral"
+					symbol="info.circle"
+					title={detailCopy.banner.restoredTitle}
+				>
+					{detailCopy.banner.restoredBody}
+				</Banner>
+			) : null}
+
+			<ProgressStatTiles tiles={tiles} />
+
+			<WeekHistoryCard
+				rangeLabel={gridRangeLabel(habit, today)}
+				rows={weekRows(habit, detail.heatmapWeeks)}
+				legend={gridLegend(habit, detail.heatmapWeeks)}
+				notice={resetNotice(detail.streakReset)}
+				onEditDay={setEditDate}
+			/>
+
+			<View style={styles.section}>
+				<View accessible accessibilityRole="header" style={styles.label}>
+					<SectionLabel>{detailCopy.reminders.header}</SectionLabel>
 				</View>
-			</View>
-
-			{habit.archivedAt ? (
-				<ArchivedBanner
-					title={archivedBannerTitle(habit.archivedAt)}
-					detail={archivedBannerDetail(loggedDays)}
-					state={isRestoring ? "dismissed" : "default"}
-					disabled={isRestoring}
-					onRestore={handleRestore}
-				/>
-			) : null}
-
-			<View style={styles.stats}>
-				<StatCard
-					label="Current"
-					value={currentTile.value}
-					caption={currentTile.caption}
-					muted={currentTile.muted}
-				/>
-				<StatCard
-					label="Longest"
-					value={String(longestStreak.days)}
-					caption={longestStreakCaption(longestStreak)}
-					muted={longestStreak.days === 0}
-				/>
-				<StatCard
-					label={completionRateLabel(habit)}
-					value={completionRateValue(completionRate)}
-					caption={completionRateCaption(completionRate)}
-					muted={completionRate.fraction === null}
-				/>
-			</View>
-
-			{streakReset ? (
-				<Caption>{streakResetNote(streakReset.poolRefillsOn)}</Caption>
-			) : null}
-
-			<HabitHeatmap
-				weeks={heatmapWeeks}
-				hasEntries={hasEntries}
-				rangeLabel={heatmapRangeLabelFor(habit, firstDay, today)}
-				frozenLabel={legendFrozenLabel(habit, freezesRemaining)}
-				onSelectDay={setRetroLogDate}
-			/>
-
-			{/* No mockup shows this entry point — a plain navigable row (HAB-12). */}
-			<ListItem
-				title="Reminders"
-				subtitle={
-					habit.archivedAt
-						? "Paused while archived"
-						: remindersSummary(reminders)
-				}
-				navigable
-				onPress={() => router.push(`/reminders/${habit.id}`)}
-			/>
-
-			<View style={styles.entries}>
-				<Caption>Recent entries</Caption>
-				{recentEntries.length > 0 ? (
-					<Container dividers compact>
-						{recentEntries.map((row) => (
-							<HabitEntryRow
-								key={row.date}
-								habit={habit}
-								row={row}
-								today={today}
-							/>
-						))}
-					</Container>
-				) : (
-					<Container>
-						<EmptyState
-							centered={false}
-							icon="circle.dashed"
-							headline="No entries yet"
-							subtitle="Check it off on Today, or tap a past day above to log it."
-						/>
-					</Container>
-				)}
-			</View>
-
-			<View style={styles.lifecycleActions}>
-				{/* Archiving is reversible, so it's one tap — never routed through Delete's sheet. */}
-				{habit.archivedAt === null ? (
-					<Button
-						label="Archive habit"
-						variant="secondary"
-						fullWidth={false}
-						disabled={isArchiving}
-						onPress={handleArchive}
+				<Container variant="flat">
+					<ListItem
+						title={detailCopy.reminders.label}
+						value={detailRemindersValue(habit, detail.reminders)}
+						leading={<IconBadge symbol="bell" />}
+						navigable
+						onPress={() => router.push(`/reminders/${habit.id}`)}
 					/>
-				) : null}
-				<Button
-					label="Delete habit"
-					variant="destructive"
-					fullWidth={false}
-					onPress={() => setIsConfirmingDelete(true)}
-				/>
+				</Container>
 			</View>
 
-			<EditDaySheet day={retroLogDay} onDismiss={() => setRetroLogDate(null)} />
-			<DeleteHabitSheet
-				visible={isConfirmingDelete}
+			<DetailHistory
+				rows={detail.history.map((row) => historyRowView(habit, row))}
+			/>
+
+			<DetailActions
+				canArchive={!archived}
+				onArchive={() => setArchiveOpen(true)}
+				onDelete={() => {
+					actions.clearDeleteFailure();
+					setDeleteOpen(true);
+				}}
+			/>
+
+			<EditDaySheet day={editDay} onDismiss={() => setEditDate(null)} />
+			<ArchiveHabitSheet
+				visible={archiveOpen}
 				habitName={habit.name}
-				loggedDays={loggedDays}
-				currentStreak={currentStreak}
-				canArchive={habit.archivedAt === null}
-				onKeep={() => setIsConfirmingDelete(false)}
+				isArchiving={actions.isArchiving}
+				onArchive={handleArchive}
+				onCancel={() => setArchiveOpen(false)}
+			/>
+			<DeleteHabitSheet
+				visible={deleteOpen}
+				habitName={habit.name}
+				logCount={detail.logCount}
+				canArchive={!archived}
+				isDeleting={actions.isDeleting}
+				failed={actions.deleteFailed}
+				onCancel={() => setDeleteOpen(false)}
 				onArchive={handleArchive}
 				onDelete={handleDelete}
-				isWorking={isArchiving || isDeleting}
 			/>
 		</ScrollView>
 	);
@@ -317,37 +247,15 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
-		paddingHorizontal: 16,
-		paddingTop: 8,
+		paddingHorizontal: space[500],
+		paddingTop: space[300],
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
-		gap: 16,
+		gap: space[300],
 	},
-	header: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 14,
+	section: {
+		gap: space[150],
 	},
-	headerText: {
-		flex: 1,
-		gap: 2,
-	},
-	name: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
-	},
-	subtitle: {
-		fontSize: typeScale.subtitle,
-	},
-	stats: {
-		flexDirection: "row",
-		gap: 8,
-	},
-	entries: {
-		gap: 8,
-	},
-	lifecycleActions: {
-		alignItems: "center",
-		paddingTop: 8,
-		gap: 8,
+	label: {
+		paddingHorizontal: space[100],
 	},
 });

@@ -32,7 +32,7 @@ export type CompletionCellState =
 	| { kind: "nothing-logged" }
 	/** Still ahead: a hairline. */
 	| { kind: "future" }
-	/** Inside an archive period: dotted and empty — skipped, never missed (HAB-20). */
+	/** Inside an archive period: hatched and empty — skipped, never missed (HAB-20, D4). */
 	| { kind: "paused" }
 	/** The missed day that reset a streak with no freezes left: the track with an amber outline (D6). */
 	| { kind: "reset" };
@@ -106,7 +106,6 @@ export function CompletionCell({
 		"before-start": { color: colors.outline, style: "dashed" },
 		"nothing-logged": { color: colors.outline, style: "solid" },
 		future: { color: colors.border, style: "solid" },
-		paused: { color: colors.outline, style: "dotted" },
 		reset: { color: colors.warnInk, style: "solid" },
 	} as const;
 	const edge =
@@ -152,6 +151,9 @@ export function CompletionCell({
 						},
 					]}
 				/>
+			) : null}
+			{state.kind === "paused" ? (
+				<Hatch size={size} color={colors.outline} />
 			) : null}
 			{state.kind === "bonus" ? (
 				<View
@@ -225,6 +227,39 @@ export function CompletionCell({
 		>
 			{content}
 		</Pressable>
+	);
+}
+
+/**
+ * Diagonal hairlines across a paused day (D4): skipped, not missed, and a shape
+ * a colour-blind eye can tell from an empty box. The cell clips them to its
+ * rounded square.
+ */
+function Hatch({ size, color }: { size: number; color: string }) {
+	const step = Math.max(3, Math.round(size / 4));
+	const count = Math.ceil((size * 2) / step) + 1;
+	return (
+		<View
+			testID="completion-cell-hatch"
+			pointerEvents="none"
+			style={StyleSheet.absoluteFill}
+		>
+			{Array.from({ length: count }, (_, index) => (
+				<View
+					// biome-ignore lint/suspicious/noArrayIndexKey: a fixed run of identical lines
+					key={index}
+					style={{
+						position: "absolute",
+						left: -size / 2,
+						top: index * step - size / 2,
+						width: size * 2,
+						height: 1,
+						backgroundColor: color,
+						transform: [{ rotate: "-45deg" }],
+					}}
+				/>
+			))}
+		</View>
 	);
 }
 

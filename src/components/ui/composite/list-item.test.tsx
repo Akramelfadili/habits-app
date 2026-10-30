@@ -5,7 +5,7 @@ import {
 	within,
 } from "@testing-library/react-native";
 import { StyleSheet, Text } from "react-native";
-import { elevation, surfaceColors } from "@/theme/theme";
+import { elevation, semanticColors, surfaceColors } from "@/theme/theme";
 
 let mockAccessibilityText = false;
 jest.mock("@/utils/use-accessibility-text-size", () => ({
@@ -118,6 +118,18 @@ describe("ListItem", () => {
 		expect(
 			StyleSheet.flatten(screen.getByRole("button").props.style),
 		).toMatchObject({ minHeight: 60, paddingHorizontal: 14 });
+	});
+
+	it("destructive: the title reads in the danger ink, the subtitle does not", async () => {
+		await render(
+			<ListItem title="Delete habit" subtitle="Cannot be undone" destructive />,
+		);
+		expect(screen.getByText("Delete habit")).toHaveStyle({
+			color: semanticColors.light.dangerBg,
+		});
+		expect(screen.getByText("Cannot be undone")).not.toHaveStyle({
+			color: semanticColors.light.dangerBg,
+		});
 	});
 
 	it("passes its hint to VoiceOver", async () => {
