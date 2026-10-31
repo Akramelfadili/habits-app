@@ -21,7 +21,7 @@ import { useExportActions } from "../hooks/use-export-actions";
 import {
 	DEFAULT_EXPORT_OPTIONS,
 	useExportQueries,
-} from "../hooks/use-settings-queries";
+} from "../hooks/use-export-queries";
 import {
 	EXPORT_FAILURE_REASSURANCE,
 	entriesLabel,

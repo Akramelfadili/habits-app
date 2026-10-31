@@ -1,50 +1,42 @@
 import {
-	appearanceCaption,
 	exportButtonLabel,
 	exportFailureMessage,
-	exportRowSubtitle,
-	lastExportLabel,
+	notificationImpact,
 	rangeLabel,
-	settingsMenuSubline,
 } from "./settings-helpers";
 
 const today = new Date(2026, 8, 16, 12);
 
-describe("lastExportLabel", () => {
-	it("says Never before the first export, Today on the same day", () => {
-		expect(lastExportLabel(null, today)).toBe("Never");
-		expect(lastExportLabel("2026-09-16", today)).toBe("Today");
+describe("notificationImpact (SY6)", () => {
+	const habits = [
+		{ id: 1, archivedAt: null },
+		{ id: 2, archivedAt: null },
+		{ id: 3, archivedAt: new Date(2026, 8, 1) },
+	];
+
+	it("counts the enabled times and the distinct active habits they sit on", () => {
+		expect(
+			notificationImpact(
+				[
+					{ habitId: 1, enabled: true },
+					{ habitId: 1, enabled: true },
+					{ habitId: 2, enabled: true },
+				],
+				habits,
+			),
+		).toEqual({ times: 3, habits: 2 });
 	});
 
-	it("drops the year within this one and keeps it otherwise", () => {
-		expect(lastExportLabel("2026-08-02", today)).toBe("2 August");
-		expect(lastExportLabel("2025-12-30", today)).toBe("30 December 2025");
-	});
-});
-
-describe("settingsMenuSubline", () => {
-	it("is static until an export has happened", () => {
-		expect(settingsMenuSubline(null, today)).toBe(
-			"Appearance, evening review, export",
-		);
-		expect(settingsMenuSubline("2026-08-02", today)).toBe(
-			"Last export: 2 August",
-		);
-	});
-});
-
-describe("appearanceCaption", () => {
-	it("reports what System currently resolves to", () => {
-		expect(appearanceCaption("system", "dark")).toBe(
-			"Matches your iPhone — currently dark. Switches whenever iOS does.",
-		);
-		expect(appearanceCaption("system", "light")).toContain("currently light");
-	});
-
-	it("states the fixed choice otherwise", () => {
-		expect(appearanceCaption("dark", "light")).toBe(
-			"Always dark, whatever your iPhone is set to.",
-		);
+	it("leaves out times that are off and times on archived habits", () => {
+		expect(
+			notificationImpact(
+				[
+					{ habitId: 1, enabled: false },
+					{ habitId: 3, enabled: true },
+				],
+				habits,
+			),
+		).toEqual({ times: 0, habits: 0 });
 	});
 });
 
@@ -52,10 +44,6 @@ describe("export labels", () => {
 	it("pluralises and groups thousands", () => {
 		expect(exportButtonLabel(1284)).toBe("Export 1,284 entries");
 		expect(exportButtonLabel(1)).toBe("Export 1 entry");
-		expect(exportRowSubtitle(9, 1284)).toBe(
-			"One file · 9 habits · 1,284 entries",
-		);
-		expect(exportRowSubtitle(1, 0)).toBe("One file · 1 habit · 0 entries");
 	});
 
 	it("shows a range, one date, or a placeholder", () => {

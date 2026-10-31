@@ -279,6 +279,17 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **The + is hidden at four times** (the note says why) instead of a disabled button.
 - **`REMINDER_CAP_MESSAGE` still lives in `constants.ts`** (the service's cap error uses it); the screen shows it from there.
 
+## Open — V3-4b step 5 (Settings)
+
+- **One screen with five groups, not S1's hub with a page per row.** HAB-44 lists the groups on the pushed screen; S2–S6 are drawn as separate pages (Theme, Evening review, Freezes, Export, About) and SY6 as a Notifications page. Their content is the group's content here; nothing links onward except Export data (the export sheet). Spec wins.
+- **Theme is three radio rows** (Light, Dark, System with "Follows iOS · now dark"), as S2 draws, not the old segmented control.
+- **The evening review's time is shown, not editable (21:30).** The frames draw 21:00 on a Time row; the code has one fixed time (`EVENING_REVIEW_TIME`) and HAB-44 says "existing reminder only". A time picker would need a stored time and a re-schedule; ask before building.
+- **"Sent only on days with open habits" is built as: only on the weekdays some active habit can be due** (`eveningReviewDays`). It is re-aimed after a habit is created, rescheduled, archived, restored or deleted, and by the launch reconcile. It cannot know at fire time whether today's habits are already done (a local notification has no logic); "closing the day" stays Later.
+- **SY6's Notifications page is the Reminders group while iOS permission is off**: one banner with Open Settings, then Affected rows ("4 times on 3 habits", the evening review's time or Off) and "Times stay editable…". The rows are information, not links to R5 / S3.
+- **Streaks shows "Left this month 1 of 2" and "Used this month" from the freeze query**, with the rule and how to use one in words. S4's "Saved … streaks this year" is dropped (PR-08) and Auto-use freezes is Later.
+- **Not built, by decision or because they are Later:** iCloud backup row, Privacy and Send feedback rows (S6, no spec), the old Categories row (the Habits tab owns it), Last export, Database schema.
+- **`SettingsGroup`, `ScopeChip` and the settings-helpers copy (appearance caption, evening footnote, diagnostics strings, export row subtitle) are deleted**; their copy lives in `settingsCopy` and the toast catalogue.
+
 ## V3-6 audit list (touch targets and known layout exceptions)
 
 Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.

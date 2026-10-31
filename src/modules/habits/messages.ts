@@ -143,6 +143,13 @@ export const messages = {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
 	},
+	/** S6: confirmed by a toast, no Undo — nothing changed. */
+	diagnosticsCopied: { tone: "info", text: "Diagnostics copied" },
+	diagnosticsShared: { tone: "info", text: "Diagnostics ready to share" },
+	diagnosticsFailed: {
+		tone: "error",
+		text: "Couldn’t copy diagnostics. Try again.",
+	},
 	/** R3: removal is instant, so the toast carries the Undo (5 s). */
 	reminderRemoved: {
 		tone: "success",
@@ -1035,6 +1042,71 @@ export const remindersCopy = {
 		title: "Notifications are off",
 		body: "Reminders won’t arrive until you allow them in iOS Settings.",
 		action: "Open Settings",
+	},
+} as const;
+
+/**
+ * Settings (HAB-44, S1–S7, SY6): Appearance, Reminders (the evening review and
+ * what notifications being off affects), Streaks (the freeze rule in plain
+ * words), Data and About. Week start and text size are explained, not set.
+ */
+export const settingsCopy = {
+	title: "Settings",
+	appearance: {
+		header: "Appearance",
+		theme: { light: "Light", dark: "Dark", system: "System" },
+		/** The System row says what it resolves to right now. */
+		systemNow: (scheme: "light" | "dark") => `Follows iOS · now ${scheme}`,
+		note: "Weeks start on Monday. Text size follows iOS Settings › Display & Text Size.",
+	},
+	reminders: {
+		header: "Reminders",
+		evening: "Evening review",
+		eveningBody: "A nudge if anything is still open",
+		time: "Time",
+		eveningNote: "Sent only on days with open habits.",
+		notifications: "Notifications",
+		allowed: "Allowed",
+		off: "Off",
+		notAsked: "Not asked yet",
+	},
+	/** SY6: one banner for the whole impact, and what is affected. */
+	denied: {
+		title: "Notifications are off",
+		body: "Reminders and the evening review won’t arrive until you allow them in iOS Settings.",
+		action: "Open Settings",
+		affected: "Affected",
+		reminders: "Reminders",
+		/** "4 times on 3 habits" — enabled times, and the habits they belong to. */
+		remindersImpact: (times: number, habits: number) =>
+			times === 0
+				? "No reminders set"
+				: `${times} ${times === 1 ? "time" : "times"} on ${habits} ${habits === 1 ? "habit" : "habits"}`,
+		evening: "Evening review",
+		eveningImpact: (on: boolean, time: string) => (on ? time : "Off"),
+		note: "Times stay editable while notifications are off. Nothing is deleted.",
+	},
+	streaks: {
+		header: "Streaks",
+		left: "Left this month",
+		used: "Used this month",
+		/** "1 of 2" */
+		leftValue: (left: number, size: number) => `${left} of ${size}`,
+		rule: (size: number) =>
+			`${size} freezes a month, shared by all habits. They don’t roll over.`,
+		how: "A freeze keeps a streak when you miss a scheduled day. You use one from the streak-at-risk sheet; Undo works for 5 s.",
+	},
+	data: {
+		header: "Data",
+		export: "Export data",
+		exportValue: "JSON, CSV",
+	},
+	about: {
+		header: "About",
+		version: "Version",
+		copy: "Copy diagnostics",
+		copyBody: "Version, device and recent errors",
+		copyValue: "Copy",
 	},
 } as const;
 

@@ -1,4 +1,7 @@
-import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
+import {
+	getSetting,
+	setSetting,
+} from "@/lib/app-settings/repositories/app-settings-repository";
 import { log } from "@/lib/logger/logger";
 import {
 	cancelRemindersWithPrefix,
@@ -15,7 +18,11 @@ import {
 	REMINDER_CAP_MESSAGE,
 	WEEKDAYS,
 } from "../constants";
-import { getHabit, updateHabit } from "../repositories/habit-repository";
+import {
+	getAllHabits,
+	getHabit,
+	updateHabit,
+} from "../repositories/habit-repository";
 import {
 	createReminder,
 	deleteReminder,
@@ -169,6 +176,7 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
  * brings the OS back in line.
  */
 export async function syncAfterWrite(habit: Habit): Promise<void> {
+	await refreshEveningReview();
 	try {
 		await syncHabitReminders(habit);
 	} catch (error) {
@@ -189,6 +197,8 @@ export async function syncAfterWrite(habit: Habit): Promise<void> {
  * and the reconcile cancels any leftover for an archived or missing habit.
  */
 export async function cancelHabitNotifications(habitId: number): Promise<void> {
+	// The days with open habits may have changed with this one gone.
+	await refreshEveningReview();
 	try {
 		await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
 	} catch (error) {
@@ -279,6 +289,46 @@ export async function updateHabitAndSyncReminders(
 }
 
 /**
+ * The days the Evening review is worth sending on (HAB-44): those on which at
+ * least one active habit can be due. A day nothing is due on gets no nudge.
+ */
+export function eveningReviewDays(habits: readonly Habit[]): IsoWeekday[] {
+	const active = habits.filter((habit) => !habit.archivedAt);
+	return EVERY_DAY.filter((day) =>
+		active.some((habit) => canHabitFallOn(habit, day)),
+	);
+}
+
+/** Schedules the review for today's set of days; nothing at all when no habit is ever due. */
+async function scheduleEveningReview(): Promise<string[]> {
+	const days = eveningReviewDays(await getAllHabits());
+	if (days.length === 0) return [];
+	return scheduleReminder(eveningReviewReminder(days), newGeneration());
+}
+
+/**
+ * Re-aims the Evening review after habits changed (created, rescheduled,
+ * archived, restored, deleted), so it keeps going out only on days with open
+ * habits. Does nothing while the review is off. A failure is logged: the row
+ * that changed already saved, and the launch-time reconcile tidies the rest.
+ */
+export async function refreshEveningReview(): Promise<void> {
+	try {
+		if ((await getSetting(EVENING_REVIEW_SETTING_KEY)) !== "true") return;
+		const previous = await scheduledWithPrefix(
+			`${EVENING_REVIEW_NOTIFICATION_ID}:`,
+		);
+		const created = await scheduleEveningReview();
+		await cancelQuietly(
+			previous.filter((identifier) => !created.includes(identifier)),
+			"replace the evening review after a habit change",
+		);
+	} catch (error) {
+		log.warn("reminders", "refreshing the evening review failed", error);
+	}
+}
+
+/**
  * The app-wide Evening review: one daily notification at a fixed time,
  * nudging to log anything left for the day, across every habit. It's a
  * plain scheduled notification, so it can't know at fire time what's still
@@ -302,10 +352,7 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 	}
 
 	const previous = await scheduledWithPrefix(prefix);
-	const created = await scheduleReminder(
-		eveningReviewReminder(),
-		newGeneration(),
-	);
+	const created = await scheduleEveningReview();
 	try {
 		await setSetting(EVENING_REVIEW_SETTING_KEY, "true");
 	} catch (error) {
@@ -318,12 +365,14 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 	);
 }
 
-export function eveningReviewReminder() {
+export function eveningReviewReminder(
+	weekdays: readonly IsoWeekday[] = EVERY_DAY,
+) {
 	return {
 		id: EVENING_REVIEW_NOTIFICATION_ID,
 		title: "Evening review",
 		body: "Anything left to log today? Take a minute to catch up.",
 		...EVENING_REVIEW_TIME,
-		weekdays: EVERY_DAY,
+		weekdays: [...weekdays],
 	};
 }

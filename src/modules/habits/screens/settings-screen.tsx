@@ -1,157 +1,210 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { Banner } from "@/components/ui/composite/banner";
+import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
-import { SettingsGroup } from "@/components/ui/composite/settings-group";
+import { ScreenHeader } from "@/components/ui/composite/screen-header";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
-import { Caption } from "@/components/ui/primitives/caption";
+import { ToggleRow } from "@/components/ui/composite/toggle-row";
+import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { KeyValueRow } from "@/components/ui/primitives/key-value-row";
-import { ScopeChip } from "@/components/ui/primitives/scope-chip";
-import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
-import { Toggle } from "@/components/ui/primitives/toggle";
 import { copyDiagnostics } from "@/lib/diagnostics/diagnostics";
-import { showToast } from "@/store/toast-store";
-import { typeScale } from "@/theme/theme";
+import { space } from "@/theme/theme";
 import type { ThemePreference } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
 import { ExportSheet } from "../components/export-sheet";
+import { LibrarySectionHeader } from "../components/habits/library-section-header";
 import { EVENING_REVIEW_TIME } from "../constants";
 import { useSettingsActions } from "../hooks/use-settings-actions";
 import { useSettingsQueries } from "../hooks/use-settings-queries";
+import { messages, settingsCopy, showMessage } from "../messages";
 import { formatReminderTime } from "../presenters/reminders-helpers";
-import {
-	appearanceCaption,
-	DIAGNOSTICS_RESULT_MESSAGE,
-	EVENING_REVIEW_FOOTNOTE,
-	exportRowSubtitle,
-	NOTIFICATIONS_OFF_NOTICE,
-	versionLabel,
-} from "../presenters/settings-helpers";
+import { versionLabel } from "../presenters/settings-helpers";
+
+const THEMES: ThemePreference[] = ["light", "dark", "system"];
 
 /**
- * Settings (HAB-15, frames B1–B6): Appearance (Light / Dark / System, applied
- * at once) → Reminders (the app-wide Evening review, scoped "All habits") →
- * Categories → Your data (Export, opens the export sheet; Last export).
- *
- * The Categories row has no mockup: it's a plain navigable row, the home
- * HAB-25 expects for Manage Categories.
+ * Settings (HAB-44, S1–S7, SY6), pushed from the Habits gear: Appearance
+ * (Light, Dark, System — week start and text size are explained, not set),
+ * Reminders (the evening review, and what iOS notifications being off holds
+ * back), Streaks (the freeze rule in plain words), Data (Export) and About.
+ * One screen, one scroll, each group a flat card under its label.
  */
 export function SettingsScreen() {
-	const router = useRouter();
 	const { colors } = useTheme();
 	const settings = useSettingsQueries();
 	const actions = useSettingsActions();
 	const [isExporting, setIsExporting] = useState(false);
+	const eveningTime = formatReminderTime(EVENING_REVIEW_TIME);
+	const { size, usedThisMonth } = settings.freezePool;
 
 	async function handleCopyDiagnostics() {
 		const result = await copyDiagnostics();
-		showToast({
-			message: DIAGNOSTICS_RESULT_MESSAGE[result],
-			tone: result === "failed" ? "error" : "info",
-		});
+		const spec =
+			result === "copied"
+				? messages.diagnosticsCopied
+				: result === "shared"
+					? messages.diagnosticsShared
+					: messages.diagnosticsFailed;
+		showMessage(spec, []);
 	}
+
+	const permissionValue =
+		settings.notificationPermission === "granted"
+			? settingsCopy.reminders.allowed
+			: settings.notificationPermission === "denied"
+				? settingsCopy.reminders.off
+				: settingsCopy.reminders.notAsked;
 
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					Settings
-				</Text>
+				<ScreenHeader title={settingsCopy.title} />
 
-				<SettingsGroup title="Appearance">
-					<SegmentedControl<ThemePreference>
-						label="Theme"
-						options={[
-							{ value: "light", label: "Light" },
-							{ value: "dark", label: "Dark" },
-							{ value: "system", label: "System" },
-						]}
-						value={settings.themePreference}
-						onChange={(preference) => actions.setThemePreference(preference)}
-					/>
-					<Caption>
-						{appearanceCaption(
-							settings.themePreference,
-							settings.resolvedScheme,
-						)}
-					</Caption>
-				</SettingsGroup>
+				<View style={styles.group}>
+					<LibrarySectionHeader label={settingsCopy.appearance.header} />
+					<Container variant="flat">
+						{THEMES.map((preference) => (
+							<ListItem
+								key={preference}
+								embedded
+								title={settingsCopy.appearance.theme[preference]}
+								subtitle={
+									preference === "system"
+										? settingsCopy.appearance.systemNow(settings.resolvedScheme)
+										: undefined
+								}
+								selected={settings.themePreference === preference}
+								onPress={() => actions.setThemePreference(preference)}
+							/>
+						))}
+					</Container>
+					<FieldHelper plain tone="hint">
+						{settingsCopy.appearance.note}
+					</FieldHelper>
+				</View>
 
-				<View style={styles.remindersBlock}>
-					<SettingsGroup title="Reminders" footnote={EVENING_REVIEW_FOOTNOTE}>
-						<ListItem
-							embedded
-							title="Evening review"
-							subtitle={`One nudge at ${formatReminderTime(EVENING_REVIEW_TIME)} to log anything you missed.`}
-							titleAccessory={<ScopeChip label="All habits" />}
-							trailing={
-								<Toggle
-									value={settings.eveningReviewEnabled}
-									onValueChange={actions.setEveningReview}
-									accessibilityLabel="Evening review"
-								/>
-							}
-						/>
-					</SettingsGroup>
-					{/* The toggle stays on; this says why nothing will arrive (B2). */}
+				<View style={styles.group}>
+					<LibrarySectionHeader label={settingsCopy.reminders.header} />
 					{settings.notificationsDenied ? (
 						<Banner
-							tone="neutral"
+							tone="warning"
+							symbol="bell.slash"
+							title={settingsCopy.denied.title}
 							action={{
-								label: "Open iOS Settings →",
+								label: settingsCopy.denied.action,
 								onPress: () => void Linking.openSettings(),
 							}}
 						>
-							{NOTIFICATIONS_OFF_NOTICE}
+							{settingsCopy.denied.body}
 						</Banner>
+					) : null}
+					<Container variant="flat">
+						<ToggleRow
+							title={settingsCopy.reminders.evening}
+							subtitle={settingsCopy.reminders.eveningBody}
+							value={settings.eveningReviewEnabled}
+							onValueChange={actions.setEveningReview}
+						/>
+						<ListItem
+							embedded
+							title={settingsCopy.reminders.time}
+							value={eveningTime}
+						/>
+						<ListItem
+							embedded
+							title={settingsCopy.reminders.notifications}
+							value={permissionValue}
+						/>
+					</Container>
+					<FieldHelper plain tone="hint">
+						{settingsCopy.reminders.eveningNote}
+					</FieldHelper>
+
+					{settings.notificationsDenied ? (
+						<>
+							<LibrarySectionHeader label={settingsCopy.denied.affected} />
+							<Container variant="flat">
+								<ListItem
+									embedded
+									title={settingsCopy.denied.reminders}
+									subtitle={settingsCopy.denied.remindersImpact(
+										settings.notificationImpact.times,
+										settings.notificationImpact.habits,
+									)}
+								/>
+								<ListItem
+									embedded
+									title={settingsCopy.denied.evening}
+									subtitle={settingsCopy.denied.eveningImpact(
+										settings.eveningReviewEnabled,
+										eveningTime,
+									)}
+								/>
+							</Container>
+							<FieldHelper plain tone="hint">
+								{settingsCopy.denied.note}
+							</FieldHelper>
+						</>
 					) : null}
 				</View>
 
-				<SettingsGroup title="Habits">
-					<ListItem
-						embedded
-						title="Categories"
-						subtitle="Rename or delete your own"
-						navigable
-						onPress={() => router.push("/categories")}
-					/>
-				</SettingsGroup>
+				<View style={styles.group}>
+					<LibrarySectionHeader label={settingsCopy.streaks.header} />
+					<Container variant="flat">
+						<ListItem
+							embedded
+							title={settingsCopy.streaks.left}
+							value={settingsCopy.streaks.leftValue(
+								Math.max(0, size - usedThisMonth),
+								size,
+							)}
+						/>
+						<ListItem
+							embedded
+							title={settingsCopy.streaks.used}
+							value={String(usedThisMonth)}
+						/>
+					</Container>
+					<FieldHelper plain tone="hint">
+						{settingsCopy.streaks.rule(size)}
+					</FieldHelper>
+					<FieldHelper plain tone="hint">
+						{settingsCopy.streaks.how}
+					</FieldHelper>
+				</View>
 
-				<SettingsGroup title="Your data" dividers>
-					<ListItem
-						embedded
-						title="Export all data"
-						subtitle={exportRowSubtitle(
-							settings.exportSummary.activeHabits +
-								settings.exportSummary.archivedHabits,
-							settings.exportSummary.logs,
-						)}
-						leading={<IconBadge symbol="doc.text" />}
-						navigable
-						onPress={() => setIsExporting(true)}
-					/>
-					<KeyValueRow label="Last export" value={settings.lastExport} />
-				</SettingsGroup>
+				<View style={styles.group}>
+					<LibrarySectionHeader label={settingsCopy.data.header} />
+					<Container variant="flat">
+						<ListItem
+							embedded
+							title={settingsCopy.data.export}
+							value={settingsCopy.data.exportValue}
+							leading={<IconBadge symbol="square.and.arrow.up" />}
+							navigable
+							onPress={() => setIsExporting(true)}
+						/>
+					</Container>
+				</View>
 
-				<SettingsGroup title="About" dividers>
-					<KeyValueRow label="Version" value={versionLabel(settings.about)} />
-					<KeyValueRow
-						label="Database schema"
-						value={String(settings.about.schemaVersion)}
-					/>
-					<ListItem
-						embedded
-						title="Copy diagnostics"
-						subtitle="Version info and recent activity, for a bug report"
-						leading={<IconBadge symbol="doc.on.doc" />}
-						onPress={handleCopyDiagnostics}
-					/>
-				</SettingsGroup>
+				<View style={styles.group}>
+					<LibrarySectionHeader label={settingsCopy.about.header} />
+					<Container variant="flat">
+						<ListItem
+							embedded
+							title={settingsCopy.about.version}
+							value={versionLabel(settings.about)}
+						/>
+						<ListItem
+							embedded
+							title={settingsCopy.about.copy}
+							subtitle={settingsCopy.about.copyBody}
+							value={settingsCopy.about.copyValue}
+							onPress={handleCopyDiagnostics}
+						/>
+					</Container>
+				</View>
 			</ScrollView>
 
 			<ExportSheet
@@ -167,16 +220,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
-		paddingHorizontal: 16,
-		paddingTop: 12,
+		paddingHorizontal: space[500],
+		paddingTop: space[300],
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
-		gap: 16,
+		gap: space[500],
 	},
-	remindersBlock: {
-		gap: 10,
-	},
-	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
+	group: {
+		gap: space[150],
 	},
 });

@@ -51,7 +51,7 @@ tags:
 - tapOn:
     id: "Settings"
     index: 1
-- assertVisible: "Appearance"
+- assertVisible: "Weeks start on Monday.*"
 - takeScreenshot: hab-13-settings
 # Settings was pushed inside the Habits tab, so Back returns to the library.
 - back

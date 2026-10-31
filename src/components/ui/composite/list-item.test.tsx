@@ -247,4 +247,18 @@ describe("ListItem", () => {
 			).toBe("column");
 		});
 	});
+
+	it("selected makes it a radio: announced as picked or not, with a check only on the picked one", async () => {
+		const { rerender } = await render(
+			<ListItem title="Dark" selected={false} onPress={jest.fn()} />,
+		);
+		expect(screen.getByRole("radio").props.accessibilityState).toMatchObject({
+			selected: false,
+		});
+		expect(screen.queryByTestId("symbol-checkmark")).toBeNull();
+		await rerender(<ListItem title="Dark" selected onPress={jest.fn()} />);
+		expect(screen.getByRole("radio").props.accessibilityState).toMatchObject({
+			selected: true,
+		});
+	});
 });

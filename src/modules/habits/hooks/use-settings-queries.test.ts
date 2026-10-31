@@ -1,6 +1,10 @@
 import { renderHook } from "@testing-library/react-native";
 import { makeExportSource } from "../test-support/export-fixtures";
 
+let mockReminders: { habitId: number; enabled: boolean }[] = [];
+jest.mock("../repositories/reminder-repository", () => ({
+	useAllReminders: () => mockReminders,
+}));
 jest.mock("../repositories/frozen-day-repository", () => ({
 	useFrozenDays: () => mockSource.frozenDays,
 }));
@@ -23,7 +27,7 @@ jest.mock("@/lib/notifications/use-notification-permission", () => ({
 }));
 
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
-import { useExportQueries, useSettingsQueries } from "./use-settings-queries";
+import { useSettingsQueries } from "./use-settings-queries";
 
 beforeEach(() => {
 	mockSettings.clear();
@@ -46,14 +50,6 @@ describe("useSettingsQueries (HAB-15)", () => {
 		expect(result.current.eveningReviewEnabled).toBe(true);
 	});
 
-	it("reports Never until an export has succeeded, then the date", async () => {
-		const first = await renderHook(() => useSettingsQueries());
-		expect(first.result.current.lastExport).toBe("Never");
-		mockSettings.set("habits.lastExport", "2020-01-02");
-		const second = await renderHook(() => useSettingsQueries());
-		expect(second.result.current.lastExport).toBe("2 January 2020");
-	});
-
 	it("exposes the Appearance choice and what it resolves to", async () => {
 		useThemePreferenceStore.setState({ preference: "dark" });
 		const { result } = await renderHook(() => useSettingsQueries());
@@ -62,16 +58,17 @@ describe("useSettingsQueries (HAB-15)", () => {
 	});
 });
 
-describe("useExportQueries", () => {
-	it("the archived toggle changes the counts the sheet quotes", async () => {
-		const withArchived = await renderHook(() =>
-			useExportQueries({ format: "csv", includeArchived: true }),
-		);
-		const without = await renderHook(() =>
-			useExportQueries({ format: "csv", includeArchived: false }),
-		);
-		expect(withArchived.result.current.summary.logs).toBe(4);
-		expect(without.result.current.summary.logs).toBe(3);
-		expect(without.result.current.summary.archivedHabits).toBe(0);
+describe("useSettingsQueries — notifications (SY6)", () => {
+	it("counts what a denied permission holds back: enabled times on active habits (SY6)", async () => {
+		mockReminders = [
+			{ habitId: 1, enabled: true },
+			{ habitId: 1, enabled: true },
+			{ habitId: 2, enabled: false },
+		];
+		mockPermission = "denied";
+		const { result } = await renderHook(() => useSettingsQueries());
+		expect(result.current.notificationPermission).toBe("denied");
+		// The fixture's one active habit has the two enabled times; the off one is not counted.
+		expect(result.current.notificationImpact).toEqual({ times: 2, habits: 1 });
 	});
 });

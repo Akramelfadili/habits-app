@@ -195,15 +195,36 @@ describe("reconcileScheduledReminders", () => {
 	});
 
 	describe("Evening review", () => {
-		it("on but missing: schedules it", async () => {
-			mockHabits = [];
+		it("on but missing: schedules it on the days with open habits", async () => {
+			mockHabits = [makeHabit({ id: 1, frequency: { type: "daily" } })];
 			mockEveningSetting = "true";
 			await reconcileScheduledReminders();
 			expect(keys()).toEqual(["evening-review:daily:2130"]);
 		});
 
-		it("on and present: untouched", async () => {
+		it("on, but no active habit is ever due: nothing is scheduled", async () => {
 			mockHabits = [];
+			mockEveningSetting = "true";
+			await reconcileScheduledReminders();
+			expect(keys()).toEqual([]);
+		});
+
+		it("on but aimed at the wrong days: replaced by the right ones", async () => {
+			mockHabits = [
+				makeHabit({ id: 1, frequency: { type: "weekdays", days: [2] } }),
+			];
+			mockEveningSetting = "true";
+			fake.scheduled.set("evening-review:daily:2130:x", {
+				identifier: "evening-review:daily:2130:x",
+				hour: 21,
+				minute: 30,
+			} as never);
+			await reconcileScheduledReminders();
+			expect(keys()).toEqual(["evening-review:day-2:2130"]);
+		});
+
+		it("on and present: untouched", async () => {
+			mockHabits = [makeHabit({ id: 1, frequency: { type: "daily" } })];
 			mockEveningSetting = "true";
 			await reconcileScheduledReminders();
 			fake.events.length = 0;

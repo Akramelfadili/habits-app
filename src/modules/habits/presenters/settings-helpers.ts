@@ -2,51 +2,7 @@ import { format, isSameDay, isSameYear, parseISO } from "date-fns";
 import type { ThemePreference } from "@/theme/theme-preference-store";
 import { formatCount, pluralise, RANGE_DASH } from "@/utils/format";
 import type { ExportSummary } from "../domain/export-data";
-import type { ExportFailureReason } from "../types";
-
-/** Settings' "Last export" value (HAB-15): "Never", "Today", "2 August", or with the year once it's not this one. */
-export function lastExportLabel(stored: string | null, today: Date): string {
-	if (!stored) return "Never";
-	const day = parseISO(stored);
-	if (isSameDay(day, today)) return "Today";
-	return format(day, isSameYear(day, today) ? "d MMMM" : "d MMMM yyyy");
-}
-
-/** Today's menu row under Settings: the last export once there is one, else what Settings holds. */
-export function settingsMenuSubline(
-	stored: string | null,
-	today: Date,
-): string {
-	return stored
-		? `Last export: ${lastExportLabel(stored, today)}`
-		: "Appearance, evening review, export";
-}
-
-/** The caption under the Appearance control — what the choice means right now. */
-export function appearanceCaption(
-	preference: ThemePreference,
-	resolved: "light" | "dark",
-): string {
-	switch (preference) {
-		case "light":
-			return "Always light, whatever your iPhone is set to.";
-		case "dark":
-			return "Always dark, whatever your iPhone is set to.";
-		case "system":
-			return `Matches your iPhone — currently ${resolved}. Switches whenever iOS does.`;
-	}
-}
-
-export const EVENING_REVIEW_FOOTNOTE =
-	"Applies to every habit at once. Reminder times for a single habit stay on that habit's Reminders screen.";
-
-export const NOTIFICATIONS_OFF_NOTICE =
-	"Notifications are off for Habits in iOS, so the review won't arrive yet.";
-
-/** "One file · 9 habits · 1,284 entries" — the Export row's subtitle. */
-export function exportRowSubtitle(habits: number, logs: number): string {
-	return `One file · ${pluralise(habits, "habit")} · ${entriesLabel(logs)}`;
-}
+import type { ExportFailureReason, Habit, Reminder } from "../types";
 
 export function entriesLabel(total: number): string {
 	return pluralise(total, "entry", "entries");
@@ -95,9 +51,21 @@ export function versionLabel(info: { version: string; build: string }): string {
 	return `${info.version} (build ${info.build})`;
 }
 
-/** What the toast says after "Copy diagnostics". */
-export const DIAGNOSTICS_RESULT_MESSAGE = {
-	copied: "Diagnostics copied",
-	shared: "Diagnostics ready to share",
-	failed: "Couldn't copy diagnostics. Try again.",
-} as const;
+/** What a denied iOS permission holds back (SY6): the enabled times and the active habits they belong to. */
+export function notificationImpact(
+	reminders: readonly Pick<Reminder, "habitId" | "enabled">[],
+	habits: readonly Pick<Habit, "id" | "archivedAt">[],
+): { times: number; habits: number } {
+	const active = new Set(
+		habits
+			.filter((habit) => habit.archivedAt === null)
+			.map((habit) => habit.id),
+	);
+	const live = reminders.filter(
+		(reminder) => reminder.enabled && active.has(reminder.habitId),
+	);
+	return {
+		times: live.length,
+		habits: new Set(live.map((reminder) => reminder.habitId)).size,
+	};
+}

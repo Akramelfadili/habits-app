@@ -15,6 +15,7 @@ import { canHabitFallOn } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
 import {
 	cancelQuietly,
+	eveningReviewDays,
 	eveningReviewReminder,
 	habitNotificationPrefix,
 	reminderNotificationId,
@@ -42,10 +43,12 @@ async function expectedKeys(habit: Habit): Promise<string[]> {
 	return keys;
 }
 
-function eveningReviewKey(): string {
-	const { hour, minute } = eveningReviewReminder();
+/** The evening review's triggers for the days with open habits — none when no habit is ever due. */
+function eveningReviewKeys(habits: readonly Habit[]): string[] {
+	const days = eveningReviewDays(habits);
+	const { hour, minute } = eveningReviewReminder(days);
 	const time = `${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}`;
-	return `${EVENING_PREFIX}daily:${time}`;
+	return reminderSlots(days).map((slot) => `${EVENING_PREFIX}${slot}:${time}`);
 }
 
 /** Whether what the OS holds is exactly `expected` — right triggers, right times, no duplicate generations. */
@@ -141,11 +144,15 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			if (await cancelQuietly(eveningOwned, "reconcile: evening review off")) {
 				cancelled += eveningOwned.length;
 			}
-		} else if (!matches(eveningOwned, [eveningReviewKey()])) {
-			const created = await scheduleReminder(
-				eveningReviewReminder(),
-				newGeneration(),
-			);
+		} else if (!matches(eveningOwned, eveningReviewKeys(habits))) {
+			const days = eveningReviewDays(habits);
+			const created =
+				days.length === 0
+					? []
+					: await scheduleReminder(
+							eveningReviewReminder(days),
+							newGeneration(),
+						);
 			await cancelQuietly(
 				eveningOwned.filter((identifier) => !created.includes(identifier)),
 				"reconcile: replace the evening review",

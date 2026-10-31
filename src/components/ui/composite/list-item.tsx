@@ -47,6 +47,12 @@ type ListItemProps = {
 	 */
 	dimmed?: boolean;
 	/**
+	 * A choice among several (Settings' Light / Dark / System): the row becomes a
+	 * radio, announced as selected or not, and draws a check when picked — the
+	 * check, not colour, says which one.
+	 */
+	selected?: boolean;
+	/**
 	 * With `dimmed`: keep `leading` at full opacity and fade only the text (H2).
 	 * An archived habit's muted icon square would otherwise vanish on a white card.
 	 */
@@ -84,6 +90,7 @@ export function ListItem({
 	embedded = false,
 	dimmed = false,
 	keepLeading = false,
+	selected,
 	lifted = false,
 	accessibilityLabel,
 	destructive = false,
@@ -97,6 +104,8 @@ export function ListItem({
 
 	const chevron = navigable ? (
 		<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
+	) : selected ? (
+		<SymbolView name="checkmark" size={16} tintColor={colors.ink} />
 	) : null;
 
 	// `trailing` sits beside the pressable area, not inside it — a trailing
@@ -117,7 +126,10 @@ export function ListItem({
 		>
 			<Pressable
 				ref={buttonRef}
-				accessibilityRole={onPress ? "button" : undefined}
+				accessibilityRole={
+					selected !== undefined ? "radio" : onPress ? "button" : undefined
+				}
+				accessibilityState={selected !== undefined ? { selected } : undefined}
 				accessibilityLabel={accessibilityLabel}
 				accessibilityHint={accessibilityHint}
 				accessibilityActions={accessibilityActions?.map(({ label }) => ({
