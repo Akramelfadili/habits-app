@@ -260,9 +260,6 @@ export const MAX_NOTE_LENGTH = 280;
 /** Reminder times per habit (HAB-12) — adding a 5th is blocked with an explanation. */
 export const REMINDER_CAP = 4;
 
-/** Always under the "Add a time" row until the cap replaces it with the message below (E4). */
-export const REMINDER_HINT = "Up to four times a day for this habit.";
-
 /** Shown under the disabled "Add a time" row, and as the service's cap error. */
 export const REMINDER_CAP_MESSAGE = `${REMINDER_CAP} of ${REMINDER_CAP} — remove one to add another. Four times a day is the cap per habit.`;
 

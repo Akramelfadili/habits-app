@@ -143,6 +143,11 @@ export const messages = {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
 	},
+	/** R3: removal is instant, so the toast carries the Undo (5 s). */
+	reminderRemoved: {
+		tone: "success",
+		text: (time: string) => `Reminder at ${time} removed`,
+	},
 	/** DC6: a category nobody used is gone at once; Undo puts it back (5 s). */
 	categoryDeleted: {
 		tone: "success",
@@ -888,8 +893,6 @@ export const formCopy = {
 		label: "Reminders",
 		add: "Add time",
 		hint: "24-hour times. Each time can repeat on its own days.",
-		remove: (time: string) => `Remove reminder at ${time}`,
-		editDays: (time: string) => `Change days for the reminder at ${time}`,
 	},
 	save: {
 		new: "Save habit",
@@ -1003,6 +1006,35 @@ export const categoriesCopy = {
 		confirmInUse: (count: number) =>
 			`Delete and move ${count} ${count === 1 ? "habit" : "habits"}`,
 		cancel: "Cancel",
+	},
+} as const;
+
+/**
+ * The Reminders screen (HAB-43, R1–R3, R5): one habit's 24-hour times, each with
+ * its own days. Removal is instant with an Undo toast; the notifications-off
+ * banner explains why nothing arrives while the times stay editable.
+ */
+export const remindersCopy = {
+	title: "Reminders",
+	/** The eyebrow: the habit and how it repeats ("Upper body · Tue, Thu"). */
+	eyebrow: (habit: string, schedule: string) => `${habit} · ${schedule}`,
+	add: "Add time",
+	/** R1: nothing yet — one clear action. */
+	empty: {
+		title: "No reminders yet",
+		body: "Add a time and choose the days it repeats.",
+	},
+	hint: "24-hour times. Tap a time to change its days.",
+	remove: (time: string) => `Remove reminder at ${time}`,
+	/** What a row says it does, for VoiceOver (08.3). */
+	rowHint: "Opens its time and days.",
+	/** A reminder switched off before V3 (the toggle is gone): said on its row, turned on again by editing. */
+	off: "Off",
+	/** R5. */
+	denied: {
+		title: "Notifications are off",
+		body: "Reminders won’t arrive until you allow them in iOS Settings.",
+		action: "Open Settings",
 	},
 } as const;
 

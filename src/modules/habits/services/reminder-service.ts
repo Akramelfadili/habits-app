@@ -28,6 +28,7 @@ import type {
 	Habit,
 	IsoWeekday,
 	Reminder,
+	ReminderDraft,
 	ReminderPatch,
 	UpdateHabitInput,
 } from "../types";
@@ -205,24 +206,22 @@ export class ReminderCapError extends Error {
 }
 
 /**
- * Adds a reminder time at the default time, pre-set to the days the habit
- * can actually fall on — so a fresh reminder never starts out flagged.
- * Blocked at the cap with an explanation, not silently.
+ * Adds a reminder at the time and on the days the person chose in the sheet
+ * (R2). With no draft it starts at the default time on the days the habit can
+ * actually fall on, so a fresh reminder never starts out flagged. Blocked at
+ * the cap with an explanation, not silently.
  */
 export async function addReminder(
 	habit: Habit,
-	/** Pre-select just these days (the Monthly pattern's weak day) instead of every one the habit falls on. */
-	onlyDays?: readonly IsoWeekday[],
+	draft?: ReminderDraft,
 ): Promise<Reminder> {
 	const existing = await getHabitReminders(habit.id);
 	if (existing.length >= REMINDER_CAP) throw new ReminderCapError();
 
 	const days = EVERY_DAY.filter((day) => canHabitFallOn(habit, day));
-	const preselected = onlyDays?.filter((day) => days.includes(day));
 	const reminder = await createReminder({
 		habitId: habit.id,
-		...DEFAULT_REMINDER_TIME,
-		weekdays: preselected && preselected.length > 0 ? preselected : days,
+		...(draft ?? { ...DEFAULT_REMINDER_TIME, weekdays: days }),
 		enabled: true,
 	});
 	await syncAfterWrite(habit);

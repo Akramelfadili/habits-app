@@ -29,11 +29,10 @@ tags:
 - tapOn: "Meditate"
 # The row's value: "Reminders" would match the section label above it.
 - tapOn: "None"
-- tapOn:
-    id: "Add a time, 0 of 4"
+- tapOn: "Add time"
 - tapOn: "Save time"
 - assertVisible:
-    id: "Reminder at 09:00, Every day"
+    id: "09:00, Every day"
 - back
 - assertVisible: "09:00 · daily"
 - back

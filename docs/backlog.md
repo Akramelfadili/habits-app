@@ -270,6 +270,15 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **Two reminder time sheets for now.** `ReminderSheet` (time wheel + days; used by the form) and the older `ReminderTimeSheet` (time only; the Reminders screen) coexist until step 4 rebuilds Reminders on `ReminderSheet` and deletes the old one. Likewise the form's red remove button (`ReminderDrafts`) is hand-drawn until step 4 extracts it for the Reminders list.
 - **The form does not move focus to the first error** (spec review): Save stays off while any issue exists and each error is next to its field, so there is nothing to submit into. Focus-to-first-error is part of step 7's accessibility pass.
 
+## Open — V3-4b step 4 (Reminders)
+
+- **The per-reminder on/off toggle is gone** (R2 draws none; HAB-43 lists times, days, remove, edit). A reminder stored as off before V3 shows "Off" on its row and editing it turns it back on. Habit Detail's summary still reads "All off" for such a habit.
+- **`?addTime=<day>` (R4, the insight deep link) is removed**, not built: no V3 insight links to it. The service's `onlyDays` argument became the sheet's full draft (time and days).
+- **One sheet for adding and editing**: `ReminderSheet` (time wheel + days) replaced the time-only sheet; Add time opens it on 09:00 on the days the habit falls on, and nothing is written until Save (it used to write a default row first).
+- **Unscheduled days** (days the habit is never due on) are a warning banner per time under the list, not inside an expandable card; such days are still never scheduled.
+- **The + is hidden at four times** (the note says why) instead of a disabled button.
+- **`REMINDER_CAP_MESSAGE` still lives in `constants.ts`** (the service's cap error uses it); the screen shows it from there.
+
 ## V3-6 audit list (touch targets and known layout exceptions)
 
 Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.

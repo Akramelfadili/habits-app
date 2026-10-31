@@ -373,23 +373,27 @@ describe("reminder-service", () => {
 		expect(fake.scheduled.size).toBe(0);
 	});
 
-	describe("addReminder with a pre-selected day (Monthly pattern)", () => {
-		it("starts the new reminder on just that day when the habit can fall on it", async () => {
-			mockCreateReminder.mockResolvedValue(reminder({ weekdays: [6] }));
-			mockGetHabitReminders.mockResolvedValue([]);
-			await addReminder(dailyHabit, [6]);
-			expect(mockCreateReminder).toHaveBeenCalledWith(
-				expect.objectContaining({ habitId: 4, weekdays: [6] }),
+	describe("addReminder with the sheet's time and days (R2)", () => {
+		it("writes exactly the chosen time and days, then syncs", async () => {
+			mockCreateReminder.mockResolvedValue(
+				reminder({ hour: 18, minute: 30, weekdays: [4] }),
 			);
-		});
-
-		it("falls back to every schedulable day when the day isn't one the habit can fall on", async () => {
-			mockCreateReminder.mockResolvedValue(reminder());
-			mockGetHabitReminders.mockResolvedValue([]);
-			await addReminder(weekdayHabit, [6]);
-			expect(mockCreateReminder).toHaveBeenCalledWith(
-				expect.objectContaining({ weekdays: [1, 2, 3, 4, 5] }),
-			);
+			mockGetHabitReminders.mockResolvedValue([
+				reminder({ hour: 18, minute: 30, weekdays: [4] }),
+			]);
+			await addReminder(weekdayHabit, {
+				hour: 18,
+				minute: 30,
+				weekdays: [4],
+			});
+			expect(mockCreateReminder).toHaveBeenCalledWith({
+				habitId: 3,
+				hour: 18,
+				minute: 30,
+				weekdays: [4],
+				enabled: true,
+			});
+			expect(scheduledKeys()).toEqual(["habit-3-reminder-1:day-4:1830"]);
 		});
 	});
 

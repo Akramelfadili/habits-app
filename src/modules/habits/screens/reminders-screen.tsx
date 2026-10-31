@@ -1,80 +1,67 @@
 import { Stack, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { AddRow } from "@/components/ui/composite/add-row";
+import { useState } from "react";
+import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { Banner } from "@/components/ui/composite/banner";
+import { Container } from "@/components/ui/composite/container";
 import { EmptyState } from "@/components/ui/composite/empty-state";
-import { headerBackOptions } from "@/components/ui/composite/header-buttons";
-import { MovedSettingPointer } from "@/components/ui/composite/moved-setting-pointer";
-import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
-import { Caption } from "@/components/ui/primitives/caption";
-import { showToast } from "@/store/toast-store";
-import { typeScale } from "@/theme/theme";
-import { useTheme } from "@/theme/use-theme";
-import { ReminderCard } from "../components/reminder-card";
-import { ReminderTimeSheet } from "../components/reminder-time-sheet";
-import { REMINDER_CAP_MESSAGE, REMINDER_HINT } from "../constants";
-import { useReminderActions } from "../hooks/use-reminder-actions";
 import {
-	type ReminderWithConflicts,
-	useReminderQueries,
-} from "../hooks/use-reminder-queries";
+	HeaderCircleButton,
+	headerBackOptions,
+} from "@/components/ui/composite/header-buttons";
+import { ScreenHeader } from "@/components/ui/composite/screen-header";
+import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
+import { Button } from "@/components/ui/primitives/button";
+import { FieldHelper } from "@/components/ui/primitives/field-helper";
+import { space } from "@/theme/theme";
+import { useTheme } from "@/theme/use-theme";
+import { ReminderRow } from "../components/reminder-row";
+import { ReminderSheet } from "../components/reminder-sheet";
+import {
+	DEFAULT_REMINDER_TIME,
+	REMINDER_CAP_MESSAGE,
+	WEEKDAYS,
+} from "../constants";
+import { useReminderActions } from "../hooks/use-reminder-actions";
+import { useReminderQueries } from "../hooks/use-reminder-queries";
+import {
+	detailCopy,
+	messages,
+	reminderSheetCopy,
+	remindersCopy,
+	showMessage,
+} from "../messages";
+import { scheduleLabel } from "../presenters/habit-schedule-label";
 import {
 	formatReminderTime,
-	parseWeekdayParam,
-	reminderCountLabel,
+	unscheduledDaysWarning,
 } from "../presenters/reminders-helpers";
-import type { Reminder } from "../types";
+import { canHabitFallOn } from "../strategies/frequency-strategy";
+import type { Reminder, ReminderDraft } from "../types";
 
 type RemindersScreenProps = {
 	habitId: number;
-	/**
-	 * The `addTime` route param: an ISO weekday (1–7). Opens straight into
-	 * "Add a time" with that day pre-selected — the Monthly pattern insight's
-	 * action (HAB-16). Anything else, or a habit already at the reminder cap,
-	 * opens Reminders as usual.
-	 */
-	addTime?: string;
 };
 
-const NOTIFICATIONS_OFF_NOTICE =
-	"Notifications are off for this app. Times stay saved — turn them on in Settings to receive these.";
+/** The reminder sheet is open on a new time, or on a stored one. */
+type SheetState =
+	| { kind: "add"; draft: ReminderDraft }
+	| { kind: "edit"; id: number; draft: ReminderDraft }
+	| null;
 
 /**
- * Reminders (HAB-12): one habit's independent reminder times, each with its
- * own days and toggle → "Add a time" (capped at 4) → the notifications-off
- * notice when permission is denied. The app-wide Evening review no longer
- * lives here (HAB-21) — only a temporary pointer to Settings.
+ * Reminders (HAB-43, R1–R3, R5): one habit's list of 24-hour times, each with
+ * its own days. The red minus on the left removes a time at once with an Undo
+ * toast; a tap opens the sheet to change its time and days; + (or the empty
+ * state's button) opens it on 09:00. With iOS notifications off a banner says
+ * why nothing will arrive and the times stay editable. The app-wide Evening
+ * review lives in Settings, not here.
  */
-export function RemindersScreen({ habitId, addTime }: RemindersScreenProps) {
-	const addTimeDay = parseWeekdayParam(addTime);
+export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const router = useRouter();
 	const { colors } = useTheme();
 	const data = useReminderQueries(habitId);
 	const actions = useReminderActions();
-	// A card with a conflict starts open so its warning is seen; every other
-	// card starts collapsed. Once tapped, a card keeps the state it was left
-	// in — so adding an unscheduled day to an open card can't collapse it
-	// and hide the warning it just caused.
-	const [expandedById, setExpandedById] = useState<
-		ReadonlyMap<number, boolean>
-	>(new Map());
-	const [editingId, setEditingId] = useState<number | null>(null);
-	const hasOpenedAddTime = useRef(false);
-	const habitToAddTo = data ? data.habit : undefined;
-	const canAddTime = data ? !data.atCap : false;
-
-	// The deep link from Monthly: add the time once, as soon as the habit has
-	// loaded, and go straight to its time picker like a tap on "Add a time".
-	useEffect(() => {
-		if (addTimeDay === undefined || hasOpenedAddTime.current) return;
-		if (!habitToAddTo) return;
-		hasOpenedAddTime.current = true;
-		if (!canAddTime) return;
-		void actions.addReminder(habitToAddTo, [addTimeDay]).then((result) => {
-			if (result.ok) setEditingId(result.value.id);
-		});
-	}, [addTimeDay, habitToAddTo, canAddTime, actions.addReminder]);
+	const [sheet, setSheet] = useState<SheetState>(null);
 
 	// Still loading: a neutral blank, never a "not found" flash (audit A5-04).
 	if (data === undefined) {
@@ -91,42 +78,51 @@ export function RemindersScreen({ habitId, addTime }: RemindersScreenProps) {
 			<View style={[styles.screen, { backgroundColor: colors.bg }]}>
 				<EmptyState
 					icon="questionmark"
-					headline="Habit not found"
-					subtitle="It may have been deleted."
+					headline={detailCopy.notFound.title}
+					subtitle={detailCopy.notFound.body}
 				/>
 			</View>
 		);
 	}
 
-	const { habit, reminders, cap, atCap, notificationsDenied } = data;
-	const editing = reminders.find((reminder) => reminder.id === editingId);
+	const { habit, reminders, atCap, notificationsDenied } = data;
+	const everyDay = WEEKDAYS.map(({ day }) => day).filter((day) =>
+		canHabitFallOn(habit, day),
+	);
+	const conflicts = reminders.filter(
+		(reminder) => reminder.unscheduledDays.length > 0,
+	);
 
-	function isExpanded(reminder: ReminderWithConflicts) {
-		return expandedById.get(reminder.id) ?? reminder.unscheduledDays.length > 0;
-	}
-
-	function flip(reminder: ReminderWithConflicts) {
-		const next = !isExpanded(reminder);
-		setExpandedById((current) => new Map(current).set(reminder.id, next));
-	}
-
-	// No confirmation: the row goes at once and the toast offers Undo, which puts
-	// the same row (id, time, days, on/off) back and re-syncs its notifications.
-	async function handleRemove(reminder: Reminder) {
-		const result = await actions.removeReminder(habit, reminder.id);
-		if (!result.ok) return;
-		showToast({
-			message: `Removed the ${formatReminderTime(reminder)} reminder`,
-			actionLabel: "Undo",
-			onAction: () => actions.restoreReminder(reminder),
+	function openAdd() {
+		setSheet({
+			kind: "add",
+			draft: { ...DEFAULT_REMINDER_TIME, weekdays: everyDay },
 		});
 	}
 
-	async function handleAdd() {
-		const result = await actions.addReminder(habit);
+	// No confirmation: the row goes at once and the toast offers Undo, which puts
+	// the same row (id, time, days) back and re-syncs its notifications.
+	async function handleRemove(reminder: Reminder) {
+		const result = await actions.removeReminder(habit, reminder.id);
 		if (!result.ok) return;
-		// Straight into picking its time — the default is only a placeholder.
-		setEditingId(result.value.id);
+		showMessage(messages.reminderRemoved, [formatReminderTime(reminder)], () =>
+			actions.restoreReminder(reminder),
+		);
+	}
+
+	async function handleSave(draft: ReminderDraft) {
+		if (!sheet) return;
+		// Editing a time that was stored as off turns it on again: the toggle is gone.
+		const result =
+			sheet.kind === "add"
+				? await actions.addReminder(habit, draft)
+				: await actions.editReminder(habit, sheet.id, {
+						...draft,
+						enabled: true,
+					});
+		// A failed save leaves the sheet open (with its error toast) rather than
+		// silently losing the edit.
+		if (result.ok) setSheet(null);
 	}
 
 	return (
@@ -141,65 +137,92 @@ export function RemindersScreen({ habitId, addTime }: RemindersScreenProps) {
 				style={[styles.screen, { backgroundColor: colors.bg }]}
 				contentContainerStyle={styles.content}
 			>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
+				<ScreenHeader
+					eyebrow={remindersCopy.eyebrow(habit.name, scheduleLabel(habit))}
+					title={remindersCopy.title}
 				>
-					Reminders
-				</Text>
-
-				{reminders.map((reminder) => (
-					<ReminderCard
-						key={reminder.id}
-						reminder={reminder}
-						expanded={isExpanded(reminder)}
-						onToggleExpanded={() => flip(reminder)}
-						onEditTime={() => setEditingId(reminder.id)}
-						onChangeEnabled={(enabled) =>
-							actions.editReminder(habit, reminder.id, { enabled })
-						}
-						onChangeDays={(weekdays) =>
-							actions.editReminder(habit, reminder.id, { weekdays })
-						}
-						onRemove={() => handleRemove(reminder)}
-					/>
-				))}
-
-				<View style={styles.addGroup}>
-					<AddRow
-						label="Add a time"
-						count={reminderCountLabel(reminders.length, cap)}
-						onPress={handleAdd}
-						disabled={atCap || actions.isAdding}
-					/>
-					<Caption>{atCap ? REMINDER_CAP_MESSAGE : REMINDER_HINT}</Caption>
-				</View>
+					{reminders.length > 0 && !atCap ? (
+						<HeaderCircleButton
+							symbol="plus"
+							accessibilityLabel={remindersCopy.add}
+							onPress={openAdd}
+						/>
+					) : null}
+				</ScreenHeader>
 
 				{notificationsDenied ? (
-					<Banner tone="neutral">{NOTIFICATIONS_OFF_NOTICE}</Banner>
+					<Banner
+						tone="warning"
+						symbol="bell.slash"
+						title={remindersCopy.denied.title}
+						action={{
+							label: remindersCopy.denied.action,
+							onPress: () => void Linking.openSettings(),
+						}}
+					>
+						{remindersCopy.denied.body}
+					</Banner>
 				) : null}
 
-				{/* TODO(backlog): remove NEW-27 and this pointer (docs/backlog.md). */}
-				<MovedSettingPointer
-					body="Looking for the evening review? It covers every habit at once, so it now lives in Settings."
-					linkLabel="Open Settings →"
-					onPress={() => router.push("/settings")}
-				/>
+				{reminders.length === 0 ? (
+					<EmptyState
+						icon="bell"
+						headline={remindersCopy.empty.title}
+						subtitle={remindersCopy.empty.body}
+						centered={false}
+					>
+						<Button
+							label={remindersCopy.add}
+							fullWidth={false}
+							onPress={openAdd}
+							disabled={actions.isAdding}
+						/>
+					</EmptyState>
+				) : (
+					<View style={styles.group}>
+						<Container variant="flat">
+							{reminders.map((reminder) => (
+								<ReminderRow
+									key={reminder.id}
+									reminder={reminder}
+									off={!reminder.enabled}
+									onEdit={() =>
+										setSheet({
+											kind: "edit",
+											id: reminder.id,
+											draft: {
+												hour: reminder.hour,
+												minute: reminder.minute,
+												weekdays: reminder.weekdays,
+											},
+										})
+									}
+									onRemove={() => handleRemove(reminder)}
+								/>
+							))}
+						</Container>
+						<FieldHelper plain tone="hint">
+							{atCap ? REMINDER_CAP_MESSAGE : remindersCopy.hint}
+						</FieldHelper>
+					</View>
+				)}
+
+				{conflicts.map((reminder) => (
+					<Banner key={reminder.id} tone="warning">
+						{`${formatReminderTime(reminder)}: ${unscheduledDaysWarning(reminder.unscheduledDays)}`}
+					</Banner>
+				))}
 			</ScrollView>
 
-			<ReminderTimeSheet
-				time={editing ?? null}
-				onDismiss={() => setEditingId(null)}
-				onSave={async ({ hour, minute }) => {
-					if (!editing) return;
-					const result = await actions.editReminder(habit, editing.id, {
-						hour,
-						minute,
-					});
-					// A failed save leaves the sheet open (with its error toast) rather
-					// than silently losing the edit.
-					if (result.ok) setEditingId(null);
-				}}
+			<ReminderSheet
+				draft={sheet?.draft ?? null}
+				title={
+					sheet?.kind === "edit"
+						? reminderSheetCopy.edit
+						: reminderSheetCopy.add
+				}
+				onDismiss={() => setSheet(null)}
+				onSave={handleSave}
 			/>
 		</>
 	);
@@ -210,17 +233,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
-		paddingHorizontal: 16,
-		paddingTop: 8,
+		paddingHorizontal: space[500],
+		paddingTop: space[300],
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
-		gap: 12,
+		gap: space[500],
 	},
-	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
-		marginBottom: 4,
-	},
-	addGroup: {
-		gap: 8,
+	group: {
+		gap: space[150],
 	},
 });

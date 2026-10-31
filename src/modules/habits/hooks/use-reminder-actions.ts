@@ -8,7 +8,7 @@ import {
 	restoreReminder,
 	setEveningReview,
 } from "../services/reminder-service";
-import type { Habit, IsoWeekday, ReminderPatch } from "../types";
+import type { Habit, ReminderDraft, ReminderPatch } from "../types";
 
 /*
  * Anything that turns a notification *on* first makes sure the OS has been
@@ -16,9 +16,9 @@ import type { Habit, IsoWeekday, ReminderPatch } from "../types";
  * settings are kept, and the screen shows a persistent notice instead.
  */
 
-async function addTime(habit: Habit, onlyDays?: readonly IsoWeekday[]) {
+async function addTime(habit: Habit, draft?: ReminderDraft) {
 	await ensureNotificationPermission();
-	return addReminder(habit, onlyDays);
+	return addReminder(habit, draft);
 }
 
 async function editTime(
