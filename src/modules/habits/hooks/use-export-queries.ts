@@ -3,14 +3,16 @@ import {
 	type ExportSummary,
 	summarizeExport,
 } from "../domain/export-data";
+import { useCategories } from "../repositories/category-repository";
 import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
+import { useAllReminders } from "../repositories/reminder-repository";
 import type { ExportOptions } from "../types";
 
-/** Archived habits are included by default (HAB-15) — the Settings row quotes the same. */
+/** Archived habits are always included (HAB-44); JSON is the default, as the sheet opens on it. */
 export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
-	format: "csv",
+	format: "json",
 	includeArchived: true,
 };
 
@@ -23,7 +25,9 @@ export function useExportQueries(options: ExportOptions): {
 	const entries = useAllEntries();
 	const notes = useEntryNotes();
 	const frozenDays = useFrozenDays();
-	const source = { habits, entries, notes, frozenDays };
+	const reminders = useAllReminders();
+	const categories = useCategories();
+	const source = { habits, entries, notes, frozenDays, reminders, categories };
 
 	return { source, summary: summarizeExport(source, options, new Date()) };
 }

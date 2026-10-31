@@ -1,37 +1,23 @@
-import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { Banner } from "@/components/ui/composite/banner";
-import { Container } from "@/components/ui/composite/container";
 import { FileCard } from "@/components/ui/composite/file-card";
-import { ListItem } from "@/components/ui/composite/list-item";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
 import { Button } from "@/components/ui/primitives/button";
-import { Caption } from "@/components/ui/primitives/caption";
-import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { KeyValueRow } from "@/components/ui/primitives/key-value-row";
+import { FieldHelper } from "@/components/ui/primitives/field-helper";
+import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
-import { Toggle } from "@/components/ui/primitives/toggle";
-import { copyDiagnostics } from "@/lib/diagnostics/diagnostics";
-import { typeScale } from "@/theme/theme";
-import { useTheme } from "@/theme/use-theme";
+import { space } from "@/theme/theme";
 import { formatCount, pluralise } from "@/utils/format";
 import { useExportActions } from "../hooks/use-export-actions";
 import {
 	DEFAULT_EXPORT_OPTIONS,
 	useExportQueries,
 } from "../hooks/use-export-queries";
-import {
-	EXPORT_FAILURE_REASSURANCE,
-	entriesLabel,
-	exportButtonLabel,
-	exportFailureMessage,
-	habitsCountLabel,
-	kilobytesLabel,
-	logsCountLabel,
-	rangeLabel,
-} from "../presenters/settings-helpers";
+import { exportCopy } from "../messages";
+import { kilobytesLabel } from "../presenters/settings-helpers";
 import type { ExportFormat, ExportOptions } from "../types";
 
 type ExportSheetProps = {
@@ -39,28 +25,62 @@ type ExportSheetProps = {
 	onClose: () => void;
 };
 
+const FORMAT_WORD: Record<ExportFormat, "JSON" | "CSV"> = {
+	json: "JSON",
+	csv: "CSV",
+};
+
 /**
- * The export flow (HAB-15, frames B3–B6) as one stacked sheet that never
- * navigates away: confirm → progress → ready, or failed. Confirm states
- * exactly what goes in the file, and the button quotes the entry count for
- * the current toggle. Progress is the only phase that can't be dismissed by
- * the scrim — Cancel export is its own action.
+ * Export data (HAB-44, EX1–EX4), opened from Settings and from Progress ›
+ * Export. One sheet, four states of one export: choose JSON or CSV with a line
+ * on what each is for; writing, with the file's name, a real percentage, the
+ * format locked and the button reading Exporting…; ready, as a file card with
+ * Share file; failed, with the reason and Retry first. Archived habits are
+ * always in. The export lives in a store, so closing the sheet while it writes
+ * leaves it running and a toast says when it is ready.
  */
 export function ExportSheet({ visible, onClose }: ExportSheetProps) {
-	const { colors } = useTheme();
 	const [options, setOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
-	const { source, summary } = useExportQueries(options);
+	const { source } = useExportQueries(options);
 	const exporter = useExportActions();
-	const { phase } = exporter;
-	const [diagnosticsResult, setDiagnosticsResult] = useState<
-		"copied" | "shared" | "failed" | null
-	>(null);
+	const { phase, setSheetOpen } = exporter;
+
+	// A finished export toasts only while no sheet is up.
+	useEffect(() => {
+		setSheetOpen(visible);
+		return () => setSheetOpen(false);
+	}, [visible, setSheetOpen]);
 
 	function close() {
 		exporter.reset();
-		setOptions((current) => ({ ...current, includeArchived: true }));
 		onClose();
 	}
+
+	const running =
+		phase.name === "progress"
+			? phase.fileName.endsWith(".csv")
+				? "csv"
+				: "json"
+			: null;
+	const format = running ?? options.format;
+
+	const formatPicker = (
+		<View style={styles.field}>
+			<SectionLabel>{exportCopy.format}</SectionLabel>
+			<SegmentedControl<ExportFormat>
+				label={exportCopy.formatLabel}
+				options={[
+					{ value: "json", label: exportCopy.json },
+					{ value: "csv", label: exportCopy.csv },
+				]}
+				value={format}
+				disabled={running !== null}
+				onChange={(next) =>
+					setOptions((current) => ({ ...current, format: next }))
+				}
+			/>
+		</View>
+	);
 
 	const content = (() => {
 		switch (phase.name) {
@@ -68,58 +88,17 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 				return (
 					<>
 						<SheetHeader
-							title="Export your data"
-							actionLabel="Cancel"
+							title={exportCopy.title}
+							actionLabel={exportCopy.close}
 							onAction={close}
 						/>
-						<Text style={[styles.lead, { color: colors.sub }]}>
-							One file with every habit, log, note and streak. It's created on
-							this iPhone — you choose where it goes next.
-						</Text>
-						<Container variant="inset">
-							<KeyValueRow label="Habits" value={habitsCountLabel(summary)} />
-							<KeyValueRow label="Entries" value={logsCountLabel(summary)} />
-							<KeyValueRow label="Range" value={rangeLabel(summary.range)} />
-						</Container>
-						<Container variant="inset" dividers>
-							<ListItem
-								embedded
-								title="Format"
-								trailing={
-									<SegmentedControl<ExportFormat>
-										label="File format"
-										size="compact"
-										options={[
-											{ value: "csv", label: "CSV" },
-											{ value: "json", label: "JSON" },
-										]}
-										value={options.format}
-										onChange={(format) =>
-											setOptions((current) => ({ ...current, format }))
-										}
-									/>
-								}
-							/>
-							<ListItem
-								embedded
-								title="Include archived habits"
-								trailing={
-									<Toggle
-										value={options.includeArchived}
-										onValueChange={(includeArchived) =>
-											setOptions((current) => ({
-												...current,
-												includeArchived,
-											}))
-										}
-										accessibilityLabel="Include archived habits"
-									/>
-								}
-							/>
-						</Container>
+						{formatPicker}
+						<FieldHelper plain tone="hint">
+							{exportCopy.explain}
+						</FieldHelper>
 						<Button
-							label={exportButtonLabel(summary.logs)}
-							onPress={() => exporter.run(source, options)}
+							label={exportCopy.button(FORMAT_WORD[options.format])}
+							onPress={() => void exporter.run(source, options)}
 						/>
 					</>
 				);
@@ -127,157 +106,90 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 				const { done, total } = phase.progress;
 				return (
 					<>
-						<View style={styles.heading}>
-							<Text
-								accessibilityRole="header"
-								style={[styles.title, { color: colors.ink }]}
-							>
-								Exporting…
-							</Text>
-							<Text
-								style={[styles.lead, styles.centered, { color: colors.sub }]}
-							>
-								Usually a second or two. Keep Habits open.
-							</Text>
-						</View>
-						<Container variant="inset">
-							<View style={styles.progressLabels}>
-								<Text style={[styles.progressLabel, { color: colors.ink }]}>
-									Packing entries
-								</Text>
-								<Text style={[styles.progressLabel, { color: colors.sub }]}>
-									{formatCount(done)} of {formatCount(total)}
-								</Text>
-							</View>
-							<ProgressBar value={total === 0 ? 0 : done / total} />
-						</Container>
-						<Button label="Preparing file…" disabled onPress={() => {}} />
-						<Button
-							label="Cancel export"
-							variant="link"
-							onPress={exporter.cancel}
+						<SheetHeader
+							title={exportCopy.title}
+							actionLabel={exportCopy.close}
+							onAction={close}
 						/>
+						{formatPicker}
+						<ProgressBar
+							label={exportCopy.writing(phase.fileName)}
+							value={total === 0 ? 0 : done / total}
+						/>
+						<FieldHelper plain tone="hint">
+							{exportCopy.progressNote}
+						</FieldHelper>
+						<Button label={exportCopy.exporting} disabled onPress={() => {}} />
 					</>
 				);
 			}
 			case "ready":
 				return (
 					<>
-						<View style={styles.heading}>
-							<IconBadge
-								symbol="checkmark"
-								size="large"
-								accent={{ tint: colors.ink, ink: colors.onAccent }}
-							/>
-							<Text
-								accessibilityRole="header"
-								style={[styles.title, { color: colors.ink }]}
-							>
-								Export ready
-							</Text>
-							<Text
-								style={[styles.lead, styles.centered, { color: colors.sub }]}
-							>
-								Saved on this iPhone. Send it anywhere — nothing was uploaded.
-							</Text>
-						</View>
+						<SheetHeader
+							title={exportCopy.title}
+							actionLabel={exportCopy.close}
+							onAction={close}
+						/>
 						<FileCard
 							name={phase.result.name}
-							meta={`${kilobytesLabel(phase.result.sizeBytes)} · ${pluralise(phase.result.habits, "habit")} · ${entriesLabel(phase.result.logs)}`}
+							meta={exportCopy.fileMeta(
+								kilobytesLabel(phase.result.sizeBytes),
+								pluralise(phase.result.habits, "habit"),
+								`${formatCount(phase.result.logs)} ${phase.result.logs === 1 ? "log" : "logs"}`,
+							)}
 						/>
-						{exporter.delivery?.kind === "error" ? (
-							<Banner tone="error">{exporter.delivery.message}</Banner>
+						{exporter.shareFailed ? (
+							<Banner tone="error">{exportCopy.shareFailed}</Banner>
 						) : null}
-						{exporter.delivery?.kind === "saved" ? (
-							<Caption>Saved to Files.</Caption>
-						) : null}
-						<Button label="Share file…" onPress={exporter.share} />
+						<Button label={exportCopy.share} onPress={exporter.share} />
 						<Button
-							label="Save to Files"
+							label={exportCopy.done}
 							variant="secondary"
-							onPress={exporter.saveToFiles}
+							onPress={close}
 						/>
-						<Button label="Done" variant="link" onPress={close} />
+						<FieldHelper plain tone="hint">
+							{exportCopy.shareNote}
+						</FieldHelper>
 					</>
 				);
 			case "failed":
 				return (
 					<>
-						<View style={styles.heading}>
-							<IconBadge
-								symbol="exclamationmark"
-								size="large"
-								accent={{ tint: colors.warnTint, ink: colors.warnInk }}
-							/>
-							<Text
-								accessibilityRole="header"
-								style={[styles.title, { color: colors.ink }]}
-							>
-								Export didn't finish
-							</Text>
-						</View>
-						<Banner>{exportFailureMessage(phase.reason)}</Banner>
-						<Caption>{EXPORT_FAILURE_REASSURANCE}</Caption>
-						<Button label="Try again" onPress={exporter.retry} />
-						<Button label="Close" variant="secondary" onPress={close} />
-						{/* The real cause is in the log; this puts it where it can be sent. */}
-						<Button
-							label="Copy diagnostics"
-							variant="link"
-							onPress={async () =>
-								setDiagnosticsResult(await copyDiagnostics())
-							}
+						<SheetHeader
+							title={exportCopy.title}
+							actionLabel={exportCopy.close}
+							onAction={close}
 						/>
-						{diagnosticsResult ? (
-							<Caption
-								tone={diagnosticsResult === "failed" ? "error" : "default"}
-							>
-								{diagnosticsResult === "failed"
-									? "Couldn't copy diagnostics."
-									: diagnosticsResult === "shared"
-										? "Diagnostics ready to share."
-										: "Diagnostics copied."}
-							</Caption>
-						) : null}
+						<Banner
+							tone="error"
+							symbol="exclamationmark.circle"
+							title={exportCopy.failed.title}
+						>
+							{phase.reason.kind === "storage"
+								? exportCopy.failed.storage
+								: exportCopy.failed.unknown}
+						</Banner>
+						<Button label={exportCopy.failed.retry} onPress={exporter.retry} />
+						<Button
+							label={exportCopy.failed.cancel}
+							variant="secondary"
+							onPress={close}
+						/>
 					</>
 				);
 		}
 	})();
 
 	return (
-		<Sheet
-			visible={visible}
-			onDismiss={close}
-			dismissible={phase.name !== "progress"}
-		>
+		<Sheet visible={visible} onDismiss={close}>
 			{content}
 		</Sheet>
 	);
 }
 
 const styles = StyleSheet.create({
-	heading: {
-		alignItems: "center",
-		gap: 8,
-	},
-	title: {
-		fontSize: typeScale.section,
-		fontWeight: "500",
-		textAlign: "center",
-	},
-	lead: {
-		fontSize: typeScale.subtitle,
-		lineHeight: 18,
-		paddingHorizontal: 4,
-	},
-	centered: {
-		textAlign: "center",
-	},
-	progressLabels: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-	},
-	progressLabel: {
-		fontSize: typeScale.subtitle,
+	field: {
+		gap: space[150],
 	},
 });

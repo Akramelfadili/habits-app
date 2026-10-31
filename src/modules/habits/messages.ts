@@ -143,6 +143,16 @@ export const messages = {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
 	},
+	/** EX2: the sheet was closed while the file was writing. */
+	exportReady: {
+		tone: "success",
+		text: (name: string) => `Export ready · ${name}`,
+	},
+	/** EX4: the sheet was closed and the export then failed; it stays until dismissed. */
+	exportFailedWhileClosed: {
+		tone: "error",
+		text: "Export failed. Open Export data to retry — nothing was changed.",
+	},
 	/** S6: confirmed by a toast, no Undo — nothing changed. */
 	diagnosticsCopied: { tone: "info", text: "Diagnostics copied" },
 	diagnosticsShared: { tone: "info", text: "Diagnostics ready to share" },
@@ -1107,6 +1117,45 @@ export const settingsCopy = {
 		copy: "Copy diagnostics",
 		copyBody: "Version, device and recent errors",
 		copyValue: "Copy",
+	},
+} as const;
+
+/**
+ * Export data (HAB-44, EX1–EX4): choose JSON or CSV, watch it write, then share
+ * the file — or read why it failed. Closing the sheet keeps a running export
+ * going; a toast says when it is ready.
+ */
+export const exportCopy = {
+	title: "Export data",
+	close: "Close",
+	format: "Format",
+	formatLabel: "File format",
+	json: "JSON",
+	csv: "CSV",
+	explain:
+		"JSON has everything, for backup or another app. CSV has one row per log, for spreadsheets.",
+	button: (format: "JSON" | "CSV") => `Export ${format}`,
+	exporting: "Exporting…",
+	writing: (name: string) => `Writing ${name}`,
+	progressNote:
+		"Usually under a second. Closing the sheet keeps it going; a toast says when it’s ready.",
+	/** "48 KB · 9 habits · 1,284 logs" */
+	fileMeta: (size: string, habits: string, logs: string) =>
+		`${size} · ${habits} · ${logs}`,
+	share: "Share file",
+	done: "Done",
+	shareNote:
+		"Share opens the iOS share sheet. The file is temporary — export again if it’s gone.",
+	shareFailed: "Couldn’t share the file. Try again.",
+	failed: {
+		title: "Export failed",
+		/** The reason first, then what did not happen. */
+		storage:
+			"Not enough storage on this iPhone. Nothing was changed — free up space, then retry.",
+		unknown:
+			"Something went wrong while writing the file. Nothing was changed — try again.",
+		retry: "Retry",
+		cancel: "Cancel",
 	},
 } as const;
 

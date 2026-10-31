@@ -1,11 +1,8 @@
 import {
-	exportButtonLabel,
-	exportFailureMessage,
+	kilobytesLabel,
 	notificationImpact,
-	rangeLabel,
+	versionLabel,
 } from "./settings-helpers";
-
-const today = new Date(2026, 8, 16, 12);
 
 describe("notificationImpact (SY6)", () => {
 	const habits = [
@@ -40,29 +37,18 @@ describe("notificationImpact (SY6)", () => {
 	});
 });
 
-describe("export labels", () => {
-	it("pluralises and groups thousands", () => {
-		expect(exportButtonLabel(1284)).toBe("Export 1,284 entries");
-		expect(exportButtonLabel(1)).toBe("Export 1 entry");
+describe("kilobytesLabel", () => {
+	it("rounds up to whole kilobytes, at least 1, with thousands grouped", () => {
+		expect(kilobytesLabel(1)).toBe("1 KB");
+		expect(kilobytesLabel(49152)).toBe("48 KB");
+		expect(kilobytesLabel(1048576 * 2)).toBe("2,048 KB");
 	});
+});
 
-	it("shows a range, one date, or a placeholder", () => {
-		expect(rangeLabel({ from: "2026-03-03", to: "2026-09-16" })).toBe(
-			"3 Mar – 16 Sep 2026",
+describe("versionLabel", () => {
+	it("joins version and build", () => {
+		expect(versionLabel({ version: "3.0", build: "412" })).toBe(
+			"3.0 (build 412)",
 		);
-		expect(rangeLabel({ from: "2025-11-03", to: "2026-09-16" })).toBe(
-			"3 Nov 2025 – 16 Sep 2026",
-		);
-		expect(rangeLabel({ from: "2026-09-16", to: "2026-09-16" })).toBe(
-			"16 Sep 2026",
-		);
-		expect(rangeLabel(null)).toBe("No entries yet");
-	});
-
-	it("explains a storage failure with the size needed", () => {
-		expect(exportFailureMessage({ kind: "storage", neededBytes: 219136 })).toBe(
-			"This iPhone is out of storage. The file needs about 214 KB free.",
-		);
-		expect(exportFailureMessage({ kind: "unknown" })).toMatch(/Try again/);
 	});
 });

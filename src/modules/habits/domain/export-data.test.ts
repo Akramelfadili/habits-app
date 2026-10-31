@@ -120,7 +120,14 @@ describe("summarizeExport", () => {
 	it("has no range when nothing has been recorded", () => {
 		expect(
 			summarizeExport(
-				{ habits: [], entries: [], notes: [], frozenDays: [] },
+				{
+					habits: [],
+					entries: [],
+					notes: [],
+					frozenDays: [],
+					reminders: [],
+					categories: [],
+				},
 				{ format: "csv", includeArchived: true },
 				EXPORT_TODAY,
 			).range,

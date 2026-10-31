@@ -8,6 +8,12 @@ const mockSource = makeExportSource();
 jest.mock("../repositories/habit-repository", () => ({
 	useHabitsList: () => ({ habits: mockSource.habits, loaded: true }),
 }));
+jest.mock("../repositories/reminder-repository", () => ({
+	useAllReminders: () => mockSource.reminders,
+}));
+jest.mock("../repositories/category-repository", () => ({
+	useCategories: () => mockSource.categories,
+}));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockSource.entries,
 	useEntryNotes: () => mockSource.notes,
@@ -26,5 +32,15 @@ describe("useExportQueries", () => {
 		expect(withArchived.result.current.summary.logs).toBe(4);
 		expect(without.result.current.summary.logs).toBe(3);
 		expect(without.result.current.summary.archivedHabits).toBe(0);
+	});
+
+	it("hands the export everything it writes: reminders and categories as well as habits, logs, notes and frozen days", async () => {
+		const { result } = await renderHook(() =>
+			useExportQueries({ format: "json", includeArchived: true }),
+		);
+		expect(result.current.source.reminders).toBe(mockSource.reminders);
+		expect(result.current.source.categories).toBe(mockSource.categories);
+		expect(result.current.source.frozenDays).toBe(mockSource.frozenDays);
+		expect(result.current.source.habits).toBe(mockSource.habits);
 	});
 });
