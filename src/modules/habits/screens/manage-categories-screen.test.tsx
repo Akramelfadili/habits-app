@@ -174,7 +174,7 @@ describe("ManageCategoriesScreen — browse (C1)", () => {
 		expect(screen.getAllByText("Not used").length).toBeGreaterThan(0);
 	});
 
-	it("with no custom categories (C6) teaches the feature and offers no Reorder", async () => {
+	it("with no custom categories (C6) teaches the feature and still offers Reorder", async () => {
 		mockView = viewWith([]);
 		await render(<ManageCategoriesScreen />);
 		expect(screen.getByText("10 BUILT-IN")).toBeTruthy();
@@ -185,7 +185,8 @@ describe("ManageCategoriesScreen — browse (C1)", () => {
 				name: "Add a category, Group habits your own way",
 			}),
 		).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "Reorder" })).toBeNull();
+		// Deliberately unlike the C6 frame: the built-ins reorder too.
+		expect(screen.getByRole("button", { name: "Reorder" })).toBeTruthy();
 	});
 
 	it("Add category (the +) and the empty row both open the add sheet", async () => {

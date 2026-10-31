@@ -26,7 +26,6 @@ function setup(
 				eyebrow="10 built-in · 2 custom"
 				accessibilityLabel="Categories, 10 built-in, 2 custom"
 				mode="browse"
-				canReorder
 				{...handlers}
 				{...overrides}
 			/>,
@@ -58,8 +57,8 @@ describe("CategoriesHeader", () => {
 		expect(onAdd).toHaveBeenCalledTimes(1);
 	});
 
-	it("offers no Reorder with nothing to reorder, or while a row is being renamed", async () => {
-		const { view } = setup({ canReorder: false });
+	it("hides Reorder only while a row is being renamed (C3)", async () => {
+		const { view } = setup({ renaming: true });
 		await view;
 		expect(screen.queryByRole("button", { name: "Reorder" })).toBeNull();
 		expect(screen.getByRole("button", { name: "Add category" })).toBeTruthy();

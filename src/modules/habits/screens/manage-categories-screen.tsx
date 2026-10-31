@@ -114,7 +114,6 @@ export function ManageCategoriesScreen() {
 						customs.length,
 					)}
 					mode={mode}
-					canReorder={customs.length > 0}
 					renaming={renamingId !== null}
 					onReorder={() => {
 						setRenamingId(null);

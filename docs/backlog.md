@@ -259,9 +259,9 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **Type is locked in Edit** with "Build and Break can’t be switched after saving." (the frame F9 draws it enabled; direction is fixed at creation, HAB-01).
 - **The live example uses `min(5, target − 1)`** ("5 of 8 glasses"; "1 of 1" for a target of 1).
 
-- **Categories (C1–C6, DC6): no Reorder button without a custom category (C6).** The frame draws none, so the built-ins can only be reordered once one custom exists. Say if the built-ins should reorder on their own.
+- **Categories: Reorder is always offered, even with no custom category (C6 draws none).** The built-ins reorder too and Other stays last and fixed, so hiding it would lock the built-in order. Deliberate spec-wins difference from the frame (owner's decision).
 - **Reorder lists every category but Other**, custom and built-in mixed (C2), and the note says "Other stays last." Other keeps the highest `sort_order`; a category added later takes max + 1 and groups still force Other to the end.
-- **Rename has Done only** (C3 draws no Cancel): an unchanged name leaves edit mode without writing, an empty or duplicate name blocks Done. The duplicate message sits under the field inside the row, not under the card as the frame draws it.
+- **Rename has Done only, no Cancel** (C3 draws none; owner's decision): an unchanged name leaves edit mode without writing, an empty or duplicate name blocks Done. The duplicate message sits under the field inside the row, not under the card as the frame draws it.
 - **Delete in use (C5) has no Close.** The frame draws one; V3-25 says confirm sheets end with Cancel. The preview lists each habit with "Outdoors → Other" instead of the frame's single line. A category in use is not undoable (its habits moved); the toast says how many moved. Deleting an unused one is one tap with a 5 s Undo that restores the same row in the same place (`restoreCategory`).
 - **Count lines** read "2 habits · 1 archived", "1 archived" (no active habits left) or "Not used" (none at all); archived habits always count.
 - **`Button` gained `rowAction` / `dangerLink`** (quiet ink and danger text actions inside a row); `Rename` and `Delete` are no longer the old outlined small pills.

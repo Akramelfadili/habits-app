@@ -15,8 +15,6 @@ type CategoriesHeaderProps = {
 	/** What VoiceOver says for the title block. */
 	accessibilityLabel: string;
 	mode: "browse" | "reorder";
-	/** Reorder is offered once there is something besides the built-ins (C6 draws it off). */
-	canReorder: boolean;
 	/** Renaming in place draws neither Reorder nor Done (C3). */
 	renaming?: boolean;
 	onReorder: () => void;
@@ -27,6 +25,8 @@ type CategoriesHeaderProps = {
 /**
  * V3-02 for Categories (C1, C2): the counts as an eyebrow, the display title,
  * and — browsing — a Reorder pill beside a + circle, or — reordering — Done.
+ * Reorder is always there: the built-ins reorder too (Other stays last), so even
+ * with no custom category it is offered, unlike the C6 frame.
  * At accessibility sizes the buttons move above the title. Eyebrow and title
  * are one VoiceOver stop.
  */
@@ -34,7 +34,6 @@ export function CategoriesHeader({
 	eyebrow,
 	accessibilityLabel,
 	mode,
-	canReorder,
 	renaming = false,
 	onReorder,
 	onDone,
@@ -61,7 +60,7 @@ export function CategoriesHeader({
 			<HeaderPillButton label={categoriesCopy.done} onPress={onDone} />
 		) : (
 			<>
-				{canReorder && !renaming ? (
+				{!renaming ? (
 					<HeaderPillButton
 						label={categoriesCopy.reorder}
 						onPress={onReorder}
