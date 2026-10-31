@@ -141,20 +141,22 @@ describe("RemindersScreen", () => {
 			mockData = data({ reminders: [] });
 		});
 
-		it("is an empty state with one clear action, and no + in the header", async () => {
+		it("is an empty state with its Add time button, and the + in the header as everywhere", async () => {
 			await render(<RemindersScreen habitId={1} />);
 			expect(screen.getByText("No reminders yet")).toBeTruthy();
 			expect(
 				screen.getByText("Add a time and choose the days it repeats."),
 			).toBeTruthy();
 			expect(screen.getAllByRole("button", { name: "Add time" })).toHaveLength(
-				1,
+				2,
 			);
 		});
 
 		it("Add time opens the sheet on 09:00, on the days the habit falls on", async () => {
 			await render(<RemindersScreen habitId={1} />);
-			await fireEvent.press(screen.getByRole("button", { name: "Add time" }));
+			await fireEvent.press(
+				screen.getAllByRole("button", { name: "Add time" })[1],
+			);
 			expect(mockTimeWheel.mock.calls.at(-1)?.[0]).toMatchObject({
 				hour: 9,
 				minute: 0,

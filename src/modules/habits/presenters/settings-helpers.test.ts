@@ -47,8 +47,6 @@ describe("kilobytesLabel", () => {
 
 describe("versionLabel", () => {
 	it("joins version and build", () => {
-		expect(versionLabel({ version: "3.0", build: "412" })).toBe(
-			"3.0 (build 412)",
-		);
+		expect(versionLabel({ version: "3.0", build: "412" })).toBe("3.0 (412)");
 	});
 });

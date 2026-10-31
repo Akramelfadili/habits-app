@@ -64,7 +64,14 @@ export function Banner({
 				<Text
 					style={[
 						styles.title,
-						{ color: error && card ? colors.dangerBg : colors.ink },
+						{
+							color:
+								error && card
+									? colors.dangerBg
+									: warning && card
+										? colors.warnInk
+										: colors.ink,
+						},
 					]}
 				>
 					{title}
@@ -91,13 +98,16 @@ export function Banner({
 			testID="banner"
 			style={[
 				styles.banner,
-				card
-					? {
-							backgroundColor: colors.card,
-							borderColor: error ? colors.dangerBg : colors.border,
-							borderWidth: error ? 1 : StyleSheet.hairlineWidth,
-						}
-					: { backgroundColor: warning ? colors.warnTint : colors.inner },
+				card && warning
+					? // R5 / SY6: the amber card — warn tint, no outline, the title in warn ink.
+						{ backgroundColor: colors.warnTint }
+					: card
+						? {
+								backgroundColor: colors.card,
+								borderColor: error ? colors.dangerBg : colors.border,
+								borderWidth: error ? 1 : StyleSheet.hairlineWidth,
+							}
+						: { backgroundColor: warning ? colors.warnTint : colors.inner },
 				largeText && styles.stacked,
 			]}
 		>

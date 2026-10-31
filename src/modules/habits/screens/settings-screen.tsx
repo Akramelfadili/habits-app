@@ -67,7 +67,6 @@ export function SettingsScreen() {
 						{THEMES.map((preference) => (
 							<ListItem
 								key={preference}
-								embedded
 								title={settingsCopy.appearance.theme[preference]}
 								subtitle={
 									preference === "system"
@@ -106,13 +105,8 @@ export function SettingsScreen() {
 							value={settings.eveningReviewEnabled}
 							onValueChange={actions.setEveningReview}
 						/>
+						<ListItem title={settingsCopy.reminders.time} value={eveningTime} />
 						<ListItem
-							embedded
-							title={settingsCopy.reminders.time}
-							value={eveningTime}
-						/>
-						<ListItem
-							embedded
 							title={settingsCopy.reminders.notifications}
 							value={permissionValue}
 						/>
@@ -126,7 +120,6 @@ export function SettingsScreen() {
 							<LibrarySectionHeader label={settingsCopy.denied.affected} />
 							<Container variant="flat">
 								<ListItem
-									embedded
 									title={settingsCopy.denied.reminders}
 									subtitle={settingsCopy.denied.remindersImpact(
 										settings.notificationImpact.times,
@@ -134,7 +127,6 @@ export function SettingsScreen() {
 									)}
 								/>
 								<ListItem
-									embedded
 									title={settingsCopy.denied.evening}
 									subtitle={settingsCopy.denied.eveningImpact(
 										settings.eveningReviewEnabled,
@@ -153,7 +145,6 @@ export function SettingsScreen() {
 					<LibrarySectionHeader label={settingsCopy.streaks.header} />
 					<Container variant="flat">
 						<ListItem
-							embedded
 							title={settingsCopy.streaks.left}
 							value={settingsCopy.streaks.leftValue(
 								Math.max(0, size - usedThisMonth),
@@ -161,7 +152,6 @@ export function SettingsScreen() {
 							)}
 						/>
 						<ListItem
-							embedded
 							title={settingsCopy.streaks.used}
 							value={String(usedThisMonth)}
 						/>
@@ -178,7 +168,6 @@ export function SettingsScreen() {
 					<LibrarySectionHeader label={settingsCopy.data.header} />
 					<Container variant="flat">
 						<ListItem
-							embedded
 							title={settingsCopy.data.export}
 							value={settingsCopy.data.exportValue}
 							leading={<IconBadge symbol="square.and.arrow.up" />}
@@ -192,12 +181,10 @@ export function SettingsScreen() {
 					<LibrarySectionHeader label={settingsCopy.about.header} />
 					<Container variant="flat">
 						<ListItem
-							embedded
 							title={settingsCopy.about.version}
 							value={versionLabel(settings.about)}
 						/>
 						<ListItem
-							embedded
 							title={settingsCopy.about.copy}
 							subtitle={settingsCopy.about.copyBody}
 							value={settingsCopy.about.copyValue}

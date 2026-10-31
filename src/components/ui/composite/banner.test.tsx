@@ -157,4 +157,18 @@ describe("Banner", () => {
 			screen.getByLabelText("Archived on 12 October. Hidden from Today."),
 		).toBeTruthy();
 	});
+
+	it("card with the warning tone is the amber card: warn tint, no outline, title in warn ink (R5, SY6)", async () => {
+		await render(
+			<Banner tone="warning" symbol="bell.slash" title="Notifications are off">
+				Reminders won’t arrive until you allow them.
+			</Banner>,
+		);
+		expect(screen.getByTestId("banner")).toHaveStyle({
+			backgroundColor: semanticColors.light.warnTint,
+		});
+		expect(screen.getByText("Notifications are off")).toHaveStyle({
+			color: semanticColors.light.warnInk,
+		});
+	});
 });

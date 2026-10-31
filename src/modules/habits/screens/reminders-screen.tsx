@@ -141,7 +141,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 					eyebrow={remindersCopy.eyebrow(habit.name, scheduleLabel(habit))}
 					title={remindersCopy.title}
 				>
-					{reminders.length > 0 && !atCap ? (
+					{!atCap ? (
 						<HeaderCircleButton
 							symbol="plus"
 							accessibilityLabel={remindersCopy.add}

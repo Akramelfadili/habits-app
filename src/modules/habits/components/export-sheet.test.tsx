@@ -144,10 +144,14 @@ describe("ExportSheet — writing (EX2)", () => {
 			screen.getByLabelText("Writing habits-2026-10-23.json, 62 percent"),
 		).toBeTruthy();
 		expect(screen.getByText("62%")).toBeTruthy();
+		// Locked: the other format is off, the one being written stays picked.
 		expect(
 			screen.getByRole("tab", { name: "CSV" }).props.accessibilityState
 				.disabled,
 		).toBe(true);
+		expect(
+			screen.getByRole("tab", { name: "JSON" }).props.accessibilityState,
+		).toMatchObject({ selected: true, disabled: false });
 		expect(
 			screen.getByText("Exporting…").parent?.props.accessibilityState.disabled,
 		).toBe(true);

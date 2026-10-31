@@ -69,12 +69,21 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 			<SectionLabel>{exportCopy.format}</SectionLabel>
 			<SegmentedControl<ExportFormat>
 				label={exportCopy.formatLabel}
+				// Locked while writing: the other format is switched off and the
+				// one being written stays as it is (EX2).
 				options={[
-					{ value: "json", label: exportCopy.json },
-					{ value: "csv", label: exportCopy.csv },
+					{
+						value: "json",
+						label: exportCopy.json,
+						disabled: running !== null && running !== "json",
+					},
+					{
+						value: "csv",
+						label: exportCopy.csv,
+						disabled: running !== null && running !== "csv",
+					},
 				]}
 				value={format}
-				disabled={running !== null}
 				onChange={(next) =>
 					setOptions((current) => ({ ...current, format: next }))
 				}

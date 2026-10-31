@@ -105,7 +105,11 @@ export function ListItem({
 	const chevron = navigable ? (
 		<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
 	) : selected ? (
-		<SymbolView name="checkmark" size={16} tintColor={colors.ink} />
+		// Drawn, like the segmented control's check, so the pick shows on web too.
+		<View
+			testID="list-item-check"
+			style={[styles.check, { borderColor: colors.ink }]}
+		/>
 	) : null;
 
 	// `trailing` sits beside the pressable area, not inside it — a trailing
@@ -223,6 +227,13 @@ export function ListItem({
 }
 
 const styles = StyleSheet.create({
+	check: {
+		width: space[150],
+		height: space[300],
+		borderRightWidth: 2,
+		borderBottomWidth: 2,
+		transform: [{ rotate: "45deg" }],
+	},
 	row: {
 		flexDirection: "row",
 		alignItems: "center",

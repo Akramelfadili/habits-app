@@ -632,55 +632,52 @@ export const SCREENS = {
 		note: "Opened from an insight's 'Reschedule habit →': scrolled so Frequency is at the top.",
 	},
 
-	// HAB-12 — Reminders
-	reminders: {
-		feature: "HAB-12",
-		route: "/(today)/reminders/1?fixtures=reminders",
-		mockup: "docs/mockups/hab-21-e4.png",
-		note: "Cards start collapsed except a conflicting one (21:00); the other two are tapped open to match the mockup. Permission reads as denied in this scenario.",
+	// HAB-43 — Reminders (R1–R3, R5)
+	"reminders-empty": {
+		feature: "HAB-43",
+		route: "/(today)/reminders/1",
+		mockup: "docs/mockups/v3/renders/settings/slice_01.png",
+		note: "R1 — no times: the empty state with one Add time. Data differs from the frame (Evening walk, not Upper body).",
+	},
+	"reminders-times": {
+		feature: "HAB-43",
+		route: "/(today)/reminders/1?fixtures=reminders-times",
+		mockup: "docs/mockups/v3/renders/settings/slice_01.png",
+		note: "R2 — two times with their own days (07:00 Tue, Thu · 18:30 Thu), the red remove on the left, the hint under the card.",
+	},
+	"reminders-removed": {
+		feature: "HAB-43",
+		route: "/(today)/reminders/1?fixtures=reminders-times",
+		mockup: "docs/mockups/v3/renders/settings/slice_02.png",
+		note: "R3 — 18:30 removed: the row is gone at once and the toast says so with Undo.",
 		async interact(page) {
-			await page.getByLabel("Reminder at 07:20, Weekdays").click();
-			await page.getByLabel("Reminder at 13:00, Mon, Wed, Fri").click();
+			await page.getByLabel("Remove reminder at 18:30").click();
+			await page.getByText("Reminder at 18:30 removed").waitFor();
+			await page.waitForTimeout(300);
 		},
 	},
-	"reminders-dark": {
-		feature: "HAB-21",
-		route: "/(today)/reminders/1?fixtures=reminders",
-		mockup: "docs/mockups/hab-21-e4.png",
-		colorScheme: "dark",
-		note: "E4 dark column.",
+	"reminders-sheet": {
+		feature: "HAB-43",
+		route: "/(today)/reminders/1?fixtures=reminders-times",
+		mockup: "docs/mockups/v3/renders/settings/slice_02.png",
+		note: "R3 sheet — tapping a time opens the sheet with its time and days (the frame's Add sheet is R4, Later). Web shows a static read-out where iOS has the wheel.",
 		async interact(page) {
-			await page.getByLabel("Reminder at 07:20, Weekdays").click();
-			await page.getByLabel("Reminder at 13:00, Mon, Wed, Fri").click();
+			await page.getByLabel("07:00, Tue, Thu").click();
+			await page.getByText("Save time").waitFor();
+			await page.waitForTimeout(300);
 		},
 	},
-	"reminders-at-cap-dark": {
-		feature: "HAB-21",
-		route: "/(today)/reminders/1?fixtures=reminders-at-cap&theme=dark",
-		mockup: null,
-		colorScheme: "dark",
-		note: "At the cap in dark: cap message, then the pointer.",
+	"reminders-denied": {
+		feature: "HAB-43",
+		route: "/(today)/reminders/1?fixtures=reminders-times-denied",
+		mockup: "docs/mockups/v3/renders/settings/slice_03.png",
+		note: "R5 — notifications off: the warning banner with Open Settings above the times, which stay editable.",
 	},
 	"reminders-at-cap": {
-		feature: "HAB-12",
+		feature: "HAB-43",
 		route: "/(today)/reminders/1?fixtures=reminders-at-cap",
-		mockup: "docs/mockups/reminders-at-cap.png",
-		note: "Cap message replaces the 'Up to four times' caption; the HAB-21 pointer still follows. The mockup predates HAB-21 and still draws the Evening review row.",
-	},
-	"reminders-empty": {
-		feature: "HAB-12",
-		route: "/(today)/reminders/1",
-		mockup: "docs/mockups/hab-21-e4.png",
-		note: "A habit with no reminders yet — caption and HAB-21 pointer only.",
-	},
-	"reminder-time-sheet": {
-		feature: "HAB-12",
-		route: "/(today)/reminders/1?fixtures=reminders",
 		mockup: null,
-		note: "Time sheet for the 21:00 reminder. Web shows a static read-out where iOS has the SwiftUI wheel.",
-		async interact(page) {
-			await page.getByText("Change time", { exact: true }).click();
-		},
+		note: "Four times: no +, the cap note under the card; a time stored as off says Off; the habit is daily so no warning.",
 	},
 
 	// HAB-39 — the Habits tab (V3-4a): H1–H6, H9, H10. Clock = the mockup's Friday 23 October.
@@ -862,110 +859,147 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-15 — Settings & local data export (B1–B6)
+	// HAB-44 — Settings (S1–S7, SY6) and Export (EX1–EX4)
 	settings: {
-		feature: "HAB-15",
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&theme=light",
-		mockup: "docs/mockups/hab-15-b1.png",
-		note: "B1 light — Light picked, Evening review on, never exported. Adds a plain Categories row (no mockup — proposal, HAB-25's expected home). Chevrons are SF Symbols (blank on web).",
+		mockup: "docs/mockups/v3/renders/settings/slice_03.png",
+		note: "S1 / S2 — System picked (resolves light): Appearance as radio rows, the Monday and text-size note, then the evening review. One screen where the frames draw a hub with a page per row.",
 	},
-	"settings-dark": {
-		feature: "HAB-15",
-		route: "/(habits)/settings?fixtures=settings&theme=dark",
-		mockup: "docs/mockups/hab-15-b1.png",
-		colorScheme: "dark",
-		note: "B1 dark column — Dark picked (OS emulated dark).",
+	"settings-reminders": {
+		feature: "HAB-44",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
+		note: "S3 — scrolled to Reminders: the evening review on, its time, Notifications Allowed and the 'only on days with open habits' rule.",
+		async interact(page) {
+			await page.getByText("Left this month").scrollIntoViewIfNeeded();
+			await page.waitForTimeout(400);
+		},
+	},
+	"settings-streaks": {
+		feature: "HAB-44",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
+		note: "S4 — Streaks: left and used this month, the rule in plain words, how to use one. Not built from S4: the 'Saved' stat (PR-08) and Auto-use freezes (Later).",
+		async interact(page) {
+			await page.getByText("JSON, CSV").scrollIntoViewIfNeeded();
+			await page.waitForTimeout(400);
+		},
+	},
+	"settings-data": {
+		feature: "HAB-44",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
+		note: "S5 — Data and About, scrolled to the end: Export data (JSON, CSV), Version, Copy diagnostics. No Backup row (Later).",
+		async interact(page) {
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 3000);
+			await page.waitForTimeout(500);
+		},
+	},
+	"settings-about": {
+		feature: "HAB-44",
+		route: "/(habits)/settings?fixtures=settings&theme=light",
+		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
+		note: "S6 — Copy diagnostics tapped: the toast says 'Diagnostics copied', no Undo. Privacy and Send feedback rows are not built (no spec).",
+		async interact(page) {
+			await page
+				.context()
+				.grantPermissions(["clipboard-read", "clipboard-write"]);
+			await page.getByText("Copy diagnostics").click();
+			await page
+				.getByText(/iagnostics/)
+				.last()
+				.waitFor();
+			await page.waitForTimeout(300);
+		},
+	},
+	"settings-ax": {
+		feature: "HAB-44",
+		route: "/(habits)/settings?fixtures=settings&theme=light&textSize=ax",
+		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
+		note: "S7 — AX3: rows stack (icon, text, value), the title block stacks.",
 	},
 	"settings-explicit-over-os": {
-		feature: "HAB-15",
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&theme=dark",
 		mockup: null,
 		colorScheme: "light",
 		note: "Explicit Dark while the emulated OS is light: the app must draw dark.",
 	},
-	"settings-system-notifications-off": {
-		feature: "HAB-15",
+	"settings-notifications-off": {
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings-notifications-off",
-		mockup: "docs/mockups/hab-15-b2.png",
-		note: "B2 — System (resolves light), Evening review on but iOS notifications off: neutral notice with 'Open iOS Settings →'; Last export 2 August.",
-	},
-	"settings-system-dark": {
-		feature: "HAB-15",
-		route: "/(habits)/settings?fixtures=settings-notifications-off",
-		mockup: "docs/mockups/hab-15-b2.png",
-		colorScheme: "dark",
-		note: "B2 dark — System follows the emulated dark OS; caption says 'currently dark'.",
-	},
-	"export-confirm": {
-		feature: "HAB-15",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
-		mockup: "docs/mockups/hab-15-b3.png",
-		note: "B3 — confirm sheet: counts, range, CSV/JSON, archived toggle, 'Export N entries'. Fixture data differs from the mockup's numbers.",
+		mockup: "docs/mockups/v3/renders/states/slice_12.png",
+		note: "SY6 — iOS notifications off: one banner with Open Settings, Affected: '4 times on 3 habits' and the evening review, 'Times stay editable…'. Notifications row says Off.",
 		async interact(page) {
-			await page.getByText("Export all data", { exact: true }).click();
-			await page.getByText("Export your data").waitFor();
+			await page
+				.getByText(
+					"Times stay editable while notifications are off. Nothing is deleted.",
+				)
+				.scrollIntoViewIfNeeded();
+			await page.waitForTimeout(400);
 		},
 	},
-	"export-confirm-archived-off": {
-		feature: "HAB-15",
+	"export-choose": {
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&theme=light",
-		mockup: "docs/mockups/hab-15-b3.png",
-		note: "B3 with 'Include archived habits' off — counts and the button shrink.",
+		mockup: "docs/mockups/v3/renders/states/slice_04.png",
+		note: "EX1 — Export data: JSON picked, the line on what each is for, 'Export JSON'. Opened from Settings; Progress opens the same sheet (export-from-progress).",
 		async interact(page) {
-			await page.getByText("Export all data", { exact: true }).click();
-			await page.getByText("Export your data").waitFor();
-			await page.getByLabel("Include archived habits").click();
+			await page.getByText("Export data", { exact: true }).click();
+			await page.getByText("Export JSON").waitFor();
+		},
+	},
+	"export-from-progress": {
+		feature: "HAB-44",
+		route: `${PROGRESS}progress-v3`,
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/states/slice_04.png",
+		note: "EX1 from Progress › Export: the same sheet over the Progress tab, as the frame draws it.",
+		async interact(page) {
+			// The collapsed inline bar carries a second, inert Export: the header's is the last.
+			await page.getByLabel("Export data", { exact: true }).last().click();
+			await page.getByText("Export JSON").waitFor();
 		},
 	},
 	"export-progress": {
-		feature: "HAB-15",
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&theme=light",
-		mockup: "docs/mockups/hab-15-b4.png",
-		note: "B4 — determinate progress. The page slows setTimeout(0) so the ~1s export is still running when captured.",
+		mockup: "docs/mockups/v3/renders/states/slice_05.png",
+		note: "EX2 — writing: the file's name with a percentage, the format locked, 'Exporting…'. The page slows setTimeout(0) so the ~1s export is still running when captured.",
 		async interact(page) {
-			await page.getByText("Export all data", { exact: true }).click();
+			await page.getByText("Export data", { exact: true }).click();
 			await page.evaluate(() => {
 				const original = window.setTimeout;
 				window.setTimeout = (fn, ms, ...args) =>
 					original(fn, ms === 0 ? 900 : ms, ...args);
 			});
-			await page.getByText(/^Export \d+ entr/).click();
+			await page.getByText("Export JSON").click();
 			await page.getByText("Exporting…").waitFor();
 			await page.waitForTimeout(1200);
 		},
 	},
 	"export-ready": {
-		feature: "HAB-15",
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&theme=light",
-		mockup: "docs/mockups/hab-15-b5.png",
-		note: "B5 — Export ready: file card, Share file…, Save to Files, Done.",
+		mockup: "docs/mockups/v3/renders/states/slice_05.png",
+		note: "EX3 — ready: the file card with size and counts, Share file, Done, the temporary-file note.",
 		async interact(page) {
-			await page.getByText("Export all data", { exact: true }).click();
-			await page.getByText(/^Export \d+ entr/).click();
-			await page.getByText("Export ready").waitFor();
+			await page.getByText("Export data", { exact: true }).click();
+			await page.getByText("Export JSON").click();
+			await page.getByText("Share file").waitFor();
 		},
 	},
 	"export-failed": {
-		feature: "HAB-15",
+		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=export-fails&theme=light",
-		mockup: "docs/mockups/hab-15-b6.png",
-		note: "B6 — failed on storage: reason, what's needed, 'nothing was changed', Try again / Close.",
+		mockup: "docs/mockups/v3/renders/states/slice_05.png",
+		note: "EX4 — failed on storage: the reason first, 'Nothing was changed', Retry primary, Cancel.",
 		async interact(page) {
-			await page.getByText("Export all data", { exact: true }).click();
-			await page.getByText(/^Export \d+ entr/).click();
-			await page.getByText("Export didn't finish").waitFor();
-		},
-	},
-	"export-ready-dark": {
-		feature: "HAB-15",
-		route: "/(habits)/settings?fixtures=settings&theme=dark",
-		mockup: "docs/mockups/hab-15-b5.png",
-		colorScheme: "dark",
-		note: "B5 dark column.",
-		async interact(page) {
-			await page.getByText("Export all data", { exact: true }).click();
-			await page.getByText(/^Export \d+ entr/).click();
-			await page.getByText("Export ready").waitFor();
+			await page.getByText("Export data", { exact: true }).click();
+			await page.getByText("Export JSON").click();
+			await page.getByText("Export failed").waitFor();
 		},
 	},
 
@@ -1040,27 +1074,6 @@ export const SCREENS = {
 			await categoryChip(page, "Learning").click();
 			await page.getByText("Save habit", { exact: true }).click();
 			await page.getByText("Couldn't save this habit. Try again.").waitFor();
-		},
-	},
-	"settings-about": {
-		feature: "B6",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
-		mockup: null,
-		note: "Settings scrolled to the About group: version (build), database schema, 'Copy diagnostics'.",
-		async interact(page) {
-			await page.getByText("Copy diagnostics").scrollIntoViewIfNeeded();
-			await page.mouse.wheel(0, 400);
-		},
-	},
-	"settings-about-dark": {
-		feature: "B6",
-		route: "/(habits)/settings?fixtures=settings&theme=dark",
-		mockup: null,
-		colorScheme: "dark",
-		note: "Same, dark.",
-		async interact(page) {
-			await page.getByText("Copy diagnostics").scrollIntoViewIfNeeded();
-			await page.mouse.wheel(0, 400);
 		},
 	},
 	// HAB-27 — the navigation shell: the floating pill (V3-01 B) and the
@@ -1630,6 +1643,24 @@ const DARK_TWINS = [
 	"progress-habit-picker-one",
 	"progress-month-edit-day",
 	"progress-week-edit-day",
+	"reminders-empty",
+	"reminders-times",
+	"reminders-removed",
+	"reminders-sheet",
+	"reminders-denied",
+	"reminders-at-cap",
+	"settings",
+	"settings-reminders",
+	"settings-streaks",
+	"settings-data",
+	"settings-about",
+	"settings-ax",
+	"settings-notifications-off",
+	"export-choose",
+	"export-from-progress",
+	"export-progress",
+	"export-ready",
+	"export-failed",
 ];
 for (const name of DARK_TWINS) {
 	const light = SCREENS[name];
@@ -1650,6 +1681,7 @@ const LONG_NAME_TWINS = [
 	"today",
 	"retro-log",
 	"reminders-at-cap",
+	"reminders-times",
 	"habits-tab",
 	"export-ready",
 	"progress-week",

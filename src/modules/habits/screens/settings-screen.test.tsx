@@ -208,7 +208,7 @@ describe("SettingsScreen — Data and About (S5, S6)", () => {
 
 	it("shows the version and build", async () => {
 		await render(<SettingsScreen />);
-		expect(screen.getByText("3.0 (build 412)")).toBeTruthy();
+		expect(screen.getByText("3.0 (412)")).toBeTruthy();
 	});
 
 	it.each([

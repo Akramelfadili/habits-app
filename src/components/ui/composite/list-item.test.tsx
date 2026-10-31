@@ -255,8 +255,9 @@ describe("ListItem", () => {
 		expect(screen.getByRole("radio").props.accessibilityState).toMatchObject({
 			selected: false,
 		});
-		expect(screen.queryByTestId("symbol-checkmark")).toBeNull();
+		expect(screen.queryByTestId("list-item-check")).toBeNull();
 		await rerender(<ListItem title="Dark" selected onPress={jest.fn()} />);
+		expect(screen.getByTestId("list-item-check")).toBeTruthy();
 		expect(screen.getByRole("radio").props.accessibilityState).toMatchObject({
 			selected: true,
 		});

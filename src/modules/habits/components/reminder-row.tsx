@@ -61,5 +61,6 @@ const styles = StyleSheet.create({
 	},
 	text: {
 		flex: 1,
+		paddingVertical: space[250],
 	},
 });
