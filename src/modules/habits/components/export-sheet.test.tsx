@@ -68,7 +68,8 @@ beforeEach(() => {
 	useToastStore.setState({ toast: null });
 	useExportStore.setState({
 		phase: { name: "confirm" },
-		sheetOpen: false,
+		openSheets: 0,
+		last: null,
 		shareFailed: false,
 	});
 });

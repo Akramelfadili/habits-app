@@ -381,16 +381,20 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Notifications denied (R5): warning banner "Reminders won't arrive until you allow them in iOS Settings" + Open Settings; times stay editable.
 - Insight deep link (R4) is **Later**.
 
+> **As built (V3-4b):** the screen is `ScreenHeader` (eyebrow = habit name + schedule), one flat card of `ReminderRow`s (`RemoveButton` on the left, tap = edit sheet, "Off" shown for a legacy disabled time), and one `ReminderSheet` for add and edit (the same sheet the habit form uses). The per-reminder on/off toggle is gone: remove is the way to stop one. The cap (4) shows as a banner and the footer hint. Archive and restore rebuild the habit's notifications without duplicates (tested). Denied permission shows the amber `Banner` with Open Settings. Deviations and loose ends: `docs/backlog.md` (V3-4b).
+
 ---
 
 ## HAB-44 — Settings and export
 **Frames:** S1–S7, EX1–EX4, SY6
 
 **Rules**
-- Pushed from the Habits gear. Groups: Appearance (Light/Dark/System; "Weeks start on Monday" and text size are explained, not configurable), Reminders (evening review toggle + time; notifications-off notice), Streaks (freeze count and how to use one — **copy pending PR-07**), Data (Export; backup is Later), About (version, Copy diagnostics → toast).
+- Pushed from the Habits gear. Groups: Appearance (Light/Dark/System; "Weeks start on Monday" and text size are explained, not configurable), Reminders (evening review toggle + time; notifications-off notice), Streaks (freeze count and how to use one — PR-07 resolved: 2 a month, shared, no roll-over), Data (Export; backup is Later), About (version, Copy diagnostics → toast).
 - Evening review: existing reminder only (nudge if anything is still open, sent only on days with open habits). Closing the day is Later.
 - Export (EX1–EX4): JSON or CSV → progress with file name (closing the sheet keeps it running; toast when ready) → file card (size, counts, Share file) → error banner with reason, Retry, "Nothing was changed". Same flow from Progress › Export. Archived habits included; to-dos/expenses removed (HAB-26).
 - SY6: when iOS permission is off, one banner summarising what is affected ("4 times on 3 habits") with Open Settings.
+
+> **As built (V3-4b):** Settings is **one scrolling screen** with five flat cards (Appearance, Reminders, Streaks, Data, About), not a hub with a page per frame; the frames S2–S6 and SY6 are its sections. The evening-review time is a **read-only row** (21:30, the existing schedule; the frames show an editable 21:00 — a time picker is an open question in the backlog). The evening review is scheduled only on weekdays an active habit can be due. Export is one sheet backed by a store (`useExportStore`), so closing it keeps the export running and a toast reports the result when no sheet is open; the JSON now carries reminders and categories; the file card shows size and counts. Version reads "x.y (build)". Deviations: `docs/backlog.md` (V3-4b, steps 5 and 6).
 
 ---
 

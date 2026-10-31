@@ -22,11 +22,14 @@ export type ExportPhase =
 
 type ExportState = {
 	phase: ExportPhase;
-	/** Whether an export sheet is on screen: a finished export toasts only when it is not. */
-	sheetOpen: boolean;
+	/** How many export sheets are on screen: a finished export toasts only when none is. */
+	openSheets: number;
+	/** What Retry re-runs. */
+	last: { source: ExportSource; options: ExportOptions } | null;
 	/** The share sheet could not open (the ready card says so). */
 	shareFailed: boolean;
-	setSheetOpen: (open: boolean) => void;
+	/** A sheet came on screen (+1) or left it (-1). */
+	trackSheet: (delta: 1 | -1) => void;
 	run: (source: ExportSource, options: ExportOptions) => Promise<void>;
 	retry: () => Promise<void>;
 	share: () => Promise<void>;
@@ -39,17 +42,17 @@ type ExportState = {
  * export sheet opens — from Settings or from Progress — it shows where things
  * stand: still writing, ready, or failed.
  */
-let last: { source: ExportSource; options: ExportOptions } | null = null;
-
 export const useExportStore = create<ExportState>((set, get) => ({
 	phase: { name: "confirm" },
-	sheetOpen: false,
+	openSheets: 0,
+	last: null,
 	shareFailed: false,
-	setSheetOpen: (sheetOpen) => set({ sheetOpen }),
+	trackSheet: (delta) =>
+		set((state) => ({ openSheets: Math.max(0, state.openSheets + delta) })),
 
 	run: async (source, options) => {
 		if (get().phase.name === "progress") return;
-		last = { source, options };
+		set({ last: { source, options } });
 		const today = new Date();
 		const fileName = exportFileName(
 			today,
@@ -77,7 +80,8 @@ export const useExportStore = create<ExportState>((set, get) => ({
 					),
 			});
 			set({ phase: { name: "ready", result } });
-			if (!get().sheetOpen) showMessage(messages.exportReady, [result.name]);
+			if (get().openSheets === 0)
+				showMessage(messages.exportReady, [result.name]);
 		} catch (caught) {
 			if (caught instanceof ExportCancelledError) {
 				set({ phase: { name: "confirm" } });
@@ -96,11 +100,13 @@ export const useExportStore = create<ExportState>((set, get) => ({
 							: { kind: "unknown" },
 				},
 			});
-			if (!get().sheetOpen) showMessage(messages.exportFailedWhileClosed, []);
+			if (get().openSheets === 0)
+				showMessage(messages.exportFailedWhileClosed, []);
 		}
 	},
 
 	retry: async () => {
+		const { last } = get();
 		if (last) await get().run(last.source, last.options);
 	},
 
@@ -133,6 +139,6 @@ export function useExportActions() {
 	const retry = useExportStore((state) => state.retry);
 	const share = useExportStore((state) => state.share);
 	const reset = useExportStore((state) => state.reset);
-	const setSheetOpen = useExportStore((state) => state.setSheetOpen);
-	return { phase, shareFailed, run, retry, share, reset, setSheetOpen };
+	const trackSheet = useExportStore((state) => state.trackSheet);
+	return { phase, shareFailed, run, retry, share, reset, trackSheet };
 }

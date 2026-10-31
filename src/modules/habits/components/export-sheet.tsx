@@ -43,13 +43,14 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 	const [options, setOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
 	const { source } = useExportQueries(options);
 	const exporter = useExportActions();
-	const { phase, setSheetOpen } = exporter;
+	const { phase, trackSheet } = exporter;
 
 	// A finished export toasts only while no sheet is up.
 	useEffect(() => {
-		setSheetOpen(visible);
-		return () => setSheetOpen(false);
-	}, [visible, setSheetOpen]);
+		if (!visible) return;
+		trackSheet(1);
+		return () => trackSheet(-1);
+	}, [visible, trackSheet]);
 
 	function close() {
 		exporter.reset();

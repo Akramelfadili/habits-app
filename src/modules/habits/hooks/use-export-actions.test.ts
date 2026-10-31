@@ -51,7 +51,8 @@ beforeEach(() => {
 	useToastStore.setState({ toast: null });
 	useExportStore.setState({
 		phase: { name: "confirm" },
-		sheetOpen: false,
+		openSheets: 0,
+		last: null,
 		shareFailed: false,
 	});
 });
@@ -120,12 +121,12 @@ describe("useExportActions (EX1–EX4)", () => {
 			const { result: hook } = await renderHook(() => useExportActions());
 			let running: Promise<void> = Promise.resolve();
 			await act(async () => {
-				hook.current.setSheetOpen(true);
+				hook.current.trackSheet(1);
 				running = hook.current.run(source, options);
 			});
 			await act(async () => {
 				hook.current.reset();
-				hook.current.setSheetOpen(false);
+				hook.current.trackSheet(-1);
 			});
 			expect(hook.current.phase.name).toBe("progress");
 
@@ -143,7 +144,19 @@ describe("useExportActions (EX1–EX4)", () => {
 			mockRunExport.mockResolvedValue(result);
 			const { result: hook } = await renderHook(() => useExportActions());
 			await act(async () => {
-				hook.current.setSheetOpen(true);
+				hook.current.trackSheet(1);
+				await hook.current.run(source, options);
+			});
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
+		it("stays quiet while a second sheet is still open after the first closes", async () => {
+			mockRunExport.mockResolvedValue(result);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(async () => {
+				hook.current.trackSheet(1);
+				hook.current.trackSheet(1);
+				hook.current.trackSheet(-1);
 				await hook.current.run(source, options);
 			});
 			expect(useToastStore.getState().toast).toBeNull();
