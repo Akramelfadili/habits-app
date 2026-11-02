@@ -349,10 +349,12 @@ describe("ExportSheet — VoiceOver and focus (08.3, 08.4)", () => {
 		await render(<ExportSheet visible onClose={jest.fn()} />);
 		await fireEvent.press(screen.getByText("Export JSON"));
 		await screen.findByText("Export failed");
+		// The title's own focus is still 250 ms away: only the error's has fired.
 		await act(async () => {
-			jest.advanceTimersByTime(500);
+			jest.advanceTimersByTime(150);
 		});
 		expect(screen.getByRole("alert")).toBeTruthy();
-		expect(focus).toHaveBeenCalled();
+		expect(focus).toHaveBeenCalledTimes(1);
+		expect(focus.mock.calls[0][0].props?.accessibilityRole).toBe("alert");
 	});
 });

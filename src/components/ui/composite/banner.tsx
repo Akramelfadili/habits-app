@@ -35,7 +35,7 @@ type BannerProps = {
 	action?: { label: string; onPress: () => void };
 	/** A compact button after the text — "Restore" (D4). Drops under the text at accessibility sizes. */
 	button?: { label: string; onPress: () => void; disabled?: boolean };
-	/** The message element, for a caller that moves the screen reader's focus onto a failure (`moveFocusTo`). */
+	/** The message element, for a caller that moves the screen reader's focus onto a failure (`useInitialFocus`). */
 	messageRef?: Ref<HostInstance>;
 };
 

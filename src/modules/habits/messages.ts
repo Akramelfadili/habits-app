@@ -12,7 +12,7 @@
 import { toastHoldMs } from "@/components/ui/composite/toast-host";
 import { showToast, type ToastTone } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
-import { REMINDER_CAP } from "./constants";
+import { notificationCopy, reminderCapMessage } from "./reminder-copy";
 
 export type MessageTone = ToastTone;
 
@@ -1028,19 +1028,6 @@ export const categoriesCopy = {
 	},
 } as const;
 
-/**
- * The Reminders screen (HAB-43, R1–R3, R5): one habit's 24-hour times, each with
- * its own days. Removal is instant with an Undo toast; the notifications-off
- * banner explains why nothing arrives while the times stay editable.
- */
-/** The text of the notifications the OS shows (their copy is ours, wherever they are scheduled). */
-export const notificationCopy = {
-	build: "Time for this one — check it off on Today.",
-	break: "A nudge to keep resisting today.",
-	eveningTitle: "Evening review",
-	eveningBody: "Anything left to log today? Take a minute to catch up.",
-} as const;
-
 /** Day-set names on a reminder row and the "not a scheduled day" warning. */
 export const reminderDaysCopy = {
 	none: "No days",
@@ -1052,13 +1039,17 @@ export const reminderDaysCopy = {
 			: `${names} are not scheduled days for this habit — this reminder would fire for nothing.`,
 } as const;
 
+/**
+ * The Reminders screen (HAB-43, R1–R3, R5): one habit's 24-hour times, each with
+ * its own days. Removal is instant with an Undo toast; the notifications-off
+ * banner explains why nothing arrives while the times stay editable.
+ */
 export const remindersCopy = {
 	title: "Reminders",
 	/** The eyebrow: the habit and how it repeats ("Upper body · Tue, Thu"). */
 	eyebrow: (habit: string, schedule: string) => `${habit} · ${schedule}`,
 	add: "Add time",
-	/** Under the disabled Add row, and the service's cap error. */
-	cap: `${REMINDER_CAP} of ${REMINDER_CAP} — remove one to add another. Four times a day is the cap per habit.`,
+	cap: reminderCapMessage,
 	/** R1: nothing yet — one clear action. */
 	empty: {
 		title: "No reminders yet",
@@ -1209,3 +1200,5 @@ export function showMessage<Params extends readonly unknown[]>(
 		...(undo ? { actionLabel: "Undo", onAction: undo } : {}),
 	});
 }
+
+export { notificationCopy };

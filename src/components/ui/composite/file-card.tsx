@@ -9,7 +9,7 @@ type FileCardProps = {
 	name: string;
 	/** "48 KB · 9 habits · 1,284 logs". */
 	meta: string;
-	/** The card's element, for a sheet that moves the screen reader onto the finished file (`moveFocusTo`). */
+	/** The card's element, for a sheet that moves the screen reader onto the finished file (`useInitialFocus`). */
 	cardRef?: Ref<HostInstance>;
 };
 

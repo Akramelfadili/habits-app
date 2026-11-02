@@ -312,5 +312,6 @@ Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is de
 - **Touch targets:** every new control is 44 pt or more (RemoveButton, the reminder and Settings rows, the format control, buttons, the Banner link, the reorder handle's 28 pt + 8 hitSlop). No exception.
 - **Time row chevron and icon squares are blank on web** (SF Symbols), so Settings' Time and Export rows show no chevron or glyph in the baselines.
 - **Settings dark twins were light** until the final pass (a forced `theme=light` route); fixed. S2 now draws System selected, as its note says.
-- **Test-only exports that knip still lists** (new since V3-4a): `useExportStore`, `refreshEveningReview`, `ReminderWithConflicts` — tests import them.
+- **Test-only exports that knip still lists** (new since V3-4a): `useExportStore`, `refreshEveningReview` (also used inside its own file), `ReminderWithConflicts` — tests import them.
+- **Check on a device:** every `SheetHeader` now starts VoiceOver on its title, including the sheets with a text field (New category, Quantity log); the focus may compete with the field's keyboard.
 - **Left for later (V3-6 / owner):** Privacy and Send feedback rows (no spec); a hub-style Settings with a page per row; the per-reminder on/off toggle (Habit Detail still says "All off" for a legacy off time); real-device checks of notifications, the share sheet and VoiceOver.

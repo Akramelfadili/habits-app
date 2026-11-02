@@ -22,7 +22,7 @@ import {
 	formatEveningReviewTime,
 	parseEveningReviewTime,
 } from "../domain/evening-review-time";
-import { notificationCopy, remindersCopy } from "../messages";
+import { notificationCopy, reminderCapMessage } from "../reminder-copy";
 import {
 	getAllHabits,
 	getHabit,
@@ -215,7 +215,7 @@ export async function cancelHabitNotifications(habitId: number): Promise<void> {
 
 export class ReminderCapError extends Error {
 	constructor() {
-		super(remindersCopy.cap);
+		super(reminderCapMessage);
 		this.name = "ReminderCapError";
 	}
 }
