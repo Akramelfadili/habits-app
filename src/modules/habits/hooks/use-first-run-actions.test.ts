@@ -1,13 +1,8 @@
 import { act, renderHook } from "@testing-library/react-native";
 
-const mockAddSuggestedHabits = jest.fn();
 const mockSetSetting = jest.fn();
 const mockDeleteSetting = jest.fn();
 const mockDeleteAllHabits = jest.fn();
-
-jest.mock("../services/first-run-service", () => ({
-	addSuggestedHabits: (...args: unknown[]) => mockAddSuggestedHabits(...args),
-}));
 
 jest.mock("../repositories/habit-repository", () => ({
 	deleteAllHabits: (...args: unknown[]) => mockDeleteAllHabits(...args),
@@ -18,49 +13,48 @@ jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 	deleteSetting: (...args: unknown[]) => mockDeleteSetting(...args),
 }));
 
-import {
-	FIRST_RUN_SUGGESTIONS,
-	SEEN_FIRST_RUN_SETTING_KEY,
-} from "../constants";
+import { SEEN_FIRST_RUN_SETTING_KEY } from "../constants";
 import { inProduction } from "../test-support/in-production";
 import { useFirstRunActions } from "./use-first-run-actions";
 
 describe("useFirstRunActions", () => {
 	beforeEach(() => {
-		mockAddSuggestedHabits.mockReset();
 		mockSetSetting.mockReset();
 		mockDeleteSetting.mockReset();
 		mockDeleteAllHabits.mockReset();
 	});
 
-	it("calls the service's addSuggestedHabits and reports loading state", async () => {
-		mockAddSuggestedHabits.mockResolvedValue([]);
-		const { result } = await renderHook(() => useFirstRunActions());
-
-		await act(() =>
-			result.current.addSuggestedHabits(FIRST_RUN_SUGGESTIONS.slice(0, 2)),
-		);
-
-		expect(mockAddSuggestedHabits).toHaveBeenCalledWith(
-			FIRST_RUN_SUGGESTIONS.slice(0, 2),
-		);
-		expect(result.current.isAdding).toBe(false);
-	});
-
-	it("marks the setting directly on skip and reports loading state", async () => {
+	it("writes the seen flag and resolves ok", async () => {
 		mockSetSetting.mockResolvedValue(undefined);
 		const { result } = await renderHook(() => useFirstRunActions());
 
-		await act(() => result.current.skipFirstRun());
+		let outcome: { ok: boolean } | undefined;
+		await act(async () => {
+			outcome = await result.current.markFirstRunSeen();
+		});
 
 		expect(mockSetSetting).toHaveBeenCalledWith(
 			SEEN_FIRST_RUN_SETTING_KEY,
 			"true",
 		);
-		expect(result.current.isSkipping).toBe(false);
+		expect(outcome?.ok).toBe(true);
+		expect(result.current.isMarking).toBe(false);
 	});
 
-	it("clears every habit and un-sets the flag on resetFirstRun", async () => {
+	it("resolves not-ok and keeps the error when the write fails, so the caller stays put", async () => {
+		mockSetSetting.mockRejectedValue(new Error("disk full"));
+		const { result } = await renderHook(() => useFirstRunActions());
+
+		let outcome: { ok: boolean } | undefined;
+		await act(async () => {
+			outcome = await result.current.markFirstRunSeen();
+		});
+
+		expect(outcome?.ok).toBe(false);
+		expect(result.current.markError).toBeInstanceOf(Error);
+	});
+
+	it("resets by deleting every habit and then un-setting the flag (dev only)", async () => {
 		mockDeleteAllHabits.mockResolvedValue(undefined);
 		mockDeleteSetting.mockResolvedValue(undefined);
 		const { result } = await renderHook(() => useFirstRunActions());
@@ -69,10 +63,9 @@ describe("useFirstRunActions", () => {
 
 		expect(mockDeleteAllHabits).toHaveBeenCalledTimes(1);
 		expect(mockDeleteSetting).toHaveBeenCalledWith(SEEN_FIRST_RUN_SETTING_KEY);
-		expect(result.current.isResetting).toBe(false);
 	});
 
-	it("exposes no resetFirstRun outside __DEV__", async () => {
+	it("exposes no reset in production", async () => {
 		await inProduction(async () => {
 			const { result } = await renderHook(() => useFirstRunActions());
 			expect(result.current.resetFirstRun).toBeUndefined();

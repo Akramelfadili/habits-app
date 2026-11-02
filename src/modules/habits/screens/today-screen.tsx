@@ -21,6 +21,7 @@ import { motion, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
+import { FirstRunReminderOffer } from "../components/first-run/first-run-reminder-offer";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { PastDayBar } from "../components/today/past-day-bar";
@@ -31,7 +32,6 @@ import { TodayRestDay } from "../components/today/today-rest-day";
 import { TodayHeader } from "../components/today-header";
 import { WeekStrip } from "../components/week-strip";
 import { EVENING_STARTS_AT_HOUR } from "../constants";
-import { useFirstRunQueries } from "../hooks/use-first-run-queries";
 import { useOffScheduleQueries } from "../hooks/use-off-schedule-queries";
 import { useSelectedDayQueries } from "../hooks/use-selected-day-queries";
 import { useTodayDevActions } from "../hooks/use-today-dev-actions";
@@ -40,7 +40,6 @@ import { useTodayLogActions } from "../hooks/use-today-log-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
 import { useWeekStripQueries } from "../hooks/use-week-strip-queries";
 import { todayCopy } from "../messages";
-import { FirstRunScreen } from "./first-run-screen";
 
 /**
  * No bottom edge: the floating pill carries its own 22 pt float over the home
@@ -59,7 +58,6 @@ export function TodayScreen() {
 	const { eligibleHabits, loggedToday } = useOffScheduleQueries(
 		today.selectedDay,
 	);
-	const { hasSeenFirstRun } = useFirstRunQueries();
 	const dev = useTodayDevActions();
 	const header = useCollapsingHeader();
 	const reduceMotion = useReducedMotion();
@@ -160,10 +158,6 @@ export function TodayScreen() {
 		);
 	}
 
-	if (today.viewState === "no-habits" && !hasSeenFirstRun) {
-		return <FirstRunScreen />;
-	}
-
 	return (
 		<SafeAreaView
 			edges={SCREEN_EDGES}
@@ -245,6 +239,7 @@ export function TodayScreen() {
 				</Animated.View>
 			</Animated.ScrollView>
 			{quantitySheet}
+			<FirstRunReminderOffer />
 			{freeze.atRiskInfo && freeze.atRiskHabit ? (
 				<StreakAtRiskSheet
 					visible

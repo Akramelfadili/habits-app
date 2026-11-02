@@ -1,6 +1,5 @@
 import { asc, desc, eq, isNotNull, isNull, max, sql } from "drizzle-orm";
 import { useMemo } from "react";
-import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { db } from "@/lib/db/client";
 import {
 	type categories,
@@ -184,46 +183,6 @@ export async function createHabit(input: CreateHabitInput): Promise<Habit> {
 	return toHabit(row);
 }
 
-/**
- * Creates several habits and marks an app-setting in one SQLite transaction —
- * used by First Run (HAB-06) so a mid-batch crash can't leave some suggested
- * habits committed while "seen first run" stays unset (which would both
- * duplicate those habits and show First Run again on the next attempt).
- *
- * This manages BEGIN/COMMIT/ROLLBACK with raw SQL instead of Drizzle's own
- * `db.transaction()` helper: that helper's expo-sqlite implementation issues
- * COMMIT as soon as the callback *returns*, without awaiting it — correct for
- * a synchronous callback, but a real bug for an async one (the callback
- * returns a pending promise at its first `await`, so COMMIT fires before the
- * rest of the batch has actually run). Driving BEGIN, the inserts, and COMMIT
- * through this file's normal awaited calls, in order, sidesteps that entirely.
- */
-export async function createHabitsAndMarkSetting(
-	inputs: CreateHabitInput[],
-	setting: { key: string; value: string },
-): Promise<Habit[]> {
-	await db.run(sql`begin`);
-	try {
-		const created: Habit[] = [];
-		for (const input of inputs) {
-			const [row] = await db
-				.insert(habits)
-				.values(habitInsertValues(input, new Date(), await nextSortOrder()))
-				.returning();
-			created.push(await toHabit(row));
-		}
-		// Same `db` connection, still inside the open transaction above — calling
-		// the generic settings repository's own write here (rather than
-		// duplicating its upsert) keeps it as the only place that logic lives.
-		await setSetting(setting.key, setting.value);
-		await db.run(sql`commit`);
-		return created;
-	} catch (err) {
-		await rollbackQuietly();
-		throw err;
-	}
-}
-
 export async function updateHabit(
 	id: number,
 	input: UpdateHabitInput,
@@ -297,7 +256,13 @@ export async function getHabit(id: number): Promise<Habit | undefined> {
  * Saves a new manual order for some habits (HAB-13): the habits' *existing*
  * sort values are redistributed in the given order, so reordering within a
  * category never moves that category relative to the others. One
- * transaction, same raw-SQL reasoning as `createHabitsAndMarkSetting`.
+ * transaction, with BEGIN/COMMIT/ROLLBACK issued as raw SQL rather than
+ * through Drizzle's `db.transaction()`: that helper's expo-sqlite
+ * implementation issues COMMIT as soon as the callback *returns*, without
+ * awaiting it — correct for a synchronous callback, a real bug for an async
+ * one (the pending promise returns at its first `await`, so COMMIT fires before
+ * the rest has run). Driving the statements through this file's awaited calls,
+ * in order, sidesteps that.
  */
 export async function reorderHabits(orderedIds: number[]): Promise<void> {
 	const rows = await db

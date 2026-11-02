@@ -1,123 +1,94 @@
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useRef } from "react";
+import {
+	type HostInstance,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Banner } from "@/components/ui/composite/banner";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
-import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { Button } from "@/components/ui/primitives/button";
-import { Checkbox } from "@/components/ui/primitives/checkbox";
-import { habitAccentInk, typeScale } from "@/theme/theme";
+import { IconBadge } from "@/components/ui/primitives/icon-badge";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
-import { pluralise } from "@/utils/format";
-import { builtInAppearance, type FirstRunSuggestion } from "../constants";
+import { useInitialFocus } from "@/utils/use-initial-focus";
+import { leaveFirstRun } from "../first-run-navigation";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
-import { useFirstRunQueries } from "../hooks/use-first-run-queries";
+import { firstRunCopy } from "../messages";
 
-function defaultSelectedIds(suggestions: FirstRunSuggestion[]): Set<string> {
-	return new Set(suggestions.filter((s) => s.preselected).map((s) => s.id));
-}
+/** The three things the app does, each with its glyph (FR1). */
+const FEATURE_SYMBOLS = {
+	today: "checkmark.circle",
+	progress: "chart.bar",
+	freezes: "snowflake",
+} as const;
 
+/**
+ * FR1: the first thing a new install shows, with no tab bar. One line about
+ * the app, the three things it does, and two ways in — Add your first habit
+ * (the slim form) or Browse suggestions. Skip for now leads to an empty Today.
+ */
 export function FirstRunScreen() {
-	const { colors, scheme } = useTheme();
-	const { suggestions } = useFirstRunQueries();
-	const { addSuggestedHabits, skipFirstRun, isAdding, isSkipping } =
-		useFirstRunActions();
-	const [selectedIds, setSelectedIds] = useState(() =>
-		defaultSelectedIds(suggestions),
-	);
+	const router = useRouter();
+	const { colors } = useTheme();
+	const { markFirstRunSeen, isMarking, markError } = useFirstRunActions();
+	const titleRef = useRef<HostInstance>(null);
+	// 08.4: the first heading is where the screen reader starts.
+	useInitialFocus(titleRef, true, 100);
 
-	function toggle(id: string) {
-		setSelectedIds((current) => {
-			const next = new Set(current);
-			if (next.has(id)) {
-				next.delete(id);
-			} else {
-				next.add(id);
-			}
-			return next;
-		});
+	async function skip() {
+		const result = await markFirstRunSeen();
+		if (result.ok) leaveFirstRun(router);
 	}
-
-	function handleAdd() {
-		const selected = suggestions.filter((s) => selectedIds.has(s.id));
-		if (selected.length === 0) return;
-		addSuggestedHabits(selected);
-	}
-
-	function handleSkip() {
-		skipFirstRun();
-	}
-
-	const count = selectedIds.size;
-	const isBusy = isAdding || isSkipping;
 
 	return (
 		<SafeAreaView style={[styles.screen, { backgroundColor: colors.bg }]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.header}>
+				<View style={styles.hero}>
 					<Text
+						ref={titleRef}
 						accessibilityRole="header"
+						accessibilityLabel={firstRunCopy.welcome.title.replace("\n", " ")}
 						style={[styles.title, { color: colors.ink }]}
 					>
-						Pick a couple to start
+						{firstRunCopy.welcome.title}
 					</Text>
-					<Text style={[styles.subtitle, { color: colors.sub }]}>
-						Two is enough for the first week. You can add more any time.
+					<Text style={[styles.body, { color: colors.sub }]}>
+						{firstRunCopy.welcome.body}
 					</Text>
 				</View>
 
-				{suggestions.map((suggestion) => {
-					const checked = selectedIds.has(suggestion.id);
-					return (
-						<Container key={suggestion.id} selected={checked}>
-							<ListItem
-								embedded
-								title={suggestion.name}
-								subtitle={suggestion.subtitle}
-								onPress={() => toggle(suggestion.id)}
-								leading={
-									<View
-										style={[
-											styles.dot,
-											{
-												backgroundColor: habitAccentInk(
-													builtInAppearance(suggestion.category).hue,
-													scheme,
-												),
-											},
-										]}
-									/>
-								}
-								trailing={
-									<Checkbox
-										checked={checked}
-										onPress={() => toggle(suggestion.id)}
-										accessibilityLabel={suggestion.name}
-									/>
-								}
-							/>
-						</Container>
-					);
-				})}
-			</ScrollView>
+				<Container variant="flat">
+					{firstRunCopy.welcome.features.map((feature) => (
+						<ListItem
+							key={feature.key}
+							title={feature.title}
+							subtitle={feature.body}
+							leading={<IconBadge symbol={FEATURE_SYMBOLS[feature.key]} />}
+						/>
+					))}
+				</Container>
 
-			<View style={styles.footer}>
-				<Button
-					label={
-						count === 0 ? "Add habits" : `Add ${pluralise(count, "habit")}`
-					}
-					onPress={handleAdd}
-					disabled={count === 0}
-					loading={isAdding}
-				/>
-				<Button
-					label="Start from scratch"
-					variant="link"
-					fullWidth={false}
-					onPress={handleSkip}
-					disabled={isBusy}
-				/>
-			</View>
+				<View style={styles.actions}>
+					{markError ? (
+						<Banner tone="error">{firstRunCopy.continueFailed}</Banner>
+					) : null}
+					<Button
+						label={firstRunCopy.welcome.addFirst}
+						onPress={() => router.push("/first-run/habit")}
+					/>
+					<Button
+						label={firstRunCopy.welcome.skip}
+						variant="link"
+						disabled={isMarking}
+						onPress={skip}
+					/>
+				</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
@@ -127,35 +98,22 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
-		paddingHorizontal: 16,
-		paddingTop: 12,
-		gap: 12,
+		flexGrow: 1,
+		justifyContent: "center",
+		paddingHorizontal: space[500],
+		paddingVertical: space[800],
+		gap: space[500],
 	},
-	header: {
-		gap: 6,
-		paddingBottom: 8,
+	hero: {
+		gap: space[300],
 	},
 	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
+		...textStyles.display,
 	},
-	subtitle: {
-		fontSize: typeScale.subtitle,
+	body: {
+		...textStyles.bodyLg,
 	},
-	dot: {
-		width: 12,
-		height: 12,
-		borderRadius: 6,
-	},
-	footer: {
-		paddingHorizontal: 16,
-		paddingTop: 8,
-		// First Run still renders inside the Today tab, so the floating pill
-		// overlays it and would sit on top of "Add N habits" (HAB-46 takes the
-		// tabs away from first launch in V3-5; until then it pays the same
-		// clearance as every other screen under the bar).
-		paddingBottom: TAB_BAR_BOTTOM_PADDING,
-		alignItems: "center",
-		gap: 4,
+	actions: {
+		gap: space[200],
 	},
 });

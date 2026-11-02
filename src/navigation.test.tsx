@@ -48,6 +48,9 @@ jest.mock("@/modules/habits/screens/reminders-screen", () => ({
 jest.mock("@/modules/habits/screens/habit-detail-screen", () => ({
 	HabitDetailScreen: mockStub("detail"),
 }));
+jest.mock("@/modules/habits/screens/first-run-screen", () => ({
+	FirstRunScreen: mockStub("first-run"),
+}));
 jest.mock("@/modules/habits/screens/habit-form-screen", () => ({
 	HabitFormScreen: mockStub("habit-form"),
 }));
@@ -57,6 +60,21 @@ jest.mock("@/modules/habits/screens/habit-form-screen", () => ({
 jest.mock("@/lib/db/client", () => ({ db: {}, expoDb: {} }));
 jest.mock("@/lib/db/database-provider", () => ({
 	DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+// Where the app opens (HAB-46): the tabs, or First Run with no tab bar.
+let mockGate: "loading" | "first-run" | "done" = "done";
+let mockNeedsSeenMark = false;
+const mockMarkFirstRunSeen = jest.fn();
+jest.mock("@/modules/habits/hooks/use-first-run-queries", () => ({
+	useFirstRunQueries: () => ({
+		gate: mockGate,
+		needsSeenMark: mockNeedsSeenMark,
+	}),
+}));
+jest.mock("@/modules/habits/hooks/use-first-run-actions", () => ({
+	useFirstRunActions: () => ({
+		markFirstRunSeen: (...args: unknown[]) => mockMarkFirstRunSeen(...args),
+	}),
 }));
 jest.mock("@/modules/habits/hooks/use-startup-actions", () => ({
 	useStartupActions: () => {},
@@ -72,6 +90,9 @@ jest.mock("@/lib/notifications/notifications", () => ({
 // Appearance choice has been read.
 beforeEach(() => {
 	useThemePreferenceStore.setState({ isLoaded: true });
+	mockGate = "done";
+	mockNeedsSeenMark = false;
+	mockMarkFirstRunSeen.mockReset().mockResolvedValue({ ok: true });
 });
 
 async function renderApp(initialUrl: string) {
@@ -84,6 +105,58 @@ function tabGroup(app: { getSegments(): string[] }) {
 		.getSegments()
 		.find((segment) => /^\((today|progress|habits)\)$/.test(segment));
 }
+
+describe("First Run opens instead of the tabs (HAB-46)", () => {
+	it("a new install lands on First Run and no tab bar is drawn", async () => {
+		mockGate = "first-run";
+		const app = await renderApp("/");
+		expect(screen.getByText("first-run")).toBeTruthy();
+		expect(app.getPathname()).toBe("/first-run");
+		expect(tabGroup(app)).toBeUndefined();
+		for (const tab of ["Today", "Progress", "Habits"]) {
+			expect(screen.queryByText(tab)).toBeNull();
+		}
+	});
+
+	it("lands on First Run from any tab root, not only Today", async () => {
+		mockGate = "first-run";
+		const app = await renderApp("/(habits)/manage");
+		expect(app.getPathname()).toBe("/first-run");
+	});
+
+	it("the first-habit form is a First Run screen too, still without tabs", async () => {
+		mockGate = "first-run";
+		const app = await renderApp("/");
+		await testRouter.push("/first-run/habit");
+		expect(screen.getByText("habit-form")).toBeTruthy();
+		expect(tabGroup(app)).toBeUndefined();
+		expect(screen.queryByText("Progress")).toBeNull();
+	});
+
+	it("an install that has been through First Run opens the tabs, with the bar", async () => {
+		const app = await renderApp("/");
+		expect(tabGroup(app)).toBe("(today)");
+		expect(screen.getByText("today")).toBeTruthy();
+		expect(screen.getByText("Progress")).toBeTruthy();
+	});
+
+	it("shows the tabs while the gate is still loading, so the skeleton has its bar (SY1)", async () => {
+		mockGate = "loading";
+		const app = await renderApp("/");
+		expect(tabGroup(app)).toBe("(today)");
+	});
+
+	it("writes the seen flag once for an install that has habits but predates it", async () => {
+		mockNeedsSeenMark = true;
+		await renderApp("/");
+		expect(mockMarkFirstRunSeen).toHaveBeenCalledTimes(1);
+	});
+
+	it("writes nothing when the flag is already there", async () => {
+		await renderApp("/");
+		expect(mockMarkFirstRunSeen).not.toHaveBeenCalled();
+	});
+});
 
 describe("the three tab roots", () => {
 	it.each([

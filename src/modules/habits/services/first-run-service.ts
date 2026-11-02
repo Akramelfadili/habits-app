@@ -1,25 +1,19 @@
-import {
-	type FirstRunSuggestion,
-	SEEN_FIRST_RUN_SETTING_KEY,
-	suggestionToCreateHabitInput,
-} from "../constants";
-import { getCategories } from "../repositories/category-repository";
-import { createHabitsAndMarkSetting } from "../repositories/habit-repository";
+import type { NotificationPermission } from "@/lib/notifications/notifications";
+import { ensureNotificationPermission } from "@/lib/notifications/use-notification-permission";
 import type { Habit } from "../types";
+import { addReminder } from "./reminder-service";
 
 /**
- * Composite HAB-06 write: creates one habit per selected suggestion and marks
- * First Run as seen, atomically — see `createHabitsAndMarkSetting`'s comment
- * for why this needs its own transaction rather than being two plain calls.
+ * "Allow reminders" on First Run's own pre-prompt (FR3, HAB-46): the habit
+ * gets its default daily reminder (09:00, on the days it can be due), and only
+ * now — after our explanation — does iOS get asked. A denial never undoes the
+ * reminder: it stays editable and the Reminders screens show the "off" notice.
+ * Resolves with what the person answered, so the caller can say so.
  */
-export async function addSuggestedHabits(
-	suggestions: FirstRunSuggestion[],
-): Promise<Habit[]> {
-	const categories = await getCategories();
-	return createHabitsAndMarkSetting(
-		suggestions.map((suggestion) =>
-			suggestionToCreateHabitInput(suggestion, categories),
-		),
-		{ key: SEEN_FIRST_RUN_SETTING_KEY, value: "true" },
-	);
+export async function enableFirstHabitReminder(
+	habit: Habit,
+): Promise<NotificationPermission> {
+	const permission = await ensureNotificationPermission();
+	await addReminder(habit);
+	return permission;
 }

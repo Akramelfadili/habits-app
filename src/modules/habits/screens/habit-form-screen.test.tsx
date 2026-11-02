@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 import { useToastStore } from "@/store/toast-store";
+import { useFirstRunOfferStore } from "../first-run-offer-store";
 import {
 	builtInCategory,
 	categoryNamed,
@@ -21,12 +22,20 @@ jest.mock("expo-symbols", () => {
 });
 
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+const mockDismissAll = jest.fn();
 type Removal = { data: { action: unknown } };
 let mockPrevent = false;
 let mockOnRemove: ((event: Removal) => void) | null = null;
 const mockDispatch = jest.fn();
 jest.mock("expo-router", () => ({
-	useRouter: () => ({ back: mockBack, push: jest.fn() }),
+	useRouter: () => ({
+		back: mockBack,
+		push: jest.fn(),
+		replace: (...args: unknown[]) => mockReplace(...args),
+		dismissAll: () => mockDismissAll(),
+		canDismiss: () => true,
+	}),
 	useNavigation: () => ({
 		dispatch: (...args: unknown[]) => mockDispatch(...args),
 		goBack: jest.fn(),
@@ -87,6 +96,13 @@ jest.mock("../hooks/use-habit-queries", () => ({
 let mockCategories: Category[] = [];
 jest.mock("../hooks/use-category-queries", () => ({
 	useCategoryQueries: () => ({ categories: mockCategories }),
+}));
+
+const mockMarkFirstRunSeen = jest.fn();
+jest.mock("../hooks/use-first-run-actions", () => ({
+	useFirstRunActions: () => ({
+		markFirstRunSeen: (...args: unknown[]) => mockMarkFirstRunSeen(...args),
+	}),
 }));
 
 const mockCreateCategory = jest.fn();
@@ -152,6 +168,10 @@ beforeEach(() => {
 	mockCategories = [...TEST_BUILT_IN_CATEGORIES, MORNING];
 	mockHabits = [];
 	mockBack.mockReset();
+	mockReplace.mockReset();
+	mockDismissAll.mockReset();
+	mockMarkFirstRunSeen.mockReset().mockResolvedValue({ ok: true });
+	useFirstRunOfferStore.getState().clear();
 	mockDispatch.mockReset();
 	mockCreateHabit
 		.mockReset()
@@ -842,5 +862,152 @@ describe("HabitFormScreen — focus=frequency (HAB-16)", () => {
 			nativeEvent: { layout: { x: 0, y: 420, width: 300, height: 120 } },
 		});
 		expect(spy).not.toHaveBeenCalled();
+	});
+});
+
+describe("HabitFormScreen — First Run, the slim form (FR2)", () => {
+	const HEALTH = builtInCategory("Health");
+
+	it("is Name, Or pick one, Type, Frequency and a note — no Category, Goal or Reminders", async () => {
+		await render(<HabitFormScreen firstRun slim />);
+		const labels = ["NAME", "OR PICK ONE", "TYPE", "FREQUENCY"];
+		const found = labels.map((label) => screen.getByText(label));
+		expect(found.every(Boolean)).toBe(true);
+		for (const hidden of ["CATEGORY", "GOAL", "REMINDERS", "DAILY TARGET"]) {
+			expect(screen.queryByText(hidden)).toBeNull();
+		}
+		expect(
+			screen.getByText(
+				"Category and reminders can wait \u2014 change them any time.",
+			),
+		).toBeTruthy();
+		expect(screen.queryByText("From a suggestion")).toBeNull();
+	});
+
+	it("offers the five quick picks, and Save is off with its reason until there is a name", async () => {
+		await render(<HabitFormScreen firstRun slim />);
+		for (const pick of [
+			"Drink water",
+			"Read 20 min",
+			"Meditate",
+			"Morning run",
+			"No phone in bed",
+		]) {
+			expect(screen.getByText(pick)).toBeTruthy();
+		}
+		expect(isSaveDisabled()).toBe(true);
+		expect(screen.getByText("Add a name to save")).toBeTruthy();
+	});
+
+	it("a quick pick fills the name, type and frequency, and keeps the category and target it brings", async () => {
+		await render(<HabitFormScreen firstRun slim />);
+		await fireEvent.press(screen.getByText("Drink water"));
+		expect(nameInput().props.value).toBe("Drink water");
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+		expect(mockCreateHabit.mock.calls[0][0]).toEqual({
+			name: "Drink water",
+			categoryId: HEALTH.id,
+			direction: "build",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+			frequency: { type: "daily" },
+		});
+	});
+
+	it("a quick pick sets Break and specific days where the suggestion has them", async () => {
+		await render(<HabitFormScreen firstRun slim />);
+		await fireEvent.press(screen.getByText("No phone in bed"));
+		expect(isSelected("Break")).toBe(true);
+		await fireEvent.press(screen.getByText("Morning run"));
+		expect(isSelected("Build")).toBe(true);
+		expect(isSelected("Specific days")).toBe(true);
+		expect(isSelected("Monday")).toBe(true);
+		expect(isSelected("Tuesday")).toBe(false);
+	});
+
+	it("changing the picked name drops the category and target that came with it", async () => {
+		await render(<HabitFormScreen firstRun slim />);
+		await fireEvent.press(screen.getByText("Drink water"));
+		await typeName("Drink tea");
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+		expect(mockCreateHabit.mock.calls[0][0]).toMatchObject({
+			name: "Drink tea",
+			categoryId: OTHER.id,
+			targetType: "simple",
+			targetAmount: null,
+			targetUnit: null,
+		});
+	});
+
+	it("saving marks First Run seen, offers the reminder question and opens Today with no way back", async () => {
+		const saved = makeHabit({ id: 9, name: "Read 20 min" });
+		mockCreateHabit.mockResolvedValue({ habit: saved, remindersFailed: false });
+		await render(<HabitFormScreen firstRun slim />);
+		await fireEvent.press(screen.getByText("Read 20 min"));
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
+		expect(mockMarkFirstRunSeen).toHaveBeenCalledTimes(1);
+		expect(useFirstRunOfferStore.getState().habit).toBe(saved);
+		expect(mockDismissAll).toHaveBeenCalled();
+		expect(mockBack).not.toHaveBeenCalled();
+	});
+
+	it("a failed save marks nothing, offers nothing and stays on the form", async () => {
+		mockCreateHabit.mockRejectedValue(new Error("disk full"));
+		await render(<HabitFormScreen firstRun slim />);
+		await typeName("Read");
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() =>
+			expect(screen.getByText(/Couldn.t save this habit/)).toBeTruthy(),
+		);
+		expect(mockMarkFirstRunSeen).not.toHaveBeenCalled();
+		expect(useFirstRunOfferStore.getState().habit).toBeNull();
+		expect(mockReplace).not.toHaveBeenCalled();
+	});
+
+	it("still hands over to Today when only the seen flag fails to write: the habit exists, so the gate is done", async () => {
+		mockMarkFirstRunSeen.mockResolvedValue({ ok: false });
+		await render(<HabitFormScreen firstRun slim />);
+		await typeName("Read");
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
+	});
+});
+
+describe("HabitFormScreen — First Run through a suggestion (BS2)", () => {
+	const prefill = {
+		name: "Meditate",
+		category: "Mindfulness" as const,
+		direction: "build" as const,
+		target: null,
+		frequency: { type: "daily" as const },
+	};
+
+	it("is the full form with the banner, and saving still finishes First Run", async () => {
+		await render(<HabitFormScreen firstRun prefill={prefill} />);
+		expect(screen.getByText("From a suggestion")).toBeTruthy();
+		expect(screen.getByText("CATEGORY")).toBeTruthy();
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
+		expect(mockMarkFirstRunSeen).toHaveBeenCalledTimes(1);
+		expect(useFirstRunOfferStore.getState().habit).not.toBeNull();
+	});
+
+	it("outside First Run a saved suggestion just goes back and asks nothing", async () => {
+		await render(<HabitFormScreen prefill={prefill} />);
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockBack).toHaveBeenCalled());
+		expect(mockMarkFirstRunSeen).not.toHaveBeenCalled();
+		expect(useFirstRunOfferStore.getState().habit).toBeNull();
 	});
 });

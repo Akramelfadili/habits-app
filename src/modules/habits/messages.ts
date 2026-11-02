@@ -167,6 +167,16 @@ export const messages = {
 		tone: "success",
 		text: (time: string) => `Reminder at ${time} removed`,
 	},
+	/** FR3: Allow reminders on First Run's pre-prompt (4 s). */
+	reminderSaved: {
+		tone: "success",
+		text: (time: string) => `Reminder saved \u00b7 ${time}`,
+	},
+	/** FR3 / R2: the reminder is stored, but iOS notifications are off (6 s). */
+	reminderSavedOff: {
+		tone: "warning",
+		text: "Reminder saved, but notifications are off",
+	},
 	/** DC6: a category nobody used is gone at once; Undo puts it back (5 s). */
 	categoryDeleted: {
 		tone: "success",
@@ -938,6 +948,78 @@ export const formCopy = {
 		body: (name: string) =>
 			`${name} is filled in. Change anything before saving.`,
 	},
+} as const;
+
+/**
+ * First run (HAB-46, FR1–FR4): the welcome, the slim first-habit form's extras
+ * and our own notification pre-prompt. The Today empty state (FR4) is
+ * `todayCopy`; the suggestions list is `suggestionsCopy`.
+ */
+export const firstRunCopy = {
+	welcome: {
+		/** Two balanced lines, as FR1 draws them; read as one sentence. */
+		title: "Small habits,\nevery day",
+		body: "Tick them off on Today, see your week in Progress, and keep streaks going on off days with freezes.",
+		features: [
+			{ key: "today", title: "Today", body: "Tick what\u2019s due" },
+			{ key: "progress", title: "Progress", body: "Week, month and year" },
+			{
+				key: "freezes",
+				title: "Freezes",
+				body: "Keep a streak through a missed day",
+			},
+		],
+		addFirst: "Add your first habit",
+		browse: "Browse suggestions",
+		/** Not drawn in FR1: every first-run screen has a way to an empty Today. */
+		skip: "Skip for now",
+	},
+	/** The welcome could not write its flag: an inline banner, since no toast host exists before the tabs. */
+	continueFailed: "Couldn\u2019t continue. Try again.",
+	habit: {
+		title: "Your first habit",
+		pickLabel: "Or pick one",
+		/** FR2's reassurance. The frame also says "icon": a habit's icon is its category's, so it is left out. */
+		note: "Category and reminders can wait \u2014 change them any time.",
+		pickLabelFor: (name: string) => `${name}, quick pick`,
+	},
+	/** FR3: the pre-prompt shown before iOS asks for permission. */
+	offer: {
+		title: "Remind you each day?",
+		body: (habit: string, time: string) =>
+			`A nudge at ${time} to log ${habit}. Change the time or turn it off in Reminders.`,
+		allow: "Allow reminders",
+		notNow: "Not now",
+		/** The default reminder could not be written; the habit is saved either way. */
+		failed:
+			"Couldn\u2019t set the reminder. Add it from the habit\u2019s Reminders.",
+	},
+} as const;
+
+/**
+ * Browse suggestions (HAB-46, BS1): the intro, the group headings, the
+ * subtitle under each suggestion and the "Added" mark.
+ */
+export const suggestionsCopy = {
+	title: "Suggestions",
+	close: "Close",
+	intro:
+		"Tap one to open Add habit with it filled in. Change anything before saving.",
+	/** The heading of the suggestions that are Break habits, whatever their category. */
+	breakGroup: "Break a habit",
+	added: "Added",
+	/** 08.3: "Drink water, Quantity, 8 glasses a day. Opens Add habit." */
+	rowLabel: (name: string, subtitle: string) => `${name}, ${subtitle}`,
+	rowHint: "Opens Add habit with this filled in.",
+	addedLabel: (name: string, subtitle: string) => `${name}, ${subtitle}. Added`,
+	addedHint: "Already in your habits.",
+	quantity: (amount: number, unit: string) =>
+		`Quantity \u00b7 ${amount} ${unit} a day`,
+	perWeek: (times: number) => `${times}\u00d7 per week`,
+	daily: "Daily",
+	breakDaily: "Break \u00b7 daily",
+	/** Browse suggestions in the Habits tab's empty state and header (H6). */
+	browse: "Browse suggestions",
 } as const;
 
 /**

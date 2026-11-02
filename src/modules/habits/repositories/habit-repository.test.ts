@@ -22,7 +22,6 @@ jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 const {
 	createHabit,
 	updateHabit,
-	createHabitsAndMarkSetting,
 	deleteAllHabits,
 	createHabitAt,
 	getHabit,
@@ -159,33 +158,6 @@ describe("habit-repository", () => {
 
 		const remaining = await mockDb.select().from(habits);
 		expect(remaining).toHaveLength(0);
-	});
-
-	describe("createHabitsAndMarkSetting", () => {
-		it("creates every habit and marks the setting in one transaction", async () => {
-			const created = await createHabitsAndMarkSetting(
-				[baseInput, { ...baseInput, name: "Stretch" }],
-				{ key: "habits.seenFirstRun", value: "true" },
-			);
-
-			expect(created.map((h) => h.name)).toEqual(["Read", "Stretch"]);
-			const remaining = await mockDb.select().from(habits);
-			expect(remaining).toHaveLength(2);
-		});
-
-		it("rolls back every habit if the batch fails partway through", async () => {
-			const before = await mockDb.select().from(habits);
-
-			await expect(
-				createHabitsAndMarkSetting(
-					[baseInput, { ...baseInput, name: null as unknown as string }],
-					{ key: "habits.seenFirstRun", value: "true" },
-				),
-			).rejects.toThrow();
-
-			const after = await mockDb.select().from(habits);
-			expect(after).toHaveLength(before.length);
-		});
 	});
 
 	describe("createHabitAt", () => {

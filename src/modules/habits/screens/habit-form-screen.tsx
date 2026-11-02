@@ -19,6 +19,7 @@ import { ActionCard } from "@/components/ui/composite/action-card";
 import { AlertDialog } from "@/components/ui/composite/alert-dialog";
 import { Banner } from "@/components/ui/composite/banner";
 import { Button } from "@/components/ui/primitives/button";
+import { Chip } from "@/components/ui/primitives/chip";
 import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
@@ -46,12 +47,16 @@ import {
 	WEEKDAYS,
 } from "../constants";
 import { findDuplicateHabit } from "../domain/habit-name-rules";
+import { leaveFirstRun } from "../first-run-navigation";
+import { useFirstRunOfferStore } from "../first-run-offer-store";
 import { useCategoryActions } from "../hooks/use-category-actions";
 import { useCategoryQueries } from "../hooks/use-category-queries";
+import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitQueries } from "../hooks/use-habit-queries";
 import {
+	firstRunCopy,
 	formCopy,
 	messages,
 	reminderSheetCopy,
@@ -71,7 +76,12 @@ import {
 	toFrequency,
 	toFrequencyFormValues,
 } from "../presenters/habit-form-schema";
-import type { FrequencyType, IsoWeekday, ReminderDraft } from "../types";
+import {
+	FIRST_RUN_QUICK_PICK_IDS,
+	findSuggestion,
+	type Suggestion,
+} from "../suggestions";
+import type { FrequencyType, Habit, IsoWeekday, ReminderDraft } from "../types";
 
 type HabitFormScreenProps = {
 	/** Present in edit mode; absent when creating a new habit. */
@@ -84,6 +94,14 @@ type HabitFormScreenProps = {
 	prefill?: HabitFormPrefill;
 	/** The same suggestion as the `prefill` route param (a JSON string); `prefill` wins when both are given. */
 	prefillParam?: string;
+	/**
+	 * Part of First Run (HAB-46): a saved habit marks First Run as seen, offers
+	 * FR3's reminder question (unless reminders were queued here) and hands over
+	 * to Today, with no way back to the welcome.
+	 */
+	firstRun?: boolean;
+	/** FR2: the slim first-habit form — name, quick picks, type and frequency; nothing else. */
+	slim?: boolean;
 };
 
 /** The reminder sheet is open on a new time, or on one already queued. */
@@ -110,6 +128,8 @@ export function HabitFormScreen({
 	name,
 	prefill: prefillProp,
 	prefillParam,
+	firstRun = false,
+	slim = false,
 }: HabitFormScreenProps) {
 	const prefill = useMemo(
 		() => prefillProp ?? parseHabitPrefill(prefillParam),
@@ -129,6 +149,9 @@ export function HabitFormScreen({
 		useCategoryActions();
 	const { archiveHabitOrThrow, restoreHabit, isArchiving } =
 		useHabitDetailActions();
+	const { markFirstRunSeen } = useFirstRunActions();
+	// The quick pick whose hidden fields (category, target) are still in the form (FR2).
+	const pickedSuggestion = useRef<Suggestion | null>(null);
 
 	const mode = habitId === undefined ? "create" : "edit";
 	const habit = habitId === undefined ? undefined : getHabitById(habitId);
@@ -239,7 +262,41 @@ export function HabitFormScreen({
 
 	// A successful save or archive leaves without asking: stop guarding, then go.
 	function close() {
-		guard.leaveWith(() => router.back());
+		guard.leaveWith(() => (firstRun ? leaveFirstRun(router) : router.back()));
+	}
+
+	// FR2's quick picks fill every field the suggestion knows; category and
+	// target stay out of sight and are dropped again if the name is changed.
+	function pickSuggestion(suggestion: Suggestion) {
+		pickedSuggestion.current = suggestion;
+		const values = prefillToFormValues(
+			{
+				name: suggestion.name,
+				category: suggestion.category,
+				direction: suggestion.direction,
+				target: suggestion.target,
+				frequency: suggestion.frequency,
+			},
+			categories,
+		);
+		for (const [key, value] of Object.entries(values)) {
+			setValue(key as keyof HabitFormInput, value as never, {
+				shouldDirty: true,
+			});
+		}
+	}
+
+	function changeName(text: string) {
+		const picked = pickedSuggestion.current;
+		if (slim && picked && text !== picked.name) {
+			pickedSuggestion.current = null;
+			const blank = blankFormValues();
+			setValue("categoryId", blank.categoryId, { shouldDirty: true });
+			setValue("targetType", blank.targetType, { shouldDirty: true });
+			setValue("targetAmount", blank.targetAmount, { shouldDirty: true });
+			setValue("targetUnit", blank.targetUnit, { shouldDirty: true });
+		}
+		setValue("name", text, { shouldDirty: true });
 	}
 
 	async function onSubmit(values: HabitFormValues) {
@@ -259,6 +316,7 @@ export function HabitFormScreen({
 		// and a retry is one tap. `runSafely` also logs it and never rejects.
 		setSubmitError(null);
 		let remindersFailed = false;
+		let savedHabit: Habit | undefined;
 		const result = await runSafely(
 			{
 				scope: "habit-form",
@@ -287,6 +345,7 @@ export function HabitFormScreen({
 						})),
 					);
 					remindersFailed = created.remindersFailed;
+					savedHabit = created.habit;
 				} else if (habitId !== undefined) {
 					await updateHabit(habitId, {
 						name: values.name,
@@ -301,6 +360,13 @@ export function HabitFormScreen({
 		);
 		if (!result.ok) return;
 		if (remindersFailed) showMessage(messages.habitSavedReminderFailed, []);
+		if (firstRun) {
+			// The habit is saved, so the gate is done either way; a failed flag write only costs the one-time mark.
+			await markFirstRunSeen();
+			if (savedHabit && queued.length === 0) {
+				useFirstRunOfferStore.getState().offer(savedHabit);
+			}
+		}
 		close();
 	}
 
@@ -347,6 +413,75 @@ export function HabitFormScreen({
 		);
 	}
 
+	const typeField = (
+		<View style={styles.field}>
+			<SectionLabel>{formCopy.type.label}</SectionLabel>
+			<SegmentedControl
+				label={formCopy.type.label}
+				options={[
+					{ value: "build", label: formCopy.type.build },
+					{ value: "break", label: formCopy.type.break },
+				]}
+				value={directionValue}
+				onChange={(value) =>
+					setValue("direction", value, { shouldDirty: true })
+				}
+				disabled={mode === "edit"}
+			/>
+			{mode === "edit" ? (
+				<FieldHelper plain tone="hint">
+					{formCopy.type.locked}
+				</FieldHelper>
+			) : isBreak ? (
+				<FieldHelper plain tone="hint">
+					{formCopy.type.breakNote}
+				</FieldHelper>
+			) : null}
+		</View>
+	);
+
+	const nameField = (
+		<TextField
+			label={formCopy.name.label}
+			placeholder={formCopy.name.placeholder}
+			value={nameValue}
+			onChangeText={changeName}
+			error={nameError}
+			maxLength={MAX_HABIT_NAME_LENGTH}
+			limitMessage={formCopy.name.limit}
+			autoFocus={mode === "create"}
+			// Return goes on to Unit when a quantity habit has one; otherwise
+			// it just puts the keyboard away — never saves a half-filled form.
+			returnKeyType={targetTypeValue === "quantity" ? "next" : "done"}
+			onSubmitEditing={() =>
+				targetTypeValue === "quantity"
+					? unitRef.current?.focus()
+					: Keyboard.dismiss()
+			}
+		/>
+	);
+
+	// FR2: five of the bundle, one tap each; the chip whose name is in the field reads as picked.
+	const quickPicks = (
+		<View style={styles.field}>
+			<SectionLabel>{firstRunCopy.habit.pickLabel}</SectionLabel>
+			<View style={styles.chips}>
+				{FIRST_RUN_QUICK_PICK_IDS.map((id) => {
+					const suggestion = findSuggestion(id);
+					if (!suggestion) return null;
+					return (
+						<Chip
+							key={id}
+							label={suggestion.name}
+							selected={nameValue === suggestion.name}
+							onPress={() => pickSuggestion(suggestion)}
+						/>
+					);
+				})}
+			</View>
+		</View>
+	);
+
 	return (
 		// The name field autofocuses on create (HAB-22), so the keyboard is up
 		// from the first frame: lift the pinned Save and its reason above it.
@@ -369,7 +504,7 @@ export function HabitFormScreen({
 					setIsScrolled(event.nativeEvent.contentOffset.y > 0)
 				}
 			>
-				{prefill && mode === "create" ? (
+				{prefill && mode === "create" && !slim ? (
 					<Banner
 						tone="neutral"
 						symbol="sparkles"
@@ -379,79 +514,46 @@ export function HabitFormScreen({
 					</Banner>
 				) : null}
 
-				<View style={styles.field}>
-					<SectionLabel>{formCopy.type.label}</SectionLabel>
-					<SegmentedControl
-						label={formCopy.type.label}
-						options={[
-							{ value: "build", label: formCopy.type.build },
-							{ value: "break", label: formCopy.type.break },
-						]}
-						value={directionValue}
-						onChange={(value) =>
-							setValue("direction", value, { shouldDirty: true })
-						}
-						disabled={mode === "edit"}
+				{slim ? null : typeField}
+				{nameField}
+				{slim ? quickPicks : null}
+				{slim ? typeField : null}
+
+				{slim ? null : (
+					<CategoryChips
+						categories={categories}
+						selectedId={categoryIdValue}
+						onSelect={(id) => setValue("categoryId", id, { shouldDirty: true })}
+						onAdd={() => setIsAddCategoryOpen(true)}
 					/>
-					{mode === "edit" ? (
-						<FieldHelper plain tone="hint">
-							{formCopy.type.locked}
-						</FieldHelper>
-					) : isBreak ? (
-						<FieldHelper plain tone="hint">
-							{formCopy.type.breakNote}
-						</FieldHelper>
-					) : null}
-				</View>
+				)}
 
-				<TextField
-					label={formCopy.name.label}
-					placeholder={formCopy.name.placeholder}
-					value={nameValue}
-					onChangeText={(text) => setValue("name", text, { shouldDirty: true })}
-					error={nameError}
-					maxLength={MAX_HABIT_NAME_LENGTH}
-					limitMessage={formCopy.name.limit}
-					autoFocus={mode === "create"}
-					// Return goes on to Unit when a quantity habit has one; otherwise
-					// it just puts the keyboard away — never saves a half-filled form.
-					returnKeyType={targetTypeValue === "quantity" ? "next" : "done"}
-					onSubmitEditing={() =>
-						targetTypeValue === "quantity"
-							? unitRef.current?.focus()
-							: Keyboard.dismiss()
-					}
-				/>
-
-				<CategoryChips
-					categories={categories}
-					selectedId={categoryIdValue}
-					onSelect={(id) => setValue("categoryId", id, { shouldDirty: true })}
-					onAdd={() => setIsAddCategoryOpen(true)}
-				/>
-
-				<GoalFields
-					direction={directionValue}
-					targetType={targetTypeValue}
-					targetAmount={targetAmountValue}
-					targetUnit={targetUnitValue}
-					unitError={
-						unitBlank && unitTouched ? formCopy.goal.unitMissing : undefined
-					}
-					onTargetType={(value) =>
-						setValue("targetType", value, { shouldDirty: true })
-					}
-					onTargetAmount={(value) =>
-						setValue("targetAmount", value, { shouldDirty: true })
-					}
-					onTargetUnit={(value) =>
-						setValue("targetUnit", value, { shouldDirty: true })
-					}
-					onUnitBlur={() => setUnitTouched(true)}
-					unitRef={unitRef}
-					// The Unit field is low on the form — bring it clear of the keyboard.
-					onUnitFocus={() => scrollRef.current?.scrollToEnd({ animated: true })}
-				/>
+				{slim ? null : (
+					<GoalFields
+						direction={directionValue}
+						targetType={targetTypeValue}
+						targetAmount={targetAmountValue}
+						targetUnit={targetUnitValue}
+						unitError={
+							unitBlank && unitTouched ? formCopy.goal.unitMissing : undefined
+						}
+						onTargetType={(value) =>
+							setValue("targetType", value, { shouldDirty: true })
+						}
+						onTargetAmount={(value) =>
+							setValue("targetAmount", value, { shouldDirty: true })
+						}
+						onTargetUnit={(value) =>
+							setValue("targetUnit", value, { shouldDirty: true })
+						}
+						onUnitBlur={() => setUnitTouched(true)}
+						unitRef={unitRef}
+						// The Unit field is low on the form — bring it clear of the keyboard.
+						onUnitFocus={() =>
+							scrollRef.current?.scrollToEnd({ animated: true })
+						}
+					/>
+				)}
 
 				<View
 					testID="habit-form-frequency"
@@ -481,7 +583,13 @@ export function HabitFormScreen({
 					/>
 				</View>
 
-				{mode === "create" ? (
+				{slim ? (
+					<FieldHelper plain tone="hint">
+						{firstRunCopy.habit.note}
+					</FieldHelper>
+				) : null}
+
+				{mode === "create" && !slim ? (
 					<ReminderDrafts
 						reminders={queued}
 						onAdd={() =>
@@ -615,6 +723,11 @@ const styles = StyleSheet.create({
 	},
 	field: {
 		gap: space[150],
+	},
+	chips: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: space[100],
 	},
 	footer: {
 		gap: space[200],

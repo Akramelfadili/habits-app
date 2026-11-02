@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -12,8 +12,10 @@ import { pinClockFromUrl } from "@/lib/dev-clock/pin-clock";
 import { installGlobalHandlers } from "@/lib/logger/global-handlers";
 import { log } from "@/lib/logger/logger";
 import { configureNotificationHandler } from "@/lib/notifications/notifications";
+import { leaveFirstRun } from "@/modules/habits/first-run-navigation";
+import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
 import { useStartupActions } from "@/modules/habits/hooks/use-startup-actions";
-import { formCopy } from "@/modules/habits/messages";
+import { firstRunCopy, formCopy } from "@/modules/habits/messages";
 import { loadThemePreference } from "@/theme/theme-preference";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -67,6 +69,17 @@ export { RootErrorBoundary as ErrorBoundary };
 
 export default function RootLayout() {
 	const { colors } = useTheme();
+	const router = useRouter();
+	const { markFirstRunSeen } = useFirstRunActions();
+	// FR2's Close is a skip: First Run is marked seen and Today opens empty (FR4).
+	const firstRunHabitHeaderOptions = useModalFormHeaderOptions(
+		firstRunCopy.habit.title,
+		formCopy.close,
+		async () => {
+			const result = await markFirstRunSeen();
+			if (result.ok) leaveFirstRun(router);
+		},
+	);
 	const newHabitHeaderOptions = useModalFormHeaderOptions(
 		formCopy.newTitle,
 		formCopy.close,
@@ -97,6 +110,15 @@ export default function RootLayout() {
 						}}
 					>
 						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+						{/* First Run sits outside the tabs, so no tab bar is drawn (HAB-46); its welcome cannot be swiped away. */}
+						<Stack.Screen
+							name="first-run/index"
+							options={{ headerShown: false, gestureEnabled: false }}
+						/>
+						<Stack.Screen
+							name="first-run/habit"
+							options={firstRunHabitHeaderOptions}
+						/>
 						{/*
 						 * new-habit / edit-habit declare their modal header (title,
 						 * suppressed back button, Cancel) statically here rather than via a

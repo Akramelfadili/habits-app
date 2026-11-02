@@ -10,6 +10,7 @@ import {
 import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useInitialFocus } from "@/utils/use-initial-focus";
+import { Button } from "../primitives/button";
 
 type AlertAction = {
 	label: string;
@@ -26,6 +27,12 @@ type AlertDialogProps = {
 	actions: AlertAction[];
 	/** Android back / the system dismiss gesture: it chooses the safe action. */
 	onRequestClose: () => void;
+	/**
+	 * "list" (F9, the default): text actions under hairlines. "offer" (FR3): the
+	 * first action is a full-width primary button, the rest are quiet links
+	 * under it — a question with a yes to lean towards, not a warning.
+	 */
+	layout?: "list" | "offer";
 };
 
 /** The dialog is 270 pt wide, like the system alert it follows (F9). */
@@ -44,6 +51,7 @@ export function AlertDialog({
 	message,
 	actions,
 	onRequestClose,
+	layout = "list",
 }: AlertDialogProps) {
 	const { colors } = useTheme();
 	const primaryRef = useRef<HostInstance>(null);
@@ -81,7 +89,20 @@ export function AlertDialog({
 							{message}
 						</Text>
 					</View>
-					{actions.map((action) => (
+					{layout === "offer" ? (
+						<View style={styles.offerActions}>
+							{actions.map((action, index) => (
+								<Button
+									key={action.label}
+									buttonRef={index === 0 ? primaryRef : undefined}
+									label={action.label}
+									variant={index === 0 ? "primary" : "link"}
+									onPress={action.onPress}
+								/>
+							))}
+						</View>
+					) : null}
+					{(layout === "offer" ? [] : actions).map((action) => (
 						<Pressable
 							key={action.label}
 							ref={action.tone === "primary" ? primaryRef : undefined}
@@ -141,6 +162,11 @@ const styles = StyleSheet.create({
 	message: {
 		...textStyles.footnote,
 		textAlign: "center",
+	},
+	offerActions: {
+		gap: space[100],
+		paddingHorizontal: space[300],
+		paddingBottom: space[300],
 	},
 	action: {
 		minHeight: 44,

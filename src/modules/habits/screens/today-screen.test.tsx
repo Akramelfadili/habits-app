@@ -150,25 +150,19 @@ jest.mock("../hooks/use-habit-actions", () => ({
 	}),
 }));
 
-let mockHasSeenFirstRun = true;
-jest.mock("../hooks/use-first-run-queries", () => ({
-	useFirstRunQueries: () => ({
-		suggestions: [],
-		hasSeenFirstRun: mockHasSeenFirstRun,
-	}),
-}));
 const mockResetFirstRun = jest.fn();
 jest.mock("../hooks/use-first-run-actions", () => ({
 	useFirstRunActions: () => ({
-		addSuggestedHabits: jest.fn(),
-		isAdding: false,
-		addError: null,
-		skipFirstRun: jest.fn(),
-		isSkipping: false,
-		skipError: null,
+		markFirstRunSeen: jest.fn(),
+		isMarking: false,
+		markError: null,
 		resetFirstRun: mockResetFirstRun,
 		isResetting: false,
 	}),
+}));
+// FR3's pre-prompt has its own tests; here it only has to stay out of the way.
+jest.mock("../components/first-run/first-run-reminder-offer", () => ({
+	FirstRunReminderOffer: () => null,
 }));
 
 // jest's window reports fontScale 2: without this the strip is the one-day AX stand-in.
@@ -251,7 +245,6 @@ describe("TodayScreen", () => {
 		mockCompletedThisWeekByHabitId = new Map();
 		mockViewState = "no-habits";
 		useToastStore.setState({ toast: null });
-		mockHasSeenFirstRun = true;
 		mockAtRiskByHabitId = new Map();
 		mockFreezesRemainingThisMonth = 2;
 		mockEligibleHabits = [];
@@ -271,15 +264,6 @@ describe("TodayScreen", () => {
 				"Add a habit and it shows up here on every day it’s due.",
 			),
 		).toBeTruthy();
-	});
-
-	it("shows First Run instead of the empty state on a genuine first launch", async () => {
-		mockHasSeenFirstRun = false;
-
-		await render(<TodayScreen />);
-
-		expect(screen.getByText("Pick a couple to start")).toBeTruthy();
-		expect(screen.queryByText("Nothing to track yet")).toBeNull();
 	});
 
 	it("navigates to new-habit from the empty state's Add habit button", async () => {

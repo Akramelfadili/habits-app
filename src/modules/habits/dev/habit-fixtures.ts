@@ -135,12 +135,20 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
  * decide whether "seen first run" starts seeded (see its own comment).
  */
 export function resolveFixtureScenario(): FixtureScenario {
+	if (pinnedScenario) return pinnedScenario;
 	const search = globalThis.location?.search ?? "";
 	const value = new URLSearchParams(search).get("fixtures");
-	return (FIXTURE_SCENARIOS as string[]).includes(value ?? "")
+	const scenario = (FIXTURE_SCENARIOS as string[]).includes(value ?? "")
 		? (value as FixtureScenario)
 		: "default";
+	// A page with a URL keeps the scenario it opened with: First Run redirects
+	// to /first-run, which drops the query, and a store first read after that
+	// (the logs, say) must still seed the same scenario as the habits did.
+	if (globalThis.location !== undefined) pinnedScenario = scenario;
+	return scenario;
 }
+
+let pinnedScenario: FixtureScenario | undefined;
 
 export const HABIT_FIXTURES: FixtureHabit[] = [
 	{

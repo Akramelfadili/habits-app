@@ -1,9 +1,4 @@
 import { useSyncExternalStore } from "react";
-// Explicit `.web` suffix — Jest defaults to iOS resolution, and an
-// extension-less import here would pull in the native app-settings
-// repository (and its real `db`/expo-sqlite import) even when this file is
-// loaded explicitly for a web test.
-import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository.web";
 import {
 	DEFAULT_HABITS,
 	habitFixturesFor,
@@ -178,29 +173,6 @@ export async function updateHabit(
 	return habit;
 }
 
-/** Web counterpart of the native repository's atomic batch-create (HAB-06). */
-export async function createHabitsAndMarkSetting(
-	inputs: CreateHabitInput[],
-	setting: { key: string; value: string },
-): Promise<Habit[]> {
-	const now = new Date();
-	let habits = getHabits();
-	const created: Habit[] = [];
-	for (const input of inputs) {
-		const habit = newHabit(
-			input,
-			await categoryById(input.categoryId),
-			habits,
-			now,
-		);
-		created.push(habit);
-		habits = [...habits, habit];
-	}
-	setHabits(habits);
-	await setSetting(setting.key, setting.value);
-	return created;
-}
-
 export function useHabitsList(): HabitsResult {
 	// Static web rendering has no URL-aware store on the server, so it renders
 	// the default fixtures; the client snapshot then applies `?fixtures=`.
@@ -340,7 +312,6 @@ export async function createHabitAt(
 const _sameShape: typeof NativeHabitRepository = {
 	createHabit,
 	updateHabit,
-	createHabitsAndMarkSetting,
 	useHabitsList,
 	useActiveHabits,
 	useArchivedHabits,

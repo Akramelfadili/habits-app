@@ -86,20 +86,46 @@ function categoryChip(page, name) {
 }
 
 export const SCREENS = {
-	// HAB-06 — First run
+	// HAB-46 — First run (FR1–FR4): no tab bar until Today
 	"first-run": {
-		feature: "HAB-06",
+		feature: "HAB-46",
 		route: "/?fixtures=first-run",
-		mockup: "docs/mockups/first-run.png",
+		mockup: "docs/mockups/v3/renders/states/slice_07.png",
+		note: "FR1 — welcome, no tab bar. Skip for now is an addition to the frame (every First Run screen has a way to an empty Today).",
 	},
-	"first-run-none-selected": {
-		feature: "HAB-06",
+	"first-run-habit": {
+		feature: "HAB-46",
 		route: "/?fixtures=first-run",
-		mockup: "docs/mockups/first-run.png",
-		note: "Both defaults unchecked — primary reads 'Add habits', disabled. Mockup shows the default state.",
+		mockup: "docs/mockups/v3/renders/states/slice_08.png",
+		note: "FR2 — the slim first-habit form: name, quick picks, type, frequency. Three frequency options, not the frame's four (spec wins).",
 		async interact(page) {
-			await page.getByLabel("Glass of water", { exact: true }).click();
-			await page.getByLabel("Walk 20 minutes", { exact: true }).click();
+			await page.getByRole("button", { name: "Add your first habit" }).click();
+			await page.getByText("Or pick one").waitFor();
+		},
+	},
+	"first-run-offer": {
+		feature: "HAB-46",
+		route: "/?fixtures=first-run",
+		mockup: "docs/mockups/v3/renders/states/slice_08.png",
+		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked).",
+		async interact(page) {
+			await page.getByRole("button", { name: "Add your first habit" }).click();
+			await page
+				.getByRole("button", { name: "Drink water", exact: true })
+				.click();
+			await page.getByRole("button", { name: "Save habit" }).click();
+			await page.getByText("Remind you each day?").waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"first-run-skipped": {
+		feature: "HAB-46",
+		route: "/?fixtures=first-run",
+		mockup: "docs/mockups/v3/renders/states/slice_09.png",
+		note: "FR4 — Skip for now lands on the empty Today, with the tab bar.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Skip for now" }).click();
+			await page.getByText("Nothing to track yet").waitFor();
 		},
 	},
 
@@ -1568,6 +1594,10 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"first-run",
+	"first-run-habit",
+	"first-run-offer",
+	"first-run-skipped",
 	"today",
 	"today-v3",
 	"today-v3-quantity-plus-one",
