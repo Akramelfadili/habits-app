@@ -1121,10 +1121,10 @@ export const SCREENS = {
 		feature: "HAB-47",
 		route: "/?fixtures=today-v3",
 		mockup: "docs/mockups/v3/renders/states/slice_11.png",
-		clock: "2026-10-23T23:59:56",
-		note: "SY5 — the app stayed open across midnight: Today is Saturday, with the banner summing up Friday (the page clock crosses midnight a few seconds after load).",
+		clock: "2026-10-23T23:59:45",
+		note: "SY5 — the app stayed open across midnight: Today is Saturday, with the banner summing up Friday (the page clock starts 15 s before midnight and crosses it while the state waits).",
 		async interact(page) {
-			await page.getByText(/closed at midnight/).waitFor({ timeout: 15000 });
+			await page.getByText(/closed at midnight/).waitFor({ timeout: 40000 });
 			await page.waitForTimeout(300);
 		},
 	},
