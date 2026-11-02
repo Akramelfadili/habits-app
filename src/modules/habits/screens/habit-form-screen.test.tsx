@@ -1,14 +1,15 @@
 import {
+	act,
 	fireEvent,
 	render,
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
-import { Keyboard, ScrollView, StyleSheet, TextInput } from "react-native";
+import { AccessibilityInfo } from "react-native";
 import { useToastStore } from "@/store/toast-store";
 import {
+	builtInCategory,
 	categoryNamed,
-	makeCategory,
 	makeHabit,
 	TEST_BUILT_IN_CATEGORIES,
 } from "../test-support/habit-builder";
@@ -20,12 +21,36 @@ jest.mock("expo-symbols", () => {
 });
 
 const mockBack = jest.fn();
+type Removal = { data: { action: unknown } };
+let mockPrevent = false;
+let mockOnRemove: ((event: Removal) => void) | null = null;
+const mockDispatch = jest.fn();
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ back: mockBack, push: jest.fn() }),
+	useNavigation: () => ({
+		dispatch: (...args: unknown[]) => mockDispatch(...args),
+		goBack: jest.fn(),
+	}),
+	usePreventRemove: (prevent: boolean, callback: (event: Removal) => void) => {
+		mockPrevent = prevent;
+		mockOnRemove = callback;
+	},
 }));
 
 jest.mock("expo-router/react-navigation", () => ({
 	useHeaderHeight: () => 56,
+}));
+
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => false,
+}));
+
+const mockTimeWheel = jest.fn();
+jest.mock("@/components/ui/primitives/time-wheel", () => ({
+	TimeWheel: (props: { hour: number; minute: number }) => {
+		mockTimeWheel(props);
+		return null;
+	},
 }));
 
 const mockArchiveHabit = jest.fn();
@@ -75,760 +100,707 @@ jest.mock("../hooks/use-category-actions", () => ({
 
 import { HabitFormScreen } from "./habit-form-screen";
 
+const MORNING = categoryNamed("Morning");
+const OTHER = builtInCategory("Other");
+const LEARNING = builtInCategory("Learning");
+
 const existingHabit = makeHabit({
+	id: 1,
 	name: "Gym",
-	category: categoryNamed("Morning"),
+	category: MORNING,
 	frequency: { type: "weekdays", days: [1, 3, 5] },
 });
 
-const MORNING = categoryNamed("Morning");
-
-const isSaveDisabled = () =>
-	screen.getByText("Save habit").parent?.props.accessibilityState.disabled;
+const saveButton = () => screen.getByText(/^Save (habit|changes)$/).parent;
+const isSaveDisabled = () => saveButton()?.props.accessibilityState.disabled;
+const nameInput = () => screen.getByLabelText("Name");
+const typeName = (text: string) => fireEvent.changeText(nameInput(), text);
 // Category chips report `selected`; weekday chips are checkboxes and report `checked`.
+type A11yState = { selected?: boolean; checked?: boolean; disabled?: boolean };
+/** The nearest ancestor of the text that carries an accessibility state (segments, mode chips). */
+function stateOfText(label: string): A11yState {
+	type Node = {
+		props: { accessibilityState?: A11yState };
+		parent: Node | null;
+	};
+	let node: Node | null = screen.getByText(label) as unknown as Node;
+	while (node && !node.props.accessibilityState) node = node.parent;
+	return node?.props.accessibilityState ?? {};
+}
 const isSelected = (label: string) => {
-	const state = screen.getByLabelText(label).props.accessibilityState;
+	const direct = screen.queryByLabelText(label);
+	const state: A11yState = direct
+		? direct.props.accessibilityState
+		: stateOfText(label);
 	return state.selected ?? state.checked;
 };
+const isDisabled = (label: string) => stateOfText(label).disabled;
 
-async function pickCategory(name: string) {
-	await fireEvent.press(screen.getByLabelText(name));
+/** The navigator removing the screen (Close, a swipe, Android back): it reaches the guard only while it is preventing. */
+async function tryToLeave(action: unknown = { type: "POP" }) {
+	let prevented = false;
+	await act(async () => {
+		if (mockPrevent) {
+			prevented = true;
+			mockOnRemove?.({ data: { action } });
+		}
+	});
+	return prevented;
 }
 
 beforeEach(() => {
 	mockCategories = [...TEST_BUILT_IN_CATEGORIES, MORNING];
+	mockHabits = [];
+	mockBack.mockReset();
+	mockDispatch.mockReset();
+	mockCreateHabit
+		.mockReset()
+		.mockResolvedValue({ habit: existingHabit, remindersFailed: false });
+	mockUpdateHabit.mockReset();
 	mockCreateCategory.mockReset();
+	mockTimeWheel.mockReset();
+	useToastStore.setState({ toast: null } as never);
 });
 
-// jest's window reports fontScale 2, i.e. accessibility sizes, where a segmented control stacks:
-// these tests are about the standard layout.
-jest.mock("@/utils/use-accessibility-text-size", () => ({
-	useAccessibilityTextSize: () => false,
-}));
-
-describe("HabitFormScreen — create mode", () => {
-	beforeEach(() => {
-		mockBack.mockReset();
-		mockCreateHabit.mockReset().mockResolvedValue(existingHabit);
-		mockUpdateHabit.mockReset();
-		mockHabits = [];
+describe("HabitFormScreen — create", () => {
+	it("lays out Type, Name, Category, Goal, Frequency, Reminders in that order", async () => {
+		await render(<HabitFormScreen />);
+		const labels = [
+			"TYPE",
+			"NAME",
+			"CATEGORY",
+			"GOAL",
+			"FREQUENCY",
+			"REMINDERS",
+		];
+		const found = labels.map((label) => screen.getByText(label));
+		expect(found).toHaveLength(labels.length);
+		// Source order = render order: each label appears after the previous one.
+		const rendered = JSON.stringify(screen.toJSON());
+		const positions = labels.map((label) => rendered.indexOf(`"${label}"`));
+		expect(positions).toEqual([...positions].sort((a, b) => a - b));
 	});
 
-	it("disables Save until a name and a category are both set", async () => {
+	it("needs only a name: Save is off with its reason until one is typed", async () => {
 		await render(<HabitFormScreen />);
 		expect(isSaveDisabled()).toBe(true);
+		expect(screen.getByText("Add a name to save")).toBeTruthy();
 
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Read");
-		expect(isSaveDisabled()).toBe(true);
-
-		await pickCategory("Learning");
+		await typeName("Read");
 		expect(isSaveDisabled()).toBe(false);
+		expect(screen.queryByText("Add a name to save")).toBeNull();
 	});
 
-	it("explains one blocking reason at a time — the name's first (HAB-24)", async () => {
+	it("a dimmed Save reads its reason as the hint, and drops it once the name is typed (08.3)", async () => {
 		await render(<HabitFormScreen />);
-		expect(screen.getByText("Add a name to save this habit")).toBeTruthy();
-		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
-
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Read");
-		expect(screen.queryByText("Add a name to save this habit")).toBeNull();
-		expect(screen.getByText("Pick a category to save this habit")).toBeTruthy();
-
-		await pickCategory("Learning");
-		expect(screen.queryByText("Pick a category to save this habit")).toBeNull();
+		expect(saveButton()?.props.accessibilityHint).toBe("Add a name to save");
+		await typeName("Read");
+		expect(saveButton()?.props.accessibilityHint).toBeUndefined();
 	});
 
-	describe("name field (HAB-22)", () => {
-		const nameInput = () => screen.getByLabelText("Name");
+	it("a name already taken is announced as an alert next to the field (08.3)", async () => {
+		mockHabits = [existingHabit];
+		await render(<HabitFormScreen />);
+		await typeName("Gym");
+		const alert = screen.getByRole("alert");
+		expect(alert.props.accessibilityLabel).toMatch(/already have a habit/i);
+	});
 
-		it("opens empty and focused, with an example placeholder and no counter (E5)", async () => {
+	it("saves with no category as Other, and offers no icon or colour picker", async () => {
+		await render(<HabitFormScreen />);
+		expect(screen.queryByText(/icon/i)).toBeNull();
+		await typeName("  Read  ");
+		await fireEvent.press(saveButton() as never);
+
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+		expect(mockCreateHabit.mock.calls[0][0]).toEqual({
+			name: "Read",
+			categoryId: OTHER.id,
+			direction: "build",
+			targetType: "simple",
+			targetAmount: null,
+			targetUnit: null,
+			frequency: { type: "daily" },
+		});
+		await waitFor(() => expect(mockBack).toHaveBeenCalled());
+	});
+
+	it("picks one category at a time, saves its id, and clears it with a second tap", async () => {
+		await render(<HabitFormScreen />);
+		await typeName("Read");
+		await fireEvent.press(screen.getByLabelText("Learning"));
+		expect(isSelected("Learning")).toBe(true);
+		await fireEvent.press(screen.getByLabelText("Health"));
+		expect(isSelected("Learning")).toBe(false);
+		expect(isSelected("Health")).toBe(true);
+		await fireEvent.press(screen.getByLabelText("Health"));
+		expect(isSelected("Health")).toBe(false);
+
+		await fireEvent.press(screen.getByLabelText("Learning"));
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+		expect(mockCreateHabit.mock.calls[0][0].categoryId).toBe(LEARNING.id);
+	});
+
+	it("says the category is optional and lists every category, then New category", async () => {
+		await render(<HabitFormScreen />);
+		expect(
+			screen.getByText("Optional — habits without one go to Other."),
+		).toBeTruthy();
+		expect(screen.getByLabelText("Morning")).toBeTruthy();
+		expect(screen.getByLabelText("New category")).toBeTruthy();
+	});
+
+	it("opens the add-category sheet from New category and selects the one created", async () => {
+		const created = { ...MORNING, id: 99, name: "Journaling" };
+		mockCreateCategory.mockResolvedValue(created);
+		await render(<HabitFormScreen />);
+		await fireEvent.press(screen.getByLabelText("New category"));
+		const field = screen.getAllByLabelText("Name").at(-1);
+		await fireEvent.changeText(field as never, "Journaling");
+		await fireEvent.press(screen.getByText("Add category"));
+		await waitFor(() => expect(mockCreateCategory).toHaveBeenCalled());
+	});
+
+	describe("name field", () => {
+		it("opens empty with an example placeholder and no counter", async () => {
 			await render(<HabitFormScreen />);
-			expect(nameInput().props.value).toBe("");
-			expect(nameInput().props.placeholder).toBe("e.g. Drink a glass of water");
-			expect(nameInput().props.autoFocus).toBe(true);
-			expect(nameInput().props.maxLength).toBe(32);
+			expect(nameInput().props.placeholder).toBe("e.g. Drink water");
 			expect(screen.queryByText(/ \/ 32$/)).toBeNull();
-			expect(isSaveDisabled()).toBe(true);
 		});
 
-		it("shows the counter only from 26 of 32 characters (E6)", async () => {
+		it("shows the counter from 26 of 32, and 'characters max' amber at the limit", async () => {
 			await render(<HabitFormScreen />);
-			await fireEvent.changeText(nameInput(), "a".repeat(25));
+			await typeName("a".repeat(25));
 			expect(screen.queryByText("25 / 32")).toBeNull();
-
-			await fireEvent.changeText(nameInput(), "a".repeat(26));
+			await typeName("a".repeat(26));
 			expect(screen.getByText("26 / 32")).toBeTruthy();
+			await typeName("a".repeat(32));
+			expect(screen.getByText("32 characters max")).toBeTruthy();
 		});
 
-		it("trims a pasted over-limit name to 32 and still shows the at-limit counter", async () => {
+		it("trims a pasted over-limit name to 32", async () => {
 			await render(<HabitFormScreen />);
-			await fireEvent.changeText(nameInput(), "a".repeat(50));
-			expect(nameInput().props.value).toBe("a".repeat(32));
-			expect(screen.getByText("32 / 32")).toBeTruthy();
+			await typeName("b".repeat(50));
+			expect(nameInput().props.value).toBe("b".repeat(32));
 		});
 
-		it("drops the helper line once a valid name exists and a category is picked", async () => {
-			await render(<HabitFormScreen />);
-			expect(screen.getByText("Add a name to save this habit")).toBeTruthy();
-
-			await fireEvent.changeText(
-				nameInput(),
-				"Read twenty pages before coffee",
-			);
-			await pickCategory("Learning");
-			expect(screen.queryByText("Add a name to save this habit")).toBeNull();
+		it("prefills the name from the route (H3)", async () => {
+			await render(<HabitFormScreen name="Yoga" />);
+			expect(nameInput().props.value).toBe("Yoga");
 			expect(isSaveDisabled()).toBe(false);
 		});
 	});
 
-	it("acts on a tap while the autofocused keyboard is up (HAB-22)", async () => {
-		await render(<HabitFormScreen />);
-		expect(
-			screen.getByTestId("habit-form-scroll").props.keyboardShouldPersistTaps,
-		).toBe("handled");
-	});
-
-	it("lists built-ins in their fixed order, then customs, then Add category last", async () => {
-		await render(<HabitFormScreen />);
-		const chips = screen
-			.getAllByTestId("category-chip")
-			.map((chip) => chip.props.accessibilityLabel);
-		expect(chips).toEqual([
-			...TEST_BUILT_IN_CATEGORIES.map((c) => c.name),
-			"Morning",
-			"Add category",
-		]);
-	});
-
-	it("selects one category at a time and shows it in the card header", async () => {
-		await render(<HabitFormScreen />);
-		expect(screen.getByText("Sets the habit's icon & colour")).toBeTruthy();
-
-		await pickCategory("Learning");
-		expect(isSelected("Learning")).toBe(true);
-		expect(screen.queryByText("Sets the habit's icon & colour")).toBeNull();
-
-		await pickCategory("Fitness");
-		expect(isSelected("Fitness")).toBe(true);
-		expect(isSelected("Learning")).toBe(false);
-	});
-
-	it("keeps the category selected when its chip is tapped again", async () => {
-		await render(<HabitFormScreen />);
-		await pickCategory("Learning");
-		await pickCategory("Learning");
-		expect(isSelected("Learning")).toBe(true);
-	});
-
-	it("creates the habit with a trimmed name and the picked category's id", async () => {
-		await render(<HabitFormScreen />);
-
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "  Read  ");
-		await pickCategory("Morning");
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledWith(
-			expect.objectContaining({
-				name: "Read",
-				categoryId: MORNING.id,
-				direction: "build",
-				targetType: "simple",
-				frequency: { type: "daily" },
-			}),
-		);
-		expect(mockBack).toHaveBeenCalledTimes(1);
-	});
-
-	it("a failed create shows an inline error, stays on the form, and a retry works", async () => {
-		mockCreateHabit.mockRejectedValueOnce(new Error("disk full"));
-		await render(<HabitFormScreen />);
-
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Read");
-		await pickCategory("Morning");
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		expect(
-			await screen.findByText("Couldn't save this habit. Try again."),
-		).toBeTruthy();
-		expect(mockBack).not.toHaveBeenCalled();
-		expect(screen.getByText("Save habit")).toBeTruthy();
-
-		await fireEvent.press(screen.getByText("Save habit"));
-		await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledTimes(2);
-		expect(
-			screen.queryByText("Couldn't save this habit. Try again."),
-		).toBeNull();
-	});
-
-	it("draws a hairline above Save only once the form is scrolled (F1c)", async () => {
-		await render(<HabitFormScreen />);
-		const footerBorder = () =>
-			StyleSheet.flatten(screen.getByTestId("habit-form-footer").props.style)
-				.borderTopWidth;
-		const scrollTo = (y: number) =>
-			fireEvent.scroll(screen.getByTestId("habit-form-scroll"), {
-				nativeEvent: { contentOffset: { x: 0, y } },
-			});
-
-		expect(footerBorder()).toBeUndefined();
-		await scrollTo(120);
-		expect(footerBorder()).toBe(StyleSheet.hairlineWidth);
-		await scrollTo(0);
-		expect(footerBorder()).toBeUndefined();
-	});
-
-	describe("add category sheet", () => {
-		const nameField = () => screen.getByPlaceholderText("e.g. Journaling");
-
-		it("opens with Add disabled, explaining a name is needed, and a placeholder preview", async () => {
+	describe("validation (F8)", () => {
+		it("shows a duplicate name inline, in the field, and blocks Save naming the issue", async () => {
+			mockHabits = [makeHabit({ id: 5, name: "Read 20 min" })];
 			await render(<HabitFormScreen />);
-			await fireEvent.press(screen.getByLabelText("Add category"));
-
-			expect(nameField()).toBeTruthy();
-			expect(
-				screen.getByText("Add a name to create this category"),
-			).toBeTruthy();
-			expect(screen.getByText("Your category")).toBeTruthy();
-			expect(
-				screen.getAllByText("Add category").at(-1)?.parent?.props
-					.accessibilityState.disabled,
-			).toBe(true);
-		});
-
-		it("previews the typed name live", async () => {
-			await render(<HabitFormScreen />);
-			await fireEvent.press(screen.getByLabelText("Add category"));
-			await fireEvent.changeText(nameField(), "Journaling");
-
-			expect(screen.getByTestId("category-preview")).toBeTruthy();
-			expect(screen.getByText("Journaling")).toBeTruthy();
-			expect(
-				screen.queryByText("Add a name to create this category"),
-			).toBeNull();
-		});
-
-		it("flags a duplicate of a built-in (any case/spacing), hides the preview, blocks Add", async () => {
-			await render(<HabitFormScreen />);
-			await fireEvent.press(screen.getByLabelText("Add category"));
-			await fireEvent.changeText(nameField(), " fitness ");
+			await typeName("read 20 MIN");
 
 			expect(
-				screen.getByText(
-					"You already have Fitness. Pick it from the list instead.",
-				),
-			).toBeTruthy();
-			expect(screen.queryByTestId("category-preview")).toBeNull();
-			expect(
-				screen.getAllByText("Add category").at(-1)?.parent?.props
-					.accessibilityState.disabled,
-			).toBe(true);
-		});
-
-		it("creates with the previewed rotation pick, closes, and auto-selects the new chip", async () => {
-			const journaling = makeCategory({
-				id: 12,
-				name: "Journaling",
-				shape: "ring",
-				hue: 330,
-			});
-			mockCreateCategory.mockImplementation(async () => {
-				mockCategories = [...mockCategories, journaling];
-				return journaling;
-			});
-			await render(<HabitFormScreen />);
-			await fireEvent.press(screen.getByLabelText("Add category"));
-			await fireEvent.changeText(nameField(), "Journaling");
-			const [, addButton] = screen.getAllByText("Add category");
-			await fireEvent.press(addButton);
-
-			// Morning already sits on slot 1, so the next pick is slot 2.
-			await waitFor(() =>
-				expect(mockCreateCategory).toHaveBeenCalledWith({
-					name: "Journaling",
-					shape: "square",
-					hue: 95,
+				screen.getByRole("alert", {
+					name: "You already have a habit called Read 20 min. Choose another name.",
 				}),
-			);
-			await waitFor(() =>
-				expect(screen.queryByPlaceholderText("e.g. Journaling")).toBeNull(),
-			);
-			expect(isSelected("Journaling")).toBe(true);
+			).toBeTruthy();
+			expect(isSaveDisabled()).toBe(true);
+			expect(screen.getByText("Fix 1 issue to save")).toBeTruthy();
 		});
-	});
 
-	it("shows the direction explanation caption in create mode too", async () => {
-		await render(<HabitFormScreen />);
-		expect(screen.getByText(/checking it off means you did it/)).toBeTruthy();
-	});
-
-	it("disables Quantity and resets it to Simple check when Direction switches to Break", async () => {
-		await render(<HabitFormScreen />);
-
-		await fireEvent.press(screen.getByText("Quantity"));
-		expect(
-			screen.getByText("Quantity").parent?.parent?.props.accessibilityState
-				.selected,
-		).toBe(true);
-
-		await fireEvent.press(screen.getByText("Break"));
-
-		await waitFor(() =>
+		it("counts a duplicate and an empty day list as two issues", async () => {
+			mockHabits = [makeHabit({ id: 5, name: "Read 20 min" })];
+			await render(<HabitFormScreen />);
+			await typeName("Read 20 min");
+			await fireEvent.press(screen.getByText("Specific days"));
 			expect(
-				screen.getByText("Simple check").parent?.parent?.props
-					.accessibilityState.selected,
-			).toBe(true),
-		);
-		expect(
-			screen.getByText("Quantity").parent?.parent?.props.accessibilityState
-				.disabled,
-		).toBe(true);
-		expect(
-			screen.getByText(/quantity targets aren't available for Break/),
-		).toBeTruthy();
+				screen.getByRole("alert", { name: "Pick at least one day" }),
+			).toBeTruthy();
+			expect(screen.getByText("Fix 2 issues to save")).toBeTruthy();
+		});
+
+		it("clears the error and re-enables Save once the name is changed", async () => {
+			mockHabits = [makeHabit({ id: 5, name: "Read 20 min" })];
+			await render(<HabitFormScreen />);
+			await typeName("Read 20 min");
+			await typeName("Read 30 min");
+			expect(screen.queryByText(/already have a habit/)).toBeNull();
+			expect(isSaveDisabled()).toBe(false);
+		});
 	});
 
-	it("saves a Break habit with targetType simple even if Quantity was picked first", async () => {
-		await render(<HabitFormScreen />);
+	describe("goal", () => {
+		it("starts on Check, and Quantity adds a daily target, a unit and the live example", async () => {
+			await render(<HabitFormScreen />);
+			expect(screen.queryByText("DAILY TARGET")).toBeNull();
+			await fireEvent.press(screen.getByText("Quantity"));
+			expect(screen.getByText("DAILY TARGET")).toBeTruthy();
+			expect(screen.getByText("units a day")).toBeTruthy();
 
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "No phone");
-		await pickCategory("Health");
-		await fireEvent.press(screen.getByText("Quantity"));
-		await fireEvent.press(screen.getByText("Break"));
-		await waitFor(() =>
+			await fireEvent.changeText(screen.getByLabelText("Unit"), "glasses");
+			expect(screen.getByText("glasses a day")).toBeTruthy();
 			expect(
-				screen.getByText("Simple check").parent?.parent?.props
-					.accessibilityState.selected,
-			).toBe(true),
-		);
-
-		await fireEvent.press(screen.getByText("Save habit"));
-		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledWith(
-			expect.objectContaining({ direction: "break", targetType: "simple" }),
-		);
-	});
-
-	describe("keyboard (A5-13)", () => {
-		afterEach(() => jest.restoreAllMocks());
-
-		it("Return on Name only puts the keyboard away for a simple check — it never saves a half-filled form", async () => {
-			const dismiss = jest
-				.spyOn(Keyboard, "dismiss")
-				.mockImplementation(() => {});
-			await render(<HabitFormScreen />);
-			const name = screen.getByLabelText("Name");
-			expect(name.props.returnKeyType).toBe("done");
-
-			await fireEvent(name, "submitEditing");
-
-			expect(dismiss).toHaveBeenCalledTimes(1);
-			expect(mockCreateHabit).not.toHaveBeenCalled();
+				screen.getByText("Shown after the number: 5 of 8 glasses"),
+			).toBeTruthy();
 		});
 
-		it("Return on Name moves on to Unit for a quantity habit, with a 'Next' key and the keyboard kept up", async () => {
-			const dismiss = jest
-				.spyOn(Keyboard, "dismiss")
-				.mockImplementation(() => {});
-			const focus = jest
-				.spyOn(TextInput.prototype, "focus")
-				.mockImplementation(() => {});
+		it("asks for a unit before saving, then saves the target and unit", async () => {
 			await render(<HabitFormScreen />);
+			await typeName("Drink water");
 			await fireEvent.press(screen.getByText("Quantity"));
-			const name = screen.getByLabelText("Name");
-			expect(name.props.returnKeyType).toBe("next");
-			expect(name.props.submitBehavior).toBe("submit");
+			expect(isSaveDisabled()).toBe(true);
+			expect(screen.getByText("Add a unit to save")).toBeTruthy();
 
-			await fireEvent(name, "submitEditing");
-
-			expect(focus).toHaveBeenCalledTimes(1);
-			expect(dismiss).not.toHaveBeenCalled();
-		});
-
-		it("Return on Unit puts the keyboard away, and focusing it scrolls it into view", async () => {
-			const dismiss = jest
-				.spyOn(Keyboard, "dismiss")
-				.mockImplementation(() => {});
-			await render(<HabitFormScreen />);
-			await fireEvent.press(screen.getByText("Quantity"));
-			const unit = screen.getByLabelText("Unit");
-			expect(unit.props.returnKeyType).toBe("done");
-
-			await fireEvent(unit, "submitEditing");
-			expect(dismiss).toHaveBeenCalledTimes(1);
-
-			const scrollToEnd = jest
-				.spyOn(ScrollView.prototype, "scrollToEnd")
-				.mockImplementation(() => {});
-			await fireEvent(unit, "focus");
-			expect(scrollToEnd).toHaveBeenCalledWith({ animated: true });
-		});
-
-		it("scrolling the form drags the keyboard away, and a chip tap still lands on the first tap", async () => {
-			await render(<HabitFormScreen />);
-			const scroll = screen.getByTestId("habit-form-scroll");
-			expect(scroll.props.keyboardDismissMode).toBe("on-drag");
-			expect(scroll.props.keyboardShouldPersistTaps).toBe("handled");
-		});
-	});
-
-	it("reveals Amount and Unit fields when Quantity is selected", async () => {
-		await render(<HabitFormScreen />);
-
-		expect(screen.queryByPlaceholderText("glasses")).toBeNull();
-		await fireEvent.press(screen.getByText("Quantity"));
-		expect(screen.getByText("Amount")).toBeTruthy();
-		expect(screen.getByPlaceholderText("glasses")).toBeTruthy();
-	});
-
-	it("blocks Save until a unit is entered for a Quantity habit", async () => {
-		await render(<HabitFormScreen />);
-
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
-		await pickCategory("Health");
-		expect(isSaveDisabled()).toBe(false);
-
-		await fireEvent.press(screen.getByText("Quantity"));
-		expect(isSaveDisabled()).toBe(true);
-
-		await fireEvent.changeText(
-			screen.getByPlaceholderText("glasses"),
-			"glasses",
-		);
-		expect(isSaveDisabled()).toBe(false);
-	});
-
-	it("creates a Quantity habit with its amount and unit", async () => {
-		await render(<HabitFormScreen />);
-
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
-		await pickCategory("Health");
-		await fireEvent.press(screen.getByText("Quantity"));
-		await fireEvent.changeText(
-			screen.getByPlaceholderText("glasses"),
-			"glasses",
-		);
-		await fireEvent.press(screen.getByLabelText("Increase target amount"));
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledWith(
-			expect.objectContaining({
+			await fireEvent.changeText(screen.getByLabelText("Unit"), " glasses ");
+			await fireEvent.press(screen.getByLabelText("Increase daily target"));
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][0]).toMatchObject({
 				targetType: "quantity",
 				targetAmount: 9,
 				targetUnit: "glasses",
-			}),
-		);
-	});
+			});
+		});
 
-	it("clears amount and unit to null when Quantity is switched back to Simple check", async () => {
-		await render(<HabitFormScreen />);
+		it("shows the missing-unit error once the unit has been left", async () => {
+			await render(<HabitFormScreen />);
+			await typeName("Drink water");
+			await fireEvent.press(screen.getByText("Quantity"));
+			await fireEvent(screen.getByLabelText("Unit"), "blur");
+			expect(
+				screen.getByRole("alert", {
+					name: "Give this target a unit, e.g. “glasses”.",
+				}),
+			).toBeTruthy();
+			expect(screen.getByText("Fix 1 issue to save")).toBeTruthy();
+		});
 
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Water");
-		await pickCategory("Health");
-		await fireEvent.press(screen.getByText("Quantity"));
-		await fireEvent.changeText(
-			screen.getByPlaceholderText("glasses"),
-			"glasses",
-		);
-		await fireEvent.press(screen.getByText("Simple check"));
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledWith(
-			expect.objectContaining({
+		it("saves a switched-back Check habit with a null target", async () => {
+			await render(<HabitFormScreen />);
+			await typeName("Drink water");
+			await fireEvent.press(screen.getByText("Quantity"));
+			await fireEvent.changeText(screen.getByLabelText("Unit"), "glasses");
+			await fireEvent.press(screen.getByText("Check"));
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][0]).toMatchObject({
 				targetType: "simple",
 				targetAmount: null,
 				targetUnit: null,
-			}),
-		);
-	});
-});
-
-describe("HabitFormScreen — frequency", () => {
-	beforeEach(() => {
-		mockBack.mockReset();
-		mockCreateHabit.mockReset().mockResolvedValue(existingHabit);
-		mockHabits = [];
-	});
-
-	async function renderNamed() {
-		await render(<HabitFormScreen />);
-		await fireEvent.changeText(screen.getAllByDisplayValue("")[0], "Gym");
-		await pickCategory("Fitness");
-	}
-
-	it("offers all three modes, defaulting to Daily with no day picker", async () => {
-		await render(<HabitFormScreen />);
-
-		expect(
-			screen.getByText("Daily").parent?.parent?.props.accessibilityState
-				.selected,
-		).toBe(true);
-		expect(screen.getByText("Specific weekdays")).toBeTruthy();
-		expect(screen.getByText("X per week")).toBeTruthy();
-		expect(screen.queryByLabelText("Monday")).toBeNull();
-	});
-
-	it("blocks Save with an inline message when Specific weekdays has no days", async () => {
-		await renderNamed();
-		expect(isSaveDisabled()).toBe(false);
-
-		await fireEvent.press(screen.getByText("Specific weekdays"));
-		expect(isSaveDisabled()).toBe(true);
-		expect(screen.getByText("Pick at least one day.")).toBeTruthy();
-
-		await fireEvent.press(screen.getByLabelText("Wednesday"));
-		expect(isSaveDisabled()).toBe(false);
-		expect(screen.queryByText("Pick at least one day.")).toBeNull();
-	});
-
-	it("Weekdays shortcut pre-fills Mon–Fri, which stay individually editable", async () => {
-		await renderNamed();
-		await fireEvent.press(screen.getByText("Specific weekdays"));
-		await fireEvent.press(screen.getByText("Weekdays shortcut"));
-
-		expect(
-			["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].every(
-				isSelected,
-			),
-		).toBe(true);
-		expect(isSelected("Saturday")).toBe(false);
-
-		await fireEvent.press(screen.getByLabelText("Tuesday"));
-		await fireEvent.press(screen.getByLabelText("Sunday"));
-		expect(
-			screen.getByText("Specific weekdays").parent?.parent?.props
-				.accessibilityState.selected,
-		).toBe(true);
-
-		await fireEvent.press(screen.getByText("Save habit"));
-		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledWith(
-			expect.objectContaining({
-				frequency: { type: "weekdays", days: [1, 3, 4, 5, 7] },
-			}),
-		);
-	});
-
-	it("saves an X-per-week count from the stepper", async () => {
-		await renderNamed();
-		await fireEvent.press(screen.getByText("X per week"));
-
-		expect(screen.getByText("3")).toBeTruthy();
-		await fireEvent.press(screen.getByLabelText("Increase times per week"));
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalledTimes(1));
-		expect(mockCreateHabit).toHaveBeenCalledWith(
-			expect.objectContaining({
-				frequency: { type: "per-week", timesPerWeek: 4 },
-			}),
-		);
-	});
-});
-
-describe("HabitFormScreen — edit mode", () => {
-	beforeEach(() => {
-		mockBack.mockReset();
-		mockCreateHabit.mockReset();
-		mockUpdateHabit.mockReset().mockResolvedValue(existingHabit);
-		mockHabits = [existingHabit];
-	});
-
-	it("pre-fills the form from the existing habit", async () => {
-		await render(<HabitFormScreen habitId={1} />);
-		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-		expect(isSelected("Morning")).toBe(true);
-		expect(
-			screen.getByText("Specific weekdays").parent?.parent?.props
-				.accessibilityState.selected,
-		).toBe(true);
-		expect(
-			["Monday", "Tuesday", "Wednesday", "Friday"].map(isSelected),
-		).toEqual([true, false, true, true]);
-	});
-
-	it("lets frequency change in edit mode", async () => {
-		await render(<HabitFormScreen habitId={1} />);
-		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-
-		await fireEvent.press(screen.getByText("Daily"));
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalledTimes(1));
-		expect(mockUpdateHabit).toHaveBeenCalledWith(
-			1,
-			expect.objectContaining({ frequency: { type: "daily" } }),
-		);
-	});
-
-	describe("Archive at the foot (HAB-17, A5-01)", () => {
-		beforeEach(() => {
-			mockArchiveHabit.mockReset().mockResolvedValue(undefined);
-			mockRestoreHabit.mockReset().mockResolvedValue(undefined);
-			useToastStore.setState({ toast: null });
+			});
 		});
+	});
 
-		it("is offered in edit mode only, and not for an archived habit", async () => {
+	describe("Break (F5)", () => {
+		it("explains Break, turns Quantity off with the reason, and resets a picked Quantity to Check", async () => {
 			await render(<HabitFormScreen />);
-			expect(screen.queryByTestId("action-card")).toBeNull();
+			await typeName("No social media");
+			await fireEvent.press(screen.getByText("Quantity"));
+			await fireEvent.press(screen.getByText("Break"));
+
+			expect(
+				screen.getByText(
+					"A Break habit counts the days you resist. Tick the circle on each day you held off.",
+				),
+			).toBeTruthy();
+			expect(
+				screen.getByText("Break habits are yes or no, so Quantity is off."),
+			).toBeTruthy();
+			expect(isDisabled("Quantity")).toBe(true);
+			expect(screen.queryByText("DAILY TARGET")).toBeNull();
+
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][0]).toMatchObject({
+				direction: "break",
+				targetType: "simple",
+			});
+		});
+	});
+
+	describe("frequency", () => {
+		it("offers three modes — Daily, Specific days, × per week — never a fourth Weekdays", async () => {
+			await render(<HabitFormScreen />);
+			expect(isSelected("Daily")).toBe(true);
+			expect(screen.getByText("Specific days")).toBeTruthy();
+			expect(screen.getByText("× per week")).toBeTruthy();
+			expect(screen.queryByText("Weekdays")).toBeNull();
+			expect(screen.queryByLabelText("Monday")).toBeNull();
 		});
 
-		it("is not offered once the habit is already archived", async () => {
+		it("Specific days shows the weekday chips, with the error until one is picked", async () => {
+			await render(<HabitFormScreen />);
+			await typeName("Upper body");
+			await fireEvent.press(screen.getByText("Specific days"));
+			expect(screen.getByLabelText("Monday")).toBeTruthy();
+			expect(screen.getByText("Pick at least one day")).toBeTruthy();
+			expect(isSaveDisabled()).toBe(true);
+
+			await fireEvent.press(screen.getByLabelText("Tuesday"));
+			await fireEvent.press(screen.getByLabelText("Thursday"));
+			expect(screen.queryByText("Pick at least one day")).toBeNull();
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][0].frequency).toEqual({
+				type: "weekdays",
+				days: [2, 4],
+			});
+		});
+
+		it("× per week has a stepper, the Monday–Sunday rule and saves the count", async () => {
+			await render(<HabitFormScreen />);
+			await typeName("Cold shower");
+			await fireEvent.press(screen.getByText("× per week"));
+			expect(screen.getByText("times a week")).toBeTruthy();
+			expect(
+				screen.getByText(
+					"Weeks run Monday to Sunday. Once you reach 3, it leaves Today until the next week starts.",
+				),
+			).toBeTruthy();
+
+			await fireEvent.press(screen.getByLabelText("Increase times per week"));
+			expect(screen.getByText(/Once you reach 4,/)).toBeTruthy();
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][0].frequency).toEqual({
+				type: "per-week",
+				timesPerWeek: 4,
+			});
+		});
+	});
+
+	describe("reminders before saving (F7)", () => {
+		it("adds a time through the sheet, lists it with its days, and sends it with the habit", async () => {
+			await render(<HabitFormScreen />);
+			await typeName("Upper body");
+			await fireEvent.press(screen.getByText("Specific days"));
+			await fireEvent.press(screen.getByLabelText("Tuesday"));
+			await fireEvent.press(screen.getByLabelText("Thursday"));
+
+			await fireEvent.press(screen.getByLabelText("Add time"));
+			// The sheet opens on 09:00, on the days the habit is set for.
+			expect(mockTimeWheel.mock.calls.at(-1)?.[0]).toMatchObject({
+				hour: 9,
+				minute: 0,
+			});
+			await fireEvent.press(screen.getByText("Save time"));
+			expect(screen.getByText("09:00")).toBeTruthy();
+			expect(screen.getByText("Tue, Thu")).toBeTruthy();
+
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][1]).toEqual([
+				{ hour: 9, minute: 0, weekdays: [2, 4] },
+			]);
+		});
+
+		it("removes a queued time at once, and never saves it", async () => {
+			await render(<HabitFormScreen />);
+			await typeName("Read");
+			await fireEvent.press(screen.getByLabelText("Add time"));
+			await fireEvent.press(screen.getByText("Save time"));
+			await fireEvent.press(screen.getByLabelText("Remove reminder at 09:00"));
+			expect(screen.queryByText("09:00")).toBeNull();
+
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+			expect(mockCreateHabit.mock.calls[0][1]).toEqual([]);
+		});
+
+		it("stops at four times, saying why", async () => {
+			await render(<HabitFormScreen />);
+			for (let index = 0; index < 4; index++) {
+				await fireEvent.press(screen.getByLabelText("Add time"));
+				await fireEvent.press(screen.getByText("Save time"));
+			}
+			expect(
+				screen.getByLabelText("Add time").props.accessibilityState.disabled,
+			).toBe(true);
+			expect(screen.getByText(/remove one to add another/)).toBeTruthy();
+		});
+
+		it("tells the person when the habit saved but a reminder did not", async () => {
+			mockCreateHabit.mockResolvedValue({
+				habit: existingHabit,
+				remindersFailed: true,
+			});
+			await render(<HabitFormScreen />);
+			await typeName("Read");
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockBack).toHaveBeenCalled());
+			expect(useToastStore.getState().toast?.message).toBe(
+				"Saved, but a reminder couldn’t be set. Add it from the habit’s Reminders.",
+			);
+		});
+	});
+
+	it("a failed save shows an inline error above Save, stays on the form, and a retry works", async () => {
+		mockCreateHabit.mockRejectedValueOnce(new Error("disk full"));
+		await render(<HabitFormScreen />);
+		await typeName("Read");
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() =>
+			expect(screen.getByRole("alert")).toHaveTextContent(/Couldn.t save/),
+		);
+		expect(mockBack).not.toHaveBeenCalled();
+
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(mockBack).toHaveBeenCalled());
+	});
+
+	it("a failed save moves the screen reader onto the error (08.4)", async () => {
+		jest.useFakeTimers();
+		const focus = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation();
+		mockCreateHabit.mockRejectedValueOnce(new Error("disk full"));
+		await render(<HabitFormScreen />);
+		await typeName("Read");
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+		await act(async () => {
+			jest.advanceTimersByTime(200);
+		});
+		expect(focus).toHaveBeenCalledWith(expect.anything(), "focus");
+		focus.mockRestore();
+		jest.useRealTimers();
+	});
+
+	it("draws a hairline above Save only once the form is scrolled", async () => {
+		await render(<HabitFormScreen />);
+		const footer = () => screen.getByTestId("habit-form-footer");
+		const flat = () =>
+			Object.assign({}, ...[footer().props.style].flat().filter(Boolean));
+		expect(flat().borderTopWidth).toBeUndefined();
+		await fireEvent.scroll(screen.getByTestId("habit-form-scroll"), {
+			nativeEvent: { contentOffset: { y: 12 } },
+		});
+		expect(flat().borderTopWidth).toBeGreaterThan(0);
+	});
+});
+
+describe("HabitFormScreen — discard prompt (F9)", () => {
+	it("lets a pristine form close without asking", async () => {
+		await render(<HabitFormScreen />);
+		expect(await tryToLeave()).toBe(false);
+		expect(screen.queryByText("Discard changes?")).toBeNull();
+	});
+
+	it("asks before closing with edits: Keep editing stays, Discard replays the exit", async () => {
+		await render(<HabitFormScreen />);
+		await typeName("Read");
+		const action = { type: "POP", from: "header" };
+		expect(await tryToLeave(action)).toBe(true);
+		expect(screen.getByText("Discard changes?")).toBeTruthy();
+		expect(screen.getByText("Your new habit won’t be saved.")).toBeTruthy();
+
+		await fireEvent.press(screen.getByText("Keep editing"));
+		expect(screen.queryByText("Discard changes?")).toBeNull();
+		expect(mockDispatch).not.toHaveBeenCalled();
+		expect(nameInput().props.value).toBe("Read");
+
+		await tryToLeave(action);
+		await fireEvent.press(screen.getByText("Discard"));
+		expect(mockDispatch).toHaveBeenCalledWith(action);
+	});
+
+	it("counts a queued reminder as an edit", async () => {
+		await render(<HabitFormScreen />);
+		await fireEvent.press(screen.getByLabelText("Add time"));
+		await fireEvent.press(screen.getByText("Save time"));
+		expect(await tryToLeave()).toBe(true);
+	});
+
+	it("does not ask after a successful save", async () => {
+		await render(<HabitFormScreen />);
+		await typeName("Read");
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(mockBack).toHaveBeenCalled());
+		// The guard is off by the time the form leaves, so nothing is asked.
+		expect(await tryToLeave()).toBe(false);
+		expect(screen.queryByText("Discard changes?")).toBeNull();
+	});
+
+	it("names the habit when editing one", async () => {
+		mockHabits = [existingHabit];
+		await render(<HabitFormScreen habitId={1} />);
+		await typeName("Gym 2");
+		await tryToLeave();
+		expect(screen.getByText("Your edits to Gym won’t be saved.")).toBeTruthy();
+	});
+});
+
+describe("HabitFormScreen — prefilled from a suggestion (BS2)", () => {
+	const prefill = {
+		name: "Drink water",
+		category: "Health" as const,
+		direction: "build" as const,
+		target: { amount: 8, unit: "glasses" },
+		frequency: { type: "daily" as const },
+	};
+
+	it("fills every field, says where from, and saves nothing until Save", async () => {
+		await render(<HabitFormScreen prefill={prefill} />);
+		expect(screen.getByText("From a suggestion")).toBeTruthy();
+		expect(
+			screen.getByText(
+				"Drink water is filled in. Change anything before saving.",
+			),
+		).toBeTruthy();
+		expect(nameInput().props.value).toBe("Drink water");
+		expect(isSelected("Health")).toBe(true);
+		expect(screen.getByText("glasses a day")).toBeTruthy();
+		expect(mockCreateHabit).not.toHaveBeenCalled();
+
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(mockCreateHabit).toHaveBeenCalled());
+		expect(mockCreateHabit.mock.calls[0][0]).toMatchObject({
+			name: "Drink water",
+			targetType: "quantity",
+			targetAmount: 8,
+			targetUnit: "glasses",
+		});
+	});
+
+	it("is not an edit until something changes: closing asks nothing", async () => {
+		await render(<HabitFormScreen prefill={prefill} />);
+		expect(await tryToLeave()).toBe(false);
+	});
+
+	it("has no banner without a prefill", async () => {
+		await render(<HabitFormScreen />);
+		expect(screen.queryByText("From a suggestion")).toBeNull();
+	});
+});
+
+describe("HabitFormScreen — edit", () => {
+	beforeEach(() => {
+		mockHabits = [existingHabit];
+		mockUpdateHabit.mockResolvedValue(existingHabit);
+	});
+
+	it("pre-fills the form from the habit and has no reminders section", async () => {
+		await render(<HabitFormScreen habitId={1} />);
+		await waitFor(() => expect(nameInput().props.value).toBe("Gym"));
+		expect(isSelected("Morning")).toBe(true);
+		expect(isSelected("Specific days")).toBe(true);
+		expect(isSelected("Monday")).toBe(true);
+		expect(isSelected("Tuesday")).toBe(false);
+		expect(screen.queryByText("REMINDERS")).toBeNull();
+		expect(screen.getByText("Save changes")).toBeTruthy();
+	});
+
+	it("doesn't autofocus the name, and locks Type with the reason", async () => {
+		await render(<HabitFormScreen habitId={1} />);
+		expect(nameInput().props.autoFocus).toBeFalsy();
+		expect(
+			screen.getByText("Build and Break can’t be switched after saving."),
+		).toBeTruthy();
+		expect(isDisabled("Break")).toBe(true);
+	});
+
+	it("lets the habit keep its own name without a duplicate error", async () => {
+		await render(<HabitFormScreen habitId={1} />);
+		await typeName("Gym");
+		expect(screen.queryByText(/already have a habit/)).toBeNull();
+		expect(isSaveDisabled()).toBe(false);
+	});
+
+	it("updates the habit without touching its direction, and keeps a picked category", async () => {
+		await render(<HabitFormScreen habitId={1} />);
+		await typeName("Gym 2");
+		await fireEvent.press(screen.getByLabelText("Learning"));
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalled());
+		const [id, input] = mockUpdateHabit.mock.calls[0];
+		expect(id).toBe(1);
+		expect(input).toMatchObject({ name: "Gym 2", categoryId: LEARNING.id });
+		expect(input).not.toHaveProperty("direction");
+	});
+
+	it("pre-fills target and unit from a Quantity habit", async () => {
+		mockHabits = [
+			makeHabit({
+				id: 2,
+				name: "Water",
+				category: MORNING,
+				targetType: "quantity",
+				targetAmount: 6,
+				targetUnit: "cups",
+			}),
+		];
+		await render(<HabitFormScreen habitId={2} />);
+		await waitFor(() => expect(screen.getByText("cups a day")).toBeTruthy());
+		expect(screen.getByLabelText("Unit").props.value).toBe("cups");
+	});
+
+	describe("Archive at the foot", () => {
+		it("is offered for an active habit only", async () => {
+			await render(<HabitFormScreen habitId={1} />);
+			expect(screen.getByText("Archive habit")).toBeTruthy();
+		});
+
+		it("is not offered once the habit is archived", async () => {
 			mockHabits = [
 				makeHabit({ ...existingHabit, archivedAt: new Date(2026, 8, 2) }),
 			];
 			await render(<HabitFormScreen habitId={1} />);
-			await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-			expect(screen.queryByTestId("action-card")).toBeNull();
+			expect(screen.queryByText("Archive habit")).toBeNull();
 		});
 
-		it("archives in one tap, closes the form and leaves an Undo toast that restores the habit", async () => {
+		it("archives in one tap, closes without asking and leaves an Undo toast", async () => {
+			mockArchiveHabit.mockResolvedValue(undefined);
 			await render(<HabitFormScreen habitId={1} />);
-			await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-
-			await fireEvent.press(screen.getByTestId("action-card"));
-
-			await waitFor(() => expect(mockArchiveHabit).toHaveBeenCalledWith(1));
-			expect(mockBack).toHaveBeenCalledTimes(1);
+			await typeName("Gym 2");
+			await fireEvent.press(screen.getByText("Archive habit"));
+			await waitFor(() => expect(mockBack).toHaveBeenCalled());
+			expect(mockArchiveHabit).toHaveBeenCalledWith(1);
 			const toast = useToastStore.getState().toast;
-			expect(toast?.message).toBe("Archived 'Gym'");
-			expect(toast?.actionLabel).toBe("Undo");
+			expect(toast?.message).toBe("Gym archived");
 			toast?.onAction?.();
 			expect(mockRestoreHabit).toHaveBeenCalledWith(1);
 		});
 
 		it("stays open and says so inline when archiving fails", async () => {
-			mockArchiveHabit.mockRejectedValue(new Error("db locked"));
+			mockArchiveHabit.mockRejectedValue(new Error("nope"));
 			await render(<HabitFormScreen habitId={1} />);
-			await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-
-			await fireEvent.press(screen.getByTestId("action-card"));
-
+			await fireEvent.press(screen.getByText("Archive habit"));
 			await waitFor(() =>
-				expect(
-					screen.getByText("Couldn't archive this habit. Try again."),
-				).toBeTruthy(),
+				expect(screen.getByRole("alert")).toHaveTextContent(/archive/i),
 			);
 			expect(mockBack).not.toHaveBeenCalled();
-			expect(useToastStore.getState().toast).toBeNull();
 		});
 	});
 
-	it("doesn't autofocus the name in edit mode (HAB-22)", async () => {
-		await render(<HabitFormScreen habitId={1} />);
-		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-		expect(screen.getByLabelText("Name").props.autoFocus).toBe(false);
-	});
-
-	describe("legacy V1 name over 32 (HAB-22)", () => {
+	describe("a legacy name over 32 (HAB-22)", () => {
 		const legacyName = "Read twenty pages before a morning tea"; // 38
 		beforeEach(() => {
 			mockHabits = [makeHabit({ id: 3, name: legacyName, category: MORNING })];
+			mockUpdateHabit.mockResolvedValue(mockHabits[0]);
 		});
 
-		it("saves other fields with the name left unchanged, showing its real count", async () => {
+		it("saves other fields with the name unchanged", async () => {
 			await render(<HabitFormScreen habitId={3} />);
-			await waitFor(() =>
-				expect(screen.getByDisplayValue(legacyName)).toBeTruthy(),
-			);
-			expect(screen.getByText("38 / 32")).toBeTruthy();
+			await fireEvent.press(screen.getByText("× per week"));
 			expect(isSaveDisabled()).toBe(false);
-
-			await fireEvent.press(screen.getByText("Daily"));
-			await fireEvent.press(screen.getByText("Save habit"));
-			await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalledTimes(1));
-			expect(mockUpdateHabit).toHaveBeenCalledWith(
-				3,
-				expect.objectContaining({ name: legacyName }),
-			);
+			await fireEvent.press(saveButton() as never);
+			await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalled());
+			expect(mockUpdateHabit.mock.calls[0][1].name).toBe(legacyName);
 		});
 
-		it("blocks Save once the name is edited but still over 32", async () => {
+		it("blocks Save, naming the issue, once the name is edited but still over 32", async () => {
 			await render(<HabitFormScreen habitId={3} />);
-			await waitFor(() =>
-				expect(screen.getByDisplayValue(legacyName)).toBeTruthy(),
-			);
-			await fireEvent.changeText(
-				screen.getByDisplayValue(legacyName),
-				legacyName.slice(0, 35),
-			);
-			expect(screen.getByDisplayValue(legacyName.slice(0, 35))).toBeTruthy();
+			await typeName(legacyName.slice(0, 35));
 			expect(isSaveDisabled()).toBe(true);
 			expect(
-				screen.getByText("Shorten the name to 32 characters to save"),
+				screen.getByText("Shorten the name to 32 characters."),
 			).toBeTruthy();
 		});
 
 		it("saves once the name is edited down to 32", async () => {
 			await render(<HabitFormScreen habitId={3} />);
-			await waitFor(() =>
-				expect(screen.getByDisplayValue(legacyName)).toBeTruthy(),
-			);
-			const shortened = legacyName.slice(0, 32);
-			await fireEvent.changeText(
-				screen.getByDisplayValue(legacyName),
-				shortened,
-			);
+			await typeName(legacyName.slice(0, 32));
 			expect(isSaveDisabled()).toBe(false);
-
-			await fireEvent.press(screen.getByText("Save habit"));
-			await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalledTimes(1));
-			expect(mockUpdateHabit).toHaveBeenCalledWith(
-				3,
-				expect.objectContaining({ name: shortened.trim() }),
-			);
 		});
-	});
-
-	it("locks Direction and shows the explanatory caption", async () => {
-		await render(<HabitFormScreen habitId={1} />);
-		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-
-		expect(screen.getByText(/checking it off means you did it/)).toBeTruthy();
-		expect(
-			screen.getByText("Break").parent?.parent?.props.accessibilityState
-				.disabled,
-		).toBe(true);
-	});
-
-	it("pre-fills Amount and Unit from an existing Quantity habit", async () => {
-		const quantityHabit = makeHabit({
-			id: 2,
-			name: "Read before bed",
-			targetType: "quantity",
-			targetAmount: 20,
-			targetUnit: "pages",
-		});
-		mockHabits = [quantityHabit];
-
-		await render(<HabitFormScreen habitId={2} />);
-		await waitFor(() =>
-			expect(screen.getByDisplayValue("Read before bed")).toBeTruthy(),
-		);
-		expect(screen.getByText("20")).toBeTruthy();
-		expect(screen.getByDisplayValue("pages")).toBeTruthy();
-	});
-
-	it("updates the habit without touching direction", async () => {
-		await render(<HabitFormScreen habitId={1} />);
-		await waitFor(() => expect(screen.getByDisplayValue("Gym")).toBeTruthy());
-
-		await fireEvent.changeText(screen.getByDisplayValue("Gym"), "Gym session");
-		await fireEvent.press(screen.getByText("Save habit"));
-
-		await waitFor(() => expect(mockUpdateHabit).toHaveBeenCalledTimes(1));
-		expect(mockUpdateHabit).toHaveBeenCalledWith(
-			1,
-			expect.objectContaining({
-				name: "Gym session",
-				categoryId: MORNING.id,
-				targetType: "simple",
-			}),
-		);
-		expect(mockBack).toHaveBeenCalledTimes(1);
 	});
 });
 

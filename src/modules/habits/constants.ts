@@ -122,19 +122,6 @@ export const MAX_QUANTITY_VALUE = 9999;
 /** Shared monthly freeze pool size (HAB-08) — across every habit, not per-habit; resets on the 1st, no rollover. */
 export const FREEZE_POOL_SIZE = 2;
 
-const DIRECTION_LOCK_NOTE =
-	"This is the only moment you can choose — it is locked after saving, because a build streak and a break streak mean opposite things.";
-
-/** Caption under the Build/Break control on the New Habit form (HAB-01). */
-export const DIRECTION_CAPTIONS: Record<HabitDirection, string> = {
-	build: `Build — checking it off means you did it. ${DIRECTION_LOCK_NOTE}`,
-	break: `Break — checking it off means you resisted. ${DIRECTION_LOCK_NOTE}`,
-};
-
-/** Caption under Target type when Direction = Break locks it to Simple check (HAB-04). */
-export const QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION =
-	"Break habits are simple check-ins only — quantity targets aren't available for Break in V1.";
-
 /**
  * The app-settings key gating First Run (HAB-06) — owned by this module, but
  * stored through the generic `lib/app-settings` KV store, not a habits-only
@@ -260,17 +247,14 @@ export const MAX_NOTE_LENGTH = 280;
 /** Reminder times per habit (HAB-12) — adding a 5th is blocked with an explanation. */
 export const REMINDER_CAP = 4;
 
-/** Always under the "Add a time" row until the cap replaces it with the message below (E4). */
-export const REMINDER_HINT = "Up to four times a day for this habit.";
-
-/** Shown under the disabled "Add a time" row, and as the service's cap error. */
-export const REMINDER_CAP_MESSAGE = `${REMINDER_CAP} of ${REMINDER_CAP} — remove one to add another. Four times a day is the cap per habit.`;
-
 /** A newly added reminder time starts here; the user edits it right after. */
 export const DEFAULT_REMINDER_TIME = { hour: 9, minute: 0 };
 
-/** The Evening review's single, fixed daily time (HAB-12). */
+/** The Evening review's time until the user picks one (HAB-12; kept at 21:30 in HAB-44). */
 export const EVENING_REVIEW_TIME = { hour: 21, minute: 30 };
+
+/** `app_settings` key for the Evening review's time, "HH:mm" — absent means the default. */
+export const EVENING_REVIEW_TIME_SETTING_KEY = "habits.eveningReviewTime";
 
 /** `app_settings` key for the app-wide Evening review toggle — "true" when on. */
 export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";

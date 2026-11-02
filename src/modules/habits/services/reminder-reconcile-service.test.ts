@@ -10,8 +10,10 @@ jest.mock(
 );
 
 let mockEveningSetting: string | null = null;
+let mockEveningTime: string | null = null;
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
-	getSetting: async () => mockEveningSetting,
+	getSetting: async (key: string) =>
+		key === "habits.eveningReviewTime" ? mockEveningTime : mockEveningSetting,
 	setSetting: jest.fn(),
 }));
 
@@ -62,6 +64,7 @@ beforeEach(() => {
 	fake.reset();
 	clearLog();
 	mockEveningSetting = null;
+	mockEveningTime = null;
 	mockHabits = [daily];
 	mockReminders = [];
 	mockRemindersThrowFor = null;
@@ -195,15 +198,49 @@ describe("reconcileScheduledReminders", () => {
 	});
 
 	describe("Evening review", () => {
-		it("on but missing: schedules it", async () => {
-			mockHabits = [];
+		it("on but missing: schedules it on the days with open habits", async () => {
+			mockHabits = [makeHabit({ id: 1, frequency: { type: "daily" } })];
 			mockEveningSetting = "true";
 			await reconcileScheduledReminders();
 			expect(keys()).toEqual(["evening-review:daily:2130"]);
 		});
 
-		it("on and present: untouched", async () => {
+		it("on, but no active habit is ever due: nothing is scheduled", async () => {
 			mockHabits = [];
+			mockEveningSetting = "true";
+			await reconcileScheduledReminders();
+			expect(keys()).toEqual([]);
+		});
+
+		it("on but aimed at the wrong days: replaced by the right ones", async () => {
+			mockHabits = [
+				makeHabit({ id: 1, frequency: { type: "weekdays", days: [2] } }),
+			];
+			mockEveningSetting = "true";
+			fake.scheduled.set("evening-review:daily:2130:x", {
+				identifier: "evening-review:daily:2130:x",
+				hour: 21,
+				minute: 30,
+			} as never);
+			await reconcileScheduledReminders();
+			expect(keys()).toEqual(["evening-review:day-2:2130"]);
+		});
+
+		it("on at a chosen time: scheduled there, and a review left at the old time is moved", async () => {
+			mockHabits = [makeHabit({ id: 1, frequency: { type: "daily" } })];
+			mockEveningSetting = "true";
+			mockEveningTime = "20:15";
+			fake.scheduled.set("evening-review:daily:2130:x", {
+				identifier: "evening-review:daily:2130:x",
+				hour: 21,
+				minute: 30,
+			} as never);
+			await reconcileScheduledReminders();
+			expect(keys()).toEqual(["evening-review:daily:2015"]);
+		});
+
+		it("on and present: untouched", async () => {
+			mockHabits = [makeHabit({ id: 1, frequency: { type: "daily" } })];
 			mockEveningSetting = "true";
 			await reconcileScheduledReminders();
 			fake.events.length = 0;

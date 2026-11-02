@@ -1,4 +1,7 @@
-import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
+import {
+	getSetting,
+	setSetting,
+} from "@/lib/app-settings/repositories/app-settings-repository";
 import { log } from "@/lib/logger/logger";
 import {
 	cancelRemindersWithPrefix,
@@ -11,11 +14,20 @@ import {
 	DEFAULT_REMINDER_TIME,
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME,
+	EVENING_REVIEW_TIME_SETTING_KEY,
 	REMINDER_CAP,
-	REMINDER_CAP_MESSAGE,
 	WEEKDAYS,
 } from "../constants";
-import { getHabit, updateHabit } from "../repositories/habit-repository";
+import {
+	formatEveningReviewTime,
+	parseEveningReviewTime,
+} from "../domain/evening-review-time";
+import { notificationCopy, reminderCapMessage } from "../reminder-copy";
+import {
+	getAllHabits,
+	getHabit,
+	updateHabit,
+} from "../repositories/habit-repository";
 import {
 	createReminder,
 	deleteReminder,
@@ -28,6 +40,7 @@ import type {
 	Habit,
 	IsoWeekday,
 	Reminder,
+	ReminderDraft,
 	ReminderPatch,
 	UpdateHabitInput,
 } from "../types";
@@ -72,8 +85,8 @@ export function unscheduledReminderDays(
 
 function notificationBody(habit: Habit): string {
 	return habit.direction === "break"
-		? "A nudge to keep resisting today."
-		: "Time for this one — check it off on Today.";
+		? notificationCopy.break
+		: notificationCopy.build;
 }
 
 /** Identifiers currently scheduled under `prefix`. */
@@ -168,6 +181,7 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
  * brings the OS back in line.
  */
 export async function syncAfterWrite(habit: Habit): Promise<void> {
+	await refreshEveningReview();
 	try {
 		await syncHabitReminders(habit);
 	} catch (error) {
@@ -188,6 +202,8 @@ export async function syncAfterWrite(habit: Habit): Promise<void> {
  * and the reconcile cancels any leftover for an archived or missing habit.
  */
 export async function cancelHabitNotifications(habitId: number): Promise<void> {
+	// The days with open habits may have changed with this one gone.
+	await refreshEveningReview();
 	try {
 		await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
 	} catch (error) {
@@ -199,30 +215,28 @@ export async function cancelHabitNotifications(habitId: number): Promise<void> {
 
 export class ReminderCapError extends Error {
 	constructor() {
-		super(REMINDER_CAP_MESSAGE);
+		super(reminderCapMessage);
 		this.name = "ReminderCapError";
 	}
 }
 
 /**
- * Adds a reminder time at the default time, pre-set to the days the habit
- * can actually fall on — so a fresh reminder never starts out flagged.
- * Blocked at the cap with an explanation, not silently.
+ * Adds a reminder at the time and on the days the person chose in the sheet
+ * (R2). With no draft it starts at the default time on the days the habit can
+ * actually fall on, so a fresh reminder never starts out flagged. Blocked at
+ * the cap with an explanation, not silently.
  */
 export async function addReminder(
 	habit: Habit,
-	/** Pre-select just these days (the Monthly pattern's weak day) instead of every one the habit falls on. */
-	onlyDays?: readonly IsoWeekday[],
+	draft?: ReminderDraft,
 ): Promise<Reminder> {
 	const existing = await getHabitReminders(habit.id);
 	if (existing.length >= REMINDER_CAP) throw new ReminderCapError();
 
 	const days = EVERY_DAY.filter((day) => canHabitFallOn(habit, day));
-	const preselected = onlyDays?.filter((day) => days.includes(day));
 	const reminder = await createReminder({
 		habitId: habit.id,
-		...DEFAULT_REMINDER_TIME,
-		weekdays: preselected && preselected.length > 0 ? preselected : days,
+		...(draft ?? { ...DEFAULT_REMINDER_TIME, weekdays: days }),
 		enabled: true,
 	});
 	await syncAfterWrite(habit);
@@ -280,6 +294,76 @@ export async function updateHabitAndSyncReminders(
 }
 
 /**
+ * The days the Evening review is worth sending on (HAB-44): those on which at
+ * least one active habit can be due. A day nothing is due on gets no nudge.
+ */
+export function eveningReviewDays(habits: readonly Habit[]): IsoWeekday[] {
+	const active = habits.filter((habit) => !habit.archivedAt);
+	return EVERY_DAY.filter((day) =>
+		active.some((habit) => canHabitFallOn(habit, day)),
+	);
+}
+
+/** The Evening review's time now: the stored choice, else the default. */
+export async function getEveningReviewTime(): Promise<{
+	hour: number;
+	minute: number;
+}> {
+	return parseEveningReviewTime(
+		await getSetting(EVENING_REVIEW_TIME_SETTING_KEY),
+	);
+}
+
+/** Schedules the review for today's set of days; nothing at all when no habit is ever due. */
+async function scheduleEveningReview(): Promise<string[]> {
+	const days = eveningReviewDays(await getAllHabits());
+	if (days.length === 0) return [];
+	return scheduleReminder(
+		eveningReviewReminder(days, await getEveningReviewTime()),
+		newGeneration(),
+	);
+}
+
+/**
+ * Changes the Evening review's time (HAB-44). The time is stored first — it is
+ * the source of truth — and, while the review is on, the notifications are
+ * rebuilt at the new time; a failed rebuild is logged for the launch-time
+ * reconcile to finish.
+ */
+export async function setEveningReviewTime(time: {
+	hour: number;
+	minute: number;
+}): Promise<void> {
+	await setSetting(
+		EVENING_REVIEW_TIME_SETTING_KEY,
+		formatEveningReviewTime(time),
+	);
+	await refreshEveningReview();
+}
+
+/**
+ * Re-aims the Evening review after habits changed (created, rescheduled,
+ * archived, restored, deleted), so it keeps going out only on days with open
+ * habits. Does nothing while the review is off. A failure is logged: the row
+ * that changed already saved, and the launch-time reconcile tidies the rest.
+ */
+export async function refreshEveningReview(): Promise<void> {
+	try {
+		if ((await getSetting(EVENING_REVIEW_SETTING_KEY)) !== "true") return;
+		const previous = await scheduledWithPrefix(
+			`${EVENING_REVIEW_NOTIFICATION_ID}:`,
+		);
+		const created = await scheduleEveningReview();
+		await cancelQuietly(
+			previous.filter((identifier) => !created.includes(identifier)),
+			"replace the evening review after a habit change",
+		);
+	} catch (error) {
+		log.warn("reminders", "refreshing the evening review failed", error);
+	}
+}
+
+/**
  * The app-wide Evening review: one daily notification at a fixed time,
  * nudging to log anything left for the day, across every habit. It's a
  * plain scheduled notification, so it can't know at fire time what's still
@@ -303,10 +387,7 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 	}
 
 	const previous = await scheduledWithPrefix(prefix);
-	const created = await scheduleReminder(
-		eveningReviewReminder(),
-		newGeneration(),
-	);
+	const created = await scheduleEveningReview();
 	try {
 		await setSetting(EVENING_REVIEW_SETTING_KEY, "true");
 	} catch (error) {
@@ -319,12 +400,16 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 	);
 }
 
-export function eveningReviewReminder() {
+export function eveningReviewReminder(
+	weekdays: readonly IsoWeekday[] = EVERY_DAY,
+	time: { hour: number; minute: number } = EVENING_REVIEW_TIME,
+) {
 	return {
 		id: EVENING_REVIEW_NOTIFICATION_ID,
-		title: "Evening review",
-		body: "Anything left to log today? Take a minute to catch up.",
-		...EVENING_REVIEW_TIME,
-		weekdays: EVERY_DAY,
+		title: notificationCopy.eveningTitle,
+		body: notificationCopy.eveningBody,
+		hour: time.hour,
+		minute: time.minute,
+		weekdays: [...weekdays],
 	};
 }

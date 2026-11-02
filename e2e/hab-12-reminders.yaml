@@ -1,8 +1,9 @@
-# Journey: Today → Habit Detail → Reminders → add a time, adjust its days
-# (triggering the unscheduled-day warning), add a second and switch it off →
+# Journey: Today → Habit Detail → Reminders (empty state) → Add time → change
+# its days (triggering the unscheduled-day warning) → remove it with Undo →
 # back on Detail the summary reflects it, and Today is unaffected.
-# Covers HAB-09 (entry point), HAB-12 (reminders), HAB-27 (Reminders is a
-# shared route, pushed inside the tab it was opened from).
+# Covers HAB-09 (entry point), HAB-43 (reminders: R1 empty, R2 times, R3
+# remove with Undo), HAB-27 (Reminders is a shared route, pushed inside the
+# tab it was opened from).
 #
 # MANUAL-ONLY: whether the OS notification actually fires at 09:00 on the
 # right days can't be checked here — web stubs expo-notifications, and even
@@ -21,48 +22,45 @@ tags:
 ---
 - launchApp
 - tapOn: "Evening walk"
-- assertVisible: "None set"
-- tapOn: "Reminders"
-- assertVisible:
-    id: "Add a time, 0 of 4"
+- assertVisible: "None"
+# The row's value: "Reminders" would match the section label above it.
+- tapOn: "None"
 
-# A new reminder starts at 09:00 on the habit's own scheduled days and opens
-# straight into the time picker. (Web's time wheel is a static read-out, so
-# the time itself isn't changed here.)
-- tapOn:
-    id: "Add a time, 0 of 4"
+# R1: nothing yet, one clear action.
+- assertVisible: "No reminders yet"
+- tapOn: "Add time"
+# The sheet opens on 09:00 on the habit's own days. (Web's time wheel is a
+# static read-out, so the time itself isn't changed here.)
 - assertVisible: "Save time"
 - tapOn: "Save time"
 - assertVisible:
-    id: "Reminder at 09:00, Weekdays"
+    id: "09:00, Weekdays"
 
-# Adding a day the habit isn't scheduled on flags it; removing it clears the flag.
+# R2: tap the time to change its days. A day the habit isn't scheduled on is
+# flagged; the reminder is never fired for it.
 - tapOn:
-    id: "Reminder at 09:00, Weekdays"
+    id: "09:00, Weekdays"
 - tapOn:
     id: "Saturday"
-- assertVisible:
-    id: "Reminder at 09:00, Mon, Tue, Wed, Thu, Fri, Sat"
-- assertVisible: "Saturday is not a scheduled day for this habit — this reminder would fire for nothing."
-- takeScreenshot: hab-12-unscheduled-warning
-- tapOn:
-    id: "Saturday"
-- assertNotVisible: "Saturday is not a scheduled day for this habit — this reminder would fire for nothing."
-
-# A second time, switched off — each reminder owns its own toggle.
-- tapOn:
-    id: "Add a time, 1 of 4"
 - tapOn: "Save time"
-- tapOn:
-    id: "Reminder at 09:00 on"
-    index: 1
 - assertVisible:
-    id: "Add a time, 2 of 4"
-- takeScreenshot: hab-12-two-reminders
+    id: "09:00, Mon, Tue, Wed, Thu, Fri, Sat"
+- assertVisible: "09:00: Saturday is not a scheduled day for this habit — this reminder would fire for nothing."
+- takeScreenshot: hab-12-unscheduled-warning
 
-# Detail summarises only the reminders that are on.
+# R3: remove is instant, with an Undo that brings back the same time.
+- tapOn:
+    id: "Remove reminder at 09:00"
+- assertVisible: "Reminder at 09:00 removed"
+- assertVisible: "No reminders yet"
+- tapOn: "Undo"
+- assertVisible:
+    id: "09:00, Mon, Tue, Wed, Thu, Fri, Sat"
+- takeScreenshot: hab-12-after-undo
+
+# Detail summarises the reminder.
 - back
-- assertVisible: "1 on · 09:00"
+- assertVisible: "09:00 · Mon, Tue, Wed, Thu, Fri, Sat"
 
 # Reminders never gate Today. Both screens were pushed inside the Today tab,
 # so Back walks straight back out to it (HAB-27).

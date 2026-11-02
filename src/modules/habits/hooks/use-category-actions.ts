@@ -1,9 +1,11 @@
-import { failureMessage } from "@/utils/failure-message";
+import { failureMessage, UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import {
 	createCategory,
 	deleteCategory,
 	renameCategory,
+	reorderCategories,
+	restoreCategory,
 } from "../repositories/category-repository";
 
 /**
@@ -18,6 +20,15 @@ export function useCategoryActions() {
 		failure: failureMessage("delete", "this category"),
 	});
 
+	const restore = useAsyncAction(restoreCategory, {
+		scope: "categories",
+		failure: UNDO_FAILED_MESSAGE,
+	});
+	const reorder = useAsyncAction(reorderCategories, {
+		scope: "categories",
+		failure: failureMessage("reorder", "the categories"),
+	});
+
 	return {
 		createCategory: create.execute,
 		isCreating: create.isLoading,
@@ -26,5 +37,7 @@ export function useCategoryActions() {
 		isRenaming: rename.isLoading,
 		deleteCategory: remove.run,
 		isDeleting: remove.isLoading,
+		restoreCategory: restore.run,
+		reorderCategories: reorder.run,
 	};
 }

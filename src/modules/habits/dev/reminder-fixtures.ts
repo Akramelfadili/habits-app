@@ -37,6 +37,24 @@ export function makeReminderFixtures(
 			reminder(3, 21, 0, [6, 7]),
 		];
 	}
+	if (scenario === "reminders-times" || scenario === "reminders-times-denied") {
+		return [reminder(1, 7, 0, [2, 4]), reminder(2, 18, 30, [4])];
+	}
+	// SY6: four times on three habits, held back by the denied permission.
+	if (scenario === "settings-notifications-off") {
+		const on = (
+			id: number,
+			habitId: number,
+			hour: number,
+			weekdays: Reminder["weekdays"],
+		): Reminder => ({ id, habitId, hour, minute: 0, weekdays, enabled: true });
+		return [
+			on(1, 1, 7, [1, 2, 3, 4, 5]),
+			on(2, 1, 18, [1, 2, 3, 4, 5]),
+			on(3, 2, 21, [1, 2, 3, 4, 5, 6, 7]),
+			on(4, 3, 9, [1, 3, 5]),
+		];
+	}
 	if (scenario === "reminders-at-cap") {
 		return [
 			reminder(1, 7, 20, [1, 2, 3, 4, 5]),

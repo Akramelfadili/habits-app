@@ -4,7 +4,7 @@ import { categories, habits } from "@/lib/db/schema";
 import { rollbackQuietly } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import { OTHER_CATEGORY_NAME } from "../constants";
-import type { Category, CreateCategoryInput } from "../types";
+import type { Category, CreateCategoryInput, DeletedCategory } from "../types";
 import { allCategoriesQuery, rowToCategory } from "./category-rows";
 
 /** Live-query hook — every category in the stored group order (HAB-42). */
@@ -78,8 +78,8 @@ export async function renameCategory(
  * of the manual order, keeping their relative order, so they land last in
  * Other's group without colliding with anyone's sort slot.
  */
-export async function deleteCategory(id: number): Promise<void> {
-	await customCategoryRow(id, "delete");
+export async function deleteCategory(id: number): Promise<DeletedCategory> {
+	const deleted = await customCategoryRow(id, "delete");
 	const [other] = await db
 		.select()
 		.from(categories)
@@ -110,6 +110,62 @@ export async function deleteCategory(id: number): Promise<void> {
 				.where(eq(habits.id, habit.id));
 		}
 		await db.delete(categories).where(eq(categories.id, id));
+		await db.run(sql`commit`);
+		return { category: rowToCategory(deleted), sortOrder: deleted.sortOrder };
+	} catch (err) {
+		await rollbackQuietly();
+		throw err;
+	}
+}
+
+/**
+ * The Undo for deleting a category nobody used (DC6): the same row (id, look,
+ * place in the order) goes back. Habits are untouched — none were in it.
+ */
+export async function restoreCategory(
+	deleted: DeletedCategory,
+): Promise<Category> {
+	const { category, sortOrder } = deleted;
+	const [row] = await db
+		.insert(categories)
+		.values({
+			id: category.id,
+			name: category.name,
+			shape: category.shape,
+			hue: category.hue,
+			builtIn: false,
+			sortOrder,
+			createdAt: new Date(),
+		})
+		.returning();
+	return rowToCategory(row);
+}
+
+/**
+ * Stores a new group order (C2): `orderedIds` are every movable category — all
+ * but the built-in Other — in the order the person left them, numbered 1…n in
+ * one transaction. Other is then set to n + 1, so it stays last and a later
+ * new category (max + 1) can only land after it, where the groups still force
+ * Other to the end.
+ */
+export async function reorderCategories(orderedIds: number[]): Promise<void> {
+	await db.run(sql`begin`);
+	try {
+		for (const [index, id] of orderedIds.entries()) {
+			await db
+				.update(categories)
+				.set({ sortOrder: index + 1 })
+				.where(eq(categories.id, id));
+		}
+		await db
+			.update(categories)
+			.set({ sortOrder: orderedIds.length + 1 })
+			.where(
+				and(
+					eq(categories.builtIn, true),
+					eq(categories.name, OTHER_CATEGORY_NAME),
+				),
+			);
 		await db.run(sql`commit`);
 	} catch (err) {
 		await rollbackQuietly();

@@ -28,14 +28,18 @@ tags:
 
 # HAB-01: add a habit of my own, from the + in Today's header (HAB-27 — the
 # ⋯ menu is gone and the + is an icon button, so it matches by label).
+# The collapsed inline bar carries a second, inert +: take the header's.
 - tapOn:
     id: "Add habit"
+    index: 1
 - assertVisible: "New habit"
+# HAB-41: only the name is required — Save says so until one is typed, and a
+# habit without a category goes to Other.
+- assertVisible: "Add a name to save"
 - tapOn:
     id: "Name"
 - inputText: "Floss"
-# A category is required since HAB-24 — Save stays disabled without one.
-- tapOn: "Health"
+- assertNotVisible: "Add a name to save"
 - tapOn: "Save habit"
 
 # HAB-03: it shows on Today and can be ticked off.
@@ -51,9 +55,17 @@ tags:
 - tapOn: "Floss"
 - tapOn: "Edit"
 - assertVisible: "Edit habit"
-- tapOn: "Cancel"
-- assertVisible:
-    id: "Current: 1, day streak"
+# With an edit, Close asks first (F9): Keep editing stays, Discard leaves.
+- tapOn:
+    id: "Name"
+- inputText: "s"
+- tapOn: "Close"
+- assertVisible: "Discard changes?"
+- tapOn: "Keep editing"
+- assertVisible: "Edit habit"
+- tapOn: "Close"
+- tapOn: "Discard"
+- assertVisible: "Streak"
 
 # HAB-27: Detail opened from Today, so the Today tab is still the selected
 # one and Back comes back to it.

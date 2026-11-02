@@ -1,32 +1,34 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { AddRow } from "@/components/ui/composite/add-row";
 import { CategoryRow } from "@/components/ui/composite/category-row";
 import { Container } from "@/components/ui/composite/container";
-import { SectionHeader } from "@/components/ui/composite/section-header";
+import { ReorderableList } from "@/components/ui/composite/reorderable-list";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
-import { CategoryChip } from "@/components/ui/primitives/category-chip";
-import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
+import { FieldHelper } from "@/components/ui/primitives/field-helper";
+import { habitAccentInk, habitAccentTint, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { AddCategorySheet } from "../components/add-category-sheet";
+import { CategoriesHeader } from "../components/categories/categories-header";
+import { CategoryNameEditor } from "../components/categories/category-name-editor";
 import { categorySymbol } from "../components/category-symbol";
 import { DeleteCategorySheet } from "../components/delete-category-sheet";
-import { RenameCategoryField } from "../components/rename-category-field";
+import { LibrarySectionHeader } from "../components/habits/library-section-header";
 import { OTHER_CATEGORY_NAME } from "../constants";
+import { movableCategories } from "../domain/category-rules";
 import { useCategoryActions } from "../hooks/use-category-actions";
 import { useManageCategoriesQueries } from "../hooks/use-manage-categories-queries";
-import {
-	BUILT_IN_TAG,
-	habitCountLabel,
-} from "../presenters/manage-categories-helpers";
-import type { Category } from "../types";
+import { categoriesCopy, messages, showMessage } from "../messages";
+import type { Category, CategoryUsage } from "../types";
 
 /**
- * Manage Categories (HAB-25, frames F3a–F3c): the ten built-ins first,
- * locked — tinted chip, count, a quiet "Built-in" tag, no actions — then
- * the user's own in creation order (the picker's order too) with inline
- * Rename and Delete. Counts include archived habits, since deleting a
- * category moves those to Other as well (F4a/F4b).
+ * Categories (HAB-42, C1–C6, DC6), pushed from Habits › Categories. Custom
+ * categories first, with Rename (inline) and Delete; then the ten built-ins,
+ * locked, with a tag. Counts include archived habits. Reorder swaps the lists
+ * for one set of handles that sets the group order on Today and Habits (Other
+ * stays last and is not in it). Deleting a category nobody uses is one tap and
+ * leaves an Undo for five seconds; deleting one in use names the habits that
+ * move to Other first.
  */
 export function ManageCategoriesScreen() {
 	const { colors, scheme } = useTheme();
@@ -38,7 +40,10 @@ export function ManageCategoriesScreen() {
 		isRenaming,
 		deleteCategory,
 		isDeleting,
+		restoreCategory,
+		reorderCategories,
 	} = useCategoryActions();
+	const [mode, setMode] = useState<"browse" | "reorder">("browse");
 	const [isAdding, setIsAdding] = useState(false);
 	const [renamingId, setRenamingId] = useState<number | null>(null);
 	// Only the id is held: the sheet reads the category's habits live from
@@ -46,7 +51,6 @@ export function ManageCategoriesScreen() {
 	const [deletingId, setDeletingId] = useState<number | null>(null);
 	const deleting =
 		customs.find(({ category }) => category.id === deletingId) ?? null;
-
 	const other = builtIns.find(
 		({ category }) => category.name === OTHER_CATEGORY_NAME,
 	)?.category;
@@ -58,11 +62,40 @@ export function ManageCategoriesScreen() {
 
 	async function handleDelete() {
 		if (!deleting) return;
-		const result = await deleteCategory(deleting.category.id);
+		const { category, habitNames } = deleting;
+		const result = await deleteCategory(category.id);
 		// On failure the sheet stays open (the hook has toasted it), so retrying
 		// is one tap; nothing changed.
-		if (result.ok) setDeletingId(null);
+		if (!result.ok) return;
+		setDeletingId(null);
+		if (habitNames.length === 0) {
+			showMessage(messages.categoryDeleted, [category.name], () =>
+				restoreCategory(result.value),
+			);
+		} else {
+			showMessage(messages.categoryDeletedMoved, [
+				category.name,
+				habitNames.length,
+			]);
+		}
 	}
+
+	const row = (
+		{ category, activeCount, archivedCount }: CategoryUsage,
+		extra: Partial<React.ComponentProps<typeof CategoryRow>>,
+	) => (
+		<CategoryRow
+			key={category.id}
+			name={category.name}
+			symbol={categorySymbol(category)}
+			accent={accentOf(category)}
+			meta={categoriesCopy.count(activeCount, archivedCount)}
+			{...extra}
+		/>
+	);
+
+	const reordering = mode === "reorder";
+	const movable = movableCategories(categories);
 
 	return (
 		<View style={[styles.screen, { backgroundColor: colors.bg }]}>
@@ -70,102 +103,125 @@ export function ManageCategoriesScreen() {
 				contentContainerStyle={styles.content}
 				keyboardShouldPersistTaps="handled"
 			>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					Categories
-				</Text>
+				<CategoriesHeader
+					eyebrow={
+						reordering
+							? categoriesCopy.reorderMode.eyebrow
+							: categoriesCopy.eyebrow(builtIns.length, customs.length)
+					}
+					accessibilityLabel={categoriesCopy.headerLabel(
+						builtIns.length,
+						customs.length,
+					)}
+					mode={mode}
+					renaming={renamingId !== null}
+					onReorder={() => {
+						setRenamingId(null);
+						setMode("reorder");
+					}}
+					onDone={() => setMode("browse")}
+					onAdd={() => setIsAdding(true)}
+				/>
 
-				<View style={styles.section}>
-					<SectionHeader
-						size="group"
-						title="Built-in"
-						count={String(builtIns.length)}
-					/>
-					<Container tight>
-						{builtIns.map(({ category, habitNames }) => (
-							<CategoryRow
-								key={category.id}
-								chip={
-									<CategoryChip
-										label={category.name}
-										state="locked"
-										size="compact"
-										symbol={categorySymbol(category)}
-										accent={accentOf(category)}
-									/>
-								}
-								meta={habitCountLabel(habitNames.length)}
-								tag={BUILT_IN_TAG}
+				{reordering ? (
+					<View style={styles.section}>
+						<FieldHelper plain tone="hint">
+							{categoriesCopy.reorderMode.note}
+						</FieldHelper>
+						<ReorderableList
+							items={movable}
+							keyOf={(category) => String(category.id)}
+							handleLabel={(category) =>
+								categoriesCopy.reorderMode.handle(category.name)
+							}
+							moveLabels={{
+								up: categoriesCopy.reorderMode.moveUp,
+								down: categoriesCopy.reorderMode.moveDown,
+							}}
+							onReorder={(keys) => reorderCategories(keys.map(Number))}
+							renderGroup={(_key, rows) => (
+								<Container variant="flat">{rows}</Container>
+							)}
+							renderItem={(category, handle, isDragging) => (
+								<CategoryRow
+									name={category.name}
+									symbol={categorySymbol(category)}
+									accent={accentOf(category)}
+									handle={handle}
+									lifted={isDragging}
+								/>
+							)}
+						/>
+					</View>
+				) : (
+					<>
+						<View style={styles.section}>
+							<LibrarySectionHeader
+								label={categoriesCopy.customHeader(customs.length)}
 							/>
-						))}
-					</Container>
-				</View>
-
-				<View style={styles.section}>
-					<SectionHeader
-						size="group"
-						title="Yours"
-						count={customs.length > 0 ? String(customs.length) : undefined}
-					/>
-					{/* Rows, then a divider, then Add — one section each; with no
-					    customs yet (F3a) the card holds only Add. */}
-					<Container tight dividers compact>
-						{customs.length > 0 ? (
-							<View>
-								{customs.map(({ category, habitNames }) => {
-									return (
-										<CategoryRow
-											key={category.id}
-											chip={
-												<CategoryChip
-													label={category.name}
-													state="unselected"
-													size="compact"
-													symbol={categorySymbol(category)}
-													accent={accentOf(category)}
-												/>
-											}
-											meta={habitCountLabel(habitNames.length)}
-											actions={[
+							{customs.length > 0 ? (
+								<Container variant="flat">
+									{customs.map((usage) =>
+										row(usage, {
+											actions: [
 												{
-													label: "Rename",
-													accessibilityLabel: `Rename ${category.name}`,
-													onPress: () => setRenamingId(category.id),
+													label: categoriesCopy.rename,
+													accessibilityLabel: categoriesCopy.renameLabel(
+														usage.category.name,
+													),
+													onPress: () => setRenamingId(usage.category.id),
 												},
 												{
-													label: "Delete",
-													accessibilityLabel: `Delete ${category.name}`,
-													onPress: () => setDeletingId(category.id),
+													label: categoriesCopy.delete,
+													accessibilityLabel: categoriesCopy.deleteLabel(
+														usage.category.name,
+													),
+													onPress: () => setDeletingId(usage.category.id),
 													destructive: true,
 												},
-											]}
-											editor={
-												renamingId === category.id ? (
-													<RenameCategoryField
-														category={category}
+											],
+											editor:
+												renamingId === usage.category.id ? (
+													<CategoryNameEditor
+														category={usage.category}
 														categories={categories}
 														onRename={(name) =>
-															renameCategory(category.id, name)
+															renameCategory(usage.category.id, name)
 														}
 														onDone={() => setRenamingId(null)}
 														isSaving={isRenaming}
 													/>
-												) : undefined
-											}
-										/>
-									);
-								})}
-							</View>
-						) : null}
-						<AddRow
-							label="Add category"
-							embedded
-							onPress={() => setIsAdding(true)}
-						/>
-					</Container>
-				</View>
+												) : undefined,
+										}),
+									)}
+								</Container>
+							) : (
+								<Container variant="flat">
+									<AddRow
+										label={categoriesCopy.empty.title}
+										subtitle={categoriesCopy.empty.body}
+										embedded
+										onPress={() => setIsAdding(true)}
+									/>
+								</Container>
+							)}
+						</View>
+
+						<View style={styles.section}>
+							<LibrarySectionHeader
+								label={categoriesCopy.builtInHeader(builtIns.length)}
+							/>
+							<FieldHelper plain tone="hint">
+								{categoriesCopy.builtInNote}
+							</FieldHelper>
+							<Container variant="flat">
+								{builtIns.map((usage) =>
+									row(usage, { tag: categoriesCopy.builtInTag }),
+								)}
+							</Container>
+						</View>
+					</>
+				)}
 			</ScrollView>
 
 			<AddCategorySheet
@@ -194,16 +250,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
-		paddingHorizontal: 16,
-		paddingTop: 12,
+		paddingHorizontal: space[500],
+		paddingTop: space[300],
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
-		gap: 16,
-	},
-	title: {
-		fontSize: typeScale.screenTitle,
-		fontWeight: "500",
+		gap: space[500],
 	},
 	section: {
-		gap: 8,
+		gap: space[150],
 	},
 });

@@ -53,6 +53,15 @@ export type CategoryUsage = {
 	category: Category;
 	/** Every habit in the category, in manual order. */
 	habitNames: string[];
+	/** How many of them are active; the rest are archived (the count line says both). */
+	activeCount: number;
+	archivedCount: number;
+};
+
+/** A deleted custom category and where it stood in the stored order, so Undo can put it back exactly (DC6). */
+export type DeletedCategory = {
+	category: Category;
+	sortOrder: number;
 };
 
 /** Icon and color are never user-chosen — the caller passes the rotation's pick. */
@@ -190,6 +199,9 @@ export type Reminder = {
 };
 
 export type CreateReminderInput = Omit<Reminder, "id">;
+
+/** A reminder queued on the New habit form, written with the habit when Save is tapped (F7). */
+export type ReminderDraft = Pick<Reminder, "hour" | "minute" | "weekdays">;
 
 /** Any subset of a reminder's editable fields. */
 export type ReminderPatch = Partial<

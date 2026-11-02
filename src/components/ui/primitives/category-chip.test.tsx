@@ -35,7 +35,7 @@ describe("CategoryChip", () => {
 		);
 	});
 
-	it("selected: fills with the category's ink and gains a check", async () => {
+	it("selected: fills with the accent, not the category's colour, and gains a check (V3-14)", async () => {
 		await render(
 			<CategoryChip
 				label="Learning"
@@ -46,7 +46,7 @@ describe("CategoryChip", () => {
 			/>,
 		);
 		expect(screen.getByTestId("category-chip-pill")).toHaveStyle({
-			backgroundColor: "#00F",
+			backgroundColor: surfaceColors.light.accent,
 		});
 		expect(screen.getByTestId("symbol-checkmark")).toBeTruthy();
 		expect(screen.getByText("Learning")).toHaveStyle({

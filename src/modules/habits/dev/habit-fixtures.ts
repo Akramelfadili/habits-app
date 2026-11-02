@@ -80,6 +80,9 @@ export type FixtureScenario =
 	| "yearly-summary"
 	| "reminders"
 	| "reminders-at-cap"
+	| "reminders-times"
+	| "reminders-times-denied"
+	| "settings-notifications-off"
 	| "manage-archive"
 	| "manage-all-archived"
 	| "many-categories"
@@ -114,6 +117,9 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"yearly-summary",
 	"reminders",
 	"reminders-at-cap",
+	"reminders-times",
+	"reminders-times-denied",
+	"settings-notifications-off",
 	"manage-archive",
 	"manage-all-archived",
 	"many-categories",
@@ -749,6 +755,10 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			});
 		case "reminders-at-cap":
 			return remindersHabitFixtures({ type: "daily" });
+		// R2, R3, R5: a Tue/Thu habit with two times (07:00 Tue, Thu and 18:30 Thu).
+		case "reminders-times":
+		case "reminders-times-denied":
+			return remindersHabitFixtures({ type: "weekdays", days: [2, 4] });
 		case "manage-archive":
 			return manageArchiveFixtures();
 		case "manage-all-archived":

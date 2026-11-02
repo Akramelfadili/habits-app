@@ -2,8 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import {
+	type HostInstance,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -15,83 +16,112 @@ import {
 	View,
 } from "react-native";
 import { ActionCard } from "@/components/ui/composite/action-card";
+import { AlertDialog } from "@/components/ui/composite/alert-dialog";
 import { Banner } from "@/components/ui/composite/banner";
-import { Container } from "@/components/ui/composite/container";
-import { ListItem } from "@/components/ui/composite/list-item";
-import { WeekdayPicker } from "@/components/ui/composite/weekday-picker";
 import { Button } from "@/components/ui/primitives/button";
-import { Caption } from "@/components/ui/primitives/caption";
-import { Chip } from "@/components/ui/primitives/chip";
-import { IconBadge } from "@/components/ui/primitives/icon-badge";
+import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
-import { Stepper } from "@/components/ui/primitives/stepper";
 import { TextField } from "@/components/ui/primitives/text-field";
-import { showToast } from "@/store/toast-store";
+import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { failureMessage } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
+import { useInitialFocus } from "@/utils/use-initial-focus";
+import { useLeaveGuard } from "@/utils/use-leave-guard";
 import { AddCategorySheet } from "../components/add-category-sheet";
-import { CategoryPicker } from "../components/category-picker";
+import { CategoryChips } from "../components/form/category-chips";
+import { FrequencyFields } from "../components/form/frequency-fields";
+import { GoalFields } from "../components/form/goal-fields";
 import {
-	DEFAULT_TARGET_AMOUNT,
-	DIRECTION_CAPTIONS,
+	type QueuedReminder,
+	ReminderDrafts,
+} from "../components/form/reminder-drafts";
+import { ReminderSheet } from "../components/reminder-sheet";
+import {
+	DEFAULT_REMINDER_TIME,
+	findBuiltInCategory,
 	MAX_HABIT_NAME_LENGTH,
-	MAX_TARGET_AMOUNT,
-	MAX_TIMES_PER_WEEK,
-	MIN_TARGET_AMOUNT,
-	MIN_TIMES_PER_WEEK,
-	QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION,
-	WEEKDAY_SHORTCUT,
+	OTHER_CATEGORY_NAME,
 	WEEKDAYS,
 } from "../constants";
+import { findDuplicateHabit } from "../domain/habit-name-rules";
 import { useCategoryActions } from "../hooks/use-category-actions";
 import { useCategoryQueries } from "../hooks/use-category-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitQueries } from "../hooks/use-habit-queries";
-import { saveBlockedReason } from "../presenters/habit-form-helpers";
 import {
-	DEFAULT_FREQUENCY_FORM_VALUES,
+	formCopy,
+	messages,
+	reminderSheetCopy,
+	showMessage,
+} from "../messages";
+import { formIssues } from "../presenters/habit-form-helpers";
+import {
+	blankFormValues,
+	type HabitFormPrefill,
+	parseHabitPrefill,
+	prefillToFormValues,
+} from "../presenters/habit-form-prefill";
+import {
 	type HabitFormInput,
 	type HabitFormValues,
 	makeHabitFormSchema,
-	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
 	toFrequencyFormValues,
 } from "../presenters/habit-form-schema";
-import type { FrequencyType } from "../types";
-
-/** E5: an example, not a default value — the field opens empty (HAB-22). */
-const NAME_PLACEHOLDER = "e.g. Drink a glass of water";
-
-const FREQUENCY_MODES: { value: FrequencyType; label: string }[] = [
-	{ value: "daily", label: "Daily" },
-	{ value: "weekdays", label: "Specific weekdays" },
-	{ value: "per-week", label: "X per week" },
-];
+import type { FrequencyType, IsoWeekday, ReminderDraft } from "../types";
 
 type HabitFormScreenProps = {
 	/** Present in edit mode; absent when creating a new habit. */
 	habitId?: number;
-	/** Opens scrolled to this section — "frequency", from an insight's "Reschedule habit" action (HAB-16). */
+	/** Opens scrolled to this section — "frequency", from an insight's "Change frequency" action (HAB-16). */
 	focus?: "frequency";
 	/** Opens New habit with this name already in the field — "Add “Yoga” as a habit" from a search with no results (H3). */
 	name?: string;
+	/** Opens New habit filled in from a suggestion, with the banner saying so (BS2, HAB-46). */
+	prefill?: HabitFormPrefill;
+	/** The same suggestion as the `prefill` route param (a JSON string); `prefill` wins when both are given. */
+	prefillParam?: string;
 };
 
+/** The reminder sheet is open on a new time, or on one already queued. */
+type SheetState =
+	| { kind: "add"; draft: ReminderDraft }
+	| { kind: "edit"; key: number; draft: ReminderDraft }
+	| null;
+
+const ALL_DAYS: IsoWeekday[] = WEEKDAYS.map(({ day }) => day);
+
+const byTime = (a: ReminderDraft, b: ReminderDraft) =>
+	a.hour - b.hour || a.minute - b.minute;
+
+/**
+ * Add / Edit habit (HAB-41, F1–F10): one modal form in the order people
+ * decide things — Type, Name, Category, Goal, Frequency — with Save pinned at
+ * the bottom and, while it is off, the reason under it. Only the name is
+ * required; no category means Other. The category supplies the icon and
+ * colour. Errors sit next to their fields; closing with edits asks first.
+ */
 export function HabitFormScreen({
 	habitId,
 	focus,
 	name,
+	prefill: prefillProp,
+	prefillParam,
 }: HabitFormScreenProps) {
+	const prefill = useMemo(
+		() => prefillProp ?? parseHabitPrefill(prefillParam),
+		[prefillProp, prefillParam],
+	);
 	const scrollRef = useRef<ScrollViewInstance>(null);
 	const unitRef = useRef<TextInputInstance>(null);
 	const hasFocused = useRef(false);
 	const router = useRouter();
 	const { colors } = useTheme();
 	const headerHeight = useHeaderHeight();
-	const { getHabitById } = useHabitQueries();
+	const { habits, getHabitById } = useHabitQueries();
 	const { categories } = useCategoryQueries();
 	const { createHabit, updateHabit, isCreating, isUpdating } =
 		useHabitActions();
@@ -112,38 +142,43 @@ export function HabitFormScreen({
 	const schemaRef = useRef(schema);
 	schemaRef.current = schema;
 	const hasLoadedEditValues = useRef(false);
+
 	const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
+	const [unitTouched, setUnitTouched] = useState(false);
+	const [queued, setQueued] = useState<QueuedReminder[]>([]);
+	const nextKey = useRef(1);
+	const [sheet, setSheet] = useState<SheetState>(null);
 	// F1c: a hairline above Save once content scrolls under the pinned header.
 	const [isScrolled, setIsScrolled] = useState(false);
 
-	const { control, handleSubmit, watch, setValue, reset } = useForm<
+	// The starting point is read once: later edits are the person's.
+	const initialValues = useRef<HabitFormInput | null>(null);
+	if (initialValues.current === null) {
+		initialValues.current =
+			prefill && mode === "create"
+				? prefillToFormValues(prefill, categories)
+				: blankFormValues(name);
+	}
+	const { handleSubmit, watch, setValue, reset, formState } = useForm<
 		HabitFormInput,
 		unknown,
 		HabitFormValues
 	>({
 		resolver: (values, context, options) =>
 			zodResolver(schemaRef.current)(values, context, options),
-		mode: "onBlur",
-		defaultValues: {
-			name: name ?? "",
-			categoryId: null,
-			direction: "build",
-			targetType: "simple",
-			targetAmount: DEFAULT_TARGET_AMOUNT,
-			targetUnit: "",
-			...DEFAULT_FREQUENCY_FORM_VALUES,
-		},
+		mode: "onSubmit",
+		defaultValues: initialValues.current,
 	});
 
 	useEffect(() => {
 		if (mode === "edit" && habit && !hasLoadedEditValues.current) {
 			reset({
-				name: habit.name,
+				...blankFormValues(habit.name),
 				categoryId: habit.category.id,
 				direction: habit.direction,
 				targetType: habit.targetType,
-				targetAmount: habit.targetAmount ?? DEFAULT_TARGET_AMOUNT,
+				targetAmount: habit.targetAmount ?? blankFormValues().targetAmount,
 				targetUnit: habit.targetUnit ?? "",
 				...toFrequencyFormValues(habit.frequency),
 			});
@@ -158,38 +193,62 @@ export function HabitFormScreen({
 	const targetAmountValue = watch("targetAmount");
 	const targetUnitValue = watch("targetUnit");
 	const frequencyTypeValue = watch("frequencyType");
-	const weekdaysValue = watch("weekdays");
+	const weekdaysValue = watch("weekdays") as IsoWeekday[];
 	const timesPerWeekValue = watch("timesPerWeek");
 
-	const hasNoWeekdays =
+	const isBreak = directionValue === "break";
+	const duplicate = findDuplicateHabit(habits, nameValue, habitId);
+	const noWeekdays =
 		frequencyTypeValue === "weekdays" && weekdaysValue.length === 0;
-	const hasNoTargetUnit =
+	const unitBlank =
 		targetTypeValue === "quantity" && targetUnitValue.trim().length === 0;
-	const isSubmitting = isCreating || isUpdating;
-	const blockedReason = saveBlockedReason({
+	const issues = formIssues({
 		name: nameValue,
-		categoryId: categoryIdValue,
 		originalName,
+		duplicate: duplicate !== undefined,
+		noWeekdays,
+		unitBlank,
+		unitTouched,
 	});
-	const isSaveDisabled =
-		blockedReason !== undefined ||
-		hasNoWeekdays ||
-		hasNoTargetUnit ||
-		isSubmitting;
-	const isTargetTypeLockedToSimple = directionValue === "break";
+	const isSubmitting = isCreating || isUpdating;
+	const isSaveDisabled = issues.reason !== undefined || isSubmitting;
+	// A failed save moves the screen reader onto the error above Save (08.4).
+	const errorRef = useRef<HostInstance>(null);
+	useInitialFocus(errorRef, submitError !== null, 100);
+	const nameError = !issues.fields.includes("name")
+		? undefined
+		: duplicate
+			? formCopy.name.duplicate(duplicate.name)
+			: formCopy.name.tooLong(MAX_HABIT_NAME_LENGTH);
 
+	// Break habits are yes or no: Quantity switches off and resets to Check.
 	useEffect(() => {
-		if (isTargetTypeLockedToSimple && targetTypeValue === "quantity") {
+		if (isBreak && targetTypeValue === "quantity") {
 			setValue("targetType", "simple", { shouldDirty: true });
 		}
-	}, [isTargetTypeLockedToSimple, targetTypeValue, setValue]);
+	}, [isBreak, targetTypeValue, setValue]);
+
+	// The days a fresh reminder starts on: the ones the habit can fall on.
+	const reminderDays = (): IsoWeekday[] =>
+		frequencyTypeValue === "weekdays" && weekdaysValue.length > 0
+			? [...weekdaysValue].sort((a, b) => a - b)
+			: ALL_DAYS;
+
+	// Closing with edits asks first (F9).
+	const guard = useLeaveGuard(formState.isDirty || queued.length > 0);
+
+	// A successful save or archive leaves without asking: stop guarding, then go.
+	function close() {
+		guard.leaveWith(() => router.back());
+	}
 
 	async function onSubmit(values: HabitFormValues) {
-		// The schema refuses a null category, so its output is always an id.
-		const { categoryId } = values;
+		const other = findBuiltInCategory(categories, OTHER_CATEGORY_NAME);
+		// No category picked means Other (HAB-41).
+		const categoryId = values.categoryId ?? other?.id;
 		const frequency = toFrequency(values);
 		// Stale Amount/Unit input never leaks in if Quantity was picked, then
-		// switched back to Simple check — a simple-check habit always has null.
+		// switched back to Check — a simple-check habit always has null.
 		const targetAmount =
 			values.targetType === "quantity" ? values.targetAmount : null;
 		const targetUnit =
@@ -199,6 +258,7 @@ export function HabitFormScreen({
 		// failed save is shown inline, above Save — the form stays as it was,
 		// and a retry is one tap. `runSafely` also logs it and never rejects.
 		setSubmitError(null);
+		let remindersFailed = false;
 		const result = await runSafely(
 			{
 				scope: "habit-form",
@@ -206,16 +266,27 @@ export function HabitFormScreen({
 				onFailure: (_error, message) => setSubmitError(message),
 			},
 			async () => {
+				if (categoryId === undefined) {
+					throw new Error("The built-in Other category is missing");
+				}
 				if (mode === "create") {
-					await createHabit({
-						name: values.name,
-						categoryId,
-						direction: values.direction,
-						targetType: values.targetType,
-						targetAmount,
-						targetUnit,
-						frequency,
-					});
+					const created = await createHabit(
+						{
+							name: values.name,
+							categoryId,
+							direction: values.direction,
+							targetType: values.targetType,
+							targetAmount,
+							targetUnit,
+							frequency,
+						},
+						queued.map(({ hour, minute, weekdays }) => ({
+							hour,
+							minute,
+							weekdays,
+						})),
+					);
+					remindersFailed = created.remindersFailed;
 				} else if (habitId !== undefined) {
 					await updateHabit(habitId, {
 						name: values.name,
@@ -228,7 +299,9 @@ export function HabitFormScreen({
 				}
 			},
 		);
-		if (result.ok) router.back();
+		if (!result.ok) return;
+		if (remindersFailed) showMessage(messages.habitSavedReminderFailed, []);
+		close();
 	}
 
 	// Archiving is reversible, so it's one tap with an Undo toast — the same as
@@ -236,7 +309,7 @@ export function HabitFormScreen({
 	// inline; the toast is raised for the screen underneath, as the form closes.
 	async function handleArchive() {
 		if (habitId === undefined || !habit) return;
-		const { name } = habit;
+		const { name: archivedName } = habit;
 		setSubmitError(null);
 		const result = await runSafely(
 			{
@@ -247,25 +320,36 @@ export function HabitFormScreen({
 			() => archiveHabitOrThrow(habitId),
 		);
 		if (!result.ok) return;
-		showToast({
-			message: `Archived '${name}'`,
-			actionLabel: "Undo",
-			onAction: () => restoreHabit(habitId),
-		});
-		router.back();
+		showMessage(messages.habitArchived, [archivedName], () =>
+			restoreHabit(habitId),
+		);
+		close();
+	}
+
+	function saveReminder(draft: ReminderDraft) {
+		if (!sheet) return;
+		setQueued((current) =>
+			(sheet.kind === "add"
+				? [...current, { ...draft, key: nextKey.current++ }]
+				: current.map((item) =>
+						item.key === sheet.key ? { ...item, ...draft } : item,
+					)
+			).sort(byTime),
+		);
+		setSheet(null);
 	}
 
 	if (mode === "edit" && !habit) {
 		return (
 			<View style={[styles.loading, { backgroundColor: colors.bg }]}>
-				<Text style={{ color: colors.sub }}>Loading…</Text>
+				<Text style={{ color: colors.sub }}>{formCopy.loading}</Text>
 			</View>
 		);
 	}
 
 	return (
 		// The name field autofocuses on create (HAB-22), so the keyboard is up
-		// from the first frame: lift the pinned Save and its reason line above it.
+		// from the first frame: lift the pinned Save and its reason above it.
 		// The offset is the stack header — this view's frame starts below it.
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -285,66 +369,89 @@ export function HabitFormScreen({
 					setIsScrolled(event.nativeEvent.contentOffset.y > 0)
 				}
 			>
-				<Container>
-					<Controller
-						control={control}
-						name="name"
-						render={({ field, fieldState }) => (
-							<TextField
-								label="Name"
-								placeholder={NAME_PLACEHOLDER}
-								value={field.value}
-								onChangeText={field.onChange}
-								onBlur={field.onBlur}
-								error={fieldState.error?.message}
-								maxLength={MAX_HABIT_NAME_LENGTH}
-								nearLimitCounter
-								autoFocus={mode === "create"}
-								// Return goes on to Unit when a quantity habit has one; otherwise
-								// it just puts the keyboard away — never saves a half-filled form.
-								returnKeyType={targetTypeValue === "quantity" ? "next" : "done"}
-								onSubmitEditing={() =>
-									targetTypeValue === "quantity"
-										? unitRef.current?.focus()
-										: Keyboard.dismiss()
-								}
-							/>
-						)}
-					/>
-				</Container>
+				{prefill && mode === "create" ? (
+					<Banner
+						tone="neutral"
+						symbol="sparkles"
+						title={formCopy.prefill.title}
+					>
+						{formCopy.prefill.body(prefill.name)}
+					</Banner>
+				) : null}
 
-				<CategoryPicker
+				<View style={styles.field}>
+					<SectionLabel>{formCopy.type.label}</SectionLabel>
+					<SegmentedControl
+						label={formCopy.type.label}
+						options={[
+							{ value: "build", label: formCopy.type.build },
+							{ value: "break", label: formCopy.type.break },
+						]}
+						value={directionValue}
+						onChange={(value) =>
+							setValue("direction", value, { shouldDirty: true })
+						}
+						disabled={mode === "edit"}
+					/>
+					{mode === "edit" ? (
+						<FieldHelper plain tone="hint">
+							{formCopy.type.locked}
+						</FieldHelper>
+					) : isBreak ? (
+						<FieldHelper plain tone="hint">
+							{formCopy.type.breakNote}
+						</FieldHelper>
+					) : null}
+				</View>
+
+				<TextField
+					label={formCopy.name.label}
+					placeholder={formCopy.name.placeholder}
+					value={nameValue}
+					onChangeText={(text) => setValue("name", text, { shouldDirty: true })}
+					error={nameError}
+					maxLength={MAX_HABIT_NAME_LENGTH}
+					limitMessage={formCopy.name.limit}
+					autoFocus={mode === "create"}
+					// Return goes on to Unit when a quantity habit has one; otherwise
+					// it just puts the keyboard away — never saves a half-filled form.
+					returnKeyType={targetTypeValue === "quantity" ? "next" : "done"}
+					onSubmitEditing={() =>
+						targetTypeValue === "quantity"
+							? unitRef.current?.focus()
+							: Keyboard.dismiss()
+					}
+				/>
+
+				<CategoryChips
 					categories={categories}
 					selectedId={categoryIdValue}
 					onSelect={(id) => setValue("categoryId", id, { shouldDirty: true })}
 					onAdd={() => setIsAddCategoryOpen(true)}
 				/>
 
-				<Container>
-					<View style={styles.directionSection}>
-						<ListItem
-							embedded
-							title="Direction"
-							leading={<IconBadge symbol="arrow.left.arrow.right" />}
-							trailing={
-								<SegmentedControl
-									label="Direction"
-									size="compact"
-									options={[
-										{ value: "build", label: "Build" },
-										{ value: "break", label: "Break" },
-									]}
-									value={directionValue}
-									onChange={(value) =>
-										setValue("direction", value, { shouldDirty: true })
-									}
-									disabled={mode === "edit"}
-								/>
-							}
-						/>
-						<Caption>{DIRECTION_CAPTIONS[directionValue]}</Caption>
-					</View>
-				</Container>
+				<GoalFields
+					direction={directionValue}
+					targetType={targetTypeValue}
+					targetAmount={targetAmountValue}
+					targetUnit={targetUnitValue}
+					unitError={
+						unitBlank && unitTouched ? formCopy.goal.unitMissing : undefined
+					}
+					onTargetType={(value) =>
+						setValue("targetType", value, { shouldDirty: true })
+					}
+					onTargetAmount={(value) =>
+						setValue("targetAmount", value, { shouldDirty: true })
+					}
+					onTargetUnit={(value) =>
+						setValue("targetUnit", value, { shouldDirty: true })
+					}
+					onUnitBlur={() => setUnitTouched(true)}
+					unitRef={unitRef}
+					// The Unit field is low on the form — bring it clear of the keyboard.
+					onUnitFocus={() => scrollRef.current?.scrollToEnd({ animated: true })}
+				/>
 
 				<View
 					testID="habit-form-frequency"
@@ -352,140 +459,60 @@ export function HabitFormScreen({
 						if (focus !== "frequency" || hasFocused.current) return;
 						hasFocused.current = true;
 						scrollRef.current?.scrollTo({
-							y: Math.max(0, event.nativeEvent.layout.y - 8),
+							y: Math.max(0, event.nativeEvent.layout.y - space[200]),
 							animated: false,
 						});
 					}}
 				>
-					<Container>
-						<SectionLabel>Frequency</SectionLabel>
-						<View style={styles.chipRow}>
-							{FREQUENCY_MODES.map((frequencyMode) => (
-								<Chip
-									key={frequencyMode.value}
-									label={frequencyMode.label}
-									selected={frequencyTypeValue === frequencyMode.value}
-									onPress={() =>
-										setValue("frequencyType", frequencyMode.value, {
-											shouldDirty: true,
-										})
-									}
-								/>
-							))}
-						</View>
-
-						{frequencyTypeValue === "weekdays" ? (
-							<>
-								<View style={styles.shortcutRow}>
-									<Chip
-										variant="outline"
-										label="Weekdays shortcut"
-										onPress={() =>
-											setValue("weekdays", [...WEEKDAY_SHORTCUT], {
-												shouldDirty: true,
-											})
-										}
-									/>
-									<Caption>pre-fills Mon–Fri</Caption>
-								</View>
-								<WeekdayPicker
-									days={WEEKDAYS}
-									selected={weekdaysValue}
-									onChange={(days) =>
-										setValue("weekdays", days, { shouldDirty: true })
-									}
-								/>
-								{hasNoWeekdays ? (
-									<Caption tone="error">{NO_WEEKDAYS_MESSAGE}</Caption>
-								) : null}
-							</>
-						) : null}
-
-						{frequencyTypeValue === "per-week" ? (
-							<ListItem
-								embedded
-								title="Times per week"
-								trailing={
-									<Stepper
-										value={timesPerWeekValue}
-										min={MIN_TIMES_PER_WEEK}
-										max={MAX_TIMES_PER_WEEK}
-										accessibilityLabel="times per week"
-										onChange={(value) =>
-											setValue("timesPerWeek", value, { shouldDirty: true })
-										}
-									/>
-								}
-							/>
-						) : null}
-					</Container>
+					<FrequencyFields
+						frequencyType={frequencyTypeValue}
+						weekdays={weekdaysValue}
+						timesPerWeek={timesPerWeekValue}
+						noDaysError={noWeekdays}
+						onFrequencyType={(value: FrequencyType) =>
+							setValue("frequencyType", value, { shouldDirty: true })
+						}
+						onWeekdays={(days) =>
+							setValue("weekdays", days, { shouldDirty: true })
+						}
+						onTimesPerWeek={(value) =>
+							setValue("timesPerWeek", value, { shouldDirty: true })
+						}
+					/>
 				</View>
 
-				<Container>
-					<SectionLabel>Target type</SectionLabel>
-					<SegmentedControl
-						label="Target"
-						options={[
-							{ value: "simple", label: "Simple check" },
-							{ value: "quantity", label: "Quantity" },
-						]}
-						value={targetTypeValue}
-						onChange={(value) =>
-							setValue("targetType", value, { shouldDirty: true })
+				{mode === "create" ? (
+					<ReminderDrafts
+						reminders={queued}
+						onAdd={() =>
+							setSheet({
+								kind: "add",
+								draft: { ...DEFAULT_REMINDER_TIME, weekdays: reminderDays() },
+							})
 						}
-						disabled={isTargetTypeLockedToSimple}
+						onEdit={(reminder) =>
+							setSheet({
+								kind: "edit",
+								key: reminder.key,
+								draft: {
+									hour: reminder.hour,
+									minute: reminder.minute,
+									weekdays: reminder.weekdays,
+								},
+							})
+						}
+						onRemove={(reminder) =>
+							setQueued((current) =>
+								current.filter((item) => item.key !== reminder.key),
+							)
+						}
 					/>
-					{isTargetTypeLockedToSimple ? (
-						<Caption>{QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION}</Caption>
-					) : null}
-					{targetTypeValue === "quantity" ? (
-						<>
-							<ListItem
-								embedded
-								title="Amount"
-								trailing={
-									<Stepper
-										value={targetAmountValue}
-										min={MIN_TARGET_AMOUNT}
-										max={MAX_TARGET_AMOUNT}
-										accessibilityLabel="target amount"
-										onChange={(value) =>
-											setValue("targetAmount", value, { shouldDirty: true })
-										}
-									/>
-								}
-							/>
-							<Controller
-								control={control}
-								name="targetUnit"
-								render={({ field, fieldState }) => (
-									<TextField
-										label="Unit"
-										placeholder="glasses"
-										value={field.value}
-										onChangeText={field.onChange}
-										onBlur={field.onBlur}
-										error={fieldState.error?.message}
-										maxLength={20}
-										inputRef={unitRef}
-										// The last field: Return puts the keyboard away.
-										onSubmitEditing={() => Keyboard.dismiss()}
-										// The Unit field is low on the form — bring it (and the
-										// Archive card below it) clear of the keyboard.
-										onFocus={() =>
-											scrollRef.current?.scrollToEnd({ animated: true })
-										}
-									/>
-								)}
-							/>
-						</>
-					) : null}
-				</Container>
+				) : null}
 
 				{mode === "edit" && habit?.archivedAt === null ? (
 					<ActionCard
-						title="Archive habit"
-						subtitle="Hides it from Today and keeps every logged day. Restore it any time."
+						title={formCopy.archive.title}
+						subtitle={formCopy.archive.body}
 						symbol="archivebox"
 						disabled={isArchiving || isSubmitting}
 						onPress={handleArchive}
@@ -503,14 +530,24 @@ export function HabitFormScreen({
 					},
 				]}
 			>
-				{submitError ? <Banner tone="error">{submitError}</Banner> : null}
+				{submitError ? (
+					<Banner tone="error" messageRef={errorRef}>
+						{submitError}
+					</Banner>
+				) : null}
 				<Button
-					label="Save habit"
+					label={mode === "create" ? formCopy.save.new : formCopy.save.edit}
 					onPress={handleSubmit(onSubmit)}
 					disabled={isSaveDisabled}
-					disabledReason={blockedReason}
+					// 08.3: a dimmed Save reads its reason as the hint ("Add a name to save").
+					accessibilityHint={isSaveDisabled ? issues.reason : undefined}
 					loading={isSubmitting}
 				/>
+				{isSaveDisabled && issues.reason ? (
+					<FieldHelper align="center" plain tone="blocking">
+						{issues.reason}
+					</FieldHelper>
+				) : null}
 			</View>
 
 			<AddCategorySheet
@@ -519,11 +556,43 @@ export function HabitFormScreen({
 				onDismiss={() => setIsAddCategoryOpen(false)}
 				onCreate={createCategory}
 				onCreated={(category) => {
-					// F2d: back to the picker with the new chip already selected.
+					// F2d: back to the chips with the new one already selected.
 					setValue("categoryId", category.id, { shouldDirty: true });
 					setIsAddCategoryOpen(false);
 				}}
 				isCreating={isCreatingCategory}
+			/>
+			<ReminderSheet
+				draft={sheet?.draft ?? null}
+				title={
+					sheet?.kind === "edit"
+						? reminderSheetCopy.edit
+						: reminderSheetCopy.add
+				}
+				onDismiss={() => setSheet(null)}
+				onSave={saveReminder}
+			/>
+			<AlertDialog
+				visible={guard.prompting}
+				title={formCopy.discard.title}
+				message={
+					mode === "edit" && originalName
+						? formCopy.discard.bodyEdit(originalName)
+						: formCopy.discard.bodyNew
+				}
+				actions={[
+					{
+						label: formCopy.discard.keep,
+						onPress: guard.keep,
+						tone: "primary",
+					},
+					{
+						label: formCopy.discard.discard,
+						onPress: guard.leave,
+						tone: "destructive",
+					},
+				]}
+				onRequestClose={guard.keep}
 			/>
 		</KeyboardAvoidingView>
 	);
@@ -534,31 +603,23 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	scrollContent: {
-		padding: 16,
-		gap: 16,
+		paddingHorizontal: space[500],
+		paddingTop: space[300],
+		paddingBottom: space[500],
+		gap: space[400],
 	},
 	loading: {
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	directionSection: {
-		gap: 12,
-	},
-	chipRow: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 8,
-	},
-	shortcutRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 10,
+	field: {
+		gap: space[150],
 	},
 	footer: {
-		gap: 8,
-		paddingHorizontal: 16,
-		paddingBottom: 16,
-		paddingTop: 8,
+		gap: space[200],
+		paddingHorizontal: space[500],
+		paddingBottom: space[400],
+		paddingTop: space[200],
 	},
 });

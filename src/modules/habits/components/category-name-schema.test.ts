@@ -1,12 +1,11 @@
+import { categoriesCopy } from "../messages";
 import {
 	makeCategory,
 	TEST_BUILT_IN_CATEGORIES,
 } from "../test-support/habit-builder";
-import {
-	duplicateRenameMessage,
-	makeCategoryNameSchema,
-	NO_CATEGORY_NAME_MESSAGE,
-} from "./category-name-schema";
+import { makeCategoryNameSchema } from "./category-name-schema";
+
+const NO_CATEGORY_NAME_MESSAGE = categoriesCopy.addSheet.needsName;
 
 const music = makeCategory({ id: 11, name: "Music" });
 const schema = makeCategoryNameSchema([...TEST_BUILT_IN_CATEGORIES, music]);
@@ -29,12 +28,12 @@ describe("makeCategoryNameSchema", () => {
 
 	it("names the built-in a duplicate clashes with", () => {
 		expect(messageFor(" fitness ")).toBe(
-			"You already have Fitness. Pick it from the list instead.",
+			"Fitness already exists. Choose another name.",
 		);
 	});
 
 	it("catches a custom duplicate too, but not when renaming that same category", () => {
-		expect(messageFor("MUSIC")).toMatch(/You already have Music/);
+		expect(messageFor("MUSIC")).toMatch(/Music already exists/);
 		const renaming = makeCategoryNameSchema(
 			[...TEST_BUILT_IN_CATEGORIES, music],
 			music.id,
@@ -64,13 +63,5 @@ describe("makeCategoryNameSchema — rename (HAB-25)", () => {
 
 	it("allows the category's own name in a different case", () => {
 		expect(renameMusic.parse({ name: "music" })).toEqual({ name: "music" });
-	});
-});
-
-describe("duplicateRenameMessage", () => {
-	it("names the clash without pointing at a list", () => {
-		expect(duplicateRenameMessage(music)).toBe(
-			"You already have Music. Choose a different name.",
-		);
 	});
 });

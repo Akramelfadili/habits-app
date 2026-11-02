@@ -1,28 +1,22 @@
-# Journey: give a habit a reminder → Manage habits → reorder within a
-# category → archive the habit with the reminder → its history and reminder
-# survive → restore it → delete a different habit through Detail's confirm
-# sheet → Today reflects all of it.
-# Covers HAB-13 (reorder, archive, restore, delete), HAB-12 (reminders kept
-# across archive), HAB-09 (Detail as the only place delete lives), HAB-03,
-# HAB-27 (the Habits tab root, and Settings behind its gear).
+# Journey: give a habit a reminder → the Habits tab → Settings and back →
+# archive the habit with the reminder from its Detail → it moves under
+# Archived, its history and reminder survive → Restore it (instant, with an
+# Undo toast) → delete a different habit through Detail's confirm sheet →
+# Today reflects all of it.
+# Covers HAB-13 (archive, restore, delete), HAB-12 (reminders kept across
+# archive), HAB-09 (Detail as the only place delete lives), HAB-03,
+# HAB-27 (the Habits tab root, and Settings behind its gear), HAB-39/40/45.
 #
 # Seed (`manage-archive` fixtures, clock pinned to Thu 1 Oct): active Glass of
-# water + Meditate (Morning), Read (Evening), Easy run + Mobility (Training);
+# water + Meditate + Read (Morning), Easy run + Mobility + Upper body (Training);
 # archived Cold shower and No phone in bed.
 #
-# Drag-to-reorder and swipe-to-archive are gesture-handler pans. Maestro's web
-# driver moves the pointer in a single jump, which never activates them (a
-# stepped drag in Playwright does — the gestures themselves work on web), so:
-#   - iOS: reorders by dragging the grip and archives by swiping the row.
-#     UNVERIFIED until the flows run against a dev-client build — see README.
-#   - Web: skips the reorder and archives through the other real path,
-#     Detail's one-tap "Archive habit". The reorder's persistence is
-#     covered by reorderable-list / habit-repository unit tests, and its lifted
-#     mid-drag state by `npm run visual-check -- manage-habits-dragging`.
-#     An *active* row on Manage is wrapped in SwipeableRow, and the web
-#     driver's single-jump tap never reaches the row underneath it, so the
-#     web branch opens each active habit's Detail from Today instead (those
-#     rows are plain). Archived rows are plain on Manage and tap fine.
+# Drag-to-reorder is a gesture-handler pan; Maestro's web driver moves the
+# pointer in a single jump, which never activates it (a stepped drag in
+# Playwright does), so the reorder is not driven here. Its persistence is
+# covered by reorderable-list / habit-repository unit tests and its lifted
+# mid-drag state by the visual-check state `habits-reorder`. Archive goes
+# through Detail's Archive habit sheet (DC5), the same on every platform.
 url: ${APP_URL}/?fixtures=manage-archive&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
@@ -33,121 +27,93 @@ tags:
 
 # Give Meditate an active reminder first.
 - tapOn: "Meditate"
-- tapOn: "Reminders"
-- tapOn:
-    id: "Add a time, 0 of 4"
+# The row's value: "Reminders" would match the section label above it.
+- tapOn: "None"
+- tapOn: "Add time"
 - tapOn: "Save time"
 - assertVisible:
-    id: "Reminder at 09:00, Every day"
+    id: "09:00, Every day"
 - back
-- assertVisible: "1 on · 09:00"
+- assertVisible: "09:00 · daily"
 - back
 
-# HAB-27: Manage & archive is the Habits tab's root — no ⋯ menu.
+# HAB-27: the Habits tab's root is the library; counts are its eyebrow.
 - tapOn:
     id: "Habits"
-- assertVisible: "Archived · 2"
-# The screen's title is "Habits", the same word as the tab, so it isn't
-# asserted on its own; the footnote identifies the screen.
-- assertVisible: "Order is set per category and matches Today. To move a habit to another category, edit it."
-# No destructive action on this screen.
+- assertVisible: "6 active · 2 archived"
+- assertVisible: "Meditate"
+# Archived is collapsed until opened (H1); no destructive action in the list.
+- assertNotVisible: "Cold shower"
 - assertNotVisible: "Delete habit"
 
 # HAB-27 / D3: the gear in the Habits header is the only way into Settings.
+# The collapsed inline bar carries a second, inert gear: take the header's.
 - tapOn:
     id: "Settings"
-- assertVisible: "Appearance"
+    index: 1
+- assertVisible: "Weeks start on Monday.*"
 - takeScreenshot: hab-13-settings
-# Settings was pushed inside the Habits tab, so Back returns to Manage.
+# Settings was pushed inside the Habits tab, so Back returns to the library.
 - back
-- assertVisible: "Order is set per category and matches Today. To move a habit to another category, edit it."
+- assertVisible: "6 active · 2 archived"
 
-- runFlow:
-    when:
-      platform: iOS
-    commands:
-      # Reorder: drag Meditate's grip above Glass of water (same Morning group).
-      - assertVisible:
-          text: "Meditate"
-          below: "Glass of water"
-      - swipe:
-          from:
-            text: "Reorder Meditate"
-          direction: UP
-          duration: 1500
-      - assertVisible:
-          text: "Glass of water"
-          below: "Meditate"
-      # Archive: swipe the row left and tap the revealed action.
-      - swipe:
-          from:
-            text: "Meditate"
-          direction: LEFT
-      - tapOn: "Archive"
-      - assertVisible: "Archived 'Meditate'"
-
-- runFlow:
-    when:
-      platform: Web
-    commands:
-      # Detail from Today (Manage's active rows are swipeable, see above).
-      # One tap, no confirmation; the toast offers the Undo.
-      - tapOn:
-          id: "Today"
-      - tapOn: "Meditate"
-      - tapOn: "Archive habit"
-      - assertVisible: "Archived 'Meditate'"
-      - tapOn:
-          id: "Habits"
-
-- assertVisible: "Archived · 3"
+# Archive Meditate from its Detail (DC5): one confirm, then it pops back with
+# an Undo toast. Web's single-jump tap lands one library row low (it opened
+# Read), so the Detail opens from Today's plain row instead.
+- tapOn:
+    id: "Today"
+- tapOn: "Meditate"
+- tapOn: "Archive habit"
+# The sheet's button shares the row's label; it is the second match.
+- tapOn:
+    text: "Archive habit"
+    index: 1
+- assertVisible: "Meditate archived"
+- tapOn:
+    id: "Habits"
+- assertVisible: "5 active · 3 archived"
 - takeScreenshot: hab-13-archived
 
+# Open the Archived section; the row carries the date it left Today.
+- tapOn: "Show"
+- assertVisible: "Cold shower"
+- assertVisible: "Meditate"
+
 # Archiving is non-destructive, but reminders pause with the habit (HAB-20),
-# and an archived habit isn't offered Archive again. Archived rows are plain,
-# so this one opens straight from Manage.
+# and an archived habit isn't offered Archive again.
 - tapOn: "Meditate"
-- assertVisible: "Paused while archived"
+- assertVisible: "Archived on .*"
+- assertVisible: "Paused"
 - assertNotVisible: "Archive habit"
 - back
 
-# Restore it — archived rows are newest first, so Meditate's Restore is the first.
+# Restore it (instant, toast with Undo).
+# Archived rows are newest first, so Meditate's Restore is the first.
 - tapOn:
     text: "Restore"
     index: 0
-- assertVisible: "Restored 'Meditate' — back on Today"
-- assertVisible: "Archived · 2"
+- assertVisible: "Meditate is back on Today"
+- assertVisible: "6 active · 2 archived"
 
 # The reminder came back with it, unpaused and unchanged.
 - tapOn:
     id: "Today"
 - tapOn: "Meditate"
-- assertVisible: "1 on · 09:00"
+- assertVisible: "09:00 · daily"
 - back
 
 # Delete a different habit — only offered on its Detail, behind a confirm
 # sheet. Mobility is active (Mon–Fri, and the clock is a Thursday), so its
 # Detail opens from Today.
-- tapOn:
-    id: "Today"
 - tapOn: "Mobility"
 - tapOn: "Delete habit"
-- assertVisible: "Keep habit"
+- assertVisible: "Archive instead"
 - takeScreenshot: hab-13-delete-confirm
 - tapOn: "Delete permanently"
-- assertVisible: "Deleted 'Mobility'"
-- assertNotVisible: "Mobility"
+- assertVisible: "Mobility deleted"
+- assertNotVisible: "Mobility, not done"
 
 # Today: restored Meditate is back; Mobility is gone. Delete pops Detail
 # back to the tab it was opened from, which is already Today.
-- assertVisible: "Today"
 - assertVisible: "Meditate"
-- assertNotVisible: "Mobility"
-- runFlow:
-    when:
-      platform: iOS
-    commands:
-      - assertVisible:
-          text: "Glass of water"
-          below: "Meditate"
 - takeScreenshot: hab-13-today

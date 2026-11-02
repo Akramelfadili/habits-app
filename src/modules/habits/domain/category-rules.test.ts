@@ -4,7 +4,7 @@ import type { Category } from "../types";
 import {
 	categoryUsage,
 	findDuplicateCategory,
-	inCreationOrder,
+	movableCategories,
 	nextCategoryAppearance,
 } from "./category-rules";
 
@@ -127,17 +127,34 @@ describe("categoryUsage (HAB-25)", () => {
 			],
 		);
 		expect(usage).toEqual([
-			{ category: music, habitNames: ["Piano", "Scales"] },
-			{ category: garden, habitNames: [] },
+			{
+				category: music,
+				habitNames: ["Piano", "Scales"],
+				activeCount: 1,
+				archivedCount: 1,
+			},
+			{ category: garden, habitNames: [], activeCount: 0, archivedCount: 0 },
 		]);
 	});
 });
 
-describe("inCreationOrder", () => {
-	it("lists built-ins in their fixed order, then customs by creation, whatever the stored order", () => {
-		const [first, second] = customsOn([0, 1]);
-		const stored = [second, builtIns[9], first, ...builtIns.slice(0, 9)];
-		expect(inCreationOrder(stored)).toEqual([...builtIns, first, second]);
-		expect(stored[0]).toBe(second);
+describe("movableCategories (C2)", () => {
+	it("is every category but the built-in Other, in the order given", () => {
+		const [custom] = customsOn([0]);
+		const stored = [builtIns[3], custom, ...builtIns.slice(0, 3), builtIns[9]];
+		expect(movableCategories(stored)).toEqual([
+			builtIns[3],
+			custom,
+			...builtIns.slice(0, 3),
+		]);
+		expect(movableCategories(stored).some((c) => c.name === "Other")).toBe(
+			false,
+		);
+	});
+
+	it("keeps a custom category that is called Other-like but is not the built-in", () => {
+		const [custom] = customsOn([0]);
+		const lookalike = { ...custom, name: "Other" };
+		expect(movableCategories([lookalike])).toEqual([lookalike]);
 	});
 });

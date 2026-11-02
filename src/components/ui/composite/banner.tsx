@@ -1,6 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { Ref } from "react";
+import {
+	type HostInstance,
+	Pressable,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { radius, space, textStyles } from "@/theme/theme";
+import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { Button } from "../primitives/button";
@@ -28,6 +35,8 @@ type BannerProps = {
 	action?: { label: string; onPress: () => void };
 	/** A compact button after the text — "Restore" (D4). Drops under the text at accessibility sizes. */
 	button?: { label: string; onPress: () => void; disabled?: boolean };
+	/** The message element, for a caller that moves the screen reader's focus onto a failure (`useInitialFocus`). */
+	messageRef?: Ref<HostInstance>;
 };
 
 /**
@@ -45,6 +54,7 @@ export function Banner({
 	symbol,
 	action,
 	button,
+	messageRef,
 }: BannerProps) {
 	const { colors, opacity } = useTheme();
 	const largeText = useAccessibilityTextSize();
@@ -55,6 +65,7 @@ export function Banner({
 
 	const text = (
 		<View
+			ref={messageRef}
 			accessible
 			accessibilityRole={error ? "alert" : undefined}
 			accessibilityLabel={title ? `${title}. ${children}` : children}
@@ -64,7 +75,14 @@ export function Banner({
 				<Text
 					style={[
 						styles.title,
-						{ color: error && card ? colors.dangerBg : colors.ink },
+						{
+							color:
+								error && card
+									? colors.dangerBg
+									: warning && card
+										? colors.warnInk
+										: colors.ink,
+						},
 					]}
 				>
 					{title}
@@ -91,13 +109,16 @@ export function Banner({
 			testID="banner"
 			style={[
 				styles.banner,
-				card
-					? {
-							backgroundColor: colors.card,
-							borderColor: error ? colors.dangerBg : colors.border,
-							borderWidth: error ? 1 : StyleSheet.hairlineWidth,
-						}
-					: { backgroundColor: warning ? colors.warnTint : colors.inner },
+				card && warning
+					? // R5 / SY6: the amber card — warn tint, no outline, the title in warn ink.
+						{ backgroundColor: colors.warnTint }
+					: card
+						? {
+								backgroundColor: colors.card,
+								borderColor: error ? colors.dangerBg : colors.border,
+								borderWidth: error ? 1 : StyleSheet.hairlineWidth,
+							}
+						: { backgroundColor: warning ? colors.warnTint : colors.inner },
 				largeText && styles.stacked,
 			]}
 		>
@@ -131,7 +152,10 @@ export function Banner({
 						<Pressable
 							accessibilityRole="link"
 							onPress={action.onPress}
-							style={({ pressed }) => pressed && { opacity: opacity.pressed }}
+							style={({ pressed }) => [
+								styles.actionHit,
+								pressed && { opacity: opacity.pressed },
+							]}
 						>
 							<Text style={[styles.action, { color: colors.ink }]}>
 								{action.label}
@@ -200,6 +224,10 @@ const styles = StyleSheet.create({
 	},
 	message: {
 		...textStyles.footnote,
+	},
+	actionHit: {
+		minHeight: minTouchTarget,
+		justifyContent: "center",
 	},
 	action: {
 		...textStyles.caption,

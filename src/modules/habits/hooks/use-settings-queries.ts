@@ -5,26 +5,15 @@ import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
 import {
 	EVENING_REVIEW_SETTING_KEY,
+	EVENING_REVIEW_TIME_SETTING_KEY,
 	FREEZE_POOL_SIZE,
-	LAST_EXPORT_SETTING_KEY,
 } from "../constants";
-import {
-	type ExportSource,
-	type ExportSummary,
-	summarizeExport,
-} from "../domain/export-data";
+import { parseEveningReviewTime } from "../domain/evening-review-time";
 import { freezesUsedInMonth } from "../domain/streaks";
-import { lastExportLabel } from "../presenters/settings-helpers";
-import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
+import { notificationImpact } from "../presenters/settings-helpers";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
-import type { ExportOptions } from "../types";
-
-/** Archived habits are included by default (HAB-15) — the Settings row quotes the same. */
-export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
-	format: "csv",
-	includeArchived: true,
-};
+import { useAllReminders } from "../repositories/reminder-repository";
 
 /**
  * Everything the Settings screen (HAB-15) shows. The Evening review reads the
@@ -34,19 +23,24 @@ export function useSettingsQueries() {
 	const preference = useThemePreferenceStore((state) => state.preference);
 	const { scheme } = useTheme();
 	const eveningReview = useAppSetting(EVENING_REVIEW_SETTING_KEY);
+	const eveningTime = useAppSetting(EVENING_REVIEW_TIME_SETTING_KEY);
 	const permission = useNotificationPermission();
-	const lastExport = useAppSetting(LAST_EXPORT_SETTING_KEY);
-	const { summary } = useExportQueries(DEFAULT_EXPORT_OPTIONS);
 	const frozenDays = useFrozenDays();
+	const reminders = useAllReminders();
+	const { habits } = useHabitsList();
 
 	return {
 		themePreference: preference,
 		/** What "System" currently resolves to — the Appearance caption reports it. */
 		resolvedScheme: scheme,
 		eveningReviewEnabled: eveningReview === "true",
+		/** The Evening review's time: the stored choice, else 21:30. */
+		eveningReviewTime: parseEveningReviewTime(eveningTime),
 		notificationsDenied: permission === "denied",
-		lastExport: lastExportLabel(lastExport ?? null, new Date()),
-		exportSummary: summary,
+		/** "granted", "denied" or "undetermined": the Notifications row says which. */
+		notificationPermission: permission,
+		/** What a denied permission holds back, for the SY6 summary. */
+		notificationImpact: notificationImpact(reminders, habits),
 		/** The shared monthly pool, counted by missed date (HAB-33, S4) — for the "used this month" row. */
 		freezePool: {
 			size: FREEZE_POOL_SIZE,
@@ -55,18 +49,4 @@ export function useSettingsQueries() {
 		/** Version, build and database schema — the About group. */
 		about: getAppInfo(),
 	};
-}
-
-/** The export sheet's data and the counts/range it quotes for the current options. */
-export function useExportQueries(options: ExportOptions): {
-	source: ExportSource;
-	summary: ExportSummary;
-} {
-	const { habits } = useHabitsList();
-	const entries = useAllEntries();
-	const notes = useEntryNotes();
-	const frozenDays = useFrozenDays();
-	const source = { habits, entries, notes, frozenDays };
-
-	return { source, summary: summarizeExport(source, options, new Date()) };
 }

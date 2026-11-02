@@ -18,14 +18,15 @@ export function HabitBadge({
 	size = "compact",
 	muted = false,
 }: HabitBadgeProps) {
-	const { scheme } = useTheme();
+	const { scheme, colors } = useTheme();
 	return (
 		<IconBadge
 			size={size}
 			symbol={categorySymbol(habit.category)}
 			accent={
 				muted
-					? undefined
+					? // H2: `track` (not `inner`, which vanishes on a white card) with the muted `sub` ink.
+						{ tint: colors.track, ink: colors.sub }
 					: {
 							tint: habitAccentTint(habit.category.hue, scheme),
 							ink: habitAccentInk(habit.category.hue, scheme),

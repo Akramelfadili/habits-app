@@ -89,11 +89,72 @@ describe("toJson", () => {
 
 	it("is valid JSON for an empty export", async () => {
 		const empty = buildExportModel(
-			{ habits: [], entries: [], notes: [], frozenDays: [] },
+			{
+				habits: [],
+				entries: [],
+				notes: [],
+				frozenDays: [],
+				reminders: [],
+				categories: [],
+			},
 			{ format: "json", includeArchived: true },
 			EXPORT_TODAY,
 		);
 
 		expect(JSON.parse(await toJson(empty)).habits).toEqual([]);
+	});
+
+	describe("what the file contains (HAB-44)", () => {
+		it("lists every category in the stored order, with whether it is built in", async () => {
+			const parsed = JSON.parse(await toJson(modelFor(true)));
+			expect(parsed.categories).toHaveLength(11);
+			expect(parsed.categories[0]).toEqual({
+				name: "Health",
+				builtIn: true,
+				order: 1,
+			});
+			expect(parsed.categories.at(-1)).toEqual({
+				name: "Morning",
+				builtIn: false,
+				order: 11,
+			});
+		});
+
+		it("carries each habit's own reminders: time, days and whether it is on, earliest first", async () => {
+			const parsed = JSON.parse(await toJson(modelFor(true)));
+			const [cafe, water] = parsed.habits;
+			expect(cafe.reminders).toEqual([
+				{ time: "07:00", days: ["Tue", "Thu"], enabled: false },
+				{ time: "18:30", days: ["Thu"], enabled: true },
+			]);
+			expect(water.reminders).toEqual([]);
+		});
+
+		it("includes the archived habit with its logs, status and archive date", async () => {
+			const parsed = JSON.parse(await toJson(modelFor(true)));
+			const old = parsed.habits.find(
+				(habit: { name: string }) => habit.name === "Old habit",
+			);
+			expect(old.status).toBe("archived");
+			expect(old.archivedOn).toBe("2026-09-10");
+			expect(old.entries).toEqual([
+				{ date: "2026-09-05", value: null, completed: true },
+			]);
+		});
+
+		it("leaves an archived habit — and its reminders, logs and frozen days — out when asked", async () => {
+			const parsed = JSON.parse(await toJson(modelFor(false)));
+			expect(parsed.habits.map((h: { name: string }) => h.name)).toEqual([
+				"Café, then “read”",
+				"Water",
+			]);
+			// Categories are the person's setup, not a habit's data: they stay.
+			expect(parsed.categories).toHaveLength(11);
+		});
+
+		it("carries frozen days under their habit", async () => {
+			const parsed = JSON.parse(await toJson(modelFor(true)));
+			expect(parsed.habits[1].frozenDays).toEqual(["2026-09-02"]);
+		});
 	});
 });

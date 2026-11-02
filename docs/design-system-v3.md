@@ -172,16 +172,18 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-20 | Toggle | V1-07 | Off track outline; knob onAccent; whole row toggles |
 | V3-21 | Checkbox | new | |
 | V3-22 | Buttons | V1-03/04/05 + VAR-13 | Primary, secondary, destructive, disabled-with-reason, compact (44 hit). **Built:** destructive is the outlined red pill and `variant="compact"` the 36 pt inset pill (V3-4a); secondary is still the hairline pill, not the 3:1 outline, and `link` is secondary ink (V3-6) |
-| V3-23 | List item | V1-14 + VAR-05/08 | |
+| V3-23 | List item | V1-14 + VAR-05/08 | **Built (V3-4b):** `value` (right text), `selected` (drawn check, radio-style), `navigable` chevron, `leading` slot |
 | V3-24 | Sheet | V1-15 + VAR-03 | Grabber, title, Close (swipe = Close); confirm sheets drop Close and end with Cancel |
 | V3-25 | Destructive confirm | NEW-12 + V1-16 | Archive-first variant, move-preview variant. **Built (V3-4a):** `DestructiveConfirmSheet` — safe action first and focused, outlined red pill, hint, Cancel last, in-sheet error banner, busy state; Archive's one-tap sheet (DC5) is its own, lighter sheet |
 | V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 4 s success+info / 6 s warning / errors until Retry or swipe |
-| V3-27 | Inline banner | V1-19 + NEW-13 | States that last |
+| V3-27 | Inline banner | V1-19 + NEW-13 | States that last. **Built (V3-4b):** card, amber tone with symbol, optional action (Open Settings, Retry) |
 | V3-28 | Empty state | V1-21 | |
 | V3-29 | Unlock card | NEW-11 | Progress toward 7 days of logs |
-| V3-30 | File card | NEW-06 | |
+| V3-30 | File card | NEW-06 | **Built (V3-4b):** `FileCard` — file name, size and counts, Share file; used by the export sheet |
 | V3-31 | Log row | NEW-22 | **Later** (PR-02); do not build |
 | V3-32 | Icon square | VAR-02 | |
+| V3-33 | Screen header | new | **Built (V3-4b):** `ScreenHeader` — optional eyebrow caption, large title, optional trailing slot; used by Reminders and Settings |
+| V3-34 | Remove button | new | **Built (V3-4b):** `RemoveButton` — 44 pt hit, red minus on the left of a row; instant, with an Undo toast |
 
 ## Screen structure quick map
 

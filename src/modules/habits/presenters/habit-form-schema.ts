@@ -8,16 +8,8 @@ import {
 	MIN_TARGET_AMOUNT,
 	MIN_TIMES_PER_WEEK,
 } from "../constants";
+import { formCopy } from "../messages";
 import type { Frequency, IsoWeekday } from "../types";
-
-/** Save's blocking reason with no category picked (HAB-24) — see `saveBlockedReason`. */
-export const NO_CATEGORY_MESSAGE = "Pick a category to save this habit";
-
-export const NO_WEEKDAYS_MESSAGE = "Pick at least one day.";
-export const NO_TARGET_UNIT_MESSAGE =
-	'Give this target a unit, e.g. "glasses".';
-
-export const NAME_TOO_LONG_MESSAGE = `Keep the name to ${MAX_HABIT_NAME_LENGTH} characters.`;
 
 /**
  * Whether `name` breaks the 32-character cap (HAB-22). A V1 habit saved with
@@ -43,14 +35,14 @@ export function makeHabitFormSchema(originalName?: string) {
 			ctx.addIssue({
 				code: "custom",
 				path: ["weekdays"],
-				message: NO_WEEKDAYS_MESSAGE,
+				message: formCopy.frequency.noDays,
 			});
 		}
 		if (values.targetType === "quantity" && values.targetUnit.trim() === "") {
 			ctx.addIssue({
 				code: "custom",
 				path: ["targetUnit"],
-				message: NO_TARGET_UNIT_MESSAGE,
+				message: formCopy.goal.unitMissing,
 			});
 		}
 	});
@@ -64,17 +56,13 @@ function habitFormObject(originalName: string | undefined) {
 		name: z
 			.string()
 			.trim()
-			.min(1, "Give this habit a name.")
+			.min(1, formCopy.save.needsName)
 			.refine(
 				(name) => !isNameOverLimit(name, originalName),
-				NAME_TOO_LONG_MESSAGE,
+				formCopy.name.tooLong(MAX_HABIT_NAME_LENGTH),
 			),
-		/** Null until picked — and a habit can't be saved without one (HAB-24). */
-		categoryId: z
-			.number()
-			.int()
-			.nullable()
-			.refine((id) => id !== null, NO_CATEGORY_MESSAGE),
+		/** Null until picked: the category is optional, and a habit without one goes to Other (HAB-41). */
+		categoryId: z.number().int().nullable(),
 		direction: z.enum(["build", "break"]),
 		targetType: z.enum(["simple", "quantity"]),
 		targetAmount: z
@@ -87,7 +75,7 @@ function habitFormObject(originalName: string | undefined) {
 			.trim()
 			.max(
 				MAX_TARGET_UNIT_LENGTH,
-				`Keep the unit under ${MAX_TARGET_UNIT_LENGTH} characters.`,
+				formCopy.goal.unitTooLong(MAX_TARGET_UNIT_LENGTH),
 			),
 		frequencyType: z.enum(["daily", "weekdays", "per-week"]),
 		weekdays: z.array(z.number().int().min(1).max(7)),
@@ -99,9 +87,9 @@ function habitFormObject(originalName: string | undefined) {
 	});
 }
 
-/** What the form holds while editing — `categoryId` may still be null. */
+/** What the form holds while editing — `categoryId` may be null (none picked). */
 export type HabitFormInput = z.input<typeof habitFormSchema>;
-/** What a valid submit produces — `categoryId` narrowed to an id. */
+/** What a valid submit produces — `categoryId` still null when none was picked. */
 export type HabitFormValues = z.output<typeof habitFormSchema>;
 
 type FrequencyFormValues = Pick<

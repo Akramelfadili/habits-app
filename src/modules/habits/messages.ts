@@ -11,6 +11,8 @@
 
 import { toastHoldMs } from "@/components/ui/composite/toast-host";
 import { showToast, type ToastTone } from "@/store/toast-store";
+import { motion } from "@/theme/theme";
+import { notificationCopy, reminderCapMessage } from "./reminder-copy";
 
 export type MessageTone = ToastTone;
 
@@ -142,6 +144,44 @@ export const messages = {
 	habitDeleted: {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
+	},
+	/** EX2: the sheet was closed while the file was writing. */
+	exportReady: {
+		tone: "success",
+		text: (name: string) => `Export ready · ${name}`,
+	},
+	/** EX4: the sheet was closed and the export then failed; it stays until dismissed. */
+	exportFailedWhileClosed: {
+		tone: "error",
+		text: "Export failed. Open Export data to retry — nothing was changed.",
+	},
+	/** S6: confirmed by a toast, no Undo — nothing changed. */
+	diagnosticsCopied: { tone: "info", text: "Diagnostics copied" },
+	diagnosticsShared: { tone: "info", text: "Diagnostics ready to share" },
+	diagnosticsFailed: {
+		tone: "error",
+		text: "Couldn’t copy diagnostics. Try again.",
+	},
+	/** R3: removal is instant, so the toast carries the Undo (5 s). */
+	reminderRemoved: {
+		tone: "success",
+		text: (time: string) => `Reminder at ${time} removed`,
+	},
+	/** DC6: a category nobody used is gone at once; Undo puts it back (5 s). */
+	categoryDeleted: {
+		tone: "success",
+		text: (name: string) => `${name} deleted`,
+	},
+	/** C5: a category in use is gone; its habits moved to Other and keep their history. */
+	categoryDeletedMoved: {
+		tone: "success",
+		text: (name: string, count: number) =>
+			`${name} deleted · ${count} ${count === 1 ? "habit" : "habits"} moved to Other`,
+	},
+	/** F7: the habit saved, but a reminder queued on the form did not. */
+	habitSavedReminderFailed: {
+		tone: "warning",
+		text: "Saved, but a reminder couldn’t be set. Add it from the habit’s Reminders.",
 	},
 	/** P3: Export tapped while there is nothing to export — says why, in a toast. */
 	exportNothing: {
@@ -807,6 +847,345 @@ export const detailCopy = {
 } as const;
 
 /**
+ * The Add / Edit habit form (HAB-41, F1–F10, BS2): headers, field labels,
+ * helpers, inline errors, the Save reason and the discard prompt. Errors sit
+ * next to their fields, never in an alert (F8).
+ */
+export const formCopy = {
+	newTitle: "New habit",
+	editTitle: "Edit habit",
+	close: "Close",
+	loading: "Loading…",
+	type: {
+		label: "Type",
+		build: "Build",
+		break: "Break",
+		/** F5: said once Break is picked. */
+		breakNote:
+			"A Break habit counts the days you resist. Tick the circle on each day you held off.",
+		/** Edit: the direction is fixed at creation (HAB-01) — a streak means the opposite. */
+		locked: "Build and Break can’t be switched after saving.",
+	},
+	name: {
+		label: "Name",
+		placeholder: "e.g. Drink water",
+		limit: (limit: number) => `${limit} characters max`,
+		duplicate: (name: string) =>
+			`You already have a habit called ${name}. Choose another name.`,
+		/** An edited V1 name still over the cap (HAB-22). */
+		tooLong: (limit: number) => `Shorten the name to ${limit} characters.`,
+	},
+	category: {
+		label: "Category",
+		optional: "Optional — habits without one go to Other.",
+		newCategory: "New category",
+	},
+	goal: {
+		label: "Goal",
+		check: "Check",
+		quantity: "Quantity",
+		/** F5: Quantity is off for a Break habit, with its reason. */
+		breakReason: "Break habits are yes or no, so Quantity is off.",
+		target: "Daily target",
+		targetCaption: (unit: string) => `${unit || "units"} a day`,
+		unit: "Unit",
+		unitPlaceholder: "glasses",
+		unitMissing: "Give this target a unit, e.g. “glasses”.",
+		unitTooLong: (limit: number) => `Keep the unit under ${limit} characters.`,
+		/** F3: the live example of how Today reads. */
+		example: (target: number, unit: string) =>
+			`Shown after the number: ${Math.max(1, Math.min(5, target - 1))} of ${target}${unit ? ` ${unit}` : ""}`,
+	},
+	frequency: {
+		label: "Frequency",
+		daily: "Daily",
+		specificDays: "Specific days",
+		perWeek: "× per week",
+		noDays: "Pick at least one day",
+		timesPerWeek: "Times per week",
+		timesCaption: "times a week",
+		/** F4: the Monday–Sunday rule (D9) and when it leaves Today. */
+		perWeekRule: (times: number) =>
+			`Weeks run Monday to Sunday. Once you reach ${times}, it leaves Today until the next week starts.`,
+	},
+	reminders: {
+		label: "Reminders",
+		add: "Add time",
+		hint: "24-hour times. Each time can repeat on its own days.",
+	},
+	save: {
+		new: "Save habit",
+		edit: "Save changes",
+		needsName: "Add a name to save",
+		needsUnit: "Add a unit to save",
+		issues: (count: number) =>
+			`Fix ${count} ${count === 1 ? "issue" : "issues"} to save`,
+	},
+	archive: {
+		title: "Archive habit",
+		body: "Hides it from Today and keeps every logged day. Restore it any time.",
+	},
+	discard: {
+		title: "Discard changes?",
+		bodyEdit: (habit: string) => `Your edits to ${habit} won’t be saved.`,
+		bodyNew: "Your new habit won’t be saved.",
+		keep: "Keep editing",
+		discard: "Discard",
+	},
+	/** BS2: where the filled-in fields came from. */
+	prefill: {
+		title: "From a suggestion",
+		body: (name: string) =>
+			`${name} is filled in. Change anything before saving.`,
+	},
+} as const;
+
+/**
+ * Categories (HAB-42, C1–C6, DC6): the screen's header and groups, the rows,
+ * the inline rename, the add sheet and the two delete confirms. Counts always
+ * include archived habits.
+ */
+export const categoriesCopy = {
+	title: "Categories",
+	/** The eyebrow: "10 built-in · 2 custom", or just the built-ins before any custom exists (C6). */
+	eyebrow: (builtIn: number, custom: number) =>
+		custom > 0
+			? `${builtIn} built-in · ${custom} custom`
+			: `${builtIn} built-in`,
+	/** 08.3: "Categories, heading. 10 built-in, 2 custom." */
+	headerLabel: (builtIn: number, custom: number) =>
+		custom > 0
+			? `Categories, ${builtIn} built-in, ${custom} custom`
+			: `Categories, ${builtIn} built-in`,
+	reorder: "Reorder",
+	reorderHint: "Opens the list to drag categories into a new order.",
+	done: "Done",
+	add: "Add category",
+	customHeader: (count: number) => `Custom · ${count}`,
+	builtInHeader: (count: number) => `Built-in · ${count}`,
+	builtInNote: "Built-ins can’t be renamed or deleted.",
+	builtInTag: "Built-in",
+	/** "2 habits", "2 habits · 1 archived", "1 archived", or "Not used" — archived habits are counted (C1). */
+	count: (active: number, archived: number) => {
+		if (active === 0 && archived === 0) return "Not used";
+		const habits = `${active} ${active === 1 ? "habit" : "habits"}`;
+		if (archived === 0) return habits;
+		return active === 0
+			? `${archived} archived`
+			: `${habits} · ${archived} archived`;
+	},
+	rename: "Rename",
+	renameLabel: (name: string) => `Rename ${name}`,
+	deleteLabel: (name: string) => `Delete ${name}`,
+	delete: "Delete",
+	/** C6: the empty custom section teaches the feature. */
+	empty: { title: "Add a category", body: "Group habits your own way" },
+	reorderMode: {
+		eyebrow: "Reorder · sets group order",
+		note: "Groups on Today and Habits follow this order. Other stays last.",
+		handle: (name: string) => `Reorder ${name}`,
+		moveUp: "Move up",
+		moveDown: "Move down",
+		/** VoiceOver after a move: the new place. */
+		moved: (name: string, place: number, total: number) =>
+			`${name}, ${place} of ${total}`,
+	},
+	/** The inline rename (C3). */
+	renameField: {
+		label: (name: string) => `Rename ${name}`,
+		save: "Done",
+		saveLabel: (name: string) => `Save new name for ${name}`,
+		failed: "Couldn’t rename this category. Try again.",
+	},
+	/** Rename and add share one rule: no two groups with the same name (C3). */
+	duplicate: (name: string) => `${name} already exists. Choose another name.`,
+	addSheet: {
+		title: "New category",
+		close: "Close",
+		name: "Name",
+		placeholder: "e.g. Journaling",
+		preview: "Preview",
+		previewPlaceholder: "Your category",
+		note: "Icon and colour are picked for you from those not in use.",
+		submit: "Add category",
+		needsName: "Add a name to create this category",
+		failed: "Couldn’t add this category. Try again.",
+	},
+	deleteSheet: {
+		headline: (name: string) => `Delete ${name}?`,
+		/** C5: names how many habits move, and that nothing about them is lost. */
+		inUse: (count: number) =>
+			count === 1
+				? "1 habit uses it. It moves to Other — its history and streak are kept."
+				: `${count} habits use it. They move to Other — their history and streaks are kept.`,
+		/** DC6: nothing is lost, so one button. */
+		unused: "No habit uses it, so nothing else changes.",
+		move: (from: string, to: string) => `${from} → ${to}`,
+		confirmUnused: "Delete category",
+		confirmInUse: (count: number) =>
+			`Delete and move ${count} ${count === 1 ? "habit" : "habits"}`,
+		cancel: "Cancel",
+	},
+} as const;
+
+/** Day-set names on a reminder row and the "not a scheduled day" warning. */
+export const reminderDaysCopy = {
+	none: "No days",
+	everyDay: "Every day",
+	weekdays: "Weekdays",
+	unscheduled: (names: string, count: number) =>
+		count === 1
+			? `${names} is not a scheduled day for this habit — this reminder would fire for nothing.`
+			: `${names} are not scheduled days for this habit — this reminder would fire for nothing.`,
+} as const;
+
+/**
+ * The Reminders screen (HAB-43, R1–R3, R5): one habit's 24-hour times, each with
+ * its own days. Removal is instant with an Undo toast; the notifications-off
+ * banner explains why nothing arrives while the times stay editable.
+ */
+export const remindersCopy = {
+	title: "Reminders",
+	/** The eyebrow: the habit and how it repeats ("Upper body · Tue, Thu"). */
+	eyebrow: (habit: string, schedule: string) => `${habit} · ${schedule}`,
+	add: "Add time",
+	cap: reminderCapMessage,
+	/** R1: nothing yet — one clear action. */
+	empty: {
+		title: "No reminders yet",
+		body: "Add a time and choose the days it repeats.",
+	},
+	hint: "24-hour times. Tap a time to change its days.",
+	remove: (time: string) => `Remove reminder at ${time}`,
+	/** What a row says it does, for VoiceOver (08.3). */
+	rowHint: "Opens its time and days.",
+	/** A reminder switched off before V3 (the toggle is gone): said on its row, turned on again by editing. */
+	off: "Off",
+	/** R5. */
+	denied: {
+		title: "Notifications are off",
+		body: "Reminders won’t arrive until you allow them in iOS Settings.",
+		action: "Open Settings",
+	},
+} as const;
+
+/**
+ * Settings (HAB-44, S1–S7, SY6): Appearance, Reminders (the evening review and
+ * what notifications being off affects), Streaks (the freeze rule in plain
+ * words), Data and About. Week start and text size are explained, not set.
+ */
+export const settingsCopy = {
+	title: "Settings",
+	appearance: {
+		header: "Appearance",
+		theme: { light: "Light", dark: "Dark", system: "System" },
+		/** The System row says what it resolves to right now. */
+		systemNow: (scheme: "light" | "dark") => `Follows iOS · now ${scheme}`,
+		note: "Weeks start on Monday. Text size follows iOS Settings › Display & Text Size.",
+	},
+	reminders: {
+		header: "Reminders",
+		evening: "Evening review",
+		eveningBody: "A nudge if anything is still open",
+		time: "Time",
+		eveningNote: "Sent only on days with open habits.",
+		notifications: "Notifications",
+		allowed: "Allowed",
+		off: "Off",
+		notAsked: "Not asked yet",
+	},
+	/** SY6: one banner for the whole impact, and what is affected. */
+	denied: {
+		title: "Notifications are off",
+		body: "Reminders and the evening review won’t arrive until you allow them in iOS Settings.",
+		action: "Open Settings",
+		affected: "Affected",
+		reminders: "Reminders",
+		/** "4 times on 3 habits" — enabled times, and the habits they belong to. */
+		remindersImpact: (times: number, habits: number) =>
+			times === 0
+				? "No reminders set"
+				: `${times} ${times === 1 ? "time" : "times"} on ${habits} ${habits === 1 ? "habit" : "habits"}`,
+		evening: "Evening review",
+		eveningImpact: (on: boolean, time: string) => (on ? time : "Off"),
+		note: "Times stay editable while notifications are off. Nothing is deleted.",
+	},
+	streaks: {
+		header: "Streaks",
+		left: "Left this month",
+		used: "Used this month",
+		/** "1 of 2" */
+		leftValue: (left: number, size: number) => `${left} of ${size}`,
+		rule: (size: number) =>
+			`${size} freezes a month, shared by all habits. They don’t roll over.`,
+		/** The Undo window is the toast's own (5 s), so the sentence cannot drift from it. */
+		how: `A freeze keeps a streak when you miss a scheduled day. You use one from the streak-at-risk sheet; Undo works for ${motion.toast.hold.undo / 1000} s.`,
+	},
+	data: {
+		header: "Data",
+		export: "Export data",
+		exportValue: "JSON, CSV",
+	},
+	about: {
+		header: "About",
+		version: "Version",
+		copy: "Copy diagnostics",
+		copyBody: "Version, device and recent errors",
+		copyValue: "Copy",
+	},
+} as const;
+
+/**
+ * Export data (HAB-44, EX1–EX4): choose JSON or CSV, watch it write, then share
+ * the file — or read why it failed. Closing the sheet keeps a running export
+ * going; a toast says when it is ready.
+ */
+export const exportCopy = {
+	title: "Export data",
+	close: "Close",
+	format: "Format",
+	formatLabel: "File format",
+	json: "JSON",
+	csv: "CSV",
+	explain:
+		"JSON has everything, for backup or another app. CSV has one row per log, for spreadsheets.",
+	button: (format: "JSON" | "CSV") => `Export ${format}`,
+	exporting: "Exporting…",
+	writing: (name: string) => `Writing ${name}`,
+	progressNote:
+		"Usually under a second. Closing the sheet keeps it going; a toast says when it’s ready.",
+	/** "48 KB · 9 habits · 1,284 logs" */
+	fileMeta: (size: string, habits: string, logs: string) =>
+		`${size} · ${habits} · ${logs}`,
+	share: "Share file",
+	done: "Done",
+	shareNote:
+		"Share opens the iOS share sheet. The file is temporary — export again if it’s gone.",
+	shareFailed: "Couldn’t share the file. Try again.",
+	failed: {
+		title: "Export failed",
+		/** The reason first, then what did not happen. */
+		storage:
+			"Not enough storage on this iPhone. Nothing was changed — free up space, then retry.",
+		unknown:
+			"Something went wrong while writing the file. Nothing was changed — try again.",
+		retry: "Retry",
+		cancel: "Cancel",
+	},
+} as const;
+
+/** The reminder sheet (F7, R3): the time wheel and the days a time repeats on. */
+export const reminderSheetCopy = {
+	add: "Add time",
+	edit: "Reminder time",
+	eveningTime: "Evening review time",
+	cancel: "Cancel",
+	save: "Save time",
+	repeatOn: "Repeat on",
+	noDays: "Pick at least one day",
+} as const;
+
+/**
  * Shows `spec` as the app's one toast, with an Undo when `undo` is given.
  * Copy and tone come from the catalogue, so a screen never writes its own.
  */
@@ -821,3 +1200,5 @@ export function showMessage<Params extends readonly unknown[]>(
 		...(undo ? { actionLabel: "Undo", onAction: undo } : {}),
 	});
 }
+
+export { notificationCopy };

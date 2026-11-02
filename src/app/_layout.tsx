@@ -13,6 +13,7 @@ import { installGlobalHandlers } from "@/lib/logger/global-handlers";
 import { log } from "@/lib/logger/logger";
 import { configureNotificationHandler } from "@/lib/notifications/notifications";
 import { useStartupActions } from "@/modules/habits/hooks/use-startup-actions";
+import { formCopy } from "@/modules/habits/messages";
 import { loadThemePreference } from "@/theme/theme-preference";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -66,8 +67,14 @@ export { RootErrorBoundary as ErrorBoundary };
 
 export default function RootLayout() {
 	const { colors } = useTheme();
-	const newHabitHeaderOptions = useModalFormHeaderOptions("New habit");
-	const editHabitHeaderOptions = useModalFormHeaderOptions("Edit habit");
+	const newHabitHeaderOptions = useModalFormHeaderOptions(
+		formCopy.newTitle,
+		formCopy.close,
+	);
+	const editHabitHeaderOptions = useModalFormHeaderOptions(
+		formCopy.editTitle,
+		formCopy.close,
+	);
 
 	return (
 		// Gesture handler needs one root view for any gesture in the app (Manage &

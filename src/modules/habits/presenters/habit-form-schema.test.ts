@@ -1,13 +1,14 @@
+import { formCopy } from "../messages";
 import {
 	habitFormSchema,
 	makeHabitFormSchema,
-	NAME_TOO_LONG_MESSAGE,
-	NO_CATEGORY_MESSAGE,
-	NO_TARGET_UNIT_MESSAGE,
-	NO_WEEKDAYS_MESSAGE,
 	toFrequency,
 	toFrequencyFormValues,
 } from "./habit-form-schema";
+
+const NAME_TOO_LONG_MESSAGE = formCopy.name.tooLong(32);
+const NO_WEEKDAYS_MESSAGE = formCopy.frequency.noDays;
+const NO_TARGET_UNIT_MESSAGE = formCopy.goal.unitMissing;
 
 const validInput = {
 	name: "Read",
@@ -27,11 +28,11 @@ describe("habitFormSchema", () => {
 		expect(result.success).toBe(true);
 	});
 
-	it("rejects an empty name with the spec's exact message", () => {
+	it("rejects an empty name ", () => {
 		const result = habitFormSchema.safeParse({ ...validInput, name: "" });
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.error.issues[0]?.message).toBe("Give this habit a name.");
+			expect(result.error.issues[0]?.message).toBe(formCopy.save.needsName);
 		}
 	});
 
@@ -81,18 +82,12 @@ describe("habitFormSchema", () => {
 		expect(result.success).toBe(true);
 	});
 
-	it("blocks a habit with no category picked (HAB-24)", () => {
+	it("accepts no category: the habit goes to Other (HAB-41)", () => {
 		const result = habitFormSchema.safeParse({
 			...validInput,
 			categoryId: null,
 		});
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0]).toMatchObject({
-				path: ["categoryId"],
-				message: NO_CATEGORY_MESSAGE,
-			});
-		}
+		expect(result.success).toBe(true);
 	});
 
 	it("rejects Specific weekdays with no days picked", () => {

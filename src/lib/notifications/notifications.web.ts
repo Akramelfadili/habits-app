@@ -13,7 +13,9 @@ import type { NotificationPermission } from "./notifications";
 function fixturePermission(): NotificationPermission {
 	const search = globalThis.location?.search ?? "";
 	const scenario = new URLSearchParams(search).get("fixtures");
-	return scenario === "reminders" || scenario === "settings-notifications-off"
+	return scenario === "reminders" ||
+		scenario === "reminders-times-denied" ||
+		scenario === "settings-notifications-off"
 		? "denied"
 		: "granted";
 }

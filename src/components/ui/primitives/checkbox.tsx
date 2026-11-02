@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
+import { cellRadius, minTouchTarget, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type CheckboxProps = {
@@ -8,7 +9,11 @@ type CheckboxProps = {
 	accessibilityLabel: string;
 };
 
-/** Checked (filled ink circle + checkmark) / unchecked (outline circle) — First Run's suggestion rows (HAB-06). */
+/**
+ * V3-21: a 24 pt square (radius rule) — checked is the accent fill with a
+ * checkmark, unchecked the 3:1 outline. A square is a settings choice and a
+ * circle is a habit done, so this is for multi-select only (suggestions, export).
+ */
 export function Checkbox({
 	checked,
 	onPress,
@@ -31,7 +36,7 @@ export function Checkbox({
 				style={[
 					styles.base,
 					checked
-						? { backgroundColor: colors.ink }
+						? { backgroundColor: colors.accent }
 						: {
 								backgroundColor: "transparent",
 								borderWidth: 1.5,
@@ -47,22 +52,24 @@ export function Checkbox({
 	);
 }
 
+const BOX = 24;
+
 const styles = StyleSheet.create({
 	// A 44pt touch area around the 24pt circle. The negative margin gives the
 	// extra back, so the row lays out as before; it reaches only into the
 	// host row's own padding (never a sibling), which is why this is not a
 	// hitSlop — it can't spill over adjacent controls.
 	touch: {
-		width: 44,
-		height: 44,
-		margin: -10,
+		width: minTouchTarget,
+		height: minTouchTarget,
+		margin: -space[250],
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	base: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
+		width: BOX,
+		height: BOX,
+		borderRadius: cellRadius(BOX),
 		alignItems: "center",
 		justifyContent: "center",
 	},

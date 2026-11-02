@@ -85,4 +85,43 @@ describe("category-repository.web (HAB-25)", () => {
 			(await getCategories()).find((c) => c.id === OTHER_FIXTURE.id)?.name,
 		).toBe("Other");
 	});
+
+	it("reorders every movable category and keeps Other last (C2)", async () => {
+		const { createCategory, getCategories, reorderCategories } =
+			loadRepositories();
+		const music = await createCategory({
+			name: "Music",
+			shape: "ring",
+			hue: 330,
+		});
+		const all = await getCategories();
+		const movable = all.filter((c) => c.name !== OTHER_FIXTURE.name);
+		await reorderCategories([
+			music.id,
+			...movable.filter((c) => c.id !== music.id).map((c) => c.id),
+		]);
+		const after = await getCategories();
+		expect(after[0].name).toBe("Music");
+		expect(after.at(-1)?.name).toBe(OTHER_FIXTURE.name);
+		expect(after).toHaveLength(all.length);
+	});
+
+	it("deletes an unused custom and restores it where it stood (DC6)", async () => {
+		const { createCategory, deleteCategory, restoreCategory, getCategories } =
+			loadRepositories();
+		const music = await createCategory({
+			name: "Music",
+			shape: "ring",
+			hue: 330,
+		});
+		await createCategory({ name: "Garden", shape: "square", hue: 95 });
+		const before = (await getCategories()).map((c) => c.name);
+
+		const deleted = await deleteCategory(music.id);
+		expect(deleted.category.name).toBe("Music");
+		expect((await getCategories()).map((c) => c.name)).not.toContain("Music");
+
+		await restoreCategory(deleted);
+		expect((await getCategories()).map((c) => c.name)).toEqual(before);
+	});
 });

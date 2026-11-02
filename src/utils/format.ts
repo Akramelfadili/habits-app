@@ -6,7 +6,7 @@ import { format, isSameYear } from "date-fns";
  */
 
 /** Spaced en dash between the two ends of a date range: "3 Mar – 16 Sep". */
-export const RANGE_DASH = " – ";
+const RANGE_DASH = " – ";
 
 /** 1612 → "1,612" — independent of the device's locale data. */
 export function formatCount(value: number): string {

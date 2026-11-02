@@ -1,10 +1,12 @@
 import { toDayKey } from "@/utils/day-key";
 import type {
+	Category,
 	Entry,
 	EntryNote,
 	ExportOptions,
 	FrozenDay,
 	Habit,
+	Reminder,
 } from "../types";
 import { calculateLongestStreak, currentStreakAsOf } from "./habit-history";
 import { isEntryComplete } from "./streaks";
@@ -21,9 +23,13 @@ export type ExportSource = {
 	entries: readonly Entry[];
 	notes: readonly EntryNote[];
 	frozenDays: readonly FrozenDay[];
+	/** Every reminder row — the file carries each habit's own (HAB-44). */
+	reminders: readonly Reminder[];
+	/** Every category in the stored order, so the file keeps the group order too. */
+	categories: readonly Category[];
 };
 
-export type ExportLog = {
+type ExportLog = {
 	date: string;
 	/** The logged amount for a quantity habit; null for a simple check. */
 	value: number | null;
@@ -31,18 +37,21 @@ export type ExportLog = {
 	completed: boolean;
 };
 
-export type ExportHabitRecord = {
+type ExportHabitRecord = {
 	habit: Habit;
 	currentStreak: number;
 	longestStreak: number;
 	logs: ExportLog[];
 	notes: { date: string; note: string }[];
 	frozenDates: string[];
+	reminders: Reminder[];
 };
 
 export type ExportModel = {
 	/** The day the export was made, "yyyy-MM-dd". */
 	exportedOn: string;
+	/** Every category, in the stored order (built-in or yours), whether or not a habit uses it. */
+	categories: Category[];
 	habits: ExportHabitRecord[];
 	logCount: number;
 	noteCount: number;
@@ -101,11 +110,15 @@ export function buildExportModel(
 				.map(({ date, note }) => ({ date, note }))
 				.sort(byDate),
 			frozenDates,
+			reminders: source.reminders
+				.filter((reminder) => reminder.habitId === habit.id)
+				.sort((a, b) => a.hour - b.hour || a.minute - b.minute),
 		};
 	});
 
 	return {
 		exportedOn: toDayKey(today),
+		categories: [...source.categories],
 		habits: records,
 		logCount: records.reduce((sum, record) => sum + record.logs.length, 0),
 		noteCount: records.reduce((sum, record) => sum + record.notes.length, 0),

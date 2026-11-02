@@ -11,15 +11,19 @@ jest.mock(
 );
 
 const mockSetSetting = jest.fn();
+const mockGetSetting = jest.fn();
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 	setSetting: (...args: unknown[]) => mockSetSetting(...args),
+	getSetting: (...args: unknown[]) => mockGetSetting(...args),
 }));
 
 const mockUpdateHabit = jest.fn();
 const mockGetHabit = jest.fn();
+const mockGetAllHabits = jest.fn();
 jest.mock("../repositories/habit-repository", () => ({
 	updateHabit: (...args: unknown[]) => mockUpdateHabit(...args),
 	getHabit: (...args: unknown[]) => mockGetHabit(...args),
+	getAllHabits: (...args: unknown[]) => mockGetAllHabits(...args),
 }));
 
 const mockGetHabitReminders = jest.fn();
@@ -41,9 +45,11 @@ import {
 	editReminder,
 	habitNotificationPrefix,
 	ReminderCapError,
+	refreshEveningReview,
 	removeReminder,
 	restoreReminder,
 	setEveningReview,
+	setEveningReviewTime,
 	syncHabitReminders,
 	unscheduledReminderDays,
 	updateHabitAndSyncReminders,
@@ -82,6 +88,9 @@ describe("reminder-service", () => {
 		fake.reset();
 		clearLog();
 		mockGetHabitReminders.mockResolvedValue([]);
+		// By default the evening review is off, and one daily habit exists.
+		mockGetSetting.mockResolvedValue("false");
+		mockGetAllHabits.mockResolvedValue([dailyHabit]);
 	});
 
 	describe("unscheduledReminderDays", () => {
@@ -373,23 +382,27 @@ describe("reminder-service", () => {
 		expect(fake.scheduled.size).toBe(0);
 	});
 
-	describe("addReminder with a pre-selected day (Monthly pattern)", () => {
-		it("starts the new reminder on just that day when the habit can fall on it", async () => {
-			mockCreateReminder.mockResolvedValue(reminder({ weekdays: [6] }));
-			mockGetHabitReminders.mockResolvedValue([]);
-			await addReminder(dailyHabit, [6]);
-			expect(mockCreateReminder).toHaveBeenCalledWith(
-				expect.objectContaining({ habitId: 4, weekdays: [6] }),
+	describe("addReminder with the sheet's time and days (R2)", () => {
+		it("writes exactly the chosen time and days, then syncs", async () => {
+			mockCreateReminder.mockResolvedValue(
+				reminder({ hour: 18, minute: 30, weekdays: [4] }),
 			);
-		});
-
-		it("falls back to every schedulable day when the day isn't one the habit can fall on", async () => {
-			mockCreateReminder.mockResolvedValue(reminder());
-			mockGetHabitReminders.mockResolvedValue([]);
-			await addReminder(weekdayHabit, [6]);
-			expect(mockCreateReminder).toHaveBeenCalledWith(
-				expect.objectContaining({ weekdays: [1, 2, 3, 4, 5] }),
-			);
+			mockGetHabitReminders.mockResolvedValue([
+				reminder({ hour: 18, minute: 30, weekdays: [4] }),
+			]);
+			await addReminder(weekdayHabit, {
+				hour: 18,
+				minute: 30,
+				weekdays: [4],
+			});
+			expect(mockCreateReminder).toHaveBeenCalledWith({
+				habitId: 3,
+				hour: 18,
+				minute: 30,
+				weekdays: [4],
+				enabled: true,
+			});
+			expect(scheduledKeys()).toEqual(["habit-3-reminder-1:day-4:1830"]);
 		});
 	});
 
@@ -490,6 +503,32 @@ describe("reminder-service", () => {
 			expect(scheduledKeys()).toEqual(["evening-review:daily:2130"]);
 		});
 
+		it("sends only on days some active habit can be due, never on a day nothing is due (HAB-44)", async () => {
+			mockGetAllHabits.mockResolvedValue([
+				makeHabit({ id: 5, frequency: { type: "weekdays", days: [2, 4] } }),
+				makeHabit({
+					id: 6,
+					frequency: { type: "daily" },
+					archivedAt: new Date(2026, 8, 1),
+				}),
+			]);
+			await setEveningReview(true);
+			expect(scheduledKeys()).toEqual([
+				"evening-review:day-2:2130",
+				"evening-review:day-4:2130",
+			]);
+		});
+
+		it("schedules nothing while no active habit exists, but still saves the flag", async () => {
+			mockGetAllHabits.mockResolvedValue([]);
+			await setEveningReview(true);
+			expect(fake.scheduled.size).toBe(0);
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				"habits.eveningReview",
+				"true",
+			);
+		});
+
 		it("turning on twice leaves one notification, not two", async () => {
 			await setEveningReview(true);
 			await setEveningReview(true);
@@ -522,6 +561,90 @@ describe("reminder-service", () => {
 			await setEveningReview(true);
 			fake.failCancelOn.add(fake.cancelCalls + 1);
 			await expect(setEveningReview(false)).resolves.toBeUndefined();
+		});
+	});
+
+	describe("refreshEveningReview (a habit changed)", () => {
+		it("does nothing while the review is off", async () => {
+			await refreshEveningReview();
+			expect(fake.scheduled.size).toBe(0);
+		});
+
+		it("re-aims the review at the days with open habits, replacing the old set", async () => {
+			mockGetAllHabits.mockResolvedValue([dailyHabit]);
+			await setEveningReview(true);
+			expect(scheduledKeys()).toEqual(["evening-review:daily:2130"]);
+
+			mockGetSetting.mockResolvedValue("true");
+			mockGetAllHabits.mockResolvedValue([
+				makeHabit({ id: 5, frequency: { type: "weekdays", days: [6] } }),
+			]);
+			await refreshEveningReview();
+			expect(scheduledKeys()).toEqual(["evening-review:day-6:2130"]);
+		});
+
+		it("is what a habit save runs: archiving the last habit silences the review", async () => {
+			await setEveningReview(true);
+			mockGetSetting.mockResolvedValue("true");
+			mockGetAllHabits.mockResolvedValue([
+				{ ...dailyHabit, archivedAt: new Date() },
+			]);
+			await cancelHabitNotifications(4);
+			expect(fake.scheduled.size).toBe(0);
+		});
+	});
+	describe("setEveningReviewTime (HAB-44)", () => {
+		/** The settings the evening review reads: its toggle and its stored time. */
+		function settings(values: Record<string, string>) {
+			mockGetSetting.mockImplementation(
+				async (key: string) => values[key] ?? null,
+			);
+		}
+
+		it("stores the time as HH:mm", async () => {
+			settings({ "habits.eveningReview": "false" });
+			await setEveningReviewTime({ hour: 7, minute: 5 });
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				"habits.eveningReviewTime",
+				"07:05",
+			);
+		});
+
+		it("schedules nothing while the review is off", async () => {
+			settings({ "habits.eveningReview": "false" });
+			await setEveningReviewTime({ hour: 7, minute: 5 });
+			expect(fake.scheduled.size).toBe(0);
+		});
+
+		it("moves a running review to the new time, keeping its days", async () => {
+			mockGetAllHabits.mockResolvedValue([
+				makeHabit({ id: 5, frequency: { type: "weekdays", days: [2, 4] } }),
+			]);
+			settings({ "habits.eveningReview": "true" });
+			await refreshEveningReview();
+			expect(scheduledKeys()).toEqual([
+				"evening-review:day-2:2130",
+				"evening-review:day-4:2130",
+			]);
+
+			settings({
+				"habits.eveningReview": "true",
+				"habits.eveningReviewTime": "20:00",
+			});
+			await setEveningReviewTime({ hour: 20, minute: 0 });
+			expect(scheduledKeys()).toEqual([
+				"evening-review:day-2:2000",
+				"evening-review:day-4:2000",
+			]);
+		});
+
+		it("a new habit's review keeps using the chosen time", async () => {
+			settings({
+				"habits.eveningReview": "true",
+				"habits.eveningReviewTime": "06:15",
+			});
+			await refreshEveningReview();
+			expect(scheduledKeys()).toEqual(["evening-review:daily:0615"]);
 		});
 	});
 });

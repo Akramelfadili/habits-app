@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { Banner } from "./banner";
 
@@ -156,5 +157,31 @@ describe("Banner", () => {
 		expect(
 			screen.getByLabelText("Archived on 12 October. Hidden from Today."),
 		).toBeTruthy();
+	});
+
+	it("card with the warning tone is the amber card: warn tint, no outline, title in warn ink (R5, SY6)", async () => {
+		await render(
+			<Banner tone="warning" symbol="bell.slash" title="Notifications are off">
+				Reminders won’t arrive until you allow them.
+			</Banner>,
+		);
+		expect(screen.getByTestId("banner")).toHaveStyle({
+			backgroundColor: semanticColors.light.warnTint,
+		});
+		expect(screen.getByText("Notifications are off")).toHaveStyle({
+			color: semanticColors.light.warnInk,
+		});
+	});
+
+	it("the action link is at least a 44 pt target", async () => {
+		await render(
+			<Banner action={{ label: "Open Settings", onPress: jest.fn() }}>
+				Notifications are off.
+			</Banner>,
+		);
+		const style = StyleSheet.flatten(
+			screen.getByRole("link", { name: "Open Settings" }).props.style,
+		);
+		expect(style.minHeight).toBeGreaterThanOrEqual(44);
 	});
 });

@@ -1,22 +1,31 @@
-import { StyleSheet, Text, View } from "react-native";
-import { typeScale } from "@/theme/theme";
+import type { Ref } from "react";
+import { type HostInstance, StyleSheet, Text, View } from "react-native";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { IconBadge } from "../primitives/icon-badge";
 import { Container } from "./container";
 
 type FileCardProps = {
 	name: string;
-	/** "214 KB · 9 habits · 1,284 entries". */
+	/** "48 KB · 9 habits · 1,284 logs". */
 	meta: string;
+	/** The card's element, for a sheet that moves the screen reader onto the finished file (`useInitialFocus`). */
+	cardRef?: Ref<HostInstance>;
 };
 
-/** NEW-06: the finished export — document badge, file name, size line (HAB-15's ready sheet). */
-export function FileCard({ name, meta }: FileCardProps) {
+/** V3-30: the finished export — a document square, the file name and its size line (EX3). */
+export function FileCard({ name, meta, cardRef }: FileCardProps) {
 	const { colors } = useTheme();
 
 	return (
-		<Container variant="inset">
-			<View testID="file-card" style={styles.row}>
+		<Container variant="outlined">
+			<View
+				ref={cardRef}
+				testID="file-card"
+				accessible
+				accessibilityLabel={`${name}, ${meta}`}
+				style={styles.row}
+			>
 				<IconBadge symbol="doc.text" />
 				<View style={styles.text}>
 					<Text style={[styles.name, { color: colors.ink }]}>{name}</Text>
@@ -31,17 +40,16 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: space[300],
 	},
 	text: {
 		flex: 1,
-		gap: 2,
+		gap: space[50],
 	},
 	name: {
-		fontSize: typeScale.rowLabel,
-		fontWeight: "500",
+		...textStyles.body,
 	},
 	meta: {
-		fontSize: typeScale.caption,
+		...textStyles.footnote,
 	},
 });

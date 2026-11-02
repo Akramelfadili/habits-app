@@ -1,5 +1,9 @@
 import type { ExportSource } from "../domain/export-data";
-import { categoryNamed, makeHabit } from "./habit-builder";
+import {
+	categoryNamed,
+	makeHabit,
+	TEST_BUILT_IN_CATEGORIES,
+} from "./habit-builder";
 
 /** Wednesday 16 Sep 2026 — the day every export test runs "on". */
 export const EXPORT_TODAY = new Date(2026, 8, 16, 12);
@@ -45,5 +49,24 @@ export function makeExportSource(): ExportSource {
 			{ habitId: 1, date: "2026-09-15", note: 'Línea uno, "dos"\nlínea tres' },
 		],
 		frozenDays: [{ id: 1, habitId: 2, date: "2026-09-02", createdAt: created }],
+		reminders: [
+			{
+				id: 1,
+				habitId: 1,
+				hour: 18,
+				minute: 30,
+				weekdays: [4],
+				enabled: true,
+			},
+			{
+				id: 2,
+				habitId: 1,
+				hour: 7,
+				minute: 0,
+				weekdays: [2, 4],
+				enabled: false,
+			},
+		],
+		categories: [...TEST_BUILT_IN_CATEGORIES, categoryNamed("Morning")],
 	};
 }

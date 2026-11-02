@@ -26,9 +26,5 @@
 	{
 		"rule": "date-args",
 		"file": "src/modules/habits/test-support/habit-builder.ts"
-	},
-	{
-		"rule": "hex-colour",
-		"file": "src/components/ui/primitives/category-chip.tsx"
 	}
 ]

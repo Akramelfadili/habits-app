@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 import { SheetHeader } from "./sheet-header";
 
 describe("SheetHeader", () => {
@@ -22,5 +23,23 @@ describe("SheetHeader", () => {
 		);
 		await fireEvent.press(screen.getByRole("button", { name: "Close" }));
 		expect(onAction).toHaveBeenCalledTimes(1);
+	});
+
+	it("starts the screen reader on the title once the sheet has settled (08.4)", async () => {
+		jest.useFakeTimers();
+		const focus = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation();
+		await render(
+			<SheetHeader title="Add time" actionLabel="Cancel" onAction={() => {}} />,
+		);
+		expect(focus).not.toHaveBeenCalled();
+		await act(async () => {
+			jest.advanceTimersByTime(500);
+		});
+		expect(focus).toHaveBeenCalledTimes(1);
+		expect(focus.mock.calls[0][1]).toBe("focus");
+		focus.mockRestore();
+		jest.useRealTimers();
 	});
 });

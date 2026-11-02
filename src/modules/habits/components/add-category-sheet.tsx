@@ -1,36 +1,28 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Keyboard, StyleSheet, Text, View } from "react-native";
+import { Keyboard, StyleSheet, View } from "react-native";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
 import { Button } from "@/components/ui/primitives/button";
 import { CategoryChip } from "@/components/ui/primitives/category-chip";
+import { FieldHelper } from "@/components/ui/primitives/field-helper";
+import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { TextField } from "@/components/ui/primitives/text-field";
-import { habitAccentInk, habitAccentTint, typeScale } from "@/theme/theme";
+import { habitAccentInk, habitAccentTint, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { MAX_CATEGORY_NAME_LENGTH } from "../constants";
 import {
 	findDuplicateCategory,
 	nextCategoryAppearance,
 } from "../domain/category-rules";
+import { categoriesCopy } from "../messages";
 import type { Category, CreateCategoryInput } from "../types";
 import {
 	type CategoryNameFormValues,
-	duplicateCategoryMessage,
 	makeCategoryNameSchema,
-	NO_CATEGORY_NAME_MESSAGE,
 } from "./category-name-schema";
 import { categorySymbol } from "./category-symbol";
-
-/** The preview chip's label before anything's typed (F2a). */
-const PREVIEW_PLACEHOLDER = "Your category";
-
-/** NEW-24 error under the field when the write itself fails — same slot as a duplicate. */
-export const CREATE_FAILED_MESSAGE = "Couldn't add this category. Try again.";
-
-const PREVIEW_CAPTION =
-	"Icon and colour are picked for you, so it stands apart from your other categories.";
 
 type AddCategorySheetProps = {
 	visible: boolean;
@@ -65,7 +57,7 @@ function AddCategoryForm({
 	onCreated,
 	isCreating = false,
 }: AddCategorySheetProps) {
-	const { colors, scheme } = useTheme();
+	const { scheme } = useTheme();
 	const schema = useMemo(
 		() => makeCategoryNameSchema(categories),
 		[categories],
@@ -86,7 +78,8 @@ function AddCategoryForm({
 	const trimmed = name.trim();
 	const duplicate = findDuplicateCategory(categories, name);
 	const appearance = nextCategoryAppearance(categories);
-	const blockedReason = trimmed === "" ? NO_CATEGORY_NAME_MESSAGE : undefined;
+	const blockedReason =
+		trimmed === "" ? categoriesCopy.addSheet.needsName : undefined;
 
 	const submit = handleSubmit(async (values) => {
 		let created: Category;
@@ -94,7 +87,10 @@ function AddCategoryForm({
 			created = await onCreate({ name: values.name, ...appearance });
 		} catch {
 			// The sheet stays open with the name kept, so retrying is one tap.
-			setError("name", { type: "create", message: CREATE_FAILED_MESSAGE });
+			setError("name", {
+				type: "create",
+				message: categoriesCopy.addSheet.failed,
+			});
 			return;
 		}
 		onCreated(created);
@@ -103,8 +99,8 @@ function AddCategoryForm({
 	return (
 		<>
 			<SheetHeader
-				title="New category"
-				actionLabel="Cancel"
+				title={categoriesCopy.addSheet.title}
+				actionLabel={categoriesCopy.addSheet.close}
 				onAction={onDismiss}
 			/>
 			<View style={styles.field}>
@@ -113,8 +109,8 @@ function AddCategoryForm({
 					name="name"
 					render={({ field }) => (
 						<TextField
-							label="Name"
-							placeholder="e.g. Journaling"
+							label={categoriesCopy.addSheet.name}
+							placeholder={categoriesCopy.addSheet.placeholder}
 							value={field.value}
 							onChangeText={(text) => {
 								// A failed add's message is about the last attempt, not this edit.
@@ -123,10 +119,9 @@ function AddCategoryForm({
 							}}
 							onBlur={field.onBlur}
 							maxLength={MAX_CATEGORY_NAME_LENGTH}
-							nearLimitCounter
-							warning={
+							error={
 								duplicate
-									? duplicateCategoryMessage(duplicate)
+									? categoriesCopy.duplicate(duplicate.name)
 									: errors.name?.message
 							}
 							autoFocus
@@ -139,12 +134,14 @@ function AddCategoryForm({
 				/>
 			</View>
 			{duplicate ? null : (
-				<View
-					testID="category-preview"
-					style={[styles.preview, { backgroundColor: colors.inner }]}
-				>
+				<View testID="category-preview" style={styles.preview}>
+					<SectionLabel>{categoriesCopy.addSheet.preview}</SectionLabel>
 					<CategoryChip
-						label={trimmed === "" ? PREVIEW_PLACEHOLDER : trimmed}
+						label={
+							trimmed === ""
+								? categoriesCopy.addSheet.previewPlaceholder
+								: trimmed
+						}
 						state="preview"
 						symbol={categorySymbol(appearance)}
 						accent={{
@@ -152,13 +149,13 @@ function AddCategoryForm({
 							ink: habitAccentInk(appearance.hue, scheme),
 						}}
 					/>
-					<Text style={[styles.caption, { color: colors.sub }]}>
-						{PREVIEW_CAPTION}
-					</Text>
+					<FieldHelper plain tone="hint">
+						{categoriesCopy.addSheet.note}
+					</FieldHelper>
 				</View>
 			)}
 			<Button
-				label="Add category"
+				label={categoriesCopy.addSheet.submit}
 				onPress={submit}
 				disabled={trimmed === "" || duplicate !== undefined || isCreating}
 				disabledReason={blockedReason}
@@ -170,18 +167,9 @@ function AddCategoryForm({
 
 const styles = StyleSheet.create({
 	field: {
-		// Room for TextField's outline, which sits 10px outside its content.
-		padding: 10,
+		paddingTop: space[100],
 	},
 	preview: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 12,
-		borderRadius: 14,
-		padding: 12,
-	},
-	caption: {
-		flex: 1,
-		fontSize: typeScale.caption,
+		gap: space[150],
 	},
 });

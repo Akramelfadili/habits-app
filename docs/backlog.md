@@ -17,7 +17,7 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 - **Left out of B8/B9** (reasons in `docs/audits/audit.md` §21): A5-14 discard prompt (product call), A5-21 placeholder tabs (product call), A5-10 Back-label derivation (touches the stack layout), A6-04 Today row double stop and at-risk in the label, A6-07 time wheel label, A6-08 decorative icons, A6-11 heatmap-cell focus, A6-14 reorder handle actions, A6-15 sheet scrim/focus management. Un-doable without a device pass: A6-12's Dynamic Type sizes beyond the scroll fallbacks added.
 - **Undo is not offered for** reordering in Manage (the drag is its own reverse), the Retro-log Save (a deliberate sheet; reopen to change) and Delete habit / category (confirm-only by spec, HAB-13/25).
-- **Touch-target exceptions** (reviewer-flagged): the Checkbox's 44 pt box uses a −10 margin that reaches into its host row's padding (device-check on Android, where a child outside its parent's bounds may not receive touches); Stepper −/+ (6), compact/small Buttons (8), the reorder handle and `MovedSettingPointer` keep a hitSlop; none were adjacent-target regressions introduced here, but they are not yet 44 pt by footprint.
+- **Touch-target exceptions** (reviewer-flagged): the Checkbox's 44 pt box uses a −10 margin that reaches into its host row's padding (device-check on Android, where a child outside its parent's bounds may not receive touches); Stepper −/+ (6), compact/small Buttons (8), the reorder handle keep a hitSlop; none were adjacent-target regressions introduced here, but they are not yet 44 pt by footprint.
 - **`?addTime=<day>` adds the reminder on arrival** (with the OS permission prompt, like "Add a time"); dismissing the time picker leaves the default-time reminder, which can be removed with Undo. If the day isn't one the habit can fall on, the new reminder falls back to every schedulable day (untested edge).
 - **Archive on Edit habit discards unsaved form edits** without a prompt (A5-14, deferred). `restoreReminder` stamps a new `createdAt` (id, time, days and on/off are preserved).
 - **The partial quantity pie** on Today (a habit logged below target) keeps its `border`-toned track; only unchecked outlines moved to the 3:1 `outline` token. Revisit with the next Today visual pass.
@@ -56,7 +56,6 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 ## Open — tidy-ups
 
-- **Remove NEW-27 and its pointer on Reminders.** `MovedSettingPointer` (`components/ui/composite/moved-setting-pointer.tsx`, its test, and its use in `reminders-screen.tsx`) is temporary, tagged `TODO(backlog): remove`. Mockup E4: "for V2.0 only — remove in a later release." Removing it also removes the "Settings back reads 'Today' when opened from Reminders" quirk.
 - **`toggleEveningReview` lives in `use-reminder-actions.ts`** though Settings is its only home (`useSettingsActions` composes it). Move it next to Settings' hook. `setEveningReview` in `reminder-service.ts` and the evening-review notification are untouched.
 - **The Today menu computes the full monthly summary only for the subline.** Consider a lighter selector (Yearly's row already uses one).
 - **`PATTERN_CAUSE_SHARE = 0.25` is weaker than the spec's "explains most of the pattern".** Kept to match C3's "a third" copy; revisit with real data.
@@ -242,6 +241,60 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **Maestro `hab-13-manage-archive-delete` still describes the old Manage screen** and was not run (V3-6 rewrites the flows for the three tabs).
 - **Scenarios left in the web fixtures:** `manage-archive` still backs Today's long-list state and `manage-all-archived` the all-archived Habits state; `habit-detail`, `habit-detail-new`, `habit-detail-bonus`, `habit-detail-archived` and `no-freezes` are no longer used by a visual-check state (dev seeds still read `habit-detail`). `manage-nothing-archived` was removed.
 
+## Open — V3-4b (Add / Edit habit form, Categories)
+
+Deviations from the mockup / spec and what was left out; each is deliberate unless marked. Steps 4–7 add their own entries below.
+
+- **Frequency has three options — Daily, Specific days, × per week — not the mockup's four.** F1–F10 draw a "Weekdays" chip; HAB-41 lists three and the old "Weekdays shortcut" is gone. Mon–Fri is two taps on the weekday chips. (Spec wins; owner's decision.)
+- **No icon / colour row (F2, F6).** The category supplies both; the mockup's "Icon and colour · tap to change" row and the F6 pickers are not built (spec wins).
+- **All categories show in the form, not five (F1, F2).** The frames truncate to five chips for brevity; every category is a chip, then "New category". F6 draws the full set.
+- **A picked category clears with a second tap**, since the category is optional; no habit is ever saved without one (it goes to Other).
+- **The duplicate-name check includes archived habits** (case- and space-insensitive), so a restore never leaves two habits with one name.
+- **Reminders are queued on New habit only.** Edit habit has no Reminders section: its reminders are the Reminders screen's (HAB-43, step 4). The queued times are written after the habit; if one fails, the habit stays and a warning toast says so.
+- **The "Discard changes?" prompt is drawn in-app (`AlertDialog`), not the system alert**, so web and the Maestro flows see it too. It follows the frame: Keep editing bold first, Discard in danger red, a scrim tap does nothing.
+- **The header button says "Close"** (was "Cancel") on both modals, as the frames do.
+- **Suggestion prefill arrives as the `prefill` route param** (a JSON string, `parseHabitPrefill`) or the `prefill` prop; HAB-46 only has to push `/new-habit?prefill=…`.
+- **Unit error appears once the unit has been left**; until then Save says "Add a unit to save" and the issue count does not include it.
+- **Type is locked in Edit** with "Build and Break can’t be switched after saving." (the frame F9 draws it enabled; direction is fixed at creation, HAB-01).
+- **The live example uses `min(5, target − 1)`** ("5 of 8 glasses"; "1 of 1" for a target of 1).
+
+- **Categories: Reorder is always offered, even with no custom category (C6 draws none).** The built-ins reorder too and Other stays last and fixed, so hiding it would lock the built-in order. Deliberate spec-wins difference from the frame (owner's decision).
+- **Reorder lists every category but Other**, custom and built-in mixed (C2), and the note says "Other stays last." Other keeps the highest `sort_order`; a category added later takes max + 1 and groups still force Other to the end.
+- **Rename has Done only, no Cancel** (C3 draws none; owner's decision): an unchanged name leaves edit mode without writing, an empty or duplicate name blocks Done. The duplicate message sits under the field inside the row, not under the card as the frame draws it.
+- **Delete in use (C5) has no Close.** The frame draws one; V3-25 says confirm sheets end with Cancel. The preview lists each habit with "Outdoors → Other" instead of the frame's single line. A category in use is not undoable (its habits moved); the toast says how many moved. Deleting an unused one is one tap with a 5 s Undo that restores the same row in the same place (`restoreCategory`).
+- **Count lines** read "2 habits · 1 archived", "1 archived" (no active habits left) or "Not used" (none at all); archived habits always count.
+- **`Button` gained `rowAction` / `dangerLink`** (quiet ink and danger text actions inside a row); `Rename` and `Delete` are no longer the old outlined small pills.
+- **The Categories screen draws its own large title** (eyebrow, title, Reorder / +), under the native Back ("Habits" or "Settings"); it does not collapse (Habits' collapsing header is still its own).
+
+
+## Open — V3-4b step 4 (Reminders)
+
+- **The per-reminder on/off toggle is gone** (R2 draws none; HAB-43 lists times, days, remove, edit). A reminder stored as off before V3 shows "Off" on its row and editing it turns it back on. Habit Detail's summary still reads "All off" for such a habit.
+- **`?addTime=<day>` (R4, the insight deep link) is removed**, not built: no V3 insight links to it. The service's `onlyDays` argument became the sheet's full draft (time and days).
+- **One sheet for adding and editing**: `ReminderSheet` (time wheel + days) replaced the time-only sheet; Add time opens it on 09:00 on the days the habit falls on, and nothing is written until Save (it used to write a default row first).
+- **Unscheduled days** (days the habit is never due on) are a warning banner per time under the list, not inside an expandable card; such days are still never scheduled.
+- **The + is hidden at four times** (the note says why) instead of a disabled button.
+
+## Open — V3-4b step 5 (Settings)
+
+- **One screen with five groups, not S1's hub with a page per row.** HAB-44 lists the groups on the pushed screen; S2–S6 are drawn as separate pages (Theme, Evening review, Freezes, Export, About) and SY6 as a Notifications page. Their content is the group's content here; nothing links onward except Export data (the export sheet). Spec wins.
+- **Theme is three radio rows** (Light, Dark, System with "Follows iOS · now dark"), as S2 draws, not the old segmented control.
+- **The evening review's time is editable** (step 7): the Time row opens the shared time wheel in a sheet with no days picker; it is stored in `habits.eveningReviewTime` and the default stays 21:30 (the spec fixes none; the frames' 21:00 is not copied). Changing it rebuilds the notifications while the review is on.
+- **"Sent only on days with open habits" is built as: only on the weekdays some active habit can be due** (`eveningReviewDays`). It is re-aimed after a habit is created, rescheduled, archived, restored or deleted, and by the launch reconcile. It cannot know at fire time whether today's habits are already done (a local notification has no logic); "closing the day" stays Later.
+- **SY6's Notifications page is the Reminders group while iOS permission is off**: one banner with Open Settings, then Affected rows ("4 times on 3 habits", the evening review's time or Off) and "Times stay editable…". The rows are information, not links to R5 / S3.
+- **Streaks shows "Left this month 1 of 2" and "Used this month" from the freeze query**, with the rule and how to use one in words. S4's "Saved … streaks this year" is dropped (PR-08) and Auto-use freezes is Later.
+- **Not built, by decision or because they are Later:** iCloud backup row, Privacy and Send feedback rows (S6, no spec), the old Categories row (the Habits tab owns it), Last export, Database schema.
+- **`SettingsGroup`, `ScopeChip` and the settings-helpers copy (appearance caption, evening footnote, diagnostics strings, export row subtitle) are deleted**; their copy lives in `settingsCopy` and the toast catalogue.
+
+## Open — V3-4b step 6 (Export)
+
+- **One sheet with four states of one export** (choose → writing → ready | failed), replacing the confirm sheet with its counts, the archived toggle, the "Export ready" screen and "Cancel export". Archived habits are always included; the Save to Files button is gone (EX3 draws Share file and Done), so `saveFileToFolder` and `isPickerCancellation` were deleted from `lib/file-export` (step 8); "Save to Files" is the share sheet's own action.
+- **The progress bar is a real percentage** (entries written ÷ entries), as EX2 draws, not indeterminate: the serializer reports it per habit chunk. It still reads "Usually under a second" because it is.
+- **The export lives in a store (`useExportStore`)**, not in the sheet: closing the sheet while it writes leaves it running, a toast ("Export ready · habits-….json") says when it is ready, and a failure while closed toasts an error; either way the next open from Settings or Progress shows where it stands. The toast has no action; the file card is behind Export data.
+- **JSON is the default format** (the frame's); the file gained `categories` (name, built-in, order) and each habit's `reminders` (time, days, on/off). Layout `version` stays 1 (additive). CSV is unchanged (one row per log).
+- **The failure reason is the frame's copy** ("Not enough storage on this iPhone. Nothing was changed — free up space, then retry."); the size needed is no longer quoted, and Copy diagnostics is no longer offered from the failure (it is in Settings › About).
+- **Export from Progress** opens the same sheet (Progress, Month and Settings share one store), so a running export started from one entry is seen from the others.
+
 ## V3-6 audit list (touch targets and known layout exceptions)
 
 Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.
@@ -251,3 +304,14 @@ Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is de
 - **Year month labels: 44 pt high through hitSlop**, so the hit areas of labels in the band above overlap the last row of cells (not tappable) and the 12 pt gap.
 - **AX3 stacked range list overlays the content** (P11) instead of pushing it down.
 - **One-habit and AX3 week blocks: 40 pt cells with a 2 pt hitSlop** (44 pt in effect), buttons that open Edit this day.
+
+## Open — V3-4b step 7–9 (copy, accessibility, final frames)
+
+- **Focus moves to the error only where there is one to reach.** Save is dimmed while any field issue exists (its reason is its VoiceOver hint), so a failed *submit* is a failed save: focus then moves onto the error above Save. A field error that appears while typing is an `alert` read where it sits. Sheets start VoiceOver on their title (`SheetHeader`) and hold it inside (`accessibilityViewIsModal`); a finished or failed export moves focus onto the file or the error.
+- **Verified by test, not on a device:** labels, roles, hints, selected and checked state, and that the focus call is made (the focus API is mocked). Whether iOS lands on the right element, the reading order and Reduce Motion behaviour are device checks (see the phone checklist in the V3-4b report).
+- **Touch targets:** every new control is 44 pt or more (RemoveButton, the reminder and Settings rows, the format control, buttons, the Banner link, the reorder handle's 28 pt + 8 hitSlop). No exception.
+- **Time row chevron and icon squares are blank on web** (SF Symbols), so Settings' Time and Export rows show no chevron or glyph in the baselines.
+- **Settings dark twins were light** until the final pass (a forced `theme=light` route); fixed. S2 now draws System selected, as its note says.
+- **Test-only exports that knip still lists** (new since V3-4a): `useExportStore`, `refreshEveningReview` (also used inside its own file), `ReminderWithConflicts` — tests import them.
+- **Check on a device:** every `SheetHeader` now starts VoiceOver on its title, including the sheets with a text field (New category, Quantity log); the focus may compete with the field's keyboard.
+- **Left for later (V3-6 / owner):** Privacy and Send feedback rows (no spec); a hub-style Settings with a page per row; the per-reminder on/off toggle (Habit Detail still says "All off" for a legacy off time); real-device checks of notifications, the share sheet and VoiceOver.

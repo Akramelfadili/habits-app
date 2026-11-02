@@ -1,13 +1,12 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { useToastStore } from "@/store/toast-store";
 import { makeExportSource } from "../test-support/export-fixtures";
 import type { ExportOptions } from "../types";
 
 const mockShare = jest.fn();
-const mockSave = jest.fn();
 jest.mock("@/lib/file-export/file-export", () => ({
 	shareFile: (...args: unknown[]) => mockShare(...args),
-	saveFileToFolder: (...args: unknown[]) => mockSave(...args),
 }));
 
 const mockRunExport = jest.fn();
@@ -23,6 +22,8 @@ jest.mock("../services/export-service", () => {
 	return {
 		ExportCancelledError,
 		ExportFailedError,
+		exportFileName: (_today: Date, extension: string) =>
+			`habits-2026-10-23.${extension}`,
 		runExport: (...args: unknown[]) => mockRunExport(...args),
 	};
 });
@@ -31,13 +32,13 @@ import {
 	ExportCancelledError,
 	ExportFailedError,
 } from "../services/export-service";
-import { useExportActions } from "./use-export-actions";
+import { useExportActions, useExportStore } from "./use-export-actions";
 
 const source = makeExportSource();
-const options: ExportOptions = { format: "json", includeArchived: false };
+const options: ExportOptions = { format: "json", includeArchived: true };
 const result = {
 	uri: "file:///habits.json",
-	name: "habits.json",
+	name: "habits-2026-10-23.json",
 	sizeBytes: 2048,
 	mimeType: "application/json",
 	habits: 2,
@@ -46,10 +47,18 @@ const result = {
 
 beforeEach(() => {
 	jest.clearAllMocks();
+	clearLog();
+	useToastStore.setState({ toast: null });
+	useExportStore.setState({
+		phase: { name: "confirm" },
+		openSheets: 0,
+		last: null,
+		shareFailed: false,
+	});
 });
 
-describe("useExportActions", () => {
-	it("starts at confirm, shows progress while running, then ready", async () => {
+describe("useExportActions (EX1–EX4)", () => {
+	it("starts at the format choice, then writes with the file's name and progress, then is ready", async () => {
 		let finish: (value: typeof result) => void = () => {};
 		mockRunExport.mockImplementation(
 			({ onProgress }) =>
@@ -67,6 +76,7 @@ describe("useExportActions", () => {
 		});
 		expect(hook.current.phase).toEqual({
 			name: "progress",
+			fileName: "habits-2026-10-23.json",
 			progress: { done: 2, total: 3 },
 		});
 
@@ -77,152 +87,170 @@ describe("useExportActions", () => {
 		expect(hook.current.phase).toEqual({ name: "ready", result });
 	});
 
-	it("passes the chosen options to the service", async () => {
+	it("passes the chosen options to the service, archived habits included", async () => {
 		mockRunExport.mockResolvedValue(result);
 		const { result: hook } = await renderHook(() => useExportActions());
 		await act(() => hook.current.run(source, options));
 		expect(mockRunExport).toHaveBeenCalledWith(
 			expect.objectContaining({ source, options }),
 		);
+		expect(mockRunExport.mock.calls[0][0].options.includeArchived).toBe(true);
 	});
 
-	it("a failure shows why, and Try again reuses the same options", async () => {
-		mockRunExport.mockRejectedValueOnce(
-			new ExportFailedError({ kind: "storage", neededBytes: 100 }),
-		);
+	it("a second Export tap while one is writing does nothing", async () => {
+		mockRunExport.mockImplementation(() => new Promise(() => {}));
 		const { result: hook } = await renderHook(() => useExportActions());
-		await act(() => hook.current.run(source, options));
-		expect(hook.current.phase).toEqual({
-			name: "failed",
-			reason: { kind: "storage", neededBytes: 100 },
-		});
-
-		mockRunExport.mockResolvedValueOnce(result);
-		await act(() => hook.current.retry());
-		expect(mockRunExport).toHaveBeenLastCalledWith(
-			expect.objectContaining({ source, options }),
-		);
-		expect(hook.current.phase.name).toBe("ready");
-	});
-
-	it("cancel aborts the run and returns to confirm", async () => {
-		mockRunExport.mockImplementation(
-			({ signal }: { signal: AbortSignal }) =>
-				new Promise((_, reject) => {
-					signal.addEventListener("abort", () =>
-						reject(new ExportCancelledError()),
-					);
-				}),
-		);
-		const { result: hook } = await renderHook(() => useExportActions());
-		let running: Promise<void> = Promise.resolve();
 		await act(async () => {
-			running = hook.current.run(source, options);
+			void hook.current.run(source, options);
 		});
-		expect(hook.current.phase.name).toBe("progress");
-
 		await act(async () => {
-			hook.current.cancel();
-			await running;
+			void hook.current.run(source, options);
 		});
-		expect(hook.current.phase.name).toBe("confirm");
+		expect(mockRunExport).toHaveBeenCalledTimes(1);
 	});
 
-	it("shares and saves the finished file", async () => {
-		mockRunExport.mockResolvedValue(result);
-		const { result: hook } = await renderHook(() => useExportActions());
-		await act(() => hook.current.run(source, options));
+	describe("closing the sheet keeps it running (EX2)", () => {
+		it("a reset while writing changes nothing, and a toast says when it is ready", async () => {
+			let finish: (value: typeof result) => void = () => {};
+			mockRunExport.mockImplementation(
+				() =>
+					new Promise((resolve) => {
+						finish = resolve;
+					}),
+			);
+			const { result: hook } = await renderHook(() => useExportActions());
+			let running: Promise<void> = Promise.resolve();
+			await act(async () => {
+				hook.current.trackSheet(1);
+				running = hook.current.run(source, options);
+			});
+			await act(async () => {
+				hook.current.reset();
+				hook.current.trackSheet(-1);
+			});
+			expect(hook.current.phase.name).toBe("progress");
 
-		await act(() => hook.current.share());
-		expect(mockShare).toHaveBeenCalledWith(result.uri, result.mimeType);
-		await act(() => hook.current.saveToFiles());
-		expect(mockSave).toHaveBeenCalledWith(result.uri);
-	});
+			await act(async () => {
+				finish(result);
+				await running;
+			});
+			expect(hook.current.phase.name).toBe("ready");
+			expect(useToastStore.getState().toast?.message).toBe(
+				"Export ready · habits-2026-10-23.json",
+			);
+		});
 
-	describe("delivering the finished file", () => {
-		async function ready() {
+		it("says nothing in a toast when the sheet is still open", async () => {
+			mockRunExport.mockResolvedValue(result);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(async () => {
+				hook.current.trackSheet(1);
+				await hook.current.run(source, options);
+			});
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
+		it("stays quiet while a second sheet is still open after the first closes", async () => {
+			mockRunExport.mockResolvedValue(result);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(async () => {
+				hook.current.trackSheet(1);
+				hook.current.trackSheet(1);
+				hook.current.trackSheet(-1);
+				await hook.current.run(source, options);
+			});
+			expect(useToastStore.getState().toast).toBeNull();
+		});
+
+		it("a failure while closed toasts it as an error, and the sheet shows it on reopening", async () => {
+			mockRunExport.mockRejectedValue(
+				new ExportFailedError({ kind: "storage", neededBytes: 5000 }),
+			);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.run(source, options));
+			expect(useToastStore.getState().toast).toMatchObject({
+				tone: "error",
+			});
+			expect(hook.current.phase).toEqual({
+				name: "failed",
+				reason: { kind: "storage", neededBytes: 5000 },
+			});
+		});
+
+		it("a finished export is cleared by reset, so the next open starts at the choice", async () => {
 			mockRunExport.mockResolvedValue(result);
 			const { result: hook } = await renderHook(() => useExportActions());
 			await act(() => hook.current.run(source, options));
-			return hook;
-		}
-
-		it("a failing share becomes an inline message, never a rejection", async () => {
-			clearLog();
-			mockShare.mockRejectedValueOnce(new Error("no activity"));
-			const hook = await ready();
-
-			await act(() => hook.current.share());
-
-			expect(hook.current.delivery).toEqual({
-				kind: "error",
-				message: "Couldn't share the file. Try again.",
-			});
-			expect(getLogEntries().filter((e) => e.level === "error")).toHaveLength(
-				1,
-			);
-			expect(hook.current.phase.name).toBe("ready");
-		});
-
-		it("a successful share clears an earlier error", async () => {
-			mockShare.mockRejectedValueOnce(new Error("no activity"));
-			const hook = await ready();
-			await act(() => hook.current.share());
-			expect(hook.current.delivery?.kind).toBe("error");
-
-			mockShare.mockResolvedValueOnce(undefined);
-			await act(() => hook.current.share());
-			expect(hook.current.delivery).toBeNull();
-		});
-
-		it("Save to Files that succeeds says so", async () => {
-			mockSave.mockResolvedValueOnce(true);
-			const hook = await ready();
-			await act(() => hook.current.saveToFiles());
-			expect(hook.current.delivery).toEqual({ kind: "saved" });
-		});
-
-		it("backing out of the folder picker is not a failure and says nothing", async () => {
-			mockSave.mockResolvedValueOnce(false);
-			const hook = await ready();
-			await act(() => hook.current.saveToFiles());
-			expect(hook.current.delivery).toBeNull();
-		});
-
-		it("a failing Save to Files becomes an inline message, never a rejection", async () => {
-			mockSave.mockRejectedValueOnce(new Error("No space left on device"));
-			const hook = await ready();
-
-			await act(() => hook.current.saveToFiles());
-
-			expect(hook.current.delivery).toEqual({
-				kind: "error",
-				message: "Couldn't save the file. Try again.",
-			});
-		});
-
-		it("a new export or a reset forgets the previous delivery result", async () => {
-			mockSave.mockResolvedValueOnce(true);
-			const hook = await ready();
-			await act(() => hook.current.saveToFiles());
-			expect(hook.current.delivery).not.toBeNull();
-
-			await act(() => hook.current.reset());
-			expect(hook.current.delivery).toBeNull();
+			await act(async () => hook.current.reset());
+			expect(hook.current.phase.name).toBe("confirm");
 		});
 	});
 
-	it("an unexpected (non-ExportFailedError) failure is logged and shown as unknown", async () => {
-		clearLog();
-		mockRunExport.mockRejectedValueOnce(new Error("surprise"));
+	it("a failure shows why, and Retry reuses the same options (EX4)", async () => {
+		mockRunExport.mockRejectedValueOnce(
+			new ExportFailedError({ kind: "storage", neededBytes: 5000 }),
+		);
+		mockRunExport.mockResolvedValueOnce(result);
 		const { result: hook } = await renderHook(() => useExportActions());
 
 		await act(() => hook.current.run(source, options));
+		expect(hook.current.phase).toEqual({
+			name: "failed",
+			reason: { kind: "storage", neededBytes: 5000 },
+		});
 
+		await act(() => hook.current.retry());
+		expect(mockRunExport).toHaveBeenCalledTimes(2);
+		expect(mockRunExport.mock.calls[1][0].options).toEqual(options);
+		expect(hook.current.phase.name).toBe("ready");
+	});
+
+	it("an aborted run returns to the format choice", async () => {
+		mockRunExport.mockRejectedValue(new ExportCancelledError());
+		const { result: hook } = await renderHook(() => useExportActions());
+		await act(() => hook.current.run(source, options));
+		expect(hook.current.phase.name).toBe("confirm");
+	});
+
+	it("an unexpected (non-ExportFailedError) failure is logged and shown as unknown", async () => {
+		mockRunExport.mockRejectedValue(new Error("boom"));
+		const { result: hook } = await renderHook(() => useExportActions());
+		await act(() => hook.current.run(source, options));
 		expect(hook.current.phase).toEqual({
 			name: "failed",
 			reason: { kind: "unknown" },
 		});
-		expect(getLogEntries().some((e) => e.level === "error")).toBe(true);
+		expect(
+			getLogEntries().some(
+				(entry) => entry.level === "error" && entry.scope === "export",
+			),
+		).toBe(true);
+	});
+
+	describe("Share file", () => {
+		it("shares the finished file with its type", async () => {
+			mockRunExport.mockResolvedValue(result);
+			mockShare.mockResolvedValue(undefined);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.run(source, options));
+			await act(() => hook.current.share());
+			expect(mockShare).toHaveBeenCalledWith(result.uri, result.mimeType);
+			expect(hook.current.shareFailed).toBe(false);
+		});
+
+		it("a failing share becomes an inline flag, never a rejection", async () => {
+			mockRunExport.mockResolvedValue(result);
+			mockShare.mockRejectedValue(new Error("no share sheet"));
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.run(source, options));
+			await act(() => hook.current.share());
+			expect(hook.current.shareFailed).toBe(true);
+		});
+
+		it("does nothing before there is a file", async () => {
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.share());
+			expect(mockShare).not.toHaveBeenCalled();
+		});
 	});
 });

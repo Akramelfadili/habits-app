@@ -4,10 +4,14 @@ import { makeCategory } from "../test-support/habit-builder";
 const mockCreateCategory = jest.fn();
 const mockRenameCategory = jest.fn();
 const mockDeleteCategory = jest.fn();
+const mockReorderCategories = jest.fn();
+const mockRestoreCategory = jest.fn();
 jest.mock("../repositories/category-repository", () => ({
 	createCategory: (...args: unknown[]) => mockCreateCategory(...args),
 	renameCategory: (...args: unknown[]) => mockRenameCategory(...args),
 	deleteCategory: (...args: unknown[]) => mockDeleteCategory(...args),
+	reorderCategories: (...args: unknown[]) => mockReorderCategories(...args),
+	restoreCategory: (...args: unknown[]) => mockRestoreCategory(...args),
 }));
 
 import { useCategoryActions } from "./use-category-actions";
@@ -67,5 +71,26 @@ describe("useCategoryActions", () => {
 			await pending;
 		});
 		expect(result.current.isDeleting).toBe(false);
+	});
+
+	it("reorders and restores through the repository, never rejecting", async () => {
+		mockReorderCategories.mockResolvedValue(undefined);
+		mockRestoreCategory.mockRejectedValue(new Error("nope"));
+		const { result } = await renderHook(() => useCategoryActions());
+
+		await act(async () => {
+			expect(await result.current.reorderCategories([3, 1, 2])).toMatchObject({
+				ok: true,
+			});
+		});
+		expect(mockReorderCategories).toHaveBeenCalledWith([3, 1, 2]);
+
+		await act(async () => {
+			const restored = await result.current.restoreCategory({
+				category: makeCategory(),
+				sortOrder: 4,
+			});
+			expect(restored.ok).toBe(false);
+		});
 	});
 });

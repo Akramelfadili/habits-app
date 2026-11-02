@@ -15,6 +15,8 @@ import { FieldHelper } from "./field-helper";
  * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is
  * V3-22's outlined pill with red text for a permanent action — never filled
  * until armed, and never the default focus (Delete confirmation, DC1);
+ * `rowAction` is a quiet ink text action inside a row (a category's Rename, C1)
+ * and `dangerLink` the same in red for a permanent one (its Delete);
  * `compact` is V3-22's 36 pt pill on the inset surface — a row's Restore (H5) —
  * with the 44 pt hit area the other compact buttons get from their hit slop.
  */
@@ -25,6 +27,8 @@ export type ButtonVariant =
 	| "ghost"
 	| "link"
 	| "inline"
+	| "rowAction"
+	| "dangerLink"
 	| "destructive";
 
 type ButtonProps = {
@@ -43,6 +47,8 @@ type ButtonProps = {
 	disabledReason?: string;
 	/** When the visible label alone is ambiguous — e.g. a row's "Rename" → "Rename Music". */
 	accessibilityLabel?: string;
+	/** What the button does beyond its label; a disabled button reads its `disabledReason` here when none is given. */
+	accessibilityHint?: string;
 };
 
 export function Button({
@@ -55,6 +61,7 @@ export function Button({
 	size = "default",
 	disabledReason,
 	accessibilityLabel,
+	accessibilityHint,
 }: ButtonProps) {
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
@@ -66,7 +73,7 @@ export function Button({
 				? colors.faint
 				: variant === "link"
 					? colors.sub
-					: variant === "destructive"
+					: variant === "destructive" || variant === "dangerLink"
 						? colors.dangerBg
 						: colors.ink;
 
@@ -74,6 +81,9 @@ export function Button({
 		<Pressable
 			accessibilityRole="button"
 			accessibilityLabel={accessibilityLabel}
+			accessibilityHint={
+				accessibilityHint ?? (disabled ? disabledReason : undefined)
+			}
 			accessibilityState={{ disabled: isDisabled, busy: loading }}
 			onPress={onPress}
 			disabled={isDisabled}
@@ -95,7 +105,11 @@ export function Button({
 					borderWidth: 1,
 					borderColor: colors.border,
 				},
-				(variant === "link" || variant === "inline") && styles.link,
+				(variant === "link" ||
+					variant === "inline" ||
+					variant === "rowAction" ||
+					variant === "dangerLink") &&
+					styles.link,
 				variant === "inline" && styles.inline,
 				isDisabled && { opacity: opacity.disabled },
 				pressed && !isDisabled && { opacity: opacity.pressed },
@@ -108,7 +122,11 @@ export function Button({
 					style={[
 						styles.label,
 						variant === "inline" && styles.inlineLabel,
-						(size === "small" || isCompact) && styles.smallLabel,
+						(size === "small" ||
+							isCompact ||
+							variant === "rowAction" ||
+							variant === "dangerLink") &&
+							styles.smallLabel,
 						{ color: textColor },
 					]}
 				>

@@ -15,7 +15,9 @@ import { canHabitFallOn } from "../strategies/frequency-strategy";
 import type { Habit } from "../types";
 import {
 	cancelQuietly,
+	eveningReviewDays,
 	eveningReviewReminder,
+	getEveningReviewTime,
 	habitNotificationPrefix,
 	reminderNotificationId,
 	syncHabitReminders,
@@ -42,10 +44,15 @@ async function expectedKeys(habit: Habit): Promise<string[]> {
 	return keys;
 }
 
-function eveningReviewKey(): string {
-	const { hour, minute } = eveningReviewReminder();
+/** The evening review's triggers for the days with open habits — none when no habit is ever due. */
+function eveningReviewKeys(
+	habits: readonly Habit[],
+	review: { hour: number; minute: number },
+): string[] {
+	const days = eveningReviewDays(habits);
+	const { hour, minute } = eveningReviewReminder(days, review);
 	const time = `${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}`;
-	return `${EVENING_PREFIX}daily:${time}`;
+	return reminderSlots(days).map((slot) => `${EVENING_PREFIX}${slot}:${time}`);
 }
 
 /** Whether what the OS holds is exactly `expected` — right triggers, right times, no duplicate generations. */
@@ -137,15 +144,20 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			identifier.startsWith(EVENING_PREFIX),
 		);
 		const eveningOn = (await getSetting(EVENING_REVIEW_SETTING_KEY)) === "true";
+		const eveningTime = await getEveningReviewTime();
 		if (!eveningOn) {
 			if (await cancelQuietly(eveningOwned, "reconcile: evening review off")) {
 				cancelled += eveningOwned.length;
 			}
-		} else if (!matches(eveningOwned, [eveningReviewKey()])) {
-			const created = await scheduleReminder(
-				eveningReviewReminder(),
-				newGeneration(),
-			);
+		} else if (!matches(eveningOwned, eveningReviewKeys(habits, eveningTime))) {
+			const days = eveningReviewDays(habits);
+			const created =
+				days.length === 0
+					? []
+					: await scheduleReminder(
+							eveningReviewReminder(days, eveningTime),
+							newGeneration(),
+						);
 			await cancelQuietly(
 				eveningOwned.filter((identifier) => !created.includes(identifier)),
 				"reconcile: replace the evening review",

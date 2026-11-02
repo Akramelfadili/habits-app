@@ -1,11 +1,14 @@
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { seedHabitWithHistory, seedStreakAtRiskHabit } from "../dev/dev-seeds";
-import { createHabit, deleteAllHabits } from "../repositories/habit-repository";
+import { deleteAllHabits } from "../repositories/habit-repository";
+import { createHabitWithReminders } from "../services/habit-create-service";
 import { updateHabitAndSyncReminders } from "../services/reminder-service";
 
 export function useHabitActions() {
-	const create = useAsyncAction(createHabit, { scope: "habit-form" });
+	const create = useAsyncAction(createHabitWithReminders, {
+		scope: "habit-form",
+	});
 	// A schedule change moves which reminder days are real (HAB-12), so an
 	// edit re-syncs the habit's notifications along with the write.
 	const update = useAsyncAction(updateHabitAndSyncReminders, {

@@ -1,4 +1,5 @@
 import { WEEKDAY_SHORTCUT, WEEKDAYS } from "../constants";
+import { reminderDaysCopy } from "../messages";
 import type { IsoWeekday, Reminder } from "../types";
 
 const SHORT_DAY_NAMES: Record<IsoWeekday, string> = {
@@ -21,16 +22,6 @@ function joinList(items: string[]): string {
 	return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
-/** An ISO weekday from a route param ("1"–"7"); anything else is undefined. */
-export function parseWeekdayParam(
-	value: string | undefined,
-): IsoWeekday | undefined {
-	const day = Number(value);
-	return value !== undefined && Number.isInteger(day) && day >= 1 && day <= 7
-		? (day as IsoWeekday)
-		: undefined;
-}
-
 /** 24-hour "07:20" — the time's own display, and its screen-reader name. */
 export function formatReminderTime({
 	hour,
@@ -42,13 +33,13 @@ export function formatReminderTime({
 /** A reminder card's subtitle: "Every day", "Weekdays", or "Mon, Wed, Fri". */
 export function reminderDaysLabel(weekdays: readonly IsoWeekday[]): string {
 	const days = [...new Set(weekdays)].sort((a, b) => a - b);
-	if (days.length === 0) return "No days";
-	if (days.length === 7) return "Every day";
+	if (days.length === 0) return reminderDaysCopy.none;
+	if (days.length === 7) return reminderDaysCopy.everyDay;
 	if (
 		days.length === WEEKDAY_SHORTCUT.length &&
 		WEEKDAY_SHORTCUT.every((day) => days.includes(day))
 	) {
-		return "Weekdays";
+		return reminderDaysCopy.weekdays;
 	}
 	return days.map((day) => SHORT_DAY_NAMES[day]).join(", ");
 }
@@ -56,19 +47,5 @@ export function reminderDaysLabel(weekdays: readonly IsoWeekday[]): string {
 /** The inline warning under a reminder set for days the habit isn't scheduled on. */
 export function unscheduledDaysWarning(days: readonly IsoWeekday[]): string {
 	const names = joinList(days.map(dayName));
-	return days.length === 1
-		? `${names} is not a scheduled day for this habit — this reminder would fire for nothing.`
-		: `${names} are not scheduled days for this habit — this reminder would fire for nothing.`;
-}
-
-/** Habit Detail's Reminders row subtitle: "None set", "All off", or "2 on · 07:20, 21:00". */
-export function remindersSummary(reminders: readonly Reminder[]): string {
-	if (reminders.length === 0) return "None set";
-	const on = reminders.filter((reminder) => reminder.enabled);
-	if (on.length === 0) return "All off";
-	return `${on.length} on · ${on.map(formatReminderTime).join(", ")}`;
-}
-
-export function reminderCountLabel(count: number, cap: number): string {
-	return `${count} of ${cap}`;
+	return reminderDaysCopy.unscheduled(names, days.length);
 }

@@ -1,24 +1,9 @@
 import type { Reminder } from "../types";
 import {
 	formatReminderTime,
-	parseWeekdayParam,
-	reminderCountLabel,
 	reminderDaysLabel,
-	remindersSummary,
 	unscheduledDaysWarning,
 } from "./reminders-helpers";
-
-function reminder(overrides: Partial<Reminder> = {}): Reminder {
-	return {
-		id: 1,
-		habitId: 1,
-		hour: 7,
-		minute: 20,
-		weekdays: [1, 2, 3, 4, 5],
-		enabled: true,
-		...overrides,
-	};
-}
 
 describe("reminders-helpers", () => {
 	it("formats times as zero-padded 24-hour", () => {
@@ -44,37 +29,4 @@ describe("reminders-helpers", () => {
 			"Tuesday, Saturday and Sunday are not scheduled days for this habit — this reminder would fire for nothing.",
 		);
 	});
-
-	it("summarizes a habit's reminders for Habit Detail", () => {
-		expect(remindersSummary([])).toBe("None set");
-		expect(remindersSummary([reminder({ enabled: false })])).toBe("All off");
-		expect(
-			remindersSummary([
-				reminder(),
-				reminder({ id: 2, hour: 13, minute: 0, enabled: false }),
-				reminder({ id: 3, hour: 21, minute: 0 }),
-			]),
-		).toBe("2 on · 07:20, 21:00");
-	});
-
-	it("labels the count against the cap", () => {
-		expect(reminderCountLabel(3, 4)).toBe("3 of 4");
-	});
-});
-
-describe("parseWeekdayParam (?addTime=<day>)", () => {
-	it.each([
-		["1", 1],
-		["6", 6],
-		["7", 7],
-	])("reads %s as ISO weekday %i", (value, day) => {
-		expect(parseWeekdayParam(value)).toBe(day);
-	});
-
-	it.each([undefined, "", "0", "8", "-1", "2.5", "sat", "NaN"])(
-		"ignores %p",
-		(value) => {
-			expect(parseWeekdayParam(value)).toBeUndefined();
-		},
-	);
 });

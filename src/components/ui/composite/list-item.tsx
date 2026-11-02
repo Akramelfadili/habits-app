@@ -47,6 +47,17 @@ type ListItemProps = {
 	 */
 	dimmed?: boolean;
 	/**
+	 * A choice among several (Settings' Light / Dark / System): the row becomes a
+	 * radio, announced as selected or not, and draws a check when picked — the
+	 * check, not colour, says which one.
+	 */
+	selected?: boolean;
+	/**
+	 * With `dimmed`: keep `leading` at full opacity and fade only the text (H2).
+	 * An archived habit's muted icon square would otherwise vanish on a white card.
+	 */
+	keepLeading?: boolean;
+	/**
 	 * Held mid-drag in a reorderable list (V3-23 "Reorder · lifted"): the E2
 	 * shadow, and in dark a lighter surface, since height reads as lightness
 	 * there (F-06).
@@ -78,6 +89,8 @@ export function ListItem({
 	trailing,
 	embedded = false,
 	dimmed = false,
+	keepLeading = false,
+	selected,
 	lifted = false,
 	accessibilityLabel,
 	destructive = false,
@@ -91,6 +104,12 @@ export function ListItem({
 
 	const chevron = navigable ? (
 		<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
+	) : selected ? (
+		// Drawn, like the segmented control's check, so the pick shows on web too.
+		<View
+			testID="list-item-check"
+			style={[styles.check, { borderColor: colors.ink }]}
+		/>
 	) : null;
 
 	// `trailing` sits beside the pressable area, not inside it — a trailing
@@ -111,7 +130,10 @@ export function ListItem({
 		>
 			<Pressable
 				ref={buttonRef}
-				accessibilityRole={onPress ? "button" : undefined}
+				accessibilityRole={
+					selected !== undefined ? "radio" : onPress ? "button" : undefined
+				}
+				accessibilityState={selected !== undefined ? { selected } : undefined}
 				accessibilityLabel={accessibilityLabel}
 				accessibilityHint={accessibilityHint}
 				accessibilityActions={accessibilityActions?.map(({ label }) => ({
@@ -138,11 +160,16 @@ export function ListItem({
 						styles.content,
 						// Accessibility sizes stack: the icon, then the text, then the value.
 						largeText && styles.contentStacked,
-						dimmed && { opacity: opacity.dimmed },
+						dimmed && !keepLeading && { opacity: opacity.dimmed },
 					]}
 				>
 					{leading}
-					<View style={styles.text}>
+					<View
+						style={[
+							styles.text,
+							dimmed && keepLeading && { opacity: opacity.dimmed },
+						]}
+					>
 						{titleAccessory ? (
 							<View style={styles.titleRow}>
 								<Text
@@ -200,6 +227,13 @@ export function ListItem({
 }
 
 const styles = StyleSheet.create({
+	check: {
+		width: space[150],
+		height: space[300],
+		borderRightWidth: 2,
+		borderBottomWidth: 2,
+		transform: [{ rotate: "45deg" }],
+	},
 	row: {
 		flexDirection: "row",
 		alignItems: "center",

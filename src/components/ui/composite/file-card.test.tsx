@@ -17,4 +17,9 @@ describe("FileCard", () => {
 		expect(screen.getByText("habits-2026-09-16.csv")).toBeTruthy();
 		expect(screen.getByText("214 KB · 9 habits · 1,284 entries")).toBeTruthy();
 	});
+
+	it("reads as one line for VoiceOver", async () => {
+		await render(<FileCard name="habits.json" meta="48 KB · 9 habits" />);
+		expect(screen.getByLabelText("habits.json, 48 KB · 9 habits")).toBeTruthy();
+	});
 });

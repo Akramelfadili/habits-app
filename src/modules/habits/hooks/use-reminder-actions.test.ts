@@ -40,10 +40,20 @@ describe("useReminderActions", () => {
 		expect(mockAddReminder).toHaveBeenCalledWith(habit, undefined);
 	});
 
-	it("passes a pre-selected day through to the service", async () => {
+	it("passes the sheet's time and days through to the service", async () => {
 		const { result } = await renderHook(() => useReminderActions());
-		await act(() => result.current.addReminder(habit, [6]));
-		expect(mockAddReminder).toHaveBeenCalledWith(habit, [6]);
+		await act(() =>
+			result.current.addReminder(habit, {
+				hour: 18,
+				minute: 30,
+				weekdays: [6],
+			}),
+		);
+		expect(mockAddReminder).toHaveBeenCalledWith(habit, {
+			hour: 18,
+			minute: 30,
+			weekdays: [6],
+		});
 	});
 
 	it("restores a removed reminder through the service", async () => {

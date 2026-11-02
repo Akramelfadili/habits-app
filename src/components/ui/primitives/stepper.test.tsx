@@ -78,4 +78,19 @@ describe("Stepper", () => {
 			expect(onChange).not.toHaveBeenCalled();
 		});
 	});
+
+	it("shows its unit or target under the value (V3-18)", async () => {
+		await render(
+			<Stepper
+				value={8}
+				onChange={jest.fn()}
+				min={1}
+				max={99}
+				accessibilityLabel="daily target"
+				caption="glasses a day"
+			/>,
+		);
+		expect(screen.getByText("8")).toBeTruthy();
+		expect(screen.getByText("glasses a day")).toBeTruthy();
+	});
 });

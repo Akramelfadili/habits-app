@@ -12,6 +12,8 @@ import type { ExportModel } from "./export-data";
 
 const EXPORT_JSON_VERSION = 1;
 
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
 const dateOnly = (date: Date) => format(date, "yyyy-MM-dd");
 
 export async function toJson(
@@ -40,6 +42,11 @@ export async function toJson(
 			entries: record.logs,
 			notes: record.notes,
 			frozenDays: record.frozenDates,
+			reminders: record.reminders.map((reminder) => ({
+				time: `${String(reminder.hour).padStart(2, "0")}:${String(reminder.minute).padStart(2, "0")}`,
+				days: reminder.weekdays.map((day) => DAY_NAMES[day - 1]),
+				enabled: reminder.enabled,
+			})),
 		});
 		logsDone += record.logs.length;
 		await onProgress(logsDone);
@@ -54,6 +61,11 @@ export async function toJson(
 			app: { version, build },
 			schema: schemaVersion,
 			exportedOn: model.exportedOn,
+			categories: model.categories.map((category, index) => ({
+				name: category.name,
+				builtIn: category.builtIn,
+				order: index + 1,
+			})),
 			habits,
 		},
 		null,

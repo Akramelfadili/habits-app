@@ -1,20 +1,10 @@
-import { SymbolView } from "expo-symbols";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { DestructiveConfirmSheet } from "@/components/ui/composite/destructive-confirm-sheet";
-import { Caption } from "@/components/ui/primitives/caption";
-import { CategoryChip } from "@/components/ui/primitives/category-chip";
-import { habitAccentInk, habitAccentTint } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { categoriesCopy } from "../messages";
 import type { Category, CategoryUsage } from "../types";
-import { categorySymbol } from "./category-symbol";
-import {
-	affectedHabitsLine,
-	CANCEL_LABEL,
-	deleteCategoryBody,
-	deleteCategoryConfirmLabel,
-	deleteCategoryHeadline,
-} from "./delete-category-sheet-helpers";
 
 type DeleteCategorySheetProps = {
 	/** The category being deleted, with its habits; null while closed. */
@@ -27,10 +17,12 @@ type DeleteCategorySheetProps = {
 };
 
 /**
- * Delete a custom category (HAB-25). Unused (F4a): a plain confirm. In use
- * (F4b): names the count and shows the move — "Music → Other" with every
- * affected habit listed. No "move habits first" step: the delete always
- * reassigns to Other in the same action.
+ * Delete a custom category (HAB-42). In use (C5): says how many habits move to
+ * Other and that their history and streaks are kept, and lists each one with
+ * its move ("Outdoors → Other") before the "Delete and move 1 habit" button.
+ * Not in use (DC6): one destructive button and Cancel — nothing is lost, so
+ * there is no lock; the Undo toast comes after. There is no "move habits
+ * first" step: the delete always reassigns to Other in the same action.
  */
 export function DeleteCategorySheet({
 	usage,
@@ -39,51 +31,38 @@ export function DeleteCategorySheet({
 	onConfirm,
 	isWorking = false,
 }: DeleteCategorySheetProps) {
-	const { colors, scheme } = useTheme();
+	const { colors } = useTheme();
+	const name = usage?.category.name ?? "";
 	const habitCount = usage?.habitNames.length ?? 0;
-	const accentOf = (category: Category) => ({
-		tint: habitAccentTint(category.hue, scheme),
-		ink: habitAccentInk(category.hue, scheme),
-	});
+	const copy = categoriesCopy.deleteSheet;
 
 	return (
 		<DestructiveConfirmSheet
 			visible={usage !== null}
-			headline={deleteCategoryHeadline(usage?.category.name ?? "")}
-			body={deleteCategoryBody(habitCount)}
+			headline={copy.headline(name)}
+			body={habitCount === 0 ? copy.unused : copy.inUse(habitCount)}
 			preview={
 				usage && habitCount > 0 ? (
 					<Container variant="outlined">
-						<View style={styles.preview}>
-							<View testID="category-move-preview" style={styles.move}>
-								<View style={styles.from}>
-									<CategoryChip
-										label={usage.category.name}
-										state="unselected"
-										symbol={categorySymbol(usage.category)}
-										accent={accentOf(usage.category)}
-									/>
+						<View testID="category-move-preview" style={styles.preview}>
+							{usage.habitNames.map((habit) => (
+								<View key={habit} accessible style={styles.row}>
+									<Text style={[styles.habit, { color: colors.ink }]}>
+										{habit}
+									</Text>
+									<Text style={[styles.move, { color: colors.sub }]}>
+										{copy.move(usage.category.name, other.name)}
+									</Text>
 								</View>
-								<SymbolView
-									name="arrow.right"
-									size={14}
-									tintColor={colors.faint}
-									accessibilityLabel="moves to"
-								/>
-								<CategoryChip
-									label={other.name}
-									state="locked"
-									symbol={categorySymbol(other)}
-									accent={accentOf(other)}
-								/>
-							</View>
-							<Caption>{affectedHabitsLine(usage.habitNames)}</Caption>
+							))}
 						</View>
 					</Container>
 				) : undefined
 			}
-			cancelLabel={CANCEL_LABEL}
-			confirmLabel={deleteCategoryConfirmLabel(habitCount)}
+			cancelLabel={copy.cancel}
+			confirmLabel={
+				habitCount === 0 ? copy.confirmUnused : copy.confirmInUse(habitCount)
+			}
 			onCancel={onKeep}
 			onConfirm={onConfirm}
 			isWorking={isWorking}
@@ -93,15 +72,15 @@ export function DeleteCategorySheet({
 
 const styles = StyleSheet.create({
 	preview: {
-		gap: 10,
+		gap: space[250],
+	},
+	row: {
+		gap: space[50],
+	},
+	habit: {
+		...textStyles.body,
 	},
 	move: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 10,
-	},
-	// Shrinks first, so a long custom name truncates rather than pushing Other off.
-	from: {
-		flexShrink: 1,
+		...textStyles.footnote,
 	},
 });

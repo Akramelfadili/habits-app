@@ -60,6 +60,22 @@ describe("ListItem", () => {
 		expect(screen.getByText("Check")).not.toHaveStyle({ opacity: 0.5 });
 	});
 
+	it("with keepLeading fades the text but leaves the leading icon opaque (H2)", async () => {
+		await render(
+			<ListItem
+				title="Meditate"
+				dimmed
+				keepLeading
+				leading={<Text>Icon</Text>}
+			/>,
+		);
+		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({
+			opacity: 0.5,
+		});
+		expect(screen.getByText("Icon")).not.toHaveStyle({ opacity: 0.5 });
+		expect(screen.getByText("Meditate").parent).toHaveStyle({ opacity: 0.5 });
+	});
+
 	it("is fully opaque by default", async () => {
 		await render(<ListItem title="Meditate" />);
 		expect(screen.getByTestId("list-item-content")).not.toHaveStyle({
@@ -229,6 +245,21 @@ describe("ListItem", () => {
 				StyleSheet.flatten(screen.getByTestId("list-item-content").props.style)
 					.flexDirection,
 			).toBe("column");
+		});
+	});
+
+	it("selected makes it a radio: announced as picked or not, with a check only on the picked one", async () => {
+		const { rerender } = await render(
+			<ListItem title="Dark" selected={false} onPress={jest.fn()} />,
+		);
+		expect(screen.getByRole("radio").props.accessibilityState).toMatchObject({
+			selected: false,
+		});
+		expect(screen.queryByTestId("list-item-check")).toBeNull();
+		await rerender(<ListItem title="Dark" selected onPress={jest.fn()} />);
+		expect(screen.getByTestId("list-item-check")).toBeTruthy();
+		expect(screen.getByRole("radio").props.accessibilityState).toMatchObject({
+			selected: true,
 		});
 	});
 });
