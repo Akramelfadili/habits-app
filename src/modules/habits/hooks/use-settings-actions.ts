@@ -1,6 +1,7 @@
 import { setThemePreference } from "@/theme/theme-preference";
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
+import { setEveningReviewTime } from "../services/reminder-service";
 import { toggleEveningReview } from "./use-reminder-actions";
 
 /**
@@ -20,8 +21,14 @@ export function useSettingsActions() {
 		failure: failureMessage("update", "the Evening review"),
 	});
 
+	const eveningTime = useAsyncAction(setEveningReviewTime, {
+		scope: "settings",
+		failure: failureMessage("save", "the Evening review time"),
+	});
+
 	return {
 		setThemePreference: appearance.run,
 		setEveningReview: eveningReview.run,
+		setEveningReviewTime: eveningTime.run,
 	};
 }

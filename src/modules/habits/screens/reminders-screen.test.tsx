@@ -1,11 +1,11 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useToastStore } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
-import { REMINDER_CAP_MESSAGE } from "../constants";
 import type {
 	ReminderScreenData,
 	ReminderWithConflicts,
 } from "../hooks/use-reminder-queries";
+import { remindersCopy } from "../messages";
 import { makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
@@ -243,7 +243,7 @@ describe("RemindersScreen", () => {
 			});
 			await render(<RemindersScreen habitId={1} />);
 			expect(screen.queryByRole("button", { name: "Add time" })).toBeNull();
-			expect(screen.getByText(REMINDER_CAP_MESSAGE)).toBeTruthy();
+			expect(screen.getByText(remindersCopy.cap)).toBeTruthy();
 		});
 	});
 

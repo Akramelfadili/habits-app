@@ -49,6 +49,7 @@ import {
 	removeReminder,
 	restoreReminder,
 	setEveningReview,
+	setEveningReviewTime,
 	syncHabitReminders,
 	unscheduledReminderDays,
 	updateHabitAndSyncReminders,
@@ -590,6 +591,60 @@ describe("reminder-service", () => {
 			]);
 			await cancelHabitNotifications(4);
 			expect(fake.scheduled.size).toBe(0);
+		});
+	});
+	describe("setEveningReviewTime (HAB-44)", () => {
+		/** The settings the evening review reads: its toggle and its stored time. */
+		function settings(values: Record<string, string>) {
+			mockGetSetting.mockImplementation(
+				async (key: string) => values[key] ?? null,
+			);
+		}
+
+		it("stores the time as HH:mm", async () => {
+			settings({ "habits.eveningReview": "false" });
+			await setEveningReviewTime({ hour: 7, minute: 5 });
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				"habits.eveningReviewTime",
+				"07:05",
+			);
+		});
+
+		it("schedules nothing while the review is off", async () => {
+			settings({ "habits.eveningReview": "false" });
+			await setEveningReviewTime({ hour: 7, minute: 5 });
+			expect(fake.scheduled.size).toBe(0);
+		});
+
+		it("moves a running review to the new time, keeping its days", async () => {
+			mockGetAllHabits.mockResolvedValue([
+				makeHabit({ id: 5, frequency: { type: "weekdays", days: [2, 4] } }),
+			]);
+			settings({ "habits.eveningReview": "true" });
+			await refreshEveningReview();
+			expect(scheduledKeys()).toEqual([
+				"evening-review:day-2:2130",
+				"evening-review:day-4:2130",
+			]);
+
+			settings({
+				"habits.eveningReview": "true",
+				"habits.eveningReviewTime": "20:00",
+			});
+			await setEveningReviewTime({ hour: 20, minute: 0 });
+			expect(scheduledKeys()).toEqual([
+				"evening-review:day-2:2000",
+				"evening-review:day-4:2000",
+			]);
+		});
+
+		it("a new habit's review keeps using the chosen time", async () => {
+			settings({
+				"habits.eveningReview": "true",
+				"habits.eveningReviewTime": "06:15",
+			});
+			await refreshEveningReview();
+			expect(scheduledKeys()).toEqual(["evening-review:daily:0615"]);
 		});
 	});
 });

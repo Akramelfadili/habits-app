@@ -10,8 +10,10 @@ jest.mock(
 );
 
 let mockEveningSetting: string | null = null;
+let mockEveningTime: string | null = null;
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
-	getSetting: async () => mockEveningSetting,
+	getSetting: async (key: string) =>
+		key === "habits.eveningReviewTime" ? mockEveningTime : mockEveningSetting,
 	setSetting: jest.fn(),
 }));
 
@@ -62,6 +64,7 @@ beforeEach(() => {
 	fake.reset();
 	clearLog();
 	mockEveningSetting = null;
+	mockEveningTime = null;
 	mockHabits = [daily];
 	mockReminders = [];
 	mockRemindersThrowFor = null;
@@ -221,6 +224,19 @@ describe("reconcileScheduledReminders", () => {
 			} as never);
 			await reconcileScheduledReminders();
 			expect(keys()).toEqual(["evening-review:day-2:2130"]);
+		});
+
+		it("on at a chosen time: scheduled there, and a review left at the old time is moved", async () => {
+			mockHabits = [makeHabit({ id: 1, frequency: { type: "daily" } })];
+			mockEveningSetting = "true";
+			mockEveningTime = "20:15";
+			fake.scheduled.set("evening-review:daily:2130:x", {
+				identifier: "evening-review:daily:2130:x",
+				hour: 21,
+				minute: 30,
+			} as never);
+			await reconcileScheduledReminders();
+			expect(keys()).toEqual(["evening-review:daily:2015"]);
 		});
 
 		it("on and present: untouched", async () => {

@@ -30,6 +30,22 @@ describe("ReminderSheet", () => {
 		expect(screen.queryByText("Save time")).toBeNull();
 	});
 
+	it("leaves out the days picker when the time has no days of its own", async () => {
+		const onSave = jest.fn();
+		await render(
+			<ReminderSheet
+				draft={{ ...draft, weekdays: [...draft.weekdays] }}
+				title="Evening review time"
+				showDays={false}
+				onDismiss={jest.fn()}
+				onSave={onSave}
+			/>,
+		);
+		expect(screen.queryByText("Repeat on")).toBeNull();
+		await fireEvent.press(screen.getByText("Save time"));
+		expect(onSave).toHaveBeenCalledTimes(1);
+	});
+
 	it("opens on the given time and days, titled by the caller", async () => {
 		await render(
 			<ReminderSheet

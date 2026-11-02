@@ -16,11 +16,7 @@ import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { ReminderRow } from "../components/reminder-row";
 import { ReminderSheet } from "../components/reminder-sheet";
-import {
-	DEFAULT_REMINDER_TIME,
-	REMINDER_CAP_MESSAGE,
-	WEEKDAYS,
-} from "../constants";
+import { DEFAULT_REMINDER_TIME, WEEKDAYS } from "../constants";
 import { useReminderActions } from "../hooks/use-reminder-actions";
 import { useReminderQueries } from "../hooks/use-reminder-queries";
 import {
@@ -202,7 +198,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 							))}
 						</Container>
 						<FieldHelper plain tone="hint">
-							{atCap ? REMINDER_CAP_MESSAGE : remindersCopy.hint}
+							{atCap ? remindersCopy.cap : remindersCopy.hint}
 						</FieldHelper>
 					</View>
 				)}

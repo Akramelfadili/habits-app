@@ -17,6 +17,7 @@ import {
 	cancelQuietly,
 	eveningReviewDays,
 	eveningReviewReminder,
+	getEveningReviewTime,
 	habitNotificationPrefix,
 	reminderNotificationId,
 	syncHabitReminders,
@@ -44,9 +45,12 @@ async function expectedKeys(habit: Habit): Promise<string[]> {
 }
 
 /** The evening review's triggers for the days with open habits — none when no habit is ever due. */
-function eveningReviewKeys(habits: readonly Habit[]): string[] {
+function eveningReviewKeys(
+	habits: readonly Habit[],
+	review: { hour: number; minute: number },
+): string[] {
 	const days = eveningReviewDays(habits);
-	const { hour, minute } = eveningReviewReminder(days);
+	const { hour, minute } = eveningReviewReminder(days, review);
 	const time = `${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}`;
 	return reminderSlots(days).map((slot) => `${EVENING_PREFIX}${slot}:${time}`);
 }
@@ -140,17 +144,18 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			identifier.startsWith(EVENING_PREFIX),
 		);
 		const eveningOn = (await getSetting(EVENING_REVIEW_SETTING_KEY)) === "true";
+		const eveningTime = await getEveningReviewTime();
 		if (!eveningOn) {
 			if (await cancelQuietly(eveningOwned, "reconcile: evening review off")) {
 				cancelled += eveningOwned.length;
 			}
-		} else if (!matches(eveningOwned, eveningReviewKeys(habits))) {
+		} else if (!matches(eveningOwned, eveningReviewKeys(habits, eveningTime))) {
 			const days = eveningReviewDays(habits);
 			const created =
 				days.length === 0
 					? []
 					: await scheduleReminder(
-							eveningReviewReminder(days),
+							eveningReviewReminder(days, eveningTime),
 							newGeneration(),
 						);
 			await cancelQuietly(

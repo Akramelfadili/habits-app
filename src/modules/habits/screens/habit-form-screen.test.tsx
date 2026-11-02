@@ -5,6 +5,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 import { useToastStore } from "@/store/toast-store";
 import {
 	builtInCategory,
@@ -188,6 +189,21 @@ describe("HabitFormScreen — create", () => {
 		await typeName("Read");
 		expect(isSaveDisabled()).toBe(false);
 		expect(screen.queryByText("Add a name to save")).toBeNull();
+	});
+
+	it("a dimmed Save reads its reason as the hint, and drops it once the name is typed (08.3)", async () => {
+		await render(<HabitFormScreen />);
+		expect(saveButton()?.props.accessibilityHint).toBe("Add a name to save");
+		await typeName("Read");
+		expect(saveButton()?.props.accessibilityHint).toBeUndefined();
+	});
+
+	it("a name already taken is announced as an alert next to the field (08.3)", async () => {
+		mockHabits = [existingHabit];
+		await render(<HabitFormScreen />);
+		await typeName("Gym");
+		const alert = screen.getByRole("alert");
+		expect(alert.props.accessibilityLabel).toMatch(/already have a habit/i);
 	});
 
 	it("saves with no category as Other, and offers no icon or colour picker", async () => {
@@ -529,6 +545,24 @@ describe("HabitFormScreen — create", () => {
 
 		await fireEvent.press(saveButton() as never);
 		await waitFor(() => expect(mockBack).toHaveBeenCalled());
+	});
+
+	it("a failed save moves the screen reader onto the error (08.4)", async () => {
+		jest.useFakeTimers();
+		const focus = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation();
+		mockCreateHabit.mockRejectedValueOnce(new Error("disk full"));
+		await render(<HabitFormScreen />);
+		await typeName("Read");
+		await fireEvent.press(saveButton() as never);
+		await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+		await act(async () => {
+			jest.advanceTimersByTime(200);
+		});
+		expect(focus).toHaveBeenCalledWith(expect.anything(), "focus");
+		focus.mockRestore();
+		jest.useRealTimers();
 	});
 
 	it("draws a hairline above Save only once the form is scrolled", async () => {

@@ -65,6 +65,8 @@ export function Sheet({
 		>
 			{/* Keeps a sheet's text field (Retro log's note) above the keyboard. */}
 			<KeyboardAvoidingView
+				// iOS: VoiceOver stays inside the sheet while it is open (08.4).
+				accessibilityViewIsModal
 				style={styles.root}
 				behavior={Platform.OS === "ios" ? "padding" : undefined}
 			>

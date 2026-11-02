@@ -1,4 +1,5 @@
 import { WEEKDAY_SHORTCUT, WEEKDAYS } from "../constants";
+import { reminderDaysCopy } from "../messages";
 import type { IsoWeekday, Reminder } from "../types";
 
 const SHORT_DAY_NAMES: Record<IsoWeekday, string> = {
@@ -32,13 +33,13 @@ export function formatReminderTime({
 /** A reminder card's subtitle: "Every day", "Weekdays", or "Mon, Wed, Fri". */
 export function reminderDaysLabel(weekdays: readonly IsoWeekday[]): string {
 	const days = [...new Set(weekdays)].sort((a, b) => a - b);
-	if (days.length === 0) return "No days";
-	if (days.length === 7) return "Every day";
+	if (days.length === 0) return reminderDaysCopy.none;
+	if (days.length === 7) return reminderDaysCopy.everyDay;
 	if (
 		days.length === WEEKDAY_SHORTCUT.length &&
 		WEEKDAY_SHORTCUT.every((day) => days.includes(day))
 	) {
-		return "Weekdays";
+		return reminderDaysCopy.weekdays;
 	}
 	return days.map((day) => SHORT_DAY_NAMES[day]).join(", ");
 }
@@ -46,7 +47,5 @@ export function reminderDaysLabel(weekdays: readonly IsoWeekday[]): string {
 /** The inline warning under a reminder set for days the habit isn't scheduled on. */
 export function unscheduledDaysWarning(days: readonly IsoWeekday[]): string {
 	const names = joinList(days.map(dayName));
-	return days.length === 1
-		? `${names} is not a scheduled day for this habit — this reminder would fire for nothing.`
-		: `${names} are not scheduled days for this habit — this reminder would fire for nothing.`;
+	return reminderDaysCopy.unscheduled(names, days.length);
 }

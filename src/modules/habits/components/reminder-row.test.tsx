@@ -46,4 +46,19 @@ describe("ReminderRow", () => {
 		);
 		expect(screen.getByLabelText("18:30, Thu · Off")).toBeTruthy();
 	});
+
+	it("the row is a button that says what it opens, and the minus is its own stop (08.3)", async () => {
+		await render(
+			<ReminderRow
+				reminder={reminder}
+				onEdit={jest.fn()}
+				onRemove={jest.fn()}
+			/>,
+		);
+		const row = screen.getByRole("button", { name: "18:30, Thu" });
+		expect(row.props.accessibilityHint).toBe("Opens its time and days.");
+		expect(
+			screen.getByRole("button", { name: "Remove reminder at 18:30" }),
+		).toBeTruthy();
+	});
 });

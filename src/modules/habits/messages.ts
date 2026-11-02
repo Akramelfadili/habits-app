@@ -11,6 +11,8 @@
 
 import { toastHoldMs } from "@/components/ui/composite/toast-host";
 import { showToast, type ToastTone } from "@/store/toast-store";
+import { motion } from "@/theme/theme";
+import { REMINDER_CAP } from "./constants";
 
 export type MessageTone = ToastTone;
 
@@ -1031,11 +1033,32 @@ export const categoriesCopy = {
  * its own days. Removal is instant with an Undo toast; the notifications-off
  * banner explains why nothing arrives while the times stay editable.
  */
+/** The text of the notifications the OS shows (their copy is ours, wherever they are scheduled). */
+export const notificationCopy = {
+	build: "Time for this one — check it off on Today.",
+	break: "A nudge to keep resisting today.",
+	eveningTitle: "Evening review",
+	eveningBody: "Anything left to log today? Take a minute to catch up.",
+} as const;
+
+/** Day-set names on a reminder row and the "not a scheduled day" warning. */
+export const reminderDaysCopy = {
+	none: "No days",
+	everyDay: "Every day",
+	weekdays: "Weekdays",
+	unscheduled: (names: string, count: number) =>
+		count === 1
+			? `${names} is not a scheduled day for this habit — this reminder would fire for nothing.`
+			: `${names} are not scheduled days for this habit — this reminder would fire for nothing.`,
+} as const;
+
 export const remindersCopy = {
 	title: "Reminders",
 	/** The eyebrow: the habit and how it repeats ("Upper body · Tue, Thu"). */
 	eyebrow: (habit: string, schedule: string) => `${habit} · ${schedule}`,
 	add: "Add time",
+	/** Under the disabled Add row, and the service's cap error. */
+	cap: `${REMINDER_CAP} of ${REMINDER_CAP} — remove one to add another. Four times a day is the cap per habit.`,
 	/** R1: nothing yet — one clear action. */
 	empty: {
 		title: "No reminders yet",
@@ -1104,7 +1127,8 @@ export const settingsCopy = {
 		leftValue: (left: number, size: number) => `${left} of ${size}`,
 		rule: (size: number) =>
 			`${size} freezes a month, shared by all habits. They don’t roll over.`,
-		how: "A freeze keeps a streak when you miss a scheduled day. You use one from the streak-at-risk sheet; Undo works for 5 s.",
+		/** The Undo window is the toast's own (5 s), so the sentence cannot drift from it. */
+		how: `A freeze keeps a streak when you miss a scheduled day. You use one from the streak-at-risk sheet; Undo works for ${motion.toast.hold.undo / 1000} s.`,
 	},
 	data: {
 		header: "Data",
@@ -1163,6 +1187,7 @@ export const exportCopy = {
 export const reminderSheetCopy = {
 	add: "Add time",
 	edit: "Reminder time",
+	eveningTime: "Evening review time",
 	cancel: "Cancel",
 	save: "Save time",
 	repeatOn: "Repeat on",

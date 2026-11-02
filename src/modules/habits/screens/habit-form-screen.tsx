@@ -4,6 +4,7 @@ import { useHeaderHeight } from "expo-router/react-navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
+	type HostInstance,
 	Keyboard,
 	KeyboardAvoidingView,
 	Platform,
@@ -26,6 +27,7 @@ import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { failureMessage } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
+import { useInitialFocus } from "@/utils/use-initial-focus";
 import { useLeaveGuard } from "@/utils/use-leave-guard";
 import { AddCategorySheet } from "../components/add-category-sheet";
 import { CategoryChips } from "../components/form/category-chips";
@@ -210,6 +212,9 @@ export function HabitFormScreen({
 	});
 	const isSubmitting = isCreating || isUpdating;
 	const isSaveDisabled = issues.reason !== undefined || isSubmitting;
+	// A failed save moves the screen reader onto the error above Save (08.4).
+	const errorRef = useRef<HostInstance>(null);
+	useInitialFocus(errorRef, submitError !== null, 100);
 	const nameError = !issues.fields.includes("name")
 		? undefined
 		: duplicate
@@ -525,11 +530,17 @@ export function HabitFormScreen({
 					},
 				]}
 			>
-				{submitError ? <Banner tone="error">{submitError}</Banner> : null}
+				{submitError ? (
+					<Banner tone="error" messageRef={errorRef}>
+						{submitError}
+					</Banner>
+				) : null}
 				<Button
 					label={mode === "create" ? formCopy.save.new : formCopy.save.edit}
 					onPress={handleSubmit(onSubmit)}
 					disabled={isSaveDisabled}
+					// 08.3: a dimmed Save reads its reason as the hint ("Add a name to save").
+					accessibilityHint={isSaveDisabled ? issues.reason : undefined}
 					loading={isSubmitting}
 				/>
 				{isSaveDisabled && issues.reason ? (

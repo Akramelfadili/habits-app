@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { Banner } from "./banner";
 
@@ -170,5 +171,17 @@ describe("Banner", () => {
 		expect(screen.getByText("Notifications are off")).toHaveStyle({
 			color: semanticColors.light.warnInk,
 		});
+	});
+
+	it("the action link is at least a 44 pt target", async () => {
+		await render(
+			<Banner action={{ label: "Open Settings", onPress: jest.fn() }}>
+				Notifications are off.
+			</Banner>,
+		);
+		const style = StyleSheet.flatten(
+			screen.getByRole("link", { name: "Open Settings" }).props.style,
+		);
+		expect(style.minHeight).toBeGreaterThanOrEqual(44);
 	});
 });

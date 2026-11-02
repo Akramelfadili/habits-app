@@ -14,14 +14,22 @@ import type { ThemePreference } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
 import { ExportSheet } from "../components/export-sheet";
 import { LibrarySectionHeader } from "../components/habits/library-section-header";
-import { EVENING_REVIEW_TIME } from "../constants";
+import { ReminderSheet } from "../components/reminder-sheet";
+import { WEEKDAYS } from "../constants";
 import { useSettingsActions } from "../hooks/use-settings-actions";
 import { useSettingsQueries } from "../hooks/use-settings-queries";
-import { messages, settingsCopy, showMessage } from "../messages";
+import {
+	messages,
+	reminderSheetCopy,
+	settingsCopy,
+	showMessage,
+} from "../messages";
 import { formatReminderTime } from "../presenters/reminders-helpers";
 import { versionLabel } from "../presenters/settings-helpers";
 
 const THEMES: ThemePreference[] = ["light", "dark", "system"];
+/** The sheet needs days; the Evening review ignores them (it hides the picker). */
+const ALL_DAYS = WEEKDAYS.map(({ day }) => day);
 
 /**
  * Settings (HAB-44, S1–S7, SY6), pushed from the Habits gear: Appearance
@@ -35,7 +43,8 @@ export function SettingsScreen() {
 	const settings = useSettingsQueries();
 	const actions = useSettingsActions();
 	const [isExporting, setIsExporting] = useState(false);
-	const eveningTime = formatReminderTime(EVENING_REVIEW_TIME);
+	const [isPickingTime, setIsPickingTime] = useState(false);
+	const eveningTime = formatReminderTime(settings.eveningReviewTime);
 	const { size, usedThisMonth } = settings.freezePool;
 
 	async function handleCopyDiagnostics() {
@@ -105,7 +114,12 @@ export function SettingsScreen() {
 							value={settings.eveningReviewEnabled}
 							onValueChange={actions.setEveningReview}
 						/>
-						<ListItem title={settingsCopy.reminders.time} value={eveningTime} />
+						<ListItem
+							title={settingsCopy.reminders.time}
+							value={eveningTime}
+							navigable
+							onPress={() => setIsPickingTime(true)}
+						/>
 						<ListItem
 							title={settingsCopy.reminders.notifications}
 							value={permissionValue}
@@ -194,6 +208,20 @@ export function SettingsScreen() {
 				</View>
 			</ScrollView>
 
+			<ReminderSheet
+				draft={
+					isPickingTime
+						? { ...settings.eveningReviewTime, weekdays: ALL_DAYS }
+						: null
+				}
+				title={reminderSheetCopy.eveningTime}
+				showDays={false}
+				onDismiss={() => setIsPickingTime(false)}
+				onSave={({ hour, minute }) => {
+					setIsPickingTime(false);
+					void actions.setEveningReviewTime({ hour, minute });
+				}}
+			/>
 			<ExportSheet
 				visible={isExporting}
 				onClose={() => setIsExporting(false)}

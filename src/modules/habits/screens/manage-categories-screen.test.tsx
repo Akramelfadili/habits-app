@@ -35,6 +35,8 @@ jest.mock("../hooks/use-manage-categories-queries", () => ({
 type ReorderProps = {
 	items: { id: number; name: string }[];
 	onReorder: (keys: string[]) => void;
+	handleLabel: (item: { id: number; name: string }) => string;
+	moveLabels: { up: string; down: string };
 	renderItem: (
 		item: { id: number; name: string },
 		handle: null,
@@ -271,6 +273,17 @@ describe("ManageCategoriesScreen — reorder (C2)", () => {
 		await startReorder();
 		mockReorderProps?.onReorder(["12", "11", "1"]);
 		expect(mockReorder).toHaveBeenCalledWith([12, 11, 1]);
+	});
+
+	it("gives each handle a name and Move up / Move down actions for VoiceOver (08.3)", async () => {
+		await startReorder();
+		expect(mockReorderProps?.moveLabels).toEqual({
+			up: "Move up",
+			down: "Move down",
+		});
+		expect(mockReorderProps?.handleLabel({ id: 11, name: "Music" })).toBe(
+			"Reorder Music",
+		);
 	});
 
 	it("Done goes back to the lists", async () => {

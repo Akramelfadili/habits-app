@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 import { useToastStore } from "@/store/toast-store";
 import { makeExportSource } from "../test-support/export-fixtures";
 
@@ -288,5 +289,70 @@ describe("ExportSheet — failed (EX4)", () => {
 		await fireEvent.press(await screen.findByText("Cancel"));
 		expect(onClose).toHaveBeenCalledTimes(1);
 		expect(useExportStore.getState().phase.name).toBe("confirm");
+	});
+});
+
+describe("ExportSheet — VoiceOver and focus (08.3, 08.4)", () => {
+	let focus: jest.SpyInstance;
+	beforeEach(() => {
+		jest.useFakeTimers();
+		focus = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation();
+	});
+	afterEach(() => {
+		focus.mockRestore();
+		jest.useRealTimers();
+	});
+
+	it("the sheet's title is a heading and the screen reader starts on it", async () => {
+		await render(<ExportSheet visible onClose={jest.fn()} />);
+		expect(screen.getByRole("header", { name: "Export data" })).toBeTruthy();
+		await act(async () => {
+			jest.advanceTimersByTime(500);
+		});
+		expect(focus).toHaveBeenCalledWith(expect.anything(), "focus");
+	});
+
+	it("reads the format as a labelled choice with the picked one selected", async () => {
+		await render(<ExportSheet visible onClose={jest.fn()} />);
+		expect(screen.getByLabelText("File format")).toBeTruthy();
+		expect(
+			screen.getByRole("tab", { name: "JSON" }).props.accessibilityState
+				.selected,
+		).toBe(true);
+	});
+
+	it("moves the screen reader onto the file when the export finishes", async () => {
+		mockRunExport.mockResolvedValue(result);
+		await render(<ExportSheet visible onClose={jest.fn()} />);
+		await act(async () => {
+			jest.advanceTimersByTime(500);
+		});
+		focus.mockClear();
+		await fireEvent.press(screen.getByText("Export JSON"));
+		await screen.findByText("Share file");
+		await act(async () => {
+			jest.advanceTimersByTime(200);
+		});
+		expect(focus).toHaveBeenCalledTimes(1);
+		const [target] = focus.mock.calls[0];
+		expect(target.props?.accessibilityLabel ?? "").toContain(
+			"habits-2026-10-23.json",
+		);
+	});
+
+	it("moves the screen reader onto the error when the export fails, and the error is an alert", async () => {
+		mockRunExport.mockRejectedValueOnce(
+			new ExportFailedError({ kind: "unknown" }),
+		);
+		await render(<ExportSheet visible onClose={jest.fn()} />);
+		await fireEvent.press(screen.getByText("Export JSON"));
+		await screen.findByText("Export failed");
+		await act(async () => {
+			jest.advanceTimersByTime(500);
+		});
+		expect(screen.getByRole("alert")).toBeTruthy();
+		expect(focus).toHaveBeenCalled();
 	});
 });

@@ -14,10 +14,15 @@ import {
 	DEFAULT_REMINDER_TIME,
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME,
+	EVENING_REVIEW_TIME_SETTING_KEY,
 	REMINDER_CAP,
-	REMINDER_CAP_MESSAGE,
 	WEEKDAYS,
 } from "../constants";
+import {
+	formatEveningReviewTime,
+	parseEveningReviewTime,
+} from "../domain/evening-review-time";
+import { notificationCopy, remindersCopy } from "../messages";
 import {
 	getAllHabits,
 	getHabit,
@@ -80,8 +85,8 @@ export function unscheduledReminderDays(
 
 function notificationBody(habit: Habit): string {
 	return habit.direction === "break"
-		? "A nudge to keep resisting today."
-		: "Time for this one — check it off on Today.";
+		? notificationCopy.break
+		: notificationCopy.build;
 }
 
 /** Identifiers currently scheduled under `prefix`. */
@@ -210,7 +215,7 @@ export async function cancelHabitNotifications(habitId: number): Promise<void> {
 
 export class ReminderCapError extends Error {
 	constructor() {
-		super(REMINDER_CAP_MESSAGE);
+		super(remindersCopy.cap);
 		this.name = "ReminderCapError";
 	}
 }
@@ -299,11 +304,41 @@ export function eveningReviewDays(habits: readonly Habit[]): IsoWeekday[] {
 	);
 }
 
+/** The Evening review's time now: the stored choice, else the default. */
+export async function getEveningReviewTime(): Promise<{
+	hour: number;
+	minute: number;
+}> {
+	return parseEveningReviewTime(
+		await getSetting(EVENING_REVIEW_TIME_SETTING_KEY),
+	);
+}
+
 /** Schedules the review for today's set of days; nothing at all when no habit is ever due. */
 async function scheduleEveningReview(): Promise<string[]> {
 	const days = eveningReviewDays(await getAllHabits());
 	if (days.length === 0) return [];
-	return scheduleReminder(eveningReviewReminder(days), newGeneration());
+	return scheduleReminder(
+		eveningReviewReminder(days, await getEveningReviewTime()),
+		newGeneration(),
+	);
+}
+
+/**
+ * Changes the Evening review's time (HAB-44). The time is stored first — it is
+ * the source of truth — and, while the review is on, the notifications are
+ * rebuilt at the new time; a failed rebuild is logged for the launch-time
+ * reconcile to finish.
+ */
+export async function setEveningReviewTime(time: {
+	hour: number;
+	minute: number;
+}): Promise<void> {
+	await setSetting(
+		EVENING_REVIEW_TIME_SETTING_KEY,
+		formatEveningReviewTime(time),
+	);
+	await refreshEveningReview();
 }
 
 /**
@@ -367,12 +402,14 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 
 export function eveningReviewReminder(
 	weekdays: readonly IsoWeekday[] = EVERY_DAY,
+	time: { hour: number; minute: number } = EVENING_REVIEW_TIME,
 ) {
 	return {
 		id: EVENING_REVIEW_NOTIFICATION_ID,
-		title: "Evening review",
-		body: "Anything left to log today? Take a minute to catch up.",
-		...EVENING_REVIEW_TIME,
+		title: notificationCopy.eveningTitle,
+		body: notificationCopy.eveningBody,
+		hour: time.hour,
+		minute: time.minute,
 		weekdays: [...weekdays],
 	};
 }

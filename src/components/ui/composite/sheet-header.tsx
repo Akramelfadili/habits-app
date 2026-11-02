@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useRef } from "react";
+import { type HostInstance, StyleSheet, Text, View } from "react-native";
 import { Button } from "@/components/ui/primitives/button";
 import { typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useInitialFocus } from "@/utils/use-initial-focus";
 
 type SheetHeaderProps = {
 	title: string;
@@ -12,7 +14,8 @@ type SheetHeaderProps = {
 
 /**
  * A bottom sheet's title row: title left, a small text action right — Retro
- * log's "Tuesday, 8 September … Close" (HAB-10).
+ * log's "Tuesday, 8 September … Close" (HAB-10). A screen reader starts on the
+ * title when the sheet opens (08.4: "Sheet — default focus: Title").
  */
 export function SheetHeader({
 	title,
@@ -20,10 +23,14 @@ export function SheetHeader({
 	onAction,
 }: SheetHeaderProps) {
 	const { colors } = useTheme();
+	const titleRef = useRef<HostInstance>(null);
+	useInitialFocus(titleRef, true);
 
 	return (
 		<View style={styles.row}>
 			<Text
+				ref={titleRef}
+				accessible
 				accessibilityRole="header"
 				style={[styles.title, { color: colors.ink }]}
 			>

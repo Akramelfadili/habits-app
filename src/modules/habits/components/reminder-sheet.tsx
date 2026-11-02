@@ -19,6 +19,8 @@ type ReminderSheetProps = {
 	title: string;
 	onDismiss: () => void;
 	onSave: (draft: ReminderDraft) => void;
+	/** Whether the days picker shows. Off for a time that has no days of its own (the Evening review). */
+	showDays?: boolean;
 };
 
 /**
@@ -31,6 +33,7 @@ export function ReminderSheet({
 	title,
 	onDismiss,
 	onSave,
+	showDays = true,
 }: ReminderSheetProps) {
 	return (
 		<Sheet visible={draft !== null} onDismiss={onDismiss}>
@@ -42,6 +45,7 @@ export function ReminderSheet({
 					title={title}
 					onDismiss={onDismiss}
 					onSave={onSave}
+					showDays={showDays}
 				/>
 			) : null}
 		</Sheet>
@@ -53,18 +57,20 @@ function ReminderSheetContent({
 	title,
 	onDismiss,
 	onSave,
+	showDays,
 }: {
 	initial: ReminderDraft;
 	title: string;
 	onDismiss: () => void;
 	onSave: (draft: ReminderDraft) => void;
+	showDays: boolean;
 }) {
 	const [time, setTime] = useState({
 		hour: initial.hour,
 		minute: initial.minute,
 	});
 	const [weekdays, setWeekdays] = useState<IsoWeekday[]>(initial.weekdays);
-	const noDays = weekdays.length === 0;
+	const noDays = showDays && weekdays.length === 0;
 
 	return (
 		<>
@@ -74,17 +80,19 @@ function ReminderSheetContent({
 				onAction={onDismiss}
 			/>
 			<TimeWheel hour={time.hour} minute={time.minute} onChange={setTime} />
-			<View style={styles.days}>
-				<SectionLabel>{reminderSheetCopy.repeatOn}</SectionLabel>
-				<WeekdayPicker
-					days={WEEKDAYS}
-					selected={weekdays}
-					onChange={(days) => setWeekdays([...days].sort((a, b) => a - b))}
-				/>
-				{noDays ? (
-					<FieldHelper tone="error">{reminderSheetCopy.noDays}</FieldHelper>
-				) : null}
-			</View>
+			{showDays ? (
+				<View style={styles.days}>
+					<SectionLabel>{reminderSheetCopy.repeatOn}</SectionLabel>
+					<WeekdayPicker
+						days={WEEKDAYS}
+						selected={weekdays}
+						onChange={(days) => setWeekdays([...days].sort((a, b) => a - b))}
+					/>
+					{noDays ? (
+						<FieldHelper tone="error">{reminderSheetCopy.noDays}</FieldHelper>
+					) : null}
+				</View>
+			) : null}
 			<Button
 				label={reminderSheetCopy.save}
 				disabled={noDays}

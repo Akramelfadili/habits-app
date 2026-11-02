@@ -10,6 +10,12 @@ const SHEET_SETTLE_MS = 400;
 /** What the ref can be: a host element, which on web also has `focus()`. */
 type Focusable = HostInstance & { focus?: () => void };
 
+/** Moves the screen reader's focus (and, on the web, keyboard focus) onto `element`. */
+export function moveFocusTo(element: Focusable): void {
+	if (Platform.OS === "web") element.focus?.();
+	else AccessibilityInfo.sendAccessibilityEvent(element, "focus");
+}
+
 /**
  * Puts the screen reader's focus (and, on the web, keyboard focus) on `ref`
  * when `active` turns true — a confirm sheet starts on its safe action (08.3:
@@ -27,8 +33,7 @@ export function useInitialFocus(
 		const timer = setTimeout(() => {
 			const element = ref.current;
 			if (!element) return;
-			if (Platform.OS === "web") element.focus?.();
-			else AccessibilityInfo.sendAccessibilityEvent(element, "focus");
+			moveFocusTo(element);
 		}, delayMs);
 		return () => clearTimeout(timer);
 	}, [active, delayMs, ref]);

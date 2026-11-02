@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { type HostInstance, StyleSheet, View } from "react-native";
 import { Banner } from "@/components/ui/composite/banner";
 import { FileCard } from "@/components/ui/composite/file-card";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
@@ -11,6 +11,7 @@ import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { space } from "@/theme/theme";
 import { formatCount, pluralise } from "@/utils/format";
+import { useInitialFocus } from "@/utils/use-initial-focus";
 import { useExportActions } from "../hooks/use-export-actions";
 import {
 	DEFAULT_EXPORT_OPTIONS,
@@ -43,7 +44,13 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 	const [options, setOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
 	const { source } = useExportQueries(options);
 	const exporter = useExportActions();
+	// When the export finishes or fails with the sheet open, the screen reader
+	// moves onto the result: the file, or what went wrong (08.4).
+	const fileRef = useRef<HostInstance>(null);
+	const failureRef = useRef<HostInstance>(null);
 	const { phase, trackSheet } = exporter;
+	useInitialFocus(fileRef, visible && phase.name === "ready", 100);
+	useInitialFocus(failureRef, visible && phase.name === "failed", 100);
 
 	// A finished export toasts only while no sheet is up.
 	useEffect(() => {
@@ -142,6 +149,7 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 							onAction={close}
 						/>
 						<FileCard
+							cardRef={fileRef}
 							name={phase.result.name}
 							meta={exportCopy.fileMeta(
 								kilobytesLabel(phase.result.sizeBytes),
@@ -173,6 +181,7 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 						/>
 						<Banner
 							tone="error"
+							messageRef={failureRef}
 							symbol="exclamationmark.circle"
 							title={exportCopy.failed.title}
 						>

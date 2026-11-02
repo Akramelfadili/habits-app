@@ -12,6 +12,7 @@ type Queries = {
 	themePreference: "light" | "dark" | "system";
 	resolvedScheme: "light" | "dark";
 	eveningReviewEnabled: boolean;
+	eveningReviewTime: { hour: number; minute: number };
 	notificationsDenied: boolean;
 	notificationPermission: "granted" | "denied" | "undetermined" | undefined;
 	notificationImpact: { times: number; habits: number };
@@ -24,6 +25,7 @@ const base = (): Queries => ({
 	themePreference: "system",
 	resolvedScheme: "light",
 	eveningReviewEnabled: false,
+	eveningReviewTime: { hour: 21, minute: 30 },
 	notificationsDenied: false,
 	notificationPermission: "granted",
 	notificationImpact: { times: 4, habits: 3 },
@@ -38,10 +40,12 @@ jest.mock("../hooks/use-settings-queries", () => ({
 }));
 const mockSetTheme = jest.fn();
 const mockSetEvening = jest.fn();
+const mockSetEveningTime = jest.fn();
 jest.mock("../hooks/use-settings-actions", () => ({
 	useSettingsActions: () => ({
 		setThemePreference: mockSetTheme,
 		setEveningReview: mockSetEvening,
+		setEveningReviewTime: mockSetEveningTime,
 	}),
 }));
 jest.mock("../components/export-sheet", () => ({
@@ -109,6 +113,22 @@ describe("SettingsScreen — Appearance (S2)", () => {
 });
 
 describe("SettingsScreen — Reminders (S3, SY6)", () => {
+	it("shows the chosen evening time and opens a time sheet without a days picker", async () => {
+		mockQueries.eveningReviewTime = { hour: 20, minute: 5 };
+		await render(<SettingsScreen />);
+		await fireEvent.press(screen.getByRole("button", { name: /^Time/ }));
+		expect(screen.getByText("Evening review time")).toBeTruthy();
+		expect(screen.queryByText("Repeat on")).toBeNull();
+	});
+
+	it("saves the picked time and closes the sheet", async () => {
+		await render(<SettingsScreen />);
+		await fireEvent.press(screen.getByRole("button", { name: /^Time/ }));
+		await fireEvent.press(screen.getByRole("button", { name: "Save time" }));
+		expect(mockSetEveningTime).toHaveBeenCalledWith({ hour: 21, minute: 30 });
+		expect(screen.queryByText("Evening review time")).toBeNull();
+	});
+
 	it("shows the evening review as one switch with its time, and the rule for when it is sent", async () => {
 		await render(<SettingsScreen />);
 		expect(
@@ -227,4 +247,31 @@ describe("SettingsScreen — Data and About (S5, S6)", () => {
 			expect(toast?.actionLabel).toBeUndefined();
 		},
 	);
+});
+
+describe("SettingsScreen — VoiceOver (08.3)", () => {
+	it("the Evening review is one switch with its state, and the Time row is a button", async () => {
+		mockQueries.eveningReviewEnabled = true;
+		await render(<SettingsScreen />);
+		const toggle = screen.getByRole("switch", { name: /^Evening review/ });
+		expect(toggle.props.accessibilityState.checked).toBe(true);
+		expect(screen.getByRole("button", { name: /^Time/ })).toBeTruthy();
+	});
+
+	it("Export data and Copy diagnostics are buttons; version is read-only text", async () => {
+		await render(<SettingsScreen />);
+		expect(screen.getByRole("button", { name: /^Export data/ })).toBeTruthy();
+		expect(
+			screen.getByRole("button", { name: /^Copy diagnostics/ }),
+		).toBeTruthy();
+		expect(screen.queryByRole("button", { name: /^Version/ })).toBeNull();
+	});
+
+	it("notifications off: the notice is a link-bearing banner and the state is words, not colour", async () => {
+		mockQueries.notificationsDenied = true;
+		mockQueries.notificationPermission = "denied";
+		await render(<SettingsScreen />);
+		expect(screen.getByRole("link", { name: /Open/ })).toBeTruthy();
+		expect(screen.getAllByText("Off").length).toBeGreaterThan(0);
+	});
 });

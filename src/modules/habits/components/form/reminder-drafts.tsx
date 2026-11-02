@@ -4,8 +4,8 @@ import { Container } from "@/components/ui/composite/container";
 import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { space } from "@/theme/theme";
-import { REMINDER_CAP, REMINDER_CAP_MESSAGE } from "../../constants";
-import { formCopy } from "../../messages";
+import { REMINDER_CAP } from "../../constants";
+import { formCopy, remindersCopy } from "../../messages";
 import type { ReminderDraft } from "../../types";
 import { ReminderRow } from "../reminder-row";
 
@@ -54,7 +54,7 @@ export function ReminderDrafts({
 				]}
 			</Container>
 			<FieldHelper plain tone="hint">
-				{atCap ? REMINDER_CAP_MESSAGE : formCopy.reminders.hint}
+				{atCap ? remindersCopy.cap : formCopy.reminders.hint}
 			</FieldHelper>
 		</View>
 	);
