@@ -59,7 +59,7 @@ describe("DatabaseProvider (web)", () => {
 	it("shows the plain open failure for ?fixtures=migration-fails-first-open", async () => {
 		withScenario("migration-fails-first-open");
 		await render(app);
-		expect(screen.getByText("Couldn't open your data")).toBeTruthy();
+		expect(screen.getByText("Couldn\u2019t open your data")).toBeTruthy();
 	});
 
 	it("Retry keeps failing when the failure is permanent", async () => {

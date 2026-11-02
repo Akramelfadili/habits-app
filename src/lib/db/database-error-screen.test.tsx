@@ -52,7 +52,7 @@ describe("DatabaseErrorScreen", () => {
 			/>,
 		);
 
-		expect(screen.getByText("Couldn't open your data")).toBeTruthy();
+		expect(screen.getByText("Couldn\u2019t open your data")).toBeTruthy();
 		expect(screen.queryByText(/SQLITE_IOERR/)).toBeNull();
 		await fireEvent.press(screen.getByText("Try again"));
 		expect(onRetry).toHaveBeenCalledTimes(1);

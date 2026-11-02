@@ -6,8 +6,8 @@ import { TodayDevButtons } from "./today-dev-buttons";
 
 type TodayEmptyStateProps = {
 	onAddHabit: () => void;
-	/** The suggestions screen (HAB-46); the link shows only once there is somewhere to go. */
-	onBrowseSuggestions?: () => void;
+	/** The suggestions screen (HAB-46). */
+	onBrowseSuggestions: () => void;
 	dev: ReturnType<typeof useTodayDevActions>;
 };
 
@@ -29,13 +29,11 @@ export function TodayEmptyState({
 				fullWidth={false}
 				onPress={onAddHabit}
 			/>
-			{onBrowseSuggestions ? (
-				<Button
-					label={todayCopy.emptySuggestions}
-					variant="link"
-					onPress={onBrowseSuggestions}
-				/>
-			) : null}
+			<Button
+				label={todayCopy.emptySuggestions}
+				variant="link"
+				onPress={onBrowseSuggestions}
+			/>
 			<TodayDevButtons dev={dev} />
 		</EmptyState>
 	);

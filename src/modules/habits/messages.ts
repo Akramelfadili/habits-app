@@ -1026,7 +1026,7 @@ export const suggestionsCopy = {
 	/** The heading of the suggestions that are Break habits, whatever their category. */
 	breakGroup: "Break a habit",
 	added: "Added",
-	/** 08.3: "Drink water, Quantity, 8 glasses a day. Opens Add habit." */
+	/** One stop per suggestion (08.3 has no row for it; wording is ours, logged in the backlog). */
 	rowLabel: (name: string, subtitle: string) => `${name}, ${subtitle}`,
 	rowHint: "Opens Add habit with this filled in.",
 	addedLabel: (name: string, subtitle: string) => `${name}, ${subtitle}. Added`,
@@ -1066,9 +1066,9 @@ export const migrationCopy = {
 		},
 	},
 	openFailed: {
-		title: "Couldn't open your data",
+		title: "Couldn\u2019t open your data",
 		message:
-			"The app couldn't prepare its database. Nothing was lost. Try again, and if it keeps happening, copy the diagnostics and send them over.",
+			"The app couldn\u2019t prepare its database. Nothing was lost. Try again, and if it keeps happening, copy the diagnostics and send them over.",
 	},
 } satisfies DatabaseCopy;
 

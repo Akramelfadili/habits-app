@@ -187,7 +187,7 @@ describe("DatabaseProvider", () => {
 			});
 			await render(app);
 
-			expect(screen.getByText("Couldn't open your data")).toBeTruthy();
+			expect(screen.getByText("Couldn\u2019t open your data")).toBeTruthy();
 			expect(screen.queryByText("Update didn’t finish")).toBeNull();
 			expect(screen.queryByText(/SQLITE_CORRUPT/)).toBeNull();
 			expect(screen.queryByText("App")).toBeNull();
@@ -219,7 +219,7 @@ describe("DatabaseProvider", () => {
 			});
 			await render(app);
 			await fireEvent.press(screen.getByText("Try again"));
-			expect(screen.getByText("Couldn't open your data")).toBeTruthy();
+			expect(screen.getByText("Couldn\u2019t open your data")).toBeTruthy();
 		});
 
 		it("Copy diagnostics is offered on the error screen", async () => {

@@ -314,6 +314,12 @@ Deliberate differences from the frames and what was left out. Spec wins where th
 - **Web only:** `?fixtures=today-loading`, `today-load-fails`, `migration-running`, `migration-fails`, `migration-fails-first-open` reach SY1–SY4; a page keeps the fixture scenario and `textSize` it opened with, because First Run redirects and drops the query. There is no fail-once: React retries a throwing render itself.
 - **Visual-check flakes seen (pass when run alone):** `habit-detail-history(-dark)`, `habit-detail-long-names` and `progress-week-ax-dark` differed once each in a full run — scroll states under load.
 - **Device checks:** the update screen's first paint before the migrator blocks the thread, the splash-to-first-run hand-off, VoiceOver focus on each First Run heading and on Allow reminders, the iOS prompt after FR3, Reduce Motion on the skeleton and bar, and the rollover with the phone clock moved.
+- **FR2's Close has no inline error path.** If the seen flag cannot be written the Close does nothing visible (the header sits in the root layout, which has no toast host); the welcome and the suggestions list show an inline banner. A write to local SQLite failing here is far-fetched.
+- **`habit-form-screen.tsx` carries the slim mode** (quick-pick logic and about eight `slim` branches) and the root layout holds the FR2 skip handler. Splitting a `SlimHabitForm` and moving the handler into a header component is deferred.
+- **Skeleton pulses (opacity), not a shimmer** (08.5 says shimmer); static with Reduce Motion.
+- **Suggestions' VoiceOver wording is ours** ("Name, subtitle" with the hint "Opens Add habit with this filled in."; Added in the label): 08.3 has no row for them.
+- **SY3 is drawn before the saved Appearance can be read** (it lives in the database that is migrating), so a dark-preference user on a light system sees it light. Device check.
+- **`useRolloverQueries` reads the closed day's week on every Today mount**, even with no notice; skipping it until one exists is deferred.
 - **Test-only exports knip lists** (new): `suggestionSubtitle`.
 
 ## V3-6 audit list (touch targets and known layout exceptions)

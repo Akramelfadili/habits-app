@@ -196,3 +196,11 @@ Frame groups (details in `feature-spec-v3.md`): **Today** T1–T15 · **Progress
 - **V3-09 rate ring: not built** — no frame draws it (P7 shows the rate as a tile); built and deleted in V3-3b, see `docs/backlog.md`.
 - Built-in V2 deltas (cell 18/6/5, stat card 14/10/26, chart padding 16) are superseded by T-10, T-14, T-18 above.
 - Everything marked **Later** in the mockup is out of V3; do not build its frames.
+
+
+## V3-5 additions (first run and system states)
+
+- **V3-07 Progress bar · indeterminate:** `ProgressBar indeterminate` sweeps a 35 % segment along the track every 1.2 s, announced as busy with no percentage; still (segment at the left end) with Reduce Motion. Used by SY3.
+- **V3-07 Skeleton:** `Skeleton` is one grey shape on the inset surface, pulsing 1 → 0.5 over the 1.2 s loop, still with Reduce Motion; callers mount it only after 300 ms (`motion.skeleton.delay`) and hide the shapes from VoiceOver behind one "Loading …" stop.
+- **Alert · offer layout (FR3):** `AlertDialog layout="offer"` — the first action is a full-width primary button, the rest are quiet links; VoiceOver starts on the primary one. `Button` takes `buttonRef` for that.
+- **Error screen (SY4):** hero title, one reassurance line, an optional error banner for the reason (`reason`), Try again (primary) and Copy diagnostics (secondary); it is also the root boundary's screen. `LoadErrorBoundary` keeps one screen's load failure inside that screen (SY2).

@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Banner } from "@/components/ui/composite/banner";
 import { Button } from "@/components/ui/primitives/button";
 import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
@@ -29,7 +30,7 @@ export function SuggestionsScreen({
 	const router = useRouter();
 	const { colors } = useTheme();
 	const { sections } = useSuggestionsQueries();
-	const { markFirstRunSeen, isMarking } = useFirstRunActions();
+	const { markFirstRunSeen, isMarking, markError } = useFirstRunActions();
 
 	function pick(suggestion: Suggestion) {
 		router.push({
@@ -67,6 +68,9 @@ export function SuggestionsScreen({
 			))}
 			{firstRun ? (
 				<View style={styles.footer}>
+					{markError ? (
+						<Banner tone="error">{firstRunCopy.continueFailed}</Banner>
+					) : null}
 					<Button
 						label={firstRunCopy.welcome.skip}
 						variant="link"

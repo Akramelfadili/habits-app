@@ -190,6 +190,11 @@ export const SCREENS = {
 		route: "/suggestions?fixtures=empty&textSize=ax",
 		mockup: null,
 		note: "BS1 at an accessibility text size: rows stack icon, text and the Added value.",
+		async interact(page) {
+			// A direct route can still be "Bundling…" when the page loads: wait for the list.
+			await page.getByText("Tap one to open Add habit").waitFor();
+			await page.waitForTimeout(300);
+		},
 	},
 
 	// HAB-03 / HAB-04 / HAB-05 — Today

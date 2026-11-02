@@ -32,10 +32,12 @@ jest.mock("../hooks/use-habit-queries", () => ({
 	useHabitQueries: () => ({ habits: mockHabits }),
 }));
 const mockMarkFirstRunSeen = jest.fn();
+let mockMarkError: Error | null = null;
 jest.mock("../hooks/use-first-run-actions", () => ({
 	useFirstRunActions: () => ({
 		markFirstRunSeen: (...args: unknown[]) => mockMarkFirstRunSeen(...args),
 		isMarking: false,
+		markError: mockMarkError,
 	}),
 }));
 
@@ -165,6 +167,13 @@ describe("SuggestionsScreen from First Run", () => {
 		await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
 		expect(mockMarkFirstRunSeen).toHaveBeenCalledTimes(1);
 		expect(mockDismissAll).toHaveBeenCalled();
+	});
+
+	it("says so inline when the flag cannot be written (no toast host outside the tabs)", async () => {
+		mockMarkError = new Error("disk full");
+		await render(<SuggestionsScreen firstRun />);
+		expect(screen.getByText("Couldn\u2019t continue. Try again.")).toBeTruthy();
+		mockMarkError = null;
 	});
 
 	it("stays when the flag cannot be written", async () => {
