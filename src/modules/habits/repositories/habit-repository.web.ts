@@ -183,12 +183,24 @@ export function useHabitsList(): HabitsResult {
 	);
 }
 
+/** A live query that has not answered yet. */
+const NOT_LOADED: HabitsResult = { habits: [], loaded: false };
+
 export function useActiveHabits(): HabitsResult {
-	return useSyncExternalStore(
+	const result = useSyncExternalStore(
 		subscribe,
 		() => getDerived().active,
 		() => SERVER_ACTIVE,
 	);
+	// The load states (SY1, SY2) are reachable on web without a dev-only route:
+	// `today-loading` never finishes and `today-load-fails` fails every read,
+	// as a live query that throws does. (There is no fail-once: React retries a
+	// throwing render itself, so "once" would never reach the boundary.)
+	const scenario = resolveFixtureScenario();
+	if (scenario === "today-loading") return NOT_LOADED;
+	if (scenario === "today-load-fails")
+		throw new Error("Simulated load failure");
+	return result;
 }
 
 export function useArchivedHabits(): HabitsResult {

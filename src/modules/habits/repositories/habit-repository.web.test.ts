@@ -133,3 +133,40 @@ describe("habit-repository.web", () => {
 		});
 	});
 });
+
+describe("habit-repository.web — the load states (SY1, SY2)", () => {
+	function openAt(scenario: string) {
+		Object.defineProperty(globalThis, "location", {
+			value: { search: `?fixtures=${scenario}` },
+			configurable: true,
+		});
+	}
+	afterEach(() => Reflect.deleteProperty(globalThis, "location"));
+
+	it("today-loading never finishes: not loaded, no habits", async () => {
+		openAt("today-loading");
+		const { useActiveHabits } = loadRepository();
+		const { result } = await renderHook(() => useActiveHabits());
+		expect(result.current).toEqual({ habits: [], loaded: false });
+	});
+
+	it("today-load-fails throws on every read, as a failing live query does", async () => {
+		openAt("today-load-fails");
+		jest.spyOn(console, "error").mockImplementation(() => {});
+		const { useActiveHabits } = loadRepository();
+		await expect(renderHook(() => useActiveHabits())).rejects.toThrow(
+			"Simulated load failure",
+		);
+		await expect(renderHook(() => useActiveHabits())).rejects.toThrow(
+			"Simulated load failure",
+		);
+		jest.restoreAllMocks();
+	});
+
+	it("any other scenario is untouched", async () => {
+		openAt("default");
+		const { useActiveHabits } = loadRepository();
+		const { result } = await renderHook(() => useActiveHabits());
+		expect(result.current.loaded).toBe(true);
+	});
+});

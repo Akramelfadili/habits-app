@@ -8,7 +8,6 @@ import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { ToggleRow } from "@/components/ui/composite/toggle-row";
 import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { copyDiagnostics } from "@/lib/diagnostics/diagnostics";
 import { space } from "@/theme/theme";
 import type { ThemePreference } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -16,14 +15,10 @@ import { ExportSheet } from "../components/export-sheet";
 import { LibrarySectionHeader } from "../components/habits/library-section-header";
 import { ReminderSheet } from "../components/reminder-sheet";
 import { WEEKDAYS } from "../constants";
+import { useDiagnosticsActions } from "../hooks/use-diagnostics-actions";
 import { useSettingsActions } from "../hooks/use-settings-actions";
 import { useSettingsQueries } from "../hooks/use-settings-queries";
-import {
-	messages,
-	reminderSheetCopy,
-	settingsCopy,
-	showMessage,
-} from "../messages";
+import { reminderSheetCopy, settingsCopy } from "../messages";
 import { formatReminderTime } from "../presenters/reminders-helpers";
 import { versionLabel } from "../presenters/settings-helpers";
 
@@ -42,21 +37,11 @@ export function SettingsScreen() {
 	const { colors } = useTheme();
 	const settings = useSettingsQueries();
 	const actions = useSettingsActions();
+	const diagnostics = useDiagnosticsActions();
 	const [isExporting, setIsExporting] = useState(false);
 	const [isPickingTime, setIsPickingTime] = useState(false);
 	const eveningTime = formatReminderTime(settings.eveningReviewTime);
 	const { size, usedThisMonth } = settings.freezePool;
-
-	async function handleCopyDiagnostics() {
-		const result = await copyDiagnostics();
-		const spec =
-			result === "copied"
-				? messages.diagnosticsCopied
-				: result === "shared"
-					? messages.diagnosticsShared
-					: messages.diagnosticsFailed;
-		showMessage(spec, []);
-	}
 
 	const permissionValue =
 		settings.notificationPermission === "granted"
@@ -202,7 +187,7 @@ export function SettingsScreen() {
 							title={settingsCopy.about.copy}
 							subtitle={settingsCopy.about.copyBody}
 							value={settingsCopy.about.copyValue}
-							onPress={handleCopyDiagnostics}
+							onPress={diagnostics.copyDiagnostics}
 						/>
 					</Container>
 				</View>

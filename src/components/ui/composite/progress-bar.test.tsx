@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import { Animated } from "react-native";
 import { ProgressBar } from "./progress-bar";
 
 describe("ProgressBar", () => {
@@ -43,5 +44,52 @@ describe("ProgressBar with a label (V3-07)", () => {
 	it("rounds the percentage to a whole number", async () => {
 		await render(<ProgressBar value={1 / 3} label="2 of 6 done" />);
 		expect(screen.getByText("33%")).toBeTruthy();
+	});
+});
+
+let mockReduceMotion = false;
+jest.mock("@/utils/use-reduced-motion", () => ({
+	useReducedMotion: () => mockReduceMotion,
+}));
+
+describe("ProgressBar — indeterminate (SY3)", () => {
+	beforeEach(() => {
+		mockReduceMotion = false;
+	});
+
+	it("is a busy progress bar with no value and no percentage", async () => {
+		await render(<ProgressBar value={0.64} indeterminate label="Updating" />);
+		const bar = screen.getByTestId("progress-bar");
+		expect(bar.props.accessibilityRole).toBe("progressbar");
+		expect(bar.props.accessibilityState).toEqual({ busy: true });
+		expect(bar.props.accessibilityValue).toBeUndefined();
+		expect(screen.queryByText(/%/)).toBeNull();
+	});
+
+	it("reads its label as one stop, without a percentage", async () => {
+		await render(<ProgressBar value={0} indeterminate label="Updating" />);
+		expect(screen.getByLabelText("Updating")).toBeTruthy();
+	});
+
+	it("sweeps once the track is measured", async () => {
+		const timing = jest.spyOn(Animated, "timing");
+		await render(<ProgressBar value={0} indeterminate />);
+		expect(timing).not.toHaveBeenCalled();
+		await fireEvent(screen.getByTestId("progress-bar"), "layout", {
+			nativeEvent: { layout: { width: 300, height: 6, x: 0, y: 0 } },
+		});
+		expect(timing).toHaveBeenCalledTimes(1);
+		timing.mockRestore();
+	});
+
+	it("sits still with Reduce Motion", async () => {
+		mockReduceMotion = true;
+		const timing = jest.spyOn(Animated, "timing");
+		await render(<ProgressBar value={0} indeterminate />);
+		await fireEvent(screen.getByTestId("progress-bar"), "layout", {
+			nativeEvent: { layout: { width: 300, height: 6, x: 0, y: 0 } },
+		});
+		expect(timing).not.toHaveBeenCalled();
+		timing.mockRestore();
 	});
 });

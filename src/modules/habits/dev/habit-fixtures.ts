@@ -88,7 +88,9 @@ export type FixtureScenario =
 	| "many-categories"
 	| "categories-built-in-only"
 	| "categories-one-custom"
-	| "categories-in-use";
+	| "categories-in-use"
+	| "today-loading"
+	| "today-load-fails";
 
 const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	...TODAY_V3_SCENARIOS,
@@ -126,6 +128,8 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	"categories-built-in-only",
 	"categories-one-custom",
 	"categories-in-use",
+	"today-loading",
+	"today-load-fails",
 ];
 
 /**

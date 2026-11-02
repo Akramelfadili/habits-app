@@ -1,33 +1,82 @@
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
-import { type PropsWithChildren, useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logger/logger";
 import { db, expoDb } from "./client";
+import type { DatabaseCopy } from "./database-copy";
 import { DatabaseErrorScreen } from "./database-error-screen";
+import {
+	MIGRATION_SCREEN_PAINT_MS,
+	type MigrationPlan,
+	planMigrations,
+} from "./migration-plan";
+import { MigrationScreen } from "./migration-screen";
 import migrations from "./migrations/migrations";
 import { SCHEMA_VERSION } from "./schema-version";
 
+type DatabaseProviderProps = PropsWithChildren<{ copy: DatabaseCopy }>;
+
 /**
  * Runs the migrations before anything reads the database. A failure shows the
- * error screen with Retry (audit A3-01). The migrator is one atomic
- * transaction, so a failed run leaves the old schema intact; Retry re-runs it
- * on a fresh mount (`useMigrations` only runs once per mount), which mainly
- * helps with transient errors.
+ * error screen with Retry (audit A3-01, SY4). The migrator is one atomic
+ * transaction, so a failed run leaves the old schema and every row intact;
+ * Retry re-runs it on a fresh mount (`useMigrations` only runs once per mount),
+ * which mainly helps with transient errors.
+ *
+ * On the first launch after an update the update screen (SY3) is up before the
+ * migrator starts. It does not change what the migrator does — only when it
+ * begins, a moment later, so the screen can be painted before the JavaScript
+ * thread is busy.
  */
-export function DatabaseProvider({ children }: PropsWithChildren) {
+export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	const [attempt, setAttempt] = useState(0);
 	return (
-		<MigrationGate key={attempt} onRetry={() => setAttempt((n) => n + 1)}>
+		<MigrationGate
+			key={attempt}
+			copy={copy}
+			onRetry={() => setAttempt((n) => n + 1)}
+		>
 			{children}
 		</MigrationGate>
 	);
 }
 
+/** The newest `when` in the journal: what the migrator compares the last applied row against. */
+function newestMigrationAt(): number {
+	return migrations.journal.entries.reduce(
+		(newest, entry) => Math.max(newest, entry.when),
+		0,
+	);
+}
+
 function MigrationGate({
 	children,
+	copy,
 	onRetry,
-}: PropsWithChildren<{ onRetry: () => void }>) {
+}: DatabaseProviderProps & { onRetry: () => void }) {
+	const plan = useMemo(() => planMigrations(expoDb, newestMigrationAt()), []);
+	const [started, setStarted] = useState(plan !== "upgrade");
+
+	useEffect(() => {
+		if (started) return;
+		const timer = setTimeout(() => setStarted(true), MIGRATION_SCREEN_PAINT_MS);
+		return () => clearTimeout(timer);
+	}, [started]);
+
+	if (!started) return <MigrationScreen copy={copy.updating} />;
+	return (
+		<RunMigrations plan={plan} copy={copy} onRetry={onRetry}>
+			{children}
+		</RunMigrations>
+	);
+}
+
+function RunMigrations({
+	children,
+	copy,
+	plan,
+	onRetry,
+}: DatabaseProviderProps & { plan: MigrationPlan; onRetry: () => void }) {
 	const { success, error } = useMigrations(db, migrations);
 	useDrizzleStudio(__DEV__ ? expoDb : null);
 
@@ -37,23 +86,20 @@ function MigrationGate({
 		}
 	}, [success]);
 
-	if (error) return <DatabaseErrorScreen error={error} onRetry={onRetry} />;
-
-	if (!success) {
+	if (error) {
 		return (
-			<View style={styles.center}>
-				<Text>Loading…</Text>
-			</View>
+			<DatabaseErrorScreen
+				error={error}
+				onRetry={onRetry}
+				copy={plan === "upgrade" ? copy.updateFailed : copy.openFailed}
+			/>
 		);
+	}
+
+	// Splash still covers a launch with nothing to show; an update keeps its screen up.
+	if (!success) {
+		return plan === "upgrade" ? <MigrationScreen copy={copy.updating} /> : null;
 	}
 
 	return children;
 }
-
-const styles = StyleSheet.create({
-	center: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-});

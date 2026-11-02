@@ -18,6 +18,7 @@ import { useStartupActions } from "@/modules/habits/hooks/use-startup-actions";
 import {
 	firstRunCopy,
 	formCopy,
+	migrationCopy,
 	suggestionsCopy,
 } from "@/modules/habits/messages";
 import { loadThemePreference } from "@/theme/theme-preference";
@@ -101,7 +102,7 @@ export default function RootLayout() {
 		// Gesture handler needs one root view for any gesture in the app (Manage &
 		// Archive's drag-to-reorder and swipe-to-archive, HAB-13).
 		<GestureHandlerRootView style={styles.root}>
-			<DatabaseProvider>
+			<DatabaseProvider copy={migrationCopy}>
 				<ThemeGate>
 					{/* "auto" follows the resolved scheme, explicit Light/Dark included. */}
 					<StatusBar style="auto" />

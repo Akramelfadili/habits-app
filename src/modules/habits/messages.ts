@@ -10,6 +10,7 @@
  */
 
 import { toastHoldMs } from "@/components/ui/composite/toast-host";
+import type { DatabaseCopy } from "@/lib/db/database-copy";
 import { showToast, type ToastTone } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
 import { notificationCopy, reminderCapMessage } from "./reminder-copy";
@@ -214,6 +215,15 @@ const plural = (count: number, one: string, many: string) =>
 	`${count} ${count === 1 ? one : many}`;
 
 export const todayCopy = {
+	/** SY1: what a screen reader says for the skeleton while Today loads. */
+	loading: "Loading your habits",
+	/** SY2: Today could not read its habits; the header and tab bar stay. */
+	loadError: {
+		title: "Couldn\u2019t load your habits",
+		body: "Your data is safe. Trying again usually fixes this.",
+		retry: "Try again",
+		copyDiagnostics: "Copy diagnostics",
+	},
 	/** Week strip VoiceOver actions (08.3). */
 	changeDayLabel: (day: string) => `${day} · Change day`,
 	changeDayTitle: "Change day",
@@ -1022,6 +1032,37 @@ export const suggestionsCopy = {
 	/** The link in the empty Today (T2, FR4) and the empty Habits tab (H6), and FR1's second action. */
 	browse: "Browse suggestions",
 } as const;
+
+/**
+ * The database gate (HAB-47, SY3 and SY4), handed to `DatabaseProvider` by the
+ * root layout. Every claim is checked against the migrator: it runs all pending
+ * migrations in one transaction, so a failed run is rolled back whole ("Nothing
+ * was changed", "as they were") and a run never deletes a person's habits
+ * ("Nothing is deleted"). There is no step or count to report, so neither
+ * screen names one (the frames' "Step 2 of 3", "64%").
+ */
+export const migrationCopy = {
+	updating: {
+		title: "Updating your data",
+		body: "This version stores habits in a new format. It usually takes under a minute.",
+		progress: "Updating your habits",
+		keepOpen: "Keep the app open. No habits or history are deleted.",
+	},
+	updateFailed: {
+		title: "Update didn\u2019t finish",
+		message: "Your habits are as they were before the update.",
+		reason: {
+			title: "The update stopped",
+			message:
+				"Nothing was changed. Try again, or copy diagnostics for support.",
+		},
+	},
+	openFailed: {
+		title: "Couldn't open your data",
+		message:
+			"The app couldn't prepare its database. Nothing was lost. Try again, and if it keeps happening, copy the diagnostics and send them over.",
+	},
+} satisfies DatabaseCopy;
 
 /**
  * Categories (HAB-42, C1–C6, DC6): the screen's header and groups, the rows,

@@ -16,10 +16,12 @@ import {
 	useCollapsingHeader,
 } from "@/components/ui/composite/collapsing-header";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
+import { LoadErrorBoundary } from "@/components/ui/composite/load-error-boundary";
 import { TAB_BAR_BOTTOM_PADDING } from "@/components/ui/composite/tab-bar-pill";
 import { motion, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
+import { useDelayedFlag } from "@/utils/use-delayed-flag";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { FirstRunReminderOffer } from "../components/first-run/first-run-reminder-offer";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
@@ -28,7 +30,9 @@ import { PastDayBar } from "../components/today/past-day-bar";
 import { TodayDevButtons } from "../components/today/today-dev-buttons";
 import { TodayEmptyState } from "../components/today/today-empty-state";
 import { TodayHabitList } from "../components/today/today-habit-list";
+import { TodayLoadError } from "../components/today/today-load-error";
 import { TodayRestDay } from "../components/today/today-rest-day";
+import { TodaySkeleton } from "../components/today/today-skeleton";
 import { TodayHeader } from "../components/today-header";
 import { WeekStrip } from "../components/week-strip";
 import { EVENING_STARTS_AT_HOUR } from "../constants";
@@ -48,8 +52,30 @@ import { todayCopy } from "../messages";
  */
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
-/** Thin: reads from the hooks, picks the view state, hands props to the sections in `components/today/`. */
+/**
+ * The Today tab: Today itself, inside a boundary that keeps a failed read in
+ * this tab (SY2) — the header and the tab bar stay and Try again re-runs it.
+ */
 export function TodayScreen() {
+	const router = useRouter();
+	return (
+		<LoadErrorBoundary
+			scope="today"
+			fallback={(retry) => (
+				<TodayLoadError
+					day={new Date()}
+					onRetry={retry}
+					onAddHabit={() => router.push("/new-habit")}
+				/>
+			)}
+		>
+			<TodayContent />
+		</LoadErrorBoundary>
+	);
+}
+
+/** Thin: reads from the hooks, picks the view state, hands props to the sections in `components/today/`. */
+function TodayContent() {
 	const router = useRouter();
 	const { colors } = useTheme();
 	const day = useSelectedDayQueries();
@@ -75,6 +101,12 @@ export function TodayScreen() {
 		: LinearTransition.duration(motion.state.duration).reduceMotion(
 				ReduceMotion.Never,
 			);
+
+	// Habits haven't loaded yet: the header is real at once, the body is blank,
+	// never a flash of "Nothing to track yet" (audit A5-04) — and only if the wait
+	// lasts 300 ms do the skeleton rows appear (SY1), so a fast load shows none.
+	const loading = !today.isLoaded;
+	const showSkeleton = useDelayedFlag(loading, motion.skeleton.delay);
 
 	const dueHabits = today.groups.flatMap((group) => group.habits);
 	const dueIds = new Set(dueHabits.map((habit) => habit.id));
@@ -146,18 +178,6 @@ export function TodayScreen() {
 		/>
 	) : null;
 
-	// Habits haven't loaded yet: a neutral blank, never a flash of "Nothing to
-	// track yet" or First Run (audit A5-04).
-	if (!today.isLoaded) {
-		return (
-			<SafeAreaView
-				edges={SCREEN_EDGES}
-				testID="screen-loading"
-				style={[styles.screen, { backgroundColor: colors.bg }]}
-			/>
-		);
-	}
-
 	return (
 		<SafeAreaView
 			edges={SCREEN_EDGES}
@@ -186,15 +206,19 @@ export function TodayScreen() {
 			>
 				<View style={styles.top}>
 					{titleRow}
-					{today.viewState === "no-habits" ? null : weekStrip}
+					{loading || today.viewState === "no-habits" ? null : weekStrip}
 				</View>
-				{day.isPastDay ? (
+				{!loading && day.isPastDay ? (
 					<Animated.View entering={barEntering} exiting={barExiting}>
 						<PastDayBar dayLabel={dayLabel} onShowToday={day.showToday} />
 					</Animated.View>
 				) : null}
 				<Animated.View layout={listLayout} style={styles.body}>
-					{today.viewState === "no-habits" ? (
+					{loading ? (
+						<View testID="screen-loading">
+							{showSkeleton ? <TodaySkeleton /> : null}
+						</View>
+					) : today.viewState === "no-habits" ? (
 						<TodayEmptyState
 							onAddHabit={() => router.push("/new-habit")}
 							onBrowseSuggestions={() => router.push("/suggestions")}

@@ -1075,17 +1075,73 @@ export const SCREENS = {
 	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in
 	// the app.
 	"error-screen-migration-failed": {
-		feature: "B6",
+		feature: "HAB-47",
 		route: "/?fixtures=migration-fails",
-		mockup: null,
-		note: "A failed database migration: plain-words title, 'Try again', 'Copy diagnostics'. No raw error text.",
+		mockup: "docs/mockups/v3/renders/states/slice_11.png",
+		note: "SY4 — an update that failed: as they were, a banner saying nothing was changed, Try again, Copy diagnostics. The frame's 'Stopped at step 2 of 3' is not built (the migrator has no steps).",
 	},
 	"error-screen-migration-failed-dark": {
-		feature: "B6",
+		feature: "HAB-47",
 		route: "/?fixtures=migration-fails",
 		mockup: null,
 		colorScheme: "dark",
 		note: "Same, dark.",
+	},
+	"error-screen-first-open-failed": {
+		feature: "HAB-47",
+		route: "/?fixtures=migration-fails-first-open",
+		mockup: null,
+		note: "The database could not be prepared with nothing to update: the plain open-failure words, no banner.",
+	},
+	"migration-running": {
+		feature: "HAB-47",
+		route: "/?fixtures=migration-running",
+		mockup: "docs/mockups/v3/renders/states/slice_10.png",
+		note: "SY3 — an update is running: an indeterminate bar (the frame's 'Step 2 of 3 · 64%' is not built; the migrator has no progress). Captured with Reduce Motion, so the segment rests at the left end.",
+		async interact(page) {
+			await page.emulateMedia({ reducedMotion: "reduce" });
+			await page.waitForTimeout(500);
+		},
+	},
+	"today-loading": {
+		feature: "HAB-47",
+		route: "/?fixtures=today-loading",
+		mockup: "docs/mockups/v3/renders/states/slice_09.png",
+		clock: V3_FRIDAY,
+		note: "SY1 — the real header at once, skeleton rows after 300 ms (captured after 700 ms).",
+		async interact(page) {
+			// Reduce Motion: the frame's skeleton is still, and the pulse would
+			// make every capture a different frame of its loop.
+			await page.emulateMedia({ reducedMotion: "reduce" });
+			await page.getByTestId("today-skeleton").waitFor({ state: "attached" });
+			await page.waitForTimeout(400);
+		},
+	},
+	"today-load-error": {
+		feature: "HAB-47",
+		route: "/?fixtures=today-load-fails",
+		mockup: "docs/mockups/v3/renders/states/slice_10.png",
+		clock: V3_FRIDAY,
+		note: "SY2 — Today could not read its habits: the header and the tab bar stay; Try again and Copy diagnostics.",
+		ignoreErrors: [/Simulated load failure/, /The above error occurred/],
+		async interact(page) {
+			// React logs a handled render error, and the dev LogBox draws a toast for
+			// it over the pill. That toast is the dev tooling, not the app: hide it.
+			const toast = page.getByText(/Simulated load failure/).first();
+			await toast.waitFor({ state: "attached", timeout: 4000 }).catch(() => {});
+			await toast
+				.evaluate((el) => {
+					for (let node = el; node; node = node.parentElement) {
+						const { position } = getComputedStyle(node);
+						if (position === "fixed" || position === "absolute") {
+							node.style.display = "none";
+							return;
+						}
+					}
+				})
+				.catch(() => {});
+			await page.waitForTimeout(200);
+		},
 	},
 	"error-toast-today": {
 		feature: "B6",
@@ -1618,6 +1674,10 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"error-screen-first-open-failed",
+	"migration-running",
+	"today-loading",
+	"today-load-error",
 	"suggestions",
 	"suggestions-added",
 	"first-run-suggestions",
