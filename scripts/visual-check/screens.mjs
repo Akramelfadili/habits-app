@@ -1117,6 +1117,17 @@ export const SCREENS = {
 			await page.waitForTimeout(400);
 		},
 	},
+	"today-rollover": {
+		feature: "HAB-47",
+		route: "/?fixtures=today-v3",
+		mockup: "docs/mockups/v3/renders/states/slice_11.png",
+		clock: "2026-10-23T23:59:56",
+		note: "SY5 — the app stayed open across midnight: Today is Saturday, with the banner summing up Friday (the page clock crosses midnight a few seconds after load).",
+		async interact(page) {
+			await page.getByText(/closed at midnight/).waitFor({ timeout: 15000 });
+			await page.waitForTimeout(300);
+		},
+	},
 	"today-load-error": {
 		feature: "HAB-47",
 		route: "/?fixtures=today-load-fails",
@@ -1674,6 +1685,7 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"today-rollover",
 	"error-screen-first-open-failed",
 	"migration-running",
 	"today-loading",

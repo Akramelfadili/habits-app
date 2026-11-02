@@ -23,6 +23,14 @@ jest.mock("./use-quantity-log-actions", () => ({
 	}),
 }));
 
+let mockEntries: { habitId: number; date: string; value?: number }[] = [];
+jest.mock("../repositories/entry-repository", () => ({
+	useEntriesInRange: (start: Date) => {
+		const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+		return mockEntries.filter((entry) => entry.date === key);
+	},
+}));
+
 import { useTodayLogActions } from "./use-today-log-actions";
 
 const TODAY = new Date(2026, 9, 14);
@@ -39,14 +47,22 @@ function setup(
 	values = new Map<number, number>(),
 	selectedKey: string | null = null,
 ) {
-	return renderHook(() =>
-		useTodayLogActions({
-			today: TODAY,
-			selectedKey,
-			completedHabitIds: new Set<number>(),
-			quantityValuesByHabitId: values,
-			loggableHabits: [read, water],
-		}),
+	// The sheet reads its own day's entry: mirror the shown day's values into the store.
+	mockEntries = [...values].map(([habitId, value]) => ({
+		habitId,
+		date: selectedKey ?? "2026-10-14",
+		value,
+	}));
+	return renderHook(
+		({ today }: { today: Date }) =>
+			useTodayLogActions({
+				today,
+				selectedKey,
+				completedHabitIds: new Set<number>(),
+				quantityValuesByHabitId: values,
+				loggableHabits: [read, water],
+			}),
+		{ initialProps: { today: TODAY } },
 	);
 }
 
@@ -101,6 +117,45 @@ describe("useTodayLogActions", () => {
 		await act(() => result.current.openQuantitySheet(2));
 		jest.setSystemTime(new Date(2026, 9, 15, 0, 1));
 		expect(result.current.quantitySheet?.day).toEqual(TODAY);
+	});
+
+	describe("an open sheet across midnight (SY5)", () => {
+		const SATURDAY = new Date(2026, 9, 15);
+
+		it("keeps its day, its amount and says the day in its title once Today has moved on", async () => {
+			const { result, rerender } = await setup(new Map([[2, 5]]));
+			await act(() => result.current.openQuantitySheet(2));
+			expect(result.current.quantitySheet?.dayLabel).toBeUndefined();
+
+			// Today moves on; the new day has its own, different amount.
+			mockEntries = [
+				{ habitId: 2, date: "2026-10-14", value: 5 },
+				{ habitId: 2, date: "2026-10-15", value: 1 },
+			];
+			await rerender({ today: SATURDAY });
+
+			expect(result.current.quantitySheet).toMatchObject({
+				day: TODAY,
+				value: 5,
+				dayLabel: "Wed 14 Oct",
+			});
+		});
+
+		it("follows a change made to its own day while open", async () => {
+			const { result, rerender } = await setup(new Map([[2, 5]]));
+			await act(() => result.current.openQuantitySheet(2));
+			mockEntries = [{ habitId: 2, date: "2026-10-14", value: 7 }];
+			await rerender({ today: SATURDAY });
+			expect(result.current.quantitySheet?.value).toBe(7);
+		});
+
+		it("a sheet closed after midnight leaves nothing behind", async () => {
+			const { result, rerender } = await setup(new Map([[2, 5]]));
+			await act(() => result.current.openQuantitySheet(2));
+			await rerender({ today: SATURDAY });
+			await act(() => result.current.dismissQuantitySheet());
+			expect(result.current.quantitySheet).toBeNull();
+		});
 	});
 
 	it("does not open the sheet on a render that still shows yesterday", async () => {

@@ -217,6 +217,15 @@ const plural = (count: number, one: string, many: string) =>
 export const todayCopy = {
 	/** SY1: what a screen reader says for the skeleton while Today loads. */
 	loading: "Loading your habits",
+	/** SY5: the app stayed open across midnight; Today has moved to the new day. */
+	rollover: {
+		title: (weekday: string) => `It\u2019s ${weekday} now`,
+		body: (weekday: string, completed: number, total: number) =>
+			total === 0
+				? `${weekday} closed at midnight with nothing due. You can still log ${weekday} from the week strip.`
+				: `${weekday} closed at midnight with ${completed} of ${total} done. You can still log ${weekday} from the week strip.`,
+		dismiss: "Dismiss",
+	},
 	/** SY2: Today could not read its habits; the header and tab bar stay. */
 	loadError: {
 		title: "Couldn\u2019t load your habits",

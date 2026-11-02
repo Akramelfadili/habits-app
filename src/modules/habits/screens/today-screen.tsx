@@ -32,11 +32,13 @@ import { TodayEmptyState } from "../components/today/today-empty-state";
 import { TodayHabitList } from "../components/today/today-habit-list";
 import { TodayLoadError } from "../components/today/today-load-error";
 import { TodayRestDay } from "../components/today/today-rest-day";
+import { TodayRolloverBanner } from "../components/today/today-rollover-banner";
 import { TodaySkeleton } from "../components/today/today-skeleton";
 import { TodayHeader } from "../components/today-header";
 import { WeekStrip } from "../components/week-strip";
 import { EVENING_STARTS_AT_HOUR } from "../constants";
 import { useOffScheduleQueries } from "../hooks/use-off-schedule-queries";
+import { useRolloverQueries } from "../hooks/use-rollover-queries";
 import { useSelectedDayQueries } from "../hooks/use-selected-day-queries";
 import { useTodayDevActions } from "../hooks/use-today-dev-actions";
 import { useTodayFreezeActions } from "../hooks/use-today-freeze-actions";
@@ -80,6 +82,7 @@ function TodayContent() {
 	const { colors } = useTheme();
 	const day = useSelectedDayQueries();
 	const today = useTodayQueries(day.selectedKey);
+	const rollover = useRolloverQueries(day.today);
 	const strip = useWeekStripQueries(day.selectedDay, day.today);
 	const { eligibleHabits, loggedToday } = useOffScheduleQueries(
 		today.selectedDay,
@@ -206,6 +209,13 @@ function TodayContent() {
 			>
 				<View style={styles.top}>
 					{titleRow}
+					{rollover.notice ? (
+						<TodayRolloverBanner
+							notice={rollover.notice}
+							today={day.today}
+							onDismiss={rollover.dismiss}
+						/>
+					) : null}
 					{loading || today.viewState === "no-habits" ? null : weekStrip}
 				</View>
 				{!loading && day.isPastDay ? (

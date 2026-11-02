@@ -164,6 +164,26 @@ jest.mock("../hooks/use-first-run-actions", () => ({
 		isResetting: false,
 	}),
 }));
+// The quantity sheet reads its own day's entry: serve the shown amounts for whichever day it asks.
+jest.mock("../repositories/entry-repository", () => ({
+	useEntriesInRange: (start: Date) =>
+		[...mockQuantityValuesByHabitId].map(([habitId, value]) => ({
+			habitId,
+			value,
+			date: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`,
+		})),
+}));
+let mockRollover: {
+	day: Date;
+	summary: { completed: number; total: number };
+} | null = null;
+const mockDismissRollover = jest.fn();
+jest.mock("../hooks/use-rollover-queries", () => ({
+	useRolloverQueries: () => ({
+		notice: mockRollover,
+		dismiss: mockDismissRollover,
+	}),
+}));
 // FR3's pre-prompt has its own tests; here it only has to stay out of the way.
 jest.mock("../components/first-run/first-run-reminder-offer", () => ({
 	FirstRunReminderOffer: () => null,
@@ -229,6 +249,8 @@ describe("TodayScreen", () => {
 		measureSpy = mockMeasureInWindow();
 		mockIsLoaded = true;
 		mockQueriesError = null;
+		mockRollover = null;
+		mockDismissRollover.mockReset();
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset().mockResolvedValue(OK);
 		mockRestoreDay
@@ -538,6 +560,32 @@ describe("TodayScreen", () => {
 				screen.queryByTestId("today-skeleton", { includeHiddenElements: true }),
 			).toBeNull();
 			expect(screen.getByText("Nothing to track yet")).toBeTruthy();
+		});
+	});
+
+	describe("midnight rollover (SY5)", () => {
+		it("shows nothing until the day rolls over", async () => {
+			await render(<TodayScreen />);
+			expect(screen.queryByText(/closed at midnight/)).toBeNull();
+		});
+
+		it("shows the banner under the header and dismisses it", async () => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
+			mockRollover = {
+				day: new Date(2026, 8, 15),
+				summary: { completed: 4, total: 5 },
+			};
+			await render(<TodayScreen />);
+			expect(
+				screen.getByText(/Tuesday closed at midnight with 4 of 5 done/),
+			).toBeTruthy();
+			// The list is still there: nothing was lost with the refresh.
+			expect(screen.getByText("Glass of water")).toBeTruthy();
+			await fireEvent.press(screen.getByText("Dismiss"));
+			expect(mockDismissRollover).toHaveBeenCalledTimes(1);
 		});
 	});
 
