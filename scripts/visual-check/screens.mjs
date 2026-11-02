@@ -194,7 +194,25 @@ export const SCREENS = {
 			await typeHabitName(page, "Drink water");
 			await page.getByText("Quantity", { exact: true }).click();
 			await page.getByLabel("Unit", { exact: true }).fill("glasses");
-			await page.waitForTimeout(300);
+			// The Unit field scrolls the form to its end (animated); let it settle.
+			await page.waitForTimeout(900);
+			// The animated scroll lands 4 px apart from run to run; pin it to the end.
+			await page.evaluate(() => {
+				const scroller = document.querySelector(
+					'[data-testid="habit-form-scroll"]',
+				);
+				if (scroller) scroller.scrollTop = scroller.scrollHeight;
+				// No caret in the capture: a blinking one makes it flaky.
+				document.activeElement?.blur();
+			});
+			await page.waitForTimeout(600);
+			await page.evaluate(() => {
+				const scroller = document.querySelector(
+					'[data-testid="habit-form-scroll"]',
+				);
+				if (scroller) scroller.scrollTop = scroller.scrollHeight;
+			});
+			await page.waitForTimeout(600);
 		},
 	},
 	"form-new-per-week": {
@@ -862,13 +880,13 @@ export const SCREENS = {
 	// HAB-44 — Settings (S1–S7, SY6) and Export (EX1–EX4)
 	settings: {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_03.png",
 		note: "S1 / S2 — System picked (resolves light): Appearance as radio rows, the Monday and text-size note, then the evening review. One screen where the frames draw a hub with a page per row.",
 	},
 	"settings-reminders": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
 		note: "S3 — scrolled to Reminders: the evening review on, its time, Notifications Allowed and the 'only on days with open habits' rule.",
 		async interact(page) {
@@ -878,7 +896,7 @@ export const SCREENS = {
 	},
 	"settings-streaks": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
 		note: "S4 — Streaks: left and used this month, the rule in plain words, how to use one. Not built from S4: the 'Saved' stat (PR-08) and Auto-use freezes (Later).",
 		async interact(page) {
@@ -888,7 +906,7 @@ export const SCREENS = {
 	},
 	"settings-data": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
 		note: "S5 — Data and About, scrolled to the end: Export data (JSON, CSV), Version, Copy diagnostics. No Backup row (Later).",
 		async interact(page) {
@@ -899,7 +917,7 @@ export const SCREENS = {
 	},
 	"settings-about": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
 		note: "S6 — Copy diagnostics tapped: the toast says 'Diagnostics copied', no Undo. Privacy and Send feedback rows are not built (no spec).",
 		async interact(page) {
@@ -916,7 +934,7 @@ export const SCREENS = {
 	},
 	"settings-ax": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light&textSize=ax",
+		route: "/(habits)/settings?fixtures=settings&textSize=ax",
 		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
 		note: "S7 — AX3: rows stack (icon, text, value), the title block stacks.",
 	},
@@ -943,7 +961,7 @@ export const SCREENS = {
 	},
 	"export-choose": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/states/slice_04.png",
 		note: "EX1 — Export data: JSON picked, the line on what each is for, 'Export JSON'. Opened from Settings; Progress opens the same sheet (export-from-progress).",
 		async interact(page) {
@@ -965,7 +983,7 @@ export const SCREENS = {
 	},
 	"export-progress": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/states/slice_05.png",
 		note: "EX2 — writing: the file's name with a percentage, the format locked, 'Exporting…'. The page slows setTimeout(0) so the ~1s export is still running when captured.",
 		async interact(page) {
@@ -982,7 +1000,7 @@ export const SCREENS = {
 	},
 	"export-ready": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings&theme=light",
+		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/states/slice_05.png",
 		note: "EX3 — ready: the file card with size and counts, Share file, Done, the temporary-file note.",
 		async interact(page) {
@@ -993,7 +1011,7 @@ export const SCREENS = {
 	},
 	"export-failed": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=export-fails&theme=light",
+		route: "/(habits)/settings?fixtures=export-fails",
 		mockup: "docs/mockups/v3/renders/states/slice_05.png",
 		note: "EX4 — failed on storage: the reason first, 'Nothing was changed', Retry primary, Cancel.",
 		async interact(page) {
