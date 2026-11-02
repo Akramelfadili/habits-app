@@ -18,7 +18,7 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **Edit this day keeps a Note field** when it is opened from Habit Detail (RL1/RL2 draw none): without it a day's note could no longer be written. Opened from anywhere else there is no note.
 - **"Log a different habit" stays under the rest-day list** (T3 draws no such link): it keeps the off-schedule picker reachable, and the picker is part of HAB-34.
 - **The quantity cap stays 9999** (the existing `MAX_QUANTITY_VALUE`); QS2's helper reads "up to 9999", not the mockup's 99.
-- **"Browse suggestions" (T2) is hidden until HAB-46**: there is no suggestions screen to send it to.
+- **"Browse suggestions" (T2) was hidden until HAB-46**; it is built (V3-5) and shown in the empty Today and Habits states.
 - **× per week habits are never at risk by day** (HAB-33, T1/T6): the mockup draws no per-week habit at risk, and a one-date freeze cannot cover a week; a week-level freeze is Later.
 - **Frames that show tab bar A** are drawn for brevity; build bar B (floating pill) everywhere.
 - **P10 (Month, one habit) tiles are Completion / Longest / Freezes used**, not Completion / Streak / Longest: the current streak is not in the month data (V3-3b).
@@ -194,7 +194,7 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - **Rest day (T3):** "Nothing is due today, so every streak is safe. Anything you log counts as a bonus." Not-due habits reachable via dashed circles; a × per week habit that met its target shows "back Monday".
 - **Loading:** header and date are real immediately; skeleton rows appear after 300 ms; static with Reduce Motion (HAB-47).
 
-> **As built (V3-2b):** the empty state hides the strip and progress (`EmptyState`, V3-28) and offers "Add habit"; **"Browse suggestions" is not shown** until the suggestions screen (HAB-46) exists, because there is nowhere to send it. The rest day (T3) is a state: why nothing is due, then "Not due today · Bonus logs" with the not-due habits on dashed circles (a met × per week habit shows done and "back Monday"). The old "Log something anyway" picker stays reachable below the list as "Log a different habit" (an addition to the frame, kept because the picker is part of HAB-34). **Loading skeleton: not built** (still the neutral blank; backlog).
+> **As built (V3-2b):** the empty state hides the strip and progress (`EmptyState`, V3-28) and offers "Add habit"; **"Browse suggestions" is not shown** until the suggestions screen (HAB-46) exists, because there is nowhere to send it. The rest day (T3) is a state: why nothing is due, then "Not due today · Bonus logs" with the not-due habits on dashed circles (a met × per week habit shows done and "back Monday"). The old "Log something anyway" picker stays reachable below the list as "Log a different habit" (an addition to the frame, kept because the picker is part of HAB-34). **Loading skeleton: built in V3-5 (SY1).**
 
 ---
 
@@ -422,6 +422,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Skipped: Today empty state (FR4).
 - Suggestions (BS1): 8–10 bundled local habits grouped by category (9 shown); tap opens Add habit prefilled (BS2).
 
+> **As built (V3-5):** *Gate:* First Run replaces the tabs (route `/first-run`, outside `(tabs)`, so no pill) only while the database has no habits, archived included, and `habits.seenFirstRun` is unset; the flag is written on a first save, on any skip and once for an install that already has habits. FR1 welcome (Skip for now is an addition); FR2 is the New habit form in `slim` mode (name, five quick picks that also carry category and target, Type, Frequency) whose Close skips to Today; FR3 is an `AlertDialog` in its `offer` layout over Today (Allow reminders adds the default 09:00 reminder and only then raises the iOS prompt, Not now does nothing); FR4 is the empty Today. *Suggestions:* `suggestions.ts` holds the nine; `/suggestions` is a root modal (`?firstRun=1` from First Run), rows from `groupSuggestions` (Break habits last), Added by the form's duplicate rule; a tap pushes `/new-habit?prefill=…`. Entry points: FR1, Today's and Habits' empty states. Deviations: `docs/backlog.md`, "V3-5".
+
 ---
 
 ## HAB-47 — System states
@@ -431,6 +433,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Loading (SY1), load error inside Today with Try again + Copy diagnostics, tabs still usable (SY2), migration in progress before the tabs, indeterminate (SY3), migration failed (SY4), midnight rollover banner (SY5), notifications denied (SY6).
 - Banners carry states that last (notifications off, archived, export failed, new day); toasts carry events.
 - Migration promises are true (one transaction); SY3 is indeterminate.
+
+> **As built (V3-5):** SY1 `TodaySkeleton` after `motion.skeleton.delay` (300 ms), pulsing on the 1.2 s loop and still with Reduce Motion, one "Loading your habits" stop; SY2 `LoadErrorBoundary` around Today with `TodayLoadError`; SY3/SY4 in `DatabaseProvider` (copy handed in as `migrationCopy`): `MigrationScreen` (indeterminate, only on an upgrade, painted 100 ms before the migrator starts) and `ErrorScreen` with a reason banner ("Update didn't finish", "Nothing was changed", Try again, Copy diagnostics); SY5 `TodayRolloverBanner` from `useRolloverQueries` with `useToday(clock)` injectable. SY6 was built in V3-4b. Deviations: `docs/backlog.md`, "V3-5".
 
 ---
 

@@ -198,7 +198,7 @@ export const SCREENS = {
 		feature: "HAB-05",
 		route: "/?fixtures=empty",
 		mockup: "docs/mockups/v3/renders/today/slice_01.png",
-		note: "T2 — header and + only, the empty state with one primary action. 'Browse suggestions' waits for HAB-46.",
+		note: "T2 / FR4 — header and + only, the empty state with Add habit and the Browse suggestions link.",
 	},
 	"today-rest-day": {
 		feature: "HAB-05",
@@ -850,7 +850,7 @@ export const SCREENS = {
 		route: "/(habits)/manage?fixtures=empty",
 		mockup: "docs/mockups/v3/renders/habits/slice_03.png",
 		clock: V3_FRIDAY,
-		note: "H6 — no habits: the empty state with Add habit, Categories still reachable. The suggestions link stays hidden until HAB-46.",
+		note: "H6 — no habits: the empty state with Add habit and Browse suggestions, Categories still reachable.",
 	},
 	"habits-all-archived": {
 		feature: "HAB-39",
