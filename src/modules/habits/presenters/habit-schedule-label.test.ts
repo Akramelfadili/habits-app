@@ -1,5 +1,5 @@
 import { makeHabit } from "../test-support/habit-builder";
-import { scheduleLabel } from "./habit-schedule-label";
+import { scheduleLabel, weekdaysLabel } from "./habit-schedule-label";
 
 describe("scheduleLabel", () => {
 	it("says Every day for a daily habit", () => {
@@ -27,5 +27,20 @@ describe("scheduleLabel", () => {
 				makeHabit({ frequency: { type: "weekdays", days: [4, 2] } }),
 			),
 		).toBe("Tue, Thu");
+	});
+});
+
+describe("weekdaysLabel", () => {
+	it("lists days that are not a run, in week order", () => {
+		expect(weekdaysLabel([5, 1, 3])).toBe("Mon, Wed, Fri");
+		expect(weekdaysLabel([4, 2])).toBe("Tue, Thu");
+	});
+
+	it("collapses three or more consecutive days to a range", () => {
+		expect(weekdaysLabel([3, 1, 2])).toBe("Mon–Wed");
+	});
+
+	it("never collapses two consecutive days", () => {
+		expect(weekdaysLabel([6, 7])).toBe("Sat, Sun");
 	});
 });

@@ -82,6 +82,11 @@ export function FirstRunScreen() {
 						onPress={() => router.push("/first-run/habit")}
 					/>
 					<Button
+						label={firstRunCopy.welcome.browse}
+						variant="secondary"
+						onPress={() => router.push("/suggestions?firstRun=1")}
+					/>
+					<Button
 						label={firstRunCopy.welcome.skip}
 						variant="link"
 						disabled={isMarking}

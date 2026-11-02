@@ -51,6 +51,9 @@ jest.mock("@/modules/habits/screens/habit-detail-screen", () => ({
 jest.mock("@/modules/habits/screens/first-run-screen", () => ({
 	FirstRunScreen: mockStub("first-run"),
 }));
+jest.mock("@/modules/habits/screens/suggestions-screen", () => ({
+	SuggestionsScreen: mockStub("suggestions"),
+}));
 jest.mock("@/modules/habits/screens/habit-form-screen", () => ({
 	HabitFormScreen: mockStub("habit-form"),
 }));
@@ -155,6 +158,26 @@ describe("First Run opens instead of the tabs (HAB-46)", () => {
 	it("writes nothing when the flag is already there", async () => {
 		await renderApp("/");
 		expect(mockMarkFirstRunSeen).not.toHaveBeenCalled();
+	});
+});
+
+describe("Browse suggestions is a root screen (HAB-46, BS1)", () => {
+	it("opens from First Run, still without a tab bar", async () => {
+		mockGate = "first-run";
+		const app = await renderApp("/");
+		await testRouter.push("/suggestions?firstRun=1");
+		expect(screen.getByText("suggestions")).toBeTruthy();
+		expect(tabGroup(app)).toBeUndefined();
+		expect(screen.queryByText("Progress")).toBeNull();
+	});
+
+	it("opens from a tab and Close returns to it", async () => {
+		const app = await renderApp("/(habits)/manage");
+		await testRouter.push("/suggestions");
+		expect(screen.getByText("suggestions")).toBeTruthy();
+		await testRouter.back();
+		expect(tabGroup(app)).toBe("(habits)");
+		expect(screen.getByText("manage")).toBeTruthy();
 	});
 });
 

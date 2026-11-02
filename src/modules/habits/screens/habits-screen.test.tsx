@@ -310,10 +310,19 @@ describe("HabitsScreen — empty states (H6)", () => {
 		expect(screen.getByRole("button", { name: "Categories, 12" })).toBeTruthy();
 	});
 
-	it("hides the suggestions link until the suggestions exist (HAB-46)", async () => {
+	it("says what the frame says and offers Browse suggestions, which opens the suggestions screen (HAB-46)", async () => {
 		mockLibrary = libraryOf([]);
 		await renderScreen();
-		expect(screen.queryByText(/suggestion/i)).toBeNull();
+		expect(
+			screen.getByText("Add your first habit, or start from a suggestion."),
+		).toBeTruthy();
+		await fireEvent.press(screen.getByText("Browse suggestions"));
+		expect(mockPush).toHaveBeenCalledWith("/suggestions");
+	});
+
+	it("has no Browse suggestions link once there are habits (the frames draw none)", async () => {
+		await renderScreen();
+		expect(screen.queryByText("Browse suggestions")).toBeNull();
 	});
 
 	it("everything archived: says so and keeps Restore within reach", async () => {

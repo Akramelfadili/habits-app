@@ -19,6 +19,16 @@ describe("HabitBadge", () => {
 		);
 	});
 
+	it("draws a bare category look when there is no habit yet (a suggestion, BS1)", async () => {
+		await render(
+			<HabitBadge appearance={{ shape: "plus", hue: 175 }} size="default" />,
+		);
+		expect(screen.toJSON()).toHaveStyle({ width: 32, height: 32 });
+		expect(screen.getByTestId("symbol").props.tintColor).toBe(
+			habitAccentInk(175, "light"),
+		);
+	});
+
 	it("the default size is the 32 pt row square (V3-32)", async () => {
 		await render(<HabitBadge habit={makeHabit()} size="default" />);
 		expect(screen.toJSON()).toHaveStyle({ width: 32, height: 32 });

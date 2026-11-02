@@ -266,6 +266,12 @@ describe("TodayScreen", () => {
 		).toBeTruthy();
 	});
 
+	it("offers Browse suggestions in the empty state, and it opens the suggestions screen (T2, FR4)", async () => {
+		await render(<TodayScreen />);
+		await fireEvent.press(screen.getByText("Browse suggestions"));
+		expect(mockPush).toHaveBeenCalledWith("/suggestions");
+	});
+
 	it("navigates to new-habit from the empty state's Add habit button", async () => {
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Add habit"));

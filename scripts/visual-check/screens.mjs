@@ -129,6 +129,30 @@ export const SCREENS = {
 		},
 	},
 
+	// HAB-46 — Browse suggestions (BS1)
+	suggestions: {
+		feature: "HAB-46",
+		route: "/suggestions?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 — the nine bundled suggestions by category, Break habits last. Opened from the empty Today or Habits.",
+	},
+	"suggestions-added": {
+		feature: "HAB-46",
+		route: "/suggestions?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 with habits that already exist (archived included): their rows say Added, have no chevron and cannot be picked. Not drawn in the frame.",
+	},
+	"first-run-suggestions": {
+		feature: "HAB-46",
+		route: "/?fixtures=first-run",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 opened from First Run: the same list with Skip for now under it (an addition to the frame).",
+		async interact(page) {
+			await page.getByRole("button", { name: "Browse suggestions" }).click();
+			await page.getByText("Tap one to open Add habit").waitFor();
+		},
+	},
+
 	// HAB-03 / HAB-04 / HAB-05 — Today
 	today: {
 		feature: "HAB-03",
@@ -1594,6 +1618,9 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"suggestions",
+	"suggestions-added",
+	"first-run-suggestions",
 	"first-run",
 	"first-run-habit",
 	"first-run-offer",

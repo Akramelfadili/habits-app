@@ -197,6 +197,7 @@ export function TodayScreen() {
 					{today.viewState === "no-habits" ? (
 						<TodayEmptyState
 							onAddHabit={() => router.push("/new-habit")}
+							onBrowseSuggestions={() => router.push("/suggestions")}
 							dev={dev}
 						/>
 					) : today.viewState === "rest-day" ? (

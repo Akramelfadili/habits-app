@@ -59,6 +59,7 @@ describe("FirstRunScreen (FR1)", () => {
 			"Freezes",
 			"Keep a streak through a missed day",
 			"Add your first habit",
+			"Browse suggestions",
 			"Skip for now",
 		];
 		for (const text of texts) expect(screen.getByText(text)).toBeTruthy();
@@ -77,6 +78,12 @@ describe("FirstRunScreen (FR1)", () => {
 		await render(<FirstRunScreen />);
 		await fireEvent.press(screen.getByText("Add your first habit"));
 		expect(mockPush).toHaveBeenCalledWith("/first-run/habit");
+	});
+
+	it("Browse suggestions opens the suggestions screen as part of First Run", async () => {
+		await render(<FirstRunScreen />);
+		await fireEvent.press(screen.getByText("Browse suggestions"));
+		expect(mockPush).toHaveBeenCalledWith("/suggestions?firstRun=1");
 	});
 
 	it("Skip for now marks First Run seen and then opens an empty Today", async () => {

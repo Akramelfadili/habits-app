@@ -669,7 +669,7 @@ export const habitsCopy = {
 	/** H6: no habits at all. The suggestions link joins it with HAB-46. */
 	empty: {
 		title: "No habits yet",
-		body: "Add your first habit to start tracking.",
+		body: "Add your first habit, or start from a suggestion.",
 		add: "Add habit",
 	},
 	/** Every habit is archived: Today is empty, Restore is below. */
@@ -1017,8 +1017,9 @@ export const suggestionsCopy = {
 		`Quantity \u00b7 ${amount} ${unit} a day`,
 	perWeek: (times: number) => `${times}\u00d7 per week`,
 	daily: "Daily",
+	breakWord: "Break",
 	breakDaily: "Break \u00b7 daily",
-	/** Browse suggestions in the Habits tab's empty state and header (H6). */
+	/** The link in the empty Today (T2, FR4) and the empty Habits tab (H6), and FR1's second action. */
 	browse: "Browse suggestions",
 } as const;
 

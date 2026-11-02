@@ -15,7 +15,11 @@ import { configureNotificationHandler } from "@/lib/notifications/notifications"
 import { leaveFirstRun } from "@/modules/habits/first-run-navigation";
 import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
 import { useStartupActions } from "@/modules/habits/hooks/use-startup-actions";
-import { firstRunCopy, formCopy } from "@/modules/habits/messages";
+import {
+	firstRunCopy,
+	formCopy,
+	suggestionsCopy,
+} from "@/modules/habits/messages";
 import { loadThemePreference } from "@/theme/theme-preference";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -80,6 +84,10 @@ export default function RootLayout() {
 			if (result.ok) leaveFirstRun(router);
 		},
 	);
+	const suggestionsHeaderOptions = useModalFormHeaderOptions(
+		suggestionsCopy.title,
+		suggestionsCopy.close,
+	);
 	const newHabitHeaderOptions = useModalFormHeaderOptions(
 		formCopy.newTitle,
 		formCopy.close,
@@ -129,6 +137,11 @@ export default function RootLayout() {
 						 * shows instead.
 						 */}
 						<Stack.Screen name="new-habit" options={newHabitHeaderOptions} />
+						{/* Browse suggestions (BS1): a modal from First Run, Today and Habits alike. */}
+						<Stack.Screen
+							name="suggestions"
+							options={suggestionsHeaderOptions}
+						/>
 						<Stack.Screen
 							name="edit-habit/[id]"
 							options={editHabitHeaderOptions}

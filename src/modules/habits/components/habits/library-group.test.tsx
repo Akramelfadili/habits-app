@@ -17,6 +17,16 @@ describe("LibraryGroup", () => {
 		expect(screen.getByText("Cold shower")).toBeTruthy();
 	});
 
+	it("draws no count where nothing is counted (Browse suggestions), and is still one heading", async () => {
+		await render(
+			<LibraryGroup name="Health">
+				<Text>Drink water</Text>
+			</LibraryGroup>,
+		);
+		expect(screen.getByRole("header", { name: "Health" })).toBeTruthy();
+		expect(screen.queryByText("0")).toBeNull();
+	});
+
 	it("separates its rows with a hairline", async () => {
 		await render(
 			<LibraryGroup name="Health" count={2}>
