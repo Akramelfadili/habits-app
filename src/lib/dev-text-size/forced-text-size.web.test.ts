@@ -21,3 +21,10 @@ describe("forcedAccessibilityTextSize (web)", () => {
 		expect(atUrl("?fixtures=empty&textSize=ax&theme=dark")).toBe(true);
 	});
 });
+
+describe("forcedAccessibilityTextSize keeps the flag a page opened with", () => {
+	it("stays on after a navigation drops the query (First Run's redirect)", () => {
+		expect(atUrl("?textSize=ax")).toBe(true);
+		expect(atUrl("")).toBe(true);
+	});
+});

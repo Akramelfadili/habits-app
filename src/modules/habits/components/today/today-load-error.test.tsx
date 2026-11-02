@@ -4,6 +4,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 import { useToastStore } from "@/store/toast-store";
 
 jest.mock("expo-symbols", () => {
@@ -38,6 +39,19 @@ describe("TodayLoadError (SY2)", () => {
 		expect(
 			screen.getByText("Your data is safe. Trying again usually fixes this."),
 		).toBeTruthy();
+	});
+
+	it("announces the error when it appears", async () => {
+		const announce = jest
+			.spyOn(AccessibilityInfo, "announceForAccessibility")
+			.mockImplementation(() => {});
+		await render(
+			<TodayLoadError day={day} onRetry={jest.fn()} onAddHabit={jest.fn()} />,
+		);
+		expect(announce).toHaveBeenCalledWith(
+			"Couldn\u2019t load your habits. Your data is safe. Trying again usually fixes this.",
+		);
+		announce.mockRestore();
 	});
 
 	it("Try again calls the retry", async () => {

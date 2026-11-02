@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 import { TodaySkeleton } from "./today-skeleton";
 
 jest.mock("@/utils/use-reduced-motion", () => ({
@@ -23,6 +24,15 @@ describe("TodaySkeleton (SY1)", () => {
 		expect(block.props.accessibilityRole).toBe("progressbar");
 		expect(block.props.accessibilityState).toEqual({ busy: true });
 		expect(block.props.importantForAccessibility).toBe("no-hide-descendants");
+	});
+
+	it("announces 'Loading your habits' when it appears", async () => {
+		const announce = jest
+			.spyOn(AccessibilityInfo, "announceForAccessibility")
+			.mockImplementation(() => {});
+		await render(<TodaySkeleton />);
+		expect(announce).toHaveBeenCalledWith("Loading your habits");
+		announce.mockRestore();
 	});
 
 	it("says nothing in words: no text is drawn", async () => {

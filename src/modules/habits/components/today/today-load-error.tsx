@@ -1,4 +1,5 @@
-import { StyleSheet, View } from "react-native";
+import { useEffect } from "react";
+import { AccessibilityInfo, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState } from "@/components/ui/composite/empty-state";
 import { Button } from "@/components/ui/primitives/button";
@@ -30,6 +31,13 @@ export function TodayLoadError({
 }: TodayLoadErrorProps) {
 	const { colors } = useTheme();
 	const diagnostics = useDiagnosticsActions();
+
+	// An error is spoken when it appears: the screen reader was on the list.
+	useEffect(() => {
+		AccessibilityInfo.announceForAccessibility(
+			`${todayCopy.loadError.title}. ${todayCopy.loadError.body}`,
+		);
+	}, []);
 
 	return (
 		<SafeAreaView

@@ -153,6 +153,30 @@ export const SCREENS = {
 		},
 	},
 
+	// HAB-46 / HAB-49 — First run and suggestions at accessibility text sizes
+	"first-run-ax": {
+		feature: "HAB-49",
+		route: "/?fixtures=first-run&textSize=ax",
+		mockup: null,
+		note: "FR1 at an accessibility text size (forced on web with ?textSize=ax): the rows stack and the buttons stay full width. Not drawn in the handoff.",
+	},
+	"first-run-habit-ax": {
+		feature: "HAB-49",
+		route: "/?fixtures=first-run&textSize=ax",
+		mockup: null,
+		note: "FR2 at an accessibility text size: chips wrap, Save stays pinned with its reason.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Add your first habit" }).click();
+			await page.getByText("Or pick one").waitFor();
+		},
+	},
+	"suggestions-ax": {
+		feature: "HAB-49",
+		route: "/suggestions?fixtures=empty&textSize=ax",
+		mockup: null,
+		note: "BS1 at an accessibility text size: rows stack icon, text and the Added value.",
+	},
+
 	// HAB-03 / HAB-04 / HAB-05 — Today
 	today: {
 		feature: "HAB-03",
@@ -1685,6 +1709,9 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"first-run-ax",
+	"first-run-habit-ax",
+	"suggestions-ax",
 	"today-rollover",
 	"error-screen-first-open-failed",
 	"migration-running",

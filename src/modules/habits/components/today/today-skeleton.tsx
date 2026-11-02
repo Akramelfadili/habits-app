@@ -1,4 +1,5 @@
-import { StyleSheet, View } from "react-native";
+import { useEffect } from "react";
+import { AccessibilityInfo, StyleSheet, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { Skeleton } from "@/components/ui/primitives/skeleton";
 import { minTouchTarget, space } from "@/theme/theme";
@@ -28,6 +29,11 @@ function SkeletonRow() {
  * reader — the shapes themselves say nothing.
  */
 export function TodaySkeleton() {
+	// Said once when it appears: a screen reader is not looking at the rows.
+	useEffect(() => {
+		AccessibilityInfo.announceForAccessibility(todayCopy.loading);
+	}, []);
+
 	return (
 		<View
 			testID="today-skeleton"

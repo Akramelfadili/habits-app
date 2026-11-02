@@ -1000,7 +1000,6 @@ export const firstRunCopy = {
 		pickLabel: "Or pick one",
 		/** FR2's reassurance. The frame also says "icon": a habit's icon is its category's, so it is left out. */
 		note: "Category and reminders can wait \u2014 change them any time.",
-		pickLabelFor: (name: string) => `${name}, quick pick`,
 	},
 	/** FR3: the pre-prompt shown before iOS asks for permission. */
 	offer: {

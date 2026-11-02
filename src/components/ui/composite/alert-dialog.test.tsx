@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 import { semanticColors } from "@/theme/theme";
 import { AlertDialog } from "./alert-dialog";
 
@@ -86,6 +86,33 @@ describe("AlertDialog", () => {
 });
 
 describe("AlertDialog — the offer layout (FR3)", () => {
+	it("moves the screen reader onto the primary action when it opens (08.3)", async () => {
+		jest.useFakeTimers();
+		const send = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation(() => {});
+		try {
+			await render(
+				<AlertDialog
+					visible
+					layout="offer"
+					title="Remind you each day?"
+					message="m"
+					actions={[
+						{ label: "Allow reminders", onPress: jest.fn(), tone: "primary" },
+						{ label: "Not now", onPress: jest.fn(), tone: "primary" },
+					]}
+					onRequestClose={jest.fn()}
+				/>,
+			);
+			await act(() => jest.advanceTimersByTime(500));
+			expect(send).toHaveBeenCalledWith(expect.anything(), "focus");
+		} finally {
+			send.mockRestore();
+			jest.useRealTimers();
+		}
+	});
+
 	const offer = (allow = jest.fn(), notNow = jest.fn()) => [
 		{ label: "Allow reminders", onPress: allow, tone: "primary" as const },
 		{ label: "Not now", onPress: notNow, tone: "primary" as const },
