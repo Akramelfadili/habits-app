@@ -150,6 +150,21 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByRole("button", { name: "Browse suggestions" }).click();
 			await page.getByText("Tap one to open Add habit").waitFor();
+			// Down to the Break habits and the Skip for now link under them.
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 6000);
+			await page.waitForTimeout(500);
+		},
+	},
+	"suggestions-end": {
+		feature: "HAB-46",
+		route: "/suggestions?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 scrolled to its end: the Break group, with the Added rows.",
+		async interact(page) {
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 6000);
+			await page.waitForTimeout(500);
 		},
 	},
 
@@ -1709,6 +1724,7 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"suggestions-end",
 	"first-run-ax",
 	"first-run-habit-ax",
 	"suggestions-ax",
