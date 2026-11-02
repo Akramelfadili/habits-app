@@ -14,7 +14,7 @@ import {
 } from "../services/export-service";
 import type { ExportFailureReason, ExportOptions } from "../types";
 
-export type ExportPhase =
+type ExportPhase =
 	| { name: "confirm" }
 	| { name: "progress"; fileName: string; progress: ExportProgress }
 	| { name: "ready"; result: ExportResult }

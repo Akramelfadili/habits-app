@@ -122,19 +122,6 @@ export const MAX_QUANTITY_VALUE = 9999;
 /** Shared monthly freeze pool size (HAB-08) — across every habit, not per-habit; resets on the 1st, no rollover. */
 export const FREEZE_POOL_SIZE = 2;
 
-const DIRECTION_LOCK_NOTE =
-	"This is the only moment you can choose — it is locked after saving, because a build streak and a break streak mean opposite things.";
-
-/** Caption under the Build/Break control on the New Habit form (HAB-01). */
-export const DIRECTION_CAPTIONS: Record<HabitDirection, string> = {
-	build: `Build — checking it off means you did it. ${DIRECTION_LOCK_NOTE}`,
-	break: `Break — checking it off means you resisted. ${DIRECTION_LOCK_NOTE}`,
-};
-
-/** Caption under Target type when Direction = Break locks it to Simple check (HAB-04). */
-export const QUANTITY_UNAVAILABLE_FOR_BREAK_CAPTION =
-	"Break habits are simple check-ins only — quantity targets aren't available for Break in V1.";
-
 /**
  * The app-settings key gating First Run (HAB-06) — owned by this module, but
  * stored through the generic `lib/app-settings` KV store, not a habits-only

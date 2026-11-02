@@ -40,15 +40,7 @@ export function discardFile(uri: string): void {
 
 export async function shareFile(): Promise<void> {}
 
-export async function saveFileToFolder(): Promise<boolean> {
-	return true;
-}
-
 export async function shareText(): Promise<void> {}
-
-export function isPickerCancellation(): boolean {
-	return false;
-}
 
 // Compile-time guard: this file must export exactly what the native adapter does.
 const _sameShape: typeof NativeFileExport = {
@@ -57,8 +49,6 @@ const _sameShape: typeof NativeFileExport = {
 	promoteScratchFile,
 	discardFile,
 	shareFile,
-	saveFileToFolder,
 	shareText,
-	isPickerCancellation,
 };
 void _sameShape;

@@ -291,7 +291,7 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 
 ## Open — V3-4b step 6 (Export)
 
-- **One sheet with four states of one export** (choose → writing → ready | failed), replacing the confirm sheet with its counts, the archived toggle, the "Export ready" screen and "Cancel export". Archived habits are always included; the Save to Files button is gone (EX3 draws Share file and Done), so `saveFileToFolder` in `lib/file-export` has no caller (step 8).
+- **One sheet with four states of one export** (choose → writing → ready | failed), replacing the confirm sheet with its counts, the archived toggle, the "Export ready" screen and "Cancel export". Archived habits are always included; the Save to Files button is gone (EX3 draws Share file and Done), so `saveFileToFolder` and `isPickerCancellation` were deleted from `lib/file-export` (step 8); "Save to Files" is the share sheet's own action.
 - **The progress bar is a real percentage** (entries written ÷ entries), as EX2 draws, not indeterminate: the serializer reports it per habit chunk. It still reads "Usually under a second" because it is.
 - **The export lives in a store (`useExportStore`)**, not in the sheet: closing the sheet while it writes leaves it running, a toast ("Export ready · habits-….json") says when it is ready, and a failure while closed toasts an error; either way the next open from Settings or Progress shows where it stands. The toast has no action; the file card is behind Export data.
 - **JSON is the default format** (the frame's); the file gained `categories` (name, built-in, order) and each habit's `reminders` (time, days, on/off). Layout `version` stays 1 (additive). CSV is unchanged (one row per log).

@@ -11,7 +11,7 @@ import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 
-export type AlertAction = {
+type AlertAction = {
 	label: string;
 	onPress: () => void;
 	/** "primary" is the safe choice: bold, and where VoiceOver starts. "destructive" is the red one. */

@@ -29,7 +29,7 @@ export type ExportSource = {
 	categories: readonly Category[];
 };
 
-export type ExportLog = {
+type ExportLog = {
 	date: string;
 	/** The logged amount for a quantity habit; null for a simple check. */
 	value: number | null;
@@ -37,7 +37,7 @@ export type ExportLog = {
 	completed: boolean;
 };
 
-export type ExportHabitRecord = {
+type ExportHabitRecord = {
 	habit: Habit;
 	currentStreak: number;
 	longestStreak: number;
