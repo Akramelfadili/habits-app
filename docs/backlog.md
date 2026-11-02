@@ -243,7 +243,7 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 
 ## Open — V3-4b (Add / Edit habit form, Categories)
 
-Deviations from the mockup / spec and what was left out; each is deliberate unless marked. Steps 4–6 (Reminders, Settings, Export) add their own entries.
+Deviations from the mockup / spec and what was left out; each is deliberate unless marked. Steps 4–7 add their own entries below.
 
 - **Frequency has three options — Daily, Specific days, × per week — not the mockup's four.** F1–F10 draw a "Weekdays" chip; HAB-41 lists three and the old "Weekdays shortcut" is gone. Mon–Fri is two taps on the weekday chips. (Spec wins; owner's decision.)
 - **No icon / colour row (F2, F6).** The category supplies both; the mockup's "Icon and colour · tap to change" row and the F6 pickers are not built (spec wins).
@@ -266,8 +266,6 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **`Button` gained `rowAction` / `dangerLink`** (quiet ink and danger text actions inside a row); `Rename` and `Delete` are no longer the old outlined small pills.
 - **The Categories screen draws its own large title** (eyebrow, title, Reorder / +), under the native Back ("Habits" or "Settings"); it does not collapse (Habits' collapsing header is still its own).
 
-- **Two reminder time sheets for now.** `ReminderSheet` (time wheel + days; used by the form) and the older `ReminderTimeSheet` (time only; the Reminders screen) coexist until step 4 rebuilds Reminders on `ReminderSheet` and deletes the old one. Likewise the form's red remove button (`ReminderDrafts`) is hand-drawn until step 4 extracts it for the Reminders list.
-- **The form does not move focus to the first error** (spec review): Save stays off while any issue exists and each error is next to its field, so there is nothing to submit into. Focus-to-first-error is part of step 7's accessibility pass.
 
 ## Open — V3-4b step 4 (Reminders)
 
@@ -276,13 +274,12 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **One sheet for adding and editing**: `ReminderSheet` (time wheel + days) replaced the time-only sheet; Add time opens it on 09:00 on the days the habit falls on, and nothing is written until Save (it used to write a default row first).
 - **Unscheduled days** (days the habit is never due on) are a warning banner per time under the list, not inside an expandable card; such days are still never scheduled.
 - **The + is hidden at four times** (the note says why) instead of a disabled button.
-- **`REMINDER_CAP_MESSAGE` still lives in `constants.ts`** (the service's cap error uses it); the screen shows it from there.
 
 ## Open — V3-4b step 5 (Settings)
 
 - **One screen with five groups, not S1's hub with a page per row.** HAB-44 lists the groups on the pushed screen; S2–S6 are drawn as separate pages (Theme, Evening review, Freezes, Export, About) and SY6 as a Notifications page. Their content is the group's content here; nothing links onward except Export data (the export sheet). Spec wins.
 - **Theme is three radio rows** (Light, Dark, System with "Follows iOS · now dark"), as S2 draws, not the old segmented control.
-- **The evening review's time is shown, not editable (21:30).** The frames draw 21:00 on a Time row; the code has one fixed time (`EVENING_REVIEW_TIME`) and HAB-44 says "existing reminder only". A time picker would need a stored time and a re-schedule; ask before building.
+- **The evening review's time is editable** (step 7): the Time row opens the shared time wheel in a sheet with no days picker; it is stored in `habits.eveningReviewTime` and the default stays 21:30 (the spec fixes none; the frames' 21:00 is not copied). Changing it rebuilds the notifications while the review is on.
 - **"Sent only on days with open habits" is built as: only on the weekdays some active habit can be due** (`eveningReviewDays`). It is re-aimed after a habit is created, rescheduled, archived, restored or deleted, and by the launch reconcile. It cannot know at fire time whether today's habits are already done (a local notification has no logic); "closing the day" stays Later.
 - **SY6's Notifications page is the Reminders group while iOS permission is off**: one banner with Open Settings, then Affected rows ("4 times on 3 habits", the evening review's time or Off) and "Times stay editable…". The rows are information, not links to R5 / S3.
 - **Streaks shows "Left this month 1 of 2" and "Used this month" from the freeze query**, with the rule and how to use one in words. S4's "Saved … streaks this year" is dropped (PR-08) and Auto-use freezes is Later.
@@ -307,3 +304,13 @@ Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is de
 - **Year month labels: 44 pt high through hitSlop**, so the hit areas of labels in the band above overlap the last row of cells (not tappable) and the 12 pt gap.
 - **AX3 stacked range list overlays the content** (P11) instead of pushing it down.
 - **One-habit and AX3 week blocks: 40 pt cells with a 2 pt hitSlop** (44 pt in effect), buttons that open Edit this day.
+
+## Open — V3-4b step 7–9 (copy, accessibility, final frames)
+
+- **Focus moves to the error only where there is one to reach.** Save is dimmed while any field issue exists (its reason is its VoiceOver hint), so a failed *submit* is a failed save: focus then moves onto the error above Save. A field error that appears while typing is an `alert` read where it sits. Sheets start VoiceOver on their title (`SheetHeader`) and hold it inside (`accessibilityViewIsModal`); a finished or failed export moves focus onto the file or the error.
+- **Verified by test, not on a device:** labels, roles, hints, selected and checked state, and that the focus call is made (the focus API is mocked). Whether iOS lands on the right element, the reading order and Reduce Motion behaviour are device checks (see the phone checklist in the V3-4b report).
+- **Touch targets:** every new control is 44 pt or more (RemoveButton, the reminder and Settings rows, the format control, buttons, the Banner link, the reorder handle's 28 pt + 8 hitSlop). No exception.
+- **Time row chevron and icon squares are blank on web** (SF Symbols), so Settings' Time and Export rows show no chevron or glyph in the baselines.
+- **Settings dark twins were light** until the final pass (a forced `theme=light` route); fixed. S2 now draws System selected, as its note says.
+- **Test-only exports that knip still lists** (new since V3-4a): `useExportStore`, `refreshEveningReview`, `ReminderWithConflicts` — tests import them.
+- **Left for later (V3-6 / owner):** Privacy and Send feedback rows (no spec); a hub-style Settings with a page per row; the per-reminder on/off toggle (Habit Detail still says "All off" for a legacy off time); real-device checks of notifications, the share sheet and VoiceOver.
