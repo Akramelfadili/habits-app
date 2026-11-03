@@ -322,15 +322,26 @@ Deliberate differences from the frames and what was left out. Spec wins where th
 - **`useRolloverQueries` reads the closed day's week on every Today mount**, even with no notice; skipping it until one exists is deferred.
 - **Test-only exports knip lists** (new): `suggestionSubtitle`.
 
-## V3-6 audit list (touch targets and known layout exceptions)
+## V3-6 step 1 — touch-target audit (done)
 
-Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.
+How: `VC_AUDIT=1 npm run visual-check` writes each state's rendered pressables to `.visual-checks/audit/` (291 states, 3 900+ targets); everything under 44 pt was grouped by role and label and checked against its `hitSlop` in code (react-native-web ignores `hitSlop`, so a web rect under 44 is only a finding when no slop makes up the difference). The static twin is `src/components/ui/touch-targets.guard.test.ts`: every `<Pressable>`/`Touchable*` in the app must prove 44 × 44 pt from its style and `hitSlop`, or carry a reasoned entry in its exceptions map; a stale entry also fails.
 
-- **Week matrix day headers: 44 pt high, 28 pt wide** (Progress, P1). Documented under "Spec wins over the mockup" in `feature-spec-v3.md`.
-- **Week matrix cells (24 pt), Year cells (16 pt):** below 44 by design, not tappable (08.2).
-- **Year month labels: 44 pt high through hitSlop**, so the hit areas of labels in the band above overlap the last row of cells (not tappable) and the 12 pt gap.
-- **AX3 stacked range list overlays the content** (P11) instead of pushing it down.
-- **One-habit and AX3 week blocks: 40 pt cells with a 2 pt hitSlop** (44 pt in effect), buttons that open Edit this day.
+**Fixed** (each was a real 41 pt or narrower hit area):
+- Embedded `ListItem` rows (the Reminders rows, "Set exact value", the off-schedule picker rows, the frequency rows): 41 pt high → `minHeight` 44.
+- Today row name area in the stacked accessibility layout: 32–41 pt → `minHeight` 44.
+- Year map month labels: 44 pt high but 23–33 pt wide → `minWidth` 44 (months start at least 72 pt apart, so no overlap).
+
+**Passes through `hitSlop` (web draws them smaller)**: Month and one-habit/AX3 week day cells (40 pt + 2 pt), compact Restore (36 + 4), small buttons (32 + 8: Dismiss, Restore on Delete's archived card), the reorder handle (28 + 8), Checkbox, Stepper −/+, the tab-bar items.
+
+**Documented exceptions (still under 44 pt)**
+- **Week matrix day headers: 44 pt high, 28 pt wide** (cell pitch, P1). Unchanged.
+- **Week matrix cells (24 pt) and Year cells (16 pt):** not tappable (08.2).
+- **Large-title header buttons while the title collapses**: the title block, including the `+`, gear and Export, scales to 88 % over the first 60 % of the scroll range, so they are 38.7 pt for the moment they are fading out. At rest they are 44 pt and the inline bar's own buttons take over at full size.
+- **Adjustable containers** (Stepper value, Insight pager, the daily-target and times-per-week values) report role `slider` to VoiceOver; they are not tap targets, their buttons are separate and 44 pt.
+- **Sheet scrim:** a full-screen close target.
+- **Not covered by the guard**: a tap handler that is not a `Pressable` (none exist: a syntax-tree scan found no `onPress` on a Text, View or Image) and `GestureDetector` surfaces (swipe rows, the reorder drag).
+- **The Checkbox's 44 pt box with a −10 margin** (reviewer-flagged earlier) still reaches into its host row; device-check on Android.
+- **AX3 stacked range list overlays the content** (P11) instead of pushing it down; unchanged.
 
 ## Open — V3-4b step 7–9 (copy, accessibility, final frames)
 
