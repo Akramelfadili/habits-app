@@ -343,6 +343,58 @@ How: `VC_AUDIT=1 npm run visual-check` writes each state's rendered pressables t
 - **The Checkbox's 44 pt box with a −10 margin** (reviewer-flagged earlier) still reaches into its host row; device-check on Android.
 - **AX3 stacked range list overlays the content** (P11) instead of pushing it down; unchanged.
 
+## V3-6 step 2 — accessibility and Dynamic Type (done)
+
+**How Dynamic Type was checked.** react-native-web has no Dynamic Type, so `?textSize=ax` only switched layouts and the screens had never been seen with AX3 *type*. The visual-check harness now scales every text element to the 08.6a AX3 sizes for a state whose route says `textSize=ax` (display 32 → 52, stat 26 → 48, title 20 → 43, body-lg 17 → 40, body 16 → 38, callout 15 → 36, subhead 14 → 36, footnote 13 → 33, caption 12 → 32; the tab-bar labels, the week matrix's day letters and the cells' numbers stay fixed, the inline bar and header pills cap at 1.3x, as the app does) and `VC_AUDIT=1` reports text that is truncated or clipped by its box. 102 AX states (51 screens, light and dark): the 13 that existed plus 38 new.
+
+**Screens and sheets checked at AX3, light and dark:** Today (populated, empty, rest day, at risk, all done, rollover banner, skeleton, load error), Progress (Week, Month, Year, the habit filter sheet, Edit this day from a week block), Habits (library, search, archived, reorder), Habit Detail (stats, history, archived), Add / Edit habit (empty, with errors), First Run (welcome, slim form, Browse suggestions, the FR3 question), Categories (list, rename, delete in use, New category sheet), Reminders (list, the reminder sheet, notifications off), Settings (and its notifications-off state), the quantity sheet (stepper, exact value), the streak-at-risk sheet, Edit this day from Detail, the off-schedule picker, archive and delete confirms (both), Export (choose, ready, failed), the update screen and its failure, the discard alert, the tab bar (bar A) and toasts. Not at AX: the dev-only Today buttons; Progress Month's day card (it is reached through the Year map's month list at AX, drawn by `progress-month-ax`).
+
+**Found and fixed**
+- **Toasts clipped at two lines** ("Couldn't update this habit. Try …"): at AX the message wraps in full and the action drops below it, on a 20 pt card (08.6).
+- **"1 not due today · Upper body" (Today's fold row) was one line** and cut: wraps at AX.
+- **Alert (FR3, F9) was 270 pt wide at AX** and its primary button's label overflowed the pill: the card takes the screen width less 16 pt insets and buttons use a 20 pt radius at AX ("labels wrap inside; button grows; radius 20").
+- **Buttons at AX** have radius 20 and centred, wrapping labels everywhere.
+- **Week blocks (AX Week): the row total "2 / 3" broke into three lines**: the name wraps before the total does.
+- **Inline bar and header pills** (Progress's Export, Detail's Edit, Categories' Done) grew past the 44 pt bar and covered the title: they hold at 1.3x Dynamic Type (`barMaxFontMultiplier`), as iOS's own bars hold theirs. The large title and its stacked buttons still scale fully.
+- **Week strip's "Change day" pill**: vertical padding and a 20 pt radius for its wrapped label.
+- **Route-entry focus (08.4):** the screen reader now starts on the title of Detail, Settings, Reminders and Categories (a pushed screen's default focus); a sheet's focus was already on its title (`SheetHeader`) and the archive sheet now starts there too; the streak-at-risk sheet starts on Use a freeze (08.3).
+- **Re-tapping the selected tab** scrolls its screen to the top and puts the screen reader on the title (08.4; was "does nothing", decided here). It does not pop a pushed screen.
+- **Selected chips draw a check** before the label (08.7 asks for a check on chips; the fill alone was the only signal).
+
+**Colour is never the only signal (08.7), audited per row:** done (check + status text + VoiceOver "done"), partial (corner notch, pie, "5 of 8"), missed ("Missed" in history), Break (amber + "Break" tag, resistance copy), at risk (text "Missed Thursday · 1 freeze left"), frozen (dashed border, "Frozen", legend), reset (notice text), bonus (dot + "Bonus" tag), before start / future (dashed / hairline), error (`!` symbol, error copy, focus), selected (check on chips, weight on tabs, check in the segmented control, VoiceOver "selected"), category (name always shown), slipping ("slipping" in status). **Exception:** the weekday chips (M T W T F S S) show selection by fill (ink) against a ring only, with VoiceOver "checked"; a check would not fit a 44 pt circle with a letter.
+
+**Reduce Motion — every animation and what it does instead**
+
+| Animation | Default | Reduce Motion |
+|---|---|---|
+| Completion circle press | scale 92 % | opacity only, no scale |
+| Fill (progress bar, column chart bars, ring) | 450 ms ease | jumps to the value |
+| Indeterminate bar (export, update screen) | a segment sweeps | the segment sits still |
+| Week strip day switch | 160 ms slide + fade | crossfade only |
+| Today list (rows reflow, the progress bar enters and leaves) | 200 ms layout transition, fade | no layout animation; 150 ms crossfade |
+| Collapsing header (Today, Progress, Habits) | scroll-linked shrink and fade, settles on the nearer end | no interpolation and no settling scroll; 150 ms crossfade past the middle |
+| Sheets | slide | fade |
+| Alert dialog | fade | fade (unchanged) |
+| All done check | draws left to right, 600 ms | drawn, static |
+| Skeleton | pulse (opacity) | static blocks |
+| Tab bar press and the selected capsule | 98 % scale, capsule fade | 70 % opacity flash, 150 ms crossfade |
+| Insight pager paging | animated scroll | no animation |
+| Reorder drop | settles over the settle duration | 0 ms (the lift is a shadow, never a scale) |
+| Re-tap scrolls to top | animated | no animation |
+| Screen pushes and modals | iOS spring | iOS's own system crossfade |
+| Toast | **no animation is built** (appears and goes) | n/a; 08.5's rise + fade is in the toast fix batch |
+
+**Not verified without a device (all of 08.3/08.4's dynamic parts):** that VoiceOver lands where the code asks (the focus API is mocked in tests), reading order inside each screen, the Magic Tap for a toast's Undo, Full Keyboard Access, Switch Control, Large Content Viewer on the tab bar, the real AX1–AX5 type sizes (web emulates AX3), the pill's Reduce Transparency and Increase Contrast modes, Reduce Motion on the animations above.
+
+**Left as they are:** the **skeleton pulses** (opacity) where 08.5 says shimmer; the **collapsing header's buttons** are 38.7 pt while the title scrolls away (see step 1); **SF Symbols render blank on web**, so AX frames show some squares without glyphs.
+
+## V3-6 step 3 — earlier batches' small items (done)
+
+- **V3-4a nits fixed:** `DetailActions` draws Delete's minus through `IconBadge` (new `minusColor`); `WeekHistoryCard` uses `Container variant="summary"`; `habitHistoryRows` looks back at most 366 days instead of walking to the habit's creation; the archive sheet has initial focus (its title).
+- **V3-4a nit moved to "parked":** `useHabitsQueries` and the Detail hook each do the per-habit streak pass inside the hook (a shared read model is its own refactor).
+- **V3-5 fixed:** FR2's Close now has an inline error path (`skipFailed` in `first-run-offer-store`; the form shows "Couldn't continue. Try again." above Save); the skip handler left the root layout for `useFirstRunSkipActions`; the quick-pick logic left `habit-form-screen` for `useQuickPickActions` and `QuickPicks`; the streak-at-risk sheet is pinned at the moment it opens (day, habit, streak and freezes), like the quantity sheet — it no longer changes or closes under the person at midnight. **What the pin does not do:** spend a freeze for a day the grace window has since closed. On "Use a freeze" the live read must still name the same missed day, otherwise nothing is written and a toast says "Too late for a freeze on Sat 3. The streak restarts with your next log."
+- **V3-5 deferred again, with the reason:** splitting a `SlimHabitForm`. Five layout branches on `slim` remain in `habit-form-screen.tsx` (which sections show, and their order); a real split needs the form state, submit and leave guard moved into a `useHabitForm` hook that New, Edit and FR2 share, and that is a refactor of the most-tested screen with its own review.
+
 ## Open — V3-4b step 7–9 (copy, accessibility, final frames)
 
 - **Focus moves to the error only where there is one to reach.** Save is dimmed while any field issue exists (its reason is its VoiceOver hint), so a failed *submit* is a failed save: focus then moves onto the error above Save. A field error that appears while typing is an `alert` read where it sits. Sheets start VoiceOver on their title (`SheetHeader`) and hold it inside (`accessibilityViewIsModal`); a finished or failed export moves focus onto the file or the error.
