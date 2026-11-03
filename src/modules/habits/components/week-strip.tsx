@@ -218,7 +218,9 @@ export function WeekStrip({
 const styles = StyleSheet.create({
 	change: {
 		minHeight: minTouchTarget,
-		borderRadius: radius.pill,
+		paddingVertical: space[200],
+		// Only drawn at accessibility sizes, where the label wraps: 20 pt, not a pill (08.6).
+		borderRadius: radius.l,
 		borderWidth: 1,
 		paddingHorizontal: space[400],
 		justifyContent: "center",

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 import { Button } from "../primitives/button";
 
@@ -44,6 +45,8 @@ const WIDTH = 270;
  * Discard in danger red. It is drawn here, not with the system alert, so it
  * looks and behaves the same on web and in the flows. Focus starts on the
  * primary action, and a scrim tap does nothing: a decision has to be made.
+ * At accessibility sizes (08.6) the card takes the screen width less 16 pt
+ * insets, so the buttons have room to stack and wrap.
  */
 export function AlertDialog({
 	visible,
@@ -54,6 +57,7 @@ export function AlertDialog({
 	layout = "list",
 }: AlertDialogProps) {
 	const { colors } = useTheme();
+	const wide = useAccessibilityTextSize();
 	const primaryRef = useRef<HostInstance>(null);
 	useInitialFocus(primaryRef, visible);
 
@@ -71,6 +75,7 @@ export function AlertDialog({
 					accessibilityRole="alert"
 					style={[
 						styles.card,
+						wide && styles.cardWide,
 						{ backgroundColor: colors.card, borderColor: colors.border },
 					]}
 				>
@@ -147,6 +152,11 @@ const styles = StyleSheet.create({
 		borderRadius: radius.l,
 		borderWidth: StyleSheet.hairlineWidth,
 		overflow: "hidden",
+	},
+	cardWide: {
+		width: "auto",
+		alignSelf: "stretch",
+		marginHorizontal: space[400],
 	},
 	text: {
 		gap: space[50],

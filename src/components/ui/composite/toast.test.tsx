@@ -1,8 +1,27 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
+
+let mockAccessibilityText = false;
+jest.mock("@/utils/use-accessibility-text-size", () => ({
+	useAccessibilityTextSize: () => mockAccessibilityText,
+}));
+
 import { Toast } from "./toast";
 
+beforeEach(() => {
+	mockAccessibilityText = false;
+});
+
 describe("Toast", () => {
+	it("at accessibility sizes wraps the whole message and drops the action below it (08.6)", async () => {
+		mockAccessibilityText = true;
+		const long = "Couldn't update this habit. Try again in a moment, please.";
+		await render(<Toast message={long} actionLabel="Retry" />);
+		expect(screen.getByText(long).props.numberOfLines).toBeUndefined();
+		const root = screen.getByTestId("toast");
+		expect(StyleSheet.flatten(root.props.style).flexDirection).toBe("column");
+	});
+
 	it("renders the message", async () => {
 		await render(<Toast message="Marked 'Upper body' complete" />);
 		expect(screen.getByText("Marked 'Upper body' complete")).toBeTruthy();

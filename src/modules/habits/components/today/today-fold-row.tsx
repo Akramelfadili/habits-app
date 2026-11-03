@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { todayCopy } from "../../messages";
 
 type TodayFoldRowProps = {
@@ -21,6 +22,7 @@ export function TodayFoldRow({
 	onToggle,
 }: TodayFoldRowProps) {
 	const { colors, opacity } = useTheme();
+	const largeText = useAccessibilityTextSize();
 	const action = expanded ? todayCopy.foldHide : todayCopy.foldShow;
 
 	return (
@@ -35,7 +37,10 @@ export function TodayFoldRow({
 				pressed && { opacity: opacity.pressed },
 			]}
 		>
-			<Text numberOfLines={1} style={[styles.summary, { color: colors.sub }]}>
+			<Text
+				numberOfLines={largeText ? undefined : 1}
+				style={[styles.summary, { color: colors.sub }]}
+			>
 				{summary}
 			</Text>
 			<View style={styles.action}>
@@ -53,6 +58,7 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		gap: space[200],
 		paddingHorizontal: space[350],
+		paddingVertical: space[200],
 		borderRadius: radius.l,
 		borderWidth: 1,
 		borderStyle: "dashed",

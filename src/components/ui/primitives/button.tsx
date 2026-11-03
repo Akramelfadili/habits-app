@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { FieldHelper } from "./field-helper";
 
 /**
@@ -71,6 +72,9 @@ export function Button({
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
 	const isCompact = variant === "compact";
+	// 08.6: at accessibility sizes the label wraps inside the button and the
+	// button grows, on a 20 pt radius (a pill would cut a two-line label).
+	const largeText = useAccessibilityTextSize();
 	const textColor =
 		variant === "primary"
 			? colors.onAccent
@@ -96,6 +100,7 @@ export function Button({
 			hitSlop={fullWidth ? undefined : isCompact ? COMPACT_HIT_SLOP : 8}
 			style={({ pressed }) => [
 				styles.base,
+				largeText && styles.baseLarge,
 				fullWidth ? styles.fullWidth : styles.compact,
 				(size === "small" || isCompact) && styles.small,
 				isCompact && [styles.compactPill, { backgroundColor: colors.inner }],
@@ -163,6 +168,9 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 	},
+	baseLarge: {
+		borderRadius: radius.l,
+	},
 	fullWidth: {
 		width: "100%",
 		minHeight: minTouchTarget,
@@ -193,6 +201,7 @@ const styles = StyleSheet.create({
 		alignSelf: "flex-start",
 	},
 	label: {
+		textAlign: "center",
 		...textStyles.body,
 		fontWeight: "500",
 	},

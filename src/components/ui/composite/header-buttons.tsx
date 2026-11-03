@@ -2,7 +2,7 @@ import type { NativeStackNavigationOptions } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { radius, space, textStyles } from "@/theme/theme";
+import { barMaxFontMultiplier, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -233,7 +233,13 @@ export function HeaderPillButton({
 			{symbol ? (
 				<SymbolView name={symbol} size={16} tintColor={colors.ink} />
 			) : null}
-			<Text style={[styles.pillLabel, { color: colors.ink }]}>{label}</Text>
+			<Text
+				// A 44 pt control holds its size: Dynamic Type may grow the label only so far.
+				maxFontSizeMultiplier={barMaxFontMultiplier}
+				style={[styles.pillLabel, { color: colors.ink }]}
+			>
+				{label}
+			</Text>
 		</Pressable>
 	);
 }

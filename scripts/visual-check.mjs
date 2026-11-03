@@ -98,8 +98,18 @@ async function emulateAx3Type(page) {
 			return RAMP[nearest] / nearest;
 		};
 		const apply = () => {
-			for (const el of document.querySelectorAll("div,span,input,textarea")) {
-				if (el.dataset.ax3) continue;
+			for (const el of document.querySelectorAll(
+				"div,span,input,textarea,h1,h2,h3,h4,h5,h6,p,a,label,li,button",
+			)) {
+				// iOS keeps the tab bar's labels at 12 pt whatever the setting (08.6).
+				// The week matrix's day letters and the cells' numbers are drawn with
+				// allowFontScaling={false}; react-native-web cannot say so, so skip them.
+				if (
+					el.closest(
+						'[data-testid^="tab-bar"],[data-testid^="completion-cell"],[data-testid^="week-matrix-day"]',
+					)
+				)
+					continue;
 				const hasText =
 					el.tagName === "INPUT" ||
 					el.tagName === "TEXTAREA" ||
@@ -107,13 +117,28 @@ async function emulateAx3Type(page) {
 						(n) => n.nodeType === 3 && n.textContent.trim(),
 					);
 				if (!hasText) continue;
-				const st = getComputedStyle(el);
-				const size = parseFloat(st.fontSize);
-				const k = scaleOf(size);
-				const line = parseFloat(st.lineHeight);
-				el.style.fontSize = `${size * k}px`;
+				// React may rewrite an inline style later: keep the original size and
+				// put the scaled one back whenever it is missing.
+				const base = el.dataset.ax3Base
+					? Number(el.dataset.ax3Base)
+					: parseFloat(getComputedStyle(el).fontSize);
+				el.dataset.ax3Base = String(base);
+				// The inline bar and the header pills cap Dynamic Type at 1.3x
+				// (maxFontSizeMultiplier), as iOS's own navigation bars hold theirs.
+				const capped = el.closest(
+					'[data-testid$="inline-bar"],[data-testid="header-pill"]',
+				);
+				const k = capped ? Math.min(scaleOf(base), 1.3) : scaleOf(base);
+				if (
+					Math.abs(parseFloat(getComputedStyle(el).fontSize) - base * k) < 0.5
+				)
+					continue;
+				const line = Number(
+					el.dataset.ax3Line ?? parseFloat(getComputedStyle(el).lineHeight),
+				);
+				if (!Number.isNaN(line)) el.dataset.ax3Line = String(line);
+				el.style.fontSize = `${base * k}px`;
 				if (!Number.isNaN(line)) el.style.lineHeight = `${line * k}px`;
-				el.dataset.ax3 = "1";
 			}
 		};
 		apply();
@@ -172,7 +197,9 @@ async function auditPage(page, name) {
 				};
 			});
 		const clipped = [];
-		for (const el of document.querySelectorAll("div,span")) {
+		for (const el of document.querySelectorAll(
+			"div,span,h1,h2,h3,h4,h5,h6,p,a,label,li,button",
+		)) {
 			if (!el.childNodes.length || !visible(el)) continue;
 			const hasText = [...el.childNodes].some(
 				(n) => n.nodeType === 3 && n.textContent.trim(),
@@ -196,7 +223,9 @@ async function auditPage(page, name) {
 			}
 		}
 		const vw = document.documentElement.clientWidth;
-		const offscreen = [...document.querySelectorAll("div,span")]
+		const offscreen = [
+			...document.querySelectorAll("div,span,h1,h2,h3,h4,h5,h6,p"),
+		]
 			.filter((el) => visible(el) && el.getBoundingClientRect().right > vw + 1)
 			.filter((el) => !el.closest('[data-testid*="scroll"]'))
 			.slice(0, 5)
