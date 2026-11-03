@@ -79,7 +79,7 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /diagnostics               app version/build/schema facts + "Copy diagnostics" report
     /clipboard                 adapter around expo-clipboard (falls back to the share sheet)
     /today                     useToday() (rolls over at midnight / on foreground) and currentDay()
-  /store                       cross-module Zustand stores (toast)
+  /store                       cross-module Zustand stores (toast, tab re-tap: the pill raises it, a tab's root screen scrolls to top and focuses its title)
   /utils                       generic helpers with no app knowledge: useAsyncAction/runSafely, format (pluralise, counts, date ranges — the one home for user-facing counts and dates), day-key (the stored "yyyy-MM-dd" calendar-day key: toDayKey/fromDayKey), useReducedMotion, useScreenReader
 
 /e2e                           Maestro flows, named by feature ID

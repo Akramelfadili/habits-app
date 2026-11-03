@@ -286,13 +286,13 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
-		gap: 4,
+		gap: space[100],
 		// Same inset as the ghost Button these actions used before.
-		paddingHorizontal: 20,
+		paddingHorizontal: space[500],
 	},
 	back: {
 		justifyContent: "flex-start",
-		paddingHorizontal: 6,
+		paddingHorizontal: space[150],
 	},
 	circle: {
 		width: HEADER_BUTTON_MIN_SIZE,

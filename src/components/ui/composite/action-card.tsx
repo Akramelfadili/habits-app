@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { typeScale } from "@/theme/theme";
+import { space, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ActionCardProps = {
@@ -58,15 +58,15 @@ const styles = StyleSheet.create({
 	card: {
 		flexDirection: "row",
 		alignItems: "center",
-		gap: 12,
+		gap: space[300],
 		borderRadius: 16,
 		borderWidth: 1,
-		paddingVertical: 14,
-		paddingHorizontal: 16,
+		paddingVertical: space[350],
+		paddingHorizontal: space[400],
 	},
 	text: {
 		flex: 1,
-		gap: 2,
+		gap: space[50],
 	},
 	title: {
 		fontSize: typeScale.rowLabel,

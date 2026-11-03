@@ -4,6 +4,35 @@ Deferred work and deviations from the specs, recorded while building so they are
 
 Status key: **Open** = something to decide or build · **Decided** = a deliberate deviation, recorded for the reviewers · **Done** = kept only for history.
 
+## Where things stand (end of V3-6)
+
+Everything below this section is the detailed record by ticket. This is what is still open, grouped.
+
+### Bugs to fix next (the owner's fix batch)
+
+- **Today's day strip, toast dismissal and the partial-sheet bugs** — named by the owner for the next prompt; deliberately not touched in V3-6.
+- **Toasts have no enter or exit animation** (08.5: rise 12 pt + fade, fade only with Reduce Motion) and, per the owner, dismissal misbehaves; fix together. Today a toast just appears and goes.
+- **After Skip on First Run, Progress and Habits are unreachable until a first habit exists** (FR4 has no tab bar by decision). If that feels wrong on a phone, show the bar again after the first push or after a few seconds; the flag is `landing` in `first-run-offer-store`.
+- **Collapsing header: the large title's buttons scale to 88 % while it fades** (38.7 pt while they can still be hit); hide them from touches once past the first third.
+- **`year-map.perf.test.ts` fails under a loaded machine** (a time budget; passes alone and with `--maxWorkers=3`). Give it a relative budget or move it to `*.slow.test.ts`.
+
+### Release prerequisites (before anyone but the owner uses it)
+
+- **Back up the database before migrating** (A7-08): a migration that succeeds with wrong data cannot be undone; copy `habits.db` to `habits.db.bak` first and say so on the update screen (SY3/SY4 promise nothing about a backup today).
+- **Import from the JSON export** (HAB-15 exports; nothing reads it back). Without it a lost phone loses the history. The file carries `version: 1`, categories (name, built-in, order) and each habit's reminders.
+- **Legacy column drop (B11):** `habits.icon/color/category` are nullable and unused; a cleanup migration (with `migration-reviewer`) removes them, after the backup above exists.
+- **`PRAGMA foreign_key_check` in dev builds** and the four orphan risks listed under "reliability follow-ups" (A7-04): foreign keys stay off on device by decision (ADR 002).
+- **`expo-clipboard`**: `npx expo install expo-clipboard` and a dev-client rebuild, so "Copy diagnostics" copies instead of sharing a file.
+- **Device-only checks, none of which the web build can show** (phone checklist in the V3-6 report): VoiceOver landing and reading order on every screen, the Magic Tap for a toast's Undo, Dynamic Type at AX1–AX5 (web only emulates AX3), Reduce Motion / Reduce Transparency / Increase Contrast on the pill, a reminder actually firing and not firing (`e2e/README.md`, manual checks 1–7), the share sheet for the export file, drag-to-reorder and swipe-to-archive, the splash → First Run hand-off and the update screen's first paint, the release build's promise-rejection tracking, Hermes timings for Year, the midnight rollover with the phone clock moved, the SF Symbols the web build cannot draw.
+
+### Parked (decided or Later, no date)
+
+- Week-level freeze for × per week habits (own ADR); auto-use freezes; the Settings hub with a page per row; Privacy and Send feedback rows; the per-reminder on/off toggle; iCloud backup row.
+- `SlimHabitForm` split behind a shared `useHabitForm` hook; the per-habit streak read model shared by `useHabitsQueries` and the Detail hook; one V3-02 `Header` component for Today / Habits / Progress.
+- Skeleton shimmer (it pulses); week-start-follows-iOS (D9, own ADR); logs on disk (A3-10); a lazy db client so an unopenable database shows the error screen.
+- The V1/V2 spec-vs-built deviations under "Decided" and the polish items under "Open — polish and small gaps".
+- Old summary builders kept as the oracle of `range-summary.parity.test.ts` (V3-3a).
+
 ## Open — product decisions and unbuilt spec rules
 
 - **Edit habit has Archive but no Delete** (HAB-23). Mockup E7 is labelled "from Edit habit · delete", but the only way to delete is "Delete habit" on Habit Detail. Archive was added at the foot of Edit habit (audit B9; HAB-17's rule) and deliberately only Archive — Delete stays one step further away. Decide whether Edit habit should also get a Delete entry.

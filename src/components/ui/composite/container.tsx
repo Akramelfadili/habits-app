@@ -117,8 +117,8 @@ export function Container({
 const styles = StyleSheet.create({
 	base: {
 		borderRadius: 16,
-		padding: 16,
-		gap: 16,
+		padding: space[400],
+		gap: space[400],
 	},
 	dividedBase: {
 		gap: 0,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
 		marginVertical: 0,
 	},
 	tight: {
-		padding: 6,
+		padding: space[150],
 		gap: 0,
 	},
 	// The 1px outline replaces 1px of padding, so lifting a card doesn't shift its rows.
@@ -149,24 +149,24 @@ const styles = StyleSheet.create({
 		padding: 5,
 	},
 	dividedSection: {
-		gap: 16,
+		gap: space[400],
 	},
 	compactSection: {
 		gap: 0,
 	},
 	divider: {
 		height: StyleSheet.hairlineWidth,
-		marginVertical: 12,
+		marginVertical: space[300],
 	},
 	compactDivider: {
-		marginVertical: 10,
+		marginVertical: space[250],
 	},
 	sheet: {
 		borderTopLeftRadius: 24,
 		borderTopRightRadius: 24,
 		borderBottomLeftRadius: 0,
 		borderBottomRightRadius: 0,
-		paddingTop: 10,
+		paddingTop: space[250],
 		// Lets a sheet's scrolling content shrink above the keyboard.
 		flexShrink: 1,
 	},

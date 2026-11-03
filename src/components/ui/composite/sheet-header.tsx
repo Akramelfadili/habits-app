@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { type HostInstance, StyleSheet, Text, View } from "react-native";
 import { Button } from "@/components/ui/primitives/button";
-import { typeScale } from "@/theme/theme";
+import { space, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 
@@ -51,8 +51,8 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		gap: 12,
-		paddingHorizontal: 4,
+		gap: space[300],
+		paddingHorizontal: space[100],
 	},
 	title: {
 		flex: 1,

@@ -11,6 +11,8 @@
 | `npm run check-architecture` | the architecture rules below | part of all of the above |
 | `npm run deadcode` / `deadcode:all` | knip: unused files, exports, dependencies (**report only**, not in `make check`) | before cleanup PRs |
 | `npm run ratchet:update` | rewrites `src/theme/token-ratchet.baseline.json` to the current (lower) counts | after removing design-token escapes |
+| `VC_AUDIT=1 npm run visual-check` | the same run, plus `.visual-checks/audit/<state>.json`: every pressable's rendered size and every text that is truncated or clipped by its box. react-native-web ignores `hitSlop`, so a size under 44 is a finding only when no slop makes up the difference (see the guard below) | the V3-6 touch-target and Dynamic Type audits; whenever a layout changes at AX sizes |
+| `src/components/ui/touch-targets.guard.test.ts` (in `make check`) | reads every `Pressable` / `Touchable*` in `src/` and fails unless its style and `hitSlop` prove 44 × 44 pt, or it has a reasoned exception in the file; a stale exception fails too | every Jest run |
 | `npm run visual-check` | renders every screen/state on web (2 pages at a time), diffs vs `docs/visual-baseline/`; a state that differs or errors is re-captured once before it is reported | per feature; never gate commits on it |
 | `src/lib/db/migrations.safety.test.ts` (in `make check`) | journal / snapshot / file parity, every migration step upgraded from a seeded DB with FK on and off, a committed V1-era DB (`src/lib/db/__fixtures__/v1-era-0008.sql`) upgraded to HEAD, and a drizzle-kit drift check against `schema.ts` | every Jest run |
 
@@ -56,6 +58,10 @@ setting can never reach the app there.
 
 Routes name their tab group (`/(progress)/progress`) so a cold load lands on the
 right tab; a plain `/week` would open inside Today.
+
+### Dynamic Type on web (V3-6)
+
+react-native-web has no Dynamic Type, so `?textSize=ax` only switches the layouts to their accessibility variants. For a state whose route says `textSize=ax` the harness also scales every text element to the 08.6a AX3 sizes (display 52, stat 48, title 43, body-lg 40, body 38, callout/subhead 36, footnote 33, caption 32), so clipping and overlap show up in the capture and in `VC_AUDIT` reports. It leaves alone what the app holds fixed (tab-bar labels, week-matrix day letters and cell numbers) and caps the inline bar and header pills at 1.3x like `barMaxFontMultiplier`. Add a state with `AX_VARIANTS` in `screens.mjs`; the emulation is the harness's, not the app's, so a real device at AX1–AX5 is still a device check.
 
 ### The page clock (V3-2a)
 
