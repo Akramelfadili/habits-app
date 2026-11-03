@@ -16,6 +16,8 @@ Everything below this section is the detailed record by ticket. This is what is 
 - **Collapsing header: the large title's buttons scale to 88 % while it fades** (38.7 pt while they can still be hit); hide them from touches once past the first third.
 - **Perf tests fail on a loaded or slower machine** (`year-map.perf.test.ts`, 1000–1200 ms budgets; `use-progress-queries.perf.slow.test.tsx`): they pass alone and with `--maxWorkers=2`, and failed in a full parallel run by as little as 9 ms (1009 vs 1000) after the machine slowed down. Give them relative budgets or move `year-map.perf` to `*.slow.test.ts`. `make check` can therefore need a re-run on a busy box.
 
+- **`--update-baseline` refuses the dev server's blank "Bundling…" page** (flat rgb 242 over 60 % of the capture). V3-6 committed three such baselines (`reminders-at-cap`, `today-empty-ax`, `-dark`) before a re-run showed them; they were recaptured and checked by eye.
+
 ### Release prerequisites (before anyone but the owner uses it)
 
 - **Back up the database before migrating** (A7-08): a migration that succeeds with wrong data cannot be undone; copy `habits.db` to `habits.db.bak` first and say so on the update screen (SY3/SY4 promise nothing about a backup today).

@@ -449,6 +449,30 @@ ${sections}
 	);
 }
 
+/**
+ * A capture taken while Metro was still building (or answered 500) is the
+ * page's flat rgb(242,242,242) with a toast at the bottom; accepted as a
+ * baseline it would match every later blank render (V3-6 committed three).
+ */
+function looksLikeBundlerPage(file) {
+	const png = readPng(file);
+	let flat = 0;
+	let total = 0;
+	for (let y = 0; y < png.height; y += 6) {
+		for (let x = 0; x < png.width; x += 6) {
+			const i = (png.width * y + x) << 2;
+			total++;
+			if (
+				png.data[i] === 242 &&
+				png.data[i + 1] === 242 &&
+				png.data[i + 2] === 242
+			)
+				flat++;
+		}
+	}
+	return flat / total > 0.6;
+}
+
 async function main() {
 	const args = process.argv.slice(2);
 
@@ -508,6 +532,12 @@ async function main() {
 		for (const name of selected) {
 			const current = path.join(CURRENT_DIR, `${name}.png`);
 			if (problemsByName.get(name).length === 0 && fs.existsSync(current)) {
+				if (looksLikeBundlerPage(current)) {
+					console.error(
+						`Not accepted: ${name} is the dev server's blank "Bundling…" page.`,
+					);
+					continue;
+				}
 				fs.copyFileSync(current, path.join(BASELINE_DIR, `${name}.png`));
 			}
 		}
