@@ -25,6 +25,8 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **P12 (Year) always shows the habit chip** ("All habits" when unfiltered), unless exactly one habit exists; the mockup draws the chip only once a habit is chosen (P15).
 - **The per-habit rates list (P8) includes an archived habit that had days in the range**; insights never name one (D11).
 - **The AX3 stacked range list overlays the content** instead of pushing it down (P11); known, revisit in V3-6.
+- **FR3 and FR4 are drawn without the tab bar** (owner's decision, V3-6): the frames draw it. Skip leaves Progress and Habits unreachable until a first habit exists (`docs/backlog.md`, V3-5).
+- **Re-tapping the selected tab scrolls to the top and focuses the title** (08.4); it does not pop a pushed screen.
 - **Week day headers are 44 pt high and 28 pt wide** (P1): the cell pitch is 28 pt, so a 44 pt-wide target would overlap its neighbours. A touch-target exception, on the V3-6 audit list in `docs/backlog.md`.
 
 ## Standing decisions (apply to every ticket)

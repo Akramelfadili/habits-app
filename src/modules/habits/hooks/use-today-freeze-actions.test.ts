@@ -99,6 +99,15 @@ describe("useTodayFreezeActions", () => {
 			expect(result.current.atRiskToday).toEqual(openedOn);
 		});
 
+		it("stays open across midnight with the day it opened on, and does not write anything by itself", async () => {
+			const { result, rerender } = await setup();
+			await act(() => result.current.openAtRisk(1));
+			await rerender({ live: new Map(), now: nextDay });
+			expect(result.current.atRiskToday).toEqual(openedOn);
+			expect(result.current.atRiskInfo?.missedDate).toEqual(missedDate);
+			expect(mockApplyFreeze).not.toHaveBeenCalled();
+		});
+
 		it("spends nothing once the grace window has closed, and says so", async () => {
 			const { result, rerender } = await setup();
 			await act(() => result.current.openAtRisk(1));

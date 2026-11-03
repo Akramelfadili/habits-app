@@ -15,9 +15,17 @@ import ts from "typescript";
  *  - an explicit `width` / `height` / `minWidth` / `minHeight` (plus the slop on
  *    both sides) under 44 fails;
  *  - an axis with no explicit size passes only if the element fills it
- *    (`flex`, `alignSelf: "stretch"`, `width: "100%"`, absolute fill) or it sets
+ *    (`flex` or `alignSelf: "stretch"` for the width only, `width: "100%"`, absolute fill) or it sets
  *    `minHeight`/`minWidth` of 44 on the other route; otherwise it is
  *    "unproven" and fails too, so a new pressable has to say how big it is.
+ *
+ * Limits, so nobody trusts it more than it earns: it reads only styles named
+ * `styles.*` in the same file (anything else shows as "unproven", which fails
+ * safe); an exception is keyed by the pressable's position in its file, so
+ * inserting one above it shifts the key (the stale-entry check then fails and
+ * the index is fixed by hand); an exception covers every problem on its
+ * element, so its reason must say which axis it is about; a computed `hitSlop`
+ * is read as the smallest number in its source, never trusted.
  *
  * An exception is keyed `file::index` (the nth pressable in the file) and
  * carries its reason. Removing a pressable leaves a stale entry, which fails.
@@ -267,10 +275,13 @@ function check(file: string): Finding[] {
 					const props = styles.get(ref);
 					if (!props) continue;
 					if (
-						props.flex !== undefined ||
-						props.flexGrow !== undefined ||
+						// `flex` says nothing about height without the parent's direction,
+						// so it counts as filling the width only; a height must be stated.
 						(axis === "x" &&
-							(props.width === "100%" || props.alignSelf === "stretch")) ||
+							(props.flex !== undefined ||
+								props.flexGrow !== undefined ||
+								props.width === "100%" ||
+								props.alignSelf === "stretch")) ||
 						(axis === "y" && props.height === "100%") ||
 						props.position === "absolute"
 					)

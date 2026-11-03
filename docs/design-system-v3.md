@@ -119,6 +119,10 @@ Density (T-18): habit row **60 pt flat with hairlines** (was 56 + 6 inset), icon
 Flat by default: a card is a surface step plus a hairline, never a shadow. Shadows only for things that float: lifted row (E2), toast (E3), pill. E0 screen · E1 card · E2 lifted · E3 toast · E4 sheet (bg + scrim, top radius 28). In dark, height reads as a lighter surface.
 **Focus ring** (T-13): 2 pt gap in the surface colour + 2 pt accent, follows the element's radius.
 
+## F-06a Bar type cap
+
+`barMaxFontMultiplier` (1.3, `src/theme/theme.ts`): the 44 pt inline bar's title and the header pills' labels stop growing with Dynamic Type at 1.3x, as iOS's navigation bars hold their size; the large title, its stacked buttons and everything in content scale fully (08.6a). The tab-bar labels (12 pt) and the week matrix's day letters and cell numbers do not scale at all.
+
 ## F-07 Motion
 
 Motion confirms an action; it never decorates. With Reduce Motion nothing moves or scales; Undo timings do not change.

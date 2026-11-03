@@ -68,7 +68,8 @@ export default function TabsLayout() {
 			setLanding(false);
 		}
 	}, [landing, habitCount, setLanding]);
-	const hideBar = offerOpen || (landing && habitCount === 0);
+	// An unknown count counts as none: the bar must not flash while it loads.
+	const hideBar = offerOpen || (landing && !habitCount);
 	const { markFirstRunSeen } = useFirstRunActions();
 	useEffect(() => {
 		if (needsSeenMark) void markFirstRunSeen();
