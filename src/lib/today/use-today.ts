@@ -2,17 +2,15 @@ import { addDays, parseISO, startOfDay } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { AppState } from "react-native";
 import { toDayKey } from "@/utils/day-key";
+import { type Clock, systemClock } from "./clock";
 
 /** Local midnight today — the single place the app asks "what day is it" for a write. */
 export function currentDay(): Date {
 	return startOfDay(new Date());
 }
 
-const dayKey = () => toDayKey(new Date());
-
 /** Milliseconds until the next local midnight (+1 s, so the clock is surely past it). */
-function msUntilMidnight(): number {
-	const now = new Date();
+function msUntilMidnight(now: Date): number {
 	return startOfDay(addDays(now, 1)).getTime() - now.getTime() + 1000;
 }
 
@@ -22,11 +20,14 @@ function msUntilMidnight(): number {
  * app is open. Without it a screen left open overnight keeps yesterday as
  * "today" and logs onto it.
  *
+ * `clock` is injectable so tests move midnight by hand; the app passes nothing.
+ *
  * The returned Date is the same object for the whole day, so it is safe in
  * memo/effect dependencies. A write should still call `currentDay()` at the
  * moment it runs instead of trusting the last render.
  */
-export function useToday(): Date {
+export function useToday(clock: Clock = systemClock): Date {
+	const dayKey = () => toDayKey(clock.now());
 	const [key, setKey] = useState(dayKey);
 	// Bumped by the midnight timer so it re-arms even if the clock hasn't ticked over.
 	const [armed, setArmed] = useState(0);
@@ -34,15 +35,15 @@ export function useToday(): Date {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `key` and `armed` are the re-arm triggers
 	useEffect(() => {
 		const refresh = () => setKey(dayKey());
-		const timer = setTimeout(() => {
+		const cancel = clock.after(msUntilMidnight(clock.now()), () => {
 			refresh();
 			setArmed((count) => count + 1);
-		}, msUntilMidnight());
+		});
 		const subscription = AppState.addEventListener("change", (state) => {
 			if (state === "active") refresh();
 		});
 		return () => {
-			clearTimeout(timer);
+			cancel();
 			subscription.remove();
 		};
 		// `armed` and `key` re-arm the timer for the next midnight.

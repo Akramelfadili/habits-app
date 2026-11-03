@@ -2,9 +2,10 @@ import { format, isSameDay } from "date-fns";
 import { useEffect, useRef, useState } from "react";
 import { log } from "@/lib/logger/logger";
 import { currentDay } from "@/lib/today/use-today";
-import { fromDayKey } from "@/utils/day-key";
+import { fromDayKey, toDayKey } from "@/utils/day-key";
 import { MAX_QUANTITY_VALUE } from "../constants";
 import { messages, showMessage } from "../messages";
+import { useEntriesInRange } from "../repositories/entry-repository";
 import type { DayWrite } from "../services/day-log-service";
 import type { Habit } from "../types";
 import { useQuantityLogActions } from "./use-quantity-log-actions";
@@ -53,12 +54,27 @@ export function useTodayLogActions({
 	const quantityHabit = loggableHabits.find(
 		(habit) => habit.id === quantitySession?.habitId,
 	);
+	// The open sheet reads its own day's entry, not the shown day's: across
+	// midnight the screen moves on, the sheet does not (SY5).
+	const sheetDay = quantitySession?.day ?? today;
+	const sheetEntries = useEntriesInRange(sheetDay, sheetDay);
+	const sheetValue =
+		sheetEntries.find(
+			(entry) =>
+				entry.habitId === quantityHabit?.id &&
+				entry.date === toDayKey(sheetDay),
+		)?.value ?? 0;
 
 	// Names the date in a toast only when it isn't today (T10).
 	const dayLabel =
 		selectedKey === null
 			? undefined
 			: format(fromDayKey(selectedKey), "EEE d MMM");
+	// A sheet whose day is no longer today says so in its title.
+	const sheetDayLabel =
+		quantitySession && !isSameDay(quantitySession.day, today)
+			? format(quantitySession.day, "EEE d MMM")
+			: dayLabel;
 
 	// Every completion confirms itself with a short-lived Undo (design system,
 	// "Feedback"). The toast lives in the shell's shared slot.
@@ -211,9 +227,9 @@ export function useTodayLogActions({
 			quantityHabit && quantitySession
 				? {
 						habit: quantityHabit,
-						value: quantityValuesByHabitId.get(quantityHabit.id) ?? 0,
+						value: sheetValue,
 						day: quantitySession.day,
-						dayLabel,
+						dayLabel: sheetDayLabel,
 						offSchedule: quantitySession.offSchedule,
 					}
 				: null,

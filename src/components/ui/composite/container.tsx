@@ -25,8 +25,6 @@ type ContainerProps = PropsWithChildren<{
 	 * with `dividers`.
 	 */
 	compact?: boolean;
-	/** Ink border ring — a selectable card that's currently picked (First Run, HAB-06). */
-	selected?: boolean;
 	/**
 	 * A list card whose rows carry their own padding (compact `ListItem`s on
 	 * Manage & Archive, HAB-13) — a thin inset so a lifted row's highlight
@@ -45,7 +43,6 @@ export function Container({
 	variant = "card",
 	dividers = false,
 	compact = false,
-	selected = false,
 	tight = false,
 	lifted = false,
 	children,
@@ -66,14 +63,10 @@ export function Container({
 				tight && (variant === "outlined" || lifted) && styles.tightOutlined,
 				{
 					backgroundColor: variant === "inset" ? colors.inner : colors.card,
-					borderWidth: selected
-						? 1.5
-						: variant === "outlined" || variant === "flat" || lifted
-							? 1
-							: 0,
-					borderColor: selected
-						? colors.ink
-						: lifted && !flat
+					borderWidth:
+						variant === "outlined" || variant === "flat" || lifted ? 1 : 0,
+					borderColor:
+						lifted && !flat
 							? colors.ink
 							: variant === "outlined" || variant === "flat"
 								? colors.border

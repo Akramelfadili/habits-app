@@ -53,6 +53,7 @@ export function makeEntryFixtures(
 
 	if (
 		scenario === "empty" ||
+		scenario === "first-run" ||
 		scenario === "rest-day" ||
 		scenario === "habit-detail-new"
 	) {

@@ -1,5 +1,5 @@
-# Journey: first run → pick suggestions → add a habit of my own → log it on Today.
-# Covers HAB-06 (first run), HAB-01/02 (create + frequency, edit from Detail), HAB-03 (Today completion).
+# Journey: first run → quick-pick a first habit → add a habit of my own → log it on Today.
+# Covers HAB-46 (first run; HAB-06 before V3), HAB-01/02 (create + frequency, edit from Detail), HAB-03 (Today completion).
 url: ${APP_URL}/?fixtures=first-run&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
@@ -8,23 +8,30 @@ tags:
 ---
 - launchApp
 
-# HAB-06: two suggestions pre-selected; toggling one updates the count live.
-- assertVisible: "Add 2 habits"
-- tapOn: "Stretch"
-- assertVisible: "Add 3 habits"
-- tapOn: "Add 3 habits"
+# HAB-46: First Run opens instead of Today, with no tab bar.
+- assertVisible: "Small habits,.*"
+- assertNotVisible:
+    id: "Progress"
+- tapOn: "Add your first habit"
+- assertVisible: "Your first habit"
+# The slim form: Save says why it is off until there is a name.
+- assertVisible: "Add a name to save"
+- tapOn: "Drink water"
+- assertNotVisible: "Add a name to save"
+- tapOn: "Save habit"
 
-# Lands on Today with the three suggestions, none done yet.
+# FR3: our own question comes before iOS gets to ask; Not now asks nothing.
+- assertVisible: "Remind you each day?"
+- tapOn: "Not now"
+
+# Lands on Today (tabs back) with the habit, grouped under its category and
+# a quantity habit as the suggestion promised ("0 of 8 glasses").
 - assertVisible: "Thursday, 1 October"
-- assertVisible: "Glass of water"
-- assertVisible: "Walk 20 minutes"
-- assertVisible: "Stretch"
-# …created as their subtitles promised: grouped by category (Glass of water
-# under Health, Walk and Stretch under Fitness), and Stretch as a 5-minute
-# quantity habit, which its status line says ("0 of 5 min").
+- assertVisible: "Drink water"
 - assertVisible: "Health"
-- assertVisible: "Fitness"
-- assertVisible: "0 of 5 min"
+- assertVisible: "0 of 8 glasses"
+- assertVisible:
+    id: "Progress"
 
 # HAB-01: add a habit of my own, from the + in Today's header (HAB-27 — the
 # ⋯ menu is gone and the + is an icon button, so it matches by label).

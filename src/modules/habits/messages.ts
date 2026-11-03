@@ -10,6 +10,7 @@
  */
 
 import { toastHoldMs } from "@/components/ui/composite/toast-host";
+import type { DatabaseCopy } from "@/lib/db/database-copy";
 import { showToast, type ToastTone } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
 import { notificationCopy, reminderCapMessage } from "./reminder-copy";
@@ -167,6 +168,16 @@ export const messages = {
 		tone: "success",
 		text: (time: string) => `Reminder at ${time} removed`,
 	},
+	/** FR3: Allow reminders on First Run's pre-prompt (4 s). */
+	reminderSaved: {
+		tone: "success",
+		text: (time: string) => `Reminder saved \u00b7 ${time}`,
+	},
+	/** FR3 / R2: the reminder is stored, but iOS notifications are off (6 s). */
+	reminderSavedOff: {
+		tone: "warning",
+		text: "Reminder saved, but notifications are off",
+	},
 	/** DC6: a category nobody used is gone at once; Undo puts it back (5 s). */
 	categoryDeleted: {
 		tone: "success",
@@ -204,6 +215,24 @@ const plural = (count: number, one: string, many: string) =>
 	`${count} ${count === 1 ? one : many}`;
 
 export const todayCopy = {
+	/** SY1: what a screen reader says for the skeleton while Today loads. */
+	loading: "Loading your habits",
+	/** SY5: the app stayed open across midnight; Today has moved to the new day. */
+	rollover: {
+		title: (weekday: string) => `It\u2019s ${weekday} now`,
+		body: (weekday: string, completed: number, total: number) =>
+			total === 0
+				? `${weekday} closed at midnight with nothing due. You can still log ${weekday} from the week strip.`
+				: `${weekday} closed at midnight with ${completed} of ${total} done. You can still log ${weekday} from the week strip.`,
+		dismiss: "Dismiss",
+	},
+	/** SY2: Today could not read its habits; the header and tab bar stay. */
+	loadError: {
+		title: "Couldn\u2019t load your habits",
+		body: "Your data is safe. Trying again usually fixes this.",
+		retry: "Try again",
+		copyDiagnostics: "Copy diagnostics",
+	},
 	/** Week strip VoiceOver actions (08.3). */
 	changeDayLabel: (day: string) => `${day} · Change day`,
 	changeDayTitle: "Change day",
@@ -659,7 +688,7 @@ export const habitsCopy = {
 	/** H6: no habits at all. The suggestions link joins it with HAB-46. */
 	empty: {
 		title: "No habits yet",
-		body: "Add your first habit to start tracking.",
+		body: "Add your first habit, or start from a suggestion.",
 		add: "Add habit",
 	},
 	/** Every habit is archived: Today is empty, Restore is below. */
@@ -939,6 +968,109 @@ export const formCopy = {
 			`${name} is filled in. Change anything before saving.`,
 	},
 } as const;
+
+/**
+ * First run (HAB-46, FR1–FR4): the welcome, the slim first-habit form's extras
+ * and our own notification pre-prompt. The Today empty state (FR4) is
+ * `todayCopy`; the suggestions list is `suggestionsCopy`.
+ */
+export const firstRunCopy = {
+	welcome: {
+		/** Two balanced lines, as FR1 draws them; read as one sentence. */
+		title: "Small habits,\nevery day",
+		body: "Tick them off on Today, see your week in Progress, and keep streaks going on off days with freezes.",
+		features: [
+			{ key: "today", title: "Today", body: "Tick what\u2019s due" },
+			{ key: "progress", title: "Progress", body: "Week, month and year" },
+			{
+				key: "freezes",
+				title: "Freezes",
+				body: "Keep a streak through a missed day",
+			},
+		],
+		addFirst: "Add your first habit",
+		browse: "Browse suggestions",
+		/** Not drawn in FR1: every first-run screen has a way to an empty Today. */
+		skip: "Skip for now",
+	},
+	/** The welcome could not write its flag: an inline banner, since no toast host exists before the tabs. */
+	continueFailed: "Couldn\u2019t continue. Try again.",
+	habit: {
+		title: "Your first habit",
+		pickLabel: "Or pick one",
+		/** FR2's reassurance. The frame also says "icon": a habit's icon is its category's, so it is left out. */
+		note: "Category and reminders can wait \u2014 change them any time.",
+	},
+	/** FR3: the pre-prompt shown before iOS asks for permission. */
+	offer: {
+		title: "Remind you each day?",
+		body: (habit: string, time: string) =>
+			`A nudge at ${time} to log ${habit}. Change the time or turn it off in Reminders.`,
+		allow: "Allow reminders",
+		notNow: "Not now",
+		/** The default reminder could not be written; the habit is saved either way. */
+		failed:
+			"Couldn\u2019t set the reminder. Add it from the habit\u2019s Reminders.",
+	},
+} as const;
+
+/**
+ * Browse suggestions (HAB-46, BS1): the intro, the group headings, the
+ * subtitle under each suggestion and the "Added" mark.
+ */
+export const suggestionsCopy = {
+	title: "Suggestions",
+	close: "Close",
+	intro:
+		"Tap one to open Add habit with it filled in. Change anything before saving.",
+	/** The heading of the suggestions that are Break habits, whatever their category. */
+	breakGroup: "Break a habit",
+	added: "Added",
+	/** One stop per suggestion (08.3 has no row for it; wording is ours, logged in the backlog). */
+	rowLabel: (name: string, subtitle: string) => `${name}, ${subtitle}`,
+	rowHint: "Opens Add habit with this filled in.",
+	addedLabel: (name: string, subtitle: string) => `${name}, ${subtitle}. Added`,
+	addedHint: "Already in your habits.",
+	quantity: (amount: number, unit: string) =>
+		`Quantity \u00b7 ${amount} ${unit} a day`,
+	perWeek: (times: number) => `${times}\u00d7 per week`,
+	daily: "Daily",
+	breakWord: "Break",
+	breakDaily: "Break \u00b7 daily",
+	/** The link in the empty Today (T2, FR4) and the empty Habits tab (H6), and FR1's second action. */
+	browse: "Browse suggestions",
+} as const;
+
+/**
+ * The database gate (HAB-47, SY3 and SY4), handed to `DatabaseProvider` by the
+ * root layout. Every claim is checked against the migrator: it runs all pending
+ * migrations in one transaction, so a failed run is rolled back whole ("Nothing
+ * was changed", "as they were") and a run never deletes a person's habits
+ * ("Nothing is deleted"). There is no step or count to report, so neither
+ * screen names one (the frames' "Step 2 of 3", "64%").
+ */
+export const migrationCopy = {
+	updating: {
+		title: "Updating your data",
+		body: "This version stores habits in a new format. It usually takes under a minute.",
+		progress: "Updating your habits",
+		keepOpen: "Keep the app open. No habits or history are deleted.",
+	},
+	updateFailed: {
+		title: "Update didn\u2019t finish",
+		message: "Your habits are as they were before the update.",
+		reason: {
+			title: "The update stopped",
+			message:
+				"Nothing was changed. Try again, or copy diagnostics for support.",
+		},
+	},
+	openFailed: {
+		title: "Couldn\u2019t open your data",
+		message:
+			"The app couldn\u2019t prepare its database. Nothing was lost. Try again, and if it keeps happening, copy the diagnostics and send them over.",
+	},
+} satisfies DatabaseCopy;
 
 /**
  * Categories (HAB-42, C1–C6, DC6): the screen's header and groups, the rows,

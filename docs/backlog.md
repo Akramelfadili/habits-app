@@ -89,8 +89,6 @@ Status key: **Open** = something to decide or build · **Decided** = a deliberat
 
 ## Open — V3-2b (Today UI)
 
-- **Browse suggestions link not shown** (T2): HAB-46's suggestions screen does not exist. `TodayEmptyState` takes `onBrowseSuggestions` and shows the link when given one.
-- **Loading skeleton** (HAB-32): rows after 300 ms, static with Reduce Motion — not built; Today shows a neutral blank while loading.
 - **Fill transitions are not animated**: the circle's 200 ms state fill and the pie sweep (V3-04, F-07) change instantly; the progress bar's 450 ms fill, the strip's day switch and the all-done check are animated. Press is a 92 % scale (opacity with Reduce Motion), without the 100 ms ease.
 - **Edit this day: entry points.** Only Habit Detail's heatmap opens it. Progress (Week day header, Month detail card) comes with V3-3; the "whole week row is one 44 pt target" on Detail with the Detail batch. The Note field is not in RL1/RL2 and is kept only when the sheet is opened from a habit.
 - **Quantity sheet maximum:** 9999 (the existing cap), the mockup's helper says 99. Decide whether 99 is intended.
@@ -169,7 +167,6 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 - **`AX_FONT_SCALE = 1.5`** is a judgement call: iOS's standard sizes stop at 1.35 (xxxLarge) and AX1 is 1.65, so the threshold sits in the gap. If a device reports something unexpected, this is the knob.
 - **`PILL_BLUR_INTENSITY = 50`** approximates the mockup's "20 pt blur": expo-blur's 1–100 `intensity` is not a radius. Needs an eye on a device.
 - **`?textSize=ax`** (`src/lib/dev-text-size/`) exists only because react-native-web hardcodes `fontScale: 1`, so the AX layouts can be driven on web at all. Delete it if that ever changes.
-- **First run shows the tab bar.** `TodayScreen` renders `FirstRunScreen` inside the Today tab, so the pill floats over it; HAB-46 says first launch has no tabs. Until V3-5 takes them away, First Run's footer pays `TAB_BAR_BOTTOM_PADDING` so the pill cannot cover "Add N habits" — it did, and the button was unreachable.
 - **Maestro cannot tap an active row on Manage** (it is wrapped in `SwipeableRow`; the web driver's single-jump tap never reaches it). `hab-13`'s web branch opens those habits from Today instead. Archived rows are plain and tap fine.
 - **Settings pushed from Reminders keeps the tab name as its Back label** (V3-1 spec review): `reminders-screen.tsx` pushes `/settings`, whose Back says "Today"/"Habits", not "Reminders". Relabel from the screen as `reminders/[id]` does, or use a bare chevron.
 - **Header circle buttons draw their glyph with `SymbolView`**, which renders nothing on web, so the `+` and gear are blank circles in every baseline. Add a View-drawn fallback or web twin before trusting those corners.
@@ -235,7 +232,6 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **DC5's body is DC5's** ("…restore it any time from Habits › Archived."), not H8's shorter line.
 - **Categories' Back says "Habits" when opened from the Habits tab** (`/categories?from=habits`) and "Settings" otherwise; the Categories screen itself is V3-4b.
 - **`EmptyState`'s icon square is `inner`**, as T2 (see V3-2b); H3 and H6 draw a white square with a hairline.
-- **The empty Habits tab (H6) has no "Browse suggestions"** until HAB-46; its body reads "Add your first habit to start tracking." instead of the frame's "…or start from a suggestion."
 - **The Habits tab with every habit archived** (not drawn) shows "No active habits" with Add habit and the Archived section below.
 - **Review nits left (spec-reviewer, V3-4a):** `DetailActions` draws its own minus icon square (extend `IconBadge`); `WeekHistoryCard` repeats `Container`'s card chrome; `useHabitsQueries` does the per-habit streak pass inside the hook (the Detail hook does the same); the archive sheet has no initial focus (the spec asks for it only on Delete); `habitHistoryRows` walks back to creation when fewer than ten days qualify.
 - **Maestro `hab-13-manage-archive-delete` still describes the old Manage screen** and was not run (V3-6 rewrites the flows for the three tabs).
@@ -253,7 +249,7 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **Reminders are queued on New habit only.** Edit habit has no Reminders section: its reminders are the Reminders screen's (HAB-43, step 4). The queued times are written after the habit; if one fails, the habit stays and a warning toast says so.
 - **The "Discard changes?" prompt is drawn in-app (`AlertDialog`), not the system alert**, so web and the Maestro flows see it too. It follows the frame: Keep editing bold first, Discard in danger red, a scrim tap does nothing.
 - **The header button says "Close"** (was "Cancel") on both modals, as the frames do.
-- **Suggestion prefill arrives as the `prefill` route param** (a JSON string, `parseHabitPrefill`) or the `prefill` prop; HAB-46 only has to push `/new-habit?prefill=…`.
+- **Suggestion prefill arrives as the `prefill` route param** (a JSON string, `parseHabitPrefill`) or the `prefill` prop; Browse suggestions (V3-5) pushes `/new-habit?prefill=…`.
 - **Unit error appears once the unit has been left**; until then Save says "Add a unit to save" and the issue count does not include it.
 - **Type is locked in Edit** with "Build and Break can’t be switched after saving." (the frame F9 draws it enabled; direction is fixed at creation, HAB-01).
 - **The live example uses `min(5, target − 1)`** ("5 of 8 glasses"; "1 of 1" for a target of 1).
@@ -294,6 +290,37 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **JSON is the default format** (the frame's); the file gained `categories` (name, built-in, order) and each habit's `reminders` (time, days, on/off). Layout `version` stays 1 (additive). CSV is unchanged (one row per log).
 - **The failure reason is the frame's copy** ("Not enough storage on this iPhone. Nothing was changed — free up space, then retry."); the size needed is no longer quoted, and Copy diagnostics is no longer offered from the failure (it is in Settings › About).
 - **Export from Progress** opens the same sheet (Progress, Month and Settings share one store), so a running export started from one entry is seen from the others.
+
+## Open — V3-5 (first run, suggestions, system states)
+
+Deliberate differences from the frames and what was left out. Spec wins where they disagree (D-list in `feature-spec-v3.md`).
+
+- **Numbering:** `feature-spec-v3.md` files first run and suggestions under HAB-46 and the system states under HAB-47 (HAB-45 is Destructive confirms); the task brief called first run HAB-45.
+- **FR3 and FR4 are drawn with the tab bar and built with it.** FR1 and FR2 (and Browse suggestions opened from First Run) have no tab bar; FR3 is a question over Today and FR4 is Today itself, so they are inside the tabs, as the frames draw them.
+- **Skip for now (FR1, BS1 from First Run) is not drawn.** Added so every First Run screen has a way to an empty Today; FR2's Close is the same skip. The suggestions list from First Run therefore carries it under the groups.
+- **FR2's frequency row has three options, not four** (Daily, Specific days, × per week), as in the form (V3-4b). Its footnote reads "Category and reminders can wait", not "Category, icon and reminders": a habit's icon is its category's, so there is no icon to postpone.
+- **Quick picks and suggestions carry their category and target.** Picking "Drink water" on FR2 saves it in Health as 8 glasses a day (FR3 draws that); editing the name drops both. "No social media" is Productivity (SY5 draws it there) and "No phone in bed" Health (no frame says).
+- **First Run gate:** no habits (archived included) and the `habits.seenFirstRun` flag unset. The flag is written when a first habit is saved, on any skip, and once for an install that already has habits, so deleting every habit never brings First Run back. The gate renders the tabs while it is still loading, so the skeleton has its bar; a fresh install may therefore show the pill for a frame before the redirect (device check).
+- **Browse suggestions is only offered from empty states** (Today T2/FR4, Habits H6) and First Run, as drawn. Once there are habits there is no entry to it; a row or a header action is not drawn, so none was invented.
+- **After saving from a suggestion outside First Run the form returns to the list**, which shows the habit as Added; there is no "Habit saved" toast (the form is a modal with no toast host).
+- **Added = same name, case and surrounding spaces ignored, archived included** (the form's duplicate rule).
+- **SY3 is indeterminate and SY4 names no step.** The migrator is one synchronous run with no progress, so the frames' "Step 2 of 3 · moving 1,284 logs · 64%" and "Stopped at step 2 of 3" are not built. "Nothing was changed" and "as they were" are true (one transaction; `migrations.rollback.test.ts` forces a failure after the last statement and checks schema and rows). "Nothing is deleted" became "No habits or history are deleted" after the migration review (0009 merges and trims free-text category names). No backup is promised or made.
+- **The update screen only shows on an upgrade** (a read-only look at `__drizzle_migrations` against the journal, before the migrator), is up 100 ms before the migrator starts so it can be painted, and drops the splash itself. The migrator is untouched. A fresh install and an up-to-date launch show nothing.
+- **Nothing guards "No habits or history are deleted" for future migrations except a test** that fails on `DELETE FROM`, `DROP COLUMN` or a `DROP TABLE` outside the migrator's own scratch tables.
+- **SY2 catches a failed read inside Today only** (`LoadErrorBoundary`); every other tab still falls through to the root boundary. Today's header uses the clock, not the database, so it stays real.
+- **SY5 covers the quantity sheet, not the streak-at-risk sheet.** An open quantity sheet keeps its day, amount and half-typed value and names the date; the at-risk sheet is recomputed against the new day and may close or change. It follows a live read; pinning it would let a freeze be spent after its grace window.
+- **The rollover banner sits under the header and above the week strip** (SY5 draws no strip). It reads "nothing due" instead of "of 0" when the closed day had nothing due.
+- **`ErrorScreen` now has the SY4 layout everywhere** (hero title, reassurance line, optional reason banner, Try again, secondary Copy diagnostics), including the root boundary; its three fixed strings ("Try again", "Copy diagnostics" and the copy results) stay in the component because it is shared infrastructure with no catalogue.
+- **Web only:** `?fixtures=today-loading`, `today-load-fails`, `migration-running`, `migration-fails`, `migration-fails-first-open` reach SY1–SY4; a page keeps the fixture scenario and `textSize` it opened with, because First Run redirects and drops the query. There is no fail-once: React retries a throwing render itself.
+- **Visual-check flakes seen (pass when run alone):** `habit-detail-history(-dark)`, `habit-detail-long-names` and `progress-week-ax-dark` differed once each in a full run — scroll states under load.
+- **Device checks:** the update screen's first paint before the migrator blocks the thread, the splash-to-first-run hand-off, VoiceOver focus on each First Run heading and on Allow reminders, the iOS prompt after FR3, Reduce Motion on the skeleton and bar, and the rollover with the phone clock moved.
+- **FR2's Close has no inline error path.** If the seen flag cannot be written the Close does nothing visible (the header sits in the root layout, which has no toast host); the welcome and the suggestions list show an inline banner. A write to local SQLite failing here is far-fetched.
+- **`habit-form-screen.tsx` carries the slim mode** (quick-pick logic and about eight `slim` branches) and the root layout holds the FR2 skip handler. Splitting a `SlimHabitForm` and moving the handler into a header component is deferred.
+- **Skeleton pulses (opacity), not a shimmer** (08.5 says shimmer); static with Reduce Motion.
+- **Suggestions' VoiceOver wording is ours** ("Name, subtitle" with the hint "Opens Add habit with this filled in."; Added in the label): 08.3 has no row for them.
+- **SY3 is drawn before the saved Appearance can be read** (it lives in the database that is migrating), so a dark-preference user on a light system sees it light. Device check.
+- **`useRolloverQueries` reads the closed day's week on every Today mount**, even with no notice; skipping it until one exists is deferred.
+- **Test-only exports knip lists** (new): `suggestionSubtitle`.
 
 ## V3-6 audit list (touch targets and known layout exceptions)
 

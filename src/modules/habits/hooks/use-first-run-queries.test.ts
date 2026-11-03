@@ -1,36 +1,52 @@
 import { renderHook } from "@testing-library/react-native";
 
 let mockSetting: string | null | undefined = null;
+let mockHabits: { loaded: boolean; habits: unknown[] } = {
+	loaded: true,
+	habits: [],
+};
 
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
 	useAppSetting: () => mockSetting,
 }));
+jest.mock("../repositories/habit-repository", () => ({
+	useHabitsList: () => mockHabits,
+}));
 
-import { FIRST_RUN_SUGGESTIONS } from "../constants";
 import { useFirstRunQueries } from "./use-first-run-queries";
 
 describe("useFirstRunQueries", () => {
-	it("exposes the 6 fixed suggestions", async () => {
-		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current.suggestions).toEqual(FIRST_RUN_SUGGESTIONS);
-		expect(result.current.suggestions).toHaveLength(6);
-	});
-
-	it("reports not seen once resolved and genuinely unset", async () => {
+	beforeEach(() => {
 		mockSetting = null;
-		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current.hasSeenFirstRun).toBe(false);
+		mockHabits = { loaded: true, habits: [] };
 	});
 
-	it("reports seen once the setting is set", async () => {
-		mockSetting = "true";
+	it("opens first run with no habits and no flag", async () => {
 		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current.hasSeenFirstRun).toBe(true);
+		expect(result.current).toEqual({ gate: "first-run", needsSeenMark: false });
 	});
 
-	it("reports seen while the live query is still loading, to avoid flashing First Run", async () => {
+	it("waits while the habit list loads, so nothing flashes", async () => {
+		mockHabits = { loaded: false, habits: [] };
+		const { result } = await renderHook(() => useFirstRunQueries());
+		expect(result.current.gate).toBe("loading");
+	});
+
+	it("waits while the flag is still being read", async () => {
 		mockSetting = undefined;
 		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current.hasSeenFirstRun).toBe(true);
+		expect(result.current.gate).toBe("loading");
+	});
+
+	it("never returns once the flag is set, whatever the habits", async () => {
+		mockSetting = "true";
+		const { result } = await renderHook(() => useFirstRunQueries());
+		expect(result.current).toEqual({ gate: "done", needsSeenMark: false });
+	});
+
+	it("asks for the flag to be written when habits exist without it", async () => {
+		mockHabits = { loaded: true, habits: [{}] };
+		const { result } = await renderHook(() => useFirstRunQueries());
+		expect(result.current).toEqual({ gate: "done", needsSeenMark: true });
 	});
 });

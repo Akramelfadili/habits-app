@@ -1,89 +1,46 @@
-const mockCreateHabitsAndMarkSetting = jest.fn();
+const calls: string[] = [];
+let mockPermission = "granted";
 
-jest.mock("../repositories/habit-repository", () => ({
-	createHabitsAndMarkSetting: (...args: unknown[]) =>
-		mockCreateHabitsAndMarkSetting(...args),
+jest.mock("@/lib/notifications/use-notification-permission", () => ({
+	ensureNotificationPermission: async () => {
+		calls.push("permission");
+		return mockPermission;
+	},
 }));
 
-jest.mock("../repositories/category-repository", () => ({
-	getCategories: async () =>
-		jest.requireActual("../test-support/habit-builder")
-			.TEST_BUILT_IN_CATEGORIES,
+const mockAddReminder = jest.fn(async () => {
+	calls.push("addReminder");
+});
+jest.mock("./reminder-service", () => ({
+	addReminder: (...args: unknown[]) => (mockAddReminder as jest.Mock)(...args),
 }));
 
-import {
-	type BuiltInCategoryName,
-	FIRST_RUN_SUGGESTIONS,
-	SEEN_FIRST_RUN_SETTING_KEY,
-} from "../constants";
-import { builtInCategory } from "../test-support/habit-builder";
-import { addSuggestedHabits } from "./first-run-service";
+import { makeHabit } from "../test-support/habit-builder";
+import { enableFirstHabitReminder } from "./first-run-service";
 
-describe("first-run-service", () => {
+describe("enableFirstHabitReminder", () => {
 	beforeEach(() => {
-		mockCreateHabitsAndMarkSetting.mockReset();
+		calls.length = 0;
+		mockPermission = "granted";
+		mockAddReminder.mockClear();
 	});
 
-	it("creates one habit input per suggestion and marks the setting atomically", async () => {
-		const selected = FIRST_RUN_SUGGESTIONS.slice(0, 2);
-		mockCreateHabitsAndMarkSetting.mockResolvedValue([]);
+	it("asks iOS first, then adds the default reminder", async () => {
+		const habit = makeHabit({ name: "Drink water" });
 
-		await addSuggestedHabits(selected);
+		const permission = await enableFirstHabitReminder(habit);
 
-		expect(mockCreateHabitsAndMarkSetting).toHaveBeenCalledWith(
-			[
-				expect.objectContaining({ name: "Glass of water", direction: "build" }),
-				expect.objectContaining({
-					name: "Walk 20 minutes",
-					direction: "build",
-				}),
-			],
-			{ key: SEEN_FIRST_RUN_SETTING_KEY, value: "true" },
-		);
+		expect(calls).toEqual(["permission", "addReminder"]);
+		expect(mockAddReminder).toHaveBeenCalledWith(habit);
+		expect(permission).toBe("granted");
 	});
 
-	it("creates what each subtitle promises — category and target included", async () => {
-		mockCreateHabitsAndMarkSetting.mockResolvedValue([]);
+	it("keeps the reminder and reports the denial when iOS says no", async () => {
+		mockPermission = "denied";
 
-		await addSuggestedHabits(FIRST_RUN_SUGGESTIONS);
+		const permission = await enableFirstHabitReminder(makeHabit());
 
-		const [inputs] = mockCreateHabitsAndMarkSetting.mock.calls[0];
-		const byName = Object.fromEntries(
-			inputs.map((input: { name: string }) => [input.name, input]),
-		);
-		const idOf = (name: BuiltInCategoryName) => builtInCategory(name).id;
-		expect(byName["Read before bed"]).toMatchObject({
-			categoryId: idOf("Learning"),
-			targetType: "quantity",
-			targetAmount: 10,
-			targetUnit: "pages",
-		});
-		expect(byName.Stretch).toMatchObject({
-			targetType: "quantity",
-			targetAmount: 5,
-			targetUnit: "min",
-		});
-		expect(byName["Glass of water"]).toMatchObject({
-			categoryId: idOf("Health"),
-			targetType: "simple",
-		});
-		expect(byName["Three lines journal"]).toMatchObject({
-			categoryId: idOf("Mindfulness"),
-		});
-		expect(byName["Walk 20 minutes"]).toMatchObject({
-			categoryId: idOf("Fitness"),
-		});
-		// Every one still starts Daily (HAB-06).
-		for (const input of inputs) {
-			expect(input.frequency).toEqual({ type: "daily" });
-		}
-	});
-
-	it("never pairs a Break habit with a quantity target (HAB-04)", () => {
-		for (const suggestion of FIRST_RUN_SUGGESTIONS) {
-			if (suggestion.direction === "break") {
-				expect(suggestion.target).toBeNull();
-			}
-		}
+		expect(mockAddReminder).toHaveBeenCalledTimes(1);
+		expect(permission).toBe("denied");
 	});
 });

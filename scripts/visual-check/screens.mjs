@@ -86,20 +86,114 @@ function categoryChip(page, name) {
 }
 
 export const SCREENS = {
-	// HAB-06 — First run
+	// HAB-46 — First run (FR1–FR4): no tab bar until Today
 	"first-run": {
-		feature: "HAB-06",
+		feature: "HAB-46",
 		route: "/?fixtures=first-run",
-		mockup: "docs/mockups/first-run.png",
+		mockup: "docs/mockups/v3/renders/states/slice_07.png",
+		note: "FR1 — welcome, no tab bar. Skip for now is an addition to the frame (every First Run screen has a way to an empty Today).",
 	},
-	"first-run-none-selected": {
-		feature: "HAB-06",
+	"first-run-habit": {
+		feature: "HAB-46",
 		route: "/?fixtures=first-run",
-		mockup: "docs/mockups/first-run.png",
-		note: "Both defaults unchecked — primary reads 'Add habits', disabled. Mockup shows the default state.",
+		mockup: "docs/mockups/v3/renders/states/slice_08.png",
+		note: "FR2 — the slim first-habit form: name, quick picks, type, frequency. Three frequency options, not the frame's four (spec wins).",
 		async interact(page) {
-			await page.getByLabel("Glass of water", { exact: true }).click();
-			await page.getByLabel("Walk 20 minutes", { exact: true }).click();
+			await page.getByRole("button", { name: "Add your first habit" }).click();
+			await page.getByText("Or pick one").waitFor();
+		},
+	},
+	"first-run-offer": {
+		feature: "HAB-46",
+		route: "/?fixtures=first-run",
+		mockup: "docs/mockups/v3/renders/states/slice_08.png",
+		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked).",
+		async interact(page) {
+			await page.getByRole("button", { name: "Add your first habit" }).click();
+			await page
+				.getByRole("button", { name: "Drink water", exact: true })
+				.click();
+			await page.getByRole("button", { name: "Save habit" }).click();
+			await page.getByText("Remind you each day?").waitFor();
+			await page.waitForTimeout(400);
+		},
+	},
+	"first-run-skipped": {
+		feature: "HAB-46",
+		route: "/?fixtures=first-run",
+		mockup: "docs/mockups/v3/renders/states/slice_09.png",
+		note: "FR4 — Skip for now lands on the empty Today, with the tab bar.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Skip for now" }).click();
+			await page.getByText("Nothing to track yet").waitFor();
+		},
+	},
+
+	// HAB-46 — Browse suggestions (BS1)
+	suggestions: {
+		feature: "HAB-46",
+		route: "/suggestions?fixtures=empty",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 — the nine bundled suggestions by category, Break habits last. Opened from the empty Today or Habits.",
+	},
+	"suggestions-added": {
+		feature: "HAB-46",
+		route: "/suggestions?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 with habits that already exist (archived included): their rows say Added, have no chevron and cannot be picked. Not drawn in the frame.",
+	},
+	"first-run-suggestions": {
+		feature: "HAB-46",
+		route: "/?fixtures=first-run",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 opened from First Run: the same list with Skip for now under it (an addition to the frame).",
+		async interact(page) {
+			await page.getByRole("button", { name: "Browse suggestions" }).click();
+			await page.getByText("Tap one to open Add habit").waitFor();
+			// Down to the Break habits and the Skip for now link under them.
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 6000);
+			await page.waitForTimeout(500);
+		},
+	},
+	"suggestions-end": {
+		feature: "HAB-46",
+		route: "/suggestions?fixtures=habits-v3",
+		mockup: "docs/mockups/v3/renders/states/slice_06.png",
+		note: "BS1 scrolled to its end: the Break group, with the Added rows.",
+		async interact(page) {
+			await page.mouse.move(200, 400);
+			await page.mouse.wheel(0, 6000);
+			await page.waitForTimeout(500);
+		},
+	},
+
+	// HAB-46 / HAB-49 — First run and suggestions at accessibility text sizes
+	"first-run-ax": {
+		feature: "HAB-49",
+		route: "/?fixtures=first-run&textSize=ax",
+		mockup: null,
+		note: "FR1 at an accessibility text size (forced on web with ?textSize=ax): the rows stack and the buttons stay full width. Not drawn in the handoff.",
+	},
+	"first-run-habit-ax": {
+		feature: "HAB-49",
+		route: "/?fixtures=first-run&textSize=ax",
+		mockup: null,
+		note: "FR2 at an accessibility text size: chips wrap, Save stays pinned with its reason.",
+		async interact(page) {
+			await page.getByRole("button", { name: "Add your first habit" }).click();
+			await page.getByText("Or pick one").waitFor();
+		},
+	},
+	"suggestions-ax": {
+		feature: "HAB-49",
+		route: "/suggestions?fixtures=empty&textSize=ax",
+		mockup: null,
+		note: "BS1 at an accessibility text size: rows stack icon, text and the Added value.",
+		async interact(page) {
+			// A direct route can still be "Bundling…" when the page loads: wait for the list.
+			await page.getByText("Tap one to open Add habit").waitFor();
+			await page.waitForTimeout(300);
 		},
 	},
 
@@ -124,7 +218,7 @@ export const SCREENS = {
 		feature: "HAB-05",
 		route: "/?fixtures=empty",
 		mockup: "docs/mockups/v3/renders/today/slice_01.png",
-		note: "T2 — header and + only, the empty state with one primary action. 'Browse suggestions' waits for HAB-46.",
+		note: "T2 / FR4 — header and + only, the empty state with Add habit and the Browse suggestions link.",
 	},
 	"today-rest-day": {
 		feature: "HAB-05",
@@ -776,7 +870,7 @@ export const SCREENS = {
 		route: "/(habits)/manage?fixtures=empty",
 		mockup: "docs/mockups/v3/renders/habits/slice_03.png",
 		clock: V3_FRIDAY,
-		note: "H6 — no habits: the empty state with Add habit, Categories still reachable. The suggestions link stays hidden until HAB-46.",
+		note: "H6 — no habits: the empty state with Add habit and Browse suggestions, Categories still reachable.",
 	},
 	"habits-all-archived": {
 		feature: "HAB-39",
@@ -1025,17 +1119,84 @@ export const SCREENS = {
 	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in
 	// the app.
 	"error-screen-migration-failed": {
-		feature: "B6",
+		feature: "HAB-47",
 		route: "/?fixtures=migration-fails",
-		mockup: null,
-		note: "A failed database migration: plain-words title, 'Try again', 'Copy diagnostics'. No raw error text.",
+		mockup: "docs/mockups/v3/renders/states/slice_11.png",
+		note: "SY4 — an update that failed: as they were, a banner saying nothing was changed, Try again, Copy diagnostics. The frame's 'Stopped at step 2 of 3' is not built (the migrator has no steps).",
 	},
 	"error-screen-migration-failed-dark": {
-		feature: "B6",
+		feature: "HAB-47",
 		route: "/?fixtures=migration-fails",
 		mockup: null,
 		colorScheme: "dark",
 		note: "Same, dark.",
+	},
+	"error-screen-first-open-failed": {
+		feature: "HAB-47",
+		route: "/?fixtures=migration-fails-first-open",
+		mockup: null,
+		note: "The database could not be prepared with nothing to update: the plain open-failure words, no banner.",
+	},
+	"migration-running": {
+		feature: "HAB-47",
+		route: "/?fixtures=migration-running",
+		mockup: "docs/mockups/v3/renders/states/slice_10.png",
+		note: "SY3 — an update is running: an indeterminate bar (the frame's 'Step 2 of 3 · 64%' is not built; the migrator has no progress). Captured with Reduce Motion, so the segment rests at the left end.",
+		async interact(page) {
+			await page.emulateMedia({ reducedMotion: "reduce" });
+			await page.waitForTimeout(500);
+		},
+	},
+	"today-loading": {
+		feature: "HAB-47",
+		route: "/?fixtures=today-loading",
+		mockup: "docs/mockups/v3/renders/states/slice_09.png",
+		clock: V3_FRIDAY,
+		note: "SY1 — the real header at once, skeleton rows after 300 ms (captured after 700 ms).",
+		async interact(page) {
+			// Reduce Motion: the frame's skeleton is still, and the pulse would
+			// make every capture a different frame of its loop.
+			await page.emulateMedia({ reducedMotion: "reduce" });
+			await page.getByTestId("today-skeleton").waitFor({ state: "attached" });
+			await page.waitForTimeout(400);
+		},
+	},
+	"today-rollover": {
+		feature: "HAB-47",
+		route: "/?fixtures=today-v3",
+		mockup: "docs/mockups/v3/renders/states/slice_11.png",
+		clock: "2026-10-23T23:59:45",
+		note: "SY5 — the app stayed open across midnight: Today is Saturday, with the banner summing up Friday (the page clock starts 15 s before midnight and crosses it while the state waits).",
+		async interact(page) {
+			await page.getByText(/closed at midnight/).waitFor({ timeout: 40000 });
+			await page.waitForTimeout(300);
+		},
+	},
+	"today-load-error": {
+		feature: "HAB-47",
+		route: "/?fixtures=today-load-fails",
+		mockup: "docs/mockups/v3/renders/states/slice_10.png",
+		clock: V3_FRIDAY,
+		note: "SY2 — Today could not read its habits: the header and the tab bar stay; Try again and Copy diagnostics.",
+		ignoreErrors: [/Simulated load failure/, /The above error occurred/],
+		async interact(page) {
+			// React logs a handled render error, and the dev LogBox draws a toast for
+			// it over the pill. That toast is the dev tooling, not the app: hide it.
+			const toast = page.getByText(/Simulated load failure/).first();
+			await toast.waitFor({ state: "attached", timeout: 4000 }).catch(() => {});
+			await toast
+				.evaluate((el) => {
+					for (let node = el; node; node = node.parentElement) {
+						const { position } = getComputedStyle(node);
+						if (position === "fixed" || position === "absolute") {
+							node.style.display = "none";
+							return;
+						}
+					}
+				})
+				.catch(() => {});
+			await page.waitForTimeout(200);
+		},
 	},
 	"error-toast-today": {
 		feature: "B6",
@@ -1568,6 +1729,22 @@ export const SCREENS = {
 };
 
 const DARK_TWINS = [
+	"suggestions-end",
+	"first-run-ax",
+	"first-run-habit-ax",
+	"suggestions-ax",
+	"today-rollover",
+	"error-screen-first-open-failed",
+	"migration-running",
+	"today-loading",
+	"today-load-error",
+	"suggestions",
+	"suggestions-added",
+	"first-run-suggestions",
+	"first-run",
+	"first-run-habit",
+	"first-run-offer",
+	"first-run-skipped",
 	"today",
 	"today-v3",
 	"today-v3-quantity-plus-one",

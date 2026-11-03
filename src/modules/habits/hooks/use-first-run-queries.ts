@@ -1,21 +1,24 @@
 import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
+import { SEEN_FIRST_RUN_SETTING_KEY } from "../constants";
 import {
-	FIRST_RUN_SUGGESTIONS,
-	type FirstRunSuggestion,
-	SEEN_FIRST_RUN_SETTING_KEY,
-} from "../constants";
+	type FirstRunGate,
+	firstRunGate,
+	shouldMarkSeen,
+} from "../domain/first-run-gate";
+import { useHabitsList } from "../repositories/habit-repository";
 
+/**
+ * Where the app opens (HAB-46): First Run, or the tabs. Reads the "seen"
+ * flag and the habit list (archived included) and lets the pure gate decide;
+ * `needsSeenMark` is true for an install that has habits but never wrote the
+ * flag, which the tabs shell writes once.
+ */
 export function useFirstRunQueries(): {
-	suggestions: FirstRunSuggestion[];
-	hasSeenFirstRun: boolean;
+	gate: FirstRunGate;
+	needsSeenMark: boolean;
 } {
 	const seenFlag = useAppSetting(SEEN_FIRST_RUN_SETTING_KEY);
-
-	return {
-		suggestions: FIRST_RUN_SUGGESTIONS,
-		// `undefined` (still loading) is treated as "seen" so no flash of First
-		// Run briefly appears before the real flag resolves — only a resolved
-		// `null` (checked, and genuinely never set) counts as not-seen.
-		hasSeenFirstRun: seenFlag !== null,
-	};
+	const { habits, loaded } = useHabitsList();
+	const state = { seenFlag, habitCount: loaded ? habits.length : undefined };
+	return { gate: firstRunGate(state), needsSeenMark: shouldMarkSeen(state) };
 }

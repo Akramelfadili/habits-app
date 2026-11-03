@@ -21,7 +21,13 @@ const dev = {
 describe("TodayEmptyState", () => {
 	it("offers one primary action, Add habit", async () => {
 		const onAddHabit = jest.fn();
-		await render(<TodayEmptyState onAddHabit={onAddHabit} dev={dev} />);
+		await render(
+			<TodayEmptyState
+				onAddHabit={onAddHabit}
+				onBrowseSuggestions={jest.fn()}
+				dev={dev}
+			/>,
+		);
 		expect(screen.getByText("Nothing to track yet")).toBeTruthy();
 		expect(
 			screen.getByText(
@@ -32,13 +38,9 @@ describe("TodayEmptyState", () => {
 		expect(onAddHabit).toHaveBeenCalledTimes(1);
 	});
 
-	it("offers the suggestions link only once there is somewhere to go", async () => {
-		const { rerender } = await render(
-			<TodayEmptyState onAddHabit={jest.fn()} dev={dev} />,
-		);
-		expect(screen.queryByText("Browse suggestions")).toBeNull();
+	it("offers Browse suggestions, which opens the list", async () => {
 		const onBrowse = jest.fn();
-		await rerender(
+		await render(
 			<TodayEmptyState
 				onAddHabit={jest.fn()}
 				onBrowseSuggestions={onBrowse}

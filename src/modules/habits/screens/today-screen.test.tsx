@@ -56,28 +56,32 @@ let mockAtRiskByHabitId = new Map<
 >();
 let mockFreezesRemainingThisMonth = 2;
 
+let mockQueriesError: Error | null = null;
 jest.mock("../hooks/use-today-queries", () => ({
-	useTodayQueries: () => ({
-		groups: mockGroups,
-		progress: mockProgress,
-		completedHabitIds: mockCompletedHabitIds,
-		quantityValuesByHabitId: mockQuantityValuesByHabitId,
-		completedThisWeekByHabitId: mockCompletedThisWeekByHabitId,
-		streakByHabitId: mockStreakByHabitId,
-		frozenYesterdayByHabitId: new Map(),
-		today: mockToday,
-		selectedDay: mockToday,
-		isLoaded: mockIsLoaded,
-		viewState: mockViewState,
-		// The hook adds the missed day's pool to each; the tests set one number.
-		atRiskByHabitId: new Map(
-			[...mockAtRiskByHabitId].map(([id, atRisk]) => [
-				id,
-				{ freezesRemaining: mockFreezesRemainingThisMonth, ...atRisk },
-			]),
-		),
-		freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
-	}),
+	useTodayQueries: () => {
+		if (mockQueriesError) throw mockQueriesError;
+		return {
+			groups: mockGroups,
+			progress: mockProgress,
+			completedHabitIds: mockCompletedHabitIds,
+			quantityValuesByHabitId: mockQuantityValuesByHabitId,
+			completedThisWeekByHabitId: mockCompletedThisWeekByHabitId,
+			streakByHabitId: mockStreakByHabitId,
+			frozenYesterdayByHabitId: new Map(),
+			today: mockToday,
+			selectedDay: mockToday,
+			isLoaded: mockIsLoaded,
+			viewState: mockViewState,
+			// The hook adds the missed day's pool to each; the tests set one number.
+			atRiskByHabitId: new Map(
+				[...mockAtRiskByHabitId].map(([id, atRisk]) => [
+					id,
+					{ freezesRemaining: mockFreezesRemainingThisMonth, ...atRisk },
+				]),
+			),
+			freezesRemainingThisMonth: mockFreezesRemainingThisMonth,
+		};
+	},
 }));
 
 jest.mock("../hooks/use-week-strip-queries", () => ({
@@ -150,25 +154,39 @@ jest.mock("../hooks/use-habit-actions", () => ({
 	}),
 }));
 
-let mockHasSeenFirstRun = true;
-jest.mock("../hooks/use-first-run-queries", () => ({
-	useFirstRunQueries: () => ({
-		suggestions: [],
-		hasSeenFirstRun: mockHasSeenFirstRun,
-	}),
-}));
 const mockResetFirstRun = jest.fn();
 jest.mock("../hooks/use-first-run-actions", () => ({
 	useFirstRunActions: () => ({
-		addSuggestedHabits: jest.fn(),
-		isAdding: false,
-		addError: null,
-		skipFirstRun: jest.fn(),
-		isSkipping: false,
-		skipError: null,
+		markFirstRunSeen: jest.fn(),
+		isMarking: false,
+		markError: null,
 		resetFirstRun: mockResetFirstRun,
 		isResetting: false,
 	}),
+}));
+// The quantity sheet reads its own day's entry: serve the shown amounts for whichever day it asks.
+jest.mock("../repositories/entry-repository", () => ({
+	useEntriesInRange: (start: Date) =>
+		[...mockQuantityValuesByHabitId].map(([habitId, value]) => ({
+			habitId,
+			value,
+			date: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`,
+		})),
+}));
+let mockRollover: {
+	day: Date;
+	summary: { completed: number; total: number };
+} | null = null;
+const mockDismissRollover = jest.fn();
+jest.mock("../hooks/use-rollover-queries", () => ({
+	useRolloverQueries: () => ({
+		notice: mockRollover,
+		dismiss: mockDismissRollover,
+	}),
+}));
+// FR3's pre-prompt has its own tests; here it only has to stay out of the way.
+jest.mock("../components/first-run/first-run-reminder-offer", () => ({
+	FirstRunReminderOffer: () => null,
 }));
 
 // jest's window reports fontScale 2: without this the strip is the one-day AX stand-in.
@@ -230,6 +248,9 @@ describe("TodayScreen", () => {
 		fakeDate(new Date(2026, 8, 16, 12));
 		measureSpy = mockMeasureInWindow();
 		mockIsLoaded = true;
+		mockQueriesError = null;
+		mockRollover = null;
+		mockDismissRollover.mockReset();
 		mockPush.mockReset();
 		mockToggleCompletion.mockReset().mockResolvedValue(OK);
 		mockRestoreDay
@@ -251,7 +272,6 @@ describe("TodayScreen", () => {
 		mockCompletedThisWeekByHabitId = new Map();
 		mockViewState = "no-habits";
 		useToastStore.setState({ toast: null });
-		mockHasSeenFirstRun = true;
 		mockAtRiskByHabitId = new Map();
 		mockFreezesRemainingThisMonth = 2;
 		mockEligibleHabits = [];
@@ -273,13 +293,10 @@ describe("TodayScreen", () => {
 		).toBeTruthy();
 	});
 
-	it("shows First Run instead of the empty state on a genuine first launch", async () => {
-		mockHasSeenFirstRun = false;
-
+	it("offers Browse suggestions in the empty state, and it opens the suggestions screen (T2, FR4)", async () => {
 		await render(<TodayScreen />);
-
-		expect(screen.getByText("Pick a couple to start")).toBeTruthy();
-		expect(screen.queryByText("Nothing to track yet")).toBeNull();
+		await fireEvent.press(screen.getByText("Browse suggestions"));
+		expect(mockPush).toHaveBeenCalledWith("/suggestions");
 	});
 
 	it("navigates to new-habit from the empty state's Add habit button", async () => {
@@ -499,6 +516,121 @@ describe("TodayScreen", () => {
 
 		expect(screen.getByTestId("screen-loading")).toBeTruthy();
 		expect(screen.queryByText("Nothing to track yet")).toBeNull();
+	});
+
+	describe("loading (SY1)", () => {
+		beforeEach(() => {
+			mockIsLoaded = false;
+			mockViewState = "no-habits";
+			jest.useFakeTimers();
+		});
+		afterEach(() => jest.useRealTimers());
+
+		it("shows the real header at once, and neither the week strip nor the empty state", async () => {
+			await render(<TodayScreen />);
+			expect(screen.getByText("Today")).toBeTruthy();
+			expect(screen.getByLabelText("Add habit")).toBeTruthy();
+			expect(screen.queryByTestId("week-strip")).toBeNull();
+			expect(screen.queryByText("Nothing to track yet")).toBeNull();
+		});
+
+		it("draws no skeleton before 300 ms, so a fast load never flashes one", async () => {
+			await render(<TodayScreen />);
+			await act(() => jest.advanceTimersByTime(299));
+			expect(
+				screen.queryByTestId("today-skeleton", { includeHiddenElements: true }),
+			).toBeNull();
+		});
+
+		it("draws the skeleton once the wait reaches 300 ms", async () => {
+			await render(<TodayScreen />);
+			await act(() => jest.advanceTimersByTime(300));
+			expect(
+				screen.getByTestId("today-skeleton", { includeHiddenElements: true }),
+			).toBeTruthy();
+		});
+
+		it("never draws the skeleton when the habits arrive in time", async () => {
+			const view = await render(<TodayScreen />);
+			await act(() => jest.advanceTimersByTime(200));
+			mockIsLoaded = true;
+			await view.rerender(<TodayScreen />);
+			await act(() => jest.advanceTimersByTime(1000));
+			expect(
+				screen.queryByTestId("today-skeleton", { includeHiddenElements: true }),
+			).toBeNull();
+			expect(screen.getByText("Nothing to track yet")).toBeTruthy();
+		});
+	});
+
+	describe("midnight rollover (SY5)", () => {
+		it("shows nothing until the day rolls over", async () => {
+			await render(<TodayScreen />);
+			expect(screen.queryByText(/closed at midnight/)).toBeNull();
+		});
+
+		it("shows the banner under the header and dismisses it", async () => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
+			mockRollover = {
+				day: new Date(2026, 8, 15),
+				summary: { completed: 4, total: 5 },
+			};
+			await render(<TodayScreen />);
+			expect(
+				screen.getByText(/Tuesday closed at midnight with 4 of 5 done/),
+			).toBeTruthy();
+			// The list is still there: nothing was lost with the refresh.
+			expect(screen.getByText("Glass of water")).toBeTruthy();
+			await fireEvent.press(screen.getByText("Dismiss"));
+			expect(mockDismissRollover).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("a load error stays inside Today (SY2)", () => {
+		beforeEach(() => {
+			mockQueriesError = new Error("query failed");
+			jest.spyOn(console, "error").mockImplementation(() => {});
+		});
+		afterEach(() => jest.restoreAllMocks());
+
+		it("keeps the header and offers Try again and Copy diagnostics, with the data-is-safe line", async () => {
+			await render(<TodayScreen />);
+			expect(screen.getByTestId("today-load-error")).toBeTruthy();
+			expect(screen.getByText("Today")).toBeTruthy();
+			expect(screen.getByText("Couldn\u2019t load your habits")).toBeTruthy();
+			expect(
+				screen.getByText("Your data is safe. Trying again usually fixes this."),
+			).toBeTruthy();
+			expect(screen.getByText("Try again")).toBeTruthy();
+			expect(screen.getByText("Copy diagnostics")).toBeTruthy();
+		});
+
+		it("the + still adds a habit", async () => {
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByLabelText("Add habit"));
+			expect(mockPush).toHaveBeenCalledWith("/new-habit");
+		});
+
+		it("Try again runs the read again, and Today comes back when it works", async () => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [morningHabit] },
+			];
+			await render(<TodayScreen />);
+			mockQueriesError = null;
+			await fireEvent.press(screen.getByText("Try again"));
+			expect(screen.queryByTestId("today-load-error")).toBeNull();
+			expect(screen.getByText("Glass of water")).toBeTruthy();
+		});
+
+		it("Try again that fails again shows the same state", async () => {
+			await render(<TodayScreen />);
+			await fireEvent.press(screen.getByText("Try again"));
+			expect(screen.getByTestId("today-load-error")).toBeTruthy();
+		});
 	});
 
 	describe("failed and day-rollover writes", () => {

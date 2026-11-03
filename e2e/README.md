@@ -6,7 +6,8 @@ screen. File names lead with the feature IDs they cover (per
 
 | Flow | Journey | Covers |
 |---|---|---|
-| `hab-06-01-03-first-run-add-and-log.yaml` | First run → pick suggestions → add a habit → log it on Today → open Edit from its Detail | HAB-06, 01, 02, 03 |
+| `hab-06-01-03-first-run-add-and-log.yaml` | First run (no tab bar) → quick-pick a first habit → the reminder pre-prompt, Not now → Today → add a habit → log it → open Edit from its Detail | HAB-46, 01, 02, 03 |
+| `hab-46-first-run-skip-and-suggestions.yaml` | First run → Skip for now → empty Today → Browse suggestions → pick one (Add habit filled in) → save → it reads Added → Today has it → Habits shows 1 active | HAB-46, 32 |
 | `hab-09-10-detail-retro-log.yaml` | Today → Detail → tap a missed heatmap day → retro-log with a note → heatmap, streak (24 → 27), note all update | HAB-03, 09, 10, 08 |
 | `hab-12-reminders.yaml` | Detail → Reminders → add a time, set its days (unscheduled-day warning), add a second and switch it off → Detail summary, Today unaffected | HAB-09, 12 |
 | `hab-11-weekly-summary-slipping.yaml` | The Progress tab flags a habit → backfill the week via retro-log → the insight moves to the habit left behind → "Change frequency ›" opens its Edit | HAB-11, 10, 02, 27 |

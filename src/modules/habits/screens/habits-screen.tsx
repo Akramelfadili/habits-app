@@ -32,7 +32,7 @@ import { HabitsLibrary } from "../components/habits/habits-library";
 import { HabitsSearchResults } from "../components/habits/habits-search-results";
 import { useHabitsActions } from "../hooks/use-habits-actions";
 import { useHabitsQueries } from "../hooks/use-habits-queries";
-import { habitsCopy } from "../messages";
+import { habitsCopy, suggestionsCopy } from "../messages";
 import {
 	archivedRowLabel,
 	archivedRowSubtitle,
@@ -199,6 +199,11 @@ export function HabitsScreen() {
 							fullWidth={false}
 							label={habitsCopy.empty.add}
 							onPress={() => addHabit()}
+						/>
+						<Button
+							label={suggestionsCopy.browse}
+							variant="link"
+							onPress={() => router.push("/suggestions")}
 						/>
 					</EmptyState>
 				) : (

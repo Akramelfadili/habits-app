@@ -1,16 +1,29 @@
-import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import {
+	type HostInstance,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/primitives/button";
 import { Caption } from "@/components/ui/primitives/caption";
 import { copyDiagnostics } from "@/lib/diagnostics/diagnostics";
-import { typeScale } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useInitialFocus } from "@/utils/use-initial-focus";
+import { Banner } from "./banner";
 
 type ErrorScreenProps = {
 	title: string;
 	message: string;
 	onRetry: () => void;
+	/**
+	 * Why it stopped, as an error banner under the message (SY4): a title and
+	 * what that means for the person's data. Never raw error text.
+	 */
+	reason?: { title: string; message: string };
 };
 
 const COPY_RESULT_MESSAGE = {
@@ -20,17 +33,26 @@ const COPY_RESULT_MESSAGE = {
 } as const;
 
 /**
- * Full-screen recovery (design-system.md, Error screen): what the root error
- * boundary and a failed database migration show instead of a blank or stuck
- * app. It never reads the app database, so it can render when the database
- * is what failed. "Try again" is the caller's retry; "Copy diagnostics" puts
- * the version facts and recent log on the clipboard to paste into a message.
+ * Full-screen recovery (SY4, design-system.md Error screen): what the root
+ * error boundary and a failed database migration show instead of a blank or
+ * stuck app. A hero title, one line of reassurance, optionally the reason in
+ * an error banner, then Try again and Copy diagnostics. It never reads the app
+ * database, so it can render when the database is what failed, and it has no
+ * toast host to lean on, so the copy result is said inline.
  */
-export function ErrorScreen({ title, message, onRetry }: ErrorScreenProps) {
+export function ErrorScreen({
+	title,
+	message,
+	onRetry,
+	reason,
+}: ErrorScreenProps) {
 	const { colors } = useTheme();
 	const [copyResult, setCopyResult] = useState<
 		keyof typeof COPY_RESULT_MESSAGE | null
 	>(null);
+	const titleRef = useRef<HostInstance>(null);
+	// 08.4: the screen reader starts on the heading.
+	useInitialFocus(titleRef, true, 100);
 
 	async function handleCopy() {
 		setCopyResult(await copyDiagnostics());
@@ -41,28 +63,40 @@ export function ErrorScreen({ title, message, onRetry }: ErrorScreenProps) {
 			testID="error-screen"
 			style={[styles.screen, { backgroundColor: colors.bg }]}
 		>
-			<View style={styles.body}>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					{title}
-				</Text>
-				<Text style={[styles.message, { color: colors.sub }]}>{message}</Text>
-			</View>
-			<View style={styles.actions}>
-				<Button label="Try again" onPress={onRetry} />
-				<Button
-					label="Copy diagnostics"
-					variant="secondary"
-					onPress={handleCopy}
-				/>
-				{copyResult ? (
-					<Caption tone={copyResult === "failed" ? "error" : "default"}>
-						{COPY_RESULT_MESSAGE[copyResult]}
-					</Caption>
+			<ScrollView contentContainerStyle={styles.content}>
+				<View style={styles.hero}>
+					<Text
+						ref={titleRef}
+						accessibilityRole="header"
+						style={[styles.title, { color: colors.ink }]}
+					>
+						{title}
+					</Text>
+					<Text style={[styles.message, { color: colors.sub }]}>{message}</Text>
+				</View>
+				{reason ? (
+					<Banner
+						tone="error"
+						symbol="exclamationmark.circle"
+						title={reason.title}
+					>
+						{reason.message}
+					</Banner>
 				) : null}
-			</View>
+				<View style={styles.actions}>
+					<Button label="Try again" onPress={onRetry} />
+					<Button
+						label="Copy diagnostics"
+						variant="secondary"
+						onPress={handleCopy}
+					/>
+					{copyResult ? (
+						<Caption tone={copyResult === "failed" ? "error" : "default"}>
+							{COPY_RESULT_MESSAGE[copyResult]}
+						</Caption>
+					) : null}
+				</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
@@ -70,25 +104,24 @@ export function ErrorScreen({ title, message, onRetry }: ErrorScreenProps) {
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
-		paddingHorizontal: 24,
-		paddingBottom: 24,
 	},
-	body: {
-		flex: 1,
-		alignItems: "center",
+	content: {
+		flexGrow: 1,
 		justifyContent: "center",
-		gap: 8,
+		paddingHorizontal: space[500],
+		paddingVertical: space[800],
+		gap: space[500],
+	},
+	hero: {
+		gap: space[200],
 	},
 	title: {
-		fontSize: typeScale.section,
-		fontWeight: "500",
-		textAlign: "center",
+		...textStyles.display,
 	},
 	message: {
-		fontSize: typeScale.subtitle,
-		textAlign: "center",
+		...textStyles.bodyLg,
 	},
 	actions: {
-		gap: 10,
+		gap: space[200],
 	},
 });

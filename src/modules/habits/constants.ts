@@ -3,8 +3,6 @@ import type {
 	Category,
 	CategoryAppearance,
 	CategoryShape,
-	CreateHabitInput,
-	HabitDirection,
 	IsoWeekday,
 } from "./types";
 
@@ -129,80 +127,6 @@ export const FREEZE_POOL_SIZE = 2;
  */
 export const SEEN_FIRST_RUN_SETTING_KEY = "habits.seenFirstRun";
 
-export type FirstRunSuggestion = {
-	id: string;
-	name: string;
-	direction: HabitDirection;
-	/** The built-in category it's created in — which also gives it its icon and color. */
-	category: BuiltInCategoryName;
-	/** A quantity target (HAB-07), or null for a simple check. */
-	target: { amount: number; unit: string } | null;
-	/**
-	 * The row's promise. Must describe what's actually created — its category
-	 * or its target — never a detail the created habit doesn't have.
-	 */
-	subtitle: string;
-	preselected: boolean;
-};
-
-/** The 6 fixed suggestions offered on First Run (HAB-06), in display order. */
-export const FIRST_RUN_SUGGESTIONS: FirstRunSuggestion[] = [
-	{
-		id: "glass-of-water",
-		name: "Glass of water",
-		direction: "build",
-		category: "Health",
-		target: null,
-		subtitle: "Health",
-		preselected: true,
-	},
-	{
-		id: "walk-20-minutes",
-		name: "Walk 20 minutes",
-		direction: "build",
-		category: "Fitness",
-		target: null,
-		subtitle: "Fitness",
-		preselected: true,
-	},
-	{
-		id: "read-before-bed",
-		name: "Read before bed",
-		direction: "build",
-		category: "Learning",
-		target: { amount: 10, unit: "pages" },
-		subtitle: "Learning · 10 pages",
-		preselected: false,
-	},
-	{
-		id: "lights-out-by-23-00",
-		name: "Lights out by 23:00",
-		direction: "break",
-		category: "Health",
-		target: null,
-		subtitle: "Break habit",
-		preselected: false,
-	},
-	{
-		id: "stretch",
-		name: "Stretch",
-		direction: "build",
-		category: "Fitness",
-		target: { amount: 5, unit: "min" },
-		subtitle: "5 minutes",
-		preselected: false,
-	},
-	{
-		id: "three-lines-journal",
-		name: "Three lines journal",
-		direction: "build",
-		category: "Mindfulness",
-		target: null,
-		subtitle: "Mindfulness",
-		preselected: false,
-	},
-];
-
 /** A built-in's stored row, by name — built-ins are always present (seeded by migration). */
 export function findBuiltInCategory(
 	categories: readonly Category[],
@@ -211,31 +135,6 @@ export function findBuiltInCategory(
 	return categories.find(
 		(category) => category.builtIn && category.name === name,
 	);
-}
-
-/**
- * Maps a selected suggestion to the same shape Feature 01's create-habit path
- * takes — with the category and target its subtitle promises, so the first
- * Today is grouped and "10 pages" really is 10 pages. Built-in ids come from
- * the database (autoincrement), so they're resolved by name here.
- */
-export function suggestionToCreateHabitInput(
-	suggestion: FirstRunSuggestion,
-	categories: readonly Category[],
-): CreateHabitInput {
-	const category = findBuiltInCategory(categories, suggestion.category);
-	if (!category) {
-		throw new Error(`Built-in category "${suggestion.category}" is missing`);
-	}
-	return {
-		name: suggestion.name,
-		categoryId: category.id,
-		direction: suggestion.direction,
-		targetType: suggestion.target ? "quantity" : "simple",
-		targetAmount: suggestion.target?.amount ?? null,
-		targetUnit: suggestion.target?.unit ?? null,
-		frequency: { type: "daily" },
-	};
 }
 
 /**

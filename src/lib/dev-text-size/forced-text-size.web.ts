@@ -9,6 +9,12 @@
  */
 export function forcedAccessibilityTextSize(): boolean {
 	if (!__DEV__) return false;
+	if (pinned) return true;
 	const search = globalThis.location?.search ?? "";
-	return new URLSearchParams(search).get("textSize") === "ax";
+	// A page opened with the flag keeps it: First Run redirects to /first-run,
+	// which drops the query, and the screens after that must still be AX.
+	pinned = new URLSearchParams(search).get("textSize") === "ax";
+	return pinned;
 }
+
+let pinned = false;

@@ -52,26 +52,6 @@ describe("habit-repository.web", () => {
 		expect(updated.direction).toBe("break");
 	});
 
-	it("creates a batch of habits and marks the setting", async () => {
-		const { createHabitsAndMarkSetting, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList().habits);
-
-		let created: Awaited<ReturnType<typeof createHabitsAndMarkSetting>> = [];
-		await act(async () => {
-			created = await createHabitsAndMarkSetting(
-				[input, { ...input, name: "Read before bed" }],
-				{ key: "habits.seenFirstRun", value: "true" },
-			);
-		});
-
-		expect(created.map((h) => h.name)).toEqual(["Stretch", "Read before bed"]);
-		expect(result.current.map((h) => h.name)).toEqual([
-			...HABIT_FIXTURES.map((h) => h.name),
-			"Stretch",
-			"Read before bed",
-		]);
-	});
-
 	it("clears every habit", async () => {
 		const { deleteAllHabits, useHabitsList } = loadRepository();
 		const { result } = await renderHook(() => useHabitsList().habits);
@@ -151,5 +131,42 @@ describe("habit-repository.web", () => {
 			expect(await getHabit(2)).toBeUndefined();
 			expect(await getHabit(1)).toBeDefined();
 		});
+	});
+});
+
+describe("habit-repository.web — the load states (SY1, SY2)", () => {
+	function openAt(scenario: string) {
+		Object.defineProperty(globalThis, "location", {
+			value: { search: `?fixtures=${scenario}` },
+			configurable: true,
+		});
+	}
+	afterEach(() => Reflect.deleteProperty(globalThis, "location"));
+
+	it("today-loading never finishes: not loaded, no habits", async () => {
+		openAt("today-loading");
+		const { useActiveHabits } = loadRepository();
+		const { result } = await renderHook(() => useActiveHabits());
+		expect(result.current).toEqual({ habits: [], loaded: false });
+	});
+
+	it("today-load-fails throws on every read, as a failing live query does", async () => {
+		openAt("today-load-fails");
+		jest.spyOn(console, "error").mockImplementation(() => {});
+		const { useActiveHabits } = loadRepository();
+		await expect(renderHook(() => useActiveHabits())).rejects.toThrow(
+			"Simulated load failure",
+		);
+		await expect(renderHook(() => useActiveHabits())).rejects.toThrow(
+			"Simulated load failure",
+		);
+		jest.restoreAllMocks();
+	});
+
+	it("any other scenario is untouched", async () => {
+		openAt("default");
+		const { useActiveHabits } = loadRepository();
+		const { result } = await renderHook(() => useActiveHabits());
+		expect(result.current.loaded).toBe(true);
 	});
 });

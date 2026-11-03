@@ -1,5 +1,7 @@
+import type { Ref } from "react";
 import {
 	ActivityIndicator,
+	type HostInstance,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -49,6 +51,8 @@ type ButtonProps = {
 	accessibilityLabel?: string;
 	/** What the button does beyond its label; a disabled button reads its `disabledReason` here when none is given. */
 	accessibilityHint?: string;
+	/** The pressable itself, for a caller that moves the screen reader's focus onto it (`useInitialFocus`). */
+	buttonRef?: Ref<HostInstance>;
 };
 
 export function Button({
@@ -62,6 +66,7 @@ export function Button({
 	disabledReason,
 	accessibilityLabel,
 	accessibilityHint,
+	buttonRef,
 }: ButtonProps) {
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
@@ -79,6 +84,7 @@ export function Button({
 
 	const button = (
 		<Pressable
+			ref={buttonRef}
 			accessibilityRole="button"
 			accessibilityLabel={accessibilityLabel}
 			accessibilityHint={

@@ -19,6 +19,8 @@ import { headerActionOptions, headerNoBackOptions } from "./header-buttons";
 export function useModalFormHeaderOptions(
 	title: string,
 	closeLabel = "Close",
+	/** What Close does when it is not "go back" (First Run's Close skips to Today). */
+	onClose?: () => void,
 ): NativeStackNavigationOptions {
 	const router = useRouter();
 
@@ -27,6 +29,9 @@ export function useModalFormHeaderOptions(
 		presentation: "fullScreenModal",
 		headerTitleAlign: "left",
 		...headerNoBackOptions(),
-		...headerActionOptions({ label: closeLabel, onPress: () => router.back() }),
+		...headerActionOptions({
+			label: closeLabel,
+			onPress: onClose ?? (() => router.back()),
+		}),
 	};
 }

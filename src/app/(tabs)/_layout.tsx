@@ -1,4 +1,6 @@
+import { Redirect } from "expo-router";
 import { Tabs } from "expo-router/js-tabs";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -7,6 +9,8 @@ import {
 	tabBarToastOffset,
 } from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
+import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
+import { useFirstRunQueries } from "@/modules/habits/hooks/use-first-run-queries";
 import { useToastStore } from "@/store/toast-store";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
@@ -46,6 +50,16 @@ export default function TabsLayout() {
 	// During the migration (SY3) the pill does not exist yet: MigrationGate
 	// renders before the tabs do.
 	const sheetOpen = useToastStore((state) => state.openSheets > 0);
+	// First Run (HAB-46) opens instead of the tabs — no habits and never seen —
+	// so the pill is never drawn over it. An install that already has habits
+	// but predates the flag gets it written once, so deleting every habit later
+	// can never bring First Run back.
+	const { gate, needsSeenMark } = useFirstRunQueries();
+	const { markFirstRunSeen } = useFirstRunActions();
+	useEffect(() => {
+		if (needsSeenMark) void markFirstRunSeen();
+	}, [needsSeenMark, markFirstRunSeen]);
+	if (gate === "first-run") return <Redirect href="/first-run" />;
 
 	return (
 		<View style={styles.root}>
