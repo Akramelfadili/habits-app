@@ -16,9 +16,15 @@ import { useHabitsList } from "../repositories/habit-repository";
 export function useFirstRunQueries(): {
 	gate: FirstRunGate;
 	needsSeenMark: boolean;
+	/** Undefined while the list loads. */
+	habitCount: number | undefined;
 } {
 	const seenFlag = useAppSetting(SEEN_FIRST_RUN_SETTING_KEY);
 	const { habits, loaded } = useHabitsList();
 	const state = { seenFlag, habitCount: loaded ? habits.length : undefined };
-	return { gate: firstRunGate(state), needsSeenMark: shouldMarkSeen(state) };
+	return {
+		gate: firstRunGate(state),
+		needsSeenMark: shouldMarkSeen(state),
+		habitCount: state.habitCount,
+	};
 }

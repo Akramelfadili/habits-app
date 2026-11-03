@@ -107,7 +107,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_08.png",
-		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked).",
+		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked); no tab bar behind it (owner's decision over the frame).",
 		async interact(page) {
 			await page.getByRole("button", { name: "Add your first habit" }).click();
 			await page
@@ -122,7 +122,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_09.png",
-		note: "FR4 — Skip for now lands on the empty Today, with the tab bar.",
+		note: "FR4 — Skip for now lands on the empty Today, without the tab bar (owner's decision over the frame).",
 		async interact(page) {
 			await page.getByRole("button", { name: "Skip for now" }).click();
 			await page.getByText("Nothing to track yet").waitFor();

@@ -4,8 +4,11 @@ import type { Habit } from "./types";
 type FirstRunOfferState = {
 	/** The first habit, waiting for the person's answer to "Remind you each day?" (FR3); null when nothing is offered. */
 	habit: Habit | null;
+	/** True from leaving First Run until the first habit exists: FR3 and FR4 are drawn without the tab bar. */
+	landing: boolean;
 	offer: (habit: Habit) => void;
 	clear: () => void;
+	setLanding: (landing: boolean) => void;
 };
 
 /**
@@ -15,6 +18,8 @@ type FirstRunOfferState = {
  */
 export const useFirstRunOfferStore = create<FirstRunOfferState>((set) => ({
 	habit: null,
+	landing: false,
 	offer: (habit) => set({ habit }),
 	clear: () => set({ habit: null }),
+	setLanding: (landing) => set({ landing }),
 }));
