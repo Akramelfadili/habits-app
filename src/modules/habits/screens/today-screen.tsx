@@ -1,6 +1,12 @@
 import { addDays, format } from "date-fns";
 import { useRouter } from "expo-router";
-import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
+import { useRef } from "react";
+import {
+	type HostInstance,
+	type LayoutChangeEvent,
+	StyleSheet,
+	View,
+} from "react-native";
 import Animated, {
 	FadeIn,
 	FadeOut,
@@ -22,6 +28,7 @@ import { motion, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
 import { useDelayedFlag } from "@/utils/use-delayed-flag";
+import { useTabRetapToTop } from "@/utils/use-on-tab-retap";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { FirstRunReminderOffer } from "../components/first-run/first-run-reminder-offer";
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
@@ -89,6 +96,8 @@ function TodayContent() {
 	);
 	const dev = useTodayDevActions();
 	const header = useCollapsingHeader();
+	const titleRef = useRef<HostInstance>(null);
+	useTabRetapToTop("(today)", header.scrollToTop, titleRef);
 	const reduceMotion = useReducedMotion();
 	// The "Logging for …" bar and the list under it move together over the
 	// state timing (F-07); Reduce Motion crossfades the bar and lets the list
@@ -152,6 +161,7 @@ function TodayContent() {
 	const titleRow = (
 		<View onLayout={onHeaderLayout}>
 			<TodayHeader
+				titleRef={titleRef}
 				day={today.selectedDay}
 				onAddHabit={() => router.push("/new-habit")}
 				animatedStyle={header.titleStyle}

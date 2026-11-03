@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { AccessibilityInfo, Text } from "react-native";
 
 let mockLargeText = false;
 jest.mock("@/utils/use-accessibility-text-size", () => ({
@@ -50,5 +50,24 @@ describe("ScreenHeader", () => {
 			</ScreenHeader>,
 		);
 		expect(order()).toBe(false);
+	});
+});
+
+describe("ScreenHeader focus on route entry (08.4)", () => {
+	afterEach(() => {
+		jest.useRealTimers();
+		jest.restoreAllMocks();
+	});
+
+	it("puts the screen reader on the title once the push has settled", async () => {
+		jest.useFakeTimers();
+		const send = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation();
+		await render(<ScreenHeader title="Reminders" />);
+		expect(send).not.toHaveBeenCalled();
+		jest.advanceTimersByTime(400);
+		expect(send).toHaveBeenCalledTimes(1);
+		expect(send.mock.calls[0][1]).toBe("focus");
 	});
 });

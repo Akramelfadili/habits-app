@@ -1,9 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useRef } from "react";
+import { type HostInstance, StyleSheet, Text, View } from "react-native";
 import { HeaderPillButton } from "@/components/ui/composite/header-buttons";
+import { ROUTE_FOCUS_DELAY_MS } from "@/components/ui/composite/screen-header";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
+import { useInitialFocus } from "@/utils/use-initial-focus";
 import { detailCopy } from "../../messages";
 
 type DetailHeaderProps = {
@@ -30,9 +33,13 @@ export function DetailHeader({
 }: DetailHeaderProps) {
 	const { colors } = useTheme();
 	const stacked = useAccessibilityTextSize();
+	// 08.4: a pushed screen starts the screen reader on its title.
+	const titleRef = useRef<HostInstance>(null);
+	useInitialFocus(titleRef, true, ROUTE_FOCUS_DELAY_MS);
 
 	const block = (
 		<View
+			ref={titleRef}
 			accessible
 			accessibilityRole="header"
 			accessibilityLabel={accessibilityLabel}

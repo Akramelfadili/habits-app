@@ -12,6 +12,7 @@ import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
 import { useFirstRunQueries } from "@/modules/habits/hooks/use-first-run-queries";
+import { useTabRetapStore } from "@/store/tab-retap-store";
 import { useToastStore } from "@/store/toast-store";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
@@ -99,7 +100,11 @@ export default function TabsLayout() {
 											target: route.key,
 											canPreventDefault: true,
 										});
-										if (!focused && !event.defaultPrevented) {
+										if (event.defaultPrevented) return;
+										if (focused) {
+											// 08.4: the screen scrolls to the top and reads its title.
+											useTabRetapStore.getState().retap(route.name);
+										} else {
 											navigateToTab(route.key);
 										}
 									},
