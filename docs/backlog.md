@@ -14,7 +14,7 @@ Everything below this section is the detailed record by ticket. This is what is 
 - **Toasts have no enter or exit animation** (08.5: rise 12 pt + fade, fade only with Reduce Motion) and, per the owner, dismissal misbehaves; fix together. Today a toast just appears and goes.
 - **After Skip on First Run, Progress and Habits are unreachable until a first habit exists** (FR4 has no tab bar by decision). If that feels wrong on a phone, show the bar again after the first push or after a few seconds; the flag is `landing` in `first-run-offer-store`.
 - **Collapsing header: the large title's buttons scale to 88 % while it fades** (38.7 pt while they can still be hit); hide them from touches once past the first third.
-- **`year-map.perf.test.ts` fails under a loaded machine** (a time budget; passes alone and with `--maxWorkers=3`). Give it a relative budget or move it to `*.slow.test.ts`.
+- **Perf tests fail on a loaded or slower machine** (`year-map.perf.test.ts`, 1000–1200 ms budgets; `use-progress-queries.perf.slow.test.tsx`): they pass alone and with `--maxWorkers=2`, and failed in a full parallel run by as little as 9 ms (1009 vs 1000) after the machine slowed down. Give them relative budgets or move `year-map.perf` to `*.slow.test.ts`. `make check` can therefore need a re-run on a busy box.
 
 ### Release prerequisites (before anyone but the owner uses it)
 
