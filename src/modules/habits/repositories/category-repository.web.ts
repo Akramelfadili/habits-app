@@ -19,7 +19,7 @@ import {
 /**
  * Web-only stand-in for `category-repository.ts` (see `habit-repository.web.ts`
  * for why web runs on in-memory fixtures). `?fixtures=many-categories` gives
- * docs/mockups/hab-24-f1c.png's eight customs. The store is kept in the
+ * the V1/V2 mockup hab-24-f1c (tag mockups-v1-v2)'s eight customs. The store is kept in the
  * stored group order (HAB-42): fixtures start in the order migration 0011
  * would give them, and a new category is appended (max + 1, as on device).
  */

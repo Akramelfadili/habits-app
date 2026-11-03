@@ -36,7 +36,7 @@ Status of the work. Specs: `docs/feature-spec.md` (HAB-01…13) and `docs/featur
 
 ### V3-6 — Accessibility, baselines, e2e, docs
 
-- Delete the V1/V2 mockup PNGs in `docs/mockups/` (kept until each V3 batch replaces its screens; recoverable from tag `mockups-v1-v2`).
+- ~~Delete the V1/V2 mockup PNGs in `docs/mockups/`~~ — done (64 PNGs; recoverable from tag `mockups-v1-v2`).
 - Null the `mockup:` entries in `scripts/visual-check/screens.mjs` that point at them.
 - Point the `/implement-feature` skill and the docs (`design-system.md`, `feature-spec.md`, `feature-spec-v2.md`, `architecture.md`) at the tag instead of `docs/mockups/*.png`.
 

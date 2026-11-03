@@ -5,8 +5,9 @@
  * feature that made it.
  *
  * Each entry: `feature` (spec ID, groups the report), `route` (with the
- * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the docs/mockups/
- * file it's judged against, or null when no mockup covers that state),
+ * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the V3
+ * render under docs/mockups/v3/renders/ it is judged against, or null: V1/V2
+ * mockups were deleted in V3-6 and live on in the tag mockups-v1-v2),
  * optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
  * in CSS px, overrides the default 393×852 — e.g. a small phone with the
  * keyboard up), `note`, `touch` (render in a
@@ -206,7 +207,7 @@ export const SCREENS = {
 	"today-break-resisted": {
 		feature: "HAB-04",
 		route: "/",
-		mockup: "docs/mockups/today-populated.png",
+		mockup: null,
 		note: "Break habit ticked: resisted caption on the row, plus the completion toast with Undo.",
 		async interact(page) {
 			await page
@@ -230,7 +231,7 @@ export const SCREENS = {
 	"rest-day-picker": {
 		feature: "HAB-18",
 		route: "/?fixtures=rest-day-picker",
-		mockup: "docs/mockups/hab-18-d1.png",
+		mockup: null,
 		note: "Picker over the rest day: Glass of water (Amount ›) and checks; the Break habit is left out.",
 		async interact(page) {
 			await page.getByText("Log a different habit", { exact: true }).click();
@@ -252,7 +253,7 @@ export const SCREENS = {
 	"rest-day-logged": {
 		feature: "HAB-18",
 		route: "/?fixtures=rest-day-picker",
-		mockup: "docs/mockups/hab-18-d2.png",
+		mockup: null,
 		note: "Read logged off-schedule: toast with Undo over the rest day, which now lists it. 'Logged 10:42' becomes the real time of day.",
 		async interact(page) {
 			await page.getByText("Log a different habit", { exact: true }).click();
@@ -411,7 +412,7 @@ export const SCREENS = {
 	"new-habit-near-limit": {
 		feature: "HAB-22",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-22-e6.png",
+		mockup: null,
 		note: "E6 — 31/32: counter shows (from 26), Save enabled once a category is picked, helper gone.",
 		async interact(page) {
 			await typeHabitName(page, "Read twenty pages before coffee");
@@ -461,7 +462,7 @@ export const SCREENS = {
 	"category-picker-many": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=many-categories",
-		mockup: "docs/mockups/hab-24-f1c.png",
+		mockup: null,
 		note: "F1c — eight customs, Music picked, scrolled: hairline above the pinned Save.",
 		async interact(page) {
 			await typeHabitName(page, "Practice scales");
@@ -474,7 +475,7 @@ export const SCREENS = {
 	"add-category-empty": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2a.png",
+		mockup: null,
 		note: "F2a — add sheet stacked over the picker: empty name, placeholder preview, Add blocked.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -484,7 +485,7 @@ export const SCREENS = {
 	"add-category-typing": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2b.png",
+		mockup: null,
 		note: "F2b — name typed: live preview on rotation slot 1, Add enabled.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -495,7 +496,7 @@ export const SCREENS = {
 	"add-category-duplicate": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2c.png",
+		mockup: null,
 		note: "F2c — duplicate of a built-in: amber field + helper, preview hidden, Add blocked.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -506,7 +507,7 @@ export const SCREENS = {
 	"category-picker-new-selected": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2d.png",
+		mockup: null,
 		note: "F2d — after Add: sheet closed, new chip in its creation-order slot, auto-selected, no toast.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -608,7 +609,7 @@ export const SCREENS = {
 	"quantity-log": {
 		feature: "HAB-07",
 		route: "/?fixtures=quantity-log",
-		mockup: "docs/mockups/quantity-log.png",
+		mockup: null,
 		note: "Sheet is opened from the row's count control (a tap on the circle adds one, D6) — the interaction the mockup can't capture from a static route load.",
 		async interact(page) {
 			await page.getByText("6/8", { exact: true }).click();
@@ -617,7 +618,7 @@ export const SCREENS = {
 	"streak-at-risk": {
 		feature: "HAB-08",
 		route: "/?fixtures=streak-at-risk",
-		mockup: "docs/mockups/streak-at-risk.png",
+		mockup: null,
 		note: "Sheet is opened by tapping the at-risk habit's row, same as a real 'open this habit' interaction.",
 		async interact(page) {
 			await page.getByText("Meditate").click();
@@ -727,7 +728,7 @@ export const SCREENS = {
 	"retro-log": {
 		feature: "HAB-10",
 		route: "/(today)/habit/1?fixtures=retro-log",
-		mockup: "docs/mockups/hab-18-d4.png",
+		mockup: null,
 		note: "Origin habit pinned first in the ringed card (HAB-18 D4), the rest under 'Also on <weekday>'. Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
 		async interact(page) {
 			await page

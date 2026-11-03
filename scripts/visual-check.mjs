@@ -17,7 +17,7 @@
  *   in HAB-12, say) surfaces on every screen it touched, not only on the one
  *   feature it was made for. Intended changes: review them in the report,
  *   then `--update-baseline` and commit the new PNGs with the change.
- * - **Mockup (by eye, in the report).** docs/mockups/ are design drawings —
+ * - **Mockup (by eye, in the report).** The mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2) are design drawings —
  *   device frame, SF Symbols, SF Pro — so a pixel diff against them is
  *   meaningless. The report puts each one next to its render instead.
  *

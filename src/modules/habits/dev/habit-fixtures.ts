@@ -45,7 +45,7 @@ function withLifecycle(habit: FixtureHabit): Habit {
 
 /**
  * Static fake habits backing the web-only repository (`habit-repository.web.ts`).
- * Web exists purely for visual checks against docs/mockups/, so this covers the
+ * Web exists purely for visual checks against the mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2), so this covers the
  * variety a screen needs to render: build + break, custom categories and
  * Other (V1's no-category habits, as the HAB-24 migration maps them), and every frequency type (#1 matches the mockup's
  * Mon–Fri specific-weekdays selection). Ids are stable so `/edit-habit/1` always resolves.
@@ -274,7 +274,7 @@ function restDayPickerFixtures(onlyBreak: boolean): FixtureHabit[] {
 }
 
 /**
- * A single quantity habit matching docs/mockups/quantity-log.png exactly
+ * A single quantity habit matching the V1/V2 mockup quantity-log (tag mockups-v1-v2) exactly
  * (name, target, unit, current value) so the Quantity Log sheet screenshot
  * (scripts/visual-check.mjs) can be compared to it directly.
  */
@@ -302,7 +302,7 @@ const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
 const STREAK_AT_RISK_HABIT_CREATED = new Date("2025-01-01T00:00:00Z");
 
 /**
- * One daily Build habit matching docs/mockups/streak-at-risk.png — its
+ * One daily Build habit matching the V1/V2 mockup streak-at-risk (tag mockups-v1-v2) — its
  * matching entries (`entry-fixtures.ts`) complete every day except yesterday,
  * so opening it shows the streak-at-risk sheet with the full freeze pool
  * available (`frozen-day-fixtures.ts` adds none for this scenario).
@@ -323,7 +323,7 @@ const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
 ];
 
 /**
- * docs/mockups/streak-reset-no-freezes.png's "Meditate · Morning · 10 min ·
+ * the V1/V2 mockup streak-reset-no-freezes (tag mockups-v1-v2)'s "Meditate · Morning · 10 min ·
  * daily" — a 24-day run that ended two days ago, yesterday missed, today
  * done (current 1). "Glass of water" is only there to own the two frozen
  * days (`frozen-day-fixtures.ts`) that empty this month's shared pool, so
@@ -360,7 +360,7 @@ const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
 export const HABIT_DETAIL_HISTORY_DAYS = 150;
 
 /**
- * One daily quantity habit matching docs/mockups/habit-detail.png's "Glass of
+ * One daily quantity habit matching the V1/V2 mockup habit-detail (tag mockups-v1-v2)'s "Glass of
  * water · Morning · 8 glasses · daily" — its ~5 months of varied history
  * (`entry-fixtures.ts`, `frozen-day-fixtures.ts`) fill every heatmap state.
  * Created relative to now so the history lands the same way on any run.
@@ -387,7 +387,7 @@ export function habitDetailFixtures(): FixtureHabit[] {
 export const HABIT_DETAIL_ARCHIVED_DAYS_AGO = 17;
 
 /**
- * docs/mockups/hab-20-d5.png's "Cold shower · Morning · daily · archived":
+ * the V1/V2 mockup hab-20-d5 (tag mockups-v1-v2)'s "Cold shower · Morning · daily · archived":
  * `habit-detail`'s history (`entry-fixtures.ts` drops everything after the
  * archive day), a simple check, and a 07:00 daily reminder
  * (`reminder-fixtures.ts`) so Restore shows E1's "07:00 · daily" row.
@@ -405,7 +405,7 @@ function habitDetailArchivedFixtures(): FixtureHabit[] {
 
 /**
  * A just-created habit with no history, matching
- * docs/mockups/habit-detail-new.png ("Evening walk · Mon–Fri · added today").
+ * the V1/V2 mockup habit-detail-new (tag mockups-v1-v2) ("Evening walk · Mon–Fri · added today").
  */
 function habitDetailNewFixtures(): FixtureHabit[] {
 	const now = new Date();
@@ -427,7 +427,7 @@ function habitDetailNewFixtures(): FixtureHabit[] {
 
 /**
  * `habit-detail`'s "Glass of water" plus the three other habits
- * docs/mockups/retro-log.png lists for the tapped day — Meditate and Read are
+ * the V1/V2 mockup retro-log (tag mockups-v1-v2) lists for the tapped day — Meditate and Read are
  * quantity habits, Mobility a simple check — so the Retro log sheet (HAB-10)
  * renders the mockup's four rows.
  */
@@ -477,7 +477,7 @@ function retroLogFixtures(): FixtureHabit[] {
 const WEEKLY_SUMMARY_CREATED = new Date("2025-01-01T00:00:00Z");
 
 /**
- * docs/mockups/weekly-summary.png / perfect-week.png's six habits, ids in the
+ * the V1/V2 mockup weekly-summary (tag mockups-v1-v2) / perfect-week.png's six habits, ids in the
  * creation order perfect-week.png lists them (its all-100% bars fall back to
  * creation order). `weekly-summary` makes every habit daily, as that mockup's
  * x/7 bars show; `perfect-week` gives Read Mon–Fri and Easy run 3×/week, as
@@ -524,7 +524,7 @@ function weeklySummaryFixtures(perfectWeek: boolean): FixtureHabit[] {
 }
 
 /**
- * docs/mockups/reminders.png / reminders-at-cap.png's "Meditate" — Mon–Fri
+ * the V1/V2 mockup reminders (tag mockups-v1-v2) / reminders-at-cap.png's "Meditate" — Mon–Fri
  * for `reminders`, so its Sat/Sun reminder shows the unscheduled-day warning;
  * daily for `reminders-at-cap`, which shows no warning on any of its four.
  * Matching reminders live in `reminder-fixtures.ts`.
@@ -546,14 +546,14 @@ function remindersHabitFixtures(frequency: Habit["frequency"]): FixtureHabit[] {
 	];
 }
 
-/** Archive dates for docs/mockups/manage-archive.png's two archived rows. */
+/** Archive dates for the V1/V2 mockup manage-archive (tag mockups-v1-v2)'s two archived rows. */
 export const MANAGE_ARCHIVE_ARCHIVED_AT = {
 	coldShower: new Date("2026-09-02T09:00:00"),
 	noPhoneInBed: new Date("2026-08-18T09:00:00"),
 };
 
 /**
- * docs/mockups/manage-archive.png: five active habits across Morning,
+ * the V1/V2 mockup manage-archive (tag mockups-v1-v2): five active habits across Morning,
  * Evening and Training, plus two archived ones — their "N logs kept" come
  * from `entry-fixtures.ts` (41 and 96).
  */
@@ -630,7 +630,7 @@ function manageArchiveFixtures(): FixtureHabit[] {
 }
 
 /**
- * Manage Categories (HAB-25, docs/mockups/hab-25-f3a–f3c.png): the built-in
+ * Manage Categories (HAB-25, the V1/V2 mockups hab-25-f3a–f3c (tag mockups-v1-v2)): the built-in
  * counts every frame shows (Health 1, Fitness 2, Mindfulness 1, Productivity
  * 1, Learning 1), plus — with customs in use — Music's three habits (one
  * archived, so the count proves archived habits are included) and

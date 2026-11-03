@@ -3,10 +3,10 @@ import type { NotificationPermission } from "./notifications";
 
 /**
  * Web-only stand-in for `notifications.ts` — expo-notifications has no web
- * support, and web only exists for visual checks against docs/mockups/
+ * support, and web only exists for visual checks against the mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2)
  * (scripts/visual-check.mjs). Scheduling is a no-op. Permission reads as
  * denied under `?fixtures=reminders` so the permission notice in
- * docs/mockups/reminders.png renders; granted everywhere else. Reads the
+ * the V1/V2 mockup reminders (tag mockups-v1-v2) renders; granted everywhere else. Reads the
  * param itself, like `app-settings-repository.web.ts` — `lib/` can't import
  * a module's fixture helpers.
  */

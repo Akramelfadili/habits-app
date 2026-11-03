@@ -17,7 +17,7 @@ import {
 import { TODAY_V3_SCENARIOS, todayV3Entries } from "./today-v3-fixtures";
 import { yearlyEntries } from "./yearly-fixtures";
 
-/** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in docs/mockups/streak-at-risk.png. */
+/** Consecutive prior days completed for the `streak-at-risk` scenario, matching the "24-day streak" copy in the V1/V2 mockup streak-at-risk (tag mockups-v1-v2). */
 const STREAK_AT_RISK_DAYS = 24;
 
 /**
@@ -28,13 +28,13 @@ const STREAK_AT_RISK_DAYS = 24;
  * per-group counts render non-zero instead of a flat 0%.
  *
  * `empty`/`rest-day` have no due-today habits to complete. `quantity-log` logs the quantity
- * fixture habit partway to its target, matching docs/mockups/quantity-log.png
+ * fixture habit partway to its target, matching the V1/V2 mockup quantity-log (tag mockups-v1-v2)
  * exactly (6 of 8), so the sheet screenshot can be compared to it directly.
  *
  * Habit #2 ("Read before bed") is a quantity habit (target 20 pages) — its
  * entry carries `value: 20` (full target) rather than just presence, so it
  * still reads as complete under HAB-07's value-based completion rule and the
- * default Today screenshot keeps matching docs/mockups/today-populated.png.
+ * default Today screenshot keeps matching the V1/V2 mockup today-populated (tag mockups-v1-v2).
  */
 export function makeEntryFixtures(
 	scenario: FixtureScenario = "default",
@@ -106,7 +106,7 @@ export function makeEntryFixtures(
 
 	if (scenario === "retro-log") {
 		// The tapped day: Read done, Meditate and Mobility not — matching
-		// docs/mockups/retro-log.png (Glass of water's own history covers it).
+		// the V1/V2 mockup retro-log (tag mockups-v1-v2) (Glass of water's own history covers it).
 		const entries = habitDetailEntries();
 		entries.push({
 			id: entries.length + 1,
@@ -166,8 +166,8 @@ export const RETRO_LOG_DAYS_AGO = 3;
 
 /**
  * Notes backing the web-only repository (HAB-10): the two Recent entries
- * subtitles docs/mockups/habit-detail.png shows, and — for `retro-log` — the
- * tapped day's note from docs/mockups/retro-log.png.
+ * subtitles the V1/V2 mockup habit-detail (tag mockups-v1-v2) shows, and — for `retro-log` — the
+ * tapped day's note from the V1/V2 mockup retro-log (tag mockups-v1-v2).
  */
 export function makeEntryNoteFixtures(
 	scenario: FixtureScenario = "default",
@@ -197,7 +197,7 @@ export function makeEntryNoteFixtures(
 	return notes;
 }
 
-/** The `habit-detail` scenario's current streak — docs/mockups/habit-detail.png's "24". */
+/** The `habit-detail` scenario's current streak — the V1/V2 mockup habit-detail (tag mockups-v1-v2)'s "24". */
 const HABIT_DETAIL_CURRENT_STREAK = 24;
 /** Its longest run (41, as in the mockup), ending this many days ago. */
 const HABIT_DETAIL_LONGEST = { days: 41, endedDaysAgo: 100 };
@@ -247,7 +247,7 @@ function habitDetailEntries(): Entry[] {
 
 /**
  * Mon→Sun (index 0–6) days each `weekly-summary` habit was done this week,
- * matching docs/mockups/weekly-summary.png's bars (Mobility 2/7, Easy run
+ * matching the V1/V2 mockup weekly-summary (tag mockups-v1-v2)'s bars (Mobility 2/7, Easy run
  * 4/7, Read 5/7, No phone 5/7, Meditate 6/7, Water 7/7) with Tuesday the
  * best day at 6 of 6. Every habit is logged on Sunday, so with the visual
  * check's clock pinned to Sunday evening each bar reads out of 7. (The
@@ -262,7 +262,7 @@ const WEEKLY_SUMMARY_DONE: Record<number, number[]> = {
 	6: [0, 1, 4, 5, 6],
 };
 
-/** docs/mockups/perfect-week.png — every scheduled day done (Read Mon–Fri, Easy run 3×). */
+/** the V1/V2 mockup perfect-week (tag mockups-v1-v2) — every scheduled day done (Read Mon–Fri, Easy run 3×). */
 const PERFECT_WEEK_DONE: Record<number, number[]> = {
 	1: [0, 1, 2, 3, 4, 5, 6],
 	2: [0, 1, 2, 3, 4, 5, 6],
@@ -277,7 +277,7 @@ function weeklySummaryEntries(
 ): Entry[] {
 	// `weekly-summary-last-week` is the same mockup week, one week back — the
 	// summary opens on last week on a Monday, so the visual check can compare
-	// that default against docs/mockups/weekly-summary.png too.
+	// that default against the V1/V2 mockup weekly-summary (tag mockups-v1-v2) too.
 	const thisWeek = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
 	const weekStart =
 		scenario === "weekly-summary-last-week" ? subWeeks(thisWeek, 1) : thisWeek;
@@ -294,7 +294,7 @@ function weeklySummaryEntries(
 }
 
 /**
- * docs/mockups/manage-archive.png's "41 logs kept" (Cold shower, #6) and
+ * the V1/V2 mockup manage-archive (tag mockups-v1-v2)'s "41 logs kept" (Cold shower, #6) and
  * "96 logs kept" (No phone in bed, #7) — consecutive days up to each one's
  * archive date.
  */
