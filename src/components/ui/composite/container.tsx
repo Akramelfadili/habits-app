@@ -1,6 +1,6 @@
 import { Children, type PropsWithChildren } from "react";
 import { StyleSheet, View } from "react-native";
-import { radius } from "@/theme/theme";
+import { radius, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ContainerProps = PropsWithChildren<{
@@ -9,9 +9,11 @@ type ContainerProps = PropsWithChildren<{
 	 * card-coloured surface (the category move preview inside a sheet, HAB-25).
 	 * "flat" is V3's list card (T-18): no padding, a hairline
 	 * border, radius `l`, and a full-bleed hairline between its children — the
-	 * rows carry their own padding.
+	 * rows carry their own padding. "summary" is V3's compact info card (Habit
+	 * Detail's history, D1): radius `l`, a hairline border, 14 pt padding and an
+	 * 8 pt gap between its parts.
 	 */
-	variant?: "card" | "inset" | "sheet" | "outlined" | "flat";
+	variant?: "card" | "inset" | "sheet" | "outlined" | "flat" | "summary";
 	/**
 	 * Groups direct children into one card, separating them with a full-bleed
 	 * hairline instead of the card's default gap (e.g. Category + Direction
@@ -56,6 +58,7 @@ export function Container({
 			style={[
 				styles.base,
 				variant === "sheet" && styles.sheet,
+				variant === "summary" && styles.summary,
 				(dividers || flat) && styles.dividedBase,
 				flat && styles.flat,
 				flat && lifted && styles.flatLifted,
@@ -64,11 +67,17 @@ export function Container({
 				{
 					backgroundColor: variant === "inset" ? colors.inner : colors.card,
 					borderWidth:
-						variant === "outlined" || variant === "flat" || lifted ? 1 : 0,
+						variant === "summary"
+							? StyleSheet.hairlineWidth
+							: variant === "outlined" || variant === "flat" || lifted
+								? 1
+								: 0,
 					borderColor:
 						lifted && !flat
 							? colors.ink
-							: variant === "outlined" || variant === "flat"
+							: variant === "outlined" ||
+									variant === "flat" ||
+									variant === "summary"
 								? colors.border
 								: "transparent",
 				},
@@ -113,6 +122,11 @@ const styles = StyleSheet.create({
 	},
 	dividedBase: {
 		gap: 0,
+	},
+	summary: {
+		borderRadius: radius.l,
+		padding: space[350],
+		gap: space[200],
 	},
 	flat: {
 		padding: 0,

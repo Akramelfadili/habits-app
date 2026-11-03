@@ -19,7 +19,6 @@ import { ActionCard } from "@/components/ui/composite/action-card";
 import { AlertDialog } from "@/components/ui/composite/alert-dialog";
 import { Banner } from "@/components/ui/composite/banner";
 import { Button } from "@/components/ui/primitives/button";
-import { Chip } from "@/components/ui/primitives/chip";
 import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
@@ -31,6 +30,7 @@ import { runSafely } from "@/utils/run-safely";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 import { useLeaveGuard } from "@/utils/use-leave-guard";
 import { AddCategorySheet } from "../components/add-category-sheet";
+import { QuickPicks, SlimFormNote } from "../components/first-run/quick-picks";
 import { CategoryChips } from "../components/form/category-chips";
 import { FrequencyFields } from "../components/form/frequency-fields";
 import { GoalFields } from "../components/form/goal-fields";
@@ -52,9 +52,11 @@ import { useFirstRunOfferStore } from "../first-run-offer-store";
 import { useCategoryActions } from "../hooks/use-category-actions";
 import { useCategoryQueries } from "../hooks/use-category-queries";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
+import { useFirstRunOfferQueries } from "../hooks/use-first-run-offer-queries";
 import { useHabitActions } from "../hooks/use-habit-actions";
 import { useHabitDetailActions } from "../hooks/use-habit-detail-actions";
 import { useHabitQueries } from "../hooks/use-habit-queries";
+import { useQuickPickActions } from "../hooks/use-quick-pick-actions";
 import {
 	firstRunCopy,
 	formCopy,
@@ -76,11 +78,6 @@ import {
 	toFrequency,
 	toFrequencyFormValues,
 } from "../presenters/habit-form-schema";
-import {
-	FIRST_RUN_QUICK_PICK_IDS,
-	findSuggestion,
-	type Suggestion,
-} from "../suggestions";
 import type { FrequencyType, Habit, IsoWeekday, ReminderDraft } from "../types";
 
 type HabitFormScreenProps = {
@@ -150,8 +147,7 @@ export function HabitFormScreen({
 	const { archiveHabitOrThrow, restoreHabit, isArchiving } =
 		useHabitDetailActions();
 	const { markFirstRunSeen } = useFirstRunActions();
-	// The quick pick whose hidden fields (category, target) are still in the form (FR2).
-	const pickedSuggestion = useRef<Suggestion | null>(null);
+	const { skipFailed } = useFirstRunOfferQueries();
 
 	const mode = habitId === undefined ? "create" : "edit";
 	const habit = habitId === undefined ? undefined : getHabitById(habitId);
@@ -265,39 +261,10 @@ export function HabitFormScreen({
 		guard.leaveWith(() => (firstRun ? leaveFirstRun(router) : router.back()));
 	}
 
-	// FR2's quick picks fill every field the suggestion knows; category and
-	// target stay out of sight and are dropped again if the name is changed.
-	function pickSuggestion(suggestion: Suggestion) {
-		pickedSuggestion.current = suggestion;
-		const values = prefillToFormValues(
-			{
-				name: suggestion.name,
-				category: suggestion.category,
-				direction: suggestion.direction,
-				target: suggestion.target,
-				frequency: suggestion.frequency,
-			},
-			categories,
-		);
-		for (const [key, value] of Object.entries(values)) {
-			setValue(key as keyof HabitFormInput, value as never, {
-				shouldDirty: true,
-			});
-		}
-	}
-
-	function changeName(text: string) {
-		const picked = pickedSuggestion.current;
-		if (slim && picked && text !== picked.name) {
-			pickedSuggestion.current = null;
-			const blank = blankFormValues();
-			setValue("categoryId", blank.categoryId, { shouldDirty: true });
-			setValue("targetType", blank.targetType, { shouldDirty: true });
-			setValue("targetAmount", blank.targetAmount, { shouldDirty: true });
-			setValue("targetUnit", blank.targetUnit, { shouldDirty: true });
-		}
-		setValue("name", text, { shouldDirty: true });
-	}
+	const { pickSuggestion, changeName } = useQuickPickActions({
+		setValue,
+		categories,
+	});
 
 	async function onSubmit(values: HabitFormValues) {
 		const other = findBuiltInCategory(categories, OTHER_CATEGORY_NAME);
@@ -461,27 +428,6 @@ export function HabitFormScreen({
 		/>
 	);
 
-	// FR2: five of the bundle, one tap each; the chip whose name is in the field reads as picked.
-	const quickPicks = (
-		<View style={styles.field}>
-			<SectionLabel>{firstRunCopy.habit.pickLabel}</SectionLabel>
-			<View style={styles.chips}>
-				{FIRST_RUN_QUICK_PICK_IDS.map((id) => {
-					const suggestion = findSuggestion(id);
-					if (!suggestion) return null;
-					return (
-						<Chip
-							key={id}
-							label={suggestion.name}
-							selected={nameValue === suggestion.name}
-							onPress={() => pickSuggestion(suggestion)}
-						/>
-					);
-				})}
-			</View>
-		</View>
-	);
-
 	return (
 		// The name field autofocuses on create (HAB-22), so the keyboard is up
 		// from the first frame: lift the pinned Save and its reason above it.
@@ -516,7 +462,9 @@ export function HabitFormScreen({
 
 				{slim ? null : typeField}
 				{nameField}
-				{slim ? quickPicks : null}
+				{slim ? (
+					<QuickPicks selectedName={nameValue} onPick={pickSuggestion} />
+				) : null}
 				{slim ? typeField : null}
 
 				{slim ? null : (
@@ -583,11 +531,7 @@ export function HabitFormScreen({
 					/>
 				</View>
 
-				{slim ? (
-					<FieldHelper plain tone="hint">
-						{firstRunCopy.habit.note}
-					</FieldHelper>
-				) : null}
+				{slim ? <SlimFormNote /> : null}
 
 				{mode === "create" && !slim ? (
 					<ReminderDrafts
@@ -642,6 +586,9 @@ export function HabitFormScreen({
 					<Banner tone="error" messageRef={errorRef}>
 						{submitError}
 					</Banner>
+				) : null}
+				{slim && skipFailed ? (
+					<Banner tone="error">{firstRunCopy.continueFailed}</Banner>
 				) : null}
 				<Button
 					label={mode === "create" ? formCopy.save.new : formCopy.save.edit}

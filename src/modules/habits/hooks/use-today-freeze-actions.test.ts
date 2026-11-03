@@ -21,9 +21,17 @@ const atRiskByHabitId = new Map([
 	[1, { missedDate, currentStreak: 13, freezesRemaining: 2 }],
 ]);
 
-function setup() {
-	return renderHook(() =>
-		useTodayFreezeActions({ habits: [read], atRiskByHabitId }),
+const openedOn = new Date(2026, 9, 4);
+
+function setup(initial = atRiskByHabitId) {
+	return renderHook(
+		(props: { live: typeof atRiskByHabitId; now: Date }) =>
+			useTodayFreezeActions({
+				habits: [read],
+				atRiskByHabitId: props.live,
+				today: props.now,
+			}),
+		{ initialProps: { live: initial, now: openedOn } },
 	);
 }
 
@@ -77,5 +85,43 @@ describe("useTodayFreezeActions", () => {
 		await act(() => result.current.dismissAtRisk());
 		expect(result.current.atRiskInfo).toBeUndefined();
 		expect(mockApplyFreeze).not.toHaveBeenCalled();
+	});
+
+	describe("across midnight (SY5)", () => {
+		const nextDay = new Date(2026, 9, 5);
+
+		it("keeps what the person is reading: the day, the habit and the streak do not change", async () => {
+			const { result, rerender } = await setup();
+			await act(() => result.current.openAtRisk(1));
+			await rerender({ live: new Map(), now: nextDay });
+			expect(result.current.atRiskInfo?.currentStreak).toBe(13);
+			expect(result.current.atRiskHabit?.name).toBe("Read");
+			expect(result.current.atRiskToday).toEqual(openedOn);
+		});
+
+		it("spends nothing once the grace window has closed, and says so", async () => {
+			const { result, rerender } = await setup();
+			await act(() => result.current.openAtRisk(1));
+			await rerender({ live: new Map(), now: nextDay });
+			await act(() => result.current.spendFreeze());
+			expect(mockApplyFreeze).not.toHaveBeenCalled();
+			expect(result.current.atRiskInfo).toBeUndefined();
+			expect(useToastStore.getState().toast?.message).toBe(
+				"Too late for a freeze on Sat 3. The streak restarts with your next log.",
+			);
+		});
+
+		it("still spends it when the live read names the same missed day", async () => {
+			const { result, rerender } = await setup();
+			await act(() => result.current.openAtRisk(1));
+			await rerender({
+				live: new Map([
+					[1, { missedDate, currentStreak: 13, freezesRemaining: 2 }],
+				]),
+				now: nextDay,
+			});
+			await act(() => result.current.spendFreeze());
+			expect(mockApplyFreeze).toHaveBeenCalledWith(1, missedDate);
+		});
 	});
 });

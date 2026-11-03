@@ -137,6 +137,7 @@ function TodayContent() {
 	const freeze = useTodayFreezeActions({
 		habits: dueHabits,
 		atRiskByHabitId: today.atRiskByHabitId,
+		today: today.today,
 	});
 
 	const isToday = !day.isPastDay;
@@ -291,7 +292,7 @@ function TodayContent() {
 					habitName={freeze.atRiskHabit.name}
 					currentStreak={freeze.atRiskInfo.currentStreak}
 					freezesRemaining={freeze.atRiskInfo.freezesRemaining}
-					today={today.today}
+					today={freeze.atRiskToday ?? today.today}
 					onUseFreeze={freeze.spendFreeze}
 					onNotNow={freeze.dismissAtRisk}
 					isApplyingFreeze={freeze.isFreezing}

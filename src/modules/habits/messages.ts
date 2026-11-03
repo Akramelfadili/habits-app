@@ -125,6 +125,12 @@ export const messages = {
 		text: (day: string, left: number) =>
 			`Freeze used for ${day} · ${left} left`,
 	},
+	/** The sheet outlived the grace window (it was open across midnight): nothing was written. */
+	freezeTooLate: {
+		tone: "warning",
+		text: (day: string) =>
+			`Too late for a freeze on ${day}. The streak restarts with your next log.`,
+	},
 	/** PR-11: logging a frozen day gives its freeze back. */
 	freezeReturned: {
 		tone: "success",

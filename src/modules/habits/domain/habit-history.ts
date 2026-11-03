@@ -366,6 +366,12 @@ export type HistoryRow = {
 const HISTORY_LIMIT = 10;
 
 /**
+ * How far back the scan goes looking for them: a year. Without a bound a habit
+ * with few days to list walked every day back to the day it was created.
+ */
+const HISTORY_LOOKBACK_DAYS = 366;
+
+/**
  * Habit Detail's History (D2): the latest days that were done, missed, frozen or
  * an off-schedule bonus — and a day that carries a note — newest first. A day
  * that was not due, a paused day and today while still open say nothing. A habit
@@ -383,11 +389,15 @@ export function habitHistoryRows(
 	const noteByDate = new Map(notes.map(({ date, note }) => [date, note]));
 	const entryByDate = new Map(entries.map((entry) => [entry.date, entry]));
 	const started = entries.length > 0;
-	const first = startOfDay(habit.createdAt);
+	const todayStart = startOfDay(today);
+	const first = max([
+		startOfDay(habit.createdAt),
+		subDays(todayStart, HISTORY_LOOKBACK_DAYS),
+	]);
 	const rows: HistoryRow[] = [];
 
 	for (
-		let cursor = startOfDay(today);
+		let cursor = todayStart;
 		!isBefore(cursor, first) && rows.length < limit;
 		cursor = subDays(cursor, 1)
 	) {

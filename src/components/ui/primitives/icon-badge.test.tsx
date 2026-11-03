@@ -8,6 +8,12 @@ jest.mock("expo-symbols", () => {
 import { IconBadge } from "./icon-badge";
 
 describe("IconBadge", () => {
+	it("draws a minus bar in the given colour instead of a symbol", async () => {
+		await render(<IconBadge minusColor="#C00" />);
+		expect(screen.queryByTestId("symbol")).toBeNull();
+		expect(screen.getByTestId("icon-badge-minus")).toBeTruthy();
+	});
+
 	it("tints the glyph with the accent ink when an accent is given", async () => {
 		await render(
 			<IconBadge symbol="book.fill" accent={{ tint: "#EEF", ink: "#00F" }} />,

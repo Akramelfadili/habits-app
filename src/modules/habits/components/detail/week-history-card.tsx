@@ -3,7 +3,8 @@ import { Banner } from "@/components/ui/composite/banner";
 import type { LegendEntry } from "@/components/ui/composite/completion-legend";
 import { CompletionLegend } from "@/components/ui/composite/completion-legend";
 import { CompletionRows } from "@/components/ui/composite/completion-rows";
-import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
+import { Container } from "@/components/ui/composite/container";
+import { minTouchTarget, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { detailCopy } from "../../messages";
 import type { WeekRow } from "../../presenters/habit-detail-presenter";
@@ -42,13 +43,7 @@ export function WeekHistoryCard({
 	const { colors } = useTheme();
 
 	return (
-		<View
-			testID="week-history-card"
-			style={[
-				styles.card,
-				{ backgroundColor: colors.card, borderColor: colors.border },
-			]}
-		>
+		<Container variant="summary">
 			<View style={styles.header}>
 				<Text
 					accessibilityRole="header"
@@ -80,7 +75,7 @@ export function WeekHistoryCard({
 			</View>
 			{legend.length > 0 ? <CompletionLegend entries={[...legend]} /> : null}
 			{notice ? <Banner tone="notice">{notice}</Banner> : null}
-		</View>
+		</Container>
 	);
 }
 
@@ -126,12 +121,6 @@ function WeekRowTarget({
 }
 
 const styles = StyleSheet.create({
-	card: {
-		borderRadius: radius.l,
-		borderWidth: StyleSheet.hairlineWidth,
-		padding: space[350],
-		gap: space[200],
-	},
 	header: {
 		flexDirection: "row",
 		alignItems: "baseline",

@@ -868,6 +868,14 @@ describe("HabitFormScreen — focus=frequency (HAB-16)", () => {
 describe("HabitFormScreen — First Run, the slim form (FR2)", () => {
 	const HEALTH = builtInCategory("Health");
 
+	it("says so inline when Close could not leave First Run", async () => {
+		await render(<HabitFormScreen firstRun slim />);
+		expect(screen.queryByText("Couldn\u2019t continue. Try again.")).toBeNull();
+		await act(async () => useFirstRunOfferStore.getState().setSkipFailed(true));
+		expect(screen.getByText("Couldn\u2019t continue. Try again.")).toBeTruthy();
+		useFirstRunOfferStore.getState().setSkipFailed(false);
+	});
+
 	it("is Name, Or pick one, Type, Frequency and a note — no Category, Goal or Reminders", async () => {
 		await render(<HabitFormScreen firstRun slim />);
 		const labels = ["NAME", "OR PICK ONE", "TYPE", "FREQUENCY"];

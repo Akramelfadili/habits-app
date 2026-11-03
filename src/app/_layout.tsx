@@ -12,8 +12,7 @@ import { pinClockFromUrl } from "@/lib/dev-clock/pin-clock";
 import { installGlobalHandlers } from "@/lib/logger/global-handlers";
 import { log } from "@/lib/logger/logger";
 import { configureNotificationHandler } from "@/lib/notifications/notifications";
-import { leaveFirstRun } from "@/modules/habits/first-run-navigation";
-import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
+import { useFirstRunSkipActions } from "@/modules/habits/hooks/use-first-run-skip-actions";
 import { useStartupActions } from "@/modules/habits/hooks/use-startup-actions";
 import {
 	firstRunCopy,
@@ -75,15 +74,12 @@ export { RootErrorBoundary as ErrorBoundary };
 export default function RootLayout() {
 	const { colors } = useTheme();
 	const router = useRouter();
-	const { markFirstRunSeen } = useFirstRunActions();
+	const { skip } = useFirstRunSkipActions();
 	// FR2's Close is a skip: First Run is marked seen and Today opens empty (FR4).
 	const firstRunHabitHeaderOptions = useModalFormHeaderOptions(
 		firstRunCopy.habit.title,
 		formCopy.close,
-		async () => {
-			const result = await markFirstRunSeen();
-			if (result.ok) leaveFirstRun(router);
-		},
+		() => skip(router),
 	);
 	const suggestionsHeaderOptions = useModalFormHeaderOptions(
 		suggestionsCopy.title,
