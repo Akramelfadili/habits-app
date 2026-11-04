@@ -1903,8 +1903,9 @@ export const SCREENS = {
 			await page.getByText(/^Logging for Wed 14 Oct/).waitFor();
 			await page.waitForTimeout(500);
 			await page.mouse.move(200, 500);
-			await page.mouse.wheel(0, 20);
-			await page.waitForTimeout(500);
+			// Past the collapse range, so nothing settles mid-capture.
+			await page.mouse.wheel(0, 120);
+			await page.waitForTimeout(1000);
 			await assertStripShown(page);
 		},
 	},
