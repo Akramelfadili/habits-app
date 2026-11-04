@@ -56,7 +56,6 @@ jobs:
     env:
       # The one place the hook is switched on (device-validation.guard.test.ts).
       EXPO_PUBLIC_DEVICE_VALIDATION: "1"
-      EXPO_PUBLIC_BUILD_SHA: ${{ github.sha }}
       CI: "1"
     steps:
       - uses: actions/checkout@v4
@@ -128,7 +127,6 @@ jobs:
             echo "::error::main.jsbundle ($MODIFIED) is older than this build ($START): a stale bundle came out of the cache"
             exit 1
           fi
-          grep -aq "$GITHUB_SHA" "$BUNDLE" || echo "::warning::main.jsbundle does not contain commit $GITHUB_SHA as plain text (Hermes may encode it)"
           echo "APP=$APP" >> "$GITHUB_ENV"
           mkdir -p dist && ditto -c -k --keepParent "$APP" dist/app.zip
           ls -lh dist/app.zip

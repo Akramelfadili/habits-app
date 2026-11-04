@@ -75,8 +75,7 @@ likes. Rejected for control, not capability.
    `app.json`, the Xcode version and a manual `CACHE_VERSION`; there are no
    `restore-keys`, so a key that changed is a clean build. The JS is never
    cached: Xcode re-runs the bundle phase every build, and the job then
-   **fails if `main.jsbundle` does not contain the commit sha** it was built
-   from (`EXPO_PUBLIC_BUILD_SHA`).
+   **fails if `main.jsbundle` is older than the build step** that just ran.
 5. **Simulator.** The newest iOS runtime the runner has, and on it
    `iPhone 16` (393 × 852 pt, the web baselines' viewport) when the runtime
    offers it, otherwise the newest iPhone that is not a Pro Max or an SE. The
