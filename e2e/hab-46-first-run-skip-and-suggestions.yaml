@@ -9,14 +9,14 @@ tags:
 ---
 - launchApp
 
-# FR1: no tab bar. Skip for now is the way out to an empty Today (FR4, also without one).
+# FR1: no tab bar. Skip for now is the way out to an empty Today (FR4), which has the bar.
 - assertVisible: "Small habits,.*"
 - assertNotVisible:
     id: "Habits"
 - tapOn: "Skip for now"
-# FR4 is drawn without the tab bar; it comes back with the first habit.
+# The empty Today is an ordinary tab root: the bar is there at once.
 - assertVisible: "Nothing to track yet"
-- assertNotVisible:
+- assertVisible:
     id: "Habits"
 
 # BS1 from Today's empty state; BS2 fills Add habit and says where from.

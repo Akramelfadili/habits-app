@@ -108,7 +108,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_08.png",
-		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked); no tab bar behind it (owner's decision over the frame).",
+		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked); the dialog is a modal over Today, so the bar is hidden while the question is open.",
 		async interact(page) {
 			await page.getByRole("button", { name: "Add your first habit" }).click();
 			await page
@@ -123,7 +123,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_09.png",
-		note: "FR4 — Skip for now lands on the empty Today, without the tab bar (owner's decision over the frame).",
+		note: "FR4 — Skip for now lands on the empty Today, with the tab bar (UI fix batch: only First Run itself hides it; the frame draws the bar too).",
 		async interact(page) {
 			await page.getByRole("button", { name: "Skip for now" }).click();
 			await page.getByText("Nothing to track yet").waitFor();
@@ -219,7 +219,7 @@ export const SCREENS = {
 		feature: "HAB-05",
 		route: "/?fixtures=empty",
 		mockup: "docs/mockups/v3/renders/today/slice_01.png",
-		note: "T2 / FR4 — header and + only, the empty state with Add habit and the Browse suggestions link.",
+		note: "T2 / FR4 — header and + only, the empty state with Add habit and the Browse suggestions link, and the tab bar.",
 	},
 	"today-rest-day": {
 		feature: "HAB-05",

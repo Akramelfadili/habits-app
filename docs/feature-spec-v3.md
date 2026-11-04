@@ -25,7 +25,7 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **P12 (Year) always shows the habit chip** ("All habits" when unfiltered), unless exactly one habit exists; the mockup draws the chip only once a habit is chosen (P15).
 - **The per-habit rates list (P8) includes an archived habit that had days in the range**; insights never name one (D11).
 - **The AX3 stacked range list overlays the content** instead of pushing it down (P11); known, revisit in V3-6.
-- **FR3 and FR4 are drawn without the tab bar** (owner's decision, V3-6): the frames draw it. Skip leaves Progress and Habits unreachable until a first habit exists (`docs/backlog.md`, V3-5).
+- **Only First Run hides the tab bar** (owner's decision, UI fix batch; reverses V3-6's "FR3 and FR4 without the bar"): FR1–FR3 (and Browse suggestions opened from First Run, root routes outside the tabs; FR3's question is a modal over Today) have none. The empty Today after Skip, or whenever there are no habits, is an ordinary tab root with the bar, and Progress and Habits open with no habits.
 - **Re-tapping the selected tab scrolls to the top and focuses the title** (08.4); it does not pop a pushed screen.
 - **Week day headers are 44 pt high and 28 pt wide** (P1): the cell pitch is 28 pt, so a 44 pt-wide target would overlap its neighbours. A touch-target exception, on the V3-6 audit list in `docs/backlog.md`.
 
@@ -427,6 +427,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Suggestions (BS1): 8–10 bundled local habits grouped by category (9 shown); tap opens Add habit prefilled (BS2).
 
 > **As built (V3-5):** *Gate:* First Run replaces the tabs (route `/first-run`, outside `(tabs)`, so no pill) only while the database has no habits, archived included, and `habits.seenFirstRun` is unset; the flag is written on a first save, on any skip and once for an install that already has habits. FR1 welcome (Skip for now is an addition); FR2 is the New habit form in `slim` mode (name, five quick picks that also carry category and target, Type, Frequency) whose Close skips to Today; FR3 is an `AlertDialog` in its `offer` layout over Today (after our question Allow reminders raises the iOS prompt and then adds the default 09:00 reminder, Not now does nothing); FR4 is the empty Today. *Suggestions:* `suggestions.ts` holds the nine; `/suggestions` is a root modal (`?firstRun=1` from First Run), rows from `groupSuggestions` (Break habits last), Added by the form's duplicate rule; a tap pushes `/new-habit?prefill=…`. Entry points: FR1, Today's and Habits' empty states. Deviations: `docs/backlog.md`, "V3-5".
+
+> **As built (UI fix batch, step 4):** the `landing` flag is gone; the tabs layout hides the bar only while the FR3 question is open. Skip no longer flakes: the tabs' gate reads the "seen" flag from a live query that lags the write, so for a moment after `markFirstRunSeen` the gate still said "first-run" and the tabs redirected straight back to the welcome (the empty Today was only sometimes on screen). `leaveFirstRun` now sets `leftFirstRun` first, the layout does not redirect while it is set, and clears it once the gate reads "done".
 
 ---
 

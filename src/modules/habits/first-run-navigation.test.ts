@@ -22,13 +22,13 @@ describe("leaveFirstRun", () => {
 		expect(calls).toEqual(["replace /"]);
 	});
 
-	it("marks the landing, so Today is drawn without the tab bar (FR3, FR4)", () => {
-		useFirstRunOfferStore.setState({ landing: false });
+	it("says First Run was left before navigating, so the tabs gate does not bounce back", () => {
+		useFirstRunOfferStore.setState({ leftFirstRun: false });
 		leaveFirstRun({
 			canDismiss: () => false,
 			dismissAll: () => {},
 			replace: () => {},
 		});
-		expect(useFirstRunOfferStore.getState().landing).toBe(true);
+		expect(useFirstRunOfferStore.getState().leftFirstRun).toBe(true);
 	});
 });
