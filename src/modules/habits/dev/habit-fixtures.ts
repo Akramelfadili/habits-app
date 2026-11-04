@@ -9,6 +9,7 @@ import {
 	OTHER_FIXTURE,
 	TRAINING_FIXTURE,
 } from "./category-fixtures";
+import { fixtureSearch } from "./fixture-search";
 import {
 	HABITS_V3_SCENARIOS,
 	type HabitsV3Scenario,
@@ -92,7 +93,7 @@ export type FixtureScenario =
 	| "today-loading"
 	| "today-load-fails";
 
-const FIXTURE_SCENARIOS: FixtureScenario[] = [
+export const FIXTURE_SCENARIOS: FixtureScenario[] = [
 	...TODAY_V3_SCENARIOS,
 	...PROGRESS_V3_SCENARIOS,
 	...HABITS_V3_SCENARIOS,
@@ -140,8 +141,7 @@ const FIXTURE_SCENARIOS: FixtureScenario[] = [
  */
 export function resolveFixtureScenario(): FixtureScenario {
 	if (pinnedScenario) return pinnedScenario;
-	const search = globalThis.location?.search ?? "";
-	const value = new URLSearchParams(search).get("fixtures");
+	const value = new URLSearchParams(fixtureSearch()).get("fixtures");
 	const scenario = (FIXTURE_SCENARIOS as string[]).includes(value ?? "")
 		? (value as FixtureScenario)
 		: "default";
@@ -796,8 +796,8 @@ const LONG_FIXTURE_NAMES = [
 ] as const;
 
 function withLongNames(habits: FixtureHabit[]): FixtureHabit[] {
-	const search = globalThis.location?.search ?? "";
-	if (new URLSearchParams(search).get("longNames") !== "1") return habits;
+	if (new URLSearchParams(fixtureSearch()).get("longNames") !== "1")
+		return habits;
 	return habits.map((habit, index) =>
 		index < LONG_FIXTURE_NAMES.length
 			? { ...habit, name: LONG_FIXTURE_NAMES[index] }
