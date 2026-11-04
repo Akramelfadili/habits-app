@@ -18,7 +18,13 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { BUG_FLOWS, convertWebFlow, ROOT, readCommands } from "./flows.mjs";
+import {
+	BUG_FLOWS,
+	convertWebFlow,
+	ROOT,
+	readCommands,
+	readLogCommands,
+} from "./flows.mjs";
 import { parseArgs, run, simctl, sleep } from "./sh.mjs";
 
 const args = parseArgs(process.argv.slice(2));
@@ -90,7 +96,11 @@ async function runFlow(flow) {
 		path.join(dir, "maestro.log"),
 		`${result.stdout}\n${result.stderr}`,
 	);
-	const commands = readCommands(path.join(dir, "debug"));
+	const fromJson = readCommands(path.join(dir, "debug"));
+	const commands =
+		fromJson.length > 0
+			? fromJson
+			: readLogCommands(`${result.stdout}\n${result.stderr}`);
 	return {
 		id: flow.id,
 		bug: flow.bug ?? null,

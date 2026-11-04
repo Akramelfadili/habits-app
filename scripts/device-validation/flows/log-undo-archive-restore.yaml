@@ -14,12 +14,12 @@ appId: ${BUNDLE_ID}
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1200, optional: true}
 - takeScreenshot: e-03-after-undo
 # Archive from Detail.
-- tapOn: {text: "Meditate", optional: true}
-- extendedWaitUntil: {visible: "Archive habit", timeout: 8000, optional: true}
-- scrollUntilVisible: {element: "Archive habit", timeout: 10000}
-- tapOn: {text: "Archive habit", optional: true}
+- tapOn: {text: "Meditate, .*streak.*", optional: true}
+- extendedWaitUntil: {visible: ".*Archive habit.*", timeout: 8000, optional: true}
+- scrollUntilVisible: {element: ".*Archive habit.*", timeout: 10000}
+- tapOn: {text: ".*Archive habit.*", optional: true}
 - takeScreenshot: e-04-archive-confirm
-- tapOn: {text: "Archive habit", index: 1, optional: true}
+- tapOn: {text: ".*Archive habit.*", index: 1, optional: true}
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
 - takeScreenshot: e-05-after-archive
 # Restore from Habits → Archived.

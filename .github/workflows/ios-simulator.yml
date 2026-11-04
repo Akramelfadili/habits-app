@@ -29,6 +29,10 @@ on:
         description: "Dynamic Type size for the -ax states (simctl ui content_size)"
         required: false
         default: "accessibility-extra-extra-extra-large"
+      flows_only:
+        description: "Skip the state captures and the contact sheet; run only the flows"
+        type: boolean
+        default: false
       runner:
         description: "macOS runner label"
         required: false
@@ -157,6 +161,7 @@ jobs:
   capture:
     name: Capture ${{ matrix.shard }}
     needs: build
+    if: ${{ !inputs.flows_only }}
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 150
     strategy:
@@ -214,6 +219,7 @@ jobs:
             out/log.txt
             out/maestro
           retention-days: 14
+          include-hidden-files: true
           if-no-files-found: warn
 
   flows:
@@ -252,13 +258,14 @@ jobs:
         with:
           name: videos
           path: out
+          include-hidden-files: true
           retention-days: 14
           if-no-files-found: warn
 
   report:
     name: Contact sheet
     needs: [capture, flows]
-    if: always()
+    if: ${{ always() && !inputs.flows_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
