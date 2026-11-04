@@ -1902,10 +1902,17 @@ export const SCREENS = {
 			await page.getByLabel(/^Wednesday 14 October/).click();
 			await page.getByText(/^Logging for Wed 14 Oct/).waitFor();
 			await page.waitForTimeout(500);
-			await page.mouse.move(200, 500);
-			// Past the collapse range, so nothing settles mid-capture.
-			await page.mouse.wheel(0, 120);
-			await page.waitForTimeout(1000);
+			// An exact offset, past the collapse range: a wheel's travel varies with timing.
+			await page.evaluate(() => {
+				const scroller = document.querySelector('[data-testid="today-scroll"]');
+				scroller?.scrollTo(0, 120);
+			});
+			await page.waitForTimeout(1200);
+			await page.evaluate(() => {
+				const scroller = document.querySelector('[data-testid="today-scroll"]');
+				scroller?.scrollTo(0, 120);
+			});
+			await page.waitForTimeout(600);
 			await assertStripShown(page);
 		},
 	},
