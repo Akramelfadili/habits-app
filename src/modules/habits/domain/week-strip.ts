@@ -26,7 +26,7 @@ export function weekDaysOf(anchor: Date): Date[] {
 }
 
 /** The same weekday `weeks` weeks away — the strip's swipe. */
-export function shiftWeek(anchor: Date, weeks: number): Date {
+function shiftWeek(anchor: Date, weeks: number): Date {
 	return addWeeks(anchor, weeks);
 }
 

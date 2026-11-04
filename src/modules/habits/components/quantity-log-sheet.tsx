@@ -58,7 +58,9 @@ export function QuantityLogSheet({
 	const [open, setOpen] = useState(true);
 	const [closing, setClosing] = useState(false);
 	const onClosedRef = useRef(onClosed);
-	onClosedRef.current = onClosed;
+	useEffect(() => {
+		onClosedRef.current = onClosed;
+	});
 	useEffect(() => {
 		if (!closing) return;
 		const timer = setTimeout(

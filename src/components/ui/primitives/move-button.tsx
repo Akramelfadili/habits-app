@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { minTouchTarget } from "@/theme/theme";
+import { minTouchTarget, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type MoveButtonProps = {
@@ -43,7 +43,9 @@ export function MoveButton({
 				size={16}
 				tintColor={tint}
 				fallback={
-					<Text style={{ color: tint }}>{direction === "up" ? "↑" : "↓"}</Text>
+					<Text style={[textStyles.subhead, { color: tint }]}>
+						{direction === "up" ? "↑" : "↓"}
+					</Text>
 				}
 			/>
 		</Pressable>

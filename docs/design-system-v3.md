@@ -155,7 +155,7 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | ID | Component | Was | Notes |
 |---|---|---|---|
 | V3-01 | Tab bar · 3 tabs | V1-17 | **A** solid: card + top hairline, 56 + 34 inset, content stops space-600 above, toasts 16 above. **B (baseline)** floating pill: 16 side insets, 56 tall, 9 above home indicator, card 88 % light / 94 % dark + blur, hairline, soft shadow; Reduce Transparency → solid. Active = filled capsule + text ink + 600. Bottom padding 112 pt, toasts 12 above, sheets cover it. AX → A. Inert during migration. |
-| V3-02 | Header + header button | V1-20 chrome | [back] · eyebrow caption caps · display title · ≤ 2 trailing 44 pt circle buttons (card + hairline); title 2 lines then truncate |
+| V3-02 | Header + header button (+ **UI fix batch:** `HeaderPillButton compact` — 36 pt drawn, 4 pt hit slop above and below for a 44 pt target, used in the 44 pt inline bar so it clears the bar's edges; `CollapsedHeaderBar hairline={false}` and `PinnedBelowBar`'s `PINNED_PADDING_TOP` (8 pt above the pinned control) for a bar with a pinned control under it) | V1-20 chrome | [back] · eyebrow caption caps · display title · ≤ 2 trailing 44 pt circle buttons (card + hairline); title 2 lines then truncate |
 | V3-03 | Week strip | new | 7 days, iOS first weekday, today ringed, selected filled accent, dot only when all due done, future faint inert, swipe for weeks |
 | V3-04 | Completion circle | V1-06 + VAR-06 | Build = filled accent; Break = amber outline, resisted = amber check on warnTint; quantity partial = pie fill; 28 pt visual, 44 hit |
 | V3-05 | Completion cell + legend | NEW-16 + VAR-09 | Square, read-only, radius floor(size/3), accent tints, notch for partial |
@@ -187,6 +187,8 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-31 | Log row | NEW-22 | **Later** (PR-02); do not build |
 | V3-32 | Icon square | VAR-02 | |
 | V3-33 | Screen header | new | **Built (V3-4b):** `ScreenHeader` — optional eyebrow caption, large title, optional trailing slot; used by Reminders and Settings |
+| V3-35 | Move button | new | **Built (UI fix batch):** `MoveButton` — a 44 × 44 pt chevron up or down beside the drag grip in reorder mode (Habits, Categories); dimmed and inert at the first or last place of its group; labelled "Move <name> up" |
+| V3-36 | Settings page | new | **Built (UI fix batch):** `SettingsPage` — large title (focus on entry), groups in one scroll, tab-bar padding; `NotificationsOffBanner` — the amber V3-27 banner with Open Settings, drawn once at the top of the page it belongs to |
 | V3-34 | Remove button | new | **Built (V3-4b):** `RemoveButton` — 44 pt hit, red minus on the left of a row; instant, with an Undo toast |
 
 ## Screen structure quick map

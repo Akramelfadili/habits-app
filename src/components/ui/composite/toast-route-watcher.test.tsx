@@ -4,6 +4,10 @@ import { motion } from "@/theme/theme";
 import { ToastRouteWatcher } from "./toast-route-watcher";
 
 let mockPathname = "/";
+let mockScreenReader = false;
+jest.mock("@/utils/use-screen-reader", () => ({
+	useScreenReader: () => mockScreenReader,
+}));
 jest.mock("expo-router", () => ({ usePathname: () => mockPathname }));
 
 const message = () => useToastStore.getState().toast?.message;
@@ -13,6 +17,7 @@ describe("ToastRouteWatcher", () => {
 		jest.useFakeTimers();
 		useToastStore.setState({ toast: null });
 		mockPathname = "/";
+		mockScreenReader = false;
 	});
 	afterEach(() => jest.useRealTimers());
 
@@ -34,5 +39,17 @@ describe("ToastRouteWatcher", () => {
 		await view.rerender(<ToastRouteWatcher />);
 		expect(message()).toBeUndefined();
 		expect(screen.toJSON()).toBeNull();
+	});
+
+	it("keeps a toast through a screen change with a screen reader on", async () => {
+		mockScreenReader = true;
+		const view = await render(<ToastRouteWatcher />);
+		await act(() => showToast({ message: "Archived" }));
+		await act(() =>
+			jest.advanceTimersByTime(motion.toast.navigationGrace + 100),
+		);
+		mockPathname = "/progress";
+		await view.rerender(<ToastRouteWatcher />);
+		expect(message()).toBe("Archived");
 	});
 });

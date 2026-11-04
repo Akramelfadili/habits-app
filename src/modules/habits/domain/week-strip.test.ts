@@ -1,11 +1,7 @@
+import { addWeeks } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
-import {
-	canShowNextWeek,
-	shiftWeek,
-	weekDaysOf,
-	weekStripDays,
-} from "./week-strip";
+import { canShowNextWeek, weekDaysOf, weekStripDays } from "./week-strip";
 
 // Friday 23 Oct 2026 (the mockup's week: Mon 19 … Sun 25).
 const TODAY = new Date(2026, 9, 23, 10);
@@ -35,7 +31,7 @@ describe("weekDaysOf", () => {
 
 describe("canShowNextWeek", () => {
 	it("allows going back always, and forward only to the week of today", () => {
-		expect(canShowNextWeek(shiftWeek(TODAY, -1), TODAY)).toBe(true);
+		expect(canShowNextWeek(addWeeks(TODAY, -1), TODAY)).toBe(true);
 		expect(canShowNextWeek(TODAY, TODAY)).toBe(false);
 	});
 });
