@@ -45,6 +45,21 @@ jest.mock("@/modules/habits/screens/manage-categories-screen", () => ({
 jest.mock("@/modules/habits/screens/settings-screen", () => ({
 	SettingsScreen: mockStub("settings"),
 }));
+jest.mock("@/modules/habits/screens/settings-appearance-screen", () => ({
+	SettingsAppearanceScreen: mockStub("settings-appearance"),
+}));
+jest.mock("@/modules/habits/screens/settings-evening-review-screen", () => ({
+	SettingsEveningReviewScreen: mockStub("settings-evening-review"),
+}));
+jest.mock("@/modules/habits/screens/settings-notifications-screen", () => ({
+	SettingsNotificationsScreen: mockStub("settings-notifications"),
+}));
+jest.mock("@/modules/habits/screens/settings-freezes-screen", () => ({
+	SettingsFreezesScreen: mockStub("settings-freezes"),
+}));
+jest.mock("@/modules/habits/screens/settings-about-screen", () => ({
+	SettingsAboutScreen: mockStub("settings-about"),
+}));
 jest.mock("@/modules/habits/screens/reminders-screen", () => ({
 	RemindersScreen: mockStub("reminders"),
 }));
@@ -349,6 +364,26 @@ describe("every pushed screen can be left (UI fix batch)", () => {
 		],
 		["Detail from Habits", "/(habits)/manage", "/habit/1", "Back to Habits"],
 		["Settings from Habits", "/(habits)/manage", "/settings", "Back to Habits"],
+		[
+			"Appearance",
+			"/(habits)/manage",
+			"/settings/appearance",
+			"Back to Settings",
+		],
+		[
+			"Evening review",
+			"/(habits)/manage",
+			"/settings/evening-review",
+			"Back to Settings",
+		],
+		[
+			"Notifications",
+			"/(habits)/manage",
+			"/settings/notifications",
+			"Back to Settings",
+		],
+		["Freezes", "/(habits)/manage", "/settings/freezes", "Back to Settings"],
+		["About", "/(habits)/manage", "/settings/about", "Back to Settings"],
 		["Reminders from Detail", "/(habits)/manage", "/reminders/1", "Back"],
 		[
 			"a Year month",

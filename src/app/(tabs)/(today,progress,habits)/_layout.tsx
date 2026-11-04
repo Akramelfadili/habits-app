@@ -81,7 +81,19 @@ export default function TabStackLayout({ segment }: { segment: string }) {
 			{/* A bare chevron until the screen relabels it with the habit's name. */}
 			<Stack.Screen name="reminders/[id]" options={backTo("")} />
 			{/* Settings opens from the Habits gear, but Reminders can reach it too. */}
-			<Stack.Screen name="settings" options={backTo(rootTitle)} />
+			<Stack.Screen name="settings/index" options={backTo(rootTitle)} />
+			{/* Its pages (S2–S6, SY6): Back reads Settings. */}
+			<Stack.Screen name="settings/appearance" options={backTo("Settings")} />
+			<Stack.Screen
+				name="settings/evening-review"
+				options={backTo("Settings")}
+			/>
+			<Stack.Screen
+				name="settings/notifications"
+				options={backTo("Settings")}
+			/>
+			<Stack.Screen name="settings/freezes" options={backTo("Settings")} />
+			<Stack.Screen name="settings/about" options={backTo("Settings")} />
 			<Stack.Screen name="categories" options={categoriesBack} />
 		</Stack>
 	);

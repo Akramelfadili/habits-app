@@ -176,7 +176,7 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-20 | Toggle | V1-07 | Off track outline; knob onAccent; whole row toggles |
 | V3-21 | Checkbox | new | |
 | V3-22 | Buttons | V1-03/04/05 + VAR-13 | Primary, secondary, destructive, disabled-with-reason, compact (44 hit). **Built:** destructive is the outlined red pill and `variant="compact"` the 36 pt inset pill (V3-4a); secondary is still the hairline pill, not the 3:1 outline, and `link` is secondary ink (V3-6) |
-| V3-23 | List item | V1-14 + VAR-05/08 | **Built (V3-4b):** `value` (right text), `selected` (drawn check, radio-style), `navigable` chevron, `leading` slot |
+| V3-23 | List item | V1-14 + VAR-05/08 | **Built (V3-4b):** `value` (right text), `selected` (drawn check, radio-style), `navigable` chevron, `leading` slot. **Settings hub (S1, step 9):** every row is `leading` `IconBadge` + title + grey `value` + chevron on the shared 60 pt row; the frames draw ≈ 54 pt, not followed |
 | V3-24 | Sheet | V1-15 + VAR-03 | Grabber, title, Close (swipe = Close); confirm sheets drop Close and end with Cancel |
 | V3-25 | Destructive confirm | NEW-12 + V1-16 | Archive-first variant, move-preview variant. **Built (V3-4a):** `DestructiveConfirmSheet` — safe action first and focused, outlined red pill, hint, Cancel last, in-sheet error banner, busy state; Archive's one-tap sheet (DC5) is its own, lighter sheet |
 | V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 3 s success+info / 6 s warning / errors until Retry or swipe |

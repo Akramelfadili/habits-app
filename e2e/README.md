@@ -11,7 +11,7 @@ screen. File names lead with the feature IDs they cover (per
 | `hab-09-10-detail-retro-log.yaml` | Today → Detail → tap a missed heatmap day → retro-log with a note → heatmap, streak (24 → 27), note all update | HAB-03, 09, 10, 08 |
 | `hab-12-reminders.yaml` | Detail → Reminders → add a time, set its days (unscheduled-day warning), add a second and switch it off → Detail summary, Today unaffected | HAB-09, 12 |
 | `hab-11-weekly-summary-slipping.yaml` | The Progress tab flags a habit → backfill the week via retro-log → the insight moves to the habit left behind → "Change frequency ›" opens its Edit | HAB-11, 10, 02, 27 |
-| `hab-13-manage-archive-delete.yaml` | Give a habit a reminder → the Habits tab → the gear → Settings → reorder → archive → reminder survives → restore → delete a different habit via Detail's confirm sheet | HAB-13, 12, 09, 03, 27 |
+| `hab-13-manage-archive-delete.yaml` | Give a habit a reminder → the Habits tab → the gear → Settings (hub → Appearance) → reorder → archive → reminder survives → restore → delete a different habit via Detail's confirm sheet | HAB-13, 12, 09, 03, 27 |
 
 ## Status and coverage (honest version)
 

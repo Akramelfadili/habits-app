@@ -199,6 +199,15 @@ async function assertStickyHeaderClear(page) {
 	if (problems.length) throw new Error(`sticky header: ${problems.join("; ")}`);
 }
 
+/** A lazily bundled route can take a while the first time: wait for its title before capturing. */
+async function untilTitled(page, title) {
+	await page
+		.getByRole("heading", { name: title, exact: true })
+		.first()
+		.waitFor({ timeout: 90000 });
+	await page.waitForTimeout(300);
+}
+
 async function typeHabitName(page, name) {
 	await page.getByLabel("Name", { exact: true }).first().fill(name);
 }
@@ -1126,45 +1135,74 @@ export const SCREENS = {
 		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_03.png",
-		note: "S1 / S2 — System picked (resolves light): Appearance as radio rows, the Monday and text-size note, then the evening review. One screen where the frames draw a hub with a page per row.",
+		note: "S1 — the hub: Appearance (Theme · System), Reminders (Evening review · Off, Notifications · Allowed), Streaks (Freezes · 1 left), Data (Export data · JSON, CSV), About (version). Icon square, title, grey value and chevron on every row; one page per row.",
+		async interact(page) {
+			await untilTitled(page, "Settings");
+		},
 	},
-	"settings-reminders": {
+	"settings-appearance": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
+		route: "/(habits)/settings/appearance?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
-		note: "S3 — scrolled to Reminders: the evening review on, its time, Notifications Allowed and the 'only on days with open habits' rule.",
+		note: "S2 — Appearance: Light, Dark, System (Follows iOS, checked) and the Monday and text-size note.",
 		async interact(page) {
-			await page.getByText("Left this month").scrollIntoViewIfNeeded();
-			await page.waitForTimeout(400);
+			await untilTitled(page, "Appearance");
 		},
 	},
-	"settings-streaks": {
+	"settings-evening-review": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
-		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
-		note: "S4 — Streaks: left and used this month, the rule in plain words, how to use one. Not built from S4: the 'Saved' stat (PR-08) and Auto-use freezes (Later).",
+		route: "/(habits)/settings/evening-review?fixtures=settings",
+		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
+		note: "S3 — Evening review with notifications allowed: the switch, Time ›, 'Sent only on days with open habits.'",
 		async interact(page) {
-			await page.getByText("JSON, CSV").scrollIntoViewIfNeeded();
-			await page.waitForTimeout(400);
+			await untilTitled(page, "Evening review");
 		},
 	},
-	"settings-data": {
+	"settings-evening-review-off": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
-		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
-		note: "S5 — Data and About, scrolled to the end: Export data (JSON, CSV), Version, Copy diagnostics. No Backup row (Later).",
+		route:
+			"/(habits)/settings/evening-review?fixtures=settings-notifications-off",
+		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
+		note: "S3 — Evening review with iOS notifications off: the amber banner first, directly under the title, then the switch (still on) and Time.",
 		async interact(page) {
-			await page.mouse.move(200, 400);
-			await page.mouse.wheel(0, 3000);
-			await page.waitForTimeout(500);
+			await untilTitled(page, "Evening review");
+		},
+	},
+	"settings-notifications": {
+		feature: "HAB-44",
+		route: "/(habits)/settings/notifications?fixtures=settings",
+		mockup: null,
+		note: "Notifications with iOS allowing them (not drawn): the state in words and a way to iOS Settings.",
+		async interact(page) {
+			await untilTitled(page, "Notifications");
+		},
+	},
+	"settings-notifications-off": {
+		feature: "HAB-44",
+		route:
+			"/(habits)/settings/notifications?fixtures=settings-notifications-off",
+		mockup: "docs/mockups/v3/renders/states/slice_12.png",
+		note: "SY6 — Notifications with iOS permission off: one banner with Open Settings at the top, Affected ('4 times on 3 habits', the evening review), 'Times stay editable…'. The banner appears once.",
+		async interact(page) {
+			await untilTitled(page, "Notifications");
+		},
+	},
+	"settings-freezes": {
+		feature: "HAB-44",
+		route: "/(habits)/settings/freezes?fixtures=settings",
+		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
+		note: "S4 — Freezes: Left and Used (this month) stat cards, the rule and how to use one. Not drawn from S4: the Saved card (needs PR-08) and Auto-use freezes (Later).",
+		async interact(page) {
+			await untilTitled(page, "Freezes");
 		},
 	},
 	"settings-about": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
+		route: "/(habits)/settings/about?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
-		note: "S6 — Copy diagnostics tapped: the toast says 'Diagnostics copied', no Undo. Privacy and Send feedback rows are not built (no spec).",
+		note: "S6 — About: Version and Copy diagnostics tapped, the toast says 'Diagnostics copied', no Undo. Privacy and Send feedback are not built (no address).",
 		async interact(page) {
+			await untilTitled(page, "About");
 			await page
 				.context()
 				.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -1180,7 +1218,10 @@ export const SCREENS = {
 		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&textSize=ax",
 		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
-		note: "S7 — AX3: rows stack (icon, text, value), the title block stacks.",
+		note: "S7 — the hub at AX3: rows stack (icon, title, value under it), the title block stacks.",
+		async interact(page) {
+			await untilTitled(page, "Settings");
+		},
 	},
 	"settings-explicit-over-os": {
 		feature: "HAB-44",
@@ -1188,19 +1229,8 @@ export const SCREENS = {
 		mockup: null,
 		colorScheme: "light",
 		note: "Explicit Dark while the emulated OS is light: the app must draw dark.",
-	},
-	"settings-notifications-off": {
-		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings-notifications-off",
-		mockup: "docs/mockups/v3/renders/states/slice_12.png",
-		note: "SY6 — iOS notifications off: one banner with Open Settings, Affected: '4 times on 3 habits' and the evening review, 'Times stay editable…'. Notifications row says Off.",
 		async interact(page) {
-			await page
-				.getByText(
-					"Times stay editable while notifications are off. Nothing is deleted.",
-				)
-				.scrollIntoViewIfNeeded();
-			await page.waitForTimeout(400);
+			await untilTitled(page, "Settings");
 		},
 	},
 	"export-choose": {
@@ -2062,12 +2092,14 @@ const DARK_TWINS = [
 	"reminders-denied",
 	"reminders-at-cap",
 	"settings",
-	"settings-reminders",
-	"settings-streaks",
-	"settings-data",
+	"settings-appearance",
+	"settings-evening-review",
+	"settings-evening-review-off",
+	"settings-notifications",
+	"settings-notifications-off",
+	"settings-freezes",
 	"settings-about",
 	"settings-ax",
-	"settings-notifications-off",
 	"export-choose",
 	"export-from-progress",
 	"export-progress",
@@ -2189,7 +2221,10 @@ const AX_VARIANTS = [
 		"A toast at AX3: wraps, the action drops below the copy.",
 	],
 	["tab-bar-toast", "A toast over bar A at AX3."],
-	["settings-notifications-off", "SY6 on Settings at AX3."],
+	["settings-notifications-off", "SY6 at AX3."],
+	["settings-appearance", "S2 at AX3."],
+	["settings-evening-review-off", "S3 with the banner at AX3."],
+	["settings-freezes", "S4 at AX3: the stat cards stack one per row."],
 	["export-ready", "EX3 at AX3."],
 ];
 for (const [name, note] of AX_VARIANTS) {
