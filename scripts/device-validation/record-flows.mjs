@@ -18,7 +18,13 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { BUG_FLOWS, convertWebFlow, ROOT, readCommands } from "./flows.mjs";
+import {
+	BUG_FLOWS,
+	convertWebFlow,
+	ROOT,
+	readCommands,
+	readLogCommands,
+} from "./flows.mjs";
 import { parseArgs, run, simctl, sleep } from "./sh.mjs";
 
 const args = parseArgs(process.argv.slice(2));
