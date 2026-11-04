@@ -121,6 +121,8 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		flex: 1,
+		// A row child may not grow past its row: the text wraps instead.
+		minWidth: 0,
 		gap: space[100],
 	},
 	text: {

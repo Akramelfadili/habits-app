@@ -239,6 +239,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-3b):** Edit this day opens from Progress too (Week day header, Month day card) with no origin habit — `useRetroLogQueries(null, date)` — so it has no note field. The Year chip's picker is `HabitFilterSheet` ("Show habit").
 
+> **As built (UI fix batch, step 8):** pinned under the inline bar, the range switcher has 8 pt of air above it and one hairline below the block; the bar itself draws no hairline there, and its Export pill is the compact one (36 pt drawn, 44 pt target) so it clears the bar's edges. An insight pager shows its first card in its own column until it has been measured, so a long insight wraps inside its card.
+
 ---
 
 ## HAB-35 — Progress: shell and Week

@@ -63,29 +63,40 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 				setWidth(nativeEvent.layout.width)
 			}
 		>
-			<ScrollView
-				ref={scroller}
-				testID="insight-pager-scroll"
-				horizontal
-				pagingEnabled
-				showsHorizontalScrollIndicator={false}
-				onMomentumScrollEnd={onEnd}
-			>
-				{insights.map((insight, page) => (
-					<View
-						key={`${insight.title}|${insight.body}`}
-						style={width > 0 ? { width } : styles.firstPage}
-					>
-						<InsightCard
-							{...insight}
-							position={{
-								label: positionLabel(page, count),
-								onStep: (direction) => goTo(page + direction),
-							}}
-						/>
-					</View>
-				))}
-			</ScrollView>
+			{width > 0 ? (
+				<ScrollView
+					ref={scroller}
+					testID="insight-pager-scroll"
+					horizontal
+					pagingEnabled
+					showsHorizontalScrollIndicator={false}
+					onMomentumScrollEnd={onEnd}
+				>
+					{insights.map((insight, page) => (
+						<View key={`${insight.title}|${insight.body}`} style={{ width }}>
+							<InsightCard
+								{...insight}
+								position={{
+									label: positionLabel(page, count),
+									onStep: (direction) => goTo(page + direction),
+								}}
+							/>
+						</View>
+					))}
+				</ScrollView>
+			) : (
+				// Before the pager is measured the pages have no width to take, and a
+				// page sized "100%" inside a horizontal scroller has none either: its
+				// text ran off the edge on one line. Until then the first card sits in
+				// the pager's own column, which wraps it at the real width.
+				<InsightCard
+					{...insights[0]}
+					position={{
+						label: positionLabel(0, count),
+						onStep: (direction) => goTo(direction),
+					}}
+				/>
+			)}
 			<View
 				testID="insight-pager-dots"
 				accessibilityElementsHidden
@@ -112,9 +123,6 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 const styles = StyleSheet.create({
 	pager: {
 		gap: space[200],
-	},
-	firstPage: {
-		width: "100%",
 	},
 	dots: {
 		flexDirection: "row",

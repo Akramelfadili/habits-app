@@ -106,6 +106,99 @@ async function scrollFormToEndClearOfSave(page) {
 	}
 }
 
+/**
+ * Fails the capture if any insight card's text runs past its card's right edge
+ * (the Year insight once ran off the screen on one line instead of wrapping).
+ */
+async function assertInsightsWrap(page) {
+	const bad = await page.evaluate(() => {
+		const out = [];
+		for (const card of document.querySelectorAll(
+			'[data-testid="insight-card"]',
+		)) {
+			const text = card.querySelector('[data-testid="insight-card-text"]');
+			const cardBox = card.getBoundingClientRect();
+			const textBox = text.getBoundingClientRect();
+			const viewport = document.documentElement.clientWidth;
+			// Later pages of the pager wait to the right, by design: check the card in view.
+			if (cardBox.left > 60) continue;
+			if (
+				textBox.right > cardBox.right + 0.5 ||
+				cardBox.right > viewport + 0.5 ||
+				text.scrollWidth > text.clientWidth + 1
+			) {
+				out.push({
+					text: (text.textContent || "").slice(0, 50),
+					textRight: textBox.right,
+					cardRight: cardBox.right,
+					viewport,
+				});
+			}
+		}
+		return out;
+	});
+	if (bad.length) {
+		throw new Error(`insight text runs off its card: ${JSON.stringify(bad)}`);
+	}
+}
+
+/**
+ * With Progress scrolled so the range switcher is pinned, fails the capture
+ * unless: the inline bar has no hairline of its own, the pinned block starts
+ * exactly where the bar ends and draws the only hairline, the control has air
+ * above it, and Export has margin above and below inside the bar.
+ */
+async function assertStickyHeaderClear(page) {
+	const m = await page.evaluate(() => {
+		const box = (id) =>
+			document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect();
+		const bar = box("progress-inline-bar");
+		const bg = document.querySelector(
+			'[data-testid="progress-inline-bar-background"]',
+		);
+		const pinned = box("progress-range-bar");
+		const control =
+			pinned &&
+			document
+				.querySelector('[data-testid="progress-range-bar"]')
+				.firstElementChild?.getBoundingClientRect();
+		const pill = box("header-pill");
+		const hairline = document.querySelector(
+			'[data-testid="progress-range-bar-hairline"]',
+		);
+		return {
+			barTop: bar.top,
+			barBottom: bar.bottom,
+			barBorder: getComputedStyle(bg).borderBottomWidth,
+			pinnedTop: pinned.top,
+			controlTop: control.top,
+			pillTop: pill.top,
+			pillBottom: pill.bottom,
+			hairlineOpacity: hairline ? getComputedStyle(hairline).opacity : null,
+		};
+	});
+	const problems = [];
+	if (m.barBorder !== "0px")
+		problems.push(`the bar draws its own hairline (${m.barBorder})`);
+	if (Math.abs(m.pinnedTop - m.barBottom) > 1)
+		problems.push(
+			`the pinned block starts at ${m.pinnedTop}, the bar ends at ${m.barBottom}`,
+		);
+	if (m.controlTop - m.barBottom < 8)
+		problems.push(
+			`the control has only ${m.controlTop - m.barBottom} pt under the bar`,
+		);
+	if (m.pillTop - m.barTop < 4 || m.barBottom - m.pillBottom < 4)
+		problems.push(
+			`Export has ${m.pillTop - m.barTop} / ${m.barBottom - m.pillBottom} pt of margin in the bar`,
+		);
+	if (Number(m.hairlineOpacity) !== 1)
+		problems.push(
+			`the pinned block's hairline is not shown (${m.hairlineOpacity})`,
+		);
+	if (problems.length) throw new Error(`sticky header: ${problems.join("; ")}`);
+}
+
 async function typeHabitName(page, name) {
 	await page.getByLabel("Name", { exact: true }).first().fill(name);
 }
@@ -1490,6 +1583,66 @@ export const SCREENS = {
 			await openJuly14(page);
 		},
 	},
+	"progress-year-insight": {
+		feature: "HAB-38",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "P12 — Year's best-month insight: the long sentence wraps inside its card, never past the right edge.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await page.waitForTimeout(400);
+			await assertInsightsWrap(page);
+		},
+	},
+	"progress-year-insight-ax": {
+		feature: "HAB-49",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: "docs/mockups/v3/renders/progress/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "Year's insight at AX3: it wraps inside its card.",
+		async interact(page) {
+			await page.getByTestId("segmented-collapsed").click();
+			await page.getByRole("tab", { name: "Year" }).click();
+			await page.waitForTimeout(500);
+			await assertInsightsWrap(page);
+		},
+	},
+	"progress-week-sticky": {
+		feature: "HAB-34",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Week scrolled so the range switcher is pinned: no hairline above it, one below the block, air around the control, Export clear of the bar's edges.",
+		async interact(page) {
+			await scrollProgress(page, 500);
+			await assertStickyHeaderClear(page);
+		},
+	},
+	"progress-month-sticky": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Month scrolled with the switcher pinned: same sticky block.",
+		async interact(page) {
+			await showRange(page, "Month");
+			await scrollProgress(page, 500);
+			await assertStickyHeaderClear(page);
+		},
+	},
+	"progress-year-sticky": {
+		feature: "HAB-37",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Year scrolled with the switcher pinned: same sticky block.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await scrollProgress(page, 500);
+			await assertStickyHeaderClear(page);
+		},
+	},
 	"progress-year-too-early": {
 		feature: "HAB-37",
 		route: `${PROGRESS}progress-v3-too-early`,
@@ -1889,6 +2042,11 @@ const DARK_TWINS = [
 	"progress-month-ax",
 	"progress-year",
 	"progress-month-day",
+	"progress-year-insight",
+	"progress-year-insight-ax",
+	"progress-week-sticky",
+	"progress-month-sticky",
+	"progress-year-sticky",
 	"progress-year-too-early",
 	"progress-year-one-habit",
 	"progress-year-ax",
