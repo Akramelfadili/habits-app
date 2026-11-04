@@ -6,7 +6,7 @@
 appId: ${BUNDLE_ID}
 ---
 - extendedWaitUntil:
-    visible: "Drink water.*"
+    visible: ".*Drink water.*"
     timeout: 20000
 - tapOn: "No social media, resisted today\\?"
 - extendedWaitUntil:

@@ -72,17 +72,25 @@ export function convertWebFlow(text, id) {
 	return { route: `${route}${params.size ? `?${params}` : ""}`, clock, flow };
 }
 
-/** Reads Maestro's `commands-*.json` into [{ kind, status, ms }]. */
+/** Finds `commands-*.json` anywhere under Maestro's debug output (it nests them in .maestro/tests/<time>/). */
+function findCommandsFile(dir) {
+	if (!fs.existsSync(dir)) return null;
+	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+		const file = path.join(dir, entry.name);
+		if (entry.isDirectory()) {
+			const found = findCommandsFile(file);
+			if (found) return found;
+		} else if (/^commands.*\.json$/.test(entry.name)) return file;
+	}
+	return null;
+}
+
+/** Reads Maestro's `commands-*.json` into [{ kind, detail, status, ms }]. */
 export function readCommands(debugDir) {
-	if (!fs.existsSync(debugDir)) return [];
-	const file = fs
-		.readdirSync(debugDir)
-		.find((name) => /^commands.*\.json$/.test(name));
+	const file = findCommandsFile(debugDir);
 	if (!file) return [];
 	try {
-		const parsed = JSON.parse(
-			fs.readFileSync(path.join(debugDir, file), "utf8"),
-		);
+		const parsed = JSON.parse(fs.readFileSync(file, "utf8"));
 		return parsed.map((entry) => {
 			const kind = Object.keys(entry.command ?? {})[0] ?? "?";
 			const detail = JSON.stringify(entry.command?.[kind] ?? {});
@@ -96,4 +104,16 @@ export function readCommands(debugDir) {
 	} catch {
 		return [];
 	}
+}
+
+/** The console log's "<command>... COMPLETED|WARNED|FAILED" lines: the fallback when the JSON is unreadable. */
+export function readLogCommands(text) {
+	return [...text.matchAll(/^(.+?)\.\.\. (COMPLETED|WARNED|FAILED)\s*$/gm)].map(
+		(m) => ({
+			kind: "log",
+			detail: m[1].slice(0, 140),
+			status: m[2],
+			ms: null,
+		}),
+	);
 }

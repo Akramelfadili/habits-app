@@ -128,7 +128,12 @@ for (const item of plan) {
 			);
 			if (!flow.ok) {
 				result.notes.push(
-					`Maestro failed: ${(flow.stdout + flow.stderr).trim().split("\n").slice(-4).join(" | ").slice(0, 400)}`,
+					`Maestro failed at: ${(flow.stdout + flow.stderr)
+						.split("\n")
+						.filter((line) => /\.\.\. (FAILED|WARNED)/.test(line))
+						.slice(-3)
+						.join(" | ")
+						.slice(0, 400)}`,
 				);
 				result.status = "partial";
 			}

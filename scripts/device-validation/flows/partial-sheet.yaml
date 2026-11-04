@@ -4,9 +4,9 @@
 appId: ${BUNDLE_ID}
 ---
 - extendedWaitUntil:
-    visible: "Drink water.*"
+    visible: ".*Drink water.*"
     timeout: 20000
-- tapOn: "Amount, 5 of 8"
+- tapOn: ".*Amount, 5 of 8.*"
 - extendedWaitUntil:
     visible: "Increase glasses"
     timeout: 8000
@@ -19,7 +19,7 @@ appId: ${BUNDLE_ID}
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
 - takeScreenshot: c-02-after-done
 # Open again and close by dragging it down.
-- tapOn: "Amount, 5 of 8"
+- tapOn: ".*Amount, 5 of 8.*"
 - extendedWaitUntil:
     visible: "Increase glasses"
     timeout: 8000
@@ -30,6 +30,6 @@ appId: ${BUNDLE_ID}
 - takeScreenshot: c-04-after-drag-down
 # Still on Today and usable?
 - assertVisible:
-    text: "Drink water.*"
+    text: ".*Drink water.*"
     optional: true
 - takeScreenshot: c-05-today-after

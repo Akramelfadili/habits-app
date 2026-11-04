@@ -90,7 +90,11 @@ async function runFlow(flow) {
 		path.join(dir, "maestro.log"),
 		`${result.stdout}\n${result.stderr}`,
 	);
-	const commands = readCommands(path.join(dir, "debug"));
+	const fromJson = readCommands(path.join(dir, "debug"));
+	const commands =
+		fromJson.length > 0
+			? fromJson
+			: readLogCommands(`${result.stdout}\n${result.stderr}`);
 	return {
 		id: flow.id,
 		bug: flow.bug ?? null,

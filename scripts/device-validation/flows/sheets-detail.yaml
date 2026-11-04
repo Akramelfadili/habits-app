@@ -5,14 +5,14 @@ appId: ${BUNDLE_ID}
 ---
 - extendedWaitUntil: {visible: ".*Archive habit.*", timeout: 20000, optional: true}
 - takeScreenshot: f-10-detail
-- scrollUntilVisible: {element: "Archive habit", timeout: 10000}
-- tapOn: {text: "Archive habit", optional: true}
+- scrollUntilVisible: {element: ".*Archive habit.*", timeout: 10000}
+- tapOn: {text: ".*Archive habit.*", optional: true}
 - takeScreenshot: f-11-archive-confirm
 - tapOn: {text: "Cancel", optional: true}
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
 - takeScreenshot: f-12-after-cancel
-- scrollUntilVisible: {element: "Delete habit", timeout: 10000}
-- tapOn: {text: "Delete habit", optional: true}
+- scrollUntilVisible: {element: ".*Delete habit.*", timeout: 10000}
+- tapOn: {text: ".*Delete habit.*", optional: true}
 - takeScreenshot: f-13-delete-confirm
 - swipe: {start: "50%, 45%", end: "50%, 95%", duration: 400}
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
