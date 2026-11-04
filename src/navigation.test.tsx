@@ -336,3 +336,52 @@ describe("Add and Edit habit are root modals, outside the tabs", () => {
 		expect(tabGroup(app)).toBeUndefined();
 	});
 });
+
+describe("every pushed screen can be left (UI fix batch)", () => {
+	// Pushed inside a tab: the header's own back button, naming where it goes back to.
+	it.each([
+		["Detail from Today", "/", "/habit/1", "Back to Today"],
+		[
+			"Detail from Progress",
+			"/(progress)/progress",
+			"/habit/1",
+			"Back to Progress",
+		],
+		["Detail from Habits", "/(habits)/manage", "/habit/1", "Back to Habits"],
+		["Settings from Habits", "/(habits)/manage", "/settings", "Back to Habits"],
+		["Reminders from Detail", "/(habits)/manage", "/reminders/1", "Back"],
+		[
+			"a Year month",
+			"/(progress)/progress",
+			"/month/2026-07-01",
+			"Back to Year",
+		],
+		[
+			"Categories from Habits",
+			"/(habits)/manage",
+			"/categories?from=habits",
+			"Back to Habits",
+		],
+		[
+			"Categories from Settings",
+			"/(habits)/manage",
+			"/categories",
+			"Back to Settings",
+		],
+	])("%s has a back button when pushed", async (_name, root, route, label) => {
+		await renderApp(root);
+		await testRouter.push(route);
+		expect(screen.getByLabelText(label)).toBeTruthy();
+	});
+
+	// Root modals have no Back: each has an explicit Cancel / Close.
+	it.each([
+		["New habit", "/new-habit", /Cancel|Close/],
+		["Browse suggestions", "/suggestions", /Cancel|Close/],
+		["Edit habit", "/edit-habit/1", /Cancel|Close/],
+	])("%s has an explicit close", async (_name, route, label) => {
+		await renderApp("/");
+		await testRouter.push(route);
+		expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
+	});
+});

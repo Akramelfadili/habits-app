@@ -77,6 +77,35 @@ async function drag(page, locator, { dx = 0, dy = 0, release = true }) {
 }
 
 /** The New habit form's own Name field (the add-category sheet has its own). */
+/**
+ * Scrolls the Add habit form to its end and fails the capture if the pinned
+ * footer (Save and its reason) sits over the last field: the end of the form
+ * must clear it with room to spare.
+ */
+async function scrollFormToEndClearOfSave(page) {
+	const box = await page.getByTestId("habit-form-scroll").boundingBox();
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.wheel(0, 5000);
+	await page.waitForTimeout(500);
+	const { lastBottom, footerTop, top, text } = await page.evaluate(() => {
+		const scroll = document.querySelector('[data-testid="habit-form-scroll"]');
+		const footer = document.querySelector('[data-testid="habit-form-footer"]');
+		const content = scroll.firstElementChild;
+		const last = [...content.children].at(-1);
+		return {
+			lastBottom: last.getBoundingClientRect().bottom,
+			footerTop: footer.getBoundingClientRect().top,
+			top: scroll.scrollTop,
+			text: (last.textContent || "").slice(0, 40),
+		};
+	});
+	if (lastBottom > footerTop) {
+		throw new Error(
+			`the form's last field ("${text}") ends at ${lastBottom} under the Save bar at ${footerTop} (scrollTop ${top})`,
+		);
+	}
+}
+
 async function typeHabitName(page, name) {
 	await page.getByLabel("Name", { exact: true }).first().fill(name);
 }
@@ -357,6 +386,33 @@ export const SCREENS = {
 			await typeHabitName(page, "Read 20 min");
 			await page.getByText("Specific days", { exact: true }).click();
 			await page.waitForTimeout(300);
+		},
+	},
+	"form-new-errors-end": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		viewport: { width: 393, height: 640 },
+		mockup: "docs/mockups/v3/renders/forms/slice_04.png",
+		note: "F8 scrolled to the end on a small phone: with the errors showing, the last field (Frequency) clears the pinned Save and its reason.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 min");
+			await page.getByText("Specific days", { exact: true }).click();
+			await page.waitForTimeout(300);
+			await scrollFormToEndClearOfSave(page);
+		},
+	},
+	"form-new-errors-end-ax": {
+		feature: "HAB-49",
+		route: "/new-habit?fixtures=today-v3&textSize=ax",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/forms/slice_05.png",
+		note: "F8 at AX3, scrolled to the end: the last field clears the pinned Save and its reason.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 min");
+			await page.getByText("Specific days", { exact: true }).click();
+			await page.waitForTimeout(300);
+			await scrollFormToEndClearOfSave(page);
 		},
 	},
 	"form-edit-discard": {
@@ -1799,6 +1855,8 @@ const DARK_TWINS = [
 	"form-new-break",
 	"form-new-specific-days",
 	"form-new-errors",
+	"form-new-errors-end",
+	"form-new-errors-end-ax",
 	"form-edit-discard",
 	"form-edit",
 	"form-new-ax",
