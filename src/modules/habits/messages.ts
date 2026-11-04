@@ -679,6 +679,9 @@ export const habitsCopy = {
 	reorderHandle: (habit: string) => `Reorder ${habit}`,
 	moveUp: "Move up",
 	moveDown: "Move down",
+	/** The visible buttons in reorder mode name the row. */
+	moveButton: (habit: string, direction: "up" | "down") =>
+		`Move ${habit} ${direction}`,
 	archiveAction: "Archive",
 	/** What a library row's tap does, for VoiceOver (08.3). */
 	rowHint: "Opens details.",
@@ -1137,6 +1140,8 @@ export const categoriesCopy = {
 		handle: (name: string) => `Reorder ${name}`,
 		moveUp: "Move up",
 		moveDown: "Move down",
+		moveButton: (name: string, direction: "up" | "down") =>
+			`Move ${name} ${direction}`,
 		/** VoiceOver after a move: the new place. */
 		moved: (name: string, place: number, total: number) =>
 			`${name}, ${place} of ${total}`,

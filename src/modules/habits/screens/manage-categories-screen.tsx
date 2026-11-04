@@ -138,6 +138,9 @@ export function ManageCategoriesScreen() {
 								up: categoriesCopy.reorderMode.moveUp,
 								down: categoriesCopy.reorderMode.moveDown,
 							}}
+							moveButtonLabel={(category, direction) =>
+								categoriesCopy.reorderMode.moveButton(category.name, direction)
+							}
 							onReorder={(keys) => reorderCategories(keys.map(Number))}
 							renderGroup={(_key, rows) => (
 								<Container variant="flat">{rows}</Container>

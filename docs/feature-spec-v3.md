@@ -324,6 +324,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-4a):** *Habits tab* — route `manage` renders `HabitsScreen`. Header: counts as the eyebrow ("7 active · 2 archived", "No habits", "Reorder · drag within a category"), gear and + (Done while reordering), collapsing into the inline bar (which keeps the buttons). Search matches names, case- and accent-folded, across active and archived; results split by status, archived ones have Restore; no results says what was searched and offers "Add “Yoga” as a habit" (`/new-habit?name=Yoga`). Rows: icon square, name, "Daily · 8 glasses" / "3× per week" / "Tue, Thu" / "Break · daily", with "13-day streak" only on a daily Build habit; VoiceOver actions Reorder and Archive. Reorder keeps a lifted row in its category (VoiceOver Move up / Move down on the grip). Archived is collapsed ("Show"/"Hide"), Restore is instant ("<Habit> is back on Today", Undo restores the archive date and pauses) and a line explains the fresh streak. Categories row (count) at the end, its Back reads Habits. H6 hid "Browse suggestions" until HAB-46 (superseded by V3-5). Deviations: `docs/backlog.md`, "V3-4a".
 
+> **As built (UI fix batch, step 7):** in reorder mode (Habits and Categories) every row has visible **Move up / Move down** buttons beside the grip, the primary way to reorder (drag was unreliable on the owner's phone); they stop at the ends of the row's group and read "Move Meditate up". The grip and the VoiceOver actions stay.
+
 ---
 
 ## HAB-40 — Habit Detail

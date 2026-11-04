@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { type LayoutChangeEvent, View } from "react-native";
+import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	type SharedValue,
@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { DragHandle } from "@/components/ui/primitives/drag-handle";
+import { MoveButton } from "@/components/ui/primitives/move-button";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import {
 	dragTargetIndex,
@@ -45,14 +46,18 @@ type ReorderableListProps<T> = {
 	handleLabel: (item: T) => string;
 	/** The grip's VoiceOver actions ("Move up", "Move down"): the caller's own words. */
 	moveLabels: { up: string; down: string };
+	/** The visible Move up / Move down buttons' labels, naming the row ("Move Meditate up"). */
+	moveButtonLabel: (item: T, direction: "up" | "down") => string;
 	/** The moved item's group, in its new order — only that group changed. */
 	onReorder: (groupKeys: string[]) => void;
 };
 
 /**
- * A vertical list whose rows are dragged by their grip (design-system "List
- * item — reorder", Manage & Archive). The grip also offers "Move up" / "Move
- * down" accessibility actions, since a drag isn't reachable with VoiceOver.
+ * A vertical list whose rows move with visible Move up / Move down buttons
+ * (the plain-tap way, which needs no gesture) or are dragged by their grip
+ * (design-system "List item — reorder", Manage & Archive). The grip also offers
+ * "Move up" / "Move down" accessibility actions, since a drag isn't reachable
+ * with VoiceOver.
  * Shows the new order immediately, then waits for `items` to catch up.
  */
 export function ReorderableList<T>({
@@ -63,6 +68,7 @@ export function ReorderableList<T>({
 	renderGroup,
 	handleLabel,
 	moveLabels,
+	moveButtonLabel,
 	onReorder,
 }: ReorderableListProps<T>) {
 	// Optimistic order after a drop, shown only while `items` is still the
@@ -149,27 +155,41 @@ export function ReorderableList<T>({
 			>
 				{renderItem(
 					item,
-					<GestureDetector gesture={gesture}>
-						<View
-							accessible
-							accessibilityRole="adjustable"
-							accessibilityLabel={handleLabel(item)}
-							accessibilityActions={[
-								{ name: "moveUp", label: moveLabels.up },
-								{ name: "moveDown", label: moveLabels.down },
-							]}
-							onAccessibilityAction={(event) => {
-								const to =
-									event.nativeEvent.actionName === "moveUp"
-										? index - 1
-										: index + 1;
-								if (to >= bounds[0] && to <= bounds[1]) commit(index, to);
-							}}
-							hitSlop={8}
-						>
-							<DragHandle />
-						</View>
-					</GestureDetector>,
+					<View style={styles.controls}>
+						<MoveButton
+							direction="up"
+							accessibilityLabel={moveButtonLabel(item, "up")}
+							disabled={index <= bounds[0]}
+							onPress={() => commit(index, index - 1)}
+						/>
+						<MoveButton
+							direction="down"
+							accessibilityLabel={moveButtonLabel(item, "down")}
+							disabled={index >= bounds[1]}
+							onPress={() => commit(index, index + 1)}
+						/>
+						<GestureDetector gesture={gesture}>
+							<View
+								accessible
+								accessibilityRole="adjustable"
+								accessibilityLabel={handleLabel(item)}
+								accessibilityActions={[
+									{ name: "moveUp", label: moveLabels.up },
+									{ name: "moveDown", label: moveLabels.down },
+								]}
+								onAccessibilityAction={(event) => {
+									const to =
+										event.nativeEvent.actionName === "moveUp"
+											? index - 1
+											: index + 1;
+									if (to >= bounds[0] && to <= bounds[1]) commit(index, to);
+								}}
+								hitSlop={8}
+							>
+								<DragHandle />
+							</View>
+						</GestureDetector>
+					</View>,
 					draggingKey === key,
 				)}
 			</ReorderableRow>
@@ -255,3 +275,11 @@ function ReorderableRow({
 		</Animated.View>
 	);
 }
+
+const styles = StyleSheet.create({
+	/** Up, down, then the drag grip. */
+	controls: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+});

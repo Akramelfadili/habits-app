@@ -272,6 +272,19 @@ describe("HabitsScreen — Reorder (H4)", () => {
 		expect(mockReorder).toHaveBeenCalledWith([2, 1]);
 	});
 
+	it("saves the same order from the visible Move up button, no drag needed", async () => {
+		await renderScreen();
+		await fireEvent.press(
+			screen.getByRole("button", { name: "Reorder habits" }),
+		);
+		await fireEvent.press(screen.getByLabelText("Move Meditate up"));
+		expect(mockReorder).toHaveBeenCalledWith([2, 1]);
+		expect(
+			screen.getByLabelText("Move Meditate up").props.accessibilityState
+				.disabled,
+		).toBe(true);
+	});
+
 	it("can't move a habit across categories: Move down off the end of its card does nothing", async () => {
 		await renderScreen();
 		await fireEvent.press(
