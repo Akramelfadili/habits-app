@@ -149,6 +149,8 @@ async function assertInsightsWrap(page) {
  * above it, and Export has margin above and below inside the bar.
  */
 async function assertStickyHeaderClear(page) {
+	await page.getByTestId("progress-range-bar").waitFor();
+	await page.getByTestId("header-pill").first().waitFor({ state: "attached" });
 	const m = await page.evaluate(() => {
 		const box = (id) =>
 			document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect();
@@ -206,6 +208,41 @@ async function untilTitled(page, title) {
 		.first()
 		.waitFor({ timeout: 90000 });
 	await page.waitForTimeout(300);
+}
+
+/**
+ * The Today week strip after browsing: it must be on screen at full opacity
+ * with a real height (it once stayed blank, its space kept, after a day was
+ * chosen in another week), and every day must be its own labelled button
+ * ("Wednesday 14 October, 3 of 5 done").
+ */
+async function assertStripShown(page) {
+	const m = await page.evaluate(() => {
+		const strip = document.querySelector('[data-testid="week-strip"]');
+		const row = strip?.firstElementChild;
+		const days = [
+			...document.querySelectorAll('[data-testid^="week-strip-day-"]'),
+		];
+		return {
+			height: strip?.getBoundingClientRect().height ?? 0,
+			opacity: row ? Number(getComputedStyle(row).opacity) : 0,
+			labels: days.map((day) => day.getAttribute("aria-label") ?? ""),
+		};
+	});
+	const problems = [];
+	if (m.height < 44) problems.push(`the strip is ${m.height} pt tall`);
+	if (m.opacity !== 1) problems.push(`the strip's opacity is ${m.opacity}`);
+	if (m.labels.length !== 7) problems.push(`${m.labels.length} day buttons`);
+	for (const label of m.labels) {
+		if (
+			!/^\w+day \d+ \w+(, today)?(, \d+ of \d+ done|, nothing due)?$/.test(
+				label,
+			)
+		) {
+			problems.push(`day label "${label}"`);
+		}
+	}
+	if (problems.length) throw new Error(`week strip: ${problems.join("; ")}`);
 }
 
 async function typeHabitName(page, name) {
@@ -1840,6 +1877,37 @@ export const SCREENS = {
 			await page.waitForTimeout(500);
 		},
 	},
+	"today-v3-strip-browsed": {
+		feature: "HAB-30",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_04.png",
+		note: "T10 — swipe the strip back a week (it selects the same weekday there), tap another day, scroll: the strip is still on screen at full opacity and every day is a labelled button.",
+		async interact(page) {
+			const box = await page.getByTestId("week-strip").boundingBox();
+			const y = box.y + box.height / 2;
+			// A real touch drag: the strip's swipe is a PanResponder, which a synthetic mouse drag does not start.
+			const cdp = await page.context().newCDPSession(page);
+			const touch = (type, x) =>
+				cdp.send("Input.dispatchTouchEvent", {
+					type,
+					touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+				});
+			await touch("touchStart", box.x + 60);
+			for (let step = 1; step <= 10; step += 1) {
+				await touch("touchMove", box.x + 60 + step * 20);
+			}
+			await touch("touchEnd", 0);
+			await page.getByText(/^Logging for Fri 16 Oct/).waitFor();
+			await page.getByLabel(/^Wednesday 14 October/).click();
+			await page.getByText(/^Logging for Wed 14 Oct/).waitFor();
+			await page.waitForTimeout(500);
+			await page.mouse.move(200, 500);
+			await page.mouse.wheel(0, 20);
+			await page.waitForTimeout(500);
+			await assertStripShown(page);
+		},
+	},
 	"today-v3-past-day-scrolled": {
 		feature: "HAB-30",
 		route: "/?fixtures=today-v3",
@@ -1990,6 +2058,7 @@ const DARK_TWINS = [
 	"today-v3-quantity-plus-one",
 	"today-v3-scrolled",
 	"today-v3-collapsing",
+	"today-v3-strip-browsed",
 	"today-v3-past-day-scrolled",
 	"today-v3-at-risk",
 	"today-v3-frozen",
