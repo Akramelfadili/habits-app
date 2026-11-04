@@ -247,6 +247,19 @@ export const todayCopy = {
 	todayWord: "Today",
 	nextDay: "Next day",
 	previousDay: "Previous day",
+	/** One strip day as a VoiceOver button: "Wednesday 21 October, today, 3 of 5 done". */
+	stripDayLabel: (
+		date: string,
+		day: { isToday: boolean; isFuture: boolean; due: number; done: number },
+	) =>
+		`${date}${day.isToday ? ", today" : ""}${
+			day.isFuture
+				? ""
+				: day.due === 0
+					? ", nothing due"
+					: `, ${day.done} of ${day.due} done`
+		}`,
+	stripDayHint: "Shows this day's habits",
 	/** Streak at risk sheets (SR1/SR3, HAB-33). */
 	atRiskTitle: (habit: string) => `Keep your ${habit} streak?`,
 	atRiskTitleNone: "No freezes left this month",
@@ -666,6 +679,9 @@ export const habitsCopy = {
 	reorderHandle: (habit: string) => `Reorder ${habit}`,
 	moveUp: "Move up",
 	moveDown: "Move down",
+	/** The visible buttons in reorder mode name the row. */
+	moveButton: (habit: string, direction: "up" | "down") =>
+		`Move ${habit} ${direction}`,
 	archiveAction: "Archive",
 	/** What a library row's tap does, for VoiceOver (08.3). */
 	rowHint: "Opens details.",
@@ -1124,6 +1140,8 @@ export const categoriesCopy = {
 		handle: (name: string) => `Reorder ${name}`,
 		moveUp: "Move up",
 		moveDown: "Move down",
+		moveButton: (name: string, direction: "up" | "down") =>
+			`Move ${name} ${direction}`,
 		/** VoiceOver after a move: the new place. */
 		moved: (name: string, place: number, total: number) =>
 			`${name}, ${place} of ${total}`,
@@ -1214,13 +1232,24 @@ export const remindersCopy = {
  */
 export const settingsCopy = {
 	title: "Settings",
+	/** S1: the hub's group labels. */
+	groups: {
+		appearance: "Appearance",
+		reminders: "Reminders",
+		streaks: "Streaks",
+		data: "Data",
+		about: "About",
+	},
+	/** S2 */
 	appearance: {
 		header: "Appearance",
+		themeHeader: "Theme",
+		themeRow: "Theme",
 		theme: { light: "Light", dark: "Dark", system: "System" },
-		/** The System row says what it resolves to right now. */
-		systemNow: (scheme: "light" | "dark") => `Follows iOS · now ${scheme}`,
+		systemNote: "Follows iOS",
 		note: "Weeks start on Monday. Text size follows iOS Settings › Display & Text Size.",
 	},
+	/** S3 and the hub's Reminders group. */
 	reminders: {
 		header: "Reminders",
 		evening: "Evening review",
@@ -1236,6 +1265,9 @@ export const settingsCopy = {
 	denied: {
 		title: "Notifications are off",
 		body: "Reminders and the evening review won’t arrive until you allow them in iOS Settings.",
+		/** S3's own sentence: only the evening review is at stake there. */
+		eveningBody:
+			"The evening review can’t arrive until you allow notifications.",
 		action: "Open Settings",
 		affected: "Affected",
 		reminders: "Reminders",
@@ -1248,12 +1280,22 @@ export const settingsCopy = {
 		eveningImpact: (on: boolean, time: string) => (on ? time : "Off"),
 		note: "Times stay editable while notifications are off. Nothing is deleted.",
 	},
+	/** The Notifications page when iOS lets them through (or has not been asked). */
+	notificationsPage: {
+		title: "Notifications",
+		status: "Notifications",
+		note: "Change this in iOS Settings.",
+	},
 	streaks: {
 		header: "Streaks",
-		left: "Left this month",
-		used: "Used this month",
-		/** "1 of 2" */
-		leftValue: (left: number, size: number) => `${left} of ${size}`,
+		title: "Freezes",
+		/** The hub's value: "1 left". */
+		leftShort: (left: number) => `${left} left`,
+		leftLabel: "Left",
+		usedLabel: "Used",
+		/** "1 freeze" / "2 freezes" under the LEFT numeral. */
+		leftCaption: (left: number) => (left === 1 ? "freeze" : "freezes"),
+		usedCaption: "this month",
 		rule: (size: number) =>
 			`${size} freezes a month, shared by all habits. They don’t roll over.`,
 		/** The Undo window is the toast's own (5 s), so the sentence cannot drift from it. */
@@ -1266,6 +1308,7 @@ export const settingsCopy = {
 	},
 	about: {
 		header: "About",
+		title: "About",
 		version: "Version",
 		copy: "Copy diagnostics",
 		copyBody: "Version, device and recent errors",

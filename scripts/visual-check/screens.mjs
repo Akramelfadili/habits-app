@@ -77,6 +77,174 @@ async function drag(page, locator, { dx = 0, dy = 0, release = true }) {
 }
 
 /** The New habit form's own Name field (the add-category sheet has its own). */
+/**
+ * Scrolls the Add habit form to its end and fails the capture if the pinned
+ * footer (Save and its reason) sits over the last field: the end of the form
+ * must clear it with room to spare.
+ */
+async function scrollFormToEndClearOfSave(page) {
+	const box = await page.getByTestId("habit-form-scroll").boundingBox();
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.wheel(0, 5000);
+	await page.waitForTimeout(500);
+	const { lastBottom, footerTop, top, text } = await page.evaluate(() => {
+		const scroll = document.querySelector('[data-testid="habit-form-scroll"]');
+		const footer = document.querySelector('[data-testid="habit-form-footer"]');
+		const content = scroll.firstElementChild;
+		const last = [...content.children].at(-1);
+		return {
+			lastBottom: last.getBoundingClientRect().bottom,
+			footerTop: footer.getBoundingClientRect().top,
+			top: scroll.scrollTop,
+			text: (last.textContent || "").slice(0, 40),
+		};
+	});
+	if (lastBottom > footerTop) {
+		throw new Error(
+			`the form's last field ("${text}") ends at ${lastBottom} under the Save bar at ${footerTop} (scrollTop ${top})`,
+		);
+	}
+}
+
+/**
+ * Fails the capture if any insight card's text runs past its card's right edge
+ * (the Year insight once ran off the screen on one line instead of wrapping).
+ */
+async function assertInsightsWrap(page) {
+	const bad = await page.evaluate(() => {
+		const out = [];
+		for (const card of document.querySelectorAll(
+			'[data-testid="insight-card"]',
+		)) {
+			const text = card.querySelector('[data-testid="insight-card-text"]');
+			const cardBox = card.getBoundingClientRect();
+			const textBox = text.getBoundingClientRect();
+			const viewport = document.documentElement.clientWidth;
+			// Later pages of the pager wait to the right, by design: check the card in view.
+			if (cardBox.left > 60) continue;
+			if (
+				textBox.right > cardBox.right + 0.5 ||
+				cardBox.right > viewport + 0.5 ||
+				text.scrollWidth > text.clientWidth + 1
+			) {
+				out.push({
+					text: (text.textContent || "").slice(0, 50),
+					textRight: textBox.right,
+					cardRight: cardBox.right,
+					viewport,
+				});
+			}
+		}
+		return out;
+	});
+	if (bad.length) {
+		throw new Error(`insight text runs off its card: ${JSON.stringify(bad)}`);
+	}
+}
+
+/**
+ * With Progress scrolled so the range switcher is pinned, fails the capture
+ * unless: the inline bar has no hairline of its own, the pinned block starts
+ * exactly where the bar ends and draws the only hairline, the control has air
+ * above it, and Export has margin above and below inside the bar.
+ */
+async function assertStickyHeaderClear(page) {
+	await page.getByTestId("progress-range-bar").waitFor();
+	await page.getByTestId("header-pill").first().waitFor({ state: "attached" });
+	const m = await page.evaluate(() => {
+		const box = (id) =>
+			document.querySelector(`[data-testid="${id}"]`)?.getBoundingClientRect();
+		const bar = box("progress-inline-bar");
+		const bg = document.querySelector(
+			'[data-testid="progress-inline-bar-background"]',
+		);
+		const pinned = box("progress-range-bar");
+		const control =
+			pinned &&
+			document
+				.querySelector('[data-testid="progress-range-bar"]')
+				.firstElementChild?.getBoundingClientRect();
+		const pill = box("header-pill");
+		const hairline = document.querySelector(
+			'[data-testid="progress-range-bar-hairline"]',
+		);
+		return {
+			barTop: bar.top,
+			barBottom: bar.bottom,
+			barBorder: getComputedStyle(bg).borderBottomWidth,
+			pinnedTop: pinned.top,
+			controlTop: control.top,
+			pillTop: pill.top,
+			pillBottom: pill.bottom,
+			hairlineOpacity: hairline ? getComputedStyle(hairline).opacity : null,
+		};
+	});
+	const problems = [];
+	if (m.barBorder !== "0px")
+		problems.push(`the bar draws its own hairline (${m.barBorder})`);
+	if (Math.abs(m.pinnedTop - m.barBottom) > 1)
+		problems.push(
+			`the pinned block starts at ${m.pinnedTop}, the bar ends at ${m.barBottom}`,
+		);
+	if (m.controlTop - m.barBottom < 8)
+		problems.push(
+			`the control has only ${m.controlTop - m.barBottom} pt under the bar`,
+		);
+	if (m.pillTop - m.barTop < 4 || m.barBottom - m.pillBottom < 4)
+		problems.push(
+			`Export has ${m.pillTop - m.barTop} / ${m.barBottom - m.pillBottom} pt of margin in the bar`,
+		);
+	if (Number(m.hairlineOpacity) !== 1)
+		problems.push(
+			`the pinned block's hairline is not shown (${m.hairlineOpacity})`,
+		);
+	if (problems.length) throw new Error(`sticky header: ${problems.join("; ")}`);
+}
+
+/** A lazily bundled route can take a while the first time: wait for its title before capturing. */
+async function untilTitled(page, title) {
+	await page
+		.getByRole("heading", { name: title, exact: true })
+		.first()
+		.waitFor({ timeout: 90000 });
+	await page.waitForTimeout(300);
+}
+
+/**
+ * The Today week strip after browsing: it must be on screen at full opacity
+ * with a real height (it once stayed blank, its space kept, after a day was
+ * chosen in another week), and every day must be its own labelled button
+ * ("Wednesday 14 October, 3 of 5 done").
+ */
+async function assertStripShown(page) {
+	const m = await page.evaluate(() => {
+		const strip = document.querySelector('[data-testid="week-strip"]');
+		const row = strip?.firstElementChild;
+		const days = [
+			...document.querySelectorAll('[data-testid^="week-strip-day-"]'),
+		];
+		return {
+			height: strip?.getBoundingClientRect().height ?? 0,
+			opacity: row ? Number(getComputedStyle(row).opacity) : 0,
+			labels: days.map((day) => day.getAttribute("aria-label") ?? ""),
+		};
+	});
+	const problems = [];
+	if (m.height < 44) problems.push(`the strip is ${m.height} pt tall`);
+	if (m.opacity !== 1) problems.push(`the strip's opacity is ${m.opacity}`);
+	if (m.labels.length !== 7) problems.push(`${m.labels.length} day buttons`);
+	for (const label of m.labels) {
+		if (
+			!/^\w+day \d+ \w+(, today)?(, \d+ of \d+ done|, nothing due)?$/.test(
+				label,
+			)
+		) {
+			problems.push(`day label "${label}"`);
+		}
+	}
+	if (problems.length) throw new Error(`week strip: ${problems.join("; ")}`);
+}
+
 async function typeHabitName(page, name) {
 	await page.getByLabel("Name", { exact: true }).first().fill(name);
 }
@@ -108,7 +276,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_08.png",
-		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked); no tab bar behind it (owner's decision over the frame).",
+		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked); the dialog is a modal over Today, so the bar is hidden while the question is open.",
 		async interact(page) {
 			await page.getByRole("button", { name: "Add your first habit" }).click();
 			await page
@@ -123,7 +291,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_09.png",
-		note: "FR4 — Skip for now lands on the empty Today, without the tab bar (owner's decision over the frame).",
+		note: "FR4 — Skip for now lands on the empty Today, with the tab bar (UI fix batch: only First Run itself hides it; the frame draws the bar too).",
 		async interact(page) {
 			await page.getByRole("button", { name: "Skip for now" }).click();
 			await page.getByText("Nothing to track yet").waitFor();
@@ -219,7 +387,7 @@ export const SCREENS = {
 		feature: "HAB-05",
 		route: "/?fixtures=empty",
 		mockup: "docs/mockups/v3/renders/today/slice_01.png",
-		note: "T2 / FR4 — header and + only, the empty state with Add habit and the Browse suggestions link.",
+		note: "T2 / FR4 — header and + only, the empty state with Add habit and the Browse suggestions link, and the tab bar.",
 	},
 	"today-rest-day": {
 		feature: "HAB-05",
@@ -357,6 +525,33 @@ export const SCREENS = {
 			await typeHabitName(page, "Read 20 min");
 			await page.getByText("Specific days", { exact: true }).click();
 			await page.waitForTimeout(300);
+		},
+	},
+	"form-new-errors-end": {
+		feature: "HAB-41",
+		route: "/new-habit?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		viewport: { width: 393, height: 640 },
+		mockup: "docs/mockups/v3/renders/forms/slice_04.png",
+		note: "F8 scrolled to the end on a small phone: with the errors showing, the last field (Frequency) clears the pinned Save and its reason.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 min");
+			await page.getByText("Specific days", { exact: true }).click();
+			await page.waitForTimeout(300);
+			await scrollFormToEndClearOfSave(page);
+		},
+	},
+	"form-new-errors-end-ax": {
+		feature: "HAB-49",
+		route: "/new-habit?fixtures=today-v3&textSize=ax",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/forms/slice_05.png",
+		note: "F8 at AX3, scrolled to the end: the last field clears the pinned Save and its reason.",
+		async interact(page) {
+			await typeHabitName(page, "Read 20 min");
+			await page.getByText("Specific days", { exact: true }).click();
+			await page.waitForTimeout(300);
+			await scrollFormToEndClearOfSave(page);
 		},
 	},
 	"form-edit-discard": {
@@ -977,45 +1172,74 @@ export const SCREENS = {
 		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_03.png",
-		note: "S1 / S2 — System picked (resolves light): Appearance as radio rows, the Monday and text-size note, then the evening review. One screen where the frames draw a hub with a page per row.",
+		note: "S1 — the hub: Appearance (Theme · System), Reminders (Evening review · Off, Notifications · Allowed), Streaks (Freezes · 1 left), Data (Export data · JSON, CSV), About (version). Icon square, title, grey value and chevron on every row; one page per row.",
+		async interact(page) {
+			await untilTitled(page, "Settings");
+		},
 	},
-	"settings-reminders": {
+	"settings-appearance": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
+		route: "/(habits)/settings/appearance?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
-		note: "S3 — scrolled to Reminders: the evening review on, its time, Notifications Allowed and the 'only on days with open habits' rule.",
+		note: "S2 — Appearance: Light, Dark, System (Follows iOS, checked) and the Monday and text-size note.",
 		async interact(page) {
-			await page.getByText("Left this month").scrollIntoViewIfNeeded();
-			await page.waitForTimeout(400);
+			await untilTitled(page, "Appearance");
 		},
 	},
-	"settings-streaks": {
+	"settings-evening-review": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
-		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
-		note: "S4 — Streaks: left and used this month, the rule in plain words, how to use one. Not built from S4: the 'Saved' stat (PR-08) and Auto-use freezes (Later).",
+		route: "/(habits)/settings/evening-review?fixtures=settings",
+		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
+		note: "S3 — Evening review with notifications allowed: the switch, Time ›, 'Sent only on days with open habits.'",
 		async interact(page) {
-			await page.getByText("JSON, CSV").scrollIntoViewIfNeeded();
-			await page.waitForTimeout(400);
+			await untilTitled(page, "Evening review");
 		},
 	},
-	"settings-data": {
+	"settings-evening-review-off": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
-		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
-		note: "S5 — Data and About, scrolled to the end: Export data (JSON, CSV), Version, Copy diagnostics. No Backup row (Later).",
+		route:
+			"/(habits)/settings/evening-review?fixtures=settings-notifications-off",
+		mockup: "docs/mockups/v3/renders/settings/slice_04.png",
+		note: "S3 — Evening review with iOS notifications off: the amber banner first, directly under the title, then the switch (still on) and Time.",
 		async interact(page) {
-			await page.mouse.move(200, 400);
-			await page.mouse.wheel(0, 3000);
-			await page.waitForTimeout(500);
+			await untilTitled(page, "Evening review");
+		},
+	},
+	"settings-notifications": {
+		feature: "HAB-44",
+		route: "/(habits)/settings/notifications?fixtures=settings",
+		mockup: null,
+		note: "Notifications with iOS allowing them (not drawn): the state in words and a way to iOS Settings.",
+		async interact(page) {
+			await untilTitled(page, "Notifications");
+		},
+	},
+	"settings-notifications-off": {
+		feature: "HAB-44",
+		route:
+			"/(habits)/settings/notifications?fixtures=settings-notifications-off",
+		mockup: "docs/mockups/v3/renders/states/slice_12.png",
+		note: "SY6 — Notifications with iOS permission off: one banner with Open Settings at the top, Affected ('4 times on 3 habits', the evening review), 'Times stay editable…'. The banner appears once.",
+		async interact(page) {
+			await untilTitled(page, "Notifications");
+		},
+	},
+	"settings-freezes": {
+		feature: "HAB-44",
+		route: "/(habits)/settings/freezes?fixtures=settings",
+		mockup: "docs/mockups/v3/renders/settings/slice_05.png",
+		note: "S4 — Freezes: Left and Used (this month) stat cards, the rule and how to use one. Not drawn from S4: the Saved card (needs PR-08) and Auto-use freezes (Later).",
+		async interact(page) {
+			await untilTitled(page, "Freezes");
 		},
 	},
 	"settings-about": {
 		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings",
+		route: "/(habits)/settings/about?fixtures=settings",
 		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
-		note: "S6 — Copy diagnostics tapped: the toast says 'Diagnostics copied', no Undo. Privacy and Send feedback rows are not built (no spec).",
+		note: "S6 — About: Version and Copy diagnostics tapped, the toast says 'Diagnostics copied', no Undo. Privacy and Send feedback are not built (no address).",
 		async interact(page) {
+			await untilTitled(page, "About");
 			await page
 				.context()
 				.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -1031,7 +1255,10 @@ export const SCREENS = {
 		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings&textSize=ax",
 		mockup: "docs/mockups/v3/renders/settings/slice_06.png",
-		note: "S7 — AX3: rows stack (icon, text, value), the title block stacks.",
+		note: "S7 — the hub at AX3: rows stack (icon, title, value under it), the title block stacks.",
+		async interact(page) {
+			await untilTitled(page, "Settings");
+		},
 	},
 	"settings-explicit-over-os": {
 		feature: "HAB-44",
@@ -1039,19 +1266,8 @@ export const SCREENS = {
 		mockup: null,
 		colorScheme: "light",
 		note: "Explicit Dark while the emulated OS is light: the app must draw dark.",
-	},
-	"settings-notifications-off": {
-		feature: "HAB-44",
-		route: "/(habits)/settings?fixtures=settings-notifications-off",
-		mockup: "docs/mockups/v3/renders/states/slice_12.png",
-		note: "SY6 — iOS notifications off: one banner with Open Settings, Affected: '4 times on 3 habits' and the evening review, 'Times stay editable…'. Notifications row says Off.",
 		async interact(page) {
-			await page
-				.getByText(
-					"Times stay editable while notifications are off. Nothing is deleted.",
-				)
-				.scrollIntoViewIfNeeded();
-			await page.waitForTimeout(400);
+			await untilTitled(page, "Settings");
 		},
 	},
 	"export-choose": {
@@ -1434,6 +1650,66 @@ export const SCREENS = {
 			await openJuly14(page);
 		},
 	},
+	"progress-year-insight": {
+		feature: "HAB-38",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "P12 — Year's best-month insight: the long sentence wraps inside its card, never past the right edge.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await page.waitForTimeout(400);
+			await assertInsightsWrap(page);
+		},
+	},
+	"progress-year-insight-ax": {
+		feature: "HAB-49",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: "docs/mockups/v3/renders/progress/slice_08.png",
+		clock: V3_FRIDAY,
+		note: "Year's insight at AX3: it wraps inside its card.",
+		async interact(page) {
+			await page.getByTestId("segmented-collapsed").click();
+			await page.getByRole("tab", { name: "Year" }).click();
+			await page.waitForTimeout(500);
+			await assertInsightsWrap(page);
+		},
+	},
+	"progress-week-sticky": {
+		feature: "HAB-34",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Week scrolled so the range switcher is pinned: no hairline above it, one below the block, air around the control, Export clear of the bar's edges.",
+		async interact(page) {
+			await scrollProgress(page, 500);
+			await assertStickyHeaderClear(page);
+		},
+	},
+	"progress-month-sticky": {
+		feature: "HAB-36",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Month scrolled with the switcher pinned: same sticky block.",
+		async interact(page) {
+			await showRange(page, "Month");
+			await scrollProgress(page, 500);
+			await assertStickyHeaderClear(page);
+		},
+	},
+	"progress-year-sticky": {
+		feature: "HAB-37",
+		route: `${PROGRESS}progress-v3`,
+		mockup: "docs/mockups/v3/renders/progress/slice_06.png",
+		clock: V3_FRIDAY,
+		note: "Year scrolled with the switcher pinned: same sticky block.",
+		async interact(page) {
+			await showRange(page, "Year");
+			await scrollProgress(page, 500);
+			await assertStickyHeaderClear(page);
+		},
+	},
 	"progress-year-too-early": {
 		feature: "HAB-37",
 		route: `${PROGRESS}progress-v3-too-early`,
@@ -1601,6 +1877,45 @@ export const SCREENS = {
 			await page.waitForTimeout(500);
 		},
 	},
+	"today-v3-strip-browsed": {
+		feature: "HAB-30",
+		route: "/?fixtures=today-v3",
+		clock: V3_FRIDAY,
+		mockup: "docs/mockups/v3/renders/today/slice_04.png",
+		note: "T10 — swipe the strip back a week (it selects the same weekday there), tap another day, scroll: the strip is still on screen at full opacity and every day is a labelled button.",
+		async interact(page) {
+			const box = await page.getByTestId("week-strip").boundingBox();
+			const y = box.y + box.height / 2;
+			// A real touch drag: the strip's swipe is a PanResponder, which a synthetic mouse drag does not start.
+			const cdp = await page.context().newCDPSession(page);
+			const touch = (type, x) =>
+				cdp.send("Input.dispatchTouchEvent", {
+					type,
+					touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+				});
+			await touch("touchStart", box.x + 60);
+			for (let step = 1; step <= 10; step += 1) {
+				await touch("touchMove", box.x + 60 + step * 20);
+			}
+			await touch("touchEnd", 0);
+			await page.getByText(/^Logging for Fri 16 Oct/).waitFor();
+			await page.getByLabel(/^Wednesday 14 October/).click();
+			await page.getByText(/^Logging for Wed 14 Oct/).waitFor();
+			await page.waitForTimeout(500);
+			// An exact offset, past the collapse range: a wheel's travel varies with timing.
+			await page.evaluate(() => {
+				const scroller = document.querySelector('[data-testid="today-scroll"]');
+				scroller?.scrollTo(0, 120);
+			});
+			await page.waitForTimeout(1200);
+			await page.evaluate(() => {
+				const scroller = document.querySelector('[data-testid="today-scroll"]');
+				scroller?.scrollTo(0, 120);
+			});
+			await page.waitForTimeout(600);
+			await assertStripShown(page);
+		},
+	},
 	"today-v3-past-day-scrolled": {
 		feature: "HAB-30",
 		route: "/?fixtures=today-v3",
@@ -1609,7 +1924,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_04.png",
 		note: "T10 + T5 — Wed 21 selected, then the list scrolled past the title: the inline bar is solid over the 'Logging for Wed 21 Oct' bar, which scrolls with the content.",
 		async interact(page) {
-			await page.getByLabel("Wednesday 21", { exact: true }).click();
+			await page.getByLabel(/^Wednesday 21 October/).click();
 			await page.getByText("Logging for Wed 21 Oct").waitFor();
 			await page.waitForTimeout(300);
 			await page.mouse.wheel(0, 120);
@@ -1660,7 +1975,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_04.png",
 		note: "T10 — Wed 21 selected: eyebrow shows the date, 'Logging for Wed 21 Oct · Show today'.",
 		async interact(page) {
-			await page.getByLabel("Wednesday 21", { exact: true }).click();
+			await page.getByLabel(/^Wednesday 21 October/).click();
 			await page.getByText("Logging for Wed 21 Oct").waitFor();
 			await page.waitForTimeout(300);
 		},
@@ -1751,6 +2066,7 @@ const DARK_TWINS = [
 	"today-v3-quantity-plus-one",
 	"today-v3-scrolled",
 	"today-v3-collapsing",
+	"today-v3-strip-browsed",
 	"today-v3-past-day-scrolled",
 	"today-v3-at-risk",
 	"today-v3-frozen",
@@ -1799,6 +2115,8 @@ const DARK_TWINS = [
 	"form-new-break",
 	"form-new-specific-days",
 	"form-new-errors",
+	"form-new-errors-end",
+	"form-new-errors-end-ax",
 	"form-edit-discard",
 	"form-edit",
 	"form-new-ax",
@@ -1831,6 +2149,11 @@ const DARK_TWINS = [
 	"progress-month-ax",
 	"progress-year",
 	"progress-month-day",
+	"progress-year-insight",
+	"progress-year-insight-ax",
+	"progress-week-sticky",
+	"progress-month-sticky",
+	"progress-year-sticky",
 	"progress-year-too-early",
 	"progress-year-one-habit",
 	"progress-year-ax",
@@ -1846,12 +2169,14 @@ const DARK_TWINS = [
 	"reminders-denied",
 	"reminders-at-cap",
 	"settings",
-	"settings-reminders",
-	"settings-streaks",
-	"settings-data",
+	"settings-appearance",
+	"settings-evening-review",
+	"settings-evening-review-off",
+	"settings-notifications",
+	"settings-notifications-off",
+	"settings-freezes",
 	"settings-about",
 	"settings-ax",
-	"settings-notifications-off",
 	"export-choose",
 	"export-from-progress",
 	"export-progress",
@@ -1973,7 +2298,10 @@ const AX_VARIANTS = [
 		"A toast at AX3: wraps, the action drops below the copy.",
 	],
 	["tab-bar-toast", "A toast over bar A at AX3."],
-	["settings-notifications-off", "SY6 on Settings at AX3."],
+	["settings-notifications-off", "SY6 at AX3."],
+	["settings-appearance", "S2 at AX3."],
+	["settings-evening-review-off", "S3 with the banner at AX3."],
+	["settings-freezes", "S4 at AX3: the stat cards stack one per row."],
 	["export-ready", "EX3 at AX3."],
 ];
 for (const [name, note] of AX_VARIANTS) {

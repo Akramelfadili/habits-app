@@ -6,11 +6,21 @@ import { motion } from "@/theme/theme";
 import { ToastHost, toastHoldMs } from "./toast-host";
 
 const TOAST_DURATION_MS = motion.toast.hold.info;
+const { out: OUT_MS, in: IN_MS } = motion.toast;
+
+let mockReduced = false;
+jest.mock("@/utils/use-reduced-motion", () => ({
+	useReducedMotion: () => mockReduced,
+}));
+
+const toastStyle = () =>
+	StyleSheet.flatten(screen.getByTestId("toast-host").props.style);
 
 describe("ToastHost", () => {
 	beforeEach(() => {
 		jest.useFakeTimers();
 		useToastStore.setState({ toast: null });
+		mockReduced = false;
 	});
 	afterEach(() => jest.useRealTimers());
 
@@ -24,8 +34,82 @@ describe("ToastHost", () => {
 		await act(() => showToast({ message: "Archived 'Read'" }));
 		expect(screen.getByText("Archived 'Read'")).toBeTruthy();
 
-		await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS));
+		await act(() => jest.advanceTimersByTime(TOAST_DURATION_MS + OUT_MS));
 		expect(screen.queryByText("Archived 'Read'")).toBeNull();
+	});
+
+	describe("enter and exit", () => {
+		it("fades and rises in over the named duration", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Saved" }));
+			expect(toastStyle().opacity).toBe(0);
+			await act(() => jest.advanceTimersByTime(IN_MS / 2));
+			const half = toastStyle().opacity;
+			expect(half).toBeGreaterThan(0);
+			expect(half).toBeLessThan(1);
+			await act(() => jest.advanceTimersByTime(IN_MS));
+			expect(toastStyle().opacity).toBe(1);
+		});
+
+		it("is still on screen while it fades out, and gone when the exit ends", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Saved" }));
+			await act(() => jest.advanceTimersByTime(IN_MS + 10));
+			const id = useToastStore.getState().toast?.id as number;
+			await act(() => useToastStore.getState().dismissToast(id));
+			await act(() => jest.advanceTimersByTime(OUT_MS - 50));
+			expect(screen.getByText("Saved")).toBeTruthy();
+			await act(() => jest.advanceTimersByTime(100));
+			expect(screen.queryByText("Saved")).toBeNull();
+		});
+
+		it("hides within the hold plus the exit, so an info toast is gone by 3.2 s", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Saved" }));
+			await act(() =>
+				jest.advanceTimersByTime(motion.toast.hold.info + OUT_MS + 20),
+			);
+			expect(screen.queryByText("Saved")).toBeNull();
+		});
+
+		it("replaces the old toast at once, without stacking", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "First" }));
+			await act(() => jest.advanceTimersByTime(IN_MS + 10));
+			await act(() => showToast({ message: "Second" }));
+			expect(screen.queryByText("First")).toBeNull();
+			expect(screen.getAllByTestId("toast")).toHaveLength(1);
+			expect(screen.getByText("Second")).toBeTruthy();
+			expect(toastStyle().opacity).toBe(1);
+		});
+
+		it("crossfades with no rise under Reduce Motion", async () => {
+			mockReduced = true;
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Saved" }));
+			expect(toastStyle().transform[0].translateY).toBe(0);
+			await act(() =>
+				jest.advanceTimersByTime(motion.toast.reduced.crossfade + 10),
+			);
+			expect(toastStyle().opacity).toBe(1);
+		});
+
+		it("is dismissed by a tap on the toast", async () => {
+			await render(<ToastHost />);
+			await act(() => showToast({ message: "Saved" }));
+			await fireEvent.press(screen.getByText("Saved"));
+			await act(() => jest.advanceTimersByTime(OUT_MS + 10));
+			expect(screen.queryByText("Saved")).toBeNull();
+		});
+
+		it("clears its timer on unmount", async () => {
+			const view = await render(<ToastHost />);
+			await act(() => showToast({ message: "Saved" }));
+			await view.unmount();
+			await act(() => jest.advanceTimersByTime(motion.toast.hold.info * 2));
+			// The hold timer did not fire after unmount: the slot is untouched.
+			expect(useToastStore.getState().toast?.message).toBe("Saved");
+		});
 	});
 
 	it("runs the action once and dismisses", async () => {
@@ -40,6 +124,7 @@ describe("ToastHost", () => {
 		);
 
 		await fireEvent.press(screen.getByText("Undo"));
+		await act(() => jest.advanceTimersByTime(OUT_MS + 10));
 
 		expect(onUndo).toHaveBeenCalledTimes(1);
 		expect(screen.queryByText("Marked 'Read' complete")).toBeNull();
@@ -163,10 +248,10 @@ describe("ToastHost", () => {
 	});
 
 	describe("hold times (HAB-48)", () => {
-		it("is 5 s for an Undo, 4 s for info and success, 6 s for a warning, never for an error", () => {
+		it("is 5 s for an Undo, 3 s for info and success, 6 s for a warning, never for an error", () => {
 			expect(toastHoldMs({ message: "m", actionLabel: "Undo" })).toBe(5000);
-			expect(toastHoldMs({ message: "m" })).toBe(4000);
-			expect(toastHoldMs({ message: "m", tone: "success" })).toBe(4000);
+			expect(toastHoldMs({ message: "m" })).toBe(3000);
+			expect(toastHoldMs({ message: "m", tone: "success" })).toBe(3000);
 			expect(toastHoldMs({ message: "m", tone: "warning" })).toBe(6000);
 			expect(toastHoldMs({ message: "m", tone: "error" })).toBeNull();
 			expect(
@@ -189,6 +274,7 @@ describe("ToastHost", () => {
 					nativeEvent: { actionName: "dismiss" },
 				}),
 			);
+			await act(() => jest.advanceTimersByTime(OUT_MS + 10));
 			expect(screen.queryByText("Couldn't save")).toBeNull();
 		});
 	});

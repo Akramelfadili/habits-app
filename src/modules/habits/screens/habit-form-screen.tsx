@@ -170,6 +170,12 @@ export function HabitFormScreen({
 	const [sheet, setSheet] = useState<SheetState>(null);
 	// F1c: a hairline above Save once content scrolls under the pinned header.
 	const [isScrolled, setIsScrolled] = useState(false);
+	// The Save bar is in the column under the scroller, so the scroller ends where
+	// it starts. When errors (or a reason) make the bar taller the scroller gets
+	// shorter, and a form resting at its end would keep its offset and leave the
+	// last field under the bar: it follows the end instead.
+	const atEnd = useRef(false);
+	const footerHeight = useRef(0);
 
 	// The starting point is read once: later edits are the person's.
 	const initialValues = useRef<HabitFormInput | null>(null);
@@ -446,9 +452,14 @@ export function HabitFormScreen({
 				keyboardDismissMode="on-drag"
 				contentContainerStyle={styles.scrollContent}
 				scrollEventThrottle={16}
-				onScroll={(event) =>
-					setIsScrolled(event.nativeEvent.contentOffset.y > 0)
-				}
+				onScroll={(event) => {
+					const { contentOffset, contentSize, layoutMeasurement } =
+						event.nativeEvent;
+					setIsScrolled(contentOffset.y > 0);
+					atEnd.current =
+						contentOffset.y + (layoutMeasurement?.height ?? 0) >=
+						(contentSize?.height ?? Number.POSITIVE_INFINITY) - AT_END_SLACK;
+				}}
 			>
 				{prefill && mode === "create" && !slim ? (
 					<Banner
@@ -574,6 +585,13 @@ export function HabitFormScreen({
 
 			<View
 				testID="habit-form-footer"
+				onLayout={({ nativeEvent }) => {
+					const grew = nativeEvent.layout.height > footerHeight.current;
+					footerHeight.current = nativeEvent.layout.height;
+					if (grew && atEnd.current) {
+						scrollRef.current?.scrollToEnd({ animated: false });
+					}
+				}}
 				style={[
 					styles.footer,
 					isScrolled && {
@@ -652,6 +670,9 @@ export function HabitFormScreen({
 		</KeyboardAvoidingView>
 	);
 }
+
+/** How close (pt) to the end of the form still counts as resting at it. */
+const AT_END_SLACK = 8;
 
 const styles = StyleSheet.create({
 	screen: {

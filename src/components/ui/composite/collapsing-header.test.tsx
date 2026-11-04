@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import Animated, { scrollTo, useSharedValue } from "react-native-reanimated";
 import {
 	COLLAPSED_BAR_HEIGHT,
 	CollapsedHeaderBar,
+	PINNED_PADDING_TOP,
 	PinnedBelowBar,
 	useCollapsingHeader,
 } from "./collapsing-header";
@@ -103,6 +105,22 @@ describe("useCollapsingHeader (V3-02, T5)", () => {
 		expect(arriving).toBeLessThan(1);
 		await scrollTo_(range);
 		expect(opacityOf("collapsed-header-bar-background")).toBe(1);
+	});
+
+	it("draws no bottom hairline of its own when a pinned control sits under it", async () => {
+		await render(
+			<CollapsedHeaderBar
+				title="Progress"
+				collapsed
+				backgroundStyle={{}}
+				contentStyle={{}}
+				hairline={false}
+			/>,
+		);
+		const background = StyleSheet.flatten(
+			screen.getByTestId("collapsed-header-bar-background").props.style,
+		);
+		expect(background.borderBottomWidth).toBeUndefined();
 	});
 
 	it("re-renders only when the bar takes over, not once per scroll frame", async () => {
@@ -247,9 +265,10 @@ describe("PinnedBelowBar (Progress's range switcher, P1 → P8)", () => {
 
 	it("sits in its own slot until it is scrolled, then follows the content up", async () => {
 		await render(<PinnedHarness />);
-		expect(translateY()).toBe(200);
+		// The layer starts PINNED_PADDING_TOP above the control's slot.
+		expect(translateY()).toBe(200 - PINNED_PADDING_TOP);
 		await scrollTo_(60);
-		expect(translateY()).toBe(140);
+		expect(translateY()).toBe(140 - PINNED_PADDING_TOP);
 	});
 
 	it("stops just under the inline bar and stays there however far the content scrolls", async () => {

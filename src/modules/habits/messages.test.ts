@@ -77,8 +77,8 @@ describe("message catalogue", () => {
 
 	describe("defaultDurationMs (HAB-48 timings)", () => {
 		it("gives each tone its default", () => {
-			expect(defaultDurationMs({ tone: "info" })).toBe(4000);
-			expect(defaultDurationMs({ tone: "success" })).toBe(4000);
+			expect(defaultDurationMs({ tone: "info" })).toBe(3000);
+			expect(defaultDurationMs({ tone: "success" })).toBe(3000);
 			expect(defaultDurationMs({ tone: "warning" })).toBe(6000);
 			expect(defaultDurationMs({ tone: "error" })).toBeNull();
 		});
@@ -138,12 +138,12 @@ describe("todayCopy (inline Today copy)", () => {
 });
 
 describe("Progress copy (HAB-35–38)", () => {
-	it("explains why Export cannot run, as an info toast that holds 4 s", () => {
+	it("explains why Export cannot run, as an info toast that holds 3 s", () => {
 		expect(messageText(messages.exportNothing)).toBe(
 			"Nothing to export yet. Log a habit on Today first, then come back.",
 		);
 		expect(messages.exportNothing.tone).toBe("info");
-		expect(defaultDurationMs(messages.exportNothing)).toBe(4000);
+		expect(defaultDurationMs(messages.exportNothing)).toBe(3000);
 	});
 
 	it("counts down the unlock in days, singular at one", () => {

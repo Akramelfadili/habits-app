@@ -1,4 +1,5 @@
 import { formatCount } from "@/utils/format";
+import { settingsCopy } from "../messages";
 import type { Habit, Reminder } from "../types";
 
 export function kilobytesLabel(bytes: number): string {
@@ -27,4 +28,15 @@ export function notificationImpact(
 		times: live.length,
 		habits: new Set(live.map((reminder) => reminder.habitId)).size,
 	};
+}
+
+/** The Notifications row's value: Allowed, Off or Not asked yet (nothing while it is still being read). */
+export function notificationValue(
+	permission: "granted" | "denied" | "undetermined" | undefined,
+): string {
+	return permission === "granted"
+		? settingsCopy.reminders.allowed
+		: permission === "denied"
+			? settingsCopy.reminders.off
+			: settingsCopy.reminders.notAsked;
 }

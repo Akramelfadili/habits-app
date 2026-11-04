@@ -230,6 +230,17 @@ describe("HeaderPillButton", () => {
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
+	it("compact is 36 pt high with 4 pt of slop above and below, so it keeps 44 pt and a margin inside the inline bar", async () => {
+		await render(
+			<HeaderPillButton label="Export" compact onPress={jest.fn()} />,
+		);
+		const button = screen.getByRole("button", { name: "Export" });
+		const height = StyleSheet.flatten(button.props.style).minHeight;
+		expect(height).toBe(36);
+		expect(button.props.hitSlop).toEqual({ top: 4, bottom: 4 });
+		expect(height + 4 + 4).toBeGreaterThanOrEqual(HEADER_BUTTON_MIN_SIZE);
+	});
+
 	it("reads and looks disabled while unavailable, but still takes the tap", async () => {
 		const onPress = jest.fn();
 		await render(

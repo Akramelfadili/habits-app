@@ -71,6 +71,9 @@ export function HabitsLibrary({
 					groupOf={(habit) => String(habit.category.id)}
 					handleLabel={(habit) => habitsCopy.reorderHandle(habit.name)}
 					moveLabels={{ up: habitsCopy.moveUp, down: habitsCopy.moveDown }}
+					moveButtonLabel={(habit, direction) =>
+						habitsCopy.moveButton(habit.name, direction)
+					}
 					onReorder={(ids) => onReorder(ids.map(Number))}
 					renderGroup={(key, rows, { isDragging }) => (
 						<LibraryGroup

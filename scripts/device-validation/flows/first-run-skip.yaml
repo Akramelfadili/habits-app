@@ -1,5 +1,6 @@
-# Known bug (d): First Run → Skip → the empty Today. Is the tab bar reachable,
-# can you get to Habits and Settings?
+# First Run → Skip → the empty Today. The tab bar must be there (only First Run
+# hides it) and Habits / Progress must open. The skip used to flake: the gate's
+# live "seen" flag lagged the write and the tabs redirected back to First Run.
 # route: /?fixtures=first-run · clock: 2026-10-23T09:00:00
 # `assertVisible … optional` warns instead of failing, so the run reports
 # which tabs were there (record-flows.mjs lists the warnings).
@@ -14,9 +15,9 @@ appId: ${BUNDLE_ID}
     visible: "Nothing to track yet"
     timeout: 8000
 - takeScreenshot: d-02-empty-today
-- assertVisible: {text: "Today", optional: true}
-- assertVisible: {text: "Progress", optional: true}
-- assertVisible: {text: "Habits", optional: true}
+- assertVisible: "Today"
+- assertVisible: "Progress"
+- assertVisible: "Habits"
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 3000, optional: true}
 - takeScreenshot: d-03-after-3s
 - swipe: {start: "50%, 60%", end: "50%, 30%", duration: 500}

@@ -9,6 +9,7 @@ import {
 	tabBarToastOffset,
 } from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
+import { ToastRouteWatcher } from "@/components/ui/composite/toast-route-watcher";
 import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
 import { useFirstRunQueries } from "@/modules/habits/hooks/use-first-run-queries";
@@ -56,25 +57,28 @@ export default function TabsLayout() {
 	// so the pill is never drawn over it. An install that already has habits
 	// but predates the flag gets it written once, so deleting every habit later
 	// can never bring First Run back.
-	const { gate, needsSeenMark, habitCount } = useFirstRunQueries();
-	// FR3 (the reminder question) and FR4 (the empty Today after Skip) are drawn
-	// without the bar — the owner's decision over the frames. The bar returns as
-	// soon as a first habit exists and the question is answered.
+	const { gate, needsSeenMark } = useFirstRunQueries();
+	// Only First Run (FR1–FR4 and Browse suggestions from it, which are root
+	// routes outside this layout) and the FR3 reminder question draw no bar. The
+	// empty Today is an ordinary tab root: the bar stays, and Progress and
+	// Habits work with no habits.
 	const offerOpen = useFirstRunOfferStore((state) => state.habit !== null);
-	const landing = useFirstRunOfferStore((state) => state.landing);
-	const setLanding = useFirstRunOfferStore((state) => state.setLanding);
+	const hideBar = offerOpen;
+	// Leaving First Run says so at once; the gate's live flag catches up a moment
+	// later, and until it does the stale "never seen" must not redirect back.
+	const leftFirstRun = useFirstRunOfferStore((state) => state.leftFirstRun);
+	const setLeftFirstRun = useFirstRunOfferStore(
+		(state) => state.setLeftFirstRun,
+	);
 	useEffect(() => {
-		if (landing && habitCount !== undefined && habitCount > 0) {
-			setLanding(false);
-		}
-	}, [landing, habitCount, setLanding]);
-	// An unknown count counts as none: the bar must not flash while it loads.
-	const hideBar = offerOpen || (landing && !habitCount);
+		if (leftFirstRun && gate === "done") setLeftFirstRun(false);
+	}, [leftFirstRun, gate, setLeftFirstRun]);
 	const { markFirstRunSeen } = useFirstRunActions();
 	useEffect(() => {
 		if (needsSeenMark) void markFirstRunSeen();
 	}, [needsSeenMark, markFirstRunSeen]);
-	if (gate === "first-run") return <Redirect href="/first-run" />;
+	if (gate === "first-run" && !leftFirstRun)
+		return <Redirect href="/first-run" />;
 
 	return (
 		<View style={styles.root}>
@@ -119,6 +123,7 @@ export default function TabsLayout() {
 				<Tabs.Screen name="(progress)" options={{ title: "Progress" }} />
 				<Tabs.Screen name="(habits)" options={{ title: "Habits" }} />
 			</Tabs>
+			<ToastRouteWatcher />
 			<ToastHost
 				bottomOffset={tabBarToastOffset(insets.bottom, accessibilityTextSize)}
 			/>

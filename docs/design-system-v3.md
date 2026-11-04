@@ -134,7 +134,7 @@ Motion confirms an action; it never decorates. With Reduce Motion nothing moves 
 | fill | 450 ms cubic-bezier(.22,1,.36,1) (bar, ring, pie) | Jumps to value |
 | day-switch | 160 ms, crossfade + 12 pt slide | Crossfade only |
 | sheet / push | iOS spring ≈ 340 ms / iOS default | System crossfade |
-| toast | 240 in / 180 out, rise 12 pt + fade | Fade only |
+| toast | 200 in / 200 out, rise 12 pt + fade; a newer toast swaps in at once; tap or swipe dismisses | 150 ms crossfade, no rise |
 | reorder | Lift scale 1.02 + E2 shadow | Shadow only |
 | header collapse | scroll-linked, no duration: title scale 1 → .88 and opacity 1 → 0 over 0–60 % of the range, bar name and buttons 50–100 %, bar background and hairline 70–100 %; settles on the nearer end when scrolling stops inside it (`useCollapsingHeader`) | No interpolation, no settle; 150 ms crossfade at 50 % |
 | celebrate | 600 ms once, check draws | Static check |
@@ -155,7 +155,7 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | ID | Component | Was | Notes |
 |---|---|---|---|
 | V3-01 | Tab bar · 3 tabs | V1-17 | **A** solid: card + top hairline, 56 + 34 inset, content stops space-600 above, toasts 16 above. **B (baseline)** floating pill: 16 side insets, 56 tall, 9 above home indicator, card 88 % light / 94 % dark + blur, hairline, soft shadow; Reduce Transparency → solid. Active = filled capsule + text ink + 600. Bottom padding 112 pt, toasts 12 above, sheets cover it. AX → A. Inert during migration. |
-| V3-02 | Header + header button | V1-20 chrome | [back] · eyebrow caption caps · display title · ≤ 2 trailing 44 pt circle buttons (card + hairline); title 2 lines then truncate |
+| V3-02 | Header + header button (+ **UI fix batch:** `HeaderPillButton compact` — 36 pt drawn, 4 pt hit slop above and below for a 44 pt target, used in the 44 pt inline bar so it clears the bar's edges; `CollapsedHeaderBar hairline={false}` and `PinnedBelowBar`'s `PINNED_PADDING_TOP` (8 pt above the pinned control) for a bar with a pinned control under it) | V1-20 chrome | [back] · eyebrow caption caps · display title · ≤ 2 trailing 44 pt circle buttons (card + hairline); title 2 lines then truncate |
 | V3-03 | Week strip | new | 7 days, iOS first weekday, today ringed, selected filled accent, dot only when all due done, future faint inert, swipe for weeks |
 | V3-04 | Completion circle | V1-06 + VAR-06 | Build = filled accent; Break = amber outline, resisted = amber check on warnTint; quantity partial = pie fill; 28 pt visual, 44 hit |
 | V3-05 | Completion cell + legend | NEW-16 + VAR-09 | Square, read-only, radius floor(size/3), accent tints, notch for partial |
@@ -176,10 +176,10 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-20 | Toggle | V1-07 | Off track outline; knob onAccent; whole row toggles |
 | V3-21 | Checkbox | new | |
 | V3-22 | Buttons | V1-03/04/05 + VAR-13 | Primary, secondary, destructive, disabled-with-reason, compact (44 hit). **Built:** destructive is the outlined red pill and `variant="compact"` the 36 pt inset pill (V3-4a); secondary is still the hairline pill, not the 3:1 outline, and `link` is secondary ink (V3-6) |
-| V3-23 | List item | V1-14 + VAR-05/08 | **Built (V3-4b):** `value` (right text), `selected` (drawn check, radio-style), `navigable` chevron, `leading` slot |
+| V3-23 | List item | V1-14 + VAR-05/08 | **Built (V3-4b):** `value` (right text), `selected` (drawn check, radio-style), `navigable` chevron, `leading` slot. **Settings hub (S1, step 9):** every row is `leading` `IconBadge` + title + grey `value` + chevron on the shared 60 pt row; the frames draw ≈ 54 pt, not followed |
 | V3-24 | Sheet | V1-15 + VAR-03 | Grabber, title, Close (swipe = Close); confirm sheets drop Close and end with Cancel |
 | V3-25 | Destructive confirm | NEW-12 + V1-16 | Archive-first variant, move-preview variant. **Built (V3-4a):** `DestructiveConfirmSheet` — safe action first and focused, outlined red pill, hint, Cancel last, in-sheet error banner, busy state; Archive's one-tap sheet (DC5) is its own, lighter sheet |
-| V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 4 s success+info / 6 s warning / errors until Retry or swipe |
+| V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 3 s success+info / 6 s warning / errors until Retry or swipe |
 | V3-27 | Inline banner | V1-19 + NEW-13 | States that last. **Built (V3-4b):** card, amber tone with symbol, optional action (Open Settings, Retry) |
 | V3-28 | Empty state | V1-21 | |
 | V3-29 | Unlock card | NEW-11 | Progress toward 7 days of logs |
@@ -187,6 +187,8 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-31 | Log row | NEW-22 | **Later** (PR-02); do not build |
 | V3-32 | Icon square | VAR-02 | |
 | V3-33 | Screen header | new | **Built (V3-4b):** `ScreenHeader` — optional eyebrow caption, large title, optional trailing slot; used by Reminders and Settings |
+| V3-35 | Move button | new | **Built (UI fix batch):** `MoveButton` — a 44 × 44 pt chevron up or down beside the drag grip in reorder mode (Habits, Categories); dimmed and inert at the first or last place of its group; labelled "Move <name> up" |
+| V3-36 | Settings page | new | **Built (UI fix batch):** `SettingsPage` — large title (focus on entry), groups in one scroll, tab-bar padding; `NotificationsOffBanner` — the amber V3-27 banner with Open Settings, drawn once at the top of the page it belongs to |
 | V3-34 | Remove button | new | **Built (V3-4b):** `RemoveButton` — 44 pt hit, red minus on the left of a row; instant, with an Undo toast |
 
 ## Screen structure quick map

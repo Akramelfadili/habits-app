@@ -51,8 +51,12 @@ tags:
 - tapOn:
     id: "Settings"
     index: 1
-- assertVisible: "Weeks start on Monday.*"
+# Settings is a hub (S1): one row per page. Appearance carries the Monday note.
+- assertVisible: "Evening review"
 - takeScreenshot: hab-13-settings
+- tapOn: "Theme.*"
+- assertVisible: "Weeks start on Monday.*"
+- back
 # Settings was pushed inside the Habits tab, so Back returns to the library.
 - back
 - assertVisible: "6 active · 2 archived"

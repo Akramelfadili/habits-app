@@ -7,7 +7,7 @@ export type ToastMessage = {
 	message: string;
 	/**
 	 * V3-26 tones. A toast with an action is an Undo and holds 5 s; otherwise
-	 * info and success hold 4 s, warning 6 s, and an error stays until Retry or
+	 * info and success hold 3 s, warning 6 s, and an error stays until Retry or
 	 * a swipe (HAB-48). Defaults to "info".
 	 */
 	tone?: ToastTone;
@@ -15,7 +15,7 @@ export type ToastMessage = {
 	onAction?: () => void;
 };
 
-type ShownToast = ToastMessage & { id: number };
+export type ShownToast = ToastMessage & { id: number };
 
 type ToastState = {
 	toast: ShownToast | null;

@@ -8,7 +8,8 @@
  * only the module screens stubbed. It lives here, not under `src/app/`,
  * because every `.tsx` in the app directory is picked up as a route.
  */
-import { act } from "@testing-library/react-native";
+import { act, fireEvent, waitFor } from "@testing-library/react-native";
+import { router } from "expo-router";
 import { renderRouter, screen, testRouter } from "expo-router/testing-library";
 import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
@@ -43,6 +44,21 @@ jest.mock("@/modules/habits/screens/manage-categories-screen", () => ({
 }));
 jest.mock("@/modules/habits/screens/settings-screen", () => ({
 	SettingsScreen: mockStub("settings"),
+}));
+jest.mock("@/modules/habits/screens/settings-appearance-screen", () => ({
+	SettingsAppearanceScreen: mockStub("settings-appearance"),
+}));
+jest.mock("@/modules/habits/screens/settings-evening-review-screen", () => ({
+	SettingsEveningReviewScreen: mockStub("settings-evening-review"),
+}));
+jest.mock("@/modules/habits/screens/settings-notifications-screen", () => ({
+	SettingsNotificationsScreen: mockStub("settings-notifications"),
+}));
+jest.mock("@/modules/habits/screens/settings-freezes-screen", () => ({
+	SettingsFreezesScreen: mockStub("settings-freezes"),
+}));
+jest.mock("@/modules/habits/screens/settings-about-screen", () => ({
+	SettingsAboutScreen: mockStub("settings-about"),
 }));
 jest.mock("@/modules/habits/screens/reminders-screen", () => ({
 	RemindersScreen: mockStub("reminders"),
@@ -100,7 +116,7 @@ beforeEach(() => {
 	mockGate = "done";
 	mockNeedsSeenMark = false;
 	mockHabitCount = 1;
-	useFirstRunOfferStore.setState({ habit: null, landing: false });
+	useFirstRunOfferStore.setState({ habit: null, leftFirstRun: false });
 	mockMarkFirstRunSeen.mockReset().mockResolvedValue({ ok: true });
 });
 
@@ -167,27 +183,56 @@ describe("First Run opens instead of the tabs (HAB-46)", () => {
 	});
 });
 
-describe("FR3 and FR4 are drawn without the tab bar (owner's decision)", () => {
-	it("the empty Today right after leaving First Run has no bar (FR4)", async () => {
+describe("only First Run hides the tab bar (UI fix batch)", () => {
+	it("the empty Today shows the bar, and Progress and Habits open with no habits", async () => {
 		mockHabitCount = 0;
-		useFirstRunOfferStore.setState({ landing: true });
-		await renderApp("/");
+		const app = await renderApp("/");
 		expect(screen.getByText("today")).toBeTruthy();
-		expect(screen.queryByText("Progress")).toBeNull();
+		for (const tab of ["Today", "Progress", "Habits"]) {
+			expect(screen.getByText(tab)).toBeTruthy();
+		}
+		await fireEvent.press(screen.getByText("Progress"));
+		expect(screen.getByText("progress")).toBeTruthy();
+		await fireEvent.press(screen.getByText("Habits"));
+		expect(screen.getByText("manage")).toBeTruthy();
+		expect(tabGroup(app)).toBe("(habits)");
 	});
 
-	it("the bar is back as soon as a first habit exists, and stays", async () => {
+	it("the empty Today right after leaving First Run has the bar", async () => {
 		mockHabitCount = 0;
-		useFirstRunOfferStore.setState({ landing: true });
+		useFirstRunOfferStore.setState({ leftFirstRun: true });
 		await renderApp("/");
-		expect(screen.queryByText("Progress")).toBeNull();
-		mockHabitCount = 1;
-		await act(async () => {
-			useFirstRunOfferStore.setState({ landing: true, habit: null });
-		});
-		await renderApp("/");
+		expect(screen.getByText("today")).toBeTruthy();
 		expect(screen.getByText("Progress")).toBeTruthy();
-		expect(useFirstRunOfferStore.getState().landing).toBe(false);
+	});
+
+	it("does not bounce back to First Run while the seen flag is still stale after leaving it", async () => {
+		mockGate = "first-run";
+		const app = await renderApp("/first-run");
+		expect(app.getPathname()).toBe("/first-run");
+		// Skip: the write has landed, but the gate's live query still says "first-run".
+		useFirstRunOfferStore.setState({ leftFirstRun: true });
+		await act(async () => router.replace("/"));
+		await waitFor(() => expect(screen.getByText("today")).toBeTruthy());
+		expect(app.getPathname()).toBe("/");
+		// The gate catches up: the override is dropped, Today stays.
+		mockGate = "done";
+		// (any store change re-renders the layout, standing in for the live query firing)
+		await act(async () =>
+			useFirstRunOfferStore.setState({ habit: { id: 1 } as never }),
+		);
+		await act(async () => useFirstRunOfferStore.getState().clear());
+		expect(useFirstRunOfferStore.getState().leftFirstRun).toBe(false);
+		await fireEvent.press(screen.getByText("Progress"));
+		expect(screen.getByText("progress")).toBeTruthy();
+	});
+
+	it("First Run itself draws no bar", async () => {
+		mockGate = "first-run";
+		await renderApp("/");
+		for (const tab of ["Today", "Progress", "Habits"]) {
+			expect(screen.queryByText(tab)).toBeNull();
+		}
 	});
 
 	it("the reminder question (FR3) hides the bar while it is open", async () => {
@@ -304,5 +349,74 @@ describe("Add and Edit habit are root modals, outside the tabs", () => {
 		const app = await renderApp(url);
 		await app.findByText(marker);
 		expect(tabGroup(app)).toBeUndefined();
+	});
+});
+
+describe("every pushed screen can be left (UI fix batch)", () => {
+	// Pushed inside a tab: the header's own back button, naming where it goes back to.
+	it.each([
+		["Detail from Today", "/", "/habit/1", "Back to Today"],
+		[
+			"Detail from Progress",
+			"/(progress)/progress",
+			"/habit/1",
+			"Back to Progress",
+		],
+		["Detail from Habits", "/(habits)/manage", "/habit/1", "Back to Habits"],
+		["Settings from Habits", "/(habits)/manage", "/settings", "Back to Habits"],
+		[
+			"Appearance",
+			"/(habits)/manage",
+			"/settings/appearance",
+			"Back to Settings",
+		],
+		[
+			"Evening review",
+			"/(habits)/manage",
+			"/settings/evening-review",
+			"Back to Settings",
+		],
+		[
+			"Notifications",
+			"/(habits)/manage",
+			"/settings/notifications",
+			"Back to Settings",
+		],
+		["Freezes", "/(habits)/manage", "/settings/freezes", "Back to Settings"],
+		["About", "/(habits)/manage", "/settings/about", "Back to Settings"],
+		["Reminders from Detail", "/(habits)/manage", "/reminders/1", "Back"],
+		[
+			"a Year month",
+			"/(progress)/progress",
+			"/month/2026-07-01",
+			"Back to Year",
+		],
+		[
+			"Categories from Habits",
+			"/(habits)/manage",
+			"/categories?from=habits",
+			"Back to Habits",
+		],
+		[
+			"Categories from Settings",
+			"/(habits)/manage",
+			"/categories",
+			"Back to Settings",
+		],
+	])("%s has a back button when pushed", async (_name, root, route, label) => {
+		await renderApp(root);
+		await testRouter.push(route);
+		expect(screen.getByLabelText(label)).toBeTruthy();
+	});
+
+	// Root modals have no Back: each has an explicit Cancel / Close.
+	it.each([
+		["New habit", "/new-habit", /Cancel|Close/],
+		["Browse suggestions", "/suggestions", /Cancel|Close/],
+		["Edit habit", "/edit-habit/1", /Cancel|Close/],
+	])("%s has an explicit close", async (_name, route, label) => {
+		await renderApp("/");
+		await testRouter.push(route);
+		expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
 	});
 });

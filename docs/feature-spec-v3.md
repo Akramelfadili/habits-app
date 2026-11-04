@@ -25,7 +25,7 @@ The decisions below were made after the code assessment (`docs/assessment-v3.md`
 - **P12 (Year) always shows the habit chip** ("All habits" when unfiltered), unless exactly one habit exists; the mockup draws the chip only once a habit is chosen (P15).
 - **The per-habit rates list (P8) includes an archived habit that had days in the range**; insights never name one (D11).
 - **The AX3 stacked range list overlays the content** instead of pushing it down (P11); known, revisit in V3-6.
-- **FR3 and FR4 are drawn without the tab bar** (owner's decision, V3-6): the frames draw it. Skip leaves Progress and Habits unreachable until a first habit exists (`docs/backlog.md`, V3-5).
+- **Only First Run hides the tab bar** (owner's decision, UI fix batch; reverses V3-6's "FR3 and FR4 without the bar"): FR1–FR3 (and Browse suggestions opened from First Run, root routes outside the tabs; FR3's question is a modal over Today) have none. The empty Today after Skip, or whenever there are no habits, is an ordinary tab root with the bar, and Progress and Habits open with no habits.
 - **Re-tapping the selected tab scrolls to the top and focuses the title** (08.4); it does not pop a pushed screen.
 - **Week day headers are 44 pt high and 28 pt wide** (P1): the cell pitch is 28 pt, so a 44 pt-wide target would overlap its neighbours. A touch-target exception, on the V3-6 audit list in `docs/backlog.md`.
 
@@ -162,6 +162,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-3a, Today scroll):** tapping a day never moved the strip, the scroll offset or the title (measured on web and pinned by tests); what moved was the list — the "Logging for …" bar mounted instantly and pushed it down 64 pt, and the inline bar (then at 64 pt) covered the strip's day letters. The bar now fades in and the list glides over the 200 ms state timing (Reduce Motion: 150 ms crossfade, no glide). The collapse is scroll-linked on the UI thread (`useCollapsingHeader` + `CollapsedHeaderBar`, `components/ui/composite/collapsing-header.tsx`): the range is where the week strip's top edge meets the bar's bottom edge (measured from the header, 32 pt at normal text size); the title shrinks (scale 1 → 0.88) and fades over the first 60 % of it, the bar's name and + arrive from 50 %, its background and hairline from 70 %; scrolling that stops inside the range settles on the nearer end; with Reduce Motion there is no interpolation and no settling, only a 150 ms crossfade at the middle. **The week strip scrolls with the content** (T5 shows it gone from the compact bar, not pinned). The bar carries the **+** as a 44 pt `HeaderCircleButton` (the iOS 26 guard); T5 draws it smaller. Not yet: Progress and Habits headers.
 
+> **As built (UI fix batch, step 1):** the strip keeps no browsing state: it **always shows the week of the selected day** (today by default). A swipe (or VoiceOver's Previous / Next week action) selects the same weekday a week away, never later than today, so the "Logging for …" bar says where logs go; selecting today or "Show today" returns to the current week. Owner decision: this replaces V3-2b's "week shown until swiped". Cause of the blank ~230 pt strip: choosing a day while browsing changed the selection and the week offset in two renders, which restarted the week fade and then stopped it at opacity 0; the offset, the direction state and the effect that reset them are gone, and the fade always ends at 1. Every day is now its own VoiceOver button ("Wednesday 21 October, today, 3 of 5 done", selected state, hint "Shows this day's habits"); the container is no longer one adjustable element (iOS exposed only the selected day). The scroll-linked collapse is kept.
+
 **Implementation notes:** selected-day state lives in a module hook `useSelectedDay(today)` (`null` = follow today) in TodayScreen's own state, not a global store. Writes go to the selected past date, else today with the existing rollover guard. Undo captures the date in its closure (existing rule). Query hooks take the selected date as live-query deps. Streak-at-risk applies only to the real today. The week window is keyed by the selected day.
 
 ---
@@ -236,6 +238,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 **Edge cases:** frozen day in RL3 (PR-11 fallback = read-only); quantity edit on a past day targets that date and Undo too.
 
 > **As built (V3-3b):** Edit this day opens from Progress too (Week day header, Month day card) with no origin habit — `useRetroLogQueries(null, date)` — so it has no note field. The Year chip's picker is `HabitFilterSheet` ("Show habit").
+
+> **As built (UI fix batch, step 8):** pinned under the inline bar, the range switcher has 8 pt of air above it and one hairline below the block; the bar itself draws no hairline there, and its Export pill is the compact one (36 pt drawn, 44 pt target) so it clears the bar's edges. An insight pager shows its first card in its own column until it has been measured, so a long insight wraps inside its card.
 
 ---
 
@@ -322,6 +326,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-4a):** *Habits tab* — route `manage` renders `HabitsScreen`. Header: counts as the eyebrow ("7 active · 2 archived", "No habits", "Reorder · drag within a category"), gear and + (Done while reordering), collapsing into the inline bar (which keeps the buttons). Search matches names, case- and accent-folded, across active and archived; results split by status, archived ones have Restore; no results says what was searched and offers "Add “Yoga” as a habit" (`/new-habit?name=Yoga`). Rows: icon square, name, "Daily · 8 glasses" / "3× per week" / "Tue, Thu" / "Break · daily", with "13-day streak" only on a daily Build habit; VoiceOver actions Reorder and Archive. Reorder keeps a lifted row in its category (VoiceOver Move up / Move down on the grip). Archived is collapsed ("Show"/"Hide"), Restore is instant ("<Habit> is back on Today", Undo restores the archive date and pauses) and a line explains the fresh streak. Categories row (count) at the end, its Back reads Habits. H6 hid "Browse suggestions" until HAB-46 (superseded by V3-5). Deviations: `docs/backlog.md`, "V3-4a".
 
+> **As built (UI fix batch, step 7):** in reorder mode (Habits and Categories) every row has visible **Move up / Move down** buttons beside the grip, the primary way to reorder (drag was unreliable on the owner's phone); they stop at the ends of the row's group and read "Move Meditate up". The grip and the VoiceOver actions stay.
+
 ---
 
 ## HAB-40 — Habit Detail
@@ -396,7 +402,9 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 - Export (EX1–EX4): JSON or CSV → progress with file name (closing the sheet keeps it running; toast when ready) → file card (size, counts, Share file) → error banner with reason, Retry, "Nothing was changed". Same flow from Progress › Export. Archived habits included; to-dos/expenses removed (HAB-26).
 - SY6: when iOS permission is off, one banner summarising what is affected ("4 times on 3 habits") with Open Settings.
 
-> **As built (V3-4b):** Settings is **one scrolling screen** with five flat cards (Appearance, Reminders, Streaks, Data, About), not a hub with a page per frame; the frames S2–S6 and SY6 are its sections. The evening-review time is **editable** from its row (the shared time wheel in a sheet without days; stored as `habits.eveningReviewTime`; the default stays 21:30, the spec fixing none — the frames' 21:00 is not copied). The time is stored first; if the reschedule then fails it is logged and the launch reconcile moves the notifications, with no toast. The evening review is scheduled only on weekdays an active habit can be due. Export is one sheet backed by a store (`useExportStore`), so closing it keeps the export running and a toast reports the result when no sheet is open; the JSON now carries reminders and categories; the file card shows size and counts. Version reads "x.y (build)". Deviations: `docs/backlog.md` (V3-4b, steps 5 and 6).
+> **As built (V3-4b):** Settings was **one scrolling screen** with five flat cards (superseded by the next note: it is now the S1 hub with a page per row). The evening-review time is **editable** from its row (the shared time wheel in a sheet without days; stored as `habits.eveningReviewTime`; the default stays 21:30, the spec fixing none — the frames' 21:00 is not copied). The time is stored first; if the reschedule then fails it is logged and the launch reconcile moves the notifications, with no toast. The evening review is scheduled only on weekdays an active habit can be due. Export is one sheet backed by a store (`useExportStore`), so closing it keeps the export running and a toast reports the result when no sheet is open; the JSON now carries reminders and categories; the file card shows size and counts. Version reads "x.y (build)". Deviations: `docs/backlog.md` (V3-4b, steps 5 and 6).
+
+> **As built (UI fix batch, step 9) — Settings follows the frames; this reverses "one scrolling screen" above (owner's decision):** `/settings` is the **S1 hub**: five groups (Appearance, Reminders, Streaks, Data, About), each row an icon square, title, the current value in grey and a chevron — Theme · System, Evening review · 21:30 (or Off), Notifications · Allowed, Freezes · 1 left, Export data · JSON, CSV (opens the export sheet), About · 3.0 (412). Each row pushes its page under `/settings/…`, each with a large title, focus on it, and Back reading "Settings": **Appearance** (S2: Light, Dark, System · Follows iOS, the Monday and text-size note), **Evening review** (S3: the notifications-off banner first when off, the switch, Time ›, "Sent only on days with open habits."), **Notifications** (SY6: the banner once at the top with Open Settings, Affected, the footnote; allowed: the state and an Open Settings row), **Freezes** (S4: Left and Used stat cards, the rule, how to use one), **About** (S6: Version, Copy diagnostics → toast). Not built, on purpose: Saved (needs PR-08), Auto-use, Backup, Privacy, Send feedback, S5 as a page. Details and the full difference list: `docs/backlog.md` (step 9).
 
 ---
 
@@ -426,6 +434,8 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 > **As built (V3-5):** *Gate:* First Run replaces the tabs (route `/first-run`, outside `(tabs)`, so no pill) only while the database has no habits, archived included, and `habits.seenFirstRun` is unset; the flag is written on a first save, on any skip and once for an install that already has habits. FR1 welcome (Skip for now is an addition); FR2 is the New habit form in `slim` mode (name, five quick picks that also carry category and target, Type, Frequency) whose Close skips to Today; FR3 is an `AlertDialog` in its `offer` layout over Today (after our question Allow reminders raises the iOS prompt and then adds the default 09:00 reminder, Not now does nothing); FR4 is the empty Today. *Suggestions:* `suggestions.ts` holds the nine; `/suggestions` is a root modal (`?firstRun=1` from First Run), rows from `groupSuggestions` (Break habits last), Added by the form's duplicate rule; a tap pushes `/new-habit?prefill=…`. Entry points: FR1, Today's and Habits' empty states. Deviations: `docs/backlog.md`, "V3-5".
 
+> **As built (UI fix batch, step 4):** the `landing` flag is gone; the tabs layout hides the bar only while the FR3 question is open. Skip no longer flakes: the tabs' gate reads the "seen" flag from a live query that lags the write, so for a moment after `markFirstRunSeen` the gate still said "first-run" and the tabs redirected straight back to the welcome (the empty Today was only sometimes on screen). `leaveFirstRun` now sets `leftFirstRun` first, the layout does not redirect while it is set, and clears it once the gate reads "done".
+
 ---
 
 ## HAB-47 — System states
@@ -443,7 +453,7 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 ## HAB-48 — Message catalogue
 **Frames:** TC1–TC3 and the catalogue table (06 Messages)
 
-**Rules:** all toasts, banners and inline messages come from one catalogue module; copy per the mockup table. Durations: Undo 5 s, success/info 4 s, warning 6 s, errors until Retry or swipe. Placement: 16 pt above bar A, 12 pt above pill B; inside a sheet above its last button; never over Undo. VoiceOver announces every toast and keeps it until dismissed.
+**Rules:** all toasts, banners and inline messages come from one catalogue module; copy per the mockup table. Durations: Undo 5 s, success/info 3 s (owner shortened it from 4 s, UI fix batch), warning 6 s, errors until Retry or swipe. Placement: 16 pt above bar A, 12 pt above pill B; inside a sheet above its last button; never over Undo. VoiceOver announces every toast and keeps it until dismissed.
 
 ---
 

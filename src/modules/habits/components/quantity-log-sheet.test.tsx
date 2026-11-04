@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { useToastStore } from "@/store/toast-store";
+import { motion } from "@/theme/theme";
 import { makeHabit } from "../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
@@ -49,7 +50,9 @@ describe("QuantityLogSheet (QS1-QS3)", () => {
 			.mockReset()
 			.mockResolvedValue({ ok: true, value: undefined });
 		useToastStore.setState({ toast: null });
+		jest.useFakeTimers();
 	});
+	afterEach(() => jest.useRealTimers());
 
 	it("titles the sheet with the habit name as a heading and shows the amount of the target", async () => {
 		await open();
@@ -104,6 +107,8 @@ describe("QuantityLogSheet (QS1-QS3)", () => {
 		await act(async () => {
 			await fireEvent.press(screen.getByText("Done"));
 		});
+		expect(onClosed).not.toHaveBeenCalled();
+		await act(() => jest.advanceTimersByTime(motion.sheet.duration));
 		expect(onClosed).toHaveBeenCalledTimes(1);
 	});
 
@@ -114,6 +119,8 @@ describe("QuantityLogSheet (QS1-QS3)", () => {
 		await act(async () => {
 			await fireEvent.press(screen.getByText("Close"));
 		});
+		expect(onClosed).not.toHaveBeenCalled();
+		await act(() => jest.advanceTimersByTime(motion.sheet.duration));
 		expect(onClosed).toHaveBeenCalledTimes(1);
 		expect(useToastStore.getState().toast).toMatchObject({
 			message: "Drink water · 7 of 8 glasses",

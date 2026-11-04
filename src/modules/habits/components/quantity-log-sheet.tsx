@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
@@ -10,7 +10,7 @@ import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { Stepper } from "@/components/ui/primitives/stepper";
 import { TextField } from "@/components/ui/primitives/text-field";
-import { space, textStyles } from "@/theme/theme";
+import { motion, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { MAX_QUANTITY_VALUE } from "../constants";
 import { useQuantitySheetActions } from "../hooks/use-quantity-sheet-actions";
@@ -53,6 +53,22 @@ export function QuantityLogSheet({
 }: QuantityLogSheetProps) {
 	const { colors } = useTheme();
 	const [mode, setMode] = useState<"stepper" | "exact">("stepper");
+	// The parent drops this component on `onClosed`; waiting for the slide-out
+	// first means the Modal is never torn out of the screen mid-animation.
+	const [open, setOpen] = useState(true);
+	const [closing, setClosing] = useState(false);
+	const onClosedRef = useRef(onClosed);
+	useEffect(() => {
+		onClosedRef.current = onClosed;
+	});
+	useEffect(() => {
+		if (!closing) return;
+		const timer = setTimeout(
+			() => onClosedRef.current(),
+			motion.sheet.duration,
+		);
+		return () => clearTimeout(timer);
+	}, [closing]);
 	const [draft, setDraft] = useState("");
 	const { amount, setAmount, close, target } = useQuantitySheetActions({
 		habit,
@@ -60,7 +76,10 @@ export function QuantityLogSheet({
 		initial: value,
 		dayLabel,
 		offSchedule,
-		onClosed,
+		onClosed: () => {
+			setOpen(false);
+			setClosing(true);
+		},
 	});
 	const unit = habit.targetUnit ?? "";
 	const atTarget = target > 0 && amount >= target;
@@ -69,7 +88,7 @@ export function QuantityLogSheet({
 		parsed !== null && Number.isInteger(parsed) && parsed !== amount;
 
 	return (
-		<Sheet visible onDismiss={close}>
+		<Sheet visible={open} onDismiss={close}>
 			<SheetHeader
 				title={
 					dayLabel

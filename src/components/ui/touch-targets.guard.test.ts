@@ -45,8 +45,12 @@ const TOUCH_TARGET_EXCEPTIONS: Record<string, string> = {
 		"A full-width card row: 14 pt padding top and bottom around a 40 pt icon square, so it is at least 68 pt tall and as wide as its column.",
 	"components/ui/composite/completion-cell.tsx::0":
 		"The cell is `size` pt (16–40 by use) and `hitSlop = ceil((44 − size) / 2)` is added on each side, so the area is 44 pt in both directions whenever size ≤ 44 (the Month calendar's 40 pt cell and the one-habit week block's 40 pt cell). Adjacent cells touch their neighbours' slop only where the cells are 2 pt apart, the documented 08.2 pitch.",
+	"components/ui/composite/header-buttons.tsx::2":
+		"The header pill (Progress's Export). Normally `minHeight` 44; with `compact` (inside the 44 pt inline bar) it is drawn 36 pt high and `hitSlop` {top: 4, bottom: 4} makes the area 44 pt. The guard reads the style's smaller number, not the slop that is only set when `compact`.",
 	"components/ui/composite/sheet.tsx::0":
 		"The scrim: `StyleSheet.absoluteFill` over the whole screen, a tap closes the sheet. Not a control to aim at.",
+	"components/ui/composite/toast-host.tsx::0":
+		"BELOW 44 (height), by design: the toast's tap-to-dismiss wrapper is exactly the toast, which is 36 pt tall without an action. Tapping is only a shortcut: a toast also times out and swipes away, VoiceOver has a Dismiss action, and its own action button keeps a 44 pt target. Width is the host's left and right insets.",
 	"components/ui/composite/week-matrix.tsx::0":
 		"BELOW 44 (width), by design: the Week matrix day headers are 44 pt high and 28 pt wide, the cell pitch; a 44 pt-wide target would overlap its neighbours. Documented in feature-spec-v3 'Spec wins over the mockup' (P1) and in the backlog's V3-6 audit list.",
 	"components/ui/primitives/button.tsx::0":

@@ -19,7 +19,7 @@ function router() {
 describe("useFirstRunSkipActions", () => {
 	beforeEach(() => {
 		mockMarkFirstRunSeen.mockReset();
-		useFirstRunOfferStore.setState({ skipFailed: false, landing: false });
+		useFirstRunOfferStore.setState({ skipFailed: false, leftFirstRun: false });
 	});
 
 	it("marks First Run seen and then leaves it for Today", async () => {

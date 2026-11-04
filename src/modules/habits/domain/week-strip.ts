@@ -14,6 +14,9 @@ export type WeekStripDay = {
 	isFuture: boolean;
 	/** Something was due and everything due was done: the accent dot. A day with nothing due has none. */
 	allDone: boolean;
+	/** How many habits are listed that day, and how many of those are done (the VoiceOver label). */
+	due: number;
+	done: number;
 };
 
 /** The seven days of `anchor`'s week, Monday first (D9). */
@@ -23,7 +26,7 @@ export function weekDaysOf(anchor: Date): Date[] {
 }
 
 /** The same weekday `weeks` weeks away — the strip's swipe. */
-export function shiftWeek(anchor: Date, weeks: number): Date {
+function shiftWeek(anchor: Date, weeks: number): Date {
 	return addWeeks(anchor, weeks);
 }
 
@@ -69,14 +72,35 @@ export function weekStripDays(
 				),
 			),
 		);
-		const allDone =
-			!isFuture &&
-			due.length > 0 &&
-			due.every((habit) =>
-				(completedByHabit.get(habit.id) ?? []).some(
-					(entry) => entry.date === key,
-				),
-			);
-		return { date, key, isToday: key === todayKey, isFuture, allDone };
+		const done = due.filter((habit) =>
+			(completedByHabit.get(habit.id) ?? []).some(
+				(entry) => entry.date === key,
+			),
+		).length;
+		const allDone = !isFuture && due.length > 0 && done === due.length;
+		return {
+			date,
+			key,
+			isToday: key === todayKey,
+			isFuture,
+			allDone,
+			due: due.length,
+			done,
+		};
 	});
+}
+
+/**
+ * The day to select after a swipe: the same weekday one week away, so the strip
+ * always shows the week of the selected day. Never later than today; null when
+ * there is no such week (a wholly future one).
+ */
+export function dayAfterWeekSwipe(
+	selected: Date,
+	today: Date,
+	weeks: -1 | 1,
+): Date | null {
+	if (weeks === 1 && !canShowNextWeek(selected, today)) return null;
+	const moved = shiftWeek(selected, weeks);
+	return isAfter(startOfDay(moved), startOfDay(today)) ? today : moved;
 }

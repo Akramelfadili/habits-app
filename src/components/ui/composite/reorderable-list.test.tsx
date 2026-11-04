@@ -24,6 +24,7 @@ async function renderList(onReorder = jest.fn()) {
 			groupOf={(row) => row.group}
 			handleLabel={(row) => `Reorder ${row.id}`}
 			moveLabels={{ up: "Move up", down: "Move down" }}
+			moveButtonLabel={(row, direction) => `Move ${row.id} ${direction}`}
 			onReorder={onReorder}
 			renderItem={(row, handle) => (
 				<View>
@@ -63,6 +64,37 @@ describe("ReorderableList", () => {
 		).toEqual(["meditate", "water", "read"]);
 	});
 
+	it("moves a row with its visible Move up and Move down buttons, no gesture needed", async () => {
+		const onReorder = await renderList();
+
+		await fireEvent.press(screen.getByLabelText("Move water down"));
+		expect(onReorder).toHaveBeenLastCalledWith(["meditate", "water"]);
+		await fireEvent.press(screen.getByLabelText("Move water up"));
+		expect(onReorder).toHaveBeenLastCalledWith(["water", "meditate"]);
+		expect(
+			screen
+				.getAllByText(/^(water|meditate|read)$/)
+				.map((n) => n.props.children),
+		).toEqual(["water", "meditate", "read"]);
+	});
+
+	it("disables the buttons at the ends of a group", async () => {
+		await renderList();
+		expect(
+			screen.getByLabelText("Move water up").props.accessibilityState.disabled,
+		).toBe(true);
+		expect(
+			screen.getByLabelText("Move meditate down").props.accessibilityState
+				.disabled,
+		).toBe(true);
+		expect(
+			screen.getByLabelText("Move read up").props.accessibilityState.disabled,
+		).toBe(true);
+		expect(
+			screen.getByLabelText("Move read down").props.accessibilityState.disabled,
+		).toBe(true);
+	});
+
 	it("won't move a row out of its group", async () => {
 		const onReorder = await renderList();
 
@@ -82,6 +114,7 @@ describe("ReorderableList", () => {
 					groupOf={(row) => row.group}
 					handleLabel={(row) => `Reorder ${row.id}`}
 					moveLabels={{ up: "Move up", down: "Move down" }}
+					moveButtonLabel={(row, direction) => `Move ${row.id} ${direction}`}
 					onReorder={onReorder}
 					renderGroup={(key, children, { isDragging }) => (
 						<View testID={`group-${key}`}>

@@ -598,6 +598,50 @@ describe("HabitFormScreen — create", () => {
 	});
 });
 
+describe("HabitFormScreen — the end of the form stays clear of Save", () => {
+	const layout = (height: number) => ({ nativeEvent: { layout: { height } } });
+	const scrolledTo = (y: number) => ({
+		nativeEvent: {
+			contentOffset: { y },
+			contentSize: { height: 900 },
+			layoutMeasurement: { height: 500 },
+		},
+	});
+	let scrollToEnd: jest.SpyInstance;
+	beforeEach(() => {
+		const { ScrollView } = require("react-native");
+		scrollToEnd = jest
+			.spyOn(ScrollView.prototype, "scrollToEnd")
+			.mockImplementation(() => {});
+	});
+	afterEach(() => jest.restoreAllMocks());
+
+	it("follows the end only when the Save bar grows while the form rests there", async () => {
+		await render(<HabitFormScreen />);
+		const footer = screen.getByTestId("habit-form-footer");
+		const scroller = screen.getByTestId("habit-form-scroll");
+		const followed = () =>
+			scrollToEnd.mock.calls.filter(([arg]) => arg?.animated === false).length;
+		await fireEvent(footer, "layout", layout(76));
+		scrollToEnd.mockClear();
+
+		// Not at the end: a taller bar leaves the form where it is.
+		await fireEvent.scroll(scroller, scrolledTo(100));
+		await fireEvent(footer, "layout", layout(120));
+		expect(followed()).toBe(0);
+
+		// At the end, the bar shrinking changes nothing…
+		await fireEvent.scroll(scroller, scrolledTo(400));
+		await fireEvent(footer, "layout", layout(76));
+		expect(followed()).toBe(0);
+
+		// …and growing (errors, a reason) keeps the last field above it.
+		await fireEvent(footer, "layout", layout(120));
+		expect(scrollToEnd).toHaveBeenCalledWith({ animated: false });
+		expect(followed()).toBe(1);
+	});
+});
+
 describe("HabitFormScreen — discard prompt (F9)", () => {
 	it("lets a pristine form close without asking", async () => {
 		await render(<HabitFormScreen />);

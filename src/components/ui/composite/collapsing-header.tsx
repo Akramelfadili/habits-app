@@ -179,6 +179,12 @@ type CollapsedHeaderBarProps = {
 	testID?: string;
 	/** Trailing header buttons (`HeaderCircleButton`), shown with the bar. */
 	trailing?: ReactNode;
+	/**
+	 * The bar's bottom hairline. Off when a pinned control sits right under the
+	 * bar (Progress's range switcher): that block draws the one hairline below
+	 * itself, so the control is not boxed between two.
+	 */
+	hairline?: boolean;
 };
 
 /**
@@ -192,6 +198,7 @@ export function CollapsedHeaderBar({
 	backgroundStyle,
 	contentStyle,
 	trailing,
+	hairline = true,
 	testID = "collapsed-header-bar",
 }: CollapsedHeaderBarProps) {
 	const { colors } = useTheme();
@@ -204,7 +211,7 @@ export function CollapsedHeaderBar({
 					pointerEvents="none"
 					style={[
 						StyleSheet.absoluteFill,
-						styles.background,
+						hairline && styles.background,
 						{ backgroundColor: colors.bg, borderBottomColor: colors.border },
 						backgroundStyle,
 					]}
@@ -245,6 +252,9 @@ type PinnedBelowBarProps = {
 	testID?: string;
 };
 
+/** Air between the bar and a pinned control; the control's own slot starts this far below the layer's top. */
+export const PINNED_PADDING_TOP = space[200];
+
 /**
  * A control that scrolls with the content until it meets the inline bar, then
  * pins just under it (Progress's range switcher, P1 → P8). One element, moved
@@ -263,14 +273,19 @@ export function PinnedBelowBar({
 	const { colors } = useTheme();
 	const layer = useAnimatedStyle(() => ({
 		transform: [
-			{ translateY: Math.max(top.value - scrollY.value, COLLAPSED_BAR_HEIGHT) },
+			{
+				translateY: Math.max(
+					top.value - PINNED_PADDING_TOP - scrollY.value,
+					COLLAPSED_BAR_HEIGHT,
+				),
+			},
 		],
 	}));
 	// A hairline arrives as the control settles under the bar, so content can
 	// be seen to pass beneath it.
 	const hairline = useAnimatedStyle(() => ({
 		opacity: interpolate(
-			top.value - scrollY.value - COLLAPSED_BAR_HEIGHT,
+			top.value - PINNED_PADDING_TOP - scrollY.value - COLLAPSED_BAR_HEIGHT,
 			[0, space[100]],
 			[1, 0],
 			Extrapolation.CLAMP,
@@ -311,6 +326,7 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		paddingHorizontal: space[500],
+		paddingTop: PINNED_PADDING_TOP,
 		paddingBottom: space[200],
 	},
 	pinnedHairline: {

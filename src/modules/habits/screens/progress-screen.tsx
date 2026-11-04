@@ -13,6 +13,7 @@ import {
 	CollapsedHeaderBar,
 	collapseRange,
 	HEADER_CONTENT_PADDING_TOP,
+	PINNED_PADDING_TOP,
 	PinnedBelowBar,
 	useCollapsingHeader,
 } from "@/components/ui/composite/collapsing-header";
@@ -111,7 +112,8 @@ export function ProgressScreen() {
 	// Where the switcher's slot starts is where the bar's bottom edge must end up, so the bar never covers it.
 	const placeSwitcher = (top: number) => {
 		switcherTop.value = top;
-		header.setRange(collapseRange(top));
+		// The pinned layer starts PINNED_PADDING_TOP above the control: the bar ends where the layer starts.
+		header.setRange(collapseRange(top - PINNED_PADDING_TOP));
 	};
 	const onSlotLayout = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
 		placeSwitcher(layout.y);
@@ -136,6 +138,7 @@ export function ProgressScreen() {
 			symbol="square.and.arrow.up"
 			accessibilityLabel={progressCopy.exportLabel}
 			unavailable={exportUnavailable}
+			compact
 			onPress={onExport}
 		/>
 	);
@@ -152,6 +155,7 @@ export function ProgressScreen() {
 				backgroundStyle={header.barBackgroundStyle}
 				contentStyle={header.barContentStyle}
 				trailing={exportButton}
+				hairline={false}
 			/>
 			<PinnedBelowBar
 				testID="progress-range-bar"
@@ -196,7 +200,7 @@ export function ProgressScreen() {
 				<View
 					testID="progress-switcher-slot"
 					onLayout={onSlotLayout}
-					style={{ height: switcherHeight - space[200] }}
+					style={{ height: switcherHeight - space[200] - PINNED_PADDING_TOP }}
 				/>
 				{view.range === "week" ? (
 					<ProgressWeek

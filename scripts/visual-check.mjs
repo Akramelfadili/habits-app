@@ -279,6 +279,14 @@ async function capture(browser, name, screen) {
 			() => document.querySelector("#root")?.childElementCount > 0,
 		);
 		await page.evaluate(() => document.fonts.ready);
+		// A lazily bundled route shows Metro's own "app/….tsx" bar (and a
+		// "Bundling…" fallback) until its chunk has arrived; a capture taken then
+		// is a blank page with that bar. Wait it out.
+		await page.waitForFunction(
+			() => !/app\/\S*\.tsx|Bundling…/.test(document.body.innerText ?? ""),
+			undefined,
+			{ timeout: 180_000 },
+		);
 		// Let hydration + fixture-driven re-renders and screen transitions settle.
 		await page.waitForTimeout(800);
 

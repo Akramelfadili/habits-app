@@ -1,9 +1,21 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { showToast, useToastStore } from "@/store/toast-store";
+import { motion } from "@/theme/theme";
 import * as reducedMotion from "@/utils/use-reduced-motion";
 import { Sheet } from "./sheet";
 import { ToastHost } from "./toast-host";
+
+// RN's own Modal keeps drawing while it slides out; Jest's drops it at once. This one draws always and shows `visible`.
+jest.mock("react-native/Libraries/Modal/Modal", () => {
+	const { View } = require("react-native");
+	return {
+		__esModule: true,
+		default: ({ children, ...props }: { children: React.ReactNode }) => (
+			<View {...props}>{children}</View>
+		),
+	};
+});
 
 describe("Sheet", () => {
 	afterEach(() => jest.restoreAllMocks());
@@ -116,5 +128,80 @@ describe("Sheet", () => {
 			node = node.parent;
 		}
 		expect(scroll).not.toBeNull();
+	});
+
+	describe("closing", () => {
+		beforeEach(() => jest.useFakeTimers());
+		afterEach(() => jest.useRealTimers());
+
+		it("is anchored to the bottom edge and shrinks instead of overflowing", async () => {
+			await render(
+				<Sheet visible onDismiss={jest.fn()}>
+					<Text>Sheet body</Text>
+				</Sheet>,
+			);
+			let node = screen.getByText("Sheet body").parent;
+			let root: typeof node = null;
+			while (node && !root) {
+				if (node.props.accessibilityViewIsModal) root = node;
+				node = node.parent;
+			}
+			expect(StyleSheet.flatten(root?.props.style)).toMatchObject({
+				flex: 1,
+				justifyContent: "flex-end",
+			});
+		});
+
+		it("keeps the content it last showed through the slide-out, then unmounts", async () => {
+			const tree = (visible: boolean, text: string) => (
+				<Sheet visible={visible} onDismiss={jest.fn()}>
+					<Text>{visible ? text : "blank"}</Text>
+				</Sheet>
+			);
+			const view = await render(tree(true, "Quantity"));
+			await view.rerender(tree(false, "Quantity"));
+			expect(
+				screen.getByTestId("sheet-modal", { includeHiddenElements: true }).props
+					.visible,
+			).toBe(false);
+			// the caller already blanked its content, the sheet still shows the old one
+			expect(screen.getByText("Quantity")).toBeTruthy();
+			expect(screen.queryByText("blank")).toBeNull();
+
+			await act(() => jest.advanceTimersByTime(motion.sheet.duration));
+			expect(
+				screen.queryByTestId("sheet-modal", { includeHiddenElements: true }),
+			).toBeNull();
+			expect(screen.queryByText("Quantity")).toBeNull();
+		});
+
+		it("reopens with the new content", async () => {
+			const tree = (visible: boolean, text: string) => (
+				<Sheet visible={visible} onDismiss={jest.fn()}>
+					<Text>{text}</Text>
+				</Sheet>
+			);
+			const view = await render(tree(true, "One"));
+			await view.rerender(tree(false, "One"));
+			await act(() => jest.advanceTimersByTime(motion.sheet.duration));
+			await view.rerender(tree(true, "Two"));
+			expect(screen.getByText("Two")).toBeTruthy();
+		});
+
+		it("clears its timer on unmount", async () => {
+			const view = await render(
+				<Sheet visible onDismiss={jest.fn()}>
+					<Text>x</Text>
+				</Sheet>,
+			);
+			await view.rerender(
+				<Sheet visible={false} onDismiss={jest.fn()}>
+					<Text>x</Text>
+				</Sheet>,
+			);
+			const clear = jest.spyOn(global, "clearTimeout");
+			await view.unmount();
+			expect(clear).toHaveBeenCalled();
+		});
 	});
 });

@@ -32,6 +32,18 @@ async function renderPager(list = insights) {
 }
 
 describe("InsightPager", () => {
+	it("before it is measured shows the first card in its own column, not in a scroller whose pages have no width", async () => {
+		await render(<InsightPager insights={insights} positionLabel={label} />);
+		expect(screen.queryByTestId("insight-pager-scroll")).toBeNull();
+		expect(screen.getAllByTestId("insight-card")).toHaveLength(1);
+		expect(screen.getByText("Read is slipping")).toBeTruthy();
+		await fireEvent(screen.getByTestId("insight-pager"), "layout", {
+			nativeEvent: { layout: { width: 300, height: 100 } },
+		});
+		expect(screen.getByTestId("insight-pager-scroll")).toBeTruthy();
+		expect(screen.getAllByTestId("insight-card")).toHaveLength(3);
+	});
+
 	it("draws a dot per insight with the first active", async () => {
 		await renderPager();
 		const hidden = { includeHiddenElements: true };

@@ -48,6 +48,9 @@ describe("ProgressInsights (HAB-38)", () => {
 				onChangeFrequency={jest.fn()}
 			/>,
 		);
+		await fireEvent(screen.getByTestId("insight-pager"), "layout", {
+			nativeEvent: { layout: { width: 300, height: 100 } },
+		});
 		expect(
 			screen.getByLabelText(
 				"Insight 1 of 2. Read 20 min is slipping. 3 of 5 so far this week, 7 of 7 last week.",

@@ -33,6 +33,10 @@ const PLUS_STROKE = 2;
 /** Minimum tap target, per the HIG. */
 export const HEADER_BUTTON_MIN_SIZE = 44;
 
+/** The compact pill: 36 pt drawn, 4 pt of hit slop above and below make 44. */
+const COMPACT_PILL_HEIGHT = 36;
+const COMPACT_PILL_SLOP = { top: 4, bottom: 4 };
+
 type HeaderButtonProps = {
 	label: string;
 	onPress: () => void;
@@ -199,6 +203,11 @@ type HeaderPillButtonProps = {
 	 * explains why it can't run in a toast (P3) instead of going silent.
 	 */
 	unavailable?: boolean;
+	/**
+	 * Drawn 36 pt high with a 44 pt hit area, for the 44 pt inline bar: a full
+	 * 44 pt pill would touch the bar's top and bottom edges.
+	 */
+	compact?: boolean;
 	onPress: () => void;
 };
 
@@ -212,6 +221,7 @@ export function HeaderPillButton({
 	symbol,
 	accessibilityLabel,
 	unavailable = false,
+	compact = false,
 	onPress,
 }: HeaderPillButtonProps) {
 	const { colors, opacity } = useTheme();
@@ -223,8 +233,10 @@ export function HeaderPillButton({
 			accessibilityLabel={accessibilityLabel ?? label}
 			accessibilityState={{ disabled: unavailable }}
 			onPress={onPress}
+			hitSlop={compact ? COMPACT_PILL_SLOP : undefined}
 			style={({ pressed }) => [
 				styles.pill,
+				compact && styles.pillCompact,
 				{ backgroundColor: colors.card, borderColor: colors.border },
 				unavailable && { opacity: opacity.disabled },
 				pressed && { opacity: opacity.pressed },
@@ -311,6 +323,9 @@ const styles = StyleSheet.create({
 		paddingHorizontal: space[400],
 		borderRadius: radius.pill,
 		borderWidth: 1,
+	},
+	pillCompact: {
+		minHeight: COMPACT_PILL_HEIGHT,
 	},
 	pillLabel: {
 		...textStyles.subhead,
