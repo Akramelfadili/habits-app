@@ -37,3 +37,26 @@ test("every known-bug flow has a file with the bundle id placeholder, and every 
 test("readCommands tolerates a missing or malformed log", () => {
 	assert.deepEqual(readCommands("/nonexistent"), []);
 });
+
+test("iosSelectors widens web texts to iOS's merged labels", async () => {
+	const { iosSelectors } = await import("./flows.mjs");
+	const out = iosSelectors(
+		[
+			'- tapOn: "Meditate"',
+			"- tapOn:",
+			'    text: "Habits"',
+			'- assertVisible: "None"',
+			'- assertVisible: "Remind you each day?"',
+			'- assertVisible: "Small habits,.*"',
+			'- assertVisible: "Thursday, 1 October"',
+			'- inputText: "Run"',
+		].join("\n"),
+	);
+	assert.match(out, /tapOn: "Meditate\(,\.\*\)\?"/);
+	assert.match(out, /text: "Habits\(,\.\*\)\?"/);
+	assert.match(out, /assertVisible: "\.\*None\.\*"/);
+	assert.match(out, /"\.\*Remind you each day\\\?\.\*"/);
+	assert.match(out, /"Small habits,\.\*"/);
+	assert.match(out, /"\.\*Thursday,\? 1 October\.\*"/);
+	assert.match(out, /inputText: "Run"/);
+});

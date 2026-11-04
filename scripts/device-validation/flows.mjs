@@ -68,7 +68,7 @@ export function convertWebFlow(text, id) {
 		.filter((line) => !/^\s*-\s*launchApp\s*$/.test(line))
 		.join("\n")
 		.replace(/\bid:/g, "text:");
-	const flow = `appId: \${BUNDLE_ID}\n---\n${body}`;
+	const flow = `appId: \${BUNDLE_ID}\n---\n${iosSelectors(body)}`;
 	return { route: `${route}${params.size ? `?${params}` : ""}`, clock, flow };
 }
 
@@ -83,6 +83,44 @@ function findCommandsFile(dir) {
 		} else if (/^commands.*\.json$/.test(entry.name)) return file;
 	}
 	return null;
+}
+
+const REGEX_TOKENS = /[.*+\\[\](){}|^$]/;
+/** Hand-fixed texts whose iOS label differs from the web's (seen in run 41836677192). */
+const TEXT_OVERRIDES = { "Thursday, 1 October": ".*Thursday,? 1 October.*" };
+
+/**
+ * iOS merges a row's texts into one accessibility label ("Meditate, Daily",
+ * "Reminders, None") and Maestro matches the whole label, so a web `id:` or
+ * text becomes: any label containing it for asserts, the text itself or
+ * "<text>, …" for taps. A literal `?` is escaped (it is a regex).
+ */
+export function iosSelectors(body) {
+	let command = "";
+	return body
+		.split("\n")
+		.map((line) => {
+			const cmd = /^\s*-\s*(\w+):/.exec(line);
+			if (cmd) command = cmd[1];
+			return line.replace(
+				/^(\s*(?:-\s*\w+:|text:|visible:|notVisible:)\s*)"([^"]*)"\s*$/,
+				(whole, head, text) => {
+					if (
+						/^(extendedWaitUntil|scroll|swipe|inputText|launchApp|takeScreenshot)/.test(
+							command,
+						) &&
+						!/text:|visible:|notVisible:/.test(head)
+					)
+						return whole;
+					if (TEXT_OVERRIDES[text]) return `${head}"${TEXT_OVERRIDES[text]}"`;
+					if (REGEX_TOKENS.test(text)) return whole;
+					const plain = text.replaceAll("?", "\\?");
+					const assertion = /assert|visible|notVisible/i.test(command);
+					return `${head}"${assertion ? `.*${plain}.*` : `${plain}(,.*)?`}"`;
+				},
+			);
+		})
+		.join("\n");
 }
 
 /** Reads Maestro's `commands-*.json` into [{ kind, detail, status, ms }]. */

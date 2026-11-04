@@ -7,10 +7,11 @@
 appId: ${BUNDLE_ID}
 ---
 - extendedWaitUntil:
-    visible: "Wednesday 21.*"
+    visible: ".*Drink water.*"
     timeout: 20000
 - takeScreenshot: a-01-today
-- tapOn: "Wednesday 21.*"
+# The strip's other days are not in the accessibility tree (see the run notes), so tap by position.
+- tapOn: {point: "37%, 21%"}
 - extendedWaitUntil:
     visible: "Logging for Wed 21 Oct.*"
     timeout: 8000
@@ -33,6 +34,6 @@ appId: ${BUNDLE_ID}
 - takeScreenshot: a-08-after-flick-back
 # Is the strip there and tappable again?
 - assertVisible:
-    text: "Wednesday 21.*"
+    text: ".*Today, Friday 23.*"
     optional: true
 - takeScreenshot: a-09-strip-check

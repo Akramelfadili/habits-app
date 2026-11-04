@@ -14,7 +14,7 @@ appId: ${BUNDLE_ID}
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1200, optional: true}
 - takeScreenshot: e-03-after-undo
 # Archive from Detail.
-- tapOn: {text: "Meditate", optional: true}
+- tapOn: {text: "Meditate, .*streak.*", optional: true}
 - extendedWaitUntil: {visible: ".*Archive habit.*", timeout: 8000, optional: true}
 - scrollUntilVisible: {element: ".*Archive habit.*", timeout: 10000}
 - tapOn: {text: ".*Archive habit.*", optional: true}

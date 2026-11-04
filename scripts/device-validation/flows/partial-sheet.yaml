@@ -14,7 +14,7 @@ appId: ${BUNDLE_ID}
 - takeScreenshot: c-01-sheet-open
 # Close with its Done button.
 - tapOn:
-    text: "Done with amount"
+    text: "Close"
     optional: true
 - extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
 - takeScreenshot: c-02-after-done

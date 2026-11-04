@@ -8,20 +8,20 @@ appId: ${BUNDLE_ID}
 - extendedWaitUntil:
     visible: ".*Drink water.*"
     timeout: 20000
-- tapOn: "No social media, resisted today\\?"
+- tapOn: "Cold shower, (not )?done"
 - extendedWaitUntil:
-    visible: "Resisted 'No social media'.*"
+    visible: ".*Undo.*"
     timeout: 8000
 - takeScreenshot: b-01-toast-visible
 # (measured) time to hide by itself
 - extendedWaitUntil:
-    notVisible: "Resisted 'No social media'.*"
+    notVisible: ".*Undo.*"
     timeout: 30000
 - takeScreenshot: b-02-toast-gone
 # Part 2: raise it again and dismiss it with Undo.
-- tapOn: "No social media, resisted today\\?"
+- tapOn: "Cold shower, (not )?done"
 - extendedWaitUntil:
-    visible: "Resisted 'No social media'.*"
+    visible: ".*Undo.*"
     timeout: 8000
     optional: true
 - takeScreenshot: b-03-toast-again
@@ -29,7 +29,7 @@ appId: ${BUNDLE_ID}
     text: "Undo"
     optional: true
 - extendedWaitUntil:
-    notVisible: "Resisted 'No social media'.*"
+    notVisible: ".*Undo.*"
     timeout: 8000
     optional: true
 - takeScreenshot: b-04-after-undo
