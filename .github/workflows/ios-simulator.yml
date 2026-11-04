@@ -275,8 +275,12 @@ jobs:
         with:
           pattern: shots-*
           path: shots
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: capture-log-*
+          path: logs
       - name: Build the contact sheet
-        run: node scripts/device-validation/contact-sheet.mjs --shots shots --out contact-sheet --summary "$GITHUB_STEP_SUMMARY"
+        run: node scripts/device-validation/contact-sheet.mjs --shots shots --logs logs --out contact-sheet --summary "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: contact-sheet
