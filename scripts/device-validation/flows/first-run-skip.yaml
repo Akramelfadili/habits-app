@@ -1,0 +1,35 @@
+# Known bug (d): First Run → Skip → the empty Today. Is the tab bar reachable,
+# can you get to Habits and Settings?
+# route: /?fixtures=first-run · clock: 2026-10-23T09:00:00
+# `assertVisible … optional` warns instead of failing, so the run reports
+# which tabs were there (record-flows.mjs lists the warnings).
+appId: ${BUNDLE_ID}
+---
+- extendedWaitUntil:
+    visible: "Skip for now"
+    timeout: 20000
+- takeScreenshot: d-01-first-run
+- tapOn: "Skip for now"
+- extendedWaitUntil:
+    visible: "Nothing to track yet"
+    timeout: 8000
+- takeScreenshot: d-02-empty-today
+- assertVisible: {text: "Today", optional: true}
+- assertVisible: {text: "Progress", optional: true}
+- assertVisible: {text: "Habits", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 3000, optional: true}
+- takeScreenshot: d-03-after-3s
+- swipe: {start: "50%, 60%", end: "50%, 30%", duration: 500}
+- takeScreenshot: d-04-after-scroll
+# Try the tabs anyway.
+- tapOn: {text: "Habits", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1200, optional: true}
+- takeScreenshot: d-05-after-tap-habits
+- tapOn: {text: "Progress", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1200, optional: true}
+- takeScreenshot: d-06-after-tap-progress
+# Browse suggestions from the empty state, and back.
+- tapOn: {text: "Browse suggestions", optional: true}
+- takeScreenshot: d-07-suggestions
+- tapOn: {text: "Close", optional: true}
+- takeScreenshot: d-08-back-on-today

@@ -14,6 +14,7 @@ Plain pointers, not imports — open the file when the row applies.
 | UI, components, styling, screens | `docs/design-system.md` (V1 and V2 merged; its **Deltas** section: smaller heatmap cells / stat cards on Detail, Weekly Summary, Streak-reset are intentional, not regressions) |
 | `src/modules`, layering, data or business logic | `docs/architecture.md` (folders, layers, patterns, stack, `.web.ts` convention) |
 | Schema or `src/lib/db/migrations/` | the Migrations guard below + `.claude/agents/migration-reviewer.md` (its checklist); run that subagent when done |
+| The iOS Simulator run, `dev-state`, `src/lib/device-validation`, `scripts/device-validation` | `docs/decisions/007-device-validation.md` + README "Device validation" (the flag is build-time, never `__DEV__`; only the simulator workflow may set it) |
 | Commands, hooks, `make check`, visual-check setup, allowlists, token ratchet | `docs/dev-tooling.md` |
 | Stack choices, project status | `docs/architecture.md` (stack table); `docs/roadmap.md` |
 | Deferred work, spec deviations | `docs/backlog.md` — append, never silently drop a deviation |

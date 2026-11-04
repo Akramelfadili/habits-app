@@ -20,6 +20,7 @@ import {
 	migrationCopy,
 	suggestionsCopy,
 } from "@/modules/habits/messages";
+import { DeviceValidationLaunch } from "@/modules/habits/screens/dev-state-screen";
 import { loadThemePreference } from "@/theme/theme-preference";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
@@ -103,6 +104,7 @@ export default function RootLayout() {
 					{/* "auto" follows the resolved scheme, explicit Light/Dark included. */}
 					<StatusBar style="auto" />
 					<StartupActions />
+					<DeviceValidationLaunch />
 					<Stack
 						screenOptions={{
 							headerStyle: { backgroundColor: colors.bg },
@@ -115,6 +117,11 @@ export default function RootLayout() {
 						}}
 					>
 						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+						{/* Device validation only (CI simulator build); anywhere else it redirects to Today. */}
+						<Stack.Screen
+							name="dev-state"
+							options={{ headerShown: false, animation: "none" }}
+						/>
 						{/* First Run sits outside the tabs, so no tab bar is drawn (HAB-46); its welcome cannot be swiped away. */}
 						<Stack.Screen
 							name="first-run/index"
