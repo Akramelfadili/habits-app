@@ -16,6 +16,8 @@ function week(allDoneKeys: string[] = []): WeekStripDay[] {
 			isToday: index === 4,
 			isFuture: index > 4,
 			allDone: allDoneKeys.includes(key),
+			due: index > 4 ? 0 : 5,
+			done: allDoneKeys.includes(key) ? 5 : 3,
 		};
 	});
 }
@@ -25,7 +27,6 @@ function setup(
 ) {
 	const handlers = {
 		onSelect: jest.fn(),
-		onStepDay: jest.fn(),
 		onPreviousWeek: jest.fn(),
 		onNextWeek: jest.fn(),
 	};
@@ -33,9 +34,7 @@ function setup(
 		<WeekStrip
 			days={week(["2026-10-19", "2026-10-20"])}
 			selectedKey="2026-10-23"
-			selectedSummary="1 of 5 done"
 			canShowNext
-			direction={0}
 			{...handlers}
 			{...overrides}
 		/>,
@@ -99,38 +98,47 @@ describe("WeekStrip (V3-03)", () => {
 		expect(onSelect).not.toHaveBeenCalled();
 	});
 
-	it("is one adjustable VoiceOver element naming the day, today, selected and the progress", async () => {
+	it("makes every day its own VoiceOver button with a label, selected state and hint", async () => {
 		await setup().view;
-		const strip = screen.getByTestId("week-strip");
-		expect(strip.props.accessibilityRole).toBe("adjustable");
-		expect(strip.props.accessibilityLabel).toBe(
-			"Friday 23, today, selected, 1 of 5 done",
+		expect(screen.getByTestId("week-strip").props.accessible).not.toBe(true);
+		const today = screen.getByTestId("week-strip-day-2026-10-23");
+		expect(today.props.accessibilityRole).toBe("button");
+		expect(today.props.accessibilityLabel).toBe(
+			"Friday 23 October, today, 3 of 5 done",
 		);
+		expect(today.props.accessibilityState).toEqual({
+			selected: true,
+			disabled: false,
+		});
+		expect(today.props.accessibilityHint).toBeTruthy();
+		const other = screen.getByTestId("week-strip-day-2026-10-19");
+		expect(other.props.accessibilityLabel).toBe(
+			"Monday 19 October, 5 of 5 done",
+		);
+		expect(other.props.accessibilityState.selected).toBe(false);
+		const future = screen.getByTestId("week-strip-day-2026-10-24");
+		expect(future.props.accessibilityLabel).toBe("Saturday 24 October");
 	});
 
-	it("steps a day with VoiceOver's increment and decrement", async () => {
-		const { view, onStepDay } = setup();
+	it("reaches other weeks through VoiceOver actions on any day", async () => {
+		const { view, onPreviousWeek, onNextWeek } = setup();
 		await view;
-		const strip = screen.getByTestId("week-strip");
+		const day = screen.getByTestId("week-strip-day-2026-10-20");
+		expect(
+			day.props.accessibilityActions.map((a: { name: string }) => a.name),
+		).toEqual(["previousWeek", "nextWeek"]);
 		await act(() =>
-			strip.props.onAccessibilityAction({
-				nativeEvent: { actionName: "increment" },
+			day.props.onAccessibilityAction({
+				nativeEvent: { actionName: "previousWeek" },
 			}),
 		);
 		await act(() =>
-			strip.props.onAccessibilityAction({
-				nativeEvent: { actionName: "decrement" },
+			day.props.onAccessibilityAction({
+				nativeEvent: { actionName: "nextWeek" },
 			}),
 		);
-		expect(onStepDay).toHaveBeenNthCalledWith(1, 1);
-		expect(onStepDay).toHaveBeenNthCalledWith(2, -1);
-	});
-
-	it("names the week when the selection is in another week", async () => {
-		await setup({ selectedKey: "2026-10-12" }).view;
-		expect(screen.getByTestId("week-strip").props.accessibilityLabel).toBe(
-			"Week of 19 October",
-		);
+		expect(onPreviousWeek).toHaveBeenCalledTimes(1);
+		expect(onNextWeek).toHaveBeenCalledTimes(1);
 	});
 
 	it("gives each day a hit area of at least 44 pt", async () => {

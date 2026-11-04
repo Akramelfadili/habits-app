@@ -1609,7 +1609,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_04.png",
 		note: "T10 + T5 — Wed 21 selected, then the list scrolled past the title: the inline bar is solid over the 'Logging for Wed 21 Oct' bar, which scrolls with the content.",
 		async interact(page) {
-			await page.getByLabel("Wednesday 21", { exact: true }).click();
+			await page.getByLabel(/^Wednesday 21 October/).click();
 			await page.getByText("Logging for Wed 21 Oct").waitFor();
 			await page.waitForTimeout(300);
 			await page.mouse.wheel(0, 120);
@@ -1660,7 +1660,7 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_04.png",
 		note: "T10 — Wed 21 selected: eyebrow shows the date, 'Logging for Wed 21 Oct · Show today'.",
 		async interact(page) {
-			await page.getByLabel("Wednesday 21", { exact: true }).click();
+			await page.getByLabel(/^Wednesday 21 October/).click();
 			await page.getByText("Logging for Wed 21 Oct").waitFor();
 			await page.waitForTimeout(300);
 		},

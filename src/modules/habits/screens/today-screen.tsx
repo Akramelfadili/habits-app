@@ -1,4 +1,4 @@
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 import {
@@ -90,7 +90,7 @@ function TodayContent() {
 	const day = useSelectedDayQueries();
 	const today = useTodayQueries(day.selectedKey);
 	const rollover = useRolloverQueries(day.today);
-	const strip = useWeekStripQueries(day.selectedDay, day.today);
+	const strip = useWeekStripQueries(day.selectedDay, day.today, day.selectDay);
 	const { eligibleHabits, loggedToday } = useOffScheduleQueries(
 		today.selectedDay,
 	);
@@ -142,10 +142,6 @@ function TodayContent() {
 
 	const isToday = !day.isPastDay;
 	const dayLabel = format(today.selectedDay, "EEE d MMM");
-	const progressLabel = todayCopy.progressLabel(
-		today.progress.completed,
-		today.progress.total,
-	);
 
 	// The strip's top edge (content padding + header + the block's gap) is where
 	// the bar's bottom edge has to end up, so the bar never covers the days.
@@ -174,13 +170,10 @@ function TodayContent() {
 		<WeekStrip
 			days={strip.days}
 			selectedKey={toDayKey(today.selectedDay)}
-			selectedSummary={progressLabel}
 			onSelect={day.selectDay}
-			onStepDay={(step) => day.selectDay(addDays(today.selectedDay, step))}
 			onPreviousWeek={strip.showPreviousWeek}
 			onNextWeek={strip.showNextWeek}
 			canShowNext={strip.canShowNext}
-			direction={strip.direction}
 		/>
 	);
 	const openHabit = (habitId: number) => router.push(`/habit/${habitId}`);

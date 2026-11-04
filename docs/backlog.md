@@ -10,7 +10,7 @@ Everything below this section is the detailed record by ticket. This is what is 
 
 ### Bugs to fix next (the owner's fix batch)
 
-- **Today's day strip, toast dismissal and the partial-sheet bugs** — named by the owner for the next prompt; deliberately not touched in V3-6.
+- **Today's day strip** — fixed in the UI fix batch (step 1, see HAB-30 "As built"). **Still open:** on a real iPhone the strip's dates showed cut off under the small centred "Today" title during the collapse; no cause was found from the code (the strip stays below the bar until the range ends, and the bar's background is opaque by then), so it needs the phone or a decision to harden the bar (background before the title). Toast dismissal and the partial-sheet bugs: steps 2 and 3.
 - **Toasts have no enter or exit animation** (08.5: rise 12 pt + fade, fade only with Reduce Motion) and, per the owner, dismissal misbehaves; fix together. Today a toast just appears and goes.
 - **After Skip on First Run, Progress and Habits are unreachable until a first habit exists** (FR4 has no tab bar by decision). If that feels wrong on a phone, show the bar again after the first push or after a few seconds; the flag is `landing` in `first-run-offer-store`.
 - **Collapsing header: the large title's buttons scale to 88 % while it fades** (38.7 pt while they can still be hit); hide them from touches once past the first third.

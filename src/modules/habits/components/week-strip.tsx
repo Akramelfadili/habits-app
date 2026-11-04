@@ -30,17 +30,11 @@ type WeekStripProps = {
 	days: readonly WeekStripDay[];
 	/** Day key of the selected day (it may be in another week than the one shown). */
 	selectedKey: string;
-	/** What the selected day's progress reads ("1 of 5 done"), for the VoiceOver label. */
-	selectedSummary: string;
 	onSelect: (date: Date) => void;
-	/** VoiceOver's swipe up/down: the previous or next selectable day. */
-	onStepDay: (step: -1 | 1) => void;
 	onPreviousWeek: () => void;
 	onNextWeek: () => void;
 	/** False once the shown week is the current one: there is no later week to swipe to. */
 	canShowNext: boolean;
-	/** −1 / +1 after a swipe, so the week slides in from the right side. */
-	direction: number;
 };
 
 /** A swipe must travel this far (pt) to change the week. */
@@ -60,13 +54,10 @@ const RING = 2;
 export function WeekStrip({
 	days,
 	selectedKey,
-	selectedSummary,
 	onSelect,
-	onStepDay,
 	onPreviousWeek,
 	onNextWeek,
 	canShowNext,
-	direction,
 }: WeekStripProps) {
 	const { colors } = useTheme();
 	const reduceMotion = useReducedMotion();
@@ -74,10 +65,16 @@ export function WeekStrip({
 	const fade = useRef(new Animated.Value(1)).current;
 	const slide = useRef(new Animated.Value(0)).current;
 	const weekKey = days[0]?.key;
+	const shownWeek = useRef(weekKey);
 
+	// The week slides in from the side it lies on. Whatever stops the run (a
+	// newer week, unmount) leaves the strip fully visible, never mid-fade.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: runs when the shown week changes
 	useEffect(() => {
-		if (direction === 0) return;
+		const previous = shownWeek.current;
+		shownWeek.current = weekKey;
+		if (!previous || !weekKey || previous === weekKey) return;
+		const direction = weekKey > previous ? 1 : -1;
 		fade.setValue(0);
 		slide.setValue(reduceMotion ? 0 : direction * motion.daySwitch.slide);
 		const run = Animated.parallel([
@@ -95,7 +92,11 @@ export function WeekStrip({
 			}),
 		]);
 		run.start();
-		return () => run.stop();
+		return () => {
+			run.stop();
+			fade.setValue(1);
+			slide.setValue(0);
+		};
 	}, [weekKey]);
 
 	const swipe = useMemo(
@@ -112,10 +113,14 @@ export function WeekStrip({
 		[onNextWeek, onPreviousWeek],
 	);
 
-	const selected = days.find((day) => day.key === selectedKey);
-	const label = selected
-		? `${format(selected.date, "EEEE d")}${selected.isToday ? ", today" : ""}, selected, ${selectedSummary}`
-		: format(days[0]?.date ?? new Date(), "'Week of' d MMMM");
+	const weekActions = [
+		{ name: "previousWeek", label: todayCopy.previousWeek },
+		...(canShowNext ? [{ name: "nextWeek", label: todayCopy.nextWeek }] : []),
+	];
+	const onWeekAction = (event: { nativeEvent: { actionName: string } }) => {
+		if (event.nativeEvent.actionName === "previousWeek") onPreviousWeek();
+		if (event.nativeEvent.actionName === "nextWeek") onNextWeek();
+	};
 
 	if (accessibilityText) {
 		return (
@@ -131,21 +136,7 @@ export function WeekStrip({
 	}
 
 	return (
-		<View
-			testID="week-strip"
-			accessible
-			accessibilityRole="adjustable"
-			accessibilityLabel={label}
-			accessibilityActions={[
-				{ name: "increment", label: todayCopy.nextDay },
-				{ name: "decrement", label: todayCopy.previousDay },
-			]}
-			onAccessibilityAction={(event) => {
-				if (event.nativeEvent.actionName === "increment") onStepDay(1);
-				if (event.nativeEvent.actionName === "decrement") onStepDay(-1);
-			}}
-			{...swipe.panHandlers}
-		>
+		<View testID="week-strip" {...swipe.panHandlers}>
 			<Animated.View
 				style={[
 					styles.row,
@@ -160,11 +151,19 @@ export function WeekStrip({
 							testID={`week-strip-day-${day.key}`}
 							disabled={day.isFuture}
 							accessibilityRole="button"
-							accessibilityLabel={format(day.date, "EEEE d")}
+							accessibilityLabel={todayCopy.stripDayLabel(
+								format(day.date, "EEEE d MMMM"),
+								day,
+							)}
+							accessibilityHint={
+								day.isFuture ? undefined : todayCopy.stripDayHint
+							}
 							accessibilityState={{
 								selected: isSelected,
 								disabled: day.isFuture,
 							}}
+							accessibilityActions={weekActions}
+							onAccessibilityAction={onWeekAction}
 							onPress={() => onSelect(day.date)}
 							style={styles.day}
 						>

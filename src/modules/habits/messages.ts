@@ -247,6 +247,19 @@ export const todayCopy = {
 	todayWord: "Today",
 	nextDay: "Next day",
 	previousDay: "Previous day",
+	/** One strip day as a VoiceOver button: "Wednesday 21 October, today, 3 of 5 done". */
+	stripDayLabel: (
+		date: string,
+		day: { isToday: boolean; isFuture: boolean; due: number; done: number },
+	) =>
+		`${date}${day.isToday ? ", today" : ""}${
+			day.isFuture
+				? ""
+				: day.due === 0
+					? ", nothing due"
+					: `, ${day.done} of ${day.due} done`
+		}`,
+	stripDayHint: "Shows this day's habits",
 	/** Streak at risk sheets (SR1/SR3, HAB-33). */
 	atRiskTitle: (habit: string) => `Keep your ${habit} streak?`,
 	atRiskTitleNone: "No freezes left this month",
