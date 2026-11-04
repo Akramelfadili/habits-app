@@ -445,7 +445,7 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 ## HAB-48 — Message catalogue
 **Frames:** TC1–TC3 and the catalogue table (06 Messages)
 
-**Rules:** all toasts, banners and inline messages come from one catalogue module; copy per the mockup table. Durations: Undo 5 s, success/info 4 s, warning 6 s, errors until Retry or swipe. Placement: 16 pt above bar A, 12 pt above pill B; inside a sheet above its last button; never over Undo. VoiceOver announces every toast and keeps it until dismissed.
+**Rules:** all toasts, banners and inline messages come from one catalogue module; copy per the mockup table. Durations: Undo 5 s, success/info 3 s (owner shortened it from 4 s, UI fix batch), warning 6 s, errors until Retry or swipe. Placement: 16 pt above bar A, 12 pt above pill B; inside a sheet above its last button; never over Undo. VoiceOver announces every toast and keeps it until dismissed.
 
 ---
 

@@ -9,6 +9,7 @@ import {
 	tabBarToastOffset,
 } from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
+import { ToastRouteWatcher } from "@/components/ui/composite/toast-route-watcher";
 import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
 import { useFirstRunQueries } from "@/modules/habits/hooks/use-first-run-queries";
@@ -119,6 +120,7 @@ export default function TabsLayout() {
 				<Tabs.Screen name="(progress)" options={{ title: "Progress" }} />
 				<Tabs.Screen name="(habits)" options={{ title: "Habits" }} />
 			</Tabs>
+			<ToastRouteWatcher />
 			<ToastHost
 				bottomOffset={tabBarToastOffset(insets.bottom, accessibilityTextSize)}
 			/>

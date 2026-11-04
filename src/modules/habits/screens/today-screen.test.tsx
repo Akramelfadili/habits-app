@@ -765,7 +765,9 @@ describe("TodayScreen", () => {
 			expect(screen.getByText("Undo")).toBeTruthy();
 			mockToggleCompletion.mockClear();
 
-			await act(() => jest.advanceTimersByTime(motion.toast.hold.undo));
+			await act(() =>
+				jest.advanceTimersByTime(motion.toast.hold.undo + motion.toast.out),
+			);
 
 			expect(screen.queryByText("Undo")).toBeNull();
 			expect(useToastStore.getState().toast).toBeNull();

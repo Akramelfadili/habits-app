@@ -134,7 +134,7 @@ Motion confirms an action; it never decorates. With Reduce Motion nothing moves 
 | fill | 450 ms cubic-bezier(.22,1,.36,1) (bar, ring, pie) | Jumps to value |
 | day-switch | 160 ms, crossfade + 12 pt slide | Crossfade only |
 | sheet / push | iOS spring ≈ 340 ms / iOS default | System crossfade |
-| toast | 240 in / 180 out, rise 12 pt + fade | Fade only |
+| toast | 200 in / 200 out, rise 12 pt + fade; a newer toast swaps in at once; tap or swipe dismisses | 150 ms crossfade, no rise |
 | reorder | Lift scale 1.02 + E2 shadow | Shadow only |
 | header collapse | scroll-linked, no duration: title scale 1 → .88 and opacity 1 → 0 over 0–60 % of the range, bar name and buttons 50–100 %, bar background and hairline 70–100 %; settles on the nearer end when scrolling stops inside it (`useCollapsingHeader`) | No interpolation, no settle; 150 ms crossfade at 50 % |
 | celebrate | 600 ms once, check draws | Static check |
@@ -179,7 +179,7 @@ T-01 faint light · T-02 warnInk light · T-03 danger dark · T-04 ringOff → o
 | V3-23 | List item | V1-14 + VAR-05/08 | **Built (V3-4b):** `value` (right text), `selected` (drawn check, radio-style), `navigable` chevron, `leading` slot |
 | V3-24 | Sheet | V1-15 + VAR-03 | Grabber, title, Close (swipe = Close); confirm sheets drop Close and end with Cancel |
 | V3-25 | Destructive confirm | NEW-12 + V1-16 | Archive-first variant, move-preview variant. **Built (V3-4a):** `DestructiveConfirmSheet` — safe action first and focused, outlined red pill, hint, Cancel last, in-sheet error banner, busy state; Archive's one-tap sheet (DC5) is its own, lighter sheet |
-| V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 4 s success+info / 6 s warning / errors until Retry or swipe |
+| V3-26 | Toast | V1-18 | Tones; Undo right; 5 s Undo / 3 s success+info / 6 s warning / errors until Retry or swipe |
 | V3-27 | Inline banner | V1-19 + NEW-13 | States that last. **Built (V3-4b):** card, amber tone with symbol, optional action (Open Settings, Retry) |
 | V3-28 | Empty state | V1-21 | |
 | V3-29 | Unlock card | NEW-11 | Progress toward 7 days of logs |

@@ -1,15 +1,22 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	AccessibilityInfo,
+	Animated,
+	Easing,
 	PanResponder,
+	Pressable,
 	StyleSheet,
-	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { type ToastMessage, useToastStore } from "@/store/toast-store";
+import {
+	type ShownToast,
+	type ToastMessage,
+	useToastStore,
+} from "@/store/toast-store";
 import { motion, space } from "@/theme/theme";
 import { UNDO_FAILED_MESSAGE } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
+import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { useScreenReader } from "@/utils/use-screen-reader";
 import { Toast } from "./toast";
 
@@ -65,7 +72,35 @@ export function ToastHost({
 	const dismissToast = useToastStore((state) => state.dismissToast);
 
 	const screenReader = useScreenReader();
+	const reduceMotion = useReducedMotion();
 	const toastId = toast?.id;
+
+	// `shown` is what is drawn: it outlives the store's toast by the exit
+	// animation, and a newer toast swaps in at once (no stacking, no replay).
+	const [shown, setShown] = useState<ShownToast | null>(toast);
+	const progress = useRef(new Animated.Value(toast ? 1 : 0)).current;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: runs when the store's toast changes; `progress` is stable
+	useEffect(() => {
+		const duration = reduceMotion
+			? motion.toast.reduced.crossfade
+			: toast
+				? motion.toast.in
+				: motion.toast.out;
+		if (toast) {
+			setShown(toast);
+		}
+		const run = Animated.timing(progress, {
+			toValue: toast ? 1 : 0,
+			duration,
+			easing: Easing.out(Easing.quad),
+			useNativeDriver: false,
+		});
+		run.start(({ finished }) => {
+			if (finished && !toast) setShown(null);
+		});
+		return () => run.stop();
+	}, [toast, reduceMotion]);
+
 	const message = toast?.message;
 
 	useEffect(() => {
@@ -104,42 +139,61 @@ export function ToastHost({
 		[toastId, dismissToast],
 	);
 
-	if (!toast) return null;
+	if (!shown) return null;
 	if (placement === "bottom" && openSheets > 0) return null;
+	const rise = reduceMotion ? 0 : motion.toast.rise;
 
 	const content = (
-		<View
+		<Animated.View
 			testID="toast-host"
 			pointerEvents="box-none"
 			{...swipe.panHandlers}
 			accessibilityActions={[{ name: "dismiss", label: "Dismiss" }]}
-			onAccessibilityAction={() => dismissToast(toast.id)}
-			style={
+			onAccessibilityAction={() => dismissToast(shown.id)}
+			style={[
 				placement === "bottom"
 					? [styles.host, { bottom: bottomOffset }]
-					: undefined
-			}
+					: undefined,
+				{
+					opacity: progress,
+					transform: [
+						{
+							translateY: progress.interpolate({
+								inputRange: [0, 1],
+								outputRange: [rise, 0],
+							}),
+						},
+					],
+				},
+			]}
 		>
-			<Toast
-				message={toast.message}
-				tone={toast.tone}
-				actionLabel={toast.actionLabel}
-				onAction={
-					toast.onAction
-						? () => {
-								dismissToast(toast.id);
-								void runSafely(
-									{
-										scope: "toast",
-										failure: UNDO_FAILED_MESSAGE,
-									},
-									() => toast.onAction?.(),
-								);
-							}
-						: undefined
-				}
-			/>
-		</View>
+			{/* A tap anywhere on the toast but its action dismisses it. */}
+			<Pressable
+				accessible={false}
+				onPress={() => dismissToast(shown.id)}
+				style={styles.tapArea}
+			>
+				<Toast
+					message={shown.message}
+					tone={shown.tone}
+					actionLabel={shown.actionLabel}
+					onAction={
+						shown.onAction
+							? () => {
+									dismissToast(shown.id);
+									void runSafely(
+										{
+											scope: "toast",
+											failure: UNDO_FAILED_MESSAGE,
+										},
+										() => shown.onAction?.(),
+									);
+								}
+							: undefined
+					}
+				/>
+			</Pressable>
+		</Animated.View>
 	);
 
 	return placement === "top" ? (
@@ -157,6 +211,9 @@ const styles = StyleSheet.create({
 		top: 0,
 		left: space[400],
 		right: space[400],
+	},
+	tapArea: {
+		alignSelf: "stretch",
 	},
 	host: {
 		position: "absolute",

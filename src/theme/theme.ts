@@ -225,10 +225,22 @@ export const motion = {
 	 * up (V3-26); errors stay until Retry or swipe, so they have none.
 	 */
 	toast: {
-		in: 240,
-		out: 180,
+		in: 200,
+		out: 200,
 		rise: 12,
-		hold: { undo: 5000, info: 4000, warning: 6000 },
+		/** Reduce Motion: a crossfade, no rise. */
+		reduced: { crossfade: 150 },
+		/**
+		 * Info and success are read in a glance, so they go quickly (3 s); an Undo
+		 * has to be reachable (5 s, the spec); a warning needs reading (6 s).
+		 */
+		hold: { undo: 5000, info: 3000, warning: 6000 },
+		/**
+		 * A toast raised by the action that also changes screen (archive, then
+		 * back) survives that navigation; one already up this long is dismissed
+		 * when the screen changes.
+		 */
+		navigationGrace: 600,
 	},
 	/** Reorder lift (+ `elevation.lifted`); Reduce Motion keeps the shadow only. */
 	reorder: { duration: 160, liftScale: 1.02 },

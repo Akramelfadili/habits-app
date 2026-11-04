@@ -296,7 +296,9 @@ describe("RemindersScreen", () => {
 					screen.getByLabelText("Remove reminder at 21:00"),
 				);
 				expect(screen.getByText("Undo")).toBeTruthy();
-				await act(() => jest.advanceTimersByTime(motion.toast.hold.undo));
+				await act(() =>
+					jest.advanceTimersByTime(motion.toast.hold.undo + motion.toast.out),
+				);
 				expect(screen.queryByText("Undo")).toBeNull();
 				expect(mockRestoreReminder).not.toHaveBeenCalled();
 			} finally {
