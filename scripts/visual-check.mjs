@@ -17,7 +17,7 @@
  *   in HAB-12, say) surfaces on every screen it touched, not only on the one
  *   feature it was made for. Intended changes: review them in the report,
  *   then `--update-baseline` and commit the new PNGs with the change.
- * - **Mockup (by eye, in the report).** docs/mockups/ are design drawings —
+ * - **Mockup (by eye, in the report).** The mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2) are design drawings —
  *   device frame, SF Symbols, SF Pro — so a pixel diff against them is
  *   meaningless. The report puts each one next to its render instead.
  *
@@ -67,6 +67,182 @@ const PIXEL_THRESHOLD = 0.02;
  */
 const MAX_DIFF_PIXELS = 10;
 
+/**
+ * Dynamic Type AX3 (08.6a): every text element's size is mapped to the value the
+ * handoff gives for that token (display 32 → 52, stat 26 → 48, title 20 → 43,
+ * body-lg 17 → 40, body 16 → 38, callout 15 → 36, subhead 14 → 36, footnote
+ * 13 → 33, caption 12 → 32); sizes off the ramp scale by the nearest ratio.
+ * Line height follows. A MutationObserver re-applies it to text React adds
+ * later (a sheet opening, a toast), so the capture is consistent.
+ */
+async function emulateAx3Type(page) {
+	await page.evaluate(() => {
+		const RAMP = {
+			32: 52,
+			26: 48,
+			20: 43,
+			17: 40,
+			16: 38,
+			15: 36,
+			14: 36,
+			13: 33,
+			12: 32,
+		};
+		const scaleOf = (px) => {
+			const exact = RAMP[Math.round(px)];
+			if (exact) return exact / Math.round(px);
+			const keys = Object.keys(RAMP).map(Number);
+			const nearest = keys.reduce((a, b) =>
+				Math.abs(b - px) < Math.abs(a - px) ? b : a,
+			);
+			return RAMP[nearest] / nearest;
+		};
+		const apply = () => {
+			for (const el of document.querySelectorAll(
+				"div,span,input,textarea,h1,h2,h3,h4,h5,h6,p,a,label,li,button",
+			)) {
+				// iOS keeps the tab bar's labels at 12 pt whatever the setting (08.6).
+				// The week matrix's day letters and the cells' numbers are drawn with
+				// allowFontScaling={false}; react-native-web cannot say so, so skip them.
+				if (
+					el.closest(
+						'[data-testid^="tab-bar"],[data-testid^="completion-cell"],[data-testid^="week-matrix-day"]',
+					)
+				)
+					continue;
+				const hasText =
+					el.tagName === "INPUT" ||
+					el.tagName === "TEXTAREA" ||
+					[...el.childNodes].some(
+						(n) => n.nodeType === 3 && n.textContent.trim(),
+					);
+				if (!hasText) continue;
+				// React may rewrite an inline style later: keep the original size and
+				// put the scaled one back whenever it is missing.
+				const base = el.dataset.ax3Base
+					? Number(el.dataset.ax3Base)
+					: parseFloat(getComputedStyle(el).fontSize);
+				el.dataset.ax3Base = String(base);
+				// The inline bar and the header pills cap Dynamic Type at 1.3x
+				// (maxFontSizeMultiplier), as iOS's own navigation bars hold theirs.
+				const capped = el.closest(
+					'[data-testid$="inline-bar"],[data-testid="header-pill"]',
+				);
+				const k = capped ? Math.min(scaleOf(base), 1.3) : scaleOf(base);
+				if (
+					Math.abs(parseFloat(getComputedStyle(el).fontSize) - base * k) < 0.5
+				)
+					continue;
+				const line = Number(
+					el.dataset.ax3Line ?? parseFloat(getComputedStyle(el).lineHeight),
+				);
+				if (!Number.isNaN(line)) el.dataset.ax3Line = String(line);
+				el.style.fontSize = `${base * k}px`;
+				if (!Number.isNaN(line)) el.style.lineHeight = `${line * k}px`;
+			}
+		};
+		apply();
+		new MutationObserver(apply).observe(document.body, {
+			childList: true,
+			subtree: true,
+		});
+	});
+}
+
+/**
+ * `VC_AUDIT=1 npm run visual-check` also writes `.visual-checks/audit/<name>.json`
+ * (HAB-49): every pressable's rendered size and every text that is cut off or
+ * clipped by its box, read from the live DOM at the state's final frame. It is
+ * the evidence behind the V3-6 touch-target and Dynamic Type audits; the
+ * committed guard (`touch-targets.guard.test.ts`) is the static twin.
+ */
+async function auditPage(page, name) {
+	const data = await page.evaluate(() => {
+		const label = (el) =>
+			(
+				el.getAttribute("aria-label") ||
+				el.textContent ||
+				el.getAttribute("data-testid") ||
+				""
+			)
+				.trim()
+				.replace(/\s+/g, " ")
+				.slice(0, 60);
+		const visible = (el) => {
+			const r = el.getBoundingClientRect();
+			const st = getComputedStyle(el);
+			return (
+				r.width > 0 &&
+				r.height > 0 &&
+				st.visibility !== "hidden" &&
+				st.display !== "none"
+			);
+		};
+		const targets = [
+			...document.querySelectorAll(
+				'[role="button"],[role="link"],[role="tab"],[role="switch"],[role="checkbox"],[role="radio"],[role="slider"],button,a[href]',
+			),
+		]
+			.filter(visible)
+			.map((el) => {
+				const r = el.getBoundingClientRect();
+				return {
+					label: label(el),
+					role: el.getAttribute("role") || el.tagName.toLowerCase(),
+					w: Math.round(r.width * 10) / 10,
+					h: Math.round(r.height * 10) / 10,
+					x: Math.round(r.x),
+					y: Math.round(r.y),
+					disabled: el.getAttribute("aria-disabled") === "true",
+				};
+			});
+		const clipped = [];
+		for (const el of document.querySelectorAll(
+			"div,span,h1,h2,h3,h4,h5,h6,p,a,label,li,button",
+		)) {
+			if (!el.childNodes.length || !visible(el)) continue;
+			const hasText = [...el.childNodes].some(
+				(n) => n.nodeType === 3 && n.textContent.trim(),
+			);
+			if (!hasText) continue;
+			const st = getComputedStyle(el);
+			const lineClamp =
+				st.webkitLineClamp !== "none" || st.textOverflow === "ellipsis";
+			const overflowX = el.scrollWidth > el.clientWidth + 1;
+			const overflowY = el.scrollHeight > el.clientHeight + 1;
+			if (
+				(overflowX || overflowY) &&
+				(lineClamp || st.overflow !== "visible")
+			) {
+				clipped.push({
+					text: label(el),
+					kind: lineClamp ? "truncated" : "clipped",
+					box: `${el.clientWidth}x${el.clientHeight}`,
+					content: `${el.scrollWidth}x${el.scrollHeight}`,
+				});
+			}
+		}
+		const vw = document.documentElement.clientWidth;
+		const offscreen = [
+			...document.querySelectorAll("div,span,h1,h2,h3,h4,h5,h6,p"),
+		]
+			.filter((el) => visible(el) && el.getBoundingClientRect().right > vw + 1)
+			.filter((el) => !el.closest('[data-testid*="scroll"]'))
+			.slice(0, 5)
+			.map((el) => ({
+				text: label(el),
+				right: Math.round(el.getBoundingClientRect().right),
+			}));
+		return { targets, clipped, offscreen, viewport: vw };
+	});
+	const dir = path.join(OUT_DIR, "audit");
+	fs.mkdirSync(dir, { recursive: true });
+	fs.writeFileSync(
+		path.join(dir, `${name}.json`),
+		JSON.stringify(data, null, 1),
+	);
+}
+
 async function capture(browser, name, screen) {
 	const clock = screen.clock ?? DEFAULT_CLOCK;
 	const page = await browser.newPage({
@@ -112,6 +288,14 @@ async function capture(browser, name, screen) {
 			await screen.interact(page, { clock });
 			await page.waitForTimeout(500);
 		}
+
+		// react-native-web has no Dynamic Type, so `?textSize=ax` only switches the
+		// layouts; scale the type itself to the AX3 sizes before looking.
+		if (/[?&]textSize=ax\b/.test(screen.route)) {
+			await emulateAx3Type(page);
+			await page.waitForTimeout(400);
+		}
+		if (process.env.VC_AUDIT) await auditPage(page, name);
 
 		await page.screenshot({
 			path: path.join(CURRENT_DIR, `${name}.png`),
@@ -265,6 +449,30 @@ ${sections}
 	);
 }
 
+/**
+ * A capture taken while Metro was still building (or answered 500) is the
+ * page's flat rgb(242,242,242) with a toast at the bottom; accepted as a
+ * baseline it would match every later blank render (V3-6 committed three).
+ */
+function looksLikeBundlerPage(file) {
+	const png = readPng(file);
+	let flat = 0;
+	let total = 0;
+	for (let y = 0; y < png.height; y += 6) {
+		for (let x = 0; x < png.width; x += 6) {
+			const i = (png.width * y + x) << 2;
+			total++;
+			if (
+				png.data[i] === 242 &&
+				png.data[i + 1] === 242 &&
+				png.data[i + 2] === 242
+			)
+				flat++;
+		}
+	}
+	return flat / total > 0.6;
+}
+
 async function main() {
 	const args = process.argv.slice(2);
 
@@ -324,6 +532,12 @@ async function main() {
 		for (const name of selected) {
 			const current = path.join(CURRENT_DIR, `${name}.png`);
 			if (problemsByName.get(name).length === 0 && fs.existsSync(current)) {
+				if (looksLikeBundlerPage(current)) {
+					console.error(
+						`Not accepted: ${name} is the dev server's blank "Bundling…" page.`,
+					);
+					continue;
+				}
 				fs.copyFileSync(current, path.join(BASELINE_DIR, `${name}.png`));
 			}
 		}

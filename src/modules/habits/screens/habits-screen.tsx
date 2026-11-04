@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
+	type HostInstance,
 	Keyboard,
 	type LayoutChangeEvent,
 	StyleSheet,
@@ -25,6 +26,7 @@ import { Button } from "@/components/ui/primitives/button";
 import { SearchField } from "@/components/ui/primitives/search-field";
 import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useTabRetapToTop } from "@/utils/use-on-tab-retap";
 import { ArchivedSection } from "../components/habits/archived-section";
 import { CategoriesRow } from "../components/habits/categories-row";
 import { HabitsHeader } from "../components/habits/habits-header";
@@ -63,6 +65,8 @@ export function HabitsScreen() {
 	const library = useHabitsQueries();
 	const actions = useHabitsActions();
 	const header = useCollapsingHeader();
+	const titleRef = useRef<HostInstance>(null);
+	useTabRetapToTop("(habits)", header.scrollToTop, titleRef);
 	const [query, setQuery] = useState("");
 	const [reordering, setReordering] = useState(false);
 	const [archivedOpen, setArchivedOpen] = useState(false);
@@ -171,6 +175,7 @@ export function HabitsScreen() {
 			>
 				<View onLayout={onHeaderLayout}>
 					<HabitsHeader
+						titleRef={titleRef}
 						eyebrow={
 							reordering
 								? habitsCopy.eyebrow.reorder

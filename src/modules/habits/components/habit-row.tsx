@@ -247,6 +247,8 @@ const styles = StyleSheet.create({
 		gap: space[200],
 	},
 	nameArea: {
+		// In the stacked accessibility layout the row's height is its content's.
+		minHeight: minTouchTarget,
 		flex: 1,
 		alignSelf: "stretch",
 		flexDirection: "row",

@@ -16,8 +16,8 @@ disable-model-invocation: true
    - Work on branch `feat/hab-<id>-<slug>` (create it if you are on `master`; one ticket per branch and PR).
 
 1. **Explore.**
-   - **V1/V2 screens (HAB-01…25):** check `docs/mockups/` for images of the screens this feature builds or changes. If none match, STOP and say which screens lack a mockup — do not proceed until the person provides one or says to proceed without.
-   - **V3 screens (HAB-26…50):** no PNG in `docs/mockups/` is required. Read `docs/mockups/v3/renders/INDEX.md`, then the matching section's `text.txt` for copy and rules, and its slices for layout if present locally (they are gitignored — `npm run mockups:render` creates them). If the ticket's frames are in none of them, STOP and say which.
+   - **V1/V2 screens (HAB-01…25):** the V1/V2 mockup PNGs were removed from the working tree in V3-6; they live at the git tag `mockups-v1-v2` (`git show mockups-v1-v2:docs/mockups/<name>.png > /tmp/<name>.png`, then read it; `git ls-tree --name-only mockups-v1-v2 docs/mockups/` lists them, named by ticket and frame, e.g. `hab-25-f3a.png`). Check there for images of the screens this feature builds or changes. If none match, STOP and say which screens lack a mockup — do not proceed until the person provides one or says to proceed without.
+   - **V3 screens (HAB-26…50):** no PNG is required. Read `docs/mockups/v3/renders/INDEX.md`, then the matching section's `text.txt` for copy and rules, and its slices for layout if present locally (they are gitignored — `npm run mockups:render` creates them). If the ticket's frames are in none of them, STOP and say which.
    - **Search before you plan:** `rg` the codebase for existing components, hooks, helpers and repositories that already do part of this (`components/ui/primitives|composite`, the module's components, `presenters/` (`*-helpers.ts`), services). List the shared components you will touch and who else uses them.
    - Look at the current state of the relevant `modules/habits/` subfolders before assuming what exists.
 

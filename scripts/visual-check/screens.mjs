@@ -5,8 +5,9 @@
  * feature that made it.
  *
  * Each entry: `feature` (spec ID, groups the report), `route` (with the
- * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the docs/mockups/
- * file it's judged against, or null when no mockup covers that state),
+ * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the V3
+ * render under docs/mockups/v3/renders/ it is judged against, or null: V1/V2
+ * mockups were deleted in V3-6 and live on in the tag mockups-v1-v2),
  * optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
  * in CSS px, overrides the default 393×852 — e.g. a small phone with the
  * keyboard up), `note`, `touch` (render in a
@@ -107,7 +108,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_08.png",
-		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked).",
+		note: "FR3 — our own pre-prompt over Today after the first save (Drink water picked); no tab bar behind it (owner's decision over the frame).",
 		async interact(page) {
 			await page.getByRole("button", { name: "Add your first habit" }).click();
 			await page
@@ -122,7 +123,7 @@ export const SCREENS = {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
 		mockup: "docs/mockups/v3/renders/states/slice_09.png",
-		note: "FR4 — Skip for now lands on the empty Today, with the tab bar.",
+		note: "FR4 — Skip for now lands on the empty Today, without the tab bar (owner's decision over the frame).",
 		async interact(page) {
 			await page.getByRole("button", { name: "Skip for now" }).click();
 			await page.getByText("Nothing to track yet").waitFor();
@@ -206,7 +207,7 @@ export const SCREENS = {
 	"today-break-resisted": {
 		feature: "HAB-04",
 		route: "/",
-		mockup: "docs/mockups/today-populated.png",
+		mockup: null,
 		note: "Break habit ticked: resisted caption on the row, plus the completion toast with Undo.",
 		async interact(page) {
 			await page
@@ -230,7 +231,7 @@ export const SCREENS = {
 	"rest-day-picker": {
 		feature: "HAB-18",
 		route: "/?fixtures=rest-day-picker",
-		mockup: "docs/mockups/hab-18-d1.png",
+		mockup: null,
 		note: "Picker over the rest day: Glass of water (Amount ›) and checks; the Break habit is left out.",
 		async interact(page) {
 			await page.getByText("Log a different habit", { exact: true }).click();
@@ -252,7 +253,7 @@ export const SCREENS = {
 	"rest-day-logged": {
 		feature: "HAB-18",
 		route: "/?fixtures=rest-day-picker",
-		mockup: "docs/mockups/hab-18-d2.png",
+		mockup: null,
 		note: "Read logged off-schedule: toast with Undo over the rest day, which now lists it. 'Logged 10:42' becomes the real time of day.",
 		async interact(page) {
 			await page.getByText("Log a different habit", { exact: true }).click();
@@ -411,7 +412,7 @@ export const SCREENS = {
 	"new-habit-near-limit": {
 		feature: "HAB-22",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-22-e6.png",
+		mockup: null,
 		note: "E6 — 31/32: counter shows (from 26), Save enabled once a category is picked, helper gone.",
 		async interact(page) {
 			await typeHabitName(page, "Read twenty pages before coffee");
@@ -461,7 +462,7 @@ export const SCREENS = {
 	"category-picker-many": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=many-categories",
-		mockup: "docs/mockups/hab-24-f1c.png",
+		mockup: null,
 		note: "F1c — eight customs, Music picked, scrolled: hairline above the pinned Save.",
 		async interact(page) {
 			await typeHabitName(page, "Practice scales");
@@ -474,7 +475,7 @@ export const SCREENS = {
 	"add-category-empty": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2a.png",
+		mockup: null,
 		note: "F2a — add sheet stacked over the picker: empty name, placeholder preview, Add blocked.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -484,7 +485,7 @@ export const SCREENS = {
 	"add-category-typing": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2b.png",
+		mockup: null,
 		note: "F2b — name typed: live preview on rotation slot 1, Add enabled.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -495,7 +496,7 @@ export const SCREENS = {
 	"add-category-duplicate": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2c.png",
+		mockup: null,
 		note: "F2c — duplicate of a built-in: amber field + helper, preview hidden, Add blocked.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -506,7 +507,7 @@ export const SCREENS = {
 	"category-picker-new-selected": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=empty",
-		mockup: "docs/mockups/hab-24-f2d.png",
+		mockup: null,
 		note: "F2d — after Add: sheet closed, new chip in its creation-order slot, auto-selected, no toast.",
 		async interact(page) {
 			await typeHabitName(page, "Write three lines");
@@ -608,7 +609,7 @@ export const SCREENS = {
 	"quantity-log": {
 		feature: "HAB-07",
 		route: "/?fixtures=quantity-log",
-		mockup: "docs/mockups/quantity-log.png",
+		mockup: null,
 		note: "Sheet is opened from the row's count control (a tap on the circle adds one, D6) — the interaction the mockup can't capture from a static route load.",
 		async interact(page) {
 			await page.getByText("6/8", { exact: true }).click();
@@ -617,7 +618,7 @@ export const SCREENS = {
 	"streak-at-risk": {
 		feature: "HAB-08",
 		route: "/?fixtures=streak-at-risk",
-		mockup: "docs/mockups/streak-at-risk.png",
+		mockup: null,
 		note: "Sheet is opened by tapping the at-risk habit's row, same as a real 'open this habit' interaction.",
 		async interact(page) {
 			await page.getByText("Meditate").click();
@@ -727,7 +728,7 @@ export const SCREENS = {
 	"retro-log": {
 		feature: "HAB-10",
 		route: "/(today)/habit/1?fixtures=retro-log",
-		mockup: "docs/mockups/hab-18-d4.png",
+		mockup: null,
 		note: "Origin habit pinned first in the ringed card (HAB-18 D4), the rest under 'Also on <weekday>'. Sheet is opened by tapping the heatmap cell 3 days ago (RETRO_LOG_DAYS_AGO in entry-fixtures.ts).",
 		async interact(page) {
 			await page
@@ -1916,3 +1917,116 @@ SCREENS["delete-confirm-long-names"] = {
 	mockup: null,
 	note: "delete-confirm with a 40-char V1 name (HAB-22): the title and the consequence wrap inside the sheet.",
 };
+
+/**
+ * HAB-49 / V3-6: Dynamic Type. Every screen and sheet that had no
+ * accessibility-size state, re-run with `?textSize=ax` (src/lib/dev-text-size)
+ * in light and dark. The screens that already had one (`*-ax`) are above.
+ * Each takes the base state's route and its interaction unchanged, so a sheet
+ * or toast is opened the same way.
+ */
+const AX_VARIANTS = [
+	[
+		"quantity-sheet-stepper",
+		"QS4 — the quantity sheet at AX3: stepper, chips one per line, Done pinned.",
+	],
+	["quantity-sheet-exact", "The exact-value pad at AX3."],
+	["streak-at-risk", "SR1 at AX3: title, body, and the two actions stacked."],
+	["retro-log", "RL1 (Edit this day) at AX3 as a full-height scrolling sheet."],
+	["rest-day-picker", "The off-schedule picker at AX3."],
+	["today-empty", "T2 at AX3."],
+	["today-v3-rest", "T3 (rest day) at AX3."],
+	["today-v3-at-risk", "T4 (a row at risk) at AX3."],
+	["today-v3-all-done", "T7 (all done) at AX3."],
+	[
+		"today-rollover",
+		"SY5 (midnight rollover banner) at AX3: the Dismiss button drops under the text.",
+	],
+	["today-load-error", "SY2 (load error) at AX3."],
+	["today-loading", "SY1 (skeleton) at AX3."],
+	["migration-running", "SY3 at AX3."],
+	["error-screen-migration-failed", "SY4 at AX3."],
+	["first-run-offer", "FR3 at AX3: the alert's buttons stack, 16 pt insets."],
+	["form-edit-discard", "F9 'Discard changes?' at AX3."],
+	["form-new-errors", "New habit with errors at AX3."],
+	["categories-list", "C1 at AX3."],
+	["categories-rename-editing", "C3 (rename) at AX3."],
+	["categories-delete-in-use", "C5 at AX3."],
+	["add-category-typing", "The New category sheet at AX3."],
+	["reminders-times", "R2 at AX3."],
+	[
+		"reminders-sheet",
+		"The reminder sheet (time wheel, weekday chips one per line) at AX3.",
+	],
+	["reminders-denied", "SY6 banner at AX3."],
+	["habits-search", "H4 (search) at AX3."],
+	["habits-archived", "H5 (archived section open) at AX3."],
+	["habits-reorder", "H9 (reorder mode) at AX3."],
+	["habit-detail-history", "D2 (history) at AX3."],
+	["habit-detail-archived", "NEW-13 (archived banner) at AX3."],
+	["archive-confirm", "DC4 at AX3."],
+	["delete-confirm-archived", "DC5 at AX3."],
+	["export-choose", "EX1 at AX3."],
+	["export-failed", "EX4 at AX3."],
+	[
+		"error-toast-today",
+		"A toast at AX3: wraps, the action drops below the copy.",
+	],
+	["tab-bar-toast", "A toast over bar A at AX3."],
+	["settings-notifications-off", "SY6 on Settings at AX3."],
+	["export-ready", "EX3 at AX3."],
+];
+for (const [name, note] of AX_VARIANTS) {
+	const base = SCREENS[name];
+	if (!base) throw new Error(`AX variant of unknown state ${name}`);
+	const [path, query = ""] = base.route.split("?");
+	const params = new URLSearchParams(query);
+	params.set("textSize", "ax");
+	for (const dark of [false, true]) {
+		SCREENS[`${name}-ax${dark ? "-dark" : ""}`] = {
+			...base,
+			feature: "HAB-49",
+			route: `${path}?${params}`,
+			mockup: null,
+			colorScheme: dark ? "dark" : (base.colorScheme ?? "light"),
+			note: dark ? `${note} Dark.` : note,
+		};
+	}
+}
+
+// The Progress range control collapses to a list at AX sizes (P11), and the
+// week matrix becomes one block of day buttons per habit (P6), so these two
+// states are opened through those controls rather than the standard ones.
+for (const dark of [false, true]) {
+	const suffix = dark ? "-dark" : "";
+	SCREENS[`progress-habit-picker-ax${suffix}`] = {
+		...SCREENS["progress-habit-picker"],
+		feature: "HAB-49",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: null,
+		colorScheme: dark ? "dark" : "light",
+		note: `HP1 at AX3: the habit filter sheet.${dark ? " Dark." : ""}`,
+		async interact(page) {
+			await page.getByTestId("segmented-collapsed").click();
+			await page.getByRole("tab", { name: "Year" }).click();
+			await page.waitForTimeout(400);
+			await page.getByTestId("habit-filter-chip").click();
+			await page.waitForTimeout(500);
+		},
+	};
+	SCREENS[`progress-week-edit-day-ax${suffix}`] = {
+		...SCREENS["progress-week-edit-day"],
+		feature: "HAB-49",
+		route: `${PROGRESS}progress-v3&textSize=ax`,
+		mockup: null,
+		colorScheme: dark ? "dark" : "light",
+		note: `RL2 at AX3: Edit this day from a week block's day cell.${dark ? " Dark." : ""}`,
+		async interact(page) {
+			await page
+				.getByRole("button", { name: /^Wed, / })
+				.first()
+				.click();
+			await page.waitForTimeout(600);
+		},
+	};
+}

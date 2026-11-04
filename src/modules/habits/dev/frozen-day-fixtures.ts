@@ -10,7 +10,7 @@ import {
 
 /**
  * Missed days the `habit-detail` scenario covered with a freeze — two, like
- * docs/mockups/habit-detail.png's heatmap. `entry-fixtures.ts` leaves these
+ * the V1/V2 mockup habit-detail (tag mockups-v1-v2)'s heatmap. `entry-fixtures.ts` leaves these
  * days without an entry.
  */
 export const HABIT_DETAIL_FROZEN_DAYS_AGO = [38, 59];
@@ -23,7 +23,7 @@ const NO_FREEZES_SPENT_DAYS_AGO = [3, 6];
  * (`frozen-day-repository.web.ts`). Only `habit-detail` and `no-freezes` have any —
  * `streak-at-risk` specifically wants the full pool available (0 used this
  * month) so both freeze slots show as open, matching
- * docs/mockups/streak-at-risk.png.
+ * the V1/V2 mockup streak-at-risk (tag mockups-v1-v2).
  */
 export function makeFrozenDayFixtures(
 	scenario: FixtureScenario = "default",

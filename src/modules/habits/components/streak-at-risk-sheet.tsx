@@ -1,11 +1,13 @@
 import { addMonths, format, startOfMonth } from "date-fns";
-import { StyleSheet, Text, View } from "react-native";
+import { useRef } from "react";
+import { type HostInstance, StyleSheet, Text, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { Button } from "@/components/ui/primitives/button";
 import { space, squareRadius, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { pluralise } from "@/utils/format";
+import { useInitialFocus } from "@/utils/use-initial-focus";
 import { FREEZE_POOL_SIZE } from "../constants";
 import { todayCopy } from "../messages";
 
@@ -49,6 +51,9 @@ export function StreakAtRiskSheet({
 	const { colors } = useTheme();
 	const resetsOn = format(addMonths(startOfMonth(today), 1), "d MMMM");
 	const hasFreeze = freezesRemaining > 0;
+	// 08.3: focus starts on the action the sheet leans towards.
+	const primaryRef = useRef<HostInstance>(null);
+	useInitialFocus(primaryRef, visible);
 	const title = hasFreeze
 		? todayCopy.atRiskTitle(habitName)
 		: todayCopy.atRiskTitleNone;
@@ -101,6 +106,7 @@ export function StreakAtRiskSheet({
 			{hasFreeze ? (
 				<>
 					<Button
+						buttonRef={primaryRef}
 						label={todayCopy.atRiskUseFreeze}
 						onPress={onUseFreeze}
 						loading={isApplyingFreeze}
@@ -113,7 +119,11 @@ export function StreakAtRiskSheet({
 					/>
 				</>
 			) : (
-				<Button label={todayCopy.atRiskGotIt} onPress={onNotNow} />
+				<Button
+					buttonRef={primaryRef}
+					label={todayCopy.atRiskGotIt}
+					onPress={onNotNow}
+				/>
 			)}
 		</Sheet>
 	);

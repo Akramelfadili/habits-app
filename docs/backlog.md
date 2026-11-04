@@ -4,6 +4,37 @@ Deferred work and deviations from the specs, recorded while building so they are
 
 Status key: **Open** = something to decide or build · **Decided** = a deliberate deviation, recorded for the reviewers · **Done** = kept only for history.
 
+## Where things stand (end of V3-6)
+
+Everything below this section is the detailed record by ticket. This is what is still open, grouped.
+
+### Bugs to fix next (the owner's fix batch)
+
+- **Today's day strip, toast dismissal and the partial-sheet bugs** — named by the owner for the next prompt; deliberately not touched in V3-6.
+- **Toasts have no enter or exit animation** (08.5: rise 12 pt + fade, fade only with Reduce Motion) and, per the owner, dismissal misbehaves; fix together. Today a toast just appears and goes.
+- **After Skip on First Run, Progress and Habits are unreachable until a first habit exists** (FR4 has no tab bar by decision). If that feels wrong on a phone, show the bar again after the first push or after a few seconds; the flag is `landing` in `first-run-offer-store`.
+- **Collapsing header: the large title's buttons scale to 88 % while it fades** (38.7 pt while they can still be hit); hide them from touches once past the first third.
+- **Perf tests fail on a loaded or slower machine** (`year-map.perf.test.ts`, 1000–1200 ms budgets; `use-progress-queries.perf.slow.test.tsx`): they pass alone and with `--maxWorkers=2`, and failed in a full parallel run by as little as 9 ms (1009 vs 1000) after the machine slowed down. Give them relative budgets or move `year-map.perf` to `*.slow.test.ts`. `make check` can therefore need a re-run on a busy box.
+
+- **`--update-baseline` refuses the dev server's blank "Bundling…" page** (flat rgb 242 over 60 % of the capture). V3-6 committed three such baselines (`reminders-at-cap`, `today-empty-ax`, `-dark`) before a re-run showed them; they were recaptured and checked by eye.
+
+### Release prerequisites (before anyone but the owner uses it)
+
+- **Back up the database before migrating** (A7-08): a migration that succeeds with wrong data cannot be undone; copy `habits.db` to `habits.db.bak` first and say so on the update screen (SY3/SY4 promise nothing about a backup today).
+- **Import from the JSON export** (HAB-15 exports; nothing reads it back). Without it a lost phone loses the history. The file carries `version: 1`, categories (name, built-in, order) and each habit's reminders.
+- **Legacy column drop (B11):** `habits.icon/color/category` are nullable and unused; a cleanup migration (with `migration-reviewer`) removes them, after the backup above exists.
+- **`PRAGMA foreign_key_check` in dev builds** and the four orphan risks listed under "reliability follow-ups" (A7-04): foreign keys stay off on device by decision (ADR 002).
+- **`expo-clipboard`**: `npx expo install expo-clipboard` and a dev-client rebuild, so "Copy diagnostics" copies instead of sharing a file.
+- **Device-only checks, none of which the web build can show** (phone checklist in the V3-6 report): VoiceOver landing and reading order on every screen, the Magic Tap for a toast's Undo, Dynamic Type at AX1–AX5 (web only emulates AX3), Reduce Motion / Reduce Transparency / Increase Contrast on the pill, a reminder actually firing and not firing (`e2e/README.md`, manual checks 1–7), the share sheet for the export file, drag-to-reorder and swipe-to-archive, the splash → First Run hand-off and the update screen's first paint, the release build's promise-rejection tracking, Hermes timings for Year, the midnight rollover with the phone clock moved, the SF Symbols the web build cannot draw.
+
+### Parked (decided or Later, no date)
+
+- Week-level freeze for × per week habits (own ADR); auto-use freezes; the Settings hub with a page per row; Privacy and Send feedback rows; the per-reminder on/off toggle; iCloud backup row.
+- `SlimHabitForm` split behind a shared `useHabitForm` hook; the per-habit streak read model shared by `useHabitsQueries` and the Detail hook; one V3-02 `Header` component for Today / Habits / Progress.
+- Skeleton shimmer (it pulses); week-start-follows-iOS (D9, own ADR); logs on disk (A3-10); a lazy db client so an unopenable database shows the error screen.
+- The V1/V2 spec-vs-built deviations under "Decided" and the polish items under "Open — polish and small gaps".
+- Old summary builders kept as the oracle of `range-summary.parity.test.ts` (V3-3a).
+
 ## Open — product decisions and unbuilt spec rules
 
 - **Edit habit has Archive but no Delete** (HAB-23). Mockup E7 is labelled "from Edit habit · delete", but the only way to delete is "Delete habit" on Habit Detail. Archive was added at the foot of Edit habit (audit B9; HAB-17's rule) and deliberately only Archive — Delete stays one step further away. Decide whether Edit habit should also get a Delete entry.
@@ -296,7 +327,7 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 Deliberate differences from the frames and what was left out. Spec wins where they disagree (D-list in `feature-spec-v3.md`).
 
 - **Numbering:** `feature-spec-v3.md` files first run and suggestions under HAB-46 and the system states under HAB-47 (HAB-45 is Destructive confirms); the task brief called first run HAB-45.
-- **FR3 and FR4 are drawn with the tab bar and built with it.** FR1 and FR2 (and Browse suggestions opened from First Run) have no tab bar; FR3 is a question over Today and FR4 is Today itself, so they are inside the tabs, as the frames draw them.
+- **FR3 and FR4 are drawn WITHOUT the tab bar — spec wins over the frames (V3-6, owner's decision).** FR1/FR2 and Browse suggestions from First Run never had one. The frames draw FR3 (the reminder question over Today) and FR4 (the empty Today after Skip) with the pill; the owner overrode that. `leaveFirstRun` sets a `landing` flag in `first-run-offer-store`; the tabs layout draws no bar while the question is open or while `landing` is set and there are no habits, and clears the flag as soon as a habit exists. Consequence: after Skip, Progress and Habits are unreachable until a first habit is added (Today's + and Browse suggestions are the ways on), and the bar appears the moment it is saved. A relaunch shows the ordinary empty Today with its bar.
 - **Skip for now (FR1, BS1 from First Run) is not drawn.** Added so every First Run screen has a way to an empty Today; FR2's Close is the same skip. The suggestions list from First Run therefore carries it under the groups.
 - **FR2's frequency row has three options, not four** (Daily, Specific days, × per week), as in the form (V3-4b). Its footnote reads "Category and reminders can wait", not "Category, icon and reminders": a habit's icon is its category's, so there is no icon to postpone.
 - **Quick picks and suggestions carry their category and target.** Picking "Drink water" on FR2 saves it in Health as 8 glasses a day (FR3 draws that); editing the name drops both. "No social media" is Productivity (SY5 draws it there) and "No phone in bed" Health (no frame says).
@@ -322,15 +353,78 @@ Deliberate differences from the frames and what was left out. Spec wins where th
 - **`useRolloverQueries` reads the closed day's week on every Today mount**, even with no notice; skipping it until one exists is deferred.
 - **Test-only exports knip lists** (new): `suggestionSubtitle`.
 
-## V3-6 audit list (touch targets and known layout exceptions)
+## V3-6 step 1 — touch-target audit (done)
 
-Collected for the accessibility and baselines batch (HAB-49, HAB-50); each is deliberate where it stands.
+How: `VC_AUDIT=1 npm run visual-check` writes each state's rendered pressables to `.visual-checks/audit/` (291 states, 3 900+ targets); everything under 44 pt was grouped by role and label and checked against its `hitSlop` in code (react-native-web ignores `hitSlop`, so a web rect under 44 is only a finding when no slop makes up the difference). The static twin is `src/components/ui/touch-targets.guard.test.ts`: every `<Pressable>`/`Touchable*` in the app must prove 44 × 44 pt from its style and `hitSlop`, or carry a reasoned entry in its exceptions map; a stale entry also fails.
 
-- **Week matrix day headers: 44 pt high, 28 pt wide** (Progress, P1). Documented under "Spec wins over the mockup" in `feature-spec-v3.md`.
-- **Week matrix cells (24 pt), Year cells (16 pt):** below 44 by design, not tappable (08.2).
-- **Year month labels: 44 pt high through hitSlop**, so the hit areas of labels in the band above overlap the last row of cells (not tappable) and the 12 pt gap.
-- **AX3 stacked range list overlays the content** (P11) instead of pushing it down.
-- **One-habit and AX3 week blocks: 40 pt cells with a 2 pt hitSlop** (44 pt in effect), buttons that open Edit this day.
+**Fixed** (each was a real 41 pt or narrower hit area):
+- Embedded `ListItem` rows (the Reminders rows, "Set exact value", the off-schedule picker rows, the frequency rows): 41 pt high → `minHeight` 44.
+- Today row name area in the stacked accessibility layout: 32–41 pt → `minHeight` 44.
+- Year map month labels: 44 pt high but 23–33 pt wide → `minWidth` 44 (months start at least 72 pt apart, so no overlap).
+
+**Passes through `hitSlop` (web draws them smaller)**: Month and one-habit/AX3 week day cells (40 pt + 2 pt), compact Restore (36 + 4), small buttons (32 + 8: Dismiss, Restore on Delete's archived card), the reorder handle (28 + 8), Checkbox, Stepper −/+, the tab-bar items.
+
+**Documented exceptions (still under 44 pt)**
+- **Week matrix day headers: 44 pt high, 28 pt wide** (cell pitch, P1). Unchanged.
+- **Week matrix cells (24 pt) and Year cells (16 pt):** not tappable (08.2).
+- **Large-title header buttons while the title collapses**: the title block, including the `+`, gear and Export, scales to 88 % over the first 60 % of the scroll range, so they are 38.7 pt for the moment they are fading out. At rest they are 44 pt and the inline bar's own buttons take over at full size.
+- **Adjustable containers** (Stepper value, Insight pager, the daily-target and times-per-week values) report role `slider` to VoiceOver; they are not tap targets, their buttons are separate and 44 pt.
+- **Sheet scrim:** a full-screen close target.
+- **Not covered by the guard**: a tap handler that is not a `Pressable` (none exist: a syntax-tree scan found no `onPress` on a Text, View or Image) and `GestureDetector` surfaces (swipe rows, the reorder drag).
+- **The Checkbox's 44 pt box with a −10 margin** (reviewer-flagged earlier) still reaches into its host row; device-check on Android.
+- **AX3 stacked range list overlays the content** (P11) instead of pushing it down; unchanged.
+
+## V3-6 step 2 — accessibility and Dynamic Type (done)
+
+**How Dynamic Type was checked.** react-native-web has no Dynamic Type, so `?textSize=ax` only switched layouts and the screens had never been seen with AX3 *type*. The visual-check harness now scales every text element to the 08.6a AX3 sizes for a state whose route says `textSize=ax` (display 32 → 52, stat 26 → 48, title 20 → 43, body-lg 17 → 40, body 16 → 38, callout 15 → 36, subhead 14 → 36, footnote 13 → 33, caption 12 → 32; the tab-bar labels, the week matrix's day letters and the cells' numbers stay fixed, the inline bar and header pills cap at 1.3x, as the app does) and `VC_AUDIT=1` reports text that is truncated or clipped by its box. 102 AX states (51 screens, light and dark): the 13 that existed plus 38 new.
+
+**Screens and sheets checked at AX3, light and dark:** Today (populated, empty, rest day, at risk, all done, rollover banner, skeleton, load error), Progress (Week, Month, Year, the habit filter sheet, Edit this day from a week block), Habits (library, search, archived, reorder), Habit Detail (stats, history, archived), Add / Edit habit (empty, with errors), First Run (welcome, slim form, Browse suggestions, the FR3 question), Categories (list, rename, delete in use, New category sheet), Reminders (list, the reminder sheet, notifications off), Settings (and its notifications-off state), the quantity sheet (stepper, exact value), the streak-at-risk sheet, Edit this day from Detail, the off-schedule picker, archive and delete confirms (both), Export (choose, ready, failed), the update screen and its failure, the discard alert, the tab bar (bar A) and toasts. Not at AX: the dev-only Today buttons; Progress Month's day card (it is reached through the Year map's month list at AX, drawn by `progress-month-ax`).
+
+**Found and fixed**
+- **Toasts clipped at two lines** ("Couldn't update this habit. Try …"): at AX the message wraps in full and the action drops below it, on a 20 pt card (08.6).
+- **"1 not due today · Upper body" (Today's fold row) was one line** and cut: wraps at AX.
+- **Alert (FR3, F9) was 270 pt wide at AX** and its primary button's label overflowed the pill: the card takes the screen width less 16 pt insets and buttons use a 20 pt radius at AX ("labels wrap inside; button grows; radius 20").
+- **Buttons at AX** have radius 20 and centred, wrapping labels everywhere.
+- **Week blocks (AX Week): the row total "2 / 3" broke into three lines**: the name wraps before the total does.
+- **Inline bar and header pills** (Progress's Export, Detail's Edit, Categories' Done) grew past the 44 pt bar and covered the title: they hold at 1.3x Dynamic Type (`barMaxFontMultiplier`), as iOS's own bars hold theirs. The large title and its stacked buttons still scale fully.
+- **Week strip's "Change day" pill**: vertical padding and a 20 pt radius for its wrapped label.
+- **Route-entry focus (08.4):** the screen reader now starts on the title of Detail, Settings, Reminders and Categories (a pushed screen's default focus); a sheet's focus was already on its title (`SheetHeader`) and the archive sheet now starts there too; the streak-at-risk sheet starts on Use a freeze (08.3).
+- **Re-tapping the selected tab** scrolls its screen to the top and puts the screen reader on the title (08.4; was "does nothing", decided here). It does not pop a pushed screen.
+- **Selected chips draw a check** before the label (08.7 asks for a check on chips; the fill alone was the only signal).
+
+**Colour is never the only signal (08.7), audited per row:** done (check + status text + VoiceOver "done"), partial (corner notch, pie, "5 of 8"), missed ("Missed" in history), Break (amber + "Break" tag, resistance copy), at risk (text "Missed Thursday · 1 freeze left"), frozen (dashed border, "Frozen", legend), reset (notice text), bonus (dot + "Bonus" tag), before start / future (dashed / hairline), error (`!` symbol, error copy, focus), selected (check on chips, weight on tabs, check in the segmented control, VoiceOver "selected"), category (name always shown), slipping ("slipping" in status). **Exception:** the weekday chips (M T W T F S S) show selection by fill (ink) against a ring only, with VoiceOver "checked"; a check would not fit a 44 pt circle with a letter.
+
+**Reduce Motion — every animation and what it does instead**
+
+| Animation | Default | Reduce Motion |
+|---|---|---|
+| Completion circle press | scale 92 % | opacity only, no scale |
+| Fill (progress bar, column chart bars, ring) | 450 ms ease | jumps to the value |
+| Indeterminate bar (export, update screen) | a segment sweeps | the segment sits still |
+| Week strip day switch | 160 ms slide + fade | crossfade only |
+| Today list (rows reflow, the progress bar enters and leaves) | 200 ms layout transition, fade | no layout animation; 150 ms crossfade |
+| Collapsing header (Today, Progress, Habits) | scroll-linked shrink and fade, settles on the nearer end | no interpolation and no settling scroll; 150 ms crossfade past the middle |
+| Sheets | slide | fade |
+| Alert dialog | fade | fade (unchanged) |
+| All done check | draws left to right, 600 ms | drawn, static |
+| Skeleton | pulse (opacity) | static blocks |
+| Tab bar press and the selected capsule | 98 % scale, capsule fade | 70 % opacity flash, 150 ms crossfade |
+| Insight pager paging | animated scroll | no animation |
+| Reorder drop | settles over the settle duration | 0 ms (the lift is a shadow, never a scale) |
+| Re-tap scrolls to top | animated | no animation |
+| Screen pushes and modals | iOS spring | iOS's own system crossfade |
+| Toast | **no animation is built** (appears and goes) | n/a; 08.5's rise + fade is in the toast fix batch |
+
+**Not verified without a device (all of 08.3/08.4's dynamic parts):** that VoiceOver lands where the code asks (the focus API is mocked in tests), reading order inside each screen, the Magic Tap for a toast's Undo, Full Keyboard Access, Switch Control, Large Content Viewer on the tab bar, the real AX1–AX5 type sizes (web emulates AX3), the pill's Reduce Transparency and Increase Contrast modes, Reduce Motion on the animations above.
+
+**Left as they are:** the **skeleton pulses** (opacity) where 08.5 says shimmer; the **collapsing header's buttons** are 38.7 pt while the title scrolls away (see step 1); **SF Symbols render blank on web**, so AX frames show some squares without glyphs.
+
+## V3-6 step 3 — earlier batches' small items (done)
+
+- **V3-4a nits fixed:** `DetailActions` draws Delete's minus through `IconBadge` (new `minusColor`); `WeekHistoryCard` uses `Container variant="summary"`; `habitHistoryRows` looks back at most 366 days instead of walking to the habit's creation; the archive sheet has initial focus (its title).
+- **V3-4a nit moved to "parked":** `useHabitsQueries` and the Detail hook each do the per-habit streak pass inside the hook (a shared read model is its own refactor).
+- **V3-5 fixed:** FR2's Close now has an inline error path (`skipFailed` in `first-run-offer-store`; the form shows "Couldn't continue. Try again." above Save); the skip handler left the root layout for `useFirstRunSkipActions`; the quick-pick logic left `habit-form-screen` for `useQuickPickActions` and `QuickPicks`; the streak-at-risk sheet is pinned at the moment it opens (day, habit, streak and freezes), like the quantity sheet — it no longer changes or closes under the person at midnight. **What the pin does not do:** spend a freeze for a day the grace window has since closed. On "Use a freeze" the live read must still name the same missed day, otherwise nothing is written and a toast says "Too late for a freeze on Sat 3. The streak restarts with your next log."
+- **V3-5 deferred again, with the reason:** splitting a `SlimHabitForm`. Five layout branches on `slim` remain in `habit-form-screen.tsx` (which sections show, and their order); a real split needs the form state, submit and leave guard moved into a `useHabitForm` hook that New, Edit and FR2 share, and that is a refactor of the most-tested screen with its own review.
 
 ## Open — V3-4b step 7–9 (copy, accessibility, final frames)
 

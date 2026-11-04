@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { AccessibilityInfo } from "react-native";
 import { StreakAtRiskSheet } from "./streak-at-risk-sheet";
 
 const TODAY = new Date("2026-09-16T12:00:00Z");
@@ -24,6 +25,24 @@ async function renderSheet(
 }
 
 describe("StreakAtRiskSheet", () => {
+	describe("focus (08.3)", () => {
+		afterEach(() => {
+			jest.useRealTimers();
+			jest.restoreAllMocks();
+		});
+
+		it("starts the screen reader on Use a freeze", async () => {
+			jest.useFakeTimers();
+			const send = jest
+				.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+				.mockImplementation();
+			await renderSheet();
+			jest.advanceTimersByTime(400);
+			expect(send).toHaveBeenCalledTimes(1);
+			expect(send.mock.calls[0][1]).toBe("focus");
+		});
+	});
+
 	describe("with a freeze left (SR1)", () => {
 		it("asks to keep the habit's streak and interpolates what is at stake", async () => {
 			await renderSheet();

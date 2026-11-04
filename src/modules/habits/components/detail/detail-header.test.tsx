@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 import { DetailHeader } from "./detail-header";
 
 let mockLargeText = false;
@@ -55,5 +55,23 @@ describe("DetailHeader", () => {
 		expect(StyleSheet.flatten(block?.props.style).flexDirection).not.toBe(
 			"row",
 		);
+	});
+});
+
+describe("DetailHeader focus on route entry (08.4)", () => {
+	afterEach(() => {
+		jest.useRealTimers();
+		jest.restoreAllMocks();
+	});
+
+	it("puts the screen reader on the title once the push has settled", async () => {
+		jest.useFakeTimers();
+		const send = jest
+			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
+			.mockImplementation();
+		await renderHeader();
+		jest.advanceTimersByTime(400);
+		expect(send).toHaveBeenCalledTimes(1);
+		expect(send.mock.calls[0][1]).toBe("focus");
 	});
 });

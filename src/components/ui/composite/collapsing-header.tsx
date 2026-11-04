@@ -13,7 +13,13 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { minTouchTarget, motion, space, textStyles } from "@/theme/theme";
+import {
+	barMaxFontMultiplier,
+	minTouchTarget,
+	motion,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 
@@ -145,8 +151,14 @@ export function useCollapsingHeader() {
 		opacity: interpolate(progress.value, [0.5, 1], [0, 1], Extrapolation.CLAMP),
 	}));
 
+	/** Back to the large title: re-tapping the selected tab (08.4). */
+	const scrollToTop = useCallback(() => {
+		scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
+	}, [scrollRef, reduced]);
+
 	return {
 		scrollRef,
+		scrollToTop,
 		scrollY,
 		onScroll,
 		setRange,
@@ -205,6 +217,8 @@ export function CollapsedHeaderBar({
 				>
 					<Text
 						accessibilityRole="header"
+						// A navigation bar holds its type size, like iOS's own (08.6).
+						maxFontSizeMultiplier={barMaxFontMultiplier}
 						style={[styles.title, { color: colors.ink }]}
 					>
 						{title}

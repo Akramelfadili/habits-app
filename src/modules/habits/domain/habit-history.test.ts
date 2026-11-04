@@ -348,6 +348,21 @@ describe("habitHistoryRows (D2)", () => {
 	const kinds = (rows: ReturnType<typeof habitHistoryRows>) =>
 		rows.map((row) => [row.date, row.kind]);
 
+	it("looks back a year at most, however old the habit is", () => {
+		const rows = habitHistoryRows(
+			history({
+				habit: makeHabit({ createdAt: longAgo }),
+				entries: [entry(500)],
+			}),
+			[],
+			10_000,
+		);
+		// Every day of the window is a missed day of a started habit; the days
+		// before it are never looked at.
+		expect(rows.length).toBeLessThanOrEqual(367);
+		expect(rows.at(-1)?.date).toBe(dayString(366));
+	});
+
 	it("lists done, missed and frozen days, newest first", () => {
 		const rows = habitHistoryRows(
 			history({

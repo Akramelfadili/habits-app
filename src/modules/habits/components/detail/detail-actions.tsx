@@ -1,8 +1,6 @@
-import { StyleSheet, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { radius, squareRadius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { detailCopy } from "../../messages";
 
@@ -40,31 +38,10 @@ export function DetailActions({
 			<ListItem
 				title={detailCopy.delete.row}
 				destructive
-				leading={
-					<View style={[styles.square, { backgroundColor: colors.inner }]}>
-						<View style={[styles.bar, { backgroundColor: colors.dangerBg }]} />
-					</View>
-				}
+				leading={<IconBadge minusColor={colors.dangerBg} />}
 				navigable
 				onPress={onDelete}
 			/>
 		</Container>
 	);
 }
-
-/** The icon square's size and radius rule (V3-32), drawn here because no SF Symbol is a bare minus. */
-const SQUARE = 32;
-const styles = StyleSheet.create({
-	square: {
-		width: SQUARE,
-		height: SQUARE,
-		borderRadius: squareRadius(SQUARE),
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	bar: {
-		width: 12,
-		height: 2,
-		borderRadius: radius.xs,
-	},
-});

@@ -4,8 +4,14 @@ import type { Habit } from "./types";
 type FirstRunOfferState = {
 	/** The first habit, waiting for the person's answer to "Remind you each day?" (FR3); null when nothing is offered. */
 	habit: Habit | null;
+	/** True from leaving First Run until the first habit exists: FR3 and FR4 are drawn without the tab bar. */
+	landing: boolean;
+	/** The Close on FR2 (a skip) could not write the "seen" flag: FR2 says so inline. */
+	skipFailed: boolean;
+	setSkipFailed: (failed: boolean) => void;
 	offer: (habit: Habit) => void;
 	clear: () => void;
+	setLanding: (landing: boolean) => void;
 };
 
 /**
@@ -15,6 +21,10 @@ type FirstRunOfferState = {
  */
 export const useFirstRunOfferStore = create<FirstRunOfferState>((set) => ({
 	habit: null,
+	landing: false,
+	skipFailed: false,
+	setSkipFailed: (skipFailed) => set({ skipFailed }),
 	offer: (habit) => set({ habit }),
 	clear: () => set({ habit: null }),
+	setLanding: (landing) => set({ landing }),
 }));

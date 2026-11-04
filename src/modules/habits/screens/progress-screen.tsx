@@ -1,7 +1,12 @@
 import { format, startOfWeek } from "date-fns";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import {
+	type HostInstance,
+	type LayoutChangeEvent,
+	StyleSheet,
+	View,
+} from "react-native";
 import Animated, { useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -17,6 +22,7 @@ import { SegmentedControl } from "@/components/ui/primitives/segmented-control";
 import { habitAccentInk, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
+import { useTabRetapToTop } from "@/utils/use-on-tab-retap";
 import { EditDaySheet } from "../components/edit-day-sheet";
 import { ExportSheet } from "../components/export-sheet";
 import { HabitFilterSheet } from "../components/progress/habit-filter-sheet";
@@ -58,6 +64,8 @@ export function ProgressScreen() {
 	const actions = useProgressViewActions();
 	const filter = useProgressFilterQueries();
 	const header = useCollapsingHeader();
+	const titleRef = useRef<HostInstance>(null);
+	useTabRetapToTop("(progress)", header.scrollToTop, titleRef);
 	const switcherTop = useSharedValue(0);
 	const [switcherHeight, setSwitcherHeight] = useState(SWITCHER_HEIGHT);
 	const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -177,6 +185,7 @@ export function ProgressScreen() {
 			>
 				<View onLayout={onHeaderLayout}>
 					<ProgressHeader
+						titleRef={titleRef}
 						eyebrow={eyebrow}
 						exportUnavailable={exportUnavailable}
 						onExport={onExport}

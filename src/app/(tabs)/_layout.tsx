@@ -9,8 +9,10 @@ import {
 	tabBarToastOffset,
 } from "@/components/ui/composite/tab-bar-pill";
 import { ToastHost } from "@/components/ui/composite/toast-host";
+import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { useFirstRunActions } from "@/modules/habits/hooks/use-first-run-actions";
 import { useFirstRunQueries } from "@/modules/habits/hooks/use-first-run-queries";
+import { useTabRetapStore } from "@/store/tab-retap-store";
 import { useToastStore } from "@/store/toast-store";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
@@ -54,7 +56,20 @@ export default function TabsLayout() {
 	// so the pill is never drawn over it. An install that already has habits
 	// but predates the flag gets it written once, so deleting every habit later
 	// can never bring First Run back.
-	const { gate, needsSeenMark } = useFirstRunQueries();
+	const { gate, needsSeenMark, habitCount } = useFirstRunQueries();
+	// FR3 (the reminder question) and FR4 (the empty Today after Skip) are drawn
+	// without the bar — the owner's decision over the frames. The bar returns as
+	// soon as a first habit exists and the question is answered.
+	const offerOpen = useFirstRunOfferStore((state) => state.habit !== null);
+	const landing = useFirstRunOfferStore((state) => state.landing);
+	const setLanding = useFirstRunOfferStore((state) => state.setLanding);
+	useEffect(() => {
+		if (landing && habitCount !== undefined && habitCount > 0) {
+			setLanding(false);
+		}
+	}, [landing, habitCount, setLanding]);
+	// An unknown count counts as none: the bar must not flash while it loads.
+	const hideBar = offerOpen || (landing && !habitCount);
 	const { markFirstRunSeen } = useFirstRunActions();
 	useEffect(() => {
 		if (needsSeenMark) void markFirstRunSeen();
@@ -65,34 +80,40 @@ export default function TabsLayout() {
 		<View style={styles.root}>
 			<Tabs
 				screenOptions={{ headerShown: false }}
-				tabBar={({ state, emitter, navigateToTab, insets: barInsets }) => (
-					<TabBarPill
-						bottomInset={barInsets.bottom}
-						disabled={sheetOpen}
-						items={state.routes.map((route, index) => {
-							const tab = TABS[route.name];
-							const focused = index === state.index;
-							return {
-								key: route.key,
-								label: tab?.label ?? route.name,
-								icon: tab?.icon ?? "today",
-								focused,
-								// The same press contract as the default bar: announce
-								// `tabPress` first, so anything listening can prevent it.
-								onPress: () => {
-									const event = emitter.emit({
-										type: "tabPress",
-										target: route.key,
-										canPreventDefault: true,
-									});
-									if (!focused && !event.defaultPrevented) {
-										navigateToTab(route.key);
-									}
-								},
-							};
-						})}
-					/>
-				)}
+				tabBar={({ state, emitter, navigateToTab, insets: barInsets }) =>
+					hideBar ? null : (
+						<TabBarPill
+							bottomInset={barInsets.bottom}
+							disabled={sheetOpen}
+							items={state.routes.map((route, index) => {
+								const tab = TABS[route.name];
+								const focused = index === state.index;
+								return {
+									key: route.key,
+									label: tab?.label ?? route.name,
+									icon: tab?.icon ?? "today",
+									focused,
+									// The same press contract as the default bar: announce
+									// `tabPress` first, so anything listening can prevent it.
+									onPress: () => {
+										const event = emitter.emit({
+											type: "tabPress",
+											target: route.key,
+											canPreventDefault: true,
+										});
+										if (event.defaultPrevented) return;
+										if (focused) {
+											// 08.4: the screen scrolls to the top and reads its title.
+											useTabRetapStore.getState().retap(route.name);
+										} else {
+											navigateToTab(route.key);
+										}
+									},
+								};
+							})}
+						/>
+					)
+				}
 			>
 				<Tabs.Screen name="(today)" options={{ title: "Today" }} />
 				<Tabs.Screen name="(progress)" options={{ title: "Progress" }} />

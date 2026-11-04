@@ -179,6 +179,9 @@ export const elevation = {
 /** Every tappable element's hit area is at least this square, even when the visual is smaller (F-06, T-11). */
 export const minTouchTarget = 44;
 
+/** How far Dynamic Type may grow text in the 44 pt inline bar and the header pills; like iOS's own bars they hold their size beyond it (08.6). */
+export const barMaxFontMultiplier = 1.3;
+
 /** Focus ring (F-06, T-13): a gap in the surface colour, then the accent; follows the element's radius. */
 export const focusRing = {
 	gap: 2,

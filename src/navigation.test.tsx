@@ -8,7 +8,9 @@
  * only the module screens stubbed. It lives here, not under `src/app/`,
  * because every `.tsx` in the app directory is picked up as a route.
  */
+import { act } from "@testing-library/react-native";
 import { renderRouter, screen, testRouter } from "expo-router/testing-library";
+import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 
 jest.mock("expo-blur", () => {
@@ -67,11 +69,13 @@ jest.mock("@/lib/db/database-provider", () => ({
 // Where the app opens (HAB-46): the tabs, or First Run with no tab bar.
 let mockGate: "loading" | "first-run" | "done" = "done";
 let mockNeedsSeenMark = false;
+let mockHabitCount: number | undefined = 1;
 const mockMarkFirstRunSeen = jest.fn();
 jest.mock("@/modules/habits/hooks/use-first-run-queries", () => ({
 	useFirstRunQueries: () => ({
 		gate: mockGate,
 		needsSeenMark: mockNeedsSeenMark,
+		habitCount: mockHabitCount,
 	}),
 }));
 jest.mock("@/modules/habits/hooks/use-first-run-actions", () => ({
@@ -95,6 +99,8 @@ beforeEach(() => {
 	useThemePreferenceStore.setState({ isLoaded: true });
 	mockGate = "done";
 	mockNeedsSeenMark = false;
+	mockHabitCount = 1;
+	useFirstRunOfferStore.setState({ habit: null, landing: false });
 	mockMarkFirstRunSeen.mockReset().mockResolvedValue({ ok: true });
 });
 
@@ -158,6 +164,44 @@ describe("First Run opens instead of the tabs (HAB-46)", () => {
 	it("writes nothing when the flag is already there", async () => {
 		await renderApp("/");
 		expect(mockMarkFirstRunSeen).not.toHaveBeenCalled();
+	});
+});
+
+describe("FR3 and FR4 are drawn without the tab bar (owner's decision)", () => {
+	it("the empty Today right after leaving First Run has no bar (FR4)", async () => {
+		mockHabitCount = 0;
+		useFirstRunOfferStore.setState({ landing: true });
+		await renderApp("/");
+		expect(screen.getByText("today")).toBeTruthy();
+		expect(screen.queryByText("Progress")).toBeNull();
+	});
+
+	it("the bar is back as soon as a first habit exists, and stays", async () => {
+		mockHabitCount = 0;
+		useFirstRunOfferStore.setState({ landing: true });
+		await renderApp("/");
+		expect(screen.queryByText("Progress")).toBeNull();
+		mockHabitCount = 1;
+		await act(async () => {
+			useFirstRunOfferStore.setState({ landing: true, habit: null });
+		});
+		await renderApp("/");
+		expect(screen.getByText("Progress")).toBeTruthy();
+		expect(useFirstRunOfferStore.getState().landing).toBe(false);
+	});
+
+	it("the reminder question (FR3) hides the bar while it is open", async () => {
+		useFirstRunOfferStore.setState({ habit: { id: 1 } as never });
+		await renderApp("/");
+		expect(screen.queryByText("Progress")).toBeNull();
+		await act(async () => useFirstRunOfferStore.getState().clear());
+		expect(screen.getByText("Progress")).toBeTruthy();
+	});
+
+	it("an ordinary empty Today (never left First Run this session) keeps its bar", async () => {
+		mockHabitCount = 0;
+		await renderApp("/");
+		expect(screen.getByText("Progress")).toBeTruthy();
 	});
 });
 

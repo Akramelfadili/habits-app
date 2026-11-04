@@ -9,7 +9,7 @@ import type * as NativeAppSettingsRepository from "./app-settings-repository";
  * existing `today-empty` visual check still renders HAB-05's plain empty
  * state; `?fixtures=first-run` clears the seed so HAB-06 shows instead.
  * `?fixtures=reminders-at-cap` turns the Evening review on, as
- * docs/mockups/reminders-at-cap.png shows it (HAB-12). `?theme=light|dark`
+ * the V1/V2 mockup reminders-at-cap (tag mockups-v1-v2) shows it (HAB-12). `?theme=light|dark`
  * seeds the Appearance choice (HAB-15) — "system" when absent;
  * `?fixtures=settings` / `settings-notifications-off` / `export-fails` seed the Settings screen's states (HAB-15).
  */

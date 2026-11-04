@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { CheckMark } from "./check-mark";
 
 type ChipProps = {
 	label: string;
@@ -11,7 +12,11 @@ type ChipProps = {
 	disabled?: boolean;
 };
 
-/** Pill for filter/mode choices (frequency, category, quick-add). */
+/**
+ * Pill for filter/mode choices (frequency, category, quick-add). Selected is
+ * the accent fill and a drawn check before the label, so it is not colour
+ * alone (08.7).
+ */
 export function Chip({
 	label,
 	onPress,
@@ -43,8 +48,12 @@ export function Chip({
 						borderColor: colors.ink,
 					},
 					selected && { backgroundColor: colors.accent },
+					selected && !isOutline && styles.chipSelected,
 				]}
 			>
+				{selected && !isOutline ? (
+					<CheckMark color={colors.onAccent} testID="chip-check" />
+				) : null}
 				<Text
 					style={[
 						styles.label,
@@ -71,6 +80,11 @@ const styles = StyleSheet.create({
 		borderColor: "transparent",
 		paddingVertical: space[200],
 		paddingHorizontal: space[350],
+	},
+	chipSelected: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: space[200],
 	},
 	label: {
 		...textStyles.subhead,

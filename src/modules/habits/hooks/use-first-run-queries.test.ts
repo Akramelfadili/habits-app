@@ -23,7 +23,11 @@ describe("useFirstRunQueries", () => {
 
 	it("opens first run with no habits and no flag", async () => {
 		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current).toEqual({ gate: "first-run", needsSeenMark: false });
+		expect(result.current).toMatchObject({
+			gate: "first-run",
+			needsSeenMark: false,
+			habitCount: 0,
+		});
 	});
 
 	it("waits while the habit list loads, so nothing flashes", async () => {
@@ -41,12 +45,19 @@ describe("useFirstRunQueries", () => {
 	it("never returns once the flag is set, whatever the habits", async () => {
 		mockSetting = "true";
 		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current).toEqual({ gate: "done", needsSeenMark: false });
+		expect(result.current).toMatchObject({
+			gate: "done",
+			needsSeenMark: false,
+		});
 	});
 
 	it("asks for the flag to be written when habits exist without it", async () => {
 		mockHabits = { loaded: true, habits: [{}] };
 		const { result } = await renderHook(() => useFirstRunQueries());
-		expect(result.current).toEqual({ gate: "done", needsSeenMark: true });
+		expect(result.current).toMatchObject({
+			gate: "done",
+			needsSeenMark: true,
+			habitCount: 1,
+		});
 	});
 });

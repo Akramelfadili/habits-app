@@ -3,6 +3,16 @@ import { StyleSheet } from "react-native";
 import { Chip } from "./chip";
 
 describe("Chip", () => {
+	it("draws a check when selected, so selection is not colour alone (08.7)", async () => {
+		await render(<Chip label="Mon" selected onPress={() => {}} />);
+		expect(screen.getByTestId("chip-check")).toBeTruthy();
+	});
+
+	it("draws none when not selected", async () => {
+		await render(<Chip label="Mon" onPress={() => {}} />);
+		expect(screen.queryByTestId("chip-check")).toBeNull();
+	});
+
 	it("calls onPress when tapped", async () => {
 		const onPress = jest.fn();
 		await render(<Chip label="Daily" onPress={onPress} />);

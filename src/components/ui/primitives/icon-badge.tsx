@@ -1,11 +1,14 @@
 import { SymbolView } from "expo-symbols";
 import { StyleSheet, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { squareRadius } from "@/theme/theme";
+import { radius, squareRadius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type IconBadgeProps = {
-	symbol: SFSymbol;
+	/** Omit only with `minusColor`. */
+	symbol?: SFSymbol;
+	/** Draws a minus bar in this colour instead of a symbol: no SF Symbol is a bare minus (Delete habit). */
+	minusColor?: string;
 	/** Accent tint + ink for a habit's icon; omit for the neutral grey badge (form rows). */
 	accent?: { tint: string; ink: string };
 	/**
@@ -19,6 +22,7 @@ type IconBadgeProps = {
 /** Non-interactive leading icon square for list rows (design-system "List row"). */
 export function IconBadge({
 	symbol,
+	minusColor,
 	accent,
 	size = "default",
 }: IconBadgeProps) {
@@ -30,11 +34,18 @@ export function IconBadge({
 				{ backgroundColor: accent?.tint ?? colors.inner },
 			]}
 		>
-			<SymbolView
-				name={symbol}
-				size={SYMBOL_SIZES[size]}
-				tintColor={accent?.ink ?? colors.sub}
-			/>
+			{minusColor ? (
+				<View
+					testID="icon-badge-minus"
+					style={[minusStyles.minus, { backgroundColor: minusColor }]}
+				/>
+			) : symbol ? (
+				<SymbolView
+					name={symbol}
+					size={SYMBOL_SIZES[size]}
+					tintColor={accent?.ink ?? colors.sub}
+				/>
+			) : null}
 		</View>
 	);
 }
@@ -71,3 +82,7 @@ const styles = StyleSheet.create(
 );
 
 const BADGE_STYLES = styles;
+
+const minusStyles = StyleSheet.create({
+	minus: { width: 12, height: 2, borderRadius: radius.xs },
+});

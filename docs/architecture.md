@@ -79,13 +79,13 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
     /diagnostics               app version/build/schema facts + "Copy diagnostics" report
     /clipboard                 adapter around expo-clipboard (falls back to the share sheet)
     /today                     useToday() (rolls over at midnight / on foreground) and currentDay()
-  /store                       cross-module Zustand stores (toast)
+  /store                       cross-module Zustand stores (toast, tab re-tap: the pill raises it, a tab's root screen scrolls to top and focuses its title)
   /utils                       generic helpers with no app knowledge: useAsyncAction/runSafely, format (pluralise, counts, date ranges — the one home for user-facing counts and dates), day-key (the stored "yyyy-MM-dd" calendar-day key: toDayKey/fromDayKey), useReducedMotion, useScreenReader
 
 /e2e                           Maestro flows, named by feature ID
 /scripts                       visual-check, e2e runner, check-architecture, token ratchet, mockup renderer (scripts/README.md)
 /docs                          specs, design systems, this file, decisions/ (ADRs), CONTRIBUTING.md, audits/;
-                               mockups/ and visual-baseline/ hold PNGs (mockups/v3/ the V3 design files)
+                               mockups/v3/ holds the V3 design files and their text renders; visual-baseline/ holds the web baselines. The V1/V2 mockup PNGs live at tag mockups-v1-v2
 /.github/workflows             CI: make check on every PR and push to master
 drizzle.config.ts              at the repo root
 ```

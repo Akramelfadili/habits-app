@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { space, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import type { TimeWheelProps } from "./time-wheel";
 
@@ -18,6 +18,6 @@ const styles = StyleSheet.create({
 		fontSize: typeScale.stat,
 		fontWeight: "500",
 		textAlign: "center",
-		paddingVertical: 24,
+		paddingVertical: space[600],
 	},
 });

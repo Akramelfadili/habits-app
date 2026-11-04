@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useToastStore } from "@/store/toast-store";
+import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { Container } from "./container";
@@ -110,6 +111,6 @@ const styles = StyleSheet.create({
 		flexGrow: 0,
 	},
 	content: {
-		gap: 16,
+		gap: space[400],
 	},
 });

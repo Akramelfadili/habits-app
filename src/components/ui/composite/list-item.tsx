@@ -244,6 +244,9 @@ const styles = StyleSheet.create({
 		zIndex: 1,
 	},
 	pressable: {
+		// An embedded row has no padding of its own; its card's padding is
+		// outside the hit area, so the row guarantees the 44 pt itself.
+		minHeight: minTouchTarget,
 		flex: 1,
 		flexDirection: "row",
 		alignItems: "center",

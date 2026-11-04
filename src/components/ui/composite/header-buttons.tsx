@@ -2,7 +2,7 @@ import type { NativeStackNavigationOptions } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { radius, space, textStyles } from "@/theme/theme";
+import { barMaxFontMultiplier, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -233,7 +233,13 @@ export function HeaderPillButton({
 			{symbol ? (
 				<SymbolView name={symbol} size={16} tintColor={colors.ink} />
 			) : null}
-			<Text style={[styles.pillLabel, { color: colors.ink }]}>{label}</Text>
+			<Text
+				// A 44 pt control holds its size: Dynamic Type may grow the label only so far.
+				maxFontSizeMultiplier={barMaxFontMultiplier}
+				style={[styles.pillLabel, { color: colors.ink }]}
+			>
+				{label}
+			</Text>
 		</Pressable>
 	);
 }
@@ -280,13 +286,13 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
-		gap: 4,
+		gap: space[100],
 		// Same inset as the ghost Button these actions used before.
-		paddingHorizontal: 20,
+		paddingHorizontal: space[500],
 	},
 	back: {
 		justifyContent: "flex-start",
-		paddingHorizontal: 6,
+		paddingHorizontal: space[150],
 	},
 	circle: {
 		width: HEADER_BUTTON_MIN_SIZE,

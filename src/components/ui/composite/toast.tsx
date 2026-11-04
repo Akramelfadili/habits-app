@@ -4,6 +4,7 @@ import type { SFSymbol } from "sf-symbols-typescript";
 import type { ToastTone } from "@/store/toast-store";
 import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 type ToastProps = {
 	message: string;
@@ -20,7 +21,11 @@ const TONE_GLYPH: Record<Exclude<ToastTone, "info">, SFSymbol> = {
 	error: "exclamationmark.circle.fill",
 };
 
-/** Floating event feedback with an optional inline action (Undo, Retry). */
+/**
+ * Floating event feedback with an optional inline action (Undo, Retry). At
+ * accessibility sizes (08.6) the message wraps in full and the action drops
+ * below it, on a 20 pt card rather than a pill.
+ */
 export function Toast({
 	message,
 	tone = "info",
@@ -28,6 +33,7 @@ export function Toast({
 	onAction,
 }: ToastProps) {
 	const { colors, opacity } = useTheme();
+	const stacked = useAccessibilityTextSize();
 	const glyph = tone === "info" ? null : TONE_GLYPH[tone];
 	const glyphColor =
 		tone === "error"
@@ -37,16 +43,27 @@ export function Toast({
 				: colors.toastInk;
 
 	return (
-		<View style={[styles.base, { backgroundColor: colors.toast }]}>
+		<View
+			testID="toast"
+			style={[
+				styles.base,
+				stacked && styles.baseStacked,
+				{ backgroundColor: colors.toast },
+			]}
+		>
 			{glyph ? (
 				<View testID={`toast-${tone}-marker`}>
 					<SymbolView name={glyph} size={16} tintColor={glyphColor} />
 				</View>
 			) : null}
 			<Text
-				numberOfLines={2}
+				numberOfLines={stacked ? undefined : 2}
 				accessibilityLabel={message}
-				style={[styles.message, { color: colors.toastInk }]}
+				style={[
+					styles.message,
+					stacked && styles.messageStacked,
+					{ color: colors.toastInk },
+				]}
 			>
 				{message}
 			</Text>
@@ -57,6 +74,7 @@ export function Toast({
 					onPress={onAction}
 					style={({ pressed }) => [
 						styles.actionTouch,
+						stacked && styles.actionTouchStacked,
 						pressed && { opacity: opacity.pressed },
 					]}
 				>
@@ -81,6 +99,19 @@ const styles = StyleSheet.create({
 		paddingVertical: space[100],
 		paddingLeft: space[400],
 		paddingRight: space[150],
+	},
+	baseStacked: {
+		flexDirection: "column",
+		alignItems: "stretch",
+		borderRadius: radius.l,
+		paddingVertical: space[300],
+		paddingRight: space[400],
+	},
+	messageStacked: {
+		flex: 0,
+	},
+	actionTouchStacked: {
+		alignSelf: "flex-end",
 	},
 	message: {
 		flex: 1,

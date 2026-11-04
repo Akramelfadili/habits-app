@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react-native";
 import { formatISO } from "date-fns";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 
-// Pinned to a Wednesday (matches docs/mockups/today-populated.png's "WEDNESDAY,
+// Pinned to a Wednesday (matches the V1/V2 mockup today-populated (tag mockups-v1-v2): "WEDNESDAY,
 // 16 SEPTEMBER") so week-boundary math (per-week frequency) is deterministic —
 // "today" is computed inside the hook via `new Date()`, so real time can't
 // drive this test's assertions.

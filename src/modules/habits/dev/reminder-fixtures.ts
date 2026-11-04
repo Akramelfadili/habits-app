@@ -6,10 +6,10 @@ import { HABITS_V3_SCENARIOS, habitsV3Reminders } from "./habits-v3-fixtures";
  * Static fake reminders backing the web-only repository
  * (`reminder-repository.web.ts`), all on habit #1 ("Meditate" — see
  * `remindersHabitFixtures` in `habit-fixtures.ts`):
- * - `reminders` matches docs/mockups/reminders.png — 07:20 weekdays, 13:00
+ * - `reminders` matches the V1/V2 mockup reminders (tag mockups-v1-v2) — 07:20 weekdays, 13:00
  *   Mon/Wed/Fri turned off, and 21:00 Sat/Sun, which conflicts with the
  *   habit's schedule and shows the warning banner.
- * - `reminders-at-cap` matches docs/mockups/reminders-at-cap.png — 4 of 4,
+ * - `reminders-at-cap` matches the V1/V2 mockup reminders-at-cap (tag mockups-v1-v2) — 4 of 4,
  *   the 18:00 one turned off.
  */
 export function makeReminderFixtures(

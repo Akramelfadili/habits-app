@@ -1,9 +1,13 @@
-import type { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { type ReactNode, useRef } from "react";
+import { type HostInstance, StyleSheet, Text, View } from "react-native";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
 import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
+import { useInitialFocus } from "@/utils/use-initial-focus";
+
+/** The push animation is done by then; a focus event sent mid-transition lands on whatever is under the finger. */
+export const ROUTE_FOCUS_DELAY_MS = 400;
 
 type ScreenHeaderProps = {
 	/** The caps line over the title ("10 built-in · 2 custom", "Upper body · Tue, Thu"). */
@@ -19,7 +23,8 @@ type ScreenHeaderProps = {
  * V3-02 for a pushed screen that draws its own title (Categories, Reminders,
  * Settings): an optional eyebrow, the display title and the trailing buttons
  * on one row. At accessibility sizes the buttons move above the title (H10).
- * Eyebrow and title are one VoiceOver stop.
+ * Eyebrow and title are one VoiceOver stop, and the screen reader starts on it
+ * when the screen opens (08.4: a pushed screen's default focus is its title).
  */
 export function ScreenHeader({
 	eyebrow,
@@ -29,9 +34,12 @@ export function ScreenHeader({
 }: ScreenHeaderProps) {
 	const { colors } = useTheme();
 	const stacked = useAccessibilityTextSize();
+	const titleRef = useRef<HostInstance>(null);
+	useInitialFocus(titleRef, true, ROUTE_FOCUS_DELAY_MS);
 
 	const block = (
 		<View
+			ref={titleRef}
 			accessible
 			accessibilityRole="header"
 			accessibilityLabel={

@@ -1,5 +1,6 @@
 import { format } from "date-fns";
-import { StyleSheet, Text, View } from "react-native";
+import type { RefObject } from "react";
+import { type HostInstance, StyleSheet, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { HeaderCircleButton } from "@/components/ui/composite/header-buttons";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
@@ -17,6 +18,8 @@ type TodayHeaderProps = {
 	animatedStyle?: object;
 	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
 	collapsed?: boolean;
+	/** The title block, so a re-tap of the tab can put the screen reader on it (08.4). */
+	titleRef?: RefObject<HostInstance | null>;
 };
 
 /**
@@ -30,12 +33,14 @@ export function TodayHeader({
 	onAddHabit,
 	animatedStyle,
 	collapsed = false,
+	titleRef,
 }: TodayHeaderProps) {
 	const { colors } = useTheme();
 	const stacked = useAccessibilityTextSize();
 
 	const title = (
 		<View
+			ref={titleRef}
 			accessible
 			accessibilityRole="header"
 			accessibilityLabel={`${todayCopy.screenTitle}, ${format(day, "EEEE d MMMM")}`}

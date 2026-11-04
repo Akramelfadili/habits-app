@@ -11,7 +11,7 @@ const SHEET_SETTLE_MS = 400;
 type Focusable = HostInstance & { focus?: () => void };
 
 /** Moves the screen reader's focus (and, on the web, keyboard focus) onto `element`. */
-function moveFocusTo(element: Focusable): void {
+export function moveFocusTo(element: Focusable): void {
 	if (Platform.OS === "web") element.focus?.();
 	else AccessibilityInfo.sendAccessibilityEvent(element, "focus");
 }

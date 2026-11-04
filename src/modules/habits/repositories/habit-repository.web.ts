@@ -22,7 +22,7 @@ import type * as NativeHabitRepository from "./habit-repository";
 /**
  * Web-only stand-in for `habit-repository.ts`, picked by Metro's `.web.ts`
  * platform resolution. expo-sqlite has no web binding without WASM + COOP/COEP
- * headers, and web only exists here for visual checks against docs/mockups/
+ * headers, and web only exists here for visual checks against the mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2)
  * (scripts/visual-check.mjs) — so it's backed by in-memory fixtures instead.
  * Hooks and screens import `./habit-repository` either way and never know.
  *

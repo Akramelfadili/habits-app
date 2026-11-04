@@ -305,6 +305,8 @@ const styles = StyleSheet.create({
 	},
 	blockTotal: {
 		width: undefined,
+		// The name wraps before the total does: "2 / 3" never breaks in two.
+		flexShrink: 0,
 	},
 	blockRow: {
 		flexDirection: "row",

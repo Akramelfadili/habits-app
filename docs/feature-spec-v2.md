@@ -1,6 +1,6 @@
 # Habit Tracker — V2 Feature Spec
 
-Mockup frame IDs in this file refer to the PNGs in docs/mockups/ (tag mockups-v1-v2); V3 frames live in docs/mockups/v3/.
+Mockup frame IDs in this file refer to the V1/V2 PNGs at git tag `mockups-v1-v2` (removed from the working tree in V3-6; see `docs/design-system.md` for how to read one); V3 frames live in docs/mockups/v3/.
 
 Continues `docs/feature-spec.md` (HAB-01–HAB-13, V1). Same format: each ticket names the screens/frames it covers from `HabitFlowV2.dc.html`, the rules that govern it, and the edge cases a plan must account for before `/implement-feature` runs. Mockup frame IDs (A1, F2b, etc.) refer to that file; component IDs (NEW-07, VAR-14, etc.) refer to `habit-components.js`.
 

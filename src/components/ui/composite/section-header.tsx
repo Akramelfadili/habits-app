@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
 	},
 	groupRow: {
 		justifyContent: "flex-start",
-		gap: 6,
-		paddingHorizontal: 4,
+		gap: space[150],
+		paddingHorizontal: space[100],
 	},
 	groupTitle: {
 		fontSize: typeScale.subtitle,

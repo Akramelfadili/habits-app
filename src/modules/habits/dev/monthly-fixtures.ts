@@ -4,7 +4,7 @@ import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
 /**
- * Fixture data for Monthly Summary (HAB-16): docs/mockups/hab-16-c2.png and
+ * Fixture data for Monthly Summary (HAB-16): the V1/V2 mockup hab-16-c2 (tag mockups-v1-v2) and
  * c3.png's six habits over August 2026 (the visual check pins "now" to 2 Sep,
  * so August is the last complete month), and c6.png's under-a-month history.
  *

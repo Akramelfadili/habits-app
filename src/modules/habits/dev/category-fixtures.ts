@@ -78,7 +78,7 @@ export const OTHER_FIXTURE = builtInFixture("Other");
 export const [MORNING_FIXTURE, EVENING_FIXTURE, TRAINING_FIXTURE] =
 	V1_CUSTOM_FIXTURES;
 
-/** docs/mockups/hab-24-f1c.png's eight customs, in its creation order. */
+/** the V1/V2 mockup hab-24-f1c (tag mockups-v1-v2)'s eight customs, in its creation order. */
 const MANY_CUSTOM_FIXTURES = customFixtures([
 	"Music",
 	"Language",
@@ -91,7 +91,7 @@ const MANY_CUSTOM_FIXTURES = customFixtures([
 ]);
 
 /**
- * docs/mockups/hab-25-f3c.png's customs (HAB-25): Music (3 habits, one
+ * the V1/V2 mockup hab-25-f3c (tag mockups-v1-v2)'s customs (HAB-25): Music (3 habits, one
  * archived), Language (1) and Garden (unused). F3b shows only Music.
  */
 export const [MUSIC_FIXTURE, LANGUAGE_FIXTURE, GARDEN_FIXTURE] = customFixtures(

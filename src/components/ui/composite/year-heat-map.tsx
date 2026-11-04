@@ -130,6 +130,9 @@ const styles = StyleSheet.create({
 	label: {
 		position: "absolute",
 		top: 0,
+		// Months start at least four columns (72 pt) apart, so the label can be
+		// 44 pt wide, growing to the right, without reaching the next one.
+		minWidth: minTouchTarget,
 	},
 	labelText: {
 		...textStyles.caption,

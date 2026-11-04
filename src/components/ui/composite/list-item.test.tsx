@@ -24,6 +24,14 @@ jest.mock("expo-symbols", () => {
 import { ListItem } from "./list-item";
 
 describe("ListItem", () => {
+	it("an embedded row keeps a 44 pt hit area (08.2)", async () => {
+		await render(
+			<ListItem embedded title="Set exact value" onPress={() => {}} />,
+		);
+		const style = StyleSheet.flatten(screen.getByRole("button").props.style);
+		expect(style.minHeight).toBeGreaterThanOrEqual(44);
+	});
+
 	it("renders title and subtitle", async () => {
 		await render(<ListItem title="Gym" subtitle="Morning" />);
 		expect(screen.getByText("Gym")).toBeTruthy();
