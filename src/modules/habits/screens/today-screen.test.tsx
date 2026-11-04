@@ -674,6 +674,50 @@ describe("TodayScreen", () => {
 		);
 	});
 
+	describe("a Break habit's circle at the evening hour (EVENING_STARTS_AT_HOUR)", () => {
+		const noSocial = () =>
+			makeHabit({
+				id: 7,
+				name: "No social media",
+				category: categoryNamed("Morning"),
+				direction: "break",
+			});
+
+		beforeEach(() => {
+			mockViewState = "populated";
+			mockGroups = [
+				{ category: categoryNamed("Morning"), habits: [noSocial()] },
+			];
+		});
+		afterEach(() => jest.useRealTimers());
+
+		// The 18:00 rule only words the status line ("Resist tonight"); the circle
+		// logs at any hour (feature-spec-v3: "the circle always logs").
+		it.each([
+			["15:30", new Date(2026, 8, 16, 15, 30), "Resisting"],
+			["17:59", new Date(2026, 8, 16, 17, 59), "Resisting"],
+			["18:00", new Date(2026, 8, 16, 18, 0), "Resist tonight"],
+		])(
+			"at %s the circle logs and confirms; the line reads %s",
+			async (_time, now, line) => {
+				fakeDate(now);
+				await render(<TodayScreen />);
+				expect(screen.getByText(new RegExp(`^${line}`))).toBeTruthy();
+				await fireEvent.press(
+					screen.getByLabelText("No social media, resisted today?"),
+				);
+				expect(mockToggleCompletion).toHaveBeenCalledWith(
+					7,
+					expect.any(Date),
+					true,
+				);
+				expect(useToastStore.getState().toast?.message).toBe(
+					"Resisted 'No social media'",
+				);
+			},
+		);
+	});
+
 	describe("un-ticking offers Undo (A5-06)", () => {
 		const waterGroup = () => [
 			{ category: categoryNamed("Morning"), habits: [morningHabit] },
