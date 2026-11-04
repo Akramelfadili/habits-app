@@ -1,0 +1,284 @@
+# Device validation (docs/decisions/007-device-validation.md): builds the app
+# for the iOS Simulator, opens every visual-check state on it and drives the
+# known-bug flows with video, so the problems only a real iPhone build shows
+# (blank SF Symbols, safe areas, the tab-bar pill, glass, fonts, Dynamic Type,
+# sheets, toasts, the day strip) can be looked at without sending screenshots.
+#
+# A validation tool, not a gate: manual only, never on a push or a pull
+# request (device-validation.guard.test.ts fails if a trigger is added).
+#
+#   gh workflow run ios-simulator.yml
+#   gh workflow run ios-simulator.yml -f only="first-run today-empty"
+#
+# Artifacts: contact-sheet (open index.html), shots-<shard>, videos, plus
+# build-log when the build fails and capture-log-<shard> for each shard.
+name: ios-simulator
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Space-separated visual-check state names (empty = all)"
+        required: false
+        default: ""
+      device:
+        description: "Simulator model. iPhone 16 is 393x852 pt, the web baselines' viewport"
+        required: false
+        default: "iPhone 16"
+      ax_size:
+        description: "Dynamic Type size for the -ax states (simctl ui content_size)"
+        required: false
+        default: "accessibility-extra-extra-extra-large"
+      runner:
+        description: "macOS runner label"
+        required: false
+        default: "macos-26"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-simulator
+  cancel-in-progress: false
+
+env:
+  # Bump to throw every native cache away.
+  CACHE_VERSION: v1
+  BUNDLE_ID: dev.habitsapp.validation
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
+
+jobs:
+  build:
+    name: Build simulator app
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 75
+    env:
+      # The one place the hook is switched on (device-validation.guard.test.ts).
+      EXPO_PUBLIC_DEVICE_VALIDATION: "1"
+      EXPO_PUBLIC_BUILD_SHA: ${{ github.sha }}
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Select the newest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "XCODE_VERSION=$(xcodebuild -version | tr '\n' ' ')" >> "$GITHUB_ENV"
+          xcodebuild -version
+          xcrun simctl list runtimes
+      - run: npm ci --no-audit --no-fund
+      - name: Give the generated project a bundle identifier
+        # app.json has none and the validation build must not change it: the
+        # id is set on the runner's checkout only.
+        run: |
+          node -e '
+            const fs = require("fs");
+            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            app.expo.ios = { ...app.expo.ios, bundleIdentifier: process.env.BUNDLE_ID };
+            fs.writeFileSync("app.json", JSON.stringify(app, null, 2));
+          '
+      - name: Generate ios/ (expo prebuild)
+        run: npx expo prebuild --platform ios --no-install --clean
+      - name: Cache Pods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+          # No restore-keys: a changed dependency, config or Xcode is a clean install.
+          key: pods-${{ env.CACHE_VERSION }}-${{ env.XCODE_VERSION }}-${{ hashFiles('package-lock.json', 'app.json', 'ios/Podfile', 'ios/Podfile.properties.json') }}
+      - name: pod install
+        run: cd ios && pod install
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ios/build
+          # The generated native project decides the key, so any native change
+          # rebuilds from scratch. JS is never taken from the cache (below).
+          key: derived-${{ env.CACHE_VERSION }}-${{ env.XCODE_VERSION }}-${{ hashFiles('package-lock.json', 'app.json', 'ios/Podfile.lock', 'ios/Podfile', 'ios/**/Info.plist', 'ios/**/*.entitlements') }}
+      - name: Build (Release, iphonesimulator)
+        run: |
+          set -o pipefail
+          START=$(date +%s)
+          echo "$START" > build-start.txt
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          xcodebuild \
+            -workspace "$WORKSPACE" -scheme "$SCHEME" \
+            -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/build \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee xcodebuild.log | tail -n 40
+      - name: Check the app is fresh
+        run: |
+          APP=$(find ios/build/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          test -n "$APP" || { echo "::error::no .app was built"; exit 1; }
+          BUNDLE="$APP/main.jsbundle"
+          test -f "$BUNDLE" || { echo "::error::$APP has no main.jsbundle (a Debug build?)"; exit 1; }
+          # The bundle phase runs on every build; a bundle older than this job is a cache leak.
+          START=$(cat build-start.txt)
+          MODIFIED=$(stat -f %m "$BUNDLE")
+          if [ "$MODIFIED" -lt "$START" ]; then
+            echo "::error::main.jsbundle ($MODIFIED) is older than this build ($START): a stale bundle came out of the cache"
+            exit 1
+          fi
+          grep -aq "$GITHUB_SHA" "$BUNDLE" || echo "::warning::main.jsbundle does not contain commit $GITHUB_SHA as plain text (Hermes may encode it)"
+          echo "APP=$APP" >> "$GITHUB_ENV"
+          mkdir -p dist && ditto -c -k --keepParent "$APP" dist/app.zip
+          ls -lh dist/app.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-app
+          path: dist/app.zip
+          retention-days: 2
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-log
+          path: |
+            xcodebuild.log
+            ios/Podfile.lock
+            ios/*.xcodeproj/project.pbxproj
+          retention-days: 14
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Build"
+            echo "- Runner image: \`${ImageOS:-?} ${ImageVersion:-?}\` (\`${{ inputs.runner }}\`)"
+            echo "- Xcode: ${XCODE_VERSION}"
+            echo "- Commit: \`${GITHUB_SHA}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  capture:
+    name: Capture ${{ matrix.shard }}
+    needs: build
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        # One shard per appearance and text size; each state runs in the shard
+        # its web counterpart's colorScheme and `-ax` suffix say.
+        shard: [light, dark, ax-light, ax-dark]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-app
+          path: dist
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Boot the simulator
+        env:
+          DEVICE: ${{ inputs.device }}
+        run: |
+          node scripts/device-validation/boot-simulator.mjs \
+            --device "$DEVICE" --app dist/app.zip --bundle-id "$BUNDLE_ID" \
+            --summary "$GITHUB_STEP_SUMMARY"
+      - name: Capture
+        env:
+          ONLY: ${{ inputs.only }}
+          AX_SIZE: ${{ inputs.ax_size }}
+        run: |
+          node scripts/device-validation/capture.mjs \
+            --shard "${{ matrix.shard }}" --bundle-id "$BUNDLE_ID" \
+            --ax-size "$AX_SIZE" --only "$ONLY" --out out
+      - name: Summary
+        if: always()
+        run: |
+          test -f out/summary.md && cat out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots-${{ matrix.shard }}
+          path: out/shots
+          retention-days: 14
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capture-log-${{ matrix.shard }}
+          path: |
+            out/results.json
+            out/summary.md
+            out/log.txt
+            out/maestro
+          retention-days: 14
+          if-no-files-found: warn
+
+  flows:
+    name: Behaviour flows with video
+    needs: build
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-app
+          path: dist
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Boot the simulator
+        env:
+          DEVICE: ${{ inputs.device }}
+        run: |
+          node scripts/device-validation/boot-simulator.mjs \
+            --device "$DEVICE" --app dist/app.zip --bundle-id "$BUNDLE_ID" \
+            --summary "$GITHUB_STEP_SUMMARY"
+      - name: Run the flows
+        run: node scripts/device-validation/record-flows.mjs --bundle-id "$BUNDLE_ID" --out out
+      - name: Summary
+        if: always()
+        run: |
+          test -f out/summary.md && cat out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: videos
+          path: out
+          retention-days: 14
+          if-no-files-found: warn
+
+  report:
+    name: Contact sheet
+    needs: [capture, flows]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-save --no-audit --no-fund sharp
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shots-*
+          path: shots
+      - name: Build the contact sheet
+        run: node scripts/device-validation/contact-sheet.mjs --shots shots --out contact-sheet --summary "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: contact-sheet
+          path: contact-sheet
+          retention-days: 14
