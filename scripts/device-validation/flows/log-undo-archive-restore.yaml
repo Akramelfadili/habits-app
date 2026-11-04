@@ -1,0 +1,34 @@
+# Known flow (e): log a habit, undo, archive it, restore it.
+# route: /?fixtures=habits-v3 · clock: 2026-10-23T09:00:00
+appId: ${BUNDLE_ID}
+---
+- extendedWaitUntil:
+    visible: "Today"
+    timeout: 20000
+- takeScreenshot: e-01-today
+# Log, then Undo.
+- tapOn: {text: "Meditate, not done", optional: true}
+- extendedWaitUntil: {visible: ".*Undo.*", timeout: 5000, optional: true}
+- takeScreenshot: e-02-logged
+- tapOn: {text: "Undo", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1200, optional: true}
+- takeScreenshot: e-03-after-undo
+# Archive from Detail.
+- tapOn: {text: "Meditate", optional: true}
+- extendedWaitUntil: {visible: "Archive habit", timeout: 8000, optional: true}
+- scrollUntilVisible: {element: "Archive habit", timeout: 10000}
+- tapOn: {text: "Archive habit", optional: true}
+- takeScreenshot: e-04-archive-confirm
+- tapOn: {text: "Archive habit", index: 1, optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: e-05-after-archive
+# Restore from Habits → Archived.
+- tapOn: {text: "Habits", optional: true}
+- extendedWaitUntil: {visible: "Archived.*", timeout: 8000, optional: true}
+- tapOn: {text: "Archived.*", optional: true}
+- takeScreenshot: e-06-archived-open
+- tapOn: {text: "Restore Meditate.*", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: e-07-after-restore
+- tapOn: {text: "Today", optional: true}
+- takeScreenshot: e-08-today-again

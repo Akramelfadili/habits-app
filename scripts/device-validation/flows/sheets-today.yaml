@@ -1,0 +1,21 @@
+# Known flow (f), Today's sheets: open and close the quantity sheet (stepper,
+# exact value) and the streak-at-risk sheet. Closed by their button, then by a
+# drag down; a screenshot at each step.
+# route: /?fixtures=today-v3-at-risk · clock: 2026-10-23T09:00:00
+appId: ${BUNDLE_ID}
+---
+- extendedWaitUntil: {visible: "Meditate.*", timeout: 20000}
+- tapOn: {text: "Meditate", optional: true}
+- extendedWaitUntil: {visible: "Use a freeze", timeout: 8000, optional: true}
+- takeScreenshot: f-01-streak-at-risk-sheet
+- swipe: {start: "50%, 45%", end: "50%, 95%", duration: 400}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: f-02-streak-sheet-dragged-down
+- tapOn: {text: "Amount.*", optional: true}
+- extendedWaitUntil: {visible: "Increase.*", timeout: 8000, optional: true}
+- takeScreenshot: f-03-quantity-sheet
+- tapOn: {text: "Set exact value", optional: true}
+- takeScreenshot: f-04-exact-value
+- tapOn: {text: "Done.*", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: f-05-after-done

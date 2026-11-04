@@ -1,0 +1,35 @@
+# Known bug (b): a toast appearing and being dismissed.
+# route: /?fixtures=today-v3 · clock: 2026-10-23T09:00:00
+# Part 1 waits for the toast to go by itself: the duration of the
+# `extendedWaitUntil … notVisible` is the time it stayed. Part 2 taps Undo and
+# checks the toast leaves at once.
+appId: ${BUNDLE_ID}
+---
+- extendedWaitUntil:
+    visible: "Drink water.*"
+    timeout: 20000
+- tapOn: "No social media, resisted today\\?"
+- extendedWaitUntil:
+    visible: "Resisted 'No social media'.*"
+    timeout: 8000
+- takeScreenshot: b-01-toast-visible
+# (measured) time to hide by itself
+- extendedWaitUntil:
+    notVisible: "Resisted 'No social media'.*"
+    timeout: 30000
+- takeScreenshot: b-02-toast-gone
+# Part 2: raise it again and dismiss it with Undo.
+- tapOn: "No social media, resisted today\\?"
+- extendedWaitUntil:
+    visible: "Resisted 'No social media'.*"
+    timeout: 8000
+    optional: true
+- takeScreenshot: b-03-toast-again
+- tapOn:
+    text: "Undo"
+    optional: true
+- extendedWaitUntil:
+    notVisible: "Resisted 'No social media'.*"
+    timeout: 8000
+    optional: true
+- takeScreenshot: b-04-after-undo

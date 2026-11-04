@@ -1,0 +1,35 @@
+# Known bug (c): a partial-height sheet (the quantity increment). Does part of
+# the sheet stay visible at the top of the screen after it closes?
+# route: /?fixtures=today-v3 · clock: 2026-10-23T09:00:00
+appId: ${BUNDLE_ID}
+---
+- extendedWaitUntil:
+    visible: "Drink water.*"
+    timeout: 20000
+- tapOn: "Amount, 5 of 8"
+- extendedWaitUntil:
+    visible: "Increase glasses"
+    timeout: 8000
+    optional: true
+- takeScreenshot: c-01-sheet-open
+# Close with its Done button.
+- tapOn:
+    text: "Done with amount"
+    optional: true
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: c-02-after-done
+# Open again and close by dragging it down.
+- tapOn: "Amount, 5 of 8"
+- extendedWaitUntil:
+    visible: "Increase glasses"
+    timeout: 8000
+    optional: true
+- takeScreenshot: c-03-sheet-open-again
+- swipe: {start: "50%, 45%", end: "50%, 95%", duration: 400}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: c-04-after-drag-down
+# Still on Today and usable?
+- assertVisible:
+    text: "Drink water.*"
+    optional: true
+- takeScreenshot: c-05-today-after

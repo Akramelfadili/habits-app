@@ -1,0 +1,21 @@
+# Known flow (f), Progress and Settings sheets: the habit filter and the export
+# choice.
+# route: /(progress)/progress?fixtures=progress-v3 · clock: 2026-10-23T09:00:00
+appId: ${BUNDLE_ID}
+---
+- extendedWaitUntil: {visible: "Progress", timeout: 20000}
+- takeScreenshot: f-20-progress
+- tapOn: {text: "Year", optional: true}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 800, optional: true}
+- tapOn: {id: "habit-filter-chip", optional: true}
+- takeScreenshot: f-21-habit-filter
+- swipe: {start: "50%, 45%", end: "50%, 95%", duration: 400}
+- extendedWaitUntil: {visible: "__never_on_screen__", timeout: 1500, optional: true}
+- takeScreenshot: f-22-filter-dragged-down
+- tapOn: {text: "Habits", optional: true}
+- tapOn: {text: "Settings", optional: true}
+- takeScreenshot: f-23-settings
+- tapOn: {text: "Export data", optional: true}
+- takeScreenshot: f-24-export-choose
+- swipe: {start: "50%, 45%", end: "50%, 95%", duration: 400}
+- takeScreenshot: f-25-after-drag-down
