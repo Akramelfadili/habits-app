@@ -1,4 +1,10 @@
-import { type PropsWithChildren, useEffect } from "react";
+import {
+	type PropsWithChildren,
+	type ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	KeyboardAvoidingView,
 	Modal,
@@ -9,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useToastStore } from "@/store/toast-store";
-import { space } from "@/theme/theme";
+import { motion, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { Container } from "./container";
@@ -56,6 +62,23 @@ export function Sheet({
 		[visible, registerSheet],
 	);
 
+	// Closing is the Modal's own slide-out. Until it has finished the sheet keeps
+	// the content it last showed: a caller that blanks its content the moment it
+	// closes (`draft !== null`, `usage !== null`) must not shrink the sheet
+	// mid-slide, and nothing is torn out of the screen half-way.
+	const lastChildren = useRef<ReactNode>(children);
+	if (visible) lastChildren.current = children;
+	const [mounted, setMounted] = useState(visible);
+	useEffect(() => {
+		if (visible) {
+			setMounted(true);
+			return;
+		}
+		const timer = setTimeout(() => setMounted(false), motion.sheet.duration);
+		return () => clearTimeout(timer);
+	}, [visible]);
+	if (!visible && !mounted) return null;
+
 	return (
 		<Modal
 			visible={visible}
@@ -89,7 +112,7 @@ export function Sheet({
 							style={styles.scroll}
 							contentContainerStyle={styles.content}
 						>
-							{children}
+							{visible ? children : lastChildren.current}
 						</ScrollView>
 					</SafeAreaView>
 				</Container>
