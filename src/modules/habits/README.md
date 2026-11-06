@@ -13,4 +13,4 @@ Inside, dependencies point down only, enforced by `npm run check-architecture`: 
 - `components/` and `screens/` are the UI; routes in `src/app/` only render a screen.
 - `test-support/` holds builders for tests and is never imported by app code.
 
-Reasons and conventions: `docs/architecture.md`.
+Reasons and conventions: `ARCHITECTURE.md`.

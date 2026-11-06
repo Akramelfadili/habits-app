@@ -4,7 +4,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 
 ## Public repo: secrets are the top risk
 
-- Never commit secrets, env values, logs, archives, generated output or files over 1 MB. Rules: `docs/CONTRIBUTING.md` → "What never goes in git". `make check` and the `secret-scan` workflow enforce them.
+- Never commit secrets, env values, logs, archives, generated output or files over 1 MB. Rules: `CONTRIBUTING.md` → "What never goes in git". `make check` and the `secret-scan` workflow enforce them.
 
 ## Check and git
 
@@ -26,13 +26,13 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 
 - Feature `HAB-<id>`: use `/implement-feature <id>` (`.claude/skills/implement-feature`).
 - V3 spec (HAB-26–50) is the source of truth; if V2 or V1 conflict, V3 wins. Check `docs/README.md` for which spec covers a ticket. Update the older text and its tests in the same change.
-- Specs: `docs/feature-spec-v3.md`, `docs/feature-spec-v2.md`, `docs/feature-spec.md`.
-- UI: `DESIGN.md`, `docs/design-system-v3.md`, `docs/design-system.md` (its **Deltas** are intentional), `docs/mockups/v3/renders/INDEX.md`.
-- Layers, folders, stack: `docs/architecture.md`.
+- Specs: `docs/specs/feature-spec-v3.md`, `docs/specs/feature-spec-v2.md`, `docs/specs/feature-spec.md`.
+- UI: `DESIGN.md`, `docs/design/design-system-v3.md`, `docs/design/design-system.md` (its **Deltas** are intentional), `docs/mockups/v3/renders/INDEX.md`.
+- Layers, folders, stack: `ARCHITECTURE.md`.
 - Navigation, tab bar, pushed screens, First Run: `docs/decisions/006-navigation.md`, test `src/navigation.test.tsx`.
-- Commands, hooks, visual-check, allowlists, token ratchet: `docs/dev-tooling.md`.
+- Commands, hooks, visual-check, allowlists, token ratchet: `docs/how-to/dev-tooling.md`.
 - iOS Simulator and device validation: `docs/decisions/007-device-validation.md`, `docs/how-to/device-validation.md`.
-- Next fixes: `docs/audits/audit.md`. Status: `docs/README.md`, `CHANGELOG.md`.
+- Next fixes: `docs/backlog.md` (the old audit plan is archived in `docs/archive/audit.md`). Status: `docs/README.md`, `CHANGELOG.md`.
 - Deviations: append to `docs/backlog.md`, never drop silently. Reviewers must not re-flag `docs/backlog.md` § "Decided".
 
 ## Rules that no tool catches
@@ -41,7 +41,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - New frequency type or streak rule = new Strategy file, not an `if`. Do not change existing Strategy semantics.
 - Forms: React Hook Form + Zod. Dates: `date-fns`, never native `Date` math for streaks or weeks.
 - Reuse before create: search `components/ui/primitives|composite` and the module's components first. Colours, shadows, font sizes come from `src/theme` tokens.
-- Header buttons only via `composite/header-buttons.tsx` (iOS 26 Liquid Glass bug).
+- Header buttons only via `src/components/ui/composite/header-buttons.tsx` (iOS 26 Liquid Glass bug).
 - Categories: `habits.categoryId` supplies icon and color. Never read or write the legacy `habits.icon/color/category` columns; no free-text categories.
 - Allowlists (`scripts/check-architecture.allowlist.json`) and the token baseline only shrink.
 - Migrations (`src/lib/db/migrations/`) need approval. Test with foreign keys ON, whole chain in one transaction, child rows present; table rebuilds use `PRAGMA defer_foreign_keys`. Run the `migration-reviewer` agent.

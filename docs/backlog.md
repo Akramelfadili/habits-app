@@ -65,7 +65,7 @@ Built on `chore/ios-simulator-validation` and merged (#36, #37); the workflow fi
 
 ## Open — UX and accessibility follow-ups (audit B8/B9)
 
-- **Left out of B8/B9** (reasons in `docs/audits/audit.md` §21): A5-14 discard prompt (product call), A5-21 placeholder tabs (product call), A5-10 Back-label derivation (touches the stack layout), A6-04 Today row double stop and at-risk in the label, A6-07 time wheel label, A6-08 decorative icons, A6-11 heatmap-cell focus, A6-14 reorder handle actions, A6-15 sheet scrim/focus management. Un-doable without a device pass: A6-12's Dynamic Type sizes beyond the scroll fallbacks added.
+- **Left out of B8/B9** (reasons in `docs/archive/audit.md` §21): A5-14 discard prompt (product call), A5-21 placeholder tabs (product call), A5-10 Back-label derivation (touches the stack layout), A6-04 Today row double stop and at-risk in the label, A6-07 time wheel label, A6-08 decorative icons, A6-11 heatmap-cell focus, A6-14 reorder handle actions, A6-15 sheet scrim/focus management. Un-doable without a device pass: A6-12's Dynamic Type sizes beyond the scroll fallbacks added.
 - **Undo is not offered for** reordering in Manage (the drag is its own reverse), the Retro-log Save (a deliberate sheet; reopen to change) and Delete habit / category (confirm-only by spec, HAB-13/25).
 - **Touch-target exceptions** (reviewer-flagged): the Checkbox's 44 pt box uses a −10 margin that reaches into its host row's padding (device-check on Android, where a child outside its parent's bounds may not receive touches); Stepper −/+ (6), compact/small Buttons (8), the reorder handle keep a hitSlop; none were adjacent-target regressions introduced here, but they are not yet 44 pt by footprint.
 - **`?addTime=<day>` adds the reminder on arrival** (with the OS permission prompt, like "Add a time"); dismissing the time picker leaves the default-time reminder, which can be removed with Undo. If the day isn't one the habit can fall on, the new reminder falls back to every schedulable day (untested edge).
@@ -124,7 +124,7 @@ Built on `chore/ios-simulator-validation` and merged (#36, #37); the workflow fi
 - **Today's group order is now the stored order, not first appearance among the day's due habits** (HAB-42). Identical whenever each category's first active habit is due; otherwise a group can sit higher than it used to.
 
 - **Spacing and radius literals move to tokens per batch, not in one sweep** (HAB-28, ADR 004). Baselines at V3-0b: `spacing-literals` 274, `radius-literals` 55, `off-scale-font-sizes` 56. Each V3 batch moves the screens it rebuilds onto `space` / `radius` / `textStyles`, then runs `npm run ratchet:update`. V3-6 checks what is left.
-- **`domain/export-json.ts` imports `lib/diagnostics/app-info`** to stamp the build number into the file: the one accepted exception to "`domain/` is pure" (static facts, no I/O; `architecture.md` layer 4). Revisit if `domain/` gets a lint rule: pass the build in from the export service instead.
+- **`domain/export-json.ts` imports `lib/diagnostics/app-info`** to stamp the build number into the file: the one accepted exception to "`domain/` is pure" (static facts, no I/O; `ARCHITECTURE.md` layer 4). Revisit if `domain/` gets a lint rule: pass the build in from the export service instead.
 - **27 `"yyyy-MM-dd"` format literals remain outside `utils/day-key.ts`** (V3-0a added `DAY_KEY_FORMAT` / `toDayKey`). Production: `domain/export-csv.ts`, `export-json.ts`, `off-schedule.ts`, `yearly-summary.ts` (2), `strategies/frequency-strategy.ts`, `hooks/use-retro-log-queries.ts`, `screens/habit-detail-screen.tsx`; the rest are web twins and `dev/` fixtures (`entry-repository.web.ts` 5, `entry-fixtures.ts` and friends). Move each to `toDayKey` when its file is touched; a later `check-architecture` rule can then forbid the literal.
 
 ## Open — V3-3a (Progress data layer)
@@ -162,7 +162,7 @@ Built on `chore/ios-simulator-validation` and merged (#36, #37); the workflow fi
 ## Decided — deviations the reviewers should not re-flag
 
 ### HAB-16 — Monthly
-- Slipping body omits C3's second sentence ("The drop started when Easy run moved to evenings") — a cause across habits isn't derivable. Insight thresholds are one named block in `services/monthly-insights.ts`.
+- Slipping body omits C3's second sentence ("The drop started when Easy run moved to evenings") — a cause across habits isn't derivable. Insight thresholds are one named block in `domain/monthly-insights.ts`.
 - Unlock date is first day + 30 (C6: since 4 Sep → 4 Oct), with "N of 30" counting full days before today.
 - Frozen days leave both sides of the rate (an excused miss), so the tile can differ slightly from a "scheduled" count that includes them.
 - The Year segment was disabled until HAB-17 (done).
@@ -218,14 +218,14 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 - **`AX_FONT_SCALE = 1.5`** is a judgement call: iOS's standard sizes stop at 1.35 (xxxLarge) and AX1 is 1.65, so the threshold sits in the gap. If a device reports something unexpected, this is the knob.
 - **`PILL_BLUR_INTENSITY = 50`** approximates the mockup's "20 pt blur": expo-blur's 1–100 `intensity` is not a radius. Needs an eye on a device.
 - **`?textSize=ax`** (`src/lib/dev-text-size/`) exists only because react-native-web hardcodes `fontScale: 1`, so the AX layouts can be driven on web at all. Delete it if that ever changes.
-- **Maestro cannot tap an active row on Manage** (it is wrapped in `SwipeableRow`; the web driver's single-jump tap never reaches it). `hab-13`'s web branch opens those habits from Today instead. Archived rows are plain and tap fine.
+- **Maestro cannot tap an active row on Manage** (it is wrapped in `SwipeableRow`; the web driver's single-jump tap never reaches it). `hab-13-12-archive-restore-delete` opens those habits from Today instead. Archived rows are plain and tap fine.
 - **Settings pushed from Reminders keeps the tab name as its Back label** (V3-1 spec review): `reminders-screen.tsx` pushes `/settings`, whose Back says "Today"/"Habits", not "Reminders". Relabel from the screen as `reminders/[id]` does, or use a bare chevron.
 - **Header circle buttons draw their glyph with `SymbolView`**, which renders nothing on web, so the `+` and gear are blank circles in every baseline. Add a View-drawn fallback or web twin before trusting those corners.
-- **ADR numbering:** `docs/assessment-v3.md` sketched this as ADR 005; it is filed as **006** at the owner's request, and 005 is left free.
+- **ADR numbering:** `docs/archive/assessment-v3.md` sketched this as ADR 005; it is filed as **006** at the owner's request, and 005 is left free.
 
 ## Visual-check
 
-- **`today-menu-open`, `today-empty-menu-open`, `today-menu-open-dark` and the menu states on Weekly/Monthly/Yearly were flaky** (a 74 px popover offset). Root cause and fix: see `docs/audits/audit.md` A10-10 and the B3 hardening notes in `docs/dev-tooling.md`. **Deleted in V3-1** with the ⋯ menu itself, along with `waitForMenuSettled`.
+- **`today-menu-open`, `today-empty-menu-open`, `today-menu-open-dark` and the menu states on Weekly/Monthly/Yearly were flaky** (a 74 px popover offset). Root cause and fix: see `docs/archive/audit.md` A10-10 and the B3 hardening notes in `docs/how-to/dev-tooling.md`. **Deleted in V3-1** with the ⋯ menu itself, along with `waitForMenuSettled`.
 - **V3-0b (122 baselines):** the single Habits tab (HAB-26) and the new category colours (Health/Social, plus fixture customs 0011 moves off dropped hues). The web fixtures now model an upgraded device (V2 slots, then 0011's remap), and a test pins them to the SQL. Expo's dev-tools button (bottom left) can appear in a capture on the current Expo; recapture that state if it does, and never accept it into a baseline.
 - Baselines re-captured over time: `retro-log` (D4), `delete-confirm*` (E7), `habit-detail-no-freezes` (D6); added `rest-day-picker*`, `rest-day-logged`, `habit-detail-bonus`, `delete-confirm-dark`, `delete-confirm-archived`.
 - **V3-1 (114 baselines: 14 new, 100 updated).** The tab bar is on every screen inside the tabs, so almost everything moved; the cause per group is in the baseline commit's message. Two faults were found by the renders themselves (the pill covering First Run's primary button, Today stacking a third bottom gap) and fixed.
@@ -249,7 +249,7 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 
 Deviations from the mockup / spec and what was left out; each is deliberate unless marked.
 
-- **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design-system-v3.md`).
+- **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design/design-system-v3.md`).
 - **Delete candidates at the end of V3-4 (sparkline, mini month, year strip): deleted in V3-4a.**
 - **Month, one habit (P10): tiles are Completion / Longest / Freezes used**, not the mockup's Streak (current streak is not in the month data; Week's tile reads the whole log, Month's does not). Add `streakHistory` to the month hook for a single habit if the current streak is wanted.
 - **Week day headers are 44 pt high but 28 pt wide** (the cell pitch): a 44 pt-wide target would overlap its neighbour. The mockup asks for 44.
@@ -285,7 +285,7 @@ Deviations from the mockup / spec and what was left out; each is deliberate unle
 - **`EmptyState`'s icon square is `inner`**, as T2 (see V3-2b); H3 and H6 draw a white square with a hairline.
 - **The Habits tab with every habit archived** (not drawn) shows "No active habits" with Add habit and the Archived section below.
 - **Review nits left (spec-reviewer, V3-4a):** `DetailActions` draws its own minus icon square (extend `IconBadge`); `WeekHistoryCard` repeats `Container`'s card chrome; `useHabitsQueries` does the per-habit streak pass inside the hook (the Detail hook does the same); the archive sheet has no initial focus (the spec asks for it only on Delete); `habitHistoryRows` walks back to creation when fewer than ten days qualify.
-- **Maestro `hab-13-manage-archive-delete` still describes the old Manage screen** and was not run (V3-6 rewrites the flows for the three tabs).
+- **Resolved (V3-6, 2026-11-03):** Maestro `hab-13-12-archive-restore-delete` (then `hab-13-manage-archive-delete`) described the old Manage screen. All six flows were rewritten for the three tabs and pass.
 - **Scenarios left in the web fixtures:** `manage-archive` still backs Today's long-list state and `manage-all-archived` the all-archived Habits state; `habit-detail`, `habit-detail-new`, `habit-detail-bonus`, `habit-detail-archived` and `no-freezes` are no longer used by a visual-check state (dev seeds still read `habit-detail`). `manage-nothing-archived` was removed.
 
 ## Open — V3-4b (Add / Edit habit form, Categories)

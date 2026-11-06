@@ -1,10 +1,10 @@
 # 001 — Drizzle ORM on expo-sqlite, reactive reads through `useLiveRows`
 
-Status: accepted · Sources: `docs/architecture.md` (Stack, "Live reads"), `docs/audits/audit.md` A3-06, A5-04, A7-01, A9-04 · Landed: Drizzle with V1; `useLiveRows` in `7363a0b` (audit B6–B9)
+Status: accepted · Sources: `ARCHITECTURE.md` (Stack, "Live reads"), `docs/archive/audit.md` A3-06, A5-04, A7-01, A9-04 · Landed: Drizzle with V1; `useLiveRows` in `7363a0b` (audit B6–B9)
 
 ## Context
 
-The app is local-only: SQLite on the device, no backend, no accounts (`architecture.md`, Constraints). Screens must update when a write lands anywhere (a tick on Today changes Detail, summaries and the menu), and most code is written by an agent, so queries must be typed and data access must sit in one reviewable place.
+The app is local-only: SQLite on the device, no backend, no accounts (`ARCHITECTURE.md`, Constraints). Screens must update when a write lands anywhere (a tick on Today changes Detail, summaries and the menu), and most code is written by an agent, so queries must be typed and data access must sit in one reviewable place.
 
 The audit found three problems with calling Drizzle's `useLiveQuery` directly:
 - **A7-01:** `useLiveQuery(query, deps = [])` runs its effect once, so a hook whose range changed (week navigation, day rollover) kept its first query forever.

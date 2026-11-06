@@ -1,6 +1,6 @@
 # Architecture
 
-How the code is organised and what it is built with. Enforcement lives in `docs/dev-tooling.md` (`check-architecture`, Biome, token ratchet); the one-line rules are in `CLAUDE.md`. This file gives the reasons.
+How the code is organised and what it is built with. Enforcement lives in `docs/how-to/dev-tooling.md` (`check-architecture`, Biome, token ratchet); the one-line rules are in `CLAUDE.md`. This file gives the reasons.
 
 ## Constraints
 
@@ -84,7 +84,7 @@ Notifications and native modules need a dev-client build, not Expo Go. Nothing h
 
 /e2e                           Maestro flows, named by feature ID
 /scripts                       visual-check, e2e runner, check-architecture, token ratchet, mockup renderer (scripts/README.md)
-/docs                          specs, design systems, this file, decisions/ (ADRs), CONTRIBUTING.md, audits/;
+/docs                          specs, design systems, decisions/ (ADRs), how-to guides, the archive;
                                mockups/v3/ holds the V3 design files and their text renders; visual-baseline/ holds the web baselines. The V1/V2 mockup PNGs live at tag mockups-v1-v2
 /.github/workflows             CI: make check on every PR and push to master
 drizzle.config.ts              at the repo root
@@ -159,7 +159,7 @@ If a package or approach is replaced, record the change here with a date rather 
 
 - 2026-09: Categories became a managed table (HAB-24/25). `habits.categoryId` is a NOT NULL FK; the legacy `icon/color/category` columns stay nullable and unused until a cleanup migration.
 - 2026-11: Device validation (ADR 007): a manual GitHub Actions workflow builds the app for the iOS Simulator (`expo prebuild` + `xcodebuild`, Release) and captures the visual-check states and the known-bug flows; a build-time flag, not `__DEV__`, enables its dev-only hook.
-- 2026-10: Docs consolidated into `architecture.md` and `design-system.md`.
+- 2026-10: Docs consolidated into `ARCHITECTURE.md` and `design-system.md`.
 - 2026-10 (V3-0b): habits only (HAB-26 removed the To-dos/Expenses placeholders and the future-modules promise; the module-isolation rule stays). V3 design tokens added to `src/theme` and the token ratchet extended to spacing, radius and the retired font sizes. Migration 0011 (HAB-42 data): `categories.sort_order`, Health 175 / Social 230, custom rotation down to six slots. Slow tests (`*.slow.test.ts`) run in CI only.
 - 2026-10 (V3-0a): module layers became repositories/strategies/dev ← domain ← services ← presenters ← hooks ← components ← screens (pure rules out of `services/`, view helpers out of `screens/`, fixtures out of `repositories/`); per-week history math pre-buckets completions by week (`strategies/completion-index.ts`); CI added.
 

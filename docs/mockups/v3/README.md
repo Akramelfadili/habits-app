@@ -1,6 +1,6 @@
 # V3 mockups
 
-The V3 design (HAB-26–50), exported from Claude Design. Spec: `docs/feature-spec-v3.md`; values: `docs/design-system-v3.md`.
+The V3 design (HAB-26–50), exported from Claude Design. Spec: `docs/specs/feature-spec-v3.md`; values: `docs/design/design-system-v3.md`.
 
 ## Files
 

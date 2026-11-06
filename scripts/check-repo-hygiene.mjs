@@ -150,7 +150,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 		console.error("check-repo-hygiene: FAILED (the repo is public)");
 		for (const p of problems) console.error(`  ${p}`);
 		console.error(
-			"See docs/CONTRIBUTING.md 'What never goes in git'. A real secret: rotate it first.",
+			"See CONTRIBUTING.md 'What never goes in git'. A real secret: rotate it first.",
 		);
 		process.exit(1);
 	}

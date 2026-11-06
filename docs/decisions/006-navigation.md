@@ -1,8 +1,8 @@
 # 006 — V3 navigation: a custom pill tab bar on JS tabs, with shared routes
 
-Status: accepted · Sources: `docs/feature-spec-v3.md` HAB-27 + decisions D2–D4, `docs/design-system-v3.md` V3-01/V3-02 and T-20/T-21/T-23/T-25, `docs/assessment-v3.md` §9 and row 27 · Spike: `spike/v3-1-navigation` (throwaway, `d54dc5b`) · Landed: V3-1
+Status: accepted · Sources: `docs/specs/feature-spec-v3.md` HAB-27 + decisions D2–D4, `docs/design/design-system-v3.md` V3-01/V3-02 and T-20/T-21/T-23/T-25, `docs/archive/assessment-v3.md` §9 and row 27 · Spike: `spike/v3-1-navigation` (throwaway, `d54dc5b`) · Landed: V3-1
 
-> Numbering note: `docs/assessment-v3.md` sketches this ADR as "005". It is filed as 006 at the owner's request; 005 is left free.
+> Numbering note: `docs/archive/assessment-v3.md` sketches this ADR as "005". It is filed as 006 at the owner's request; 005 is left free.
 
 ## Context
 

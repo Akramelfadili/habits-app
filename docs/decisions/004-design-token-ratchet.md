@@ -1,6 +1,6 @@
 # 004 — Design tokens are enforced by a ratchet, not a big-bang migration
 
-Status: accepted · Sources: `docs/dev-tooling.md` ("Design-token ratchet"), `docs/audits/audit.md` A4-01…A4-03, A8-15, §13 "Proposed design-token lint" · Landed: audit batches B1–B3 (`1573646`)
+Status: accepted · Sources: `docs/how-to/dev-tooling.md` ("Design-token ratchet"), `docs/archive/audit.md` A4-01…A4-03, A8-15, §13 "Proposed design-token lint" · Landed: audit batches B1–B3 (`1573646`)
 
 ## Context
 
@@ -34,6 +34,6 @@ The count may only go down. Separately, `check-architecture`'s `hex-colour` rule
   - `radius-literals`: 55;
   - `off-scale-font-sizes`: 56. These are the V3-retired sizes 10, 10.5, 11, 11.5 and 12.5, as literals or through `typeScale.micro/caption/subtitle`; a literal is also counted under `font-size-literals`.
 
-  Zero values and width/height are not counted. The screens move onto the tokens batch by batch during V3 rather than in one sweep, which is the same reasoning as the original decision. Details are in `docs/dev-tooling.md`.
+  Zero values and width/height are not counted. The screens move onto the tokens batch by batch during V3 rather than in one sweep, which is the same reasoning as the original decision. Details are in `docs/how-to/dev-tooling.md`.
 - The baseline is a file in the repo. Lowering it is a deliberate commit, so reviewers see token progress in diffs.
 - About 32 test files assert raw style values (A10-08). They change when the tokens land, separately from the ratchet.

@@ -11,13 +11,13 @@ model: sonnet
 
 | Doc kind | Path |
 |---|---|
-| Architecture rules, layers, stack | `docs/architecture.md`, `CLAUDE.md` |
-| Design system (V1/V2 merged, with **Deltas**; V3 tokens and components) | `docs/design-system.md`, `docs/design-system-v3.md` |
-| Previous audit and batch plan (compare, do not repeat) | `docs/audits/audit.md` (headings first) |
+| Architecture rules, layers, stack | `ARCHITECTURE.md`, `CLAUDE.md` |
+| Design system (V1/V2 merged, with **Deltas**; V3 tokens and components) | `docs/design/design-system.md`, `docs/design/design-system-v3.md` |
+| Previous audit and batch plan (compare, do not repeat) | `docs/archive/audit.md` (headings first) |
 | Deferred work and decided deviations (do not re-flag "Decided") | `docs/backlog.md` (grep only) |
 | Theme tokens, ratchet baseline | `src/theme/theme.ts`, `src/theme/token-ratchet.baseline.json` |
 
-You are an independent auditor reviewing this entire codebase for long-term health, not reviewing one feature against its spec. Read `CLAUDE.md` and `docs/architecture.md` first, then examine the full `src/` tree.
+You are an independent auditor reviewing this entire codebase for long-term health, not reviewing one feature against its spec. Read `CLAUDE.md` and `ARCHITECTURE.md` first, then examine the full `src/` tree.
 
 Check for, and report EVERY instance found (not just examples):
 

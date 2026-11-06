@@ -1,6 +1,6 @@
 # Changelog
 
-What shipped, by version and batch. Dates are merge dates from git history. Detail: the spec "As built" notes (`docs/feature-spec*.md`) and `docs/backlog.md`. Nothing has been released to anyone but the owner (`package.json` version is a placeholder).
+What shipped, by version and batch. Dates are merge dates from git history. Detail: the spec "As built" notes (`docs/specs/`) and `docs/backlog.md`. Nothing has been released to anyone but the owner (`package.json` version is a placeholder).
 
 ## V3 — habits only, three tabs (2026-10-24 → 2026-11-04)
 
@@ -46,4 +46,4 @@ Release prerequisites (from `docs/backlog.md`, "Release prerequisites"):
 - `expo-clipboard` and a dev-client rebuild so "Copy diagnostics" copies.
 - Device-only checks: VoiceOver, Dynamic Type AX1–AX5, Reduce Motion, reminders firing, share sheet, drag-to-reorder and swipe-to-archive, update-screen first paint.
 
-Hardening still to do (`docs/audits/audit.md` §16): folder moves, error handling, accessibility, diagnostics, crash reporting and versioning.
+Hardening still to do (`docs/archive/audit.md` §16): folder moves, error handling, accessibility, diagnostics, crash reporting and versioning.

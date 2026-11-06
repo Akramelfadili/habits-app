@@ -1,6 +1,6 @@
 # Contributing
 
-How changes get into this repo. The rules themselves are in `CLAUDE.md`; the reasons in `docs/architecture.md` and `docs/decisions/`; the tools in `docs/dev-tooling.md`.
+How changes get into this repo. The rules themselves are in `CLAUDE.md`; the reasons in `ARCHITECTURE.md` and `docs/decisions/`; the tools in `docs/how-to/dev-tooling.md`.
 
 ## Branches, commits, pull requests
 
@@ -34,7 +34,7 @@ This repo is **public**: anything committed is visible to everyone, and deleting
 
 ## Visual check
 
-`npm run visual-check` renders every screen state on the web build and diffs it against `docs/visual-baseline/`. Run it on the screens you touched, in light and dark. Review `.visual-checks/report.html`, and only then accept intended changes with `npm run visual-check -- --update-baseline`. Commit the new PNGs with the change. Chromium setup on WSL: `docs/dev-tooling.md`. It is not part of `make check`.
+`npm run visual-check` renders every screen state on the web build and diffs it against `docs/visual-baseline/`. Run it on the screens you touched, in light and dark. Review `.visual-checks/report.html`, and only then accept intended changes with `npm run visual-check -- --update-baseline`. Commit the new PNGs with the change. Chromium setup on WSL: `docs/how-to/dev-tooling.md`. It is not part of `make check`.
 
 ## Adding a migration
 

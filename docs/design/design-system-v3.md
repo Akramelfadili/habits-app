@@ -7,7 +7,7 @@ tags: [design-system, ui, habits, v3]
 # Habits — Design System & Screen Reference — V3
 
 > [!info] What this file is for
-> Transcription of the finished V3 mockup (`docs/mockups/v3/Habits V3.dc.html`, sections 00–02 Foundations/Components/Nav). **V3 replaces V1 and V2 values wherever this file gives one**; anything not mentioned here is unchanged from `docs/design-system.md` (which already includes V2). IDs: F-xx foundations, V3-xx components, T-xx token changes ("was → now"). Contrast ratios in the mockup are computed live from the hex values; if a value here is in doubt, the master file wins.
+> Transcription of the finished V3 mockup (`docs/mockups/v3/Habits V3.dc.html`, sections 00–02 Foundations/Components/Nav). **V3 replaces V1 and V2 values wherever this file gives one**; anything not mentioned here is unchanged from `docs/design/design-system.md` (which already includes V2). IDs: F-xx foundations, V3-xx components, T-xx token changes ("was → now"). Contrast ratios in the mockup are computed live from the hex values; if a value here is in doubt, the master file wins.
 
 ## Principles
 

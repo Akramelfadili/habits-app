@@ -2,7 +2,7 @@
 
 Date: 2026-10-24 · Branch: `chore/cleanup-docs-tests` (HEAD `7363a0b`) · Scope: read-only; nothing in the app was changed for this document.
 
-Inputs: `docs/feature-spec-v3.md`, `docs/design-system-v3.md`, `docs/mockups/v3/renders/` (text + slices), `CLAUDE.md`, `docs/architecture.md`, `docs/dev-tooling.md`, `docs/audits/audit.md` (the 2026-10-05 audit), `docs/backlog.md`, the code, plus measurements run for this document (benchmarks, coverage, knip, an AST scan; method in §C.3).
+Inputs: `docs/specs/feature-spec-v3.md`, `docs/design/design-system-v3.md`, `docs/mockups/v3/renders/` (text + slices), `CLAUDE.md`, `ARCHITECTURE.md`, `docs/how-to/dev-tooling.md`, `docs/archive/audit.md` (the 2026-10-05 audit), `docs/backlog.md`, the code, plus measurements run for this document (benchmarks, coverage, knip, an AST scan; method in §C.3).
 
 **Evidence tags.** **VERIFIED** = read in code or reproduced by running it. **INFERRED** = follows from verified facts but not exercised end-to-end. **UNKNOWN** = could not be established here (why in §C.3).
 
@@ -33,7 +33,7 @@ Inputs: `docs/feature-spec-v3.md`, `docs/design-system-v3.md`, `docs/mockups/v3/
 
 | Question | Answer | Evidence | Tag |
 |---|---|---|---|
-| How are freezes earned? | **They aren't.** A fixed shared pool of `FREEZE_POOL_SIZE = 2` per calendar month for all habits. It resets on the 1st and unused freezes don't roll over | `src/modules/habits/constants.ts:123-124`; `freezesRemainingInMonth` `services/habit-service.ts:132-142`; rule text `docs/feature-spec.md` §08 | VERIFIED |
+| How are freezes earned? | **They aren't.** A fixed shared pool of `FREEZE_POOL_SIZE = 2` per calendar month for all habits. It resets on the 1st and unused freezes don't roll over | `src/modules/habits/constants.ts:123-124`; `freezesRemainingInMonth` `services/habit-service.ts:132-142`; rule text `docs/specs/feature-spec.md` §08 | VERIFIED |
 | How are they stored? | One `frozen_days` row per frozen missed day: `habit_id`, `date` ("yyyy-MM-dd"), `created_at`; unique `(habit_id, date)`; index on `date` | `src/lib/db/schema.ts` (`frozenDays`) | VERIFIED |
 | Is there a freeze event with date + habit? | **Yes.** Each row is that event. The pool counts rows whose **missed date** falls in the month, not the month the freeze was used in | `frozen-day-repository.ts:33-48`; `habit-service.ts:132-142` | VERIFIED |
 | How are they used? | Manually only. The at-risk sheet's "Use a freeze" → `applyFreeze` re-reads the pool, then inserts. The grace window is **yesterday only**. Undo deletes the row | `habit-service.ts:98-129,150-162`; `today-screen.tsx:212-227`; `use-streak-actions.ts` | VERIFIED |
@@ -112,9 +112,9 @@ SQL side: all reads are live queries that refire on any table change (`enableCha
 | Visual states / baselines | `scripts/visual-check/screens.mjs:959-969` (`tab-todos`, `tab-expenses`); `docs/visual-baseline/tab-todos.png`, `tab-expenses.png` | No: delete | VERIFIED |
 | Maestro flows / export fields / settings / onboarding | None | — | VERIFIED |
 | Tooling test fixture | `scripts/check-architecture.test.mjs:116-117` uses a fake `src/modules/todos/…` to test module isolation. Keep it (it's a fixture) or rename it to a neutral module | — | VERIFIED |
-| Docs | `README.md:3`, `CLAUDE.md:3`, `docs/architecture.md:9,47,58`, `docs/design-system.md:127`, `docs/feature-spec.md:5,506` | — | VERIFIED |
+| Docs | `README.md:3`, `CLAUDE.md:3`, `ARCHITECTURE.md:9,47,58`, `docs/design/design-system.md:127`, `docs/specs/feature-spec.md:5,506` | — | VERIFIED |
 
-**Options for existing rows:** none apply, because there are no rows. (a) leave, (b) drop and (c) export-then-drop are all no-ops. The real decision is about the **architecture promise**: `architecture.md` says the shell will host future modules. Dropping that promise can simplify `module-isolation` and the "modules never import each other" rule. Recommendation: keep the rules (they cost nothing) and remove only the promise text.
+**Options for existing rows:** none apply, because there are no rows. (a) leave, (b) drop and (c) export-then-drop are all no-ops. The real decision is about the **architecture promise**: `ARCHITECTURE.md` says the shell will host future modules. Dropping that promise can simplify `module-isolation` and the "modules never import each other" rule. Recommendation: keep the rules (they cost nothing) and remove only the promise text.
 
 ### 8. Navigation
 
@@ -171,7 +171,7 @@ Status: **exists** = behaviour present, mostly restyle · **partial** = a base e
 | **44** Settings + export | exists | `settings-screen.tsx`, `export-sheet.tsx` (284), `use-export-actions.ts` | Push from the Habits gear; Export also from Progress; background export with toast is new (closing the sheet keeps it running); no to-do/expense fields exist | 11 `settings*`/`export*` baselines | Low–medium · VERIFIED |
 | **45** Destructive confirms | exists | `delete-habit-sheet.tsx`, `destructive-confirm-sheet.tsx` | Swap primary to Archive; Cancel last; log count copy; in-sheet failure banner | `delete-habit-sheet*`, `destructive-confirm-sheet.test.tsx`; 4 `delete-confirm*` baselines | Low · VERIFIED |
 | **46** First run + suggestions | partial | `first-run-screen.tsx`, `services/first-run-service.ts`, `constants.ts` (`FIRST_RUN_SUGGESTIONS`, 6 entries) | 8–10 bundled suggestions grouped by category; prefill into the form; our own notification pre-prompt (FR3) is new | first-run tests; 2 `first-run*` baselines; e2e `hab-06-01-03` | Low–medium · VERIFIED |
-| **47** System states | partial | `lib/db/database-provider.tsx`, `database-error-screen.tsx`, `today-screen.tsx` | SY2 load error **inside Today** with tabs usable is new (today a query error throws to `RootErrorBoundary`, `docs/architecture.md` "Live reads"); SY3 progress not possible on the sync migrator (§A.1.3); SY5 midnight banner new | `database-provider*.test`; `error-screen-*` baselines | Medium · VERIFIED |
+| **47** System states | partial | `lib/db/database-provider.tsx`, `database-error-screen.tsx`, `today-screen.tsx` | SY2 load error **inside Today** with tabs usable is new (today a query error throws to `RootErrorBoundary`, `ARCHITECTURE.md` "Live reads"); SY3 progress not possible on the sync migrator (§A.1.3); SY5 midnight banner new | `database-provider*.test`; `error-screen-*` baselines | Medium · VERIFIED |
 | **48** Message catalogue | new | ~252 inline strings in screens/components (top: `export-sheet.tsx` 27, `habit-form-screen.tsx` 26, `settings-screen.tsx` 22, `today-screen.tsx` 19); 16 `showToast(` call sites in 9 files; `utils/failure-message.ts` | New `modules/habits/messages.ts` (or `messages/`); durations per tone in `store/toast-store.ts`; VoiceOver keep-until-dismissed | Many text assertions in tests | Medium; wide · VERIFIED (counts, §B.3) |
 | **49** Accessibility / Dynamic Type | partial | B8 landed (touch targets, reduce motion via `utils/use-reduced-motion.ts`, toast announcements) | AX3 reflows (P6, P11, P16, F10, H7, QS4, DC7, S7) are new; Reduce Transparency is new; tab label fixed size | device checks | Medium · VERIFIED (B8 as built, audit §21) |
 | **50** Baselines, e2e, docs | — | `docs/visual-baseline/` (137 PNGs, 14 MB), `e2e/` (5 flows), `scripts/visual-check/screens.mjs` (137 states, 1139 lines), `scripts/check-architecture.mjs`, CLAUDE.md, docs | Regenerate almost all; rewrite the 5 flows for 3 tabs; add V3 flows | — | Medium (effort) · INFERRED |
@@ -227,7 +227,7 @@ Totals: **20 allowlist entries** (`scripts/check-architecture.allowlist.json`). 
 - **Toast copy is inline and inconsistent with V3.** Examples: "Marked 'X' complete", "Used a freeze on 'X'" (`today-screen.tsx:103-226`) vs V3's "Freeze used for Thu 22 · 0 left". VERIFIED.
 - **Unbounded live reads** are duplicated per screen (`useAllEntries` in Today, Detail, Manage, Settings and retro-log; `useActiveHabits` twice on Today, audit A9-04). VERIFIED.
 - **Naming.** `services/` vs "domain"; `components/` (module) vs `components/ui/composite` overlap. Examples: `habit-badge` vs `icon-badge`; `menu-row` vs `list-item`; `freeze-pool-card` vs `stat-card`; `range-switcher` vs `segmented-control`. INFERRED (by name and doc comment).
-- **Error handling and logging are consistent and documented** (`useAsyncAction.run`, `runSafely`, `lib/logger` with privacy rules). That's a strength. VERIFIED (`docs/architecture.md` "Cross-cutting decisions").
+- **Error handling and logging are consistent and documented** (`useAsyncAction.run`, `runSafely`, `lib/logger` with privacy rules). That's a strength. VERIFIED (`ARCHITECTURE.md` "Cross-cutting decisions").
 
 ## B.4 Tests
 
@@ -290,19 +290,19 @@ Layer order becomes: repositories / domain ← services ← presenters ← hooks
 4. Add one `DATE_KEY` helper (`lib/today` or `utils/day-key.ts`) and replace the 11 `DATE_FORMAT` copies.
 5. Create `messages.ts` before any V3 screen work, so new copy lands there (HAB-48 first).
 6. Add `components/<surface>/` subfolders as V3 surfaces are built (not up front).
-7. Update `docs/architecture.md`, CLAUDE.md rules 3 and 6, and `check-architecture.mjs` with its tests in the same commits.
+7. Update `ARCHITECTURE.md`, CLAUDE.md rules 3 and 6, and `check-architecture.mjs` with its tests in the same commits.
 
-This is the prior audit's B4 (`docs/audits/audit.md` §4, §16), narrowed. B4 hasn't landed: `src/modules/habits/` still has only `components hooks repositories screens services strategies test-support` (VERIFIED).
+This is the prior audit's B4 (`docs/archive/audit.md` §4, §16), narrowed. B4 hasn't landed: `src/modules/habits/` still has only `components hooks repositories screens services strategies test-support` (VERIFIED).
 
 ## B.7 Docs gaps
 
 | Doc | State | Outline | Tag |
 |---|---|---|---|
-| `docs/architecture.md` | Good. Out of date on the shell promise (To-dos/Expenses), the folder tree, and navigation | Update the tree (B.6), the navigation section (pill, shared routes, modals, sheets), drop the module-shell promise, add the Today selected-day rule | VERIFIED |
+| `ARCHITECTURE.md` | Good. Out of date on the shell promise (To-dos/Expenses), the folder tree, and navigation | Update the tree (B.6), the navigation section (pill, shared routes, modals, sheets), drop the module-shell promise, add the Today selected-day rule | VERIFIED |
 | `docs/roadmap.md` | Says "V3: Not planned" | Add V3 batches | VERIFIED |
-| `docs/design-system-v3.md` | Referenced `design-system-v2.md`, which no longer exists (merged into `design-system.md`, CLAUDE.md). **Fixed** in the V3 docs commit; nothing else in `docs/` (outside the dated audit) points at it | F-05 radius-xs/s/m values still say "see master" | VERIFIED |
-| `docs/feature-spec-v3.md` | HAB-50 says "update `docs/feature-spec.md` index"; there is no index there (the docs index is `README.md` "Where to read more") | Point HAB-50 at README | VERIFIED |
-| ADRs | Only a 2-line decision log in `architecture.md` | `docs/decisions/`, one page each (context, decision, consequences): **001 Drizzle + live queries via `useLiveRows`** (why not React Query; refire-on-any-change cost); **002 FKs off on device** (A7-04; orphan risks; integrity tests); **003 `run()` never rejects** (error toast, `execute` for inline-error forms); **004 Token ratchet** (counts only go down; scope); **005 V3 navigation** (custom pill on js-tabs, shared routes, modals vs sheets); **006 Week start** (iOS first weekday vs Monday; the per-week history consequence); **007 Freeze pool** (fixed 2/month, not earned) | VERIFIED (absence) |
+| `docs/design/design-system-v3.md` | Referenced `design-system-v2.md`, which no longer exists (merged into `design-system.md`, CLAUDE.md). **Fixed** in the V3 docs commit; nothing else in `docs/` (outside the dated audit) points at it | F-05 radius-xs/s/m values still say "see master" | VERIFIED |
+| `docs/specs/feature-spec-v3.md` | HAB-50 says "update `docs/specs/feature-spec.md` index"; there is no index there (the docs index is `README.md` "Where to read more") | Point HAB-50 at README | VERIFIED |
+| ADRs | Only a 2-line decision log in `ARCHITECTURE.md` | `docs/decisions/`, one page each (context, decision, consequences): **001 Drizzle + live queries via `useLiveRows`** (why not React Query; refire-on-any-change cost); **002 FKs off on device** (A7-04; orphan risks; integrity tests); **003 `run()` never rejects** (error toast, `execute` for inline-error forms); **004 Token ratchet** (counts only go down; scope); **005 V3 navigation** (custom pill on js-tabs, shared routes, modals vs sheets); **006 Week start** (iOS first weekday vs Monday; the per-week history consequence); **007 Freeze pool** (fixed 2/month, not earned) | VERIFIED (absence) |
 | CONTRIBUTING | None (README + CLAUDE.md cover commands) | Short: branch/commit/PR rules, `make check`, visual-check, how to add a migration, the `/implement-feature` flow | VERIFIED |
 | Folder READMEs | `e2e/README.md` and now `docs/mockups/v3/README.md` | Add one-paragraph READMEs to `src/modules/habits/` (layers + where things go) and `scripts/` (what each script does) | VERIFIED |
 

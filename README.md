@@ -21,8 +21,8 @@ A manual GitHub Actions run renders every state on an iOS Simulator: `gh workflo
 ## Where to read more
 
 - [docs/README.md](docs/README.md): which doc answers which question, current status, and a guide for coming back to the project
-- [docs/architecture.md](docs/architecture.md): folders, layers, patterns, stack
+- [ARCHITECTURE.md](ARCHITECTURE.md): folders, layers, patterns, stack
 - [DESIGN.md](DESIGN.md): design principles, token and accessibility rules
-- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md): branches, commits, the gate, what never goes in git
+- [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, the gate, what never goes in git
 - [CHANGELOG.md](CHANGELOG.md): what shipped and what is next
 - [CLAUDE.md](CLAUDE.md): working rules for Claude Code sessions

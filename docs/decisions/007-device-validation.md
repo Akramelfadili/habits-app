@@ -1,6 +1,6 @@
 # 007 — Device validation: an iOS Simulator build in CI, from `expo prebuild` + `xcodebuild`
 
-Status: accepted · Sources: the owner's "device validation" brief (2026-11-04), `docs/decisions/006-navigation.md`, `docs/dev-tooling.md`, `e2e/README.md`
+Status: accepted · Sources: the owner's "device validation" brief (2026-11-04), `docs/decisions/006-navigation.md`, `docs/how-to/dev-tooling.md`, `e2e/README.md`
 
 ## Context
 

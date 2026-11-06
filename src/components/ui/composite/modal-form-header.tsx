@@ -6,7 +6,7 @@ import { headerActionOptions, headerNoBackOptions } from "./header-buttons";
  * Shared header config for a modal form screen (New/Edit habit, and future
  * form screens): left-aligned title, no back chevron/gesture affordance, an
  * explicit "Cancel" button, and a full-screen presentation (not the iOS
- * page-sheet peek) — per docs/design-system.md's New/Edit habit screen
+ * page-sheet peek) — per docs/design/design-system.md's New/Edit habit screen
  * structure.
  *
  * Header buttons come from `header-buttons.tsx` (plain, no iOS 26 glass
