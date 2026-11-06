@@ -75,6 +75,6 @@ describe("useLiveRows", () => {
 		);
 		const errors = getLogEntries().filter((entry) => entry.level === "error");
 		expect(errors).toHaveLength(1);
-		expect(errors[0].scope).toBe("live-query");
+		expect(errors[0].event).toBe("livequery.failed");
 	});
 });

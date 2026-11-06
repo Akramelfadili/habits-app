@@ -230,7 +230,7 @@ describe("reminder-service", () => {
 			expect(
 				getLogEntries().some(
 					(entry) =>
-						entry.level === "warn" && /cancel failed/.test(entry.message),
+						entry.level === "warn" && entry.event === "reminders.cancel_failed",
 				),
 			).toBe(true);
 			expect(scheduledKeys()).toEqual(
@@ -243,8 +243,8 @@ describe("reminder-service", () => {
 		it("logs counts, never names", async () => {
 			mockGetHabitReminders.mockResolvedValue([reminder()]);
 			await syncHabitReminders(weekdayHabit);
-			const entry = getLogEntries().find((e) => e.message === "synced");
-			expect(entry?.context).toEqual({
+			const entry = getLogEntries().find((e) => e.event === "reminders.synced");
+			expect(entry?.fields).toEqual({
 				habitId: 3,
 				scheduled: 5,
 				cancelled: 0,
@@ -288,7 +288,7 @@ describe("reminder-service", () => {
 
 			expect(getLogEntries()[0]).toMatchObject({
 				level: "error",
-				context: { habitId: 3 },
+				fields: { habitId: 3 },
 			});
 		});
 	});
@@ -345,7 +345,9 @@ describe("reminder-service", () => {
 
 			expect(
 				getLogEntries().some(
-					(e) => e.level === "error" && /scheduling failed/.test(e.message),
+					(e) =>
+						e.level === "error" &&
+						e.event === "reminders.saved_but_not_scheduled",
 				),
 			).toBe(true);
 			expect(fake.scheduled.size).toBe(0);

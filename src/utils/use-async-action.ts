@@ -31,7 +31,7 @@ export function useAsyncAction<Args extends unknown[], Result>(
 					caught instanceof Error ? caught : new Error(String(caught));
 				setError(normalized);
 				// The same object reaching `runSafely` is not logged a second time.
-				log.error(scope, "action failed", normalized);
+				log.error("action.failed", { scope, error: normalized });
 				throw normalized;
 			} finally {
 				setIsLoading(false);

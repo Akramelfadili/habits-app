@@ -1,10 +1,6 @@
 [
 	{
 		"rule": "colocated-tests",
-		"file": "src/lib/db/client.ts"
-	},
-	{
-		"rule": "colocated-tests",
 		"file": "src/lib/dev-clock/pin-clock.ts"
 	},
 	{

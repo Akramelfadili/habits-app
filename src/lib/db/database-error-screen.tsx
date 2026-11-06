@@ -6,7 +6,7 @@ import type { DatabaseCopy } from "./database-copy";
 import { SCHEMA_VERSION } from "./schema-version";
 
 type DatabaseErrorScreenProps = {
-	error: Error;
+	error: unknown;
 	onRetry: () => void;
 	/** SY4's words when an update failed; the plain open-failure words otherwise. */
 	copy: DatabaseCopy["updateFailed"] | DatabaseCopy["openFailed"];
@@ -25,9 +25,7 @@ export function DatabaseErrorScreen({
 	copy,
 }: DatabaseErrorScreenProps) {
 	useEffect(() => {
-		log.error("db", "migration failed", error, {
-			schemaVersion: SCHEMA_VERSION,
-		});
+		log.error("migration.failure", { schemaVersion: SCHEMA_VERSION, error });
 		SplashScreen.hide();
 	}, [error]);
 

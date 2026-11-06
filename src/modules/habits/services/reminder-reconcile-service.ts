@@ -87,20 +87,13 @@ export async function reconcileScheduledReminders(): Promise<void> {
 	try {
 		const permission = await getNotificationPermission();
 		if (permission !== "granted") {
-			log.info("reminders", "reconcile skipped: notifications not granted");
+			log.info("reminders.reconcile_skipped", { reason: "not_granted" });
 			return;
 		}
 
 		const scheduled = await listScheduledIdentifiers();
 		if (scheduled.length >= PENDING_WARNING) {
-			log.warn(
-				"reminders",
-				"close to the OS limit of pending notifications",
-				undefined,
-				{
-					pending: scheduled.length,
-				},
-			);
+			log.warn("reminders.near_pending_limit", { pending: scheduled.length });
 		}
 
 		const habits = await getAllHabits();
@@ -113,7 +106,7 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			const id = identifier.match(HABIT_ID_OF)?.[1];
 			return id !== undefined && !known.has(Number(id));
 		});
-		if (await cancelQuietly(orphans, "reconcile: deleted habits")) {
+		if (await cancelQuietly(orphans, "reconcile_deleted_habits")) {
 			cancelled += orphans.length;
 		}
 
@@ -126,7 +119,7 @@ export async function reconcileScheduledReminders(): Promise<void> {
 				if (matches(owned, expected)) continue;
 				if (expected.length === 0) {
 					// Archived, or nothing enabled: only ever cancel.
-					if (await cancelQuietly(owned, "reconcile: nothing expected")) {
+					if (await cancelQuietly(owned, "reconcile_nothing_expected")) {
 						cancelled += owned.length;
 					}
 				} else {
@@ -134,8 +127,9 @@ export async function reconcileScheduledReminders(): Promise<void> {
 					resynced++;
 				}
 			} catch (error) {
-				log.error("reminders", "reconcile of one habit failed", error, {
+				log.error("reminders.reconcile_habit_failed", {
 					habitId: habit.id,
+					error,
 				});
 			}
 		}
@@ -146,7 +140,7 @@ export async function reconcileScheduledReminders(): Promise<void> {
 		const eveningOn = (await getSetting(EVENING_REVIEW_SETTING_KEY)) === "true";
 		const eveningTime = await getEveningReviewTime();
 		if (!eveningOn) {
-			if (await cancelQuietly(eveningOwned, "reconcile: evening review off")) {
+			if (await cancelQuietly(eveningOwned, "reconcile_evening_review_off")) {
 				cancelled += eveningOwned.length;
 			}
 		} else if (!matches(eveningOwned, eveningReviewKeys(habits, eveningTime))) {
@@ -160,17 +154,17 @@ export async function reconcileScheduledReminders(): Promise<void> {
 						);
 			await cancelQuietly(
 				eveningOwned.filter((identifier) => !created.includes(identifier)),
-				"reconcile: replace the evening review",
+				"reconcile_replace_evening_review",
 			);
 			resynced++;
 		}
 
-		log.info("reminders", "reconciled", {
+		log.info("reminders.reconciled", {
 			resynced,
 			cancelled,
 			pending: scheduled.length,
 		});
 	} catch (error) {
-		log.error("reminders", "reconcile failed", error);
+		log.error("reminders.reconcile_failed", { error });
 	}
 }

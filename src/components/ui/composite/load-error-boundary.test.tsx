@@ -47,7 +47,7 @@ describe("LoadErrorBoundary", () => {
 	it("draws the fallback instead of letting the error reach the root, and logs it once", async () => {
 		await renderBoundary();
 		expect(screen.getByText("failed, retry")).toBeTruthy();
-		const entries = getLogEntries().filter((e) => e.scope === "today");
+		const entries = getLogEntries().filter((e) => e.fields?.scope === "today");
 		expect(entries).toHaveLength(1);
 		expect(entries[0].level).toBe("warn");
 	});

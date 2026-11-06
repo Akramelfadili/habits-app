@@ -46,8 +46,8 @@ describe("installGlobalHandlers", () => {
 		expect(getLogEntries()).toHaveLength(1);
 		expect(getLogEntries()[0]).toMatchObject({
 			level: "error",
-			message: "fatal error",
-			context: { isFatal: true },
+			event: "global.fatal_error",
+			fields: { isFatal: true },
 		});
 		uninstall();
 	});
@@ -57,7 +57,7 @@ describe("installGlobalHandlers", () => {
 		globals.ErrorUtils = utils;
 		const uninstall = installGlobalHandlers();
 		utils.fire(new Error("boom"));
-		expect(getLogEntries()[0].message).toBe("unhandled error");
+		expect(getLogEntries()[0].event).toBe("global.unhandled_error");
 		uninstall();
 	});
 
@@ -95,8 +95,8 @@ describe("installGlobalHandlers", () => {
 		};
 		const uninstall = installGlobalHandlers();
 		onUnhandled?.(1, new Error("rejected"));
-		expect(getLogEntries().map((e) => e.message)).toEqual([
-			"unhandled promise rejection",
+		expect(getLogEntries().map((e) => e.event)).toEqual([
+			"global.unhandled_rejection",
 		]);
 		uninstall();
 	});

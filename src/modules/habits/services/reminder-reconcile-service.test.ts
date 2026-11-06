@@ -302,7 +302,7 @@ describe("reconcileScheduledReminders", () => {
 		await reconcileScheduledReminders();
 
 		expect(
-			getLogEntries().find((entry) => entry.level === "warn")?.context,
+			getLogEntries().find((entry) => entry.level === "warn")?.fields,
 		).toEqual({ pending: 57 });
 	});
 

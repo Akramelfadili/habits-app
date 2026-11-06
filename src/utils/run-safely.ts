@@ -30,7 +30,7 @@ export async function runSafely<Result>(
 	} catch (caught) {
 		const error = caught instanceof Error ? caught : new Error(String(caught));
 		const message = options.failure ?? GENERIC_FAILURE_MESSAGE;
-		log.error(options.scope, "action failed", error);
+		log.error("action.failed", { scope: options.scope, error });
 		if (options.onFailure) options.onFailure(error, message);
 		else showToast({ message, tone: "error" });
 		return { ok: false, error };

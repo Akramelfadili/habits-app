@@ -120,11 +120,7 @@ export function DestructiveConfirmSheet({
 			// and say something went wrong.
 			Promise.resolve(result).then(release, (error) => {
 				release();
-				log.warn(
-					"confirm-sheet",
-					"a handler rejected — wrap it in run()",
-					error,
-				);
+				log.warn("confirm_sheet.handler_rejected", { error });
 				showToast({ message: GENERIC_FAILURE_MESSAGE, tone: "error" });
 			});
 		};

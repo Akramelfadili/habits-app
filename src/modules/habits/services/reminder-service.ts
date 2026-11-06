@@ -99,6 +99,7 @@ async function scheduledWithPrefix(prefix: string): Promise<string[]> {
 /** Cancels these identifiers; a failure is logged, never thrown — see the callers for why. */
 export async function cancelQuietly(
 	identifiers: readonly string[],
+	/** A short lowercase code (`replace_old_set`) — it goes into the log. */
 	why: string,
 ): Promise<boolean> {
 	if (identifiers.length === 0) return true;
@@ -106,8 +107,10 @@ export async function cancelQuietly(
 		await cancelScheduled(identifiers);
 		return true;
 	} catch (error) {
-		log.warn("reminders", `cancel failed (${why})`, error, {
+		log.warn("reminders.cancel_failed", {
+			reason: why,
 			count: identifiers.length,
+			error,
 		});
 		return false;
 	}
@@ -160,14 +163,14 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
 				);
 			}
 		} catch (error) {
-			await cancelQuietly(created, "revert a failed schedule");
+			await cancelQuietly(created, "revert_failed_schedule");
 			throw error;
 		}
 	}
 
 	const stale = previous.filter((identifier) => !created.includes(identifier));
-	await cancelQuietly(stale, "replace the old set");
-	log.info("reminders", "synced", {
+	await cancelQuietly(stale, "replace_old_set");
+	log.info("reminders.synced", {
 		habitId: habit.id,
 		scheduled: created.length,
 		cancelled: stale.length,
@@ -185,14 +188,10 @@ export async function syncAfterWrite(habit: Habit): Promise<void> {
 	try {
 		await syncHabitReminders(habit);
 	} catch (error) {
-		log.error(
-			"reminders",
-			"scheduling failed after the change was saved",
+		log.error("reminders.saved_but_not_scheduled", {
+			habitId: habit.id,
 			error,
-			{
-				habitId: habit.id,
-			},
-		);
+		});
 	}
 }
 
@@ -207,9 +206,7 @@ export async function cancelHabitNotifications(habitId: number): Promise<void> {
 	try {
 		await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
 	} catch (error) {
-		log.error("reminders", "cancelling a habit's reminders failed", error, {
-			habitId,
-		});
+		log.error("reminders.cancel_habit_failed", { habitId, error });
 	}
 }
 
@@ -356,10 +353,11 @@ export async function refreshEveningReview(): Promise<void> {
 		const created = await scheduleEveningReview();
 		await cancelQuietly(
 			previous.filter((identifier) => !created.includes(identifier)),
-			"replace the evening review after a habit change",
+			"replace_evening_review_after_habit_change",
 		);
+		log.info("eveningreview.refreshed", { scheduled: created.length });
 	} catch (error) {
-		log.warn("reminders", "refreshing the evening review failed", error);
+		log.warn("eveningreview.refresh_failed", { error });
 	}
 }
 
@@ -381,7 +379,7 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 		await setSetting(EVENING_REVIEW_SETTING_KEY, "false");
 		await cancelQuietly(
 			await scheduledWithPrefix(prefix),
-			"evening review off",
+			"evening_review_off",
 		);
 		return;
 	}
@@ -391,12 +389,12 @@ export async function setEveningReview(enabled: boolean): Promise<void> {
 	try {
 		await setSetting(EVENING_REVIEW_SETTING_KEY, "true");
 	} catch (error) {
-		await cancelQuietly(created, "revert the evening review");
+		await cancelQuietly(created, "revert_evening_review");
 		throw error;
 	}
 	await cancelQuietly(
 		previous.filter((identifier) => !created.includes(identifier)),
-		"replace the old evening review",
+		"replace_old_evening_review",
 	);
 }
 

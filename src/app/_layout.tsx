@@ -10,6 +10,7 @@ import { DatabaseProvider } from "@/lib/db/database-provider";
 import { SCHEMA_VERSION } from "@/lib/db/schema-version";
 import { pinClockFromUrl } from "@/lib/dev-clock/pin-clock";
 import { installGlobalHandlers } from "@/lib/logger/global-handlers";
+import { installLogging } from "@/lib/logger/install";
 import { log } from "@/lib/logger/logger";
 import { configureNotificationHandler } from "@/lib/notifications/notifications";
 import { useFirstRunSkipActions } from "@/modules/habits/hooks/use-first-run-skip-actions";
@@ -27,8 +28,9 @@ import { useTheme } from "@/theme/use-theme";
 
 // First, before anything can throw: unhandled errors and promise rejections
 // are logged (and still reach React Native's own handler — red box, fatal).
+installLogging();
 installGlobalHandlers();
-log.info("app", "start", { schemaVersion: SCHEMA_VERSION });
+log.info("app.start", { schemaVersion: SCHEMA_VERSION });
 
 // Web fixture runs only (`?clock=`, dev) — before any screen reads "now".
 pinClockFromUrl();
@@ -36,7 +38,7 @@ pinClockFromUrl();
 // Held until the saved Appearance choice is applied (ThemeGate) — otherwise a
 // dark-mode user would see a light frame before the app repaints.
 SplashScreen.preventAutoHideAsync().catch((error) =>
-	log.warn("app", "could not hold the splash screen", error),
+	log.warn("app.splash_hold_failed", { error }),
 );
 
 // Once, before anything can schedule — lets reminders (HAB-12) show while the app is open.

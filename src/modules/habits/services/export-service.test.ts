@@ -194,8 +194,7 @@ describe("runExport", () => {
 		const entries = getLogEntries().filter((entry) => entry.level === "error");
 		expect(entries).toHaveLength(1);
 		expect(entries[0]).toMatchObject({
-			scope: "export",
-			message: "export failed",
+			event: "export.failed",
 		});
 		expect(entries[0].error?.cause?.message).toBe("EIO: input/output error");
 	});

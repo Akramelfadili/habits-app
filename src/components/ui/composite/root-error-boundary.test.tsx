@@ -51,7 +51,7 @@ describe("RootErrorBoundary", () => {
 		// The live-query hook logged it first; the boundary must not log it again.
 		const errors = getLogEntries().filter((entry) => entry.level === "error");
 		expect(errors).toHaveLength(1);
-		expect(errors[0].scope).toBe("live-query");
+		expect(errors[0].event).toBe("livequery.failed");
 	});
 
 	it("Try again resets the boundary, remounts the screen and re-subscribes", async () => {
@@ -94,6 +94,6 @@ describe("RootErrorBoundary", () => {
 
 		const errors = getLogEntries().filter((entry) => entry.level === "error");
 		expect(errors).toHaveLength(1);
-		expect(errors[0]).toMatchObject({ scope: "boundary" });
+		expect(errors[0]).toMatchObject({ event: "boundary.render_error" });
 	});
 });

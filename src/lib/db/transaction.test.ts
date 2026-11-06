@@ -29,8 +29,7 @@ describe("rollbackQuietly", () => {
 
 		expect(getLogEntries()[0]).toMatchObject({
 			level: "error",
-			scope: "db",
-			message: "rollback failed",
+			event: "database.rollback_failed",
 		});
 	});
 });

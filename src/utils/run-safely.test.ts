@@ -36,7 +36,11 @@ describe("runSafely", () => {
 				tone: "error",
 			});
 			expect(getLogEntries()).toHaveLength(1);
-			expect(getLogEntries()[0]).toMatchObject({ level: "error", scope: "t" });
+			expect(getLogEntries()[0]).toMatchObject({
+				level: "error",
+				event: "action.failed",
+				fields: { scope: "t" },
+			});
 		},
 	);
 

@@ -222,7 +222,7 @@ describe("useExportActions (EX1–EX4)", () => {
 		});
 		expect(
 			getLogEntries().some(
-				(entry) => entry.level === "error" && entry.scope === "export",
+				(entry) => entry.level === "error" && entry.event.startsWith("export."),
 			),
 		).toBe(true);
 	});

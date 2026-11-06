@@ -38,7 +38,7 @@ export function DevStateScreen() {
 				await loadDeviceState(`?${query}`);
 				await loadThemePreference();
 			} catch (error) {
-				log.error("dev-state", "could not load the state", error);
+				log.error("devstate.load_failed", { error });
 			}
 			if (!cancelled) router.replace(route as Href);
 		})();

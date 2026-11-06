@@ -46,7 +46,7 @@ export function useLiveRows<Row>(
 	if (error) {
 		const normalized =
 			error instanceof Error ? error : new Error(String(error));
-		log.error("live-query", "query failed", normalized);
+		log.error("livequery.failed", { error: normalized });
 		throw normalized;
 	}
 
