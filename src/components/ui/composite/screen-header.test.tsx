@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react-native";
+import { act, render, screen } from "@testing-library/react-native";
 import { AccessibilityInfo, Text } from "react-native";
 
 let mockLargeText = false;
@@ -6,11 +6,16 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 	useAccessibilityTextSize: () => mockLargeText,
 }));
 
-import { ScreenHeader } from "./screen-header";
+import { ROUTE_FOCUS_DELAY_MS, ScreenHeader } from "./screen-header";
 
+// Every render schedules the route-entry focus timer. Faked before the first
+// render, it can never fire into a later test or depend on how loaded the
+// machine is.
 beforeEach(() => {
+	jest.useFakeTimers();
 	mockLargeText = false;
 });
+afterEach(() => jest.useRealTimers());
 
 describe("ScreenHeader", () => {
 	it("reads eyebrow and title as one heading", async () => {
@@ -54,19 +59,15 @@ describe("ScreenHeader", () => {
 });
 
 describe("ScreenHeader focus on route entry (08.4)", () => {
-	afterEach(() => {
-		jest.useRealTimers();
-		jest.restoreAllMocks();
-	});
+	afterEach(() => jest.restoreAllMocks());
 
 	it("puts the screen reader on the title once the push has settled", async () => {
-		jest.useFakeTimers();
 		const send = jest
 			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
 			.mockImplementation();
 		await render(<ScreenHeader title="Reminders" />);
 		expect(send).not.toHaveBeenCalled();
-		jest.advanceTimersByTime(400);
+		await act(async () => jest.advanceTimersByTime(ROUTE_FOCUS_DELAY_MS));
 		expect(send).toHaveBeenCalledTimes(1);
 		expect(send.mock.calls[0][1]).toBe("focus");
 	});
