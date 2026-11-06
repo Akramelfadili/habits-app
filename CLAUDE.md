@@ -65,4 +65,8 @@ Rules 1, 2, 4, 6, 8, 9 are enforced by `npm run check-architecture` (and rule 1 
 
 ## Definition of done
 
-`make check` green → visual-check on touched screens, light and dark → `spec-reviewer` subagent (+ `migration-reviewer` for schema changes) → log deviations in the backlog and add an "As built" note to the spec section → **do not commit or push unless asked.**
+`make check` green → visual-check on touched screens, light and dark → `spec-reviewer` subagent (+ `migration-reviewer` for schema changes) → log deviations in the backlog and add an "As built" note to the spec section → **commit per step only when the task says so; never push.**
+
+## Session rules
+
+One Claude session per working copy · never `git stash` · never `--no-verify` · a denied push means stop and ask · no attribution lines in commits or PRs · commit per step when the task says so, never push (reasons: `docs/CONTRIBUTING.md`).
