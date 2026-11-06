@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-slow test-tooling lint lint-check typecheck check-architecture deadcode doctor check e2e visual-check visual-baseline
+.PHONY: help start ios android web test test-slow test-tooling lint lint-check typecheck check-architecture check-repo-hygiene deadcode doctor check e2e visual-check visual-baseline
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -39,10 +39,13 @@ doctor: ## Diagnose Expo dependency/config issues
 check-architecture: ## Check the architecture rules (Drizzle placement, layers, modules, routes, ...)
 	npm run check-architecture
 
+check-repo-hygiene: ## Fail if a tracked file is a secret, env/signing file, log, archive, generated output or >1 MB (repo is public)
+	npm run check-repo-hygiene
+
 deadcode: ## Report unused files/exports/dependencies with knip (report only; not part of `make check`)
 	-npm run deadcode
 
-check: lint-check typecheck test test-tooling check-architecture ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules
+check: lint-check typecheck test test-tooling check-architecture check-repo-hygiene ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules + repo hygiene
 
 e2e: ## Run the Maestro journeys against the web build (setup: e2e/README.md)
 	npm run e2e
