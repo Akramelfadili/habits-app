@@ -297,28 +297,6 @@ export async function deleteHabitAndHistory(id: number): Promise<void> {
 	setHabits(getHabits().filter((h) => h.id !== id));
 }
 
-export async function deleteAllHabits(): Promise<void> {
-	if (!__DEV__) {
-		throw new Error("deleteAllHabits is dev-only");
-	}
-	setHabits([]);
-}
-
-/** Web counterpart of the native repository's backdated dev-seed helper (HAB-08). */
-export async function createHabitAt(
-	input: CreateHabitInput,
-	createdAt: Date,
-): Promise<Habit> {
-	if (!__DEV__) {
-		throw new Error("createHabitAt is dev-only");
-	}
-	const category = await categoryById(input.categoryId);
-	const habits = getHabits();
-	const habit = newHabit(input, category, habits, createdAt);
-	setHabits([...habits, habit]);
-	return habit;
-}
-
 // Compile-time guard: this file must export exactly what the native repository
 // does, so a function added there without a web counterpart fails `tsc`.
 const _sameShape: typeof NativeHabitRepository = {
@@ -333,7 +311,5 @@ const _sameShape: typeof NativeHabitRepository = {
 	setHabitArchived,
 	setHabitRestored,
 	deleteHabitAndHistory,
-	deleteAllHabits,
-	createHabitAt,
 };
 void _sameShape;

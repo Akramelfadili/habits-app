@@ -145,27 +145,6 @@ jest.mock("../hooks/use-streak-actions", () => ({
 	}),
 }));
 
-const mockClearAllHabits = jest.fn();
-const mockSeedStreakAtRiskHabit = jest.fn();
-jest.mock("../hooks/use-habit-actions", () => ({
-	useHabitActions: () => ({
-		clearAllHabits: mockClearAllHabits,
-		isClearingAll: false,
-		seedStreakAtRiskHabit: mockSeedStreakAtRiskHabit,
-		isSeedingStreakAtRisk: false,
-	}),
-}));
-
-const mockResetFirstRun = jest.fn();
-jest.mock("../hooks/use-first-run-actions", () => ({
-	useFirstRunActions: () => ({
-		markFirstRunSeen: jest.fn(),
-		isMarking: false,
-		markError: null,
-		resetFirstRun: mockResetFirstRun,
-		isResetting: false,
-	}),
-}));
 // The quantity sheet reads its own day's entry: serve the shown amounts for whichever day it asks.
 jest.mock("../repositories/entry-repository", () => ({
 	useEntriesInRange: (start: Date) =>
@@ -216,7 +195,7 @@ jest.mock("../components/week-strip", () => {
 	};
 });
 
-import { Alert, Animated } from "react-native";
+import { Animated } from "react-native";
 import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
@@ -260,13 +239,10 @@ describe("TodayScreen", () => {
 			.mockReset()
 			.mockResolvedValue({ ok: true, value: undefined });
 		mockLogQuantity.mockReset().mockResolvedValue(OK);
-		mockClearAllHabits.mockReset();
-		mockResetFirstRun.mockReset();
 		mockApplyFreeze
 			.mockReset()
 			.mockResolvedValue({ ok: true, value: { freezesLeft: 1 } });
 		mockUndoFreeze.mockReset().mockResolvedValue(OK);
-		mockSeedStreakAtRiskHabit.mockReset();
 		mockGroups = [];
 		mockProgress = { completed: 0, total: 0, fraction: 0 };
 		mockCompletedHabitIds = new Set();
@@ -1042,23 +1018,6 @@ describe("TodayScreen", () => {
 		});
 	});
 
-	it("offers the streak-at-risk dev seed button from the empty state too", async () => {
-		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Seed streak-at-risk habit (dev)"));
-		expect(mockSeedStreakAtRiskHabit).toHaveBeenCalledTimes(1);
-	});
-
-	it("offers the streak-at-risk dev seed button once habits already exist", async () => {
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [morningHabit] },
-		];
-
-		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Seed streak-at-risk habit (dev)"));
-		expect(mockSeedStreakAtRiskHabit).toHaveBeenCalledTimes(1);
-	});
-
 	describe("streak-at-risk (HAB-08)", () => {
 		it("tapping an at-risk habit's row opens the sheet instead of navigating", async () => {
 			mockViewState = "populated";
@@ -1110,62 +1069,6 @@ describe("TodayScreen", () => {
 			expect(useToastStore.getState().toast).toBeNull();
 			expect(screen.getByText("Keep your Glass of water streak?")).toBeTruthy();
 		});
-	});
-
-	it("asks for confirmation before clearing all habits, and only clears on confirm", async () => {
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [morningHabit] },
-		];
-		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
-
-		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Clear all habits (dev)"));
-
-		expect(alertSpy).toHaveBeenCalledTimes(1);
-		expect(mockClearAllHabits).not.toHaveBeenCalled();
-
-		const buttons = alertSpy.mock.calls[0][2];
-		const confirmButton = buttons?.find((button) => button.text === "Clear");
-		confirmButton?.onPress?.();
-
-		expect(mockClearAllHabits).toHaveBeenCalledTimes(1);
-		alertSpy.mockRestore();
-	});
-
-	it("asks for confirmation before resetting First Run, and only resets on confirm", async () => {
-		mockViewState = "populated";
-		mockGroups = [
-			{ category: categoryNamed("Morning"), habits: [morningHabit] },
-		];
-		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
-
-		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Reset First Run (dev)"));
-
-		expect(alertSpy).toHaveBeenCalledTimes(1);
-		expect(mockResetFirstRun).not.toHaveBeenCalled();
-
-		const buttons = alertSpy.mock.calls[0][2];
-		const confirmButton = buttons?.find((button) => button.text === "Reset");
-		confirmButton?.onPress?.();
-
-		expect(mockResetFirstRun).toHaveBeenCalledTimes(1);
-		alertSpy.mockRestore();
-	});
-
-	it("offers Reset First Run (dev) from the empty state too", async () => {
-		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation();
-
-		await render(<TodayScreen />);
-		await fireEvent.press(screen.getByText("Reset First Run (dev)"));
-
-		const buttons = alertSpy.mock.calls[0][2];
-		const confirmButton = buttons?.find((button) => button.text === "Reset");
-		confirmButton?.onPress?.();
-
-		expect(mockResetFirstRun).toHaveBeenCalledTimes(1);
-		alertSpy.mockRestore();
 	});
 });
 

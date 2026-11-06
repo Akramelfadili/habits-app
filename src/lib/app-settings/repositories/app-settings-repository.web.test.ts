@@ -31,19 +31,6 @@ describe("app-settings-repository.web", () => {
 		expect(result.current).toBe("dark");
 	});
 
-	it("deletes a setting back to 'never set' and notifies live readers", async () => {
-		const { deleteSetting, useAppSetting } = loadRepository();
-		const { result } = await renderHook(() =>
-			useAppSetting("habits.seenFirstRun"),
-		);
-		expect(result.current).toBe("true");
-
-		await act(async () => {
-			await deleteSetting("habits.seenFirstRun");
-		});
-		expect(result.current).toBeNull();
-	});
-
 	it("follows a changed key (parity with the native live hook)", async () => {
 		const { setSetting, useAppSetting } = loadRepository();
 		await setSetting("first", "one");

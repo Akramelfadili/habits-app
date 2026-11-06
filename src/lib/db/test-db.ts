@@ -4,6 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./schema";
 
@@ -122,4 +123,16 @@ function wrap(sqlite: DatabaseSync, onWrite?: (table: string) => void) {
 		},
 		{ schema },
 	);
+}
+
+/** Stamps a habit as created at `createdAt` — a normal create always uses "now", which would put a backdated entry before the habit existed. */
+export async function backdateHabit(
+	db: { update: ReturnType<typeof createTestDb>["update"] },
+	habitId: number,
+	createdAt: Date,
+) {
+	await db
+		.update(schema.habits)
+		.set({ createdAt })
+		.where(eq(schema.habits.id, habitId));
 }

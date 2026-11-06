@@ -110,7 +110,6 @@ _Resolved items of this group: `docs/archive/backlog-done.md`._
 ## Open — product decisions and unbuilt spec rules
 
 - **Edit habit has Archive but no Delete** (HAB-23). Mockup E7 is labelled "from Edit habit · delete", but the only way to delete is "Delete habit" on Habit Detail. Archive was added at the foot of Edit habit (audit B9; HAB-17's rule) and deliberately only Archive — Delete stays one step further away. Decide whether Edit habit should also get a Delete entry.
-- **Dev buttons on Today** (`today-screen.tsx`). The ghost "Add habit" link is gone (audit B9: a header `+` replaces it; the empty state keeps its primary button). The dev buttons are gated on `__DEV__`; they need a "Developer" label, and the seed code should move out of production hooks (audit A1-06).
 - **Category order: picker and the Categories screen still list by creation** (HAB-42). Only Today and the Habits tab group by the stored `sort_order`; decide with the reorder UI whether the picker and C1 follow it too. Other is forced last in groups even though a new custom is stored after it (max + 1); the reorder UI decides whether Other can move.
 - **Quantity sheet maximum:** 9999 (the existing cap), the mockup's helper says 99. Decide whether 99 is intended.
 - **"Resist tonight" uses 18:00** (`EVENING_STARTS_AT_HOUR` in `constants.ts`, its only place). The spec gives no hour; confirm or change it there.

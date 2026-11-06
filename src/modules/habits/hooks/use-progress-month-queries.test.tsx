@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react-native";
 import { format } from "date-fns";
 import { entries, frozenDays, habits } from "@/lib/db/schema";
-import { createTestDb } from "@/lib/db/test-db";
+import { backdateHabit, createTestDb } from "@/lib/db/test-db";
 import { notifyTableChanged } from "@/lib/db/test-live-query";
 import { inAct } from "@/test-support/in-act";
 import type { CalendarDay } from "../domain/progress-grid";
@@ -15,7 +15,17 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 	useLiveQuery: require("@/lib/db/test-live-query").useLiveQuery,
 }));
 
-const { createHabitAt } = require("../repositories/habit-repository");
+const { createHabit } = require("../repositories/habit-repository");
+
+/** A habit created at `createdAt`, so entries before today still count. */
+async function createHabitAt(
+	input: Parameters<typeof createHabit>[0],
+	createdAt: Date,
+) {
+	const created = await createHabit(input);
+	await backdateHabit(mockDb, created.id, createdAt);
+	return created;
+}
 const { setHabitCompletedOn } = require("../repositories/entry-repository");
 const { freezeHabitDay } = require("../repositories/frozen-day-repository");
 const {

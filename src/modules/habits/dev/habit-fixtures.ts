@@ -365,7 +365,7 @@ export const HABIT_DETAIL_HISTORY_DAYS = 150;
  * (`entry-fixtures.ts`, `frozen-day-fixtures.ts`) fill every heatmap state.
  * Created relative to now so the history lands the same way on any run.
  */
-export function habitDetailFixtures(): FixtureHabit[] {
+function habitDetailFixtures(): FixtureHabit[] {
 	const created = subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS);
 	return [
 		{

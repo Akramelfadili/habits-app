@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { HABIT_FIXTURES } from "../dev/habit-fixtures";
 import { makeHabitInput } from "../test-support/habit-builder";
-import { inProduction } from "../test-support/in-production";
 import type * as WebHabitRepository from "./habit-repository.web";
 
 // Jest runs as iOS, so `./habit-repository` would resolve to the SQLite one —
@@ -50,42 +49,6 @@ describe("habit-repository.web", () => {
 
 		expect(updated.name).toBe("No phone");
 		expect(updated.direction).toBe("break");
-	});
-
-	it("clears every habit", async () => {
-		const { deleteAllHabits, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList().habits);
-
-		await act(() => deleteAllHabits());
-		expect(result.current).toEqual([]);
-	});
-
-	it("refuses to clear habits outside __DEV__", async () => {
-		const { deleteAllHabits, useHabitsList } = loadRepository();
-		const { result } = await renderHook(() => useHabitsList().habits);
-
-		await inProduction(async () => {
-			await expect(deleteAllHabits()).rejects.toThrow("dev-only");
-		});
-		expect(result.current).toHaveLength(HABIT_FIXTURES.length);
-	});
-
-	describe("createHabitAt", () => {
-		it("stores the given createdAt instead of the current time", async () => {
-			const { createHabitAt } = loadRepository();
-			const backdate = new Date("2026-09-01T00:00:00Z");
-			const habit = await createHabitAt(input, backdate);
-			expect(habit.createdAt).toEqual(backdate);
-		});
-
-		it("refuses to run outside __DEV__", async () => {
-			const { createHabitAt } = loadRepository();
-			await inProduction(async () => {
-				await expect(
-					createHabitAt(input, new Date("2026-09-01")),
-				).rejects.toThrow("dev-only");
-			});
-		});
 	});
 
 	describe("HAB-13 lifecycle", () => {

@@ -64,14 +64,6 @@ export async function setSetting(key: string, value: string): Promise<void> {
 	notify();
 }
 
-export async function deleteSetting(key: string): Promise<void> {
-	if (!__DEV__) {
-		throw new Error("deleteSetting is dev-only");
-	}
-	getStore().delete(key);
-	notify();
-}
-
 export function useAppSetting(key: string): string | null {
 	return useSyncExternalStore(
 		subscribe,
@@ -85,7 +77,6 @@ export function useAppSetting(key: string): string | null {
 const _sameShape: typeof NativeAppSettingsRepository = {
 	getSetting,
 	setSetting,
-	deleteSetting,
 	useAppSetting,
 };
 void _sameShape;
