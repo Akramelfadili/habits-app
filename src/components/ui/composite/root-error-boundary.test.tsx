@@ -3,6 +3,7 @@ import { Try } from "expo-router/build/views/Try";
 import { Text } from "react-native";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { expectConsole } from "@/test-support/console";
 
 let mockQueryFails = true;
 // Drizzle keeps one error object in state; React may render the throwing screen twice.
@@ -32,7 +33,7 @@ beforeEach(() => {
 	mockQueryFails = true;
 	clearLog();
 	// React logs the caught render error; keep the output quiet.
-	jest.spyOn(console, "error").mockImplementation(() => {});
+	expectConsole("error");
 });
 afterEach(() => jest.restoreAllMocks());
 

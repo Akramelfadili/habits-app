@@ -152,7 +152,6 @@ describe("habit-repository.web — the load states (SY1, SY2)", () => {
 
 	it("today-load-fails throws on every read, as a failing live query does", async () => {
 		openAt("today-load-fails");
-		jest.spyOn(console, "error").mockImplementation(() => {});
 		const { useActiveHabits } = loadRepository();
 		await expect(renderHook(() => useActiveHabits())).rejects.toThrow(
 			"Simulated load failure",
@@ -160,7 +159,6 @@ describe("habit-repository.web — the load states (SY1, SY2)", () => {
 		await expect(renderHook(() => useActiveHabits())).rejects.toThrow(
 			"Simulated load failure",
 		);
-		jest.restoreAllMocks();
 	});
 
 	it("any other scenario is untouched", async () => {

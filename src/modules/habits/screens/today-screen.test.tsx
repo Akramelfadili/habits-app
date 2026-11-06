@@ -5,6 +5,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import { expectConsole } from "@/test-support/console";
 import type { CategoryGroup } from "../presenters/today-screen-helpers";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
 import { mockMeasureInWindow } from "../test-support/measure-in-window";
@@ -592,7 +593,7 @@ describe("TodayScreen", () => {
 	describe("a load error stays inside Today (SY2)", () => {
 		beforeEach(() => {
 			mockQueriesError = new Error("query failed");
-			jest.spyOn(console, "error").mockImplementation(() => {});
+			expectConsole("error");
 		});
 		afterEach(() => jest.restoreAllMocks());
 
