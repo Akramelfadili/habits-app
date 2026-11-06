@@ -9,14 +9,14 @@ HAB-26–50. To-dos and expenses removed; Today, Progress and Habits rebuilt on 
 - **V3-0a** Structure and performance: module layers, per-week frequency speed-up, CI, ADRs (#24).
 - **V3-0b** Foundations: habits-only shell, tokens (type, spacing, radius, elevation, focus, motion), ratchet extended, category-order migration, Expo SDK 58 (#25).
 - **V3-1** Navigation shell: three tabs as one shared route group, floating pill bar, one toast host; ADR 006 (#26).
-- **V3-2a** Today logic: selected day, +1 on quantity habits with Undo, freezes, day-keyed queries.
-- **V3-2b** Today UI: completion circle, 60 pt rows, week strip, category cards, quantity and Edit-this-day sheets.
-- **V3-3a** Progress data layer: one cell classifier and completion rule, Week/Month/Year summaries, insights.
-- **V3-3b** Progress UI: one tab root with range switcher, matrix, month calendar, year heat map.
-- **V3-4a** Habits tab, Habit Detail, delete and archive sheets.
-- **V3-4b** Add/Edit form, Categories, Reminders, Settings, Export.
-- **V3-5** First Run, Browse suggestions, loading/error/update states.
-- **V3-6** Accessibility and Dynamic Type to AX3, touch-target guard, baselines, e2e, docs.
+- **V3-2a** Today logic: selected day, +1 on quantity habits with Undo, freezes, day-keyed queries (#27).
+- **V3-2b** Today UI: completion circle, 60 pt rows, week strip, category cards, quantity and Edit-this-day sheets (#28; Today scroll follow-up #30).
+- **V3-3a** Progress data layer: one cell classifier and completion rule, Week/Month/Year summaries, insights (#29).
+- **V3-3b** Progress UI: one tab root with range switcher, matrix, month calendar, year heat map (#31).
+- **V3-4a** Habits tab, Habit Detail, delete and archive sheets (#32).
+- **V3-4b** Add/Edit form, Categories, Reminders, Settings, Export (#33).
+- **V3-5** First Run, Browse suggestions, loading/error/update states (#34).
+- **V3-6** Accessibility and Dynamic Type to AX3, touch-target guard, baselines, e2e, docs (#35).
 
 ## After V3
 
@@ -24,7 +24,8 @@ HAB-26–50. To-dos and expenses removed; Today, Progress and Habits rebuilt on 
 - **UI fix batch from device testing** (#38): Today strip, toasts, sheets, tab bar and Skip, form and back affordances, reorder buttons, Progress sticky header, Settings hub, dev buttons. Phone checks still open in the backlog.
 - **Guardrails** (#39), **accuracy fixes** (#40), **repo hygiene** (#41): repo-hygiene check and secret scan, doc corrections, clean targets.
 - **Skill and agent update** (#42): `/implement-feature`, `spec-reviewer`, `migration-reviewer`, `codebase-auditor` rewritten for V1–V3 with a docs map.
-- **Docs set** (in progress): docs index, DESIGN.md, this file.
+- **Branch cleanup** (2026-11-06): stale local and remote branches deleted by commands; no PR.
+- **Docs set** (branch `chore/docs-set`, no PR number yet): docs index, DESIGN.md, this file.
 
 ## V2 — categories, summaries, settings (2026-10-02 → 2026-10-05)
 
