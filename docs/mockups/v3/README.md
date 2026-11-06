@@ -31,4 +31,4 @@ Re-run the script whenever a `.dc.html` file changes, and commit the regenerated
 
 ## Older versions
 
-The V1 and V2 mockups (`docs/mockups/*.png`) stay the reference for what was built before V3.
+The V1 and V2 mockups were removed from the working tree in V3-6 (HAB-26–50) and live only at the git tag `mockups-v1-v2` (browse them with `git ls-tree -r mockups-v1-v2 docs/mockups`). They stay the reference for what was built before V3.
