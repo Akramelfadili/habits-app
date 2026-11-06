@@ -343,6 +343,23 @@ for (const file of productionFiles) {
 	}
 }
 
+// 12. No raw console.* in src/ outside the logger's console sink (tests and
+//     scripts are excluded): everything goes through `log` (ADR 008).
+const CONSOLE_CALL = /\bconsole\s*\.\s*(log|info|warn|error|debug|trace)\s*\(/g;
+const CONSOLE_SINK = "src/lib/logger/sinks/console-sink.ts";
+for (const file of productionFiles) {
+	const r = rel(file);
+	if (r === CONSOLE_SINK || r.startsWith("src/test-support/")) continue;
+	const text = sources.get(file);
+	for (const match of text.matchAll(CONSOLE_CALL))
+		report(
+			"no-console",
+			file,
+			text.slice(0, match.index).split("\n").length,
+			`console.${match[1]}() — use log.${match[1] === "log" ? "info" : match[1]}("area.event", fields) from lib/logger (ADR 008); only the console sink may call console`,
+		);
+}
+
 // 11. No dev-only controls in the app: UI never imports dev/ (fixtures, device state),
 //     and the removed seed / clear / reset helpers and "(dev)" button labels stay gone.
 const UI_DIRS = ["hooks", "components", "screens", "presenters"];

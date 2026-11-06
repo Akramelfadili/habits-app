@@ -26,6 +26,7 @@ HAB-26–50. To-dos and expenses removed; Today, Progress and Habits rebuilt on 
 - **Skill and agent update** (#42): `/implement-feature`, `spec-reviewer`, `migration-reviewer`, `codebase-auditor` rewritten for V1–V3 with a docs map.
 - **Branch cleanup** (2026-11-06): stale local and remote branches deleted by commands; no PR.
 - **Dev controls removed** (branch `chore/remove-dev-controls`, no PR number yet): the seed, clear and Reset First Run buttons and their helpers are gone from Today; `check-architecture` rule `no-dev-in-ui` keeps them out.
+- **Logging** (branch `feat/logging`, no PR number yet): pluggable log sinks with redaction in the core, a persistent 500-entry log in its own `logs.db`, the recovery screen for a database that cannot open, Copy diagnostics with locale and time zone and the stored history; `no-console` architecture rule; ADR 008.
 - **Docs set** (branch `chore/docs-set`, no PR number yet): docs index, DESIGN.md, this file.
 
 ## V2 — categories, summaries, settings (2026-10-02 → 2026-10-05)

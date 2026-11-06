@@ -95,8 +95,7 @@ _Resolved items of this group: `docs/archive/backlog-done.md`._
 ## Open — reliability
 
 - **No floating-promise lint** (A3-12): Biome needs type-aware linting for it. `DestructiveConfirmSheet` now logs a rejecting handler and shows the generic error toast, but callers should still go through `run()`.
-- **A database that cannot be opened at all still crashes before any UI.** `lib/db/client.ts` opens it at import; the failure is now logged, then rethrown. A lazy client would let the error screen show for that case too.
-- **A reminder that saved but failed to schedule is only logged.** `syncAfterWrite` keeps the add/edit successful (the row changed); the next launch's reconcile reschedules it. Consider a quiet "Reminders may not fire — open Reminders" notice.
+- **A reminder that saved but failed to schedule is only logged** (`reminders.saved_but_not_scheduled`, kept in the on-device log).** `syncAfterWrite` keeps the add/edit successful (the row changed); the next launch's reconcile reschedules it. Consider a quiet "Reminders may not fire — open Reminders" notice.
 - **Orphan risks with foreign keys off** (A7-04; decision: keep them off, see `migrations.safety.test.ts` and `habit-repository.integrity.test.ts`). `deleteHabitAndHistory` and `deleteCategory` are covered and leave none. Still open: (1) dev-only `deleteAllHabits` leaves entries/notes/freezes/reminders behind; (2) a write for a habit that was deleted meanwhile (a stale Undo, a retro-log sheet left open) inserts a child row with no parent; (3) `deleteCategory` reads "Other" and moves habits across awaits (A7-03), so a `createHabit` landing in between can leave a habit on the deleted category (`resolveHabitCategory` falls back to Other when reading); (4) a stale `categoryId` in `createHabit`. A dev-build startup `PRAGMA foreign_key_check` would surface them.
 - **Reconcile only runs when permission is already granted at launch.** Granting it later in iOS Settings leaves drift until the next launch.
 - **Two overlapping `syncHabitReminders` for one habit can interleave** (rapid reminder edits): each treats the other's new set as "old". The last write wins in the database and the next launch reconciles, but serialising per habit would be cleaner.
@@ -194,8 +193,7 @@ _Resolved items of this group: `docs/archive/backlog-done.md`._
 
 - Week-level freeze for × per week habits (own ADR); auto-use freezes; the Settings hub with a page per row; Privacy and Send feedback rows; the per-reminder on/off toggle; iCloud backup row.
 - `SlimHabitForm` split behind a shared `useHabitForm` hook; the per-habit streak read model shared by `useHabitsQueries` and the Detail hook; one V3-02 `Header` component for Today / Habits / Progress.
-- Skeleton shimmer (it pulses); week-start-follows-iOS (D9, own ADR); logs on disk (A3-10); a lazy db client so an unopenable database shows the error screen.
-- **Logs are in memory only** (A3-10). Owner decision: no log file. A crash or force-quit loses the buffer, so "Copy diagnostics" only helps for the current session. If it proves too thin: a capped file (about 200 KB, one rotation) via `expo-file-system`'s `File.write(…, { append: true })`.
+- Skeleton shimmer (it pulses); week-start-follows-iOS (D9, own ADR).
 - **Week-level freeze for × per week habits (Later).** They are never at risk by day (HAB-33). A week that ends below its target still breaks the streak with no prompt; covering it needs a freeze that spans the week (a Sunday-only freeze that the per-week strategy reads as covering it, or a week-level row) — a streak-semantics change with its own ADR.
 
 _Resolved items of this group: `docs/archive/backlog-done.md`._

@@ -186,6 +186,24 @@ describe("check-architecture", () => {
 		);
 	});
 
+	it("no-console: raw console.* in src fails, the console sink and tests are fine", () => {
+		expectViolation(
+			{
+				"src/utils/noisy.ts": `export function f() { console.log("x"); }\n`,
+				"src/utils/noisy.test.ts": "",
+			},
+			"no-console",
+		);
+		const { code, out } = run({
+			...GOOD,
+			"src/lib/logger/sinks/console-sink.ts": `export const s = () => console.log("x");\n`,
+			"src/lib/logger/sinks/console-sink.test.ts": "",
+			"src/utils/quiet.ts": `// console.log is not allowed here\nexport const a = 1;\n`,
+			"src/utils/quiet.test.ts": `console.log("tests may");\n`,
+		});
+		assert.equal(code, 0, out);
+	});
+
 	it("layer-order: presenters sit between services and hooks", () => {
 		const { code, out } = run({
 			...GOOD,
