@@ -33,6 +33,12 @@ jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
+// Importing the real package prints its Expo Go push-token warning.
+jest.mock(
+	"expo-notifications",
+	() =>
+		require("../test-support/fake-expo-notifications").fakeNotifications.module,
+);
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: mockPush, back: jest.fn() }),
@@ -116,20 +122,47 @@ async function addHabit(
 }
 
 async function log(habitId: number, date: string, value?: number) {
-	await mockDb
-		.insert(entries)
-		.values({ habitId, date, value, createdAt: new Date() });
+	// A mounted screen is subscribed to the table, so the write goes through act.
+	await act(async () => {
+		await mockDb
+			.insert(entries)
+			.values({ habitId, date, value, createdAt: new Date() });
+	});
 }
 
 async function freeze(habitId: number, date: string) {
-	await mockDb
-		.insert(frozenDays)
-		.values({ habitId, date, createdAt: new Date(2026, 8, 16, 7) });
+	await act(async () => {
+		await mockDb
+			.insert(frozenDays)
+			.values({ habitId, date, createdAt: new Date(2026, 8, 16, 7) });
+	});
 }
 
 const entryRows = () => mockDb.select().from(entries);
 const frozenRows = () => mockDb.select().from(frozenDays);
 const toast = () => useToastStore.getState().toast;
+
+/**
+ * Wait for a database state. waitFor with a frozen clock advances timers inside
+ * an act scope whose flag it has switched off, so the live-query stand-in's
+ * state updates log "not configured to support act". Here each retry flushes
+ * one real macrotask inside an awaited act instead.
+ */
+async function waitForDb(check: () => Promise<void>) {
+	let failure: unknown;
+	for (let attempt = 0; attempt < 100; attempt++) {
+		try {
+			await check();
+			return;
+		} catch (error) {
+			failure = error;
+		}
+		await act(async () => {
+			await new Promise((resolve) => setImmediate(resolve));
+		});
+	}
+	throw failure;
+}
 
 describe("TodayScreen on the in-memory database", () => {
 	beforeEach(async () => {
@@ -152,7 +185,7 @@ describe("TodayScreen on the in-memory database", () => {
 		await render(<TodayScreen />);
 
 		await fireEvent.press(await screen.findByLabelText("Read, not done"));
-		await waitFor(async () =>
+		await waitForDb(async () =>
 			expect(await entryRows()).toEqual([
 				expect.objectContaining({ habitId: id, date: WEDNESDAY }),
 			]),
@@ -178,7 +211,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await fireEvent.press(
 				await screen.findByLabelText("Add one, Water, 0 of 8"),
 			);
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ habitId: id, value: 1 }),
 				]),
@@ -188,7 +221,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await fireEvent.press(
 				await screen.findByLabelText("Add one, Water, 1 of 8"),
 			);
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ habitId: id, value: 2 }),
 				]),
@@ -216,13 +249,13 @@ describe("TodayScreen on the in-memory database", () => {
 
 			await fireEvent.press(await screen.findByLabelText("Amount, 5 of 8"));
 			await fireEvent.press(await screen.findByLabelText("Increase glasses"));
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ habitId: id, value: 6 }),
 				]),
 			);
 			await fireEvent.press(await screen.findByText("+2"));
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ habitId: id, value: 8 }),
 				]),
@@ -253,7 +286,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await fireEvent.press(
 				await screen.findByLabelText("Add one, Water, 0 of 8"),
 			);
-			await waitFor(async () => expect(await entryRows()).toHaveLength(1));
+			await waitForDb(async () => expect(await entryRows()).toHaveLength(1));
 			await act(async () => {
 				await toast()?.onAction?.();
 			});
@@ -273,7 +306,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await fireEvent.press(
 				await screen.findByLabelText("Add one, Water, 2 of 2"),
 			);
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ value: 3 }),
 				]),
@@ -296,7 +329,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await screen.findByText("THURSDAY, 17 SEPTEMBER");
 
 			await fireEvent.press(await screen.findByLabelText("Read, not done"));
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await entryRows()).toEqual([
 					expect.objectContaining({ habitId: id, date: "2026-09-17" }),
 				]),
@@ -307,7 +340,7 @@ describe("TodayScreen on the in-memory database", () => {
 			const id = await addHabit({ name: "Read" });
 			await render(<TodayScreen />);
 			await fireEvent.press(await screen.findByLabelText("Read, not done"));
-			await waitFor(async () => expect(await entryRows()).toHaveLength(1));
+			await waitForDb(async () => expect(await entryRows()).toHaveLength(1));
 
 			// Midnight passes with the toast still up, before the screen re-renders.
 			jest.setSystemTime(new Date(2026, 8, 17, 0, 0, 5));
@@ -364,7 +397,7 @@ describe("TodayScreen on the in-memory database", () => {
 			await fireEvent.press(
 				await screen.findByLabelText("Gym, not due, bonus"),
 			);
-			await waitFor(async () => expect(await entryRows()).toHaveLength(3));
+			await waitForDb(async () => expect(await entryRows()).toHaveLength(3));
 			expect(toast()?.message).toBe("Logged 'Gym' · off-schedule");
 
 			const after = (await entryRows()) as Entry[];
@@ -400,7 +433,7 @@ describe("TodayScreen on the in-memory database", () => {
 			expect(screen.getByText("2 freezes left")).toBeTruthy();
 			await fireEvent.press(screen.getByText("Use a freeze"));
 
-			await waitFor(async () =>
+			await waitForDb(async () =>
 				expect(await frozenRows()).toEqual([
 					expect.objectContaining({ habitId: id, date: TUESDAY }),
 				]),
@@ -502,7 +535,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 
 		const habit = result.current.today.groups[0].habits[0];
 		await act(() => result.current.logging.toggle(habit));
-		await waitFor(async () =>
+		await waitForDb(async () =>
 			expect(await entryRows()).toEqual([
 				expect.objectContaining({ habitId: read, date: MONDAY }),
 			]),
@@ -533,7 +566,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 		// And a write at 00:00:01 still lands on the selected Monday, not skipped.
 		const habit = result.current.today.groups[0].habits[0];
 		await act(() => result.current.logging.toggle(habit));
-		await waitFor(async () =>
+		await waitForDb(async () =>
 			expect(await entryRows()).toEqual([
 				expect.objectContaining({ date: MONDAY }),
 			]),
@@ -563,7 +596,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 
 			await act(() => result.current.logging.toggle(habit));
 
-			await waitFor(async () => expect(await frozenRows()).toEqual([]));
+			await waitForDb(async () => expect(await frozenRows()).toEqual([]));
 			expect(await entryRows()).toContainEqual(
 				expect.objectContaining({ habitId: id, date: TUESDAY }),
 			);
@@ -595,7 +628,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 			const habit = result.current.today.groups[0].habits[0];
 
 			await act(() => result.current.logging.addOne(habit));
-			await waitFor(async () => expect(await entryRows()).toHaveLength(1));
+			await waitForDb(async () => expect(await entryRows()).toHaveLength(1));
 			expect(await frozenRows()).toHaveLength(1); // 1 of 3: still missed
 
 			await act(() => result.current.logging.openQuantitySheet(id));
@@ -603,7 +636,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 			expect(sheet).not.toBeNull();
 			await render(<QuantityLogSheet {...sheet} onClosed={jest.fn()} />);
 			await fireEvent.press(screen.getByText("Fill to 3"));
-			await waitFor(async () => expect(await frozenRows()).toEqual([]));
+			await waitForDb(async () => expect(await frozenRows()).toEqual([]));
 			await act(async () => {
 				await fireEvent.press(screen.getByText("Done"));
 			});
@@ -624,6 +657,8 @@ describe("Today for a selected past day, on the in-memory database", () => {
 		await waitFor(() =>
 			expect(result.current.today.atRiskByHabitId.size).toBe(0),
 		);
-		await mockDb.delete(entries).where(eq(entries.habitId, id));
+		await act(async () => {
+			await mockDb.delete(entries).where(eq(entries.habitId, id));
+		});
 	});
 });

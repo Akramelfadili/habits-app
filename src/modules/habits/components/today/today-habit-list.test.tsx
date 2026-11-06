@@ -46,6 +46,11 @@ async function renderList(overrides = {}) {
 }
 
 describe("TodayHabitList", () => {
+	// The all-done card draws its check over time; faked, it cannot update the
+	// tree outside act.
+	beforeEach(() => jest.useFakeTimers());
+	afterEach(() => jest.useRealTimers());
+
 	it("shows one progress bar: '1 of 2 done' and 50%", async () => {
 		await renderList();
 		expect(screen.getByText("1 of 2 done")).toBeTruthy();

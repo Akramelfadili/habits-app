@@ -2,13 +2,14 @@
 
 | Command | What it does | When |
 |---|---|---|
-| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`) |
+| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`, which adds `JEST_ARGS=--maxWorkers=2`; CI and a hand run use all cores) |
 | `make check-repo-hygiene` (in `make check`) | `scripts/check-repo-hygiene.mjs`: fails if a tracked file is a secret/env/signing file, log, OS/editor file, archive, generated output, `ios/`, `android/` or `node_modules`, is over 1 MB outside a short allowlist, or contains a private-key header, AWS/Google/GitHub token shape or a literal `password = "..."` | every `make check` |
 | `.github/workflows/secret-scan.yml` / `make secrets` | gitleaks (pinned version, SHA-256 verified, `--redact`, full history, config `.gitleaks.toml`). Bump version and hash together | every pull request and push to `master`; locally with `make secrets` |
 | `make clean` / `make clean-all` | `git clean -fdX` on explicit ignored paths only (dry-run listing first). `clean-all` adds `.expo` and the mockup PNGs (re-run `npm run mockups:render`) | by hand |
 | `npm run lint` / `make lint-check` / `make lint` | `npm run lint` and `make lint-check` are Biome **without writes** (what `make check` runs); `make lint` is `biome check --write .` and **rewrites files** | by hand |
 | `.github/workflows/check.yml` | `npm ci` → `make check` → `npm run test:slow` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
 | `.github/workflows/ios-simulator.yml` (manual) | builds the app for the iOS Simulator, opens every visual-check state on it (`scripts/device-validation/`), records the flows in `scripts/device-validation/flows/` on video and writes a web-vs-simulator contact sheet | `gh workflow run ios-simulator.yml`; never on a push or PR. See `docs/how-to/device-validation.md` and ADR 007 |
+| `npm run test:perf` (`make test-perf`) | only the `*.perf.test.ts(x)` timing tests, in band (`--runInBand`), after the main Jest run, so parallel workers cannot skew their thresholds. The default run ignores them. Thresholds are unchanged | every `make check` and pre-push |
 | `npm run test:slow` (`make test-slow`) | only the `*.slow.test.ts(x)` files, which the default Jest run ignores (`testPathIgnorePatterns` in `package.json`). Today: `per-week-frequency.equivalence.slow.test.ts` (~25 s) | CI; by hand when you touch the code it covers. Not in `make check` / pre-push |
 | `.husky/pre-commit` | `biome check --write .` only (fast on purpose) | every `git commit` |
 | Claude Code `PostToolUse` → `.claude/hooks/format.sh` | Biome-fixes the single file that was just edited with Edit/Write | after every Edit/Write |

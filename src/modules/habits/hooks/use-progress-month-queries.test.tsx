@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { entries, frozenDays, habits } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { notifyTableChanged } from "@/lib/db/test-live-query";
+import { inAct } from "@/test-support/in-act";
 import type { CalendarDay } from "../domain/progress-grid";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as MonthHook from "./use-progress-month-queries";
@@ -28,15 +29,16 @@ const sept = (day: number) => new Date(2026, 8, day);
 async function habit(
 	overrides: Parameters<typeof makeHabitInput>[0] = {},
 ): Promise<number> {
-	const created = await createHabitAt(
-		makeHabitInput(overrides),
-		new Date(2026, 0, 1),
+	const created = await inAct<{ id: number }>(() =>
+		createHabitAt(makeHabitInput(overrides), new Date(2026, 0, 1)),
 	);
 	return created.id;
 }
 
 async function done(habitId: number, days: number[]) {
-	for (const day of days) await setHabitCompletedOn(habitId, sept(day), true);
+	await inAct(async () => {
+		for (const day of days) await setHabitCompletedOn(habitId, sept(day), true);
+	});
 }
 
 /**
@@ -54,7 +56,7 @@ async function seedMonth() {
 	await done(a, [1, 2, 4, 7, 8, 9, 10]);
 	await done(b, [1, 4]);
 	await done(c, [1, 2]);
-	await freezeHabitDay(c, sept(4), new Date());
+	await inAct(() => freezeHabitDay(c, sept(4), new Date()));
 	return { a, b, c };
 }
 

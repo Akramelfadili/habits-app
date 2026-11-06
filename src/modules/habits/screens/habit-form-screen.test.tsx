@@ -917,7 +917,9 @@ describe("HabitFormScreen — First Run, the slim form (FR2)", () => {
 		expect(screen.queryByText("Couldn\u2019t continue. Try again.")).toBeNull();
 		await act(async () => useFirstRunOfferStore.getState().setSkipFailed(true));
 		expect(screen.getByText("Couldn\u2019t continue. Try again.")).toBeTruthy();
-		useFirstRunOfferStore.getState().setSkipFailed(false);
+		await act(async () =>
+			useFirstRunOfferStore.getState().setSkipFailed(false),
+		);
 	});
 
 	it("is Name, Or pick one, Type, Frequency and a note — no Category, Goal or Reminders", async () => {

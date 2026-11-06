@@ -79,6 +79,7 @@ export function ToastHost({
 	// animation, and a newer toast swaps in at once (no stacking, no replay).
 	const [shown, setShown] = useState<ShownToast | null>(toast);
 	const progress = useRef(new Animated.Value(toast ? 1 : 0)).current;
+	const target = useRef(toast ? 1 : 0);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: runs when the store's toast changes; `progress` is stable
 	useEffect(() => {
 		const duration = reduceMotion
@@ -89,6 +90,11 @@ export function ToastHost({
 		if (toast) {
 			setShown(toast);
 		}
+		// Already at the end the toast is heading to (mount with no toast, or one
+		// toast replacing another): nothing to animate.
+		const end = toast ? 1 : 0;
+		if (target.current === end) return;
+		target.current = end;
 		const run = Animated.timing(progress, {
 			toValue: toast ? 1 : 0,
 			duration,

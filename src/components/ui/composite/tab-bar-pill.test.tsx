@@ -172,8 +172,8 @@ describe("TabBarPill (V3-01 B)", () => {
 		const tab = screen.getByTestId("tab-progress");
 
 		await act(async () => {
-			fireEvent(tab, "pressIn");
-			fireEvent(tab, "pressOut");
+			await fireEvent(tab, "pressIn");
+			await fireEvent(tab, "pressOut");
 		});
 		await fireEvent.press(tab);
 

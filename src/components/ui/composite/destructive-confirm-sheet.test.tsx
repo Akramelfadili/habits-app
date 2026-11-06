@@ -11,9 +11,13 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 	useAccessibilityTextSize: () => mockAccessibilityText,
 }));
 
+// The sheet's slide, its focus timer and the error toast's fade all run on
+// timers; faked from the start, none can fire outside act or into a later test.
 beforeEach(() => {
+	jest.useFakeTimers();
 	mockAccessibilityText = false;
 });
+afterEach(() => jest.useRealTimers());
 
 const SAFE = {
 	title: "Archive instead",
@@ -103,7 +107,6 @@ describe("DestructiveConfirmSheet", () => {
 		});
 
 		it("takes the screen reader's focus once the sheet has settled (08.3)", async () => {
-			jest.useFakeTimers();
 			jest
 				.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
 				.mockImplementation();
@@ -114,7 +117,6 @@ describe("DestructiveConfirmSheet", () => {
 				expect.anything(),
 				"focus",
 			);
-			jest.useRealTimers();
 			jest.restoreAllMocks();
 		});
 

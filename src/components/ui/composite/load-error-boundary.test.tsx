@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { Pressable, Text } from "react-native";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { expectConsole } from "@/test-support/console";
 import { LoadErrorBoundary } from "./load-error-boundary";
 
 let mockShouldThrow = true;
@@ -31,7 +32,8 @@ beforeEach(() => {
 	mockShouldThrow = true;
 	mounts = 0;
 	clearLog();
-	jest.spyOn(console, "error").mockImplementation(() => {});
+	// React logs the caught render error; keep the output quiet.
+	expectConsole("error");
 });
 afterEach(() => jest.restoreAllMocks());
 

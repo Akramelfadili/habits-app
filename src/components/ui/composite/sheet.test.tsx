@@ -18,7 +18,13 @@ jest.mock("react-native/Libraries/Modal/Modal", () => {
 });
 
 describe("Sheet", () => {
-	afterEach(() => jest.restoreAllMocks());
+	// The slide, the toast fade and the toast's hold run on timers; faked, none
+	// updates a component outside act or leaks into the next test.
+	beforeEach(() => jest.useFakeTimers());
+	afterEach(() => {
+		jest.restoreAllMocks();
+		jest.useRealTimers();
+	});
 
 	it("slides in by default and fades with Reduce Motion on", async () => {
 		jest.spyOn(reducedMotion, "useReducedMotion").mockReturnValue(false);

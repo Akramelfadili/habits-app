@@ -1,4 +1,5 @@
 import {
+	act,
 	fireEvent,
 	render,
 	screen,
@@ -558,7 +559,7 @@ describe("Delete habit (DC1–DC4)", () => {
 		await view.rerender(<HabitDetailScreen habitId={1} />);
 		expect(screen.queryByText("Habit not found")).toBeNull();
 		expect(screen.getByTestId("screen-loading")).toBeTruthy();
-		release(OK);
+		await act(async () => release(OK));
 	});
 
 	it("Archive instead archives (not deletes) and pops with the Undo toast", async () => {
