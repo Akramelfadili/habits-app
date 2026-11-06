@@ -71,4 +71,4 @@ The job summary lists the runner image, Xcode, the simulator model and iOS runti
 - `docs/CONTRIBUTING.md` — branches, commits, PRs, the gate, migrations, the feature flow
 - `docs/dev-tooling.md` — hooks, checks, ratchets, visual-check setup
 - `docs/backlog.md` — deferred work and deviations from the specs
-- `docs/roadmap.md` — status
+- `docs/README.md` ("Status") and `CHANGELOG.md` — status and what shipped

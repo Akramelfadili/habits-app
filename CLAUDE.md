@@ -16,7 +16,7 @@ Plain pointers, not imports — open the file when the row applies.
 | Schema or `src/lib/db/migrations/` | the Migrations guard below + `.claude/agents/migration-reviewer.md` (its checklist); run that subagent when done |
 | The iOS Simulator run, `dev-state`, `src/lib/device-validation`, `scripts/device-validation` | `docs/decisions/007-device-validation.md` + README "Device validation" (the flag is build-time, never `__DEV__`; only the simulator workflow may set it) |
 | Commands, hooks, `make check`, visual-check setup, allowlists, token ratchet | `docs/dev-tooling.md` |
-| Stack choices, project status | `docs/architecture.md` (stack table); `docs/roadmap.md` |
+| Stack choices, project status | `docs/architecture.md` (stack table); `docs/README.md` ("Status"); `CHANGELOG.md` |
 | Adding any file that might hold a secret, env value, log, archive, generated output or a >1 MB file (the repo is PUBLIC) | `docs/CONTRIBUTING.md` → "What never goes in git" (`make check` and the `secret-scan` workflow enforce it) |
 | Deferred work, spec deviations | `docs/backlog.md` — append, never silently drop a deviation |
 | What to fix next | `docs/audits/audit.md` (full audit + batched plan B0–B13) |
