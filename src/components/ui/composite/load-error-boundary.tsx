@@ -30,7 +30,7 @@ export class LoadErrorBoundary extends Component<
 	}
 
 	componentDidCatch(error: Error) {
-		log.warn(this.props.scope, "load failed inside the screen", error);
+		log.warn("boundary.load_failed", { scope: this.props.scope, error });
 	}
 
 	retry = () => {

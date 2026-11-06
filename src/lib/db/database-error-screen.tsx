@@ -25,9 +25,7 @@ export function DatabaseErrorScreen({
 	copy,
 }: DatabaseErrorScreenProps) {
 	useEffect(() => {
-		log.error("db", "migration failed", error, {
-			schemaVersion: SCHEMA_VERSION,
-		});
+		log.error("migration.failure", { schemaVersion: SCHEMA_VERSION, error });
 		SplashScreen.hide();
 	}, [error]);
 

@@ -13,7 +13,7 @@ import { ErrorScreen } from "./error-screen";
 export function RootErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 	// Logged once: an error already recorded by the hook that threw it is skipped.
 	useEffect(() => {
-		log.error("boundary", "render error", error);
+		log.error("boundary.render_error", { error });
 	}, [error]);
 
 	return (

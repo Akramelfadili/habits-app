@@ -34,7 +34,7 @@ async function refresh(): Promise<void> {
 /** For effects, which can't await: a failed permission read is logged, not an unhandled rejection. */
 function refreshInBackground(): void {
 	refresh().catch((error) =>
-		log.warn("notifications", "could not read the permission", error),
+		log.warn("notifications.permission_read_failed", { error }),
 	);
 }
 

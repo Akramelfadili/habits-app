@@ -1,5 +1,6 @@
 import { copyText } from "@/lib/clipboard/clipboard";
-import { formatEntry, getLogEntries, log } from "@/lib/logger/logger";
+import { formatEntry } from "@/lib/logger/format";
+import { getLogEntries, log } from "@/lib/logger/logger";
 import { getAppInfo } from "./app-info";
 
 /** Plain text a person can paste into a message: version facts, then the in-memory log. */
@@ -32,7 +33,7 @@ export async function copyDiagnostics(): Promise<DiagnosticsResult> {
 	try {
 		return await copyText(buildDiagnosticsReport(), "diagnostics.txt");
 	} catch (error) {
-		log.error("diagnostics", "copy failed", error);
+		log.error("diagnostics.copy_failed", { error });
 		return "failed";
 	}
 }

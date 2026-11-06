@@ -1,174 +1,106 @@
-import { formatISO } from "date-fns";
+import { getAppInfo } from "@/lib/diagnostics/app-info";
+import { redactFields, serializeError } from "./redact";
+import { createMemorySink } from "./sinks/memory-sink";
+import type { LogEntry, LogFields, LogLevel, LogSink } from "./types";
 
 /**
- * App-wide logger (audit A3-10): levels, a console mirror in development and an
- * in-memory ring buffer of the last `MAX_ENTRIES` entries that "Copy
- * diagnostics" reads. Memory only — nothing is written to disk (a persistent
- * log is deferred, see docs/backlog.md).
- *
- * Privacy is enforced here, not left to callers:
- * - `message` is a static string written in code, never built from user text.
- * - `context` values are numbers, booleans or null — ids and counts. Any other
- *   value (a string could be a habit name) is dropped, not echoed.
- * - An error's `message` is capped and has its quoted segments removed
- *   (`Category "Glass of water" is missing` → `Category "…" is missing`).
- *   Unquoted interpolation can't be detected, so: never put user text into an
- *   Error message — use the id.
+ * App-wide logger (audit A3-10). `log.error("migration.failure", { schemaVersion })`:
+ * a short dot-separated event name and allowlisted fields. The core redacts
+ * (redact.ts), stamps time, level and app version, then hands the entry to
+ * every registered sink (sinks/). A sink or the logger itself can fail; the
+ * app never sees it. See docs/decisions/008-logging.md.
  */
 
-export type LogLevel = "debug" | "info" | "warn" | "error";
+export const SESSION_BUFFER_SIZE = 200;
 
-export type LogContext = Record<string, number | boolean | null | undefined>;
-
-export type SerializedError = {
-	name: string;
-	code?: string | number;
-	message: string;
-	stack?: string;
-	cause?: SerializedError;
+const LEVEL_ORDER: Record<LogLevel, number> = {
+	debug: 0,
+	info: 1,
+	warn: 2,
+	error: 3,
 };
 
-export type LogEntry = {
-	/** Epoch milliseconds. */
-	at: number;
-	level: LogLevel;
-	scope: string;
-	message: string;
-	context?: Record<string, number | boolean | null>;
-	error?: SerializedError;
-};
-
-export const MAX_ENTRIES = 200;
-export const MAX_MESSAGE_LENGTH = 160;
-const MAX_STACK_LENGTH = 600;
-const MAX_CAUSE_DEPTH = 2;
-
-const QUOTED_SEGMENT = /(["'`‘“])[^"'`’”]*(["'`’”])/g;
-
-function scrubMessage(raw: string): string {
-	// Drizzle's "Failed query: <sql>\nparams: <values>" carries the written
-	// values unquoted (a habit or category name) — keep the SQL, drop the params.
-	const withoutParams = raw.split(/\r?\nparams:/i)[0];
-	const scrubbed = withoutParams.replace(QUOTED_SEGMENT, "$1…$2");
-	return scrubbed.length > MAX_MESSAGE_LENGTH
-		? `${scrubbed.slice(0, MAX_MESSAGE_LENGTH)}…`
-		: scrubbed;
-}
-
-/** Only the `at …` frames — the stack's first line repeats the unscrubbed message. */
-function framesOf(stack: string | undefined): string | undefined {
-	if (!stack) return undefined;
-	const frames = stack
-		.split("\n")
-		.filter((line) => /^\s*at\s/.test(line))
-		.join("\n");
-	return frames || undefined;
-}
-
-export function serializeError(
-	error: unknown,
-	depth = 0,
-): SerializedError | undefined {
-	if (error === undefined || error === null) return undefined;
-	if (!(error instanceof Error)) {
-		// A thrown string/object can carry anything — keep only that it happened.
-		return { name: "NonError", message: `thrown ${typeof error}` };
-	}
-	const code = (error as { code?: unknown }).code;
-	const serialized: SerializedError = {
-		name: error.name,
-		message: scrubMessage(error.message),
-	};
-	if (typeof code === "string" || typeof code === "number") {
-		serialized.code = typeof code === "string" ? scrubMessage(code) : code;
-	}
-	const frames = framesOf(error.stack);
-	if (frames) serialized.stack = frames.slice(0, MAX_STACK_LENGTH);
-	if (error.cause !== undefined && depth < MAX_CAUSE_DEPTH) {
-		serialized.cause = serializeError(error.cause, depth + 1);
-	}
-	return serialized;
-}
-
-function safeContext(
-	context: LogContext | undefined,
-): LogEntry["context"] | undefined {
-	if (!context) return undefined;
-	const safe: Record<string, number | boolean | null> = {};
-	for (const [key, value] of Object.entries(context)) {
-		if (
-			typeof value === "number" ||
-			typeof value === "boolean" ||
-			value === null
-		) {
-			safe[key] = value;
-		}
-	}
-	return Object.keys(safe).length > 0 ? safe : undefined;
-}
-
-let entries: LogEntry[] = [];
+let minLevel: LogLevel = __DEV__ ? "debug" : "info";
+const sinks = new Set<LogSink>();
 /** Errors already recorded — the same object reported twice (hook, then boundary) is logged once. */
 let reported = new WeakSet<object>();
+const session = createMemorySink(SESSION_BUFFER_SIZE);
+let versionStamp: { appVersion: string; build: string } | undefined;
 
-const consoleEnabled = __DEV__ && process.env.NODE_ENV !== "test";
+export function setMinLevel(level: LogLevel): void {
+	minLevel = level;
+}
 
-function write(
-	level: LogLevel,
-	scope: string,
-	message: string,
-	error?: unknown,
-	context?: LogContext,
-): void {
-	if (error instanceof Error) {
-		if (reported.has(error)) return;
-		reported.add(error);
-	}
-	const entry: LogEntry = {
-		at: Date.now(),
-		level,
-		scope,
-		message: message.slice(0, MAX_MESSAGE_LENGTH),
+/** Adds a sink; returns the function that removes it. Registering twice is a no-op. */
+export function registerSink(sink: LogSink): () => void {
+	sinks.add(sink);
+	return () => {
+		sinks.delete(sink);
 	};
-	const safe = safeContext(context);
-	if (safe) entry.context = safe;
-	const serialized = serializeError(error);
-	if (serialized) entry.error = serialized;
+}
 
-	// Release builds keep info and up; debug is console-only.
-	if (level !== "debug" || consoleEnabled) {
-		entries.push(entry);
-		if (entries.length > MAX_ENTRIES) entries = entries.slice(-MAX_ENTRIES);
+/** Awaits every sink's `flush`. Never rejects. */
+export async function flushLogs(): Promise<void> {
+	await Promise.all(
+		[session, ...sinks].map(async (sink) => {
+			try {
+				await sink.flush?.();
+			} catch {
+				// A failing flush must not surface.
+			}
+		}),
+	);
+}
+
+function stamp() {
+	if (!versionStamp) {
+		const info = getAppInfo();
+		versionStamp = { appVersion: info.version, build: info.build };
 	}
-	if (consoleEnabled) {
-		// console.log for every level: console.error/warn would raise React
-		// Native's LogBox toast over the app for an error that is already handled.
-		console.log(`[${level}] [${scope}] ${message}`, error ?? "", safe ?? "");
+	return versionStamp;
+}
+
+function write(level: LogLevel, event: string, fields?: LogFields): void {
+	try {
+		if (LEVEL_ORDER[level] < LEVEL_ORDER[minLevel]) return;
+		const error = fields?.error;
+		if (error instanceof Error) {
+			if (reported.has(error)) return;
+			reported.add(error);
+		}
+		const entry: LogEntry = {
+			timestamp: new Date().toISOString(),
+			level,
+			event,
+			...stamp(),
+		};
+		const safe = redactFields(fields);
+		if (safe) entry.fields = safe;
+		const serialized = serializeError(error);
+		if (serialized) entry.error = serialized;
+
+		for (const sink of [session, ...sinks]) {
+			try {
+				sink.write(entry);
+			} catch {
+				// One broken sink must not stop the others or the app.
+			}
+		}
+	} catch {
+		// Logging is best effort.
 	}
 }
 
 export const log = {
-	debug: (scope: string, message: string, context?: LogContext) =>
-		write("debug", scope, message, undefined, context),
-	info: (scope: string, message: string, context?: LogContext) =>
-		write("info", scope, message, undefined, context),
-	warn: (
-		scope: string,
-		message: string,
-		error?: unknown,
-		context?: LogContext,
-	) => write("warn", scope, message, error, context),
-	error: (
-		scope: string,
-		message: string,
-		error?: unknown,
-		context?: LogContext,
-	) => write("error", scope, message, error, context),
+	debug: (event: string, fields?: LogFields) => write("debug", event, fields),
+	info: (event: string, fields?: LogFields) => write("info", event, fields),
+	warn: (event: string, fields?: LogFields) => write("warn", event, fields),
+	error: (event: string, fields?: LogFields) => write("error", event, fields),
 };
 
-/** Oldest first. */
+/** This session's entries, oldest first. */
 export function getLogEntries(): readonly LogEntry[] {
-	return entries;
+	return session.entries();
 }
 
 /** Whether `log` has already recorded this exact error object. */
@@ -177,25 +109,6 @@ export function wasLogged(error: unknown): boolean {
 }
 
 export function clearLog(): void {
-	entries = [];
+	session.clear();
 	reported = new WeakSet();
-}
-
-export function formatEntry(entry: LogEntry): string {
-	const time = formatISO(entry.at);
-	const parts = [
-		`${time} ${entry.level.toUpperCase()} [${entry.scope}] ${entry.message}`,
-	];
-	if (entry.context) parts.push(JSON.stringify(entry.context));
-	if (entry.error) {
-		const { name, code, message } = entry.error;
-		parts.push(`${name}${code !== undefined ? ` (${code})` : ""}: ${message}`);
-		if (entry.error.cause) {
-			parts.push(
-				`caused by ${entry.error.cause.name}: ${entry.error.cause.message}`,
-			);
-		}
-		if (entry.error.stack) parts.push(entry.error.stack);
-	}
-	return parts.join("\n  ");
 }

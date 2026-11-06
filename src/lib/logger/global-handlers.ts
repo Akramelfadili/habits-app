@@ -37,8 +37,9 @@ export function installGlobalHandlers(): () => void {
 
 	const previous = errorUtils.getGlobalHandler?.();
 	errorUtils.setGlobalHandler((error, isFatal) => {
-		log.error("global", isFatal ? "fatal error" : "unhandled error", error, {
+		log.error(isFatal ? "global.fatal_error" : "global.unhandled_error", {
 			isFatal: Boolean(isFatal),
+			error,
 		});
 		previous?.(error, isFatal);
 	});
@@ -50,10 +51,10 @@ export function installGlobalHandlers(): () => void {
 			hermes.enablePromiseRejectionTracker({
 				allRejections: true,
 				onUnhandled: (_id, rejection) =>
-					log.error("global", "unhandled promise rejection", rejection),
+					log.error("global.unhandled_rejection", { error: rejection }),
 			});
 		} else {
-			log.warn("global", "promise rejection tracking unavailable");
+			log.warn("global.rejection_tracking_unavailable");
 		}
 	}
 

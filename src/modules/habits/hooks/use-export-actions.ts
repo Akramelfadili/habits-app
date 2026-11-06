@@ -89,7 +89,7 @@ export const useExportStore = create<ExportState>((set, get) => ({
 			}
 			// A failure `runExport` didn't wrap is still logged, with its cause.
 			if (!(caught instanceof ExportFailedError)) {
-				log.error("export", "export failed unexpectedly", caught);
+				log.error("export.failed_unexpectedly", { error: caught });
 			}
 			set({
 				phase: {
@@ -119,7 +119,7 @@ export const useExportStore = create<ExportState>((set, get) => ({
 			// "cancelled" to tell apart from "sent".
 			await shareFile(phase.result.uri, phase.result.mimeType);
 		} catch (error) {
-			log.error("export", "share failed", error);
+			log.error("export.share_failed", { error });
 			set({ shareFailed: true });
 		}
 	},

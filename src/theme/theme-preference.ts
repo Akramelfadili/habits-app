@@ -20,7 +20,7 @@ export async function loadThemePreference(): Promise<void> {
 		if (isThemePreference(stored)) preference = stored;
 	} catch (error) {
 		// An unreadable setting must never keep the app from opening.
-		log.warn("theme", "could not read the saved Appearance choice", error);
+		log.warn("theme.preference_read_failed", { error });
 	}
 	applyNativeScheme(preference);
 	useThemePreferenceStore.setState({ preference, isLoaded: true });

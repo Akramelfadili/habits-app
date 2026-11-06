@@ -145,8 +145,8 @@ describe("DatabaseProvider", () => {
 			).toBeTruthy();
 			expect(screen.queryByText(/SQLITE_CORRUPT/)).toBeNull();
 			expect(screen.queryByText(/Stopped at step/)).toBeNull();
-			expect(getLogEntries().map((e) => [e.level, e.message])).toEqual([
-				["error", "migration failed"],
+			expect(getLogEntries().map((e) => [e.level, e.event])).toEqual([
+				["error", "migration.failure"],
 			]);
 		});
 
@@ -192,8 +192,8 @@ describe("DatabaseProvider", () => {
 			expect(screen.queryByText(/SQLITE_CORRUPT/)).toBeNull();
 			expect(screen.queryByText("App")).toBeNull();
 			expect(mockHideSplash).toHaveBeenCalled();
-			expect(getLogEntries().map((e) => [e.level, e.message])).toEqual([
-				["error", "migration failed"],
+			expect(getLogEntries().map((e) => [e.level, e.event])).toEqual([
+				["error", "migration.failure"],
 			]);
 		});
 

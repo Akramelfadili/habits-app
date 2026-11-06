@@ -178,11 +178,7 @@ export async function scheduleReminder(
 		return created;
 	} catch (error) {
 		await cancelScheduled(created).catch((cleanupError) =>
-			log.warn(
-				"notifications",
-				"cleanup after a failed schedule failed",
-				cleanupError,
-			),
+			log.warn("notifications.cleanup_failed", { error: cleanupError }),
 		);
 		throw error;
 	}

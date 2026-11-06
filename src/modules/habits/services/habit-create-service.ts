@@ -36,8 +36,9 @@ export async function createHabitWithReminders(
 			await createReminder({ habitId: habit.id, ...reminder, enabled: true });
 		} catch (error) {
 			remindersFailed = true;
-			log.error("reminders", "queued reminder failed to save", error, {
+			log.error("reminders.queued_save_failed", {
 				habitId: habit.id,
+				error,
 			});
 		}
 	}

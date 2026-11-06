@@ -36,10 +36,9 @@ describe("DatabaseErrorScreen", () => {
 		const [entry] = getLogEntries();
 		expect(entry).toMatchObject({
 			level: "error",
-			scope: "db",
-			message: "migration failed",
+			event: "migration.failure",
 		});
-		expect(entry.context?.schemaVersion).toEqual(expect.any(Number));
+		expect(entry.fields?.schemaVersion).toEqual(expect.any(Number));
 	});
 
 	it("explains in plain words — no raw error text — and offers Retry", async () => {

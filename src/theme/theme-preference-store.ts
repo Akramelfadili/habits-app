@@ -40,7 +40,7 @@ export function applyNativeScheme(preference: ThemePreference) {
 	} catch {
 		// Not every runtime (web fixtures, tests) supports the override — drawing
 		// still follows the store, only the native chrome is left alone.
-		log.debug("theme", "native colour scheme override unavailable");
+		log.debug("theme.native_override_unavailable");
 	}
 }
 

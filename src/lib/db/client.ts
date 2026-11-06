@@ -9,7 +9,7 @@ function openDatabase() {
 	} catch (error) {
 		// Opening runs at import, before any screen exists, so there is nothing to
 		// show an error on — log it (the global handler then reports the crash).
-		log.error("db", "could not open the database", error);
+		log.error("database.open_failed", { error });
 		throw error;
 	}
 }

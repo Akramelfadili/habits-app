@@ -31,12 +31,12 @@ describe("buildDiagnosticsReport", () => {
 	});
 
 	it("includes the recent log entries", () => {
-		log.info("app", "start", { schemaVersion: 11 });
-		log.error("db", "migration failed", new Error("boom"));
+		log.info("app.start", { schemaVersion: 11 });
+		log.error("migration.failure", { error: new Error("boom") });
 		const report = buildDiagnosticsReport();
 		expect(report).toContain("Recent log (2 entries)");
-		expect(report).toContain("INFO [app] start");
-		expect(report).toContain("ERROR [db] migration failed");
+		expect(report).toContain("INFO app.start");
+		expect(report).toContain("ERROR migration.failure");
 	});
 
 	it("says so when nothing was logged", () => {
@@ -44,8 +44,10 @@ describe("buildDiagnosticsReport", () => {
 	});
 
 	it("carries no habit text that was kept out of the log", () => {
-		log.info("t", "m", { name: "Glass of water" as unknown as number });
-		log.error("t", "failed", new Error('Habit "Glass of water" is missing'));
+		log.info("t.m", { name: "Glass of water" });
+		log.error("t.failed", {
+			error: new Error('Habit "Glass of water" is missing'),
+		});
 		expect(buildDiagnosticsReport()).not.toContain("Glass of water");
 	});
 });

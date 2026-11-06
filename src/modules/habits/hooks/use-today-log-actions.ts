@@ -140,7 +140,7 @@ export function useTodayLogActions({
 		if (selectedKey !== null) return fromDayKey(selectedKey);
 		const day = currentDay();
 		if (isSameDay(day, today)) return day;
-		log.info("today", "write skipped: the day rolled over since this render");
+		log.info("today.write_skipped_day_rollover");
 		return null;
 	}
 

@@ -12,7 +12,7 @@ export async function rollbackQuietly(): Promise<void> {
 	try {
 		await db.run(sql`rollback`);
 	} catch (error) {
-		log.error("db", "rollback failed", error);
+		log.error("database.rollback_failed", { error });
 	}
 }
 

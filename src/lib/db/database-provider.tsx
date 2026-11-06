@@ -82,7 +82,7 @@ function RunMigrations({
 
 	useEffect(() => {
 		if (success) {
-			log.info("db", "migrations applied", { schemaVersion: SCHEMA_VERSION });
+			log.info("migration.success", { schemaVersion: SCHEMA_VERSION });
 		}
 	}, [success]);
 

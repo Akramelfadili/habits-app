@@ -127,7 +127,7 @@ export async function runExport({
 				? { kind: "storage", neededBytes }
 				: { kind: "unknown" };
 		const failure = new ExportFailedError(reason, { cause: caught });
-		log.error("export", "export failed", failure, { neededBytes });
+		log.error("export.failed", { neededBytes, error: failure });
 		throw failure;
 	}
 }
