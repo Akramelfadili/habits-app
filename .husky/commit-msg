@@ -1,0 +1,7 @@
+# Rejects attribution lines in commit messages (project rule: no attribution lines).
+# $1 is the path of the commit message file. Comment lines (#) are ignored, as git does.
+if grep -v '^#' "$1" | grep -qiE 'co-authored-by|generated with|claude\.ai/code/session'; then
+  echo "commit-msg: rejected. This project allows no attribution lines in commit messages" >&2
+  echo "(Co-Authored-By, 'Generated with', claude.ai/code/session URLs). Remove them and commit again." >&2
+  exit 1
+fi
