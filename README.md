@@ -18,6 +18,8 @@ Use `npx expo install <package>` (not `npm install`) for Expo / React Native pac
 | Command | What it does |
 |---|---|
 | `make check` | The gate: Biome, `tsc`, Jest, tooling tests, architecture check. Also runs on pre-push |
+| `make secrets` | gitleaks over the git history (same config as the CI `secret-scan` job); says how to install gitleaks if it is missing |
+| `make clean` / `make clean-all` | Delete ignored local output only (`.visual-checks`, `.e2e-output`, `tsconfig.tsbuildinfo`, `tmp/`, `scratch/`; `clean-all` also `.expo` and the mockup PNGs, so re-run `npm run mockups:render`). Never touches `node_modules`, tracked files or git state |
 | `npm test` | Jest only |
 | `npm run lint` | Biome, **no writes** (same as `make lint-check`). `make lint` is the one that **rewrites files** (`biome check --write .`) |
 | `npm run visual-check` | Renders every screen state on web and diffs against `docs/visual-baseline/` |

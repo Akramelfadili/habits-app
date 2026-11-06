@@ -1,0 +1,13 @@
+# gitleaks config: the default ruleset plus one allowlist entry.
+title = "habits-app gitleaks config"
+
+[extend]
+useDefault = true
+
+# scripts/check-repo-hygiene.test.mjs deliberately contains a synthetic
+# private-key header to prove the hygiene guard rejects it. No real key.
+[[allowlists]]
+description = "synthetic fixtures in the repo-hygiene guard test"
+condition = "AND"
+paths = ['''^scripts/check-repo-hygiene\.test\.mjs$''']
+regexes = ['''-----BEGIN''']

@@ -1,52 +1,91 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# The repo is PUBLIC: anything committed is visible to everyone. See
+# docs/CONTRIBUTING.md "What never goes in git"; scripts/check-repo-hygiene.mjs
+# fails `make check` if a tracked file matches these classes.
 
-# dependencies
+# --- dependencies ---
 node_modules/
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-.env
+# --- OS files ---
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
+# --- editors (.vscode/extensions.json and settings.json stay tracked) ---
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- logs ---
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.log*
+
+# --- env files (never commit real values; .env.example is the template) ---
+.env
+.env.*
+!.env.example
+
+# --- secrets and signing material ---
+*.pem
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.keystore
+*.jks
+*.cer
+*.certSigningRequest
+google-services.json
+GoogleService-Info.plist
+service-account*.json
 
-# Metro
+# --- build and generated output ---
+.expo/
+dist/
+web-build/
+build/
+.kotlin/
 .metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
 *.tsbuildinfo
-
-# generated native folders
+expo-env.d.ts
+coverage/
+.jest-cache/
+.metro-cache/
+.eslintcache
+# generated native folders: never hand-edit, CI generates them
 /ios
 /android
 
+# --- tooling output ---
 # visual-check screenshots (scripts/visual-check.mjs)
 .visual-checks/
-
 # Maestro journey output (scripts/e2e.mjs)
 .e2e-output/
-
-# V3 mockup slices (scripts/render-mockups.mjs) — ~27 MB, regenerate with
+# V3 mockup slices (scripts/render-mockups.mjs), ~27 MB, regenerate with
 # `npm run mockups:render`. INDEX.md and the text.txt files stay tracked.
 docs/mockups/v3/renders/**/*.png
+# scripts/device-validation default/CI output dirs (--out out, shots, logs,
+# contact-sheet); anchored to the repo root so they cannot hide source folders
+/out/
+/shots/
+/logs/
+/contact-sheet/
+
+# --- scratch ---
+tmp/
+scratch/
+*.bak
+*.orig
+*.orig.*
+*.rej
+
+# --- archives and design exports (none are used by the repo) ---
+*.zip
+*.tgz
+*.tar.gz

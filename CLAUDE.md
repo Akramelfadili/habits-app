@@ -17,6 +17,7 @@ Plain pointers, not imports — open the file when the row applies.
 | The iOS Simulator run, `dev-state`, `src/lib/device-validation`, `scripts/device-validation` | `docs/decisions/007-device-validation.md` + README "Device validation" (the flag is build-time, never `__DEV__`; only the simulator workflow may set it) |
 | Commands, hooks, `make check`, visual-check setup, allowlists, token ratchet | `docs/dev-tooling.md` |
 | Stack choices, project status | `docs/architecture.md` (stack table); `docs/roadmap.md` |
+| Adding any file that might hold a secret, env value, log, archive, generated output or a >1 MB file (the repo is PUBLIC) | `docs/CONTRIBUTING.md` → "What never goes in git" (`make check` and the `secret-scan` workflow enforce it) |
 | Deferred work, spec deviations | `docs/backlog.md` — append, never silently drop a deviation |
 | What to fix next | `docs/audits/audit.md` (full audit + batched plan B0–B13) |
 
@@ -69,4 +70,4 @@ Rules 1, 2, 4, 6, 8, 9 are enforced by `npm run check-architecture` (and rule 1 
 
 ## Session rules
 
-One Claude session per working copy · never `git stash` · never `--no-verify` · a denied push means stop and ask · no attribution lines in commits or PRs · commit per step when the task says so, never push (reasons: `docs/CONTRIBUTING.md`).
+One Claude session per working copy · never `git stash` · never `--no-verify` · a denied push means stop and ask · no attribution lines in commits or PRs · commit per step when the task says so, never push · never pipe `make check` or test commands through `tail`/`head`/`grep`, so the exit code stays visible (reasons: `docs/CONTRIBUTING.md`).

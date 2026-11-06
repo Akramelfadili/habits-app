@@ -17,6 +17,21 @@ make check     # Biome (no writes) + tsc + Jest + tooling tests + check-architec
 
 It also runs on `git push` (`.husky/pre-push`) and in CI. Jest skips tests named `*.slow.test.ts(x)` (today: the per-week equivalence test, ~25 s); CI runs them after `make check` with `npm run test:slow` (`make test-slow`). Run them yourself when you touch the code they cover. Name a test `.slow.test.ts` only when it is slow by design (a randomised or exhaustive check), not to hide a slow unit test. Never add an allowlist entry (`scripts/check-architecture.allowlist.json`) or raise the token baseline to get green: fix the code. Both files may only shrink.
 
+## What never goes in git
+
+This repo is **public**: anything committed is visible to everyone, and deleting it later does not un-publish it. Never commit:
+
+- **Secrets and signing material:** `*.pem`, `*.p8`, `*.p12`, `*.key`, `*.cer`, `*.certSigningRequest`, `*.mobileprovision`, `*.keystore`, `*.jks`, `google-services.json`, `GoogleService-Info.plist`, `service-account*.json`, tokens, passwords.
+- **`.env` files** (`.env`, `.env.*`). Only `.env.example`, with placeholders, may be tracked.
+- **Logs** (`*.log`), OS and editor files (`.DS_Store`, `.idea/`, `*.swp`, `.vscode/*` except `extensions.json` and `settings.json`).
+- **Generated output:** `ios/`, `android/`, `.expo/`, `dist/`, `build/`, `coverage/`, `*.tsbuildinfo`, `.visual-checks/`, `.e2e-output/`, the mockup PNGs under `docs/mockups/v3/renders/`.
+- **Scratch and archives:** `tmp/`, `scratch/`, `*.bak`, `*.orig`, `*.rej`, `*.zip`, `*.tgz`.
+- **Big files:** over 1 MB, except the short allowlist in `scripts/check-repo-hygiene.mjs` (visual baselines, V3 mockup exports, `assets/`, the lockfile).
+
+`.gitignore` covers these, `scripts/check-repo-hygiene.mjs` (in `make check`) fails on a tracked file that matches, and the `secret-scan` workflow (gitleaks over the full history; `make secrets` runs it locally) catches secrets in content. `make clean` / `make clean-all` remove ignored local output safely.
+
+**If a secret was committed:** rotate or revoke it first, since it must be treated as public the moment it was pushed. Rewriting history comes second, and only with the owner's approval.
+
 ## Visual check
 
 `npm run visual-check` renders every screen state on the web build and diffs it against `docs/visual-baseline/`. Run it on the screens you touched, in light and dark. Review `.visual-checks/report.html`, and only then accept intended changes with `npm run visual-check -- --update-baseline`. Commit the new PNGs with the change. Chromium setup on WSL: `docs/dev-tooling.md`. It is not part of `make check`.
@@ -53,3 +68,4 @@ Rules for working with Claude Code (and anyone else) in this repo, with the inci
 - **If a push is denied, stop and ask.** Do not retry or work around it.
 - **No attribution lines in commits or PR descriptions.** The `.husky/commit-msg` hook rejects them.
 - **Commit per step when the task says so; never push.** The owner pushes.
+- **Never pipe `make check` or test commands through `tail`, `head` or `grep`.** The pipe replaces the exit code with the last command's, so a failure looks green.
