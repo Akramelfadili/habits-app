@@ -15,8 +15,8 @@ android: ## Start with the Android emulator target
 web: ## Start the web preview
 	npx expo start --web
 
-test: ## Run the test suite (skips *.slow.test.ts; see test-slow)
-	npm test
+test: ## Run the test suite (skips *.slow.test.ts and *.perf.test.ts); JEST_ARGS adds Jest flags
+	npm test -- $(JEST_ARGS)
 
 test-perf: ## Run the timing tests (*.perf.test.ts) alone, in band, so other tests cannot slow them
 	npm run test:perf

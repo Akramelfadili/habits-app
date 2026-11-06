@@ -1,3 +1,4 @@
 # Runs on every push. Same as `make check` (Biome without writes + tsc + Jest + tooling tests + architecture rules).
 # pre-commit stays Biome-only on purpose: it must be fast.
-make check
+# Two Jest workers, so a push does not freeze the machine. CI runs make check with all cores.
+make check JEST_ARGS=--maxWorkers=2

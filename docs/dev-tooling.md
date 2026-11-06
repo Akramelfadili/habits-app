@@ -2,7 +2,7 @@
 
 | Command | What it does | When |
 |---|---|---|
-| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`) |
+| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`, which adds `JEST_ARGS=--maxWorkers=2`; CI and a hand run use all cores) |
 | `make check-repo-hygiene` (in `make check`) | `scripts/check-repo-hygiene.mjs`: fails if a tracked file is a secret/env/signing file, log, OS/editor file, archive, generated output, `ios/`, `android/` or `node_modules`, is over 1 MB outside a short allowlist, or contains a private-key header, AWS/Google/GitHub token shape or a literal `password = "..."` | every `make check` |
 | `.github/workflows/secret-scan.yml` / `make secrets` | gitleaks (pinned version, SHA-256 verified, `--redact`, full history, config `.gitleaks.toml`). Bump version and hash together | every pull request and push to `master`; locally with `make secrets` |
 | `make clean` / `make clean-all` | `git clean -fdX` on explicit ignored paths only (dry-run listing first). `clean-all` adds `.expo` and the mockup PNGs (re-run `npm run mockups:render`) | by hand |
