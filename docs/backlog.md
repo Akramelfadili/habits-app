@@ -102,7 +102,7 @@ Built on `chore/ios-simulator-validation`; **the workflow has not been run yet**
 - **Inline category rename has no mockup** (HAB-25); the built state is a proposal — replace it if a mockup is drawn.
 - **Settings → Categories row has no mockup** (HAB-15/24/25); a plain navigable row, proposal.
 - **Legacy remaining-characters counter**: `COUNTER_THRESHOLD = 40` in `text-field.tsx` still drives the counter for non-name fields, so the 20-character unit field shows a counter from the first keystroke.
-- **Wording**: "Best day: All · every day full" (`weekly-summary-helpers.ts`); Manage shows "N logs kept" where the UX audit asked for "days logged".
+- **Wording**: "Best day: All · every day full" (`weekly-summary-helpers.ts`); Manage shows "N logs kept" where the UX audit (Sep 2026, deleted; see `git log -- docs/audits/ux-audit-2026-09.md`) asked for "days logged".
 
 ## Open — tidy-ups
 
