@@ -34,7 +34,6 @@ import { FirstRunReminderOffer } from "../components/first-run/first-run-reminde
 import { QuantityLogSheet } from "../components/quantity-log-sheet";
 import { StreakAtRiskSheet } from "../components/streak-at-risk-sheet";
 import { PastDayBar } from "../components/today/past-day-bar";
-import { TodayDevButtons } from "../components/today/today-dev-buttons";
 import { TodayEmptyState } from "../components/today/today-empty-state";
 import { TodayHabitList } from "../components/today/today-habit-list";
 import { TodayLoadError } from "../components/today/today-load-error";
@@ -47,7 +46,6 @@ import { EVENING_STARTS_AT_HOUR } from "../constants";
 import { useOffScheduleQueries } from "../hooks/use-off-schedule-queries";
 import { useRolloverQueries } from "../hooks/use-rollover-queries";
 import { useSelectedDayQueries } from "../hooks/use-selected-day-queries";
-import { useTodayDevActions } from "../hooks/use-today-dev-actions";
 import { useTodayFreezeActions } from "../hooks/use-today-freeze-actions";
 import { useTodayLogActions } from "../hooks/use-today-log-actions";
 import { useTodayQueries } from "../hooks/use-today-queries";
@@ -94,7 +92,6 @@ function TodayContent() {
 	const { eligibleHabits, loggedToday } = useOffScheduleQueries(
 		today.selectedDay,
 	);
-	const dev = useTodayDevActions();
 	const header = useCollapsingHeader();
 	const titleRef = useRef<HostInstance>(null);
 	useTabRetapToTop("(today)", header.scrollToTop, titleRef);
@@ -236,7 +233,6 @@ function TodayContent() {
 						<TodayEmptyState
 							onAddHabit={() => router.push("/new-habit")}
 							onBrowseSuggestions={() => router.push("/suggestions")}
-							dev={dev}
 						/>
 					) : today.viewState === "rest-day" ? (
 						<TodayRestDay
@@ -272,9 +268,6 @@ function TodayContent() {
 							onLogBonus={logging.logOffSchedule}
 						/>
 					)}
-					{today.viewState === "populated" ? (
-						<TodayDevButtons dev={dev} withClearAll />
-					) : null}
 				</Animated.View>
 			</Animated.ScrollView>
 			{quantitySheet}

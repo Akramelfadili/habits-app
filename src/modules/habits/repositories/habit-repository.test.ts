@@ -8,7 +8,6 @@ import {
 } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { builtInCategory, makeHabitInput } from "../test-support/habit-builder";
-import { inProduction } from "../test-support/in-production";
 import type { Frequency } from "../types";
 import type * as HabitRepository from "./habit-repository";
 
@@ -22,8 +21,6 @@ jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 const {
 	createHabit,
 	updateHabit,
-	deleteAllHabits,
-	createHabitAt,
 	getHabit,
 	reorderHabits,
 	setHabitArchived,
@@ -148,44 +145,6 @@ describe("habit-repository", () => {
 			.from(habits)
 			.where(eq(habits.id, created.id));
 		expect(row.frequencyWeekdays).toBeNull();
-	});
-
-	it("deletes every habit", async () => {
-		await createHabit(baseInput);
-		await createHabit({ ...baseInput, name: "Stretch" });
-
-		await deleteAllHabits();
-
-		const remaining = await mockDb.select().from(habits);
-		expect(remaining).toHaveLength(0);
-	});
-
-	describe("createHabitAt", () => {
-		it("stores the given createdAt instead of the current time", async () => {
-			const backdate = new Date("2026-09-01T00:00:00Z");
-			const habit = await createHabitAt(baseInput, backdate);
-			expect(habit.createdAt).toEqual(backdate);
-		});
-
-		it("refuses to run outside __DEV__", async () => {
-			await inProduction(async () => {
-				await expect(
-					createHabitAt(baseInput, new Date("2026-09-01")),
-				).rejects.toThrow("dev-only");
-			});
-		});
-	});
-
-	it("refuses to delete anything outside __DEV__", async () => {
-		await createHabit(baseInput);
-		const before = await mockDb.select().from(habits);
-
-		await inProduction(async () => {
-			await expect(deleteAllHabits()).rejects.toThrow("dev-only");
-		});
-
-		const after = await mockDb.select().from(habits);
-		expect(after).toHaveLength(before.length);
 	});
 
 	describe("manual order (HAB-13)", () => {

@@ -1,21 +1,17 @@
 import { EmptyState } from "@/components/ui/composite/empty-state";
 import { Button } from "@/components/ui/primitives/button";
-import type { useTodayDevActions } from "../../hooks/use-today-dev-actions";
 import { todayCopy } from "../../messages";
-import { TodayDevButtons } from "./today-dev-buttons";
 
 type TodayEmptyStateProps = {
 	onAddHabit: () => void;
 	/** The suggestions screen (HAB-46). */
 	onBrowseSuggestions: () => void;
-	dev: ReturnType<typeof useTodayDevActions>;
 };
 
 /** No habits at all (HAB-05, HAB-32 T2): one primary action and a link to suggestions. */
 export function TodayEmptyState({
 	onAddHabit,
 	onBrowseSuggestions,
-	dev,
 }: TodayEmptyStateProps) {
 	return (
 		<EmptyState
@@ -34,7 +30,6 @@ export function TodayEmptyState({
 				variant="link"
 				onPress={onBrowseSuggestions}
 			/>
-			<TodayDevButtons dev={dev} />
 		</EmptyState>
 	);
 }

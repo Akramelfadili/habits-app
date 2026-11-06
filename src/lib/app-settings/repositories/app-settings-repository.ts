@@ -18,14 +18,6 @@ export async function setSetting(key: string, value: string): Promise<void> {
 		.onConflictDoUpdate({ target: appSettings.key, set: { value } });
 }
 
-/** Dev-only escape hatch for resetting a setting back to "never set" — refuses to run outside `__DEV__`. */
-export async function deleteSetting(key: string): Promise<void> {
-	if (!__DEV__) {
-		throw new Error("deleteSetting is dev-only");
-	}
-	await db.delete(appSettings).where(eq(appSettings.key, key));
-}
-
 /**
  * Live-query hook — the only place outside this file that ever sees settings
  * rows. Returns `undefined` until the query has resolved at least once

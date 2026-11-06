@@ -4,7 +4,7 @@ Everything Habits-specific. Nothing outside the module imports from it, and it i
 
 Inside, dependencies point down only, enforced by `npm run check-architecture`: **repositories / strategies / dev ← domain ← services ← presenters ← hooks ← components ← screens**.
 
-- `repositories/` is the only code touching Drizzle; every file has a `.web.ts` twin. `dev/` holds the web fixtures and `__DEV__` seeds.
+- `repositories/` is the only code touching Drizzle; every file has a `.web.ts` twin. `dev/` holds the web fixtures and the device-validation state hook.
 - `strategies/` holds one file per frequency rule.
 - `domain/` holds the pure rules (streaks, summaries, insights, export formats).
 - `services/` orchestrates repositories, domain and lib adapters.

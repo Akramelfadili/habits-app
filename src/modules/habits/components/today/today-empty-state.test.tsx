@@ -7,17 +7,6 @@ jest.mock("expo-symbols", () => {
 
 import { TodayEmptyState } from "./today-empty-state";
 
-const dev = {
-	clearAll: undefined,
-	isClearingAll: false,
-	seedStreakAtRisk: undefined,
-	isSeedingStreakAtRisk: false,
-	seedHistory: undefined,
-	isSeedingHistory: false,
-	resetFirstRun: undefined,
-	isResetting: false,
-};
-
 describe("TodayEmptyState", () => {
 	it("offers one primary action, Add habit", async () => {
 		const onAddHabit = jest.fn();
@@ -25,7 +14,6 @@ describe("TodayEmptyState", () => {
 			<TodayEmptyState
 				onAddHabit={onAddHabit}
 				onBrowseSuggestions={jest.fn()}
-				dev={dev}
 			/>,
 		);
 		expect(screen.getByText("Nothing to track yet")).toBeTruthy();
@@ -41,11 +29,7 @@ describe("TodayEmptyState", () => {
 	it("offers Browse suggestions, which opens the list", async () => {
 		const onBrowse = jest.fn();
 		await render(
-			<TodayEmptyState
-				onAddHabit={jest.fn()}
-				onBrowseSuggestions={onBrowse}
-				dev={dev}
-			/>,
+			<TodayEmptyState onAddHabit={jest.fn()} onBrowseSuggestions={onBrowse} />,
 		);
 		await fireEvent.press(screen.getByText("Browse suggestions"));
 		expect(onBrowse).toHaveBeenCalledTimes(1);

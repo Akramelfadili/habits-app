@@ -341,33 +341,3 @@ export async function deleteHabitAndHistory(id: number): Promise<void> {
 		await db.delete(habits).where(eq(habits.id, id));
 	});
 }
-
-/** Dev-only escape hatch for clearing out test data — refuses to run outside `__DEV__`. */
-export async function deleteAllHabits(): Promise<void> {
-	if (!__DEV__) {
-		throw new Error("deleteAllHabits is dev-only");
-	}
-	await db.delete(habits);
-}
-
-/**
- * Dev-only escape hatch for manually testing streak/freeze logic (HAB-08) on
- * a real device — a normal `createHabit` always stamps `createdAt` as "now,"
- * which would make any backdated seed entry fall before the habit's own
- * `createdAt` floor and never count toward a streak. Refuses to run outside
- * `__DEV__`.
- */
-export async function createHabitAt(
-	input: CreateHabitInput,
-	createdAt: Date,
-): Promise<Habit> {
-	if (!__DEV__) {
-		throw new Error("createHabitAt is dev-only");
-	}
-	const [row] = await db
-		.insert(habits)
-		.values(habitInsertValues(input, createdAt, await nextSortOrder()))
-		.returning();
-
-	return toHabit(row);
-}
