@@ -12,7 +12,7 @@ You are an independent database-migration reviewer for an Expo + expo-sqlite + D
 | Doc kind | Path / section to read (`grep -n`, then a small window; never the whole file) |
 |---|---|
 | Migration rules, FK-off-on-device | `docs/decisions/002-foreign-keys-off-on-device.md` (short, read whole) and the "Migrations" bullet under "Cross-cutting decisions" in `ARCHITECTURE.md` |
-| Worked example (categories rebuild) | `docs/feature-spec-v2.md`, `grep -n 'Data migration' ` (HAB-24 section) |
+| Worked example (categories rebuild) | `docs/specs/feature-spec-v2.md`, `grep -n 'Data migration' ` (HAB-24 section) |
 | Deferred cleanups (legacy `habits.icon/color/category` drop, B11) | `docs/backlog.md`, `grep -n -i 'legacy column' ` |
 
 Read those, then `git diff` / `git status` for `schema.ts`, `src/lib/db/migrations/*.sql`, `meta/_journal.json`, `meta/*_snapshot.json`, `migrations.js`, repositories and their `.web.ts` twins.

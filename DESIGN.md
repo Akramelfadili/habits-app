@@ -4,7 +4,7 @@ Entry point for anyone changing how the app looks or behaves on screen. The valu
 
 ## Principles
 
-From the V3 design system and spec (`docs/design-system-v3.md` "Principles", `docs/feature-spec-v3.md` D1–D15):
+From the V3 design system and spec (`docs/design-system-v3.md` "Principles", `docs/specs/feature-spec-v3.md` D1–D15):
 
 - Habits only, three tabs (Today, Progress, Habits). One purpose per screen; short-lived things are sheets.
 - **One accent.** Each colour means one thing: amber = Break habits and warnings, violet = freezes, red = destructive actions and errors, category hue = identity (icon squares and dots only).

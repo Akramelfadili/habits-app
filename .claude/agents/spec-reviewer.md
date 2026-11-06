@@ -13,7 +13,7 @@ You are given a feature id (`HAB-<id>`). If you are not, ask the caller for it, 
 
 | Doc kind | Path |
 |---|---|
-| Spec HAB-01–13 / 14–25 / 26–50 | `docs/feature-spec.md` / `docs/feature-spec-v2.md` / `docs/feature-spec-v3.md` |
+| Spec HAB-01–13 / 14–25 / 26–50 | `docs/specs/feature-spec.md` / `docs/specs/feature-spec-v2.md` / `docs/specs/feature-spec-v3.md` |
 | Design system HAB-01–25 (has **Deltas**) / 26–50 | `docs/design-system.md` / `docs/design-system-v3.md` |
 | Progress maths (HAB-35–38) | `docs/progress-data.md` |
 | Architecture | `ARCHITECTURE.md` (+ `CLAUDE.md`) |

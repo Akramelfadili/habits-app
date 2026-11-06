@@ -1,6 +1,6 @@
 # Habit Tracker — V3 Feature Spec
 
-V3 turns the app into a **habits-only** app (no to-dos, no expenses) and reworks navigation, Today, Progress and habit management. Continues `docs/feature-spec.md` (HAB-01–13) and `docs/feature-spec-v2.md` (HAB-14–25). Numbering continues: **HAB-26 → HAB-50**.
+V3 turns the app into a **habits-only** app (no to-dos, no expenses) and reworks navigation, Today, Progress and habit management. Continues `docs/specs/feature-spec.md` (HAB-01–13) and `docs/specs/feature-spec-v2.md` (HAB-14–25). Numbering continues: **HAB-26 → HAB-50**.
 
 **Source of truth for visuals:** `docs/mockups/v3/Habits V3.dc.html` (master; the other eight `Habits V3 - *.dc.html` files are the same design opened on one section). Frame IDs below (T1, P7, H4, DC1, SR3, …) refer to that file; component IDs (V3-13) and token IDs (F-04, T-18) too. Read `docs/design-system-v3.md` for values.
 
@@ -81,7 +81,7 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Notes (verified by the assessment)**
 - There is **no data**: the two tabs are placeholder routes sharing `placeholder-tab-screen`. No tables, migrations, repositories, flows or export fields exist. No migration needed.
-- Delete the 2 routes, the placeholder component and its test, the 2 visual states and 2 baseline PNGs; update README, CLAUDE.md, `ARCHITECTURE.md`, `docs/design-system.md`, `docs/feature-spec.md`.
+- Delete the 2 routes, the placeholder component and its test, the 2 visual states and 2 baseline PNGs; update README, CLAUDE.md, `ARCHITECTURE.md`, `docs/design-system.md`, `docs/specs/feature-spec.md`.
 - Remove the "future modules" promise from the docs; **keep** the module-isolation rules. Keep or rename the fake `todos` fixture in `check-architecture.test.mjs`.
 
 > **As built (V3-0b):** the 2 routes, their tab entries, `placeholder-tab-screen` + test, the `tab-todos` / `tab-expenses` visual states and PNGs are gone; the tabs layout keeps only Habits until HAB-27. README, CLAUDE.md, `ARCHITECTURE.md`, `design-system.md` and `feature-spec.md` reworded (no future-modules promise; module-isolation rule kept). The fake `src/modules/todos/…` fixture in `check-architecture.test.mjs` is kept as-is: it only exercises the module-isolation rule.

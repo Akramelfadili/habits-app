@@ -2,7 +2,7 @@
  * The message catalogue (HAB-48): every toast, banner and inline message the
  * module shows lives here, so wording, tone and timing are reviewed in one
  * place instead of being scattered across screens. New copy goes here; existing
- * strings move in as their screens are rebuilt in V3 (docs/feature-spec-v3.md).
+ * strings move in as their screens are rebuilt in V3 (docs/specs/feature-spec-v3.md).
  *
  * Rules (D12): toasts report events, banners describe states that last. Copy
  * names the habit, date or count — never "Success!" or "Oops". Never put raw

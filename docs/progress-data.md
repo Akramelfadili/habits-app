@@ -1,6 +1,6 @@
 # Progress data layer (V3-3a)
 
-The logic behind Progress (HAB-35–38) — no new visual design; V3-3b builds the screens on it. Specs: `docs/feature-spec-v3.md` (HAB-35–38, D6, D8, D11, D14, D15), `docs/assessment-v3.md` (A.1.6, A.2 rows 35–38), mockup frames P1–P17 and the Handoff "Data needs" (DN) table (`docs/mockups/v3/renders/handoff/text.txt`, "Data needs — final").
+The logic behind Progress (HAB-35–38) — no new visual design; V3-3b builds the screens on it. Specs: `docs/specs/feature-spec-v3.md` (HAB-35–38, D6, D8, D11, D14, D15), `docs/assessment-v3.md` (A.1.6, A.2 rows 35–38), mockup frames P1–P17 and the Handoff "Data needs" (DN) table (`docs/mockups/v3/renders/handoff/text.txt`, "Data needs — final").
 
 The old Weekly / Monthly / Yearly summary screens were replaced by the Progress tab in V3-3b (their builders remain as the oracle of `range-summary.parity.test.ts`). Where a rule changes (D14, D15, the 7-day unlock) the old domain functions change with it, so there is one definition.
 

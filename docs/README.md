@@ -14,7 +14,7 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `decisions/001…007` | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007) | Before changing what they decide | 0.6–2k each |
 | `design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
 | `design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 9k |
-| `feature-spec-v3.md` | HAB-26–50: rules, edge cases, "Spec wins", D1–D15 | Implementing or reworking a V3 ticket (one section only) | 15k |
+| `specs/feature-spec-v3.md` | HAB-26–50: rules, edge cases, "Spec wins", D1–D15 | Implementing or reworking a V3 ticket (one section only) | 15k |
 | `progress-data.md` | Progress maths (rates, cells, ranges) | HAB-35–38 | 3k |
 | `backlog.md` | Open items, deviations, the **Decided** section | Before planning; by `grep` only | 21k |
 | `mockups/v3/README.md`, `mockups/v3/renders/INDEX.md` | V3 design files; frame id → section | Visual work | 2.5k |
@@ -23,7 +23,7 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 0.9k |
 | `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 2k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |
-| `feature-spec.md`, `feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 10k |
+| `specs/feature-spec.md`, `specs/feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 10k |
 | `assessment-v3.md` | V3 impact per ticket, batch plan. **Never read by default** | History | 16k |
 | `audits/audit.md` | Full audit, batches B0–B13. **Never read by default** | "What to fix next" | 30k |
 | mockup `text.txt` dumps | **Never read whole** (`foundations` is 17k tokens) | One frame, by `grep` | — |
@@ -33,11 +33,11 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 Find a ticket without opening the spec:
 
 ```bash
-grep -n '^## HAB-35 ' docs/feature-spec-v3.md      # V3: HAB-26…50
-grep -n '^## HAB-18 ' docs/feature-spec-v2.md      # V2: HAB-14…25
-grep -n '^## 03 — ' docs/feature-spec.md           # V1: 01…13 (no "HAB" in the heading)
-grep -n '^## Spec wins' docs/feature-spec-v3.md    # the overrides of the mockup
-grep -n '^## Standing decisions' docs/feature-spec-v3.md   # D1–D15
+grep -n '^## HAB-35 ' docs/specs/feature-spec-v3.md      # V3: HAB-26…50
+grep -n '^## HAB-18 ' docs/specs/feature-spec-v2.md      # V2: HAB-14…25
+grep -n '^## 03 — ' docs/specs/feature-spec.md           # V1: 01…13 (no "HAB" in the heading)
+grep -n '^## Spec wins' docs/specs/feature-spec-v3.md    # the overrides of the mockup
+grep -n '^## Standing decisions' docs/specs/feature-spec-v3.md   # D1–D15
 sed -n '/^## Decided/,/^## Visual-check/p' docs/backlog.md  # deviations not to re-flag
 ```
 
