@@ -34,6 +34,8 @@ export const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"attempt",
 	"index",
 	"total",
+	"version",
+	"withReminders",
 ]);
 
 export const TOKEN_FIELDS: ReadonlySet<string> = new Set([
