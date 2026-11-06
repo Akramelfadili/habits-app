@@ -54,7 +54,7 @@ machine, so the journeys drive **Maestro's web driver** against
   has both, **the `accessibilityLabel` wins and the `testID` is invisible** —
   Maestro's web `resource-id` is the `aria-label` when there is one. So the
   tab bar is tapped by label (`id: "Today"`, `"Progress"`, `"Habits"`), not by
-  its `tab-*` testIDs. `id:` never matches plain text, so the Manage screen's
+  its `tab-*` testIDs. `id:` never matches plain text, so the Habits screen's
   "Habits" title does not collide with the tab.
 - **Gestures:** drag-to-reorder and swipe-to-archive can't be driven here.
   Maestro's web driver moves the pointer in a single jump, and

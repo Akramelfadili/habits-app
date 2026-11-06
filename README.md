@@ -19,7 +19,7 @@ Use `npx expo install <package>` (not `npm install`) for Expo / React Native pac
 |---|---|
 | `make check` | The gate: Biome, `tsc`, Jest, tooling tests, architecture check. Also runs on pre-push |
 | `npm test` | Jest only |
-| `npm run lint` | Biome (no writes) |
+| `npm run lint` | Biome, **no writes** (same as `make lint-check`). `make lint` is the one that **rewrites files** (`biome check --write .`) |
 | `npm run visual-check` | Renders every screen state on web and diffs against `docs/visual-baseline/` |
 | `npm run e2e` | Maestro journeys in `e2e/` (needs a simulator) |
 | `npm run mockups:render` | Renders the V3 design files to PNG slices + text in `docs/mockups/v3/renders/` |

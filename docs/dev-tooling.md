@@ -3,6 +3,7 @@
 | Command | What it does | When |
 |---|---|---|
 | `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`) |
+| `npm run lint` / `make lint-check` / `make lint` | `npm run lint` and `make lint-check` are Biome **without writes** (what `make check` runs); `make lint` is `biome check --write .` and **rewrites files** | by hand |
 | `.github/workflows/check.yml` | `npm ci` → `make check` → `npm run test:slow` on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
 | `.github/workflows/ios-simulator.yml` (manual) | builds the app for the iOS Simulator, opens every visual-check state on it (`scripts/device-validation/`), records the flows in `scripts/device-validation/flows/` on video and writes a web-vs-simulator contact sheet | `gh workflow run ios-simulator.yml`; never on a push or PR. See README "Device validation" and ADR 007 |
 | `npm run test:slow` (`make test-slow`) | only the `*.slow.test.ts(x)` files, which the default Jest run ignores (`testPathIgnorePatterns` in `package.json`). Today: `per-week-frequency.equivalence.slow.test.ts` (~25 s) | CI; by hand when you touch the code it covers. Not in `make check` / pre-push |
