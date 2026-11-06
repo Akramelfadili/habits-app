@@ -1,6 +1,6 @@
 # 008 — Logging: pluggable sinks, redaction in the core, a separate on-device store
 
-Status: accepted · Sources: audit A3-10, batch 11 brief, `ARCHITECTURE.md` § "Logging and diagnostics"
+Status: accepted · Sources: audit A3-10, batch 11 brief, `ARCHITECTURE.md` § "Cross-cutting decisions" (the Logging bullet)
 
 ## Context
 
