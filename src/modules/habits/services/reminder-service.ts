@@ -355,6 +355,7 @@ export async function refreshEveningReview(): Promise<void> {
 			previous.filter((identifier) => !created.includes(identifier)),
 			"replace_evening_review_after_habit_change",
 		);
+		log.info("eveningreview.refreshed", { scheduled: created.length });
 	} catch (error) {
 		log.warn("eveningreview.refresh_failed", { error });
 	}

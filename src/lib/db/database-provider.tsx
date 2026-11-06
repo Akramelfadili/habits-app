@@ -2,7 +2,7 @@ import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logger/logger";
-import { db, expoDb } from "./client";
+import { db, expoDb, getDatabaseOpenError, retryOpenDatabase } from "./client";
 import type { DatabaseCopy } from "./database-copy";
 import { DatabaseErrorScreen } from "./database-error-screen";
 import {
@@ -30,6 +30,20 @@ type DatabaseProviderProps = PropsWithChildren<{ copy: DatabaseCopy }>;
  */
 export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	const [attempt, setAttempt] = useState(0);
+	// The file could not be opened at all: nothing below can run, so say so
+	// here (the failure was logged by the client) instead of crashing.
+	if (getDatabaseOpenError() !== null) {
+		return (
+			<DatabaseErrorScreen
+				error={getDatabaseOpenError()}
+				copy={copy.openFailed}
+				onRetry={() => {
+					retryOpenDatabase();
+					setAttempt((n) => n + 1);
+				}}
+			/>
+		);
+	}
 	return (
 		<MigrationGate
 			key={attempt}
@@ -79,6 +93,10 @@ function RunMigrations({
 }: DatabaseProviderProps & { plan: MigrationPlan; onRetry: () => void }) {
 	const { success, error } = useMigrations(db, migrations);
 	useDrizzleStudio(__DEV__ ? expoDb : null);
+
+	useEffect(() => {
+		log.info("migration.start", { schemaVersion: SCHEMA_VERSION, plan });
+	}, [plan]);
 
 	useEffect(() => {
 		if (success) {

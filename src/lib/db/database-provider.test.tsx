@@ -19,7 +19,14 @@ jest.mock("expo-symbols", () => {
 jest.mock("@/utils/use-accessibility-text-size", () => ({
 	useAccessibilityTextSize: () => false,
 }));
-jest.mock("./client", () => ({ db: {}, expoDb: {} }));
+const mockOpen: { error: unknown } = { error: null };
+const mockRetryOpen = jest.fn();
+jest.mock("./client", () => ({
+	db: {},
+	expoDb: {},
+	getDatabaseOpenError: () => mockOpen.error,
+	retryOpenDatabase: () => mockRetryOpen(),
+}));
 jest.mock("./migrations/migrations", () => ({
 	__esModule: true,
 	default: { journal: { entries: [{ when: 100 }, { when: 500 }] } },
@@ -49,9 +56,39 @@ beforeEach(() => {
 	jest.clearAllMocks();
 	clearLog();
 	mockPlan = "current";
+	mockOpen.error = null;
 });
 
 describe("DatabaseProvider", () => {
+	it("shows the recovery screen, not a crash, when the file cannot be opened", async () => {
+		mockOpen.error = new Error("SQLITE_CANTOPEN");
+		await render(app);
+		expect(screen.queryByText("App")).toBeNull();
+		expect(screen.getByText(migrationCopy.openFailed.title)).toBeTruthy();
+		expect(screen.getByText("Copy diagnostics")).toBeTruthy();
+		expect(mockUseMigrations).not.toHaveBeenCalled();
+	});
+
+	it("Try again reopens the database and recovers", async () => {
+		mockOpen.error = new Error("SQLITE_CANTOPEN");
+		mockUseMigrations.mockReturnValue({ success: true });
+		await render(app);
+		mockRetryOpen.mockImplementation(() => {
+			mockOpen.error = null;
+		});
+		await fireEvent.press(screen.getByText("Try again"));
+		expect(mockRetryOpen).toHaveBeenCalledTimes(1);
+		expect(screen.getByText("App")).toBeTruthy();
+	});
+
+	it("logs migration.start with the schema version and plan", async () => {
+		mockUseMigrations.mockReturnValue({ success: true });
+		await render(app);
+		expect(
+			getLogEntries().find((e) => e.event === "migration.start")?.fields,
+		).toEqual({ schemaVersion: expect.any(Number), plan: "current" });
+	});
+
 	it("shows the app once migrations succeed", async () => {
 		mockUseMigrations.mockReturnValue({ success: true });
 		await render(app);
@@ -145,9 +182,11 @@ describe("DatabaseProvider", () => {
 			).toBeTruthy();
 			expect(screen.queryByText(/SQLITE_CORRUPT/)).toBeNull();
 			expect(screen.queryByText(/Stopped at step/)).toBeNull();
-			expect(getLogEntries().map((e) => [e.level, e.event])).toEqual([
-				["error", "migration.failure"],
-			]);
+			expect(
+				getLogEntries()
+					.filter((e) => e.level === "error")
+					.map((e) => [e.level, e.event]),
+			).toEqual([["error", "migration.failure"]]);
 		});
 
 		it("Try again re-runs the update from its screen and recovers", async () => {
@@ -192,9 +231,11 @@ describe("DatabaseProvider", () => {
 			expect(screen.queryByText(/SQLITE_CORRUPT/)).toBeNull();
 			expect(screen.queryByText("App")).toBeNull();
 			expect(mockHideSplash).toHaveBeenCalled();
-			expect(getLogEntries().map((e) => [e.level, e.event])).toEqual([
-				["error", "migration.failure"],
-			]);
+			expect(
+				getLogEntries()
+					.filter((e) => e.level === "error")
+					.map((e) => [e.level, e.event]),
+			).toEqual([["error", "migration.failure"]]);
 		});
 
 		it("Retry re-runs the migration on a fresh mount and recovers", async () => {

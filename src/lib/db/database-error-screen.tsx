@@ -6,7 +6,7 @@ import type { DatabaseCopy } from "./database-copy";
 import { SCHEMA_VERSION } from "./schema-version";
 
 type DatabaseErrorScreenProps = {
-	error: Error;
+	error: unknown;
 	onRetry: () => void;
 	/** SY4's words when an update failed; the plain open-failure words otherwise. */
 	copy: DatabaseCopy["updateFailed"] | DatabaseCopy["openFailed"];
