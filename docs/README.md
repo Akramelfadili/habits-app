@@ -20,7 +20,7 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `mockups/v3/README.md`, `mockups/v3/renders/INDEX.md` | V3 design files; frame id → section | Visual work | 2.5k |
 | `mockups/v3/renders/<section>/text.txt` | All copy and rules of one mockup section | Wording for one frame, by `grep` | 3–17k each |
 | `visual-baseline/` | PNG baselines for `npm run visual-check` | Only through the tool | — |
-| `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 1.3k |
+| `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 0.9k |
 | `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 2k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |
 | `feature-spec.md`, `feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 10k |
