@@ -1,6 +1,6 @@
 # Architecture
 
-How the code is organised and what it is built with. Enforcement lives in `docs/dev-tooling.md` (`check-architecture`, Biome, token ratchet); the one-line rules are in `CLAUDE.md`. This file gives the reasons.
+How the code is organised and what it is built with. Enforcement lives in `docs/how-to/dev-tooling.md` (`check-architecture`, Biome, token ratchet); the one-line rules are in `CLAUDE.md`. This file gives the reasons.
 
 ## Constraints
 

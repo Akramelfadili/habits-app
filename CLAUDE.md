@@ -30,7 +30,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - UI: `DESIGN.md`, `docs/design/design-system-v3.md`, `docs/design/design-system.md` (its **Deltas** are intentional), `docs/mockups/v3/renders/INDEX.md`.
 - Layers, folders, stack: `ARCHITECTURE.md`.
 - Navigation, tab bar, pushed screens, First Run: `docs/decisions/006-navigation.md`, test `src/navigation.test.tsx`.
-- Commands, hooks, visual-check, allowlists, token ratchet: `docs/dev-tooling.md`.
+- Commands, hooks, visual-check, allowlists, token ratchet: `docs/how-to/dev-tooling.md`.
 - iOS Simulator and device validation: `docs/decisions/007-device-validation.md`, `docs/how-to/device-validation.md`.
 - Next fixes: `docs/audits/audit.md`. Status: `docs/README.md`, `CHANGELOG.md`.
 - Deviations: append to `docs/backlog.md`, never drop silently. Reviewers must not re-flag `docs/backlog.md` § "Decided".

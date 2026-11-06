@@ -1,6 +1,6 @@
 # `scripts/`
 
-Node scripts behind the `npm run` commands; details in `docs/dev-tooling.md`.
+Node scripts behind the `npm run` commands; details in `docs/how-to/dev-tooling.md`.
 
 - `check-architecture.mjs` enforces the layer rules (allowlist may only shrink; tested by `check-architecture.test.mjs`).
 - `check-repo-hygiene.mjs` fails on a tracked secret, log, archive, generated file or file over 1 MB.

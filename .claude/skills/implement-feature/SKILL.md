@@ -16,7 +16,7 @@ disable-model-invocation: true
 | Architecture, navigation ADR | `ARCHITECTURE.md`, `docs/decisions/006-navigation.md` |
 | Backlog (deviations, open items) | `docs/backlog.md` |
 | V3 mockup index and frame text | `docs/mockups/v3/renders/INDEX.md`, `docs/mockups/v3/renders/<section>/text.txt` |
-| Tooling, visual-check | `docs/dev-tooling.md` |
+| Tooling, visual-check | `docs/how-to/dev-tooling.md` |
 
 ## Reading rule: never open a whole spec, backlog or text.txt
 
@@ -47,7 +47,7 @@ Per the plan and `CLAUDE.md`; match the documented screen structure and componen
 ## 4. Verify
 
 - `make check` green, **run unpiped** (no `tail`/`head`/`grep`) so the exit code stays visible. Fix failures; never add allowlist entries or raise the token baseline to get green.
-- **Visual check** (setup in `docs/dev-tooling.md`): register every screen **and state** you touched in `SCREENS` in `scripts/visual-check/screens.mjs`. First targeted: `npm run visual-check -- <screen>...` (fix page/console errors), then once the full `npm run visual-check`. Drift in other features' states = a shared-component leak; inspect `.visual-checks/report.html`, `--update-baseline` only intended ones. Compare each screen with its mockup, light **and dark**, at most 3 rounds. New `-ax` states run with `?textSize=ax`.
+- **Visual check** (setup in `docs/how-to/dev-tooling.md`): register every screen **and state** you touched in `SCREENS` in `scripts/visual-check/screens.mjs`. First targeted: `npm run visual-check -- <screen>...` (fix page/console errors), then once the full `npm run visual-check`. Drift in other features' states = a shared-component leak; inspect `.visual-checks/report.html`, `--update-baseline` only intended ones. Compare each screen with its mockup, light **and dark**, at most 3 rounds. New `-ax` states run with `?textSize=ax`.
 - Only then ask for a real-device screenshot as a final confirmation: what the self-check verified, what it could not, what to look at.
 
 ## 5. Review

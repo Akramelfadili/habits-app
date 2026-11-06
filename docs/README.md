@@ -10,7 +10,7 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.5k |
 | `CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
 | `ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
-| `dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 2.8k |
+| `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 2.8k |
 | `decisions/001…007` | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007) | Before changing what they decide | 0.6–2k each |
 | `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
 | `design/design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 9k |
@@ -76,7 +76,7 @@ A section runs to the next `^## `. Ticket → stage (used by `/implement-feature
 
 **Checks, in order**
 - `make check`: the gate. Run it unpiped.
-- `npm run visual-check -- <screen>`: targeted, for the screens you touched; then once the full `npm run visual-check` (light and dark). Setup: `dev-tooling.md`.
+- `npm run visual-check -- <screen>`: targeted, for the screens you touched; then once the full `npm run visual-check` (light and dark). Setup: `how-to/dev-tooling.md`.
 - `npm run test:slow`: when you touch code the slow tests cover (CI runs it).
 - `npm run e2e`: Maestro journeys, when navigation or a tapped label changed.
 - Device validation: `gh workflow run ios-simulator.yml` (manual, not a gate). How-to: `how-to/device-validation.md`.
