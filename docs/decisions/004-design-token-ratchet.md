@@ -1,6 +1,6 @@
 # 004 — Design tokens are enforced by a ratchet, not a big-bang migration
 
-Status: accepted · Sources: `docs/how-to/dev-tooling.md` ("Design-token ratchet"), `docs/audits/audit.md` A4-01…A4-03, A8-15, §13 "Proposed design-token lint" · Landed: audit batches B1–B3 (`1573646`)
+Status: accepted · Sources: `docs/how-to/dev-tooling.md` ("Design-token ratchet"), `docs/archive/audit.md` A4-01…A4-03, A8-15, §13 "Proposed design-token lint" · Landed: audit batches B1–B3 (`1573646`)
 
 ## Context
 

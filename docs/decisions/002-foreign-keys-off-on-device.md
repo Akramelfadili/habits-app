@@ -1,6 +1,6 @@
 # 002 — Foreign keys stay off on the device
 
-Status: accepted · Sources: `docs/audits/audit.md` A7-04, A11-02; `docs/backlog.md` ("Orphan risks with foreign keys off"); `src/lib/db/migrations/0010_empty_iron_man.sql`; `src/lib/db/migrations.safety.test.ts`
+Status: accepted · Sources: `docs/archive/audit.md` A7-04, A11-02; `docs/backlog.md` ("Orphan risks with foreign keys off"); `src/lib/db/migrations/0010_empty_iron_man.sql`; `src/lib/db/migrations.safety.test.ts`
 
 ## Context
 

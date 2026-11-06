@@ -1,6 +1,6 @@
 # 001 — Drizzle ORM on expo-sqlite, reactive reads through `useLiveRows`
 
-Status: accepted · Sources: `ARCHITECTURE.md` (Stack, "Live reads"), `docs/audits/audit.md` A3-06, A5-04, A7-01, A9-04 · Landed: Drizzle with V1; `useLiveRows` in `7363a0b` (audit B6–B9)
+Status: accepted · Sources: `ARCHITECTURE.md` (Stack, "Live reads"), `docs/archive/audit.md` A3-06, A5-04, A7-01, A9-04 · Landed: Drizzle with V1; `useLiveRows` in `7363a0b` (audit B6–B9)
 
 ## Context
 

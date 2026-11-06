@@ -8,7 +8,7 @@ V3 turns the app into a **habits-only** app (no to-dos, no expenses) and reworks
 
 ## Spec wins over the mockup
 
-The decisions below were made after the code assessment (`docs/assessment-v3.md`). Where the mockup disagrees, **this spec wins**. Known differences:
+The decisions below were made after the code assessment (`docs/archive/assessment-v3.md`). Where the mockup disagrees, **this spec wins**. Known differences:
 - **T15 / S2 (week starts Sunday, "follows iOS"):** not in V3. Weeks start Monday. T15 is a Later frame.
 - **"Done 07:10" in row status lines (T1, T5, T8 etc.):** not built; the status line shows the streak only ("13-day streak").
 - **F6 icon and colour pickers:** not built. The category supplies icon and colour (existing rule).

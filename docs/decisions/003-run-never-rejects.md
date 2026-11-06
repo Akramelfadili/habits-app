@@ -1,6 +1,6 @@
 # 003 — Write actions go through `run()`, which never rejects
 
-Status: accepted · Sources: `ARCHITECTURE.md` ("Async writes", "Logging and diagnostics"), `docs/audits/audit.md` A3-03, A5-05, A3-12 · Landed: audit batch B6 (`7363a0b`)
+Status: accepted · Sources: `ARCHITECTURE.md` ("Async writes", "Logging and diagnostics"), `docs/archive/audit.md` A3-03, A5-05, A3-12 · Landed: audit batch B6 (`7363a0b`)
 
 ## Context
 

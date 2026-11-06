@@ -8,8 +8,8 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `../README.md` | What the app is, how to run it | First visit | 0.5k |
 | `../DESIGN.md` | Design principles, token rules, accessibility rules, who enforces each | Before any UI work | 1k |
 | `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.5k |
-| `CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
-| `ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
+| `../CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
+| `../ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
 | `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 2.8k |
 | `decisions/001…007` | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007) | Before changing what they decide | 0.6–2k each |
 | `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
@@ -24,9 +24,26 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 2k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |
 | `specs/feature-spec.md`, `specs/feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 10k |
-| `assessment-v3.md` | V3 impact per ticket, batch plan. **Never read by default** | History | 16k |
-| `audits/audit.md` | Full audit, batches B0–B13. **Never read by default** | "What to fix next" | 30k |
+| `archive/assessment-v3.md` | V3 impact per ticket, batch plan. **Never read by default** | History | 16k |
+| `archive/audit.md` | Full audit, batches B0–B13 (superseded by `backlog.md` for what to fix next). **Never read by default** | History, or a finding id (`grep -n A12-02`) | 30k |
 | mockup `text.txt` dumps | **Never read whole** (`foundations` is 17k tokens) | One frame, by `grep` | — |
+
+## Layout
+
+```
+ARCHITECTURE.md  CONTRIBUTING.md  CLAUDE.md  DESIGN.md  CHANGELOG.md   (repo root)
+docs/
+  README.md            this index
+  backlog.md           open items, deviations, "Decided"
+  progress-data.md     Progress maths
+  specs/               feature-spec.md (V1), feature-spec-v2.md, feature-spec-v3.md
+  design/              design-system.md (V1+V2), design-system-v3.md
+  decisions/           ADRs 001-007
+  how-to/              dev-tooling.md, e2e.md, device-validation.md
+  archive/             audit.md, assessment-v3.md (history; not scanned by check-doc-refs)
+  mockups/v3/          V3 design files and text renders
+  visual-baseline/     web baselines for visual-check
+```
 
 ## Spec table of contents
 
@@ -48,7 +65,7 @@ A section runs to the next `^## `. Ticket → stage (used by `/implement-feature
 | Stage | Status |
 |---|---|
 | V1 (HAB-01–13), V2 (HAB-14–25), V3 (HAB-26–50, batches V3-0a…V3-6) | Shipped; the owner's UI fix batch from device testing is done |
-| Hardening (audit batches B0–B13, `audits/audit.md` §16) | Cleanups, docs and test hygiene done; folder moves, error handling, accessibility and diagnostics next |
+| Hardening (audit batches B0–B13, `archive/audit.md` §16) | Cleanups, docs and test hygiene done; folder moves, error handling, accessibility and diagnostics next |
 | Device validation (iOS Simulator run in CI, ADR 007) | Built, merged, run on GitHub Actions |
 | Crash/error reporting, versioning | Not started |
 

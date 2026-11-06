@@ -46,4 +46,4 @@ Release prerequisites (from `docs/backlog.md`, "Release prerequisites"):
 - `expo-clipboard` and a dev-client rebuild so "Copy diagnostics" copies.
 - Device-only checks: VoiceOver, Dynamic Type AX1–AX5, Reduce Motion, reminders firing, share sheet, drag-to-reorder and swipe-to-archive, update-screen first paint.
 
-Hardening still to do (`docs/audits/audit.md` §16): folder moves, error handling, accessibility, diagnostics, crash reporting and versioning.
+Hardening still to do (`docs/archive/audit.md` §16): folder moves, error handling, accessibility, diagnostics, crash reporting and versioning.

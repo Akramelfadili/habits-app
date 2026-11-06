@@ -74,11 +74,7 @@ export const ALLOWLIST = [
 
 // Historical documents (audits, assessments) are not scanned: their paths
 // describe the code as it was, and stale ones are expected there.
-export const SKIP_PREFIXES = [
-	"docs/archive/",
-	"docs/audits/",
-	"docs/assessment-v3.md",
-];
+export const SKIP_PREFIXES = ["docs/archive/"];
 
 // Instruction files an agent follows literally: a short path is a stale path.
 // Elsewhere a path may be written relative to a module ("screens/x.tsx") as

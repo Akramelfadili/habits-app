@@ -2,7 +2,7 @@
 
 Date: 2026-10-24 · Branch: `chore/cleanup-docs-tests` (HEAD `7363a0b`) · Scope: read-only; nothing in the app was changed for this document.
 
-Inputs: `docs/specs/feature-spec-v3.md`, `docs/design/design-system-v3.md`, `docs/mockups/v3/renders/` (text + slices), `CLAUDE.md`, `ARCHITECTURE.md`, `docs/how-to/dev-tooling.md`, `docs/audits/audit.md` (the 2026-10-05 audit), `docs/backlog.md`, the code, plus measurements run for this document (benchmarks, coverage, knip, an AST scan; method in §C.3).
+Inputs: `docs/specs/feature-spec-v3.md`, `docs/design/design-system-v3.md`, `docs/mockups/v3/renders/` (text + slices), `CLAUDE.md`, `ARCHITECTURE.md`, `docs/how-to/dev-tooling.md`, `docs/archive/audit.md` (the 2026-10-05 audit), `docs/backlog.md`, the code, plus measurements run for this document (benchmarks, coverage, knip, an AST scan; method in §C.3).
 
 **Evidence tags.** **VERIFIED** = read in code or reproduced by running it. **INFERRED** = follows from verified facts but not exercised end-to-end. **UNKNOWN** = could not be established here (why in §C.3).
 
@@ -292,7 +292,7 @@ Layer order becomes: repositories / domain ← services ← presenters ← hooks
 6. Add `components/<surface>/` subfolders as V3 surfaces are built (not up front).
 7. Update `ARCHITECTURE.md`, CLAUDE.md rules 3 and 6, and `check-architecture.mjs` with its tests in the same commits.
 
-This is the prior audit's B4 (`docs/audits/audit.md` §4, §16), narrowed. B4 hasn't landed: `src/modules/habits/` still has only `components hooks repositories screens services strategies test-support` (VERIFIED).
+This is the prior audit's B4 (`docs/archive/audit.md` §4, §16), narrowed. B4 hasn't landed: `src/modules/habits/` still has only `components hooks repositories screens services strategies test-support` (VERIFIED).
 
 ## B.7 Docs gaps
 
