@@ -29,7 +29,9 @@ pnpm-debug.log*
 # --- env files (never commit real values; .env.example is the template) ---
 .env
 .env.*
+.env*.local
 !.env.example
+!.env.local.example
 
 # --- secrets and signing material ---
 *.pem

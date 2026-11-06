@@ -35,6 +35,16 @@ log.info("app.start", { schemaVersion: SCHEMA_VERSION });
 // Web fixture runs only (`?clock=`, dev) — before any screen reads "now".
 pinClockFromUrl();
 
+// Development builds only: applies the starter habits from .env.local before
+// the first screen (docs/how-to/starter-habits.md). A `__DEV__ ? require(...)`
+// is the only form that keeps the module — and the env value Expo inlines in
+// it — out of a production bundle; check-architecture enforces it.
+const StarterProfileGate: React.ComponentType<{
+	children: React.ReactNode;
+}> = __DEV__
+	? require("@/modules/habits/screens/starter-profile-gate").StarterProfileGate
+	: ({ children }) => children;
+
 // Held until the saved Appearance choice is applied (ThemeGate) — otherwise a
 // dark-mode user would see a light frame before the app repaints.
 SplashScreen.preventAutoHideAsync().catch((error) =>
@@ -102,58 +112,60 @@ export default function RootLayout() {
 		// Archive's drag-to-reorder and swipe-to-archive, HAB-13).
 		<GestureHandlerRootView style={styles.root}>
 			<DatabaseProvider copy={migrationCopy}>
-				<ThemeGate>
-					{/* "auto" follows the resolved scheme, explicit Light/Dark included. */}
-					<StatusBar style="auto" />
-					<StartupActions />
-					<DeviceValidationLaunch />
-					<Stack
-						screenOptions={{
-							headerStyle: { backgroundColor: colors.bg },
-							headerTintColor: colors.ink,
-							headerTitleStyle: { color: colors.ink },
-							headerShadowVisible: false,
-							// No back-button config here: every header button, back
-							// included, comes from components/ui/composite/header-buttons
-							// (the system back button is never shown — iOS 26 glass).
-						}}
-					>
-						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-						{/* Device validation only (CI simulator build); anywhere else it redirects to Today. */}
-						<Stack.Screen
-							name="dev-state"
-							options={{ headerShown: false, animation: "none" }}
-						/>
-						{/* First Run sits outside the tabs, so no tab bar is drawn (HAB-46); its welcome cannot be swiped away. */}
-						<Stack.Screen
-							name="first-run/index"
-							options={{ headerShown: false, gestureEnabled: false }}
-						/>
-						<Stack.Screen
-							name="first-run/habit"
-							options={firstRunHabitHeaderOptions}
-						/>
-						{/*
-						 * new-habit / edit-habit declare their modal header (title,
-						 * suppressed back button, Cancel) statically here rather than via a
-						 * <Stack.Screen> rendered inside the route — the navigator resolves
-						 * presentation/back-button chrome for the push transition before
-						 * the screen mounts, so a dynamically-registered override arrives
-						 * too late and the system back chevron briefly or persistently
-						 * shows instead.
-						 */}
-						<Stack.Screen name="new-habit" options={newHabitHeaderOptions} />
-						{/* Browse suggestions (BS1): a modal from First Run, Today and Habits alike. */}
-						<Stack.Screen
-							name="suggestions"
-							options={suggestionsHeaderOptions}
-						/>
-						<Stack.Screen
-							name="edit-habit/[id]"
-							options={editHabitHeaderOptions}
-						/>
-					</Stack>
-				</ThemeGate>
+				<StarterProfileGate>
+					<ThemeGate>
+						{/* "auto" follows the resolved scheme, explicit Light/Dark included. */}
+						<StatusBar style="auto" />
+						<StartupActions />
+						<DeviceValidationLaunch />
+						<Stack
+							screenOptions={{
+								headerStyle: { backgroundColor: colors.bg },
+								headerTintColor: colors.ink,
+								headerTitleStyle: { color: colors.ink },
+								headerShadowVisible: false,
+								// No back-button config here: every header button, back
+								// included, comes from components/ui/composite/header-buttons
+								// (the system back button is never shown — iOS 26 glass).
+							}}
+						>
+							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+							{/* Device validation only (CI simulator build); anywhere else it redirects to Today. */}
+							<Stack.Screen
+								name="dev-state"
+								options={{ headerShown: false, animation: "none" }}
+							/>
+							{/* First Run sits outside the tabs, so no tab bar is drawn (HAB-46); its welcome cannot be swiped away. */}
+							<Stack.Screen
+								name="first-run/index"
+								options={{ headerShown: false, gestureEnabled: false }}
+							/>
+							<Stack.Screen
+								name="first-run/habit"
+								options={firstRunHabitHeaderOptions}
+							/>
+							{/*
+							 * new-habit / edit-habit declare their modal header (title,
+							 * suppressed back button, Cancel) statically here rather than via a
+							 * <Stack.Screen> rendered inside the route — the navigator resolves
+							 * presentation/back-button chrome for the push transition before
+							 * the screen mounts, so a dynamically-registered override arrives
+							 * too late and the system back chevron briefly or persistently
+							 * shows instead.
+							 */}
+							<Stack.Screen name="new-habit" options={newHabitHeaderOptions} />
+							{/* Browse suggestions (BS1): a modal from First Run, Today and Habits alike. */}
+							<Stack.Screen
+								name="suggestions"
+								options={suggestionsHeaderOptions}
+							/>
+							<Stack.Screen
+								name="edit-habit/[id]"
+								options={editHabitHeaderOptions}
+							/>
+						</Stack>
+					</ThemeGate>
+				</StarterProfileGate>
 			</DatabaseProvider>
 		</GestureHandlerRootView>
 	);
