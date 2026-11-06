@@ -11,6 +11,19 @@ export type AppInfo = {
 	device: string;
 };
 
+/** Language and time zone, for "Copy diagnostics" (day-boundary bugs depend on them). */
+export function getLocaleInfo(): { locale: string; timeZone: string } {
+	try {
+		const options = Intl.DateTimeFormat().resolvedOptions();
+		return {
+			locale: options.locale || "unknown",
+			timeZone: options.timeZone || "unknown",
+		};
+	} catch {
+		return { locale: "unknown", timeZone: "unknown" };
+	}
+}
+
 /**
  * Version facts for the About row, the export file and "Copy diagnostics".
  * `build` is the native binary's own number (`CFBundleVersion`); the config
