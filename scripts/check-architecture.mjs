@@ -343,6 +343,41 @@ for (const file of productionFiles) {
 	}
 }
 
+// 11. No dev-only controls in the app: UI never imports dev/ (fixtures, device state),
+//     and the removed seed / clear / reset helpers and "(dev)" button labels stay gone.
+const UI_DIRS = ["hooks", "components", "screens", "presenters"];
+const DEV_ONLY_NAMES =
+	/\b(seedStreakAtRiskHabit|seedHabitWithHistory|clearAllHabits|deleteAllHabits|resetFirstRun|createHabitAt)\b|\(dev\)["'`]/g;
+for (const file of productionFiles) {
+	const r = rel(file);
+	const isUi =
+		r.startsWith("src/app/") ||
+		r.startsWith("src/components/") ||
+		UI_DIRS.some((dir) => inDir(file, dir));
+	if (isUi) {
+		for (const { spec, line } of importsOf(file)) {
+			const target = resolveImport(file, spec);
+			if (target && /\/dev(\/|$)/.test(target))
+				report(
+					"no-dev-in-ui",
+					file,
+					line,
+					"UI imports from dev/ — fixtures and device state are for repositories and the dev-state service only",
+					spec,
+				);
+		}
+	}
+	if (r.includes("/dev/")) continue;
+	const text = sources.get(file);
+	for (const match of text.matchAll(DEV_ONLY_NAMES))
+		report(
+			"no-dev-in-ui",
+			file,
+			text.slice(0, match.index).split("\n").length,
+			`"${match[0]}" — dev-only seed/clear/reset controls were removed and must not return`,
+		);
+}
+
 // --- allowlist ------------------------------------------------------------
 
 /** Allowlist entries are file-level (+ the import, for import rules). */

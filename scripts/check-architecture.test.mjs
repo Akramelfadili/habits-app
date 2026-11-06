@@ -160,6 +160,32 @@ describe("check-architecture", () => {
 		);
 	});
 
+	it("no-dev-in-ui: UI importing dev/ or bringing back a seed/clear/reset helper fails", () => {
+		expectViolation(
+			{
+				"src/modules/habits/dev/habit-fixtures.ts": "export const rows = [];\n",
+				"src/modules/habits/components/dev-card.tsx": `import { rows } from "../dev/habit-fixtures";\nexport const C = rows;\n`,
+				"src/modules/habits/components/dev-card.test.tsx": "",
+			},
+			"no-dev-in-ui",
+		);
+		expectViolation(
+			{
+				"src/modules/habits/hooks/use-wipe-actions.ts":
+					"export function useWipeActions() { return { clearAllHabits: 1 }; }\n",
+				"src/modules/habits/hooks/use-wipe-actions.test.ts": "",
+			},
+			"no-dev-in-ui",
+		);
+		expectViolation(
+			{
+				"src/modules/habits/screens/seed-screen.tsx": `export const label = "Seed (dev)";\n`,
+				"src/modules/habits/screens/seed-screen.test.tsx": "",
+			},
+			"no-dev-in-ui",
+		);
+	});
+
 	it("layer-order: presenters sit between services and hooks", () => {
 		const { code, out } = run({
 			...GOOD,
