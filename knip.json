@@ -7,16 +7,6 @@
 		"jest.setup.js"
 	],
 	"project": ["src/**/*.{ts,tsx,js}!", "scripts/**/*.{js,mjs,cjs}"],
-	"ignore": [
-		"src/lib/db/migrations/**",
-		"src/lib/db/test-db.ts",
-		"src/lib/db/test-live-query.ts",
-		"src/modules/habits/test-support/**"
-	],
-	"ignoreDependencies": [
-		"sf-symbols-typescript",
-		"expo-device",
-		"expo-constants",
-		"expo-updates"
-	]
+	"ignore": ["src/modules/habits/test-support/**"],
+	"ignoreDependencies": ["expo-updates"]
 }

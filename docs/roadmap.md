@@ -1,12 +1,12 @@
 ---
 title: Habits — Roadmap
-status: V1 and V2 shipped; hardening in progress
+status: V1, V2 and V3 shipped; hardening in progress
 tags: [roadmap, habits]
 ---
 
 # Roadmap
 
-Status of the work. Specs: `docs/feature-spec.md` (HAB-01…13) and `docs/feature-spec-v2.md` (HAB-14…25). Deferred work: `docs/backlog.md`.
+Status of the work. Specs: `docs/feature-spec.md` (HAB-01…13) and `docs/feature-spec-v2.md` (HAB-14…25), `docs/feature-spec-v3.md` (HAB-26…50). Deferred work: `docs/backlog.md`.
 
 | Stage | What | Status |
 |---|---|---|
@@ -17,7 +17,7 @@ Status of the work. Specs: `docs/feature-spec.md` (HAB-01…13) and `docs/featur
 | V1 build | HAB-01…13 | Shipped |
 | V2 build | HAB-14…25 (nav menu, settings and export, summaries, logging mechanics, manage rework, detail states, reminders, name polish, delete sheet, categories) | Shipped |
 | Hardening | Audit batches B0–B13 in `docs/audits/audit.md` §16 — cleanups, docs, test hygiene done; folder moves, error handling, accessibility and diagnostics next | In progress |
-| Device validation | A manual iOS Simulator run in GitHub Actions: every visual-check state on a device runtime, the known-bug flows on video, a web-vs-simulator contact sheet (`docs/decisions/007-device-validation.md`, README "Device validation") | Built on `chore/ios-simulator-validation`; first run pending (see `docs/backlog.md`) |
+| Device validation | A manual iOS Simulator run in GitHub Actions: every visual-check state on a device runtime, the known-bug flows on video, a web-vs-simulator contact sheet (`docs/decisions/007-device-validation.md`, README "Device validation") | Built and merged (#36, #37); the workflow has been run on GitHub Actions (see `docs/backlog.md`) |
 | Real-product practices | Crash/error reporting, versioning, changelog | Not started (diagnostics planned) |
 | V3 | Batches V3-0a…V3-6 in `docs/feature-spec-v3.md` | **V3 complete: V3-0a … V3-6 done.** The owner's UI fix batch (`fix/ui-device-findings`: Today strip, toasts, sheets, tab bar and Skip, form and back affordances, reorder buttons, Progress sticky header, Settings hub, dev buttons) is done pending the phone checks listed in `docs/backlog.md`; next: the release prerequisites there |
 
