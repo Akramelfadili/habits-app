@@ -5,7 +5,7 @@
 		".e2e-output": true,
 		"tsconfig.tsbuildinfo": true,
 		"expo-env.d.ts": true,
-		"docs/mockups/v3/renders": true
+		"docs/mockups/v3/renders/**/*.png": true
 	},
 	"search.exclude": {
 		".expo": true,
@@ -13,7 +13,7 @@
 		".e2e-output": true,
 		"tsconfig.tsbuildinfo": true,
 		"expo-env.d.ts": true,
-		"docs/mockups/v3/renders": true
+		"docs/mockups/v3/renders/**/*.png": true
 	},
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "explicit",
