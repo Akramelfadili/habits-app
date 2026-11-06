@@ -115,7 +115,11 @@ export function useCollapsingHeader() {
 	useAnimatedReaction(
 		() => progress.value >= BAR_TAKES_OVER_AT,
 		(next, previous) => {
-			if (next !== previous) scheduleOnRN(setCollapsed, next);
+			// `previous` is null on the first run, when `collapsed` already holds the
+			// start value (progress 0): setting it again is a stray render after mount.
+			if (previous !== null && next !== previous) {
+				scheduleOnRN(setCollapsed, next);
+			}
 		},
 	);
 

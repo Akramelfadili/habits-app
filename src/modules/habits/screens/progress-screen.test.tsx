@@ -104,7 +104,10 @@ jest.mock("../components/edit-day-sheet", () => {
 	};
 });
 
+// Reanimated's header animation runs on timers; faked, it never updates a
+// screen outside act (and cannot leak into the next test).
 beforeEach(() => {
+	jest.useFakeTimers();
 	jest.clearAllMocks();
 	resetProgressView();
 	useToastStore.setState({ toast: null });
@@ -118,6 +121,8 @@ beforeEach(() => {
 	};
 	mockFilter = { active: [water, read], archived: [], onlyHabit: null };
 });
+
+afterEach(() => jest.useRealTimers());
 
 describe("ProgressScreen — the shell (HAB-35)", () => {
 	it("is blank until habits and logs have loaded", async () => {
@@ -151,10 +156,12 @@ describe("ProgressScreen — the shell (HAB-35)", () => {
 	});
 
 	it("opens on the range last chosen, however the screen came to be mounted — a tab switch", async () => {
-		await render(<ProgressScreen />);
+		const first = await render(<ProgressScreen />);
 		await fireEvent.press(screen.getByRole("tab", { name: "Year" }));
 		// A fresh mount reads the same store: the range is not screen state.
 		expect(useProgressViewStore.getState().range).toBe("year");
+		// The first screen is gone (the tab switch) before the store is touched.
+		await first.unmount();
 		resetProgressView();
 		useProgressViewStore.setState({ range: "year" });
 		await render(<ProgressScreen />);

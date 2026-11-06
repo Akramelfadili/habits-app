@@ -3,6 +3,7 @@ import { addDays, format } from "date-fns";
 import { entries, frozenDays, habits } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { notifyTableChanged } from "@/lib/db/test-live-query";
+import { inAct } from "@/test-support/in-act";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as WeekHook from "./use-progress-week-queries";
 
@@ -34,17 +35,18 @@ const at = (offset: number) => addDays(MONDAY, offset);
 async function habit(
 	overrides: Parameters<typeof makeHabitInput>[0] = {},
 ): Promise<number> {
-	const created = await createHabitAt(
-		makeHabitInput(overrides),
-		new Date(2026, 0, 1),
+	const created = await inAct<{ id: number }>(() =>
+		createHabitAt(makeHabitInput(overrides), new Date(2026, 0, 1)),
 	);
 	return created.id;
 }
 
 async function done(habitId: number, offsets: number[]) {
-	for (const offset of offsets) {
-		await setHabitCompletedOn(habitId, at(offset), true);
-	}
+	await inAct(async () => {
+		for (const offset of offsets) {
+			await setHabitCompletedOn(habitId, at(offset), true);
+		}
+	});
 }
 
 async function seedWeek() {
@@ -64,7 +66,7 @@ async function seedWeek() {
 	await done(cold, [0, 2]);
 	await done(noSocial, [-7, -6, -5, -4, -3, -2, -1, 0, 1, 3]);
 	await done(read, [-7, -6, -5, -4, -3, -2, -1, 0, 1]);
-	await freezeHabitDay(read, at(3), new Date());
+	await inAct(() => freezeHabitDay(read, at(3), new Date()));
 	return { water, upper, cold, noSocial, read };
 }
 
@@ -150,9 +152,11 @@ describe("useProgressWeekQueries", () => {
 			targetAmount: 8,
 			targetUnit: "glasses",
 		});
-		await setHabitQuantityOn(glasses, at(0), 3);
-		await setHabitQuantityOn(glasses, at(1), 5);
-		await setHabitQuantityOn(glasses, at(2), 8);
+		await inAct(async () => {
+			await setHabitQuantityOn(glasses, at(0), 3);
+			await setHabitQuantityOn(glasses, at(1), 5);
+			await setHabitQuantityOn(glasses, at(2), 8);
+		});
 		const hook = await renderHook(() => useProgressWeekQueries());
 		await waitFor(() => expect(hook.result.current.state).not.toBe("loading"));
 		const view = hook.result.current;

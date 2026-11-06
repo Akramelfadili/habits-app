@@ -2,6 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react-native";
 import { entries, frozenDays, habits } from "@/lib/db/schema";
 import { createTestDb } from "@/lib/db/test-db";
 import { notifyTableChanged } from "@/lib/db/test-live-query";
+import { inAct } from "@/test-support/in-act";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as BaseHook from "./use-progress-base-queries";
 
@@ -22,9 +23,8 @@ const {
 const NOW = new Date(2026, 8, 18, 12);
 
 async function habit(name = "Read"): Promise<number> {
-	const created = await createHabitAt(
-		makeHabitInput({ name }),
-		new Date(2026, 0, 1),
+	const created = await inAct<{ id: number }>(() =>
+		createHabitAt(makeHabitInput({ name }), new Date(2026, 0, 1)),
 	);
 	return created.id;
 }
@@ -60,18 +60,22 @@ describe("useProgressBaseQueries", () => {
 		);
 		expect(hook.result.current.nothingLogged).toBe(true);
 
-		for (const day of [1, 2, 3]) {
-			await setHabitCompletedOn(read, new Date(2026, 8, day), true);
-		}
+		await inAct(async () => {
+			for (const day of [1, 2, 3]) {
+				await setHabitCompletedOn(read, new Date(2026, 8, day), true);
+			}
+		});
 		await waitFor(() => expect(hook.result.current.gate).toBe("too-early"));
 		expect(hook.result.current.unlock).toMatchObject({
 			loggedDays: 3,
 			remainingDays: 4,
 		});
 
-		for (const day of [4, 5, 6, 7]) {
-			await setHabitCompletedOn(read, new Date(2026, 8, day), true);
-		}
+		await inAct(async () => {
+			for (const day of [4, 5, 6, 7]) {
+				await setHabitCompletedOn(read, new Date(2026, 8, day), true);
+			}
+		});
 		await waitFor(() => expect(hook.result.current.gate).toBe("ready"));
 		expect(hook.result.current.unlock.isUnlocked).toBe(true);
 	});
@@ -79,7 +83,7 @@ describe("useProgressBaseQueries", () => {
 	it("scopes to one habit and counts the freezes left this month", async () => {
 		const read = await habit("Read");
 		await habit("Stretch");
-		await freezeHabitDay(read, new Date(2026, 8, 10), new Date());
+		await inAct(() => freezeHabitDay(read, new Date(2026, 8, 10), new Date()));
 		const all = await renderHook(() => useProgressBaseQueries(null));
 		const one = await renderHook(() => useProgressBaseQueries(read));
 		await waitFor(() => expect(one.result.current.scoped).toHaveLength(1));

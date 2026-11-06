@@ -12,6 +12,7 @@ import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { renderRouter, screen, testRouter } from "expo-router/testing-library";
 import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
+import { expectConsole } from "@/test-support/console";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 
 jest.mock("expo-blur", () => {
@@ -346,9 +347,13 @@ describe("Add and Edit habit are root modals, outside the tabs", () => {
 		["/new-habit", "habit-form"],
 		["/edit-habit/1", "habit-form"],
 	])("%s", async (url, marker) => {
+		// Opened cold from a URL there is no screen under the modal, so the
+		// native stack says it draws a card; in the app it is pushed from a tab.
+		const warn = expectConsole("warn", /uses presentation "fullScreenModal"/);
 		const app = await renderApp(url);
 		await app.findByText(marker);
 		expect(tabGroup(app)).toBeUndefined();
+		expect(warn).toHaveBeenCalled();
 	});
 });
 
