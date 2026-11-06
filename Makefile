@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-slow test-tooling lint lint-check typecheck check-architecture check-repo-hygiene deadcode doctor check e2e visual-check visual-baseline
+.PHONY: help start ios android web test test-slow test-tooling lint lint-check typecheck check-architecture check-repo-hygiene secrets deadcode doctor check e2e visual-check visual-baseline
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -41,6 +41,10 @@ check-architecture: ## Check the architecture rules (Drizzle placement, layers, 
 
 check-repo-hygiene: ## Fail if a tracked file is a secret, env/signing file, log, archive, generated output or >1 MB (repo is public)
 	npm run check-repo-hygiene
+
+secrets: ## Scan the git history for secrets with gitleaks (same config as CI; --redact)
+	@command -v gitleaks >/dev/null 2>&1 || { echo "gitleaks is not installed. Install: brew install gitleaks (macOS) or download a release from https://github.com/gitleaks/gitleaks/releases (CI pins v8.30.1)."; exit 1; }
+	gitleaks git --redact --no-banner --config .gitleaks.toml --exit-code 1 .
 
 deadcode: ## Report unused files/exports/dependencies with knip (report only; not part of `make check`)
 	-npm run deadcode

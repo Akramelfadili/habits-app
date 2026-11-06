@@ -106,7 +106,7 @@ describe("check-repo-hygiene content", () => {
 	it("rejects secret shapes", () => {
 		const cases = [
 			`-----BEGIN ${"RSA "}PRIVATE KEY-----\nabc`,
-			`-----BEGIN PRIVATE KEY-----`,
+			`${"-----BEGIN "}${"PRIVATE KEY-----"}`,
 			`key: ${"AKIA"}${"IOSFODNN7EXAMPLE"}`,
 			`k=${"AIza"}${"x".repeat(35)}`,
 			`t=${"ghp_"}${"a".repeat(36)}`,
@@ -125,7 +125,7 @@ describe("check-repo-hygiene content", () => {
 			[],
 		);
 		assert.deepEqual(
-			checkContent("a.dat", "\0-----BEGIN PRIVATE KEY-----"),
+			checkContent("a.dat", `\0${"-----BEGIN "}${"PRIVATE KEY-----"}`),
 			[],
 		);
 	});
