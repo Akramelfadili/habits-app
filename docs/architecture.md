@@ -12,7 +12,7 @@ How the code is organised and what it is built with. Enforcement lives in `docs/
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Expo SDK 57, React Native 0.86 (New Architecture), React 19 | Expo makes iOS development possible without owning a Mac; the New Architecture is the only one left |
+| Framework | Expo, React Native (New Architecture), React (versions: see `package.json`) | Expo makes iOS development possible without owning a Mac; the New Architecture is the only one left |
 | Language | TypeScript, strict | Most code is written by an agent; strict types are what make its output reviewable |
 | Navigation | Expo Router (file-based) | A new screen is a new file, not an edit to a central navigator config |
 | Database | `expo-sqlite` + Drizzle ORM + `drizzle-kit` migrations | Typed queries, `useLiveQuery` for reactive reads, safe schema changes |
