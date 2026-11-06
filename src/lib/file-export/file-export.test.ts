@@ -15,8 +15,10 @@ jest.mock("expo-file-system", () => {
 	}
 	class Directory {
 		exists = true;
-		uri = "cache/exports";
-		constructor(..._parts: unknown[]) {}
+		uri: string;
+		constructor(...parts: unknown[]) {
+			this.uri = parts.map(String).join("/");
+		}
 		create() {}
 		list() {
 			return [];

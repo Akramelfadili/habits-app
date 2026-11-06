@@ -41,4 +41,15 @@ It also runs on `git push` (`.husky/pre-push`) and in CI. Jest skips tests named
 6. Run `spec-reviewer` (+ `migration-reviewer` for schema changes).
 7. Report, log deviations in `docs/backlog.md`, and add an "As built" note to the spec.
 
-Nothing is committed unless the owner asks.
+Commit only when the task says so (one commit per step); never push.
+
+## Session rules
+
+Rules for working with Claude Code (and anyone else) in this repo, with the incident behind each:
+
+- **One Claude session per working copy at a time.** Concurrent edits once corrupted `package.json` and the settings file.
+- **Never run `git stash`.** It once applied an old stash and conflicted 26 files. Denied in `.claude/settings.json`.
+- **Never skip hooks with `--no-verify`.** The hooks are the gate. Denied in `.claude/settings.json`.
+- **If a push is denied, stop and ask.** Do not retry or work around it.
+- **No attribution lines in commits or PR descriptions.** The `.husky/commit-msg` hook rejects them.
+- **Commit per step when the task says so; never push.** The owner pushes.
