@@ -12,7 +12,7 @@ model: sonnet
 | Doc kind | Path |
 |---|---|
 | Architecture rules, layers, stack | `ARCHITECTURE.md`, `CLAUDE.md` |
-| Design system (V1/V2 merged, with **Deltas**; V3 tokens and components) | `docs/design-system.md`, `docs/design-system-v3.md` |
+| Design system (V1/V2 merged, with **Deltas**; V3 tokens and components) | `docs/design/design-system.md`, `docs/design/design-system-v3.md` |
 | Previous audit and batch plan (compare, do not repeat) | `docs/audits/audit.md` (headings first) |
 | Deferred work and decided deviations (do not re-flag "Decided") | `docs/backlog.md` (grep only) |
 | Theme tokens, ratchet baseline | `src/theme/theme.ts`, `src/theme/token-ratchet.baseline.json` |

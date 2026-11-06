@@ -27,7 +27,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - Feature `HAB-<id>`: use `/implement-feature <id>` (`.claude/skills/implement-feature`).
 - V3 spec (HAB-26–50) is the source of truth; if V2 or V1 conflict, V3 wins. Check `docs/README.md` for which spec covers a ticket. Update the older text and its tests in the same change.
 - Specs: `docs/specs/feature-spec-v3.md`, `docs/specs/feature-spec-v2.md`, `docs/specs/feature-spec.md`.
-- UI: `DESIGN.md`, `docs/design-system-v3.md`, `docs/design-system.md` (its **Deltas** are intentional), `docs/mockups/v3/renders/INDEX.md`.
+- UI: `DESIGN.md`, `docs/design/design-system-v3.md`, `docs/design/design-system.md` (its **Deltas** are intentional), `docs/mockups/v3/renders/INDEX.md`.
 - Layers, folders, stack: `ARCHITECTURE.md`.
 - Navigation, tab bar, pushed screens, First Run: `docs/decisions/006-navigation.md`, test `src/navigation.test.tsx`.
 - Commands, hooks, visual-check, allowlists, token ratchet: `docs/dev-tooling.md`.

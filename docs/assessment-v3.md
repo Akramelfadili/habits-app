@@ -2,7 +2,7 @@
 
 Date: 2026-10-24 · Branch: `chore/cleanup-docs-tests` (HEAD `7363a0b`) · Scope: read-only; nothing in the app was changed for this document.
 
-Inputs: `docs/specs/feature-spec-v3.md`, `docs/design-system-v3.md`, `docs/mockups/v3/renders/` (text + slices), `CLAUDE.md`, `ARCHITECTURE.md`, `docs/dev-tooling.md`, `docs/audits/audit.md` (the 2026-10-05 audit), `docs/backlog.md`, the code, plus measurements run for this document (benchmarks, coverage, knip, an AST scan; method in §C.3).
+Inputs: `docs/specs/feature-spec-v3.md`, `docs/design/design-system-v3.md`, `docs/mockups/v3/renders/` (text + slices), `CLAUDE.md`, `ARCHITECTURE.md`, `docs/dev-tooling.md`, `docs/audits/audit.md` (the 2026-10-05 audit), `docs/backlog.md`, the code, plus measurements run for this document (benchmarks, coverage, knip, an AST scan; method in §C.3).
 
 **Evidence tags.** **VERIFIED** = read in code or reproduced by running it. **INFERRED** = follows from verified facts but not exercised end-to-end. **UNKNOWN** = could not be established here (why in §C.3).
 
@@ -112,7 +112,7 @@ SQL side: all reads are live queries that refire on any table change (`enableCha
 | Visual states / baselines | `scripts/visual-check/screens.mjs:959-969` (`tab-todos`, `tab-expenses`); `docs/visual-baseline/tab-todos.png`, `tab-expenses.png` | No: delete | VERIFIED |
 | Maestro flows / export fields / settings / onboarding | None | — | VERIFIED |
 | Tooling test fixture | `scripts/check-architecture.test.mjs:116-117` uses a fake `src/modules/todos/…` to test module isolation. Keep it (it's a fixture) or rename it to a neutral module | — | VERIFIED |
-| Docs | `README.md:3`, `CLAUDE.md:3`, `ARCHITECTURE.md:9,47,58`, `docs/design-system.md:127`, `docs/specs/feature-spec.md:5,506` | — | VERIFIED |
+| Docs | `README.md:3`, `CLAUDE.md:3`, `ARCHITECTURE.md:9,47,58`, `docs/design/design-system.md:127`, `docs/specs/feature-spec.md:5,506` | — | VERIFIED |
 
 **Options for existing rows:** none apply, because there are no rows. (a) leave, (b) drop and (c) export-then-drop are all no-ops. The real decision is about the **architecture promise**: `ARCHITECTURE.md` says the shell will host future modules. Dropping that promise can simplify `module-isolation` and the "modules never import each other" rule. Recommendation: keep the rules (they cost nothing) and remove only the promise text.
 
@@ -300,7 +300,7 @@ This is the prior audit's B4 (`docs/audits/audit.md` §4, §16), narrowed. B4 ha
 |---|---|---|---|
 | `ARCHITECTURE.md` | Good. Out of date on the shell promise (To-dos/Expenses), the folder tree, and navigation | Update the tree (B.6), the navigation section (pill, shared routes, modals, sheets), drop the module-shell promise, add the Today selected-day rule | VERIFIED |
 | `docs/roadmap.md` | Says "V3: Not planned" | Add V3 batches | VERIFIED |
-| `docs/design-system-v3.md` | Referenced `design-system-v2.md`, which no longer exists (merged into `design-system.md`, CLAUDE.md). **Fixed** in the V3 docs commit; nothing else in `docs/` (outside the dated audit) points at it | F-05 radius-xs/s/m values still say "see master" | VERIFIED |
+| `docs/design/design-system-v3.md` | Referenced `design-system-v2.md`, which no longer exists (merged into `design-system.md`, CLAUDE.md). **Fixed** in the V3 docs commit; nothing else in `docs/` (outside the dated audit) points at it | F-05 radius-xs/s/m values still say "see master" | VERIFIED |
 | `docs/specs/feature-spec-v3.md` | HAB-50 says "update `docs/specs/feature-spec.md` index"; there is no index there (the docs index is `README.md` "Where to read more") | Point HAB-50 at README | VERIFIED |
 | ADRs | Only a 2-line decision log in `ARCHITECTURE.md` | `docs/decisions/`, one page each (context, decision, consequences): **001 Drizzle + live queries via `useLiveRows`** (why not React Query; refire-on-any-change cost); **002 FKs off on device** (A7-04; orphan risks; integrity tests); **003 `run()` never rejects** (error toast, `execute` for inline-error forms); **004 Token ratchet** (counts only go down; scope); **005 V3 navigation** (custom pill on js-tabs, shared routes, modals vs sheets); **006 Week start** (iOS first weekday vs Monday; the per-week history consequence); **007 Freeze pool** (fixed 2/month, not earned) | VERIFIED (absence) |
 | CONTRIBUTING | None (README + CLAUDE.md cover commands) | Short: branch/commit/PR rules, `make check`, visual-check, how to add a migration, the `/implement-feature` flow | VERIFIED |

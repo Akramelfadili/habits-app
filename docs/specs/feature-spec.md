@@ -8,7 +8,7 @@ tags: [spec, habits, v1, personal-app]
 
 # Habits — Feature Spec
 
-Mockup frame IDs in this file refer to the V1/V2 PNGs at git tag `mockups-v1-v2` (removed from the working tree in V3-6; see `docs/design-system.md` for how to read one); V3 frames live in docs/mockups/v3/.
+Mockup frame IDs in this file refer to the V1/V2 PNGs at git tag `mockups-v1-v2` (removed from the working tree in V3-6; see `docs/design/design-system.md` for how to read one); V3 frames live in docs/mockups/v3/.
 
 V2 specs: see feature-spec-v2.md. Where V2 conflicts, V2 wins.
 

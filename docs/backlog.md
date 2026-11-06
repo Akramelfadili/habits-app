@@ -249,7 +249,7 @@ Deferred, each wanted by HAB-27's own rules or raised while building it:
 
 Deviations from the mockup / spec and what was left out; each is deliberate unless marked.
 
-- **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design-system-v3.md`).
+- **Rate ring (V3-09): deleted.** No frame draws it — P7 shows the month's rate as a tile — so it was removed rather than kept unused (see `docs/design/design-system-v3.md`).
 - **Delete candidates at the end of V3-4 (sparkline, mini month, year strip): deleted in V3-4a.**
 - **Month, one habit (P10): tiles are Completion / Longest / Freezes used**, not the mockup's Streak (current streak is not in the month data; Week's tile reads the whole log, Month's does not). Add `streakHistory` to the month hook for a single habit if the current streak is wanted.
 - **Week day headers are 44 pt high but 28 pt wide** (the cell pitch): a 44 pt-wide target would overlap its neighbour. The mockup asks for 44.

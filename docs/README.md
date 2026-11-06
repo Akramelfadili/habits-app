@@ -12,8 +12,8 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
 | `dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 2.8k |
 | `decisions/001…007` | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007) | Before changing what they decide | 0.6–2k each |
-| `design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
-| `design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 9k |
+| `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
+| `design/design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 9k |
 | `specs/feature-spec-v3.md` | HAB-26–50: rules, edge cases, "Spec wins", D1–D15 | Implementing or reworking a V3 ticket (one section only) | 15k |
 | `progress-data.md` | Progress maths (rates, cells, ranges) | HAB-35–38 | 3k |
 | `backlog.md` | Open items, deviations, the **Decided** section | Before planning; by `grep` only | 21k |

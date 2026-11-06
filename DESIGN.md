@@ -1,10 +1,10 @@
 # Design
 
-Entry point for anyone changing how the app looks or behaves on screen. The values live in `docs/design-system-v3.md` (V3) and `docs/design-system.md` (V1/V2, with its **Deltas** section); this file says which rules exist and what enforces them.
+Entry point for anyone changing how the app looks or behaves on screen. The values live in `docs/design/design-system-v3.md` (V3) and `docs/design/design-system.md` (V1/V2, with its **Deltas** section); this file says which rules exist and what enforces them.
 
 ## Principles
 
-From the V3 design system and spec (`docs/design-system-v3.md` "Principles", `docs/specs/feature-spec-v3.md` D1–D15):
+From the V3 design system and spec (`docs/design/design-system-v3.md` "Principles", `docs/specs/feature-spec-v3.md` D1–D15):
 
 - Habits only, three tabs (Today, Progress, Habits). One purpose per screen; short-lived things are sheets.
 - **One accent.** Each colour means one thing: amber = Break habits and warnings, violet = freezes, red = destructive actions and errors, category hue = identity (icon squares and dots only).
@@ -47,4 +47,4 @@ Every token has a light and a dark value. The Appearance setting (Light, Dark, S
 
 The V3 design files are `docs/mockups/v3/*.dc.html`; the master `Habits V3.dc.html` wins when anything disagrees. Their text and frame index are generated: `npm run mockups:render` writes `docs/mockups/v3/renders/INDEX.md` (frame id → section) and `<section>/text.txt` (commit these); the PNG slices are gitignored. V1/V2 mockups exist only at git tag `mockups-v1-v2`.
 
-Values and components: `docs/design-system-v3.md`, `docs/design-system.md`, `docs/mockups/v3/README.md`. Why: `docs/decisions/004-design-token-ratchet.md`, `006-navigation.md`.
+Values and components: `docs/design/design-system-v3.md`, `docs/design/design-system.md`, `docs/mockups/v3/README.md`. Why: `docs/decisions/004-design-token-ratchet.md`, `006-navigation.md`.
