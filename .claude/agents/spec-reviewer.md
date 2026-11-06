@@ -17,17 +17,17 @@ You are given a feature id (`HAB-<id>`). If you are not, ask the caller for it, 
 | Design system HAB-01–25 (has **Deltas**) / 26–50 | `docs/design/design-system.md` / `docs/design/design-system-v3.md` |
 | Progress maths (HAB-35–38) | `docs/progress-data.md` |
 | Architecture | `ARCHITECTURE.md` (+ `CLAUDE.md`) |
-| Backlog | `docs/backlog.md` |
+| Backlog / shipped history (grep only) | `docs/backlog.md` / `docs/archive/backlog-done.md` |
 | V3 mockup index / frame text | `docs/mockups/v3/renders/INDEX.md`, `docs/mockups/v3/renders/<section>/text.txt` |
 
 ## 1. Pick the right docs — sections only, never whole files
 
-Specs (36–61 KB), the backlog (83 KB) and each `text.txt` (11–67 KB) are too big to open. `grep -n`, then read a window.
+Specs (36–61 KB), the backlog (50 KB) and each `text.txt` (11–67 KB) are too big to open. `grep -n`, then read a window.
 
 - **Spec section:** V1 `grep -n '^## 03 — ' <spec>`; V2/V3 `grep -n '^## HAB-35 ' <spec>`. It runs to the next `^## `. Read it in full — acceptance criteria, edge cases, states, **As built** notes — plus any NEW-/VAR- entries it cites (V2). That is the ground truth for "done", not what the implementer chose to build.
 - **Design system:** HAB-14…25 also the **Deltas** section of `design-system.md` (smaller heatmap cells / stat cards on Detail, Weekly Summary, Streak-reset are intentional). HAB-26…50: grep the `V3-xx` / `F-xx` ids the ticket cites in `design-system-v3.md`; HAB-35–38 also the matching rules in `progress-data.md`. V2 wins over V1 where they conflict, and the V1 text it supersedes should have been updated in the same diff.
 - **V3 standing rules (HAB-26…50) — read, do not re-derive:** the `Standing decisions` table (D1–D15) and the `Spec wins over the mockup` list at the top of `feature-spec-v3.md` (~7 KB). Where the mockup differs from them, the spec is right: flag code that follows the mockup against one of those rules, not the reverse. Mockup frame text (frame ids from the ticket's **Frames** line): `grep -n 'P1' INDEX.md` for the section, then `grep -n '^P1 ·' <section>/text.txt` and a ~80-line window.
-- **Backlog:** `grep -n '<HAB-id>' docs/backlog.md` (plus the ticket's stage label, e.g. `V3-3` for HAB-35–38) for open items, and only the section `sed -n '/^## Decided/,/^## Visual-check/p' docs/backlog.md`. **Anything listed under Decided is a deliberate deviation: do not flag it.**
+- **Backlog:** `grep -n '<HAB-id>' docs/backlog.md` (plus the ticket's stage label, e.g. `V3-3` for HAB-35–38) for open items, and only the sections `awk '/^## /{p=0} /^## (Decided|Deliberate V3)/{p=1} p' docs/backlog.md`. **Anything listed under Decided or Deliberate V3 deviations is a deliberate deviation: do not flag it.** Shipped entries are in `docs/archive/backlog-done.md`.
 - `ARCHITECTURE.md`: only the layers the diff touches. `CLAUDE.md` is already in context.
 
 ## 2. Inspect the change
