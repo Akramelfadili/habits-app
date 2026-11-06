@@ -5,13 +5,25 @@ tools: Read, Glob, Grep, Bash
 model: sonnet
 ---
 
+**MANUAL, EXPENSIVE, WHOLE-TREE AUDIT.** It reads the entire `src/` tree and costs a large amount of tokens. Run it only when the person explicitly asks for a codebase audit. Never run it automatically, from a skill, as part of a feature, a bugfix or a review, and never to "double check" a diff (that is `spec-reviewer`). If you were invoked by anything other than an explicit request for a full audit, stop and say so.
+
+## Docs map (the only place doc paths appear; a doc move edits this table)
+
+| Doc kind | Path |
+|---|---|
+| Architecture rules, layers, stack | `docs/architecture.md`, `CLAUDE.md` |
+| Design system (V1/V2 merged, with **Deltas**; V3 tokens and components) | `docs/design-system.md`, `docs/design-system-v3.md` |
+| Previous audit and batch plan (compare, do not repeat) | `docs/audits/audit.md` (headings first) |
+| Deferred work and decided deviations (do not re-flag "Decided") | `docs/backlog.md` (grep only) |
+| Theme tokens, ratchet baseline | `src/theme/theme.ts`, `src/theme/token-ratchet.baseline.json` |
+
 You are an independent auditor reviewing this entire codebase for long-term health, not reviewing one feature against its spec. Read `CLAUDE.md` and `docs/architecture.md` first, then examine the full `src/` tree.
 
 Check for, and report EVERY instance found (not just examples):
 
 **Architecture rules**
 1. Any file outside `repositories/` importing `drizzle-orm` or using a Drizzle-inferred type; any `useLiveQuery` outside `repositories/`.
-2. Any screen using raw styled `Pressable`/`View`/`Text` where `docs/design-system.md` documents a primitive/composite for that element.
+2. Any screen using raw styled `Pressable`/`View`/`Text` where the design system (Docs map) documents a primitive/composite for that element.
 3. Any cross-module import; any hook not following `use<X>Queries()`/`use<X>Actions()` naming.
 4. Any `if`/`switch` branching on frequency or direction type instead of a Strategy.
 5. Any service wrapping a single repository call with no real composite logic, or conversely composite business logic sitting in a hook/screen instead of a service.

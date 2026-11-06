@@ -1,42 +1,61 @@
 ---
 name: implement-feature
-description: Implements one feature from the Habits specs (V1 HAB-01–13 in docs/feature-spec.md, V2 HAB-14–25 in docs/feature-spec-v2.md) following Explore, Plan, Implement, Verify, Review, Report. Only invoke manually.
+description: Implements one feature from the Habits specs (HAB-01–25 in feature-spec.md / feature-spec-v2.md, HAB-26–50 in feature-spec-v3.md) following Explore, Plan, Implement, Verify, Review, Report. Only invoke manually.
 disable-model-invocation: true
 ---
 
-## Usage
+`/implement-feature <id>` — e.g. `03` (V1), `21` (V2), `35` (V3). Never commit or push unless the person says so. `CLAUDE.md` already holds the architecture rules, guards and definition of done: follow it, do not restate it.
 
-`/implement-feature <id>` — e.g. `/implement-feature 03` (HAB-03, V1) or `/implement-feature 21` (HAB-21, V2). Never commit or push unless the person says so.
+## Docs map (the only place doc paths appear; a doc move edits this table)
 
-## Instructions
+| Doc kind | Path |
+|---|---|
+| Spec HAB-01–13 / HAB-14–25 / HAB-26–50 | `docs/feature-spec.md` / `docs/feature-spec-v2.md` / `docs/feature-spec-v3.md` |
+| Design system HAB-01–25 (has **Deltas**) / HAB-26–50 | `docs/design-system.md` / `docs/design-system-v3.md` |
+| Progress maths (HAB-35–38) | `docs/progress-data.md` |
+| Architecture, navigation ADR | `docs/architecture.md`, `docs/decisions/006-navigation.md` |
+| Backlog (deviations, open items) | `docs/backlog.md` |
+| V3 mockup index and frame text | `docs/mockups/v3/renders/INDEX.md`, `docs/mockups/v3/renders/<section>/text.txt` |
+| Tooling, visual-check | `docs/dev-tooling.md` |
 
-0. **Resolve the docs and the branch.**
-   - HAB-01…13 → `docs/feature-spec.md` + `docs/design-system.md`. HAB-14…25 → `docs/feature-spec-v2.md` + `docs/design-system.md`, **including its Deltas section** (smaller cells/cards there are intentional). For V2 also skim the V1 section the ticket revises — V2 wins on conflicts, and you update the V1 text/tests in the same change.
-   - Read only the matching `HAB-<id>` section (+ the NEW-/VAR- entries it references), not whole files. Also read `CLAUDE.md` and the parts of `docs/architecture.md` your layers touch, and `docs/backlog.md` for the ticket's open items.
-   - Work on branch `feat/hab-<id>-<slug>` (create it if you are on `master`; one ticket per branch and PR).
+## Reading rule: never open a whole spec, backlog or text.txt
 
-1. **Explore.**
-   - **V1/V2 screens (HAB-01…25):** the V1/V2 mockup PNGs were removed from the working tree in V3-6; they live at the git tag `mockups-v1-v2` (`git show mockups-v1-v2:docs/mockups/<name>.png > /tmp/<name>.png`, then read it; `git ls-tree --name-only mockups-v1-v2 docs/mockups/` lists them, named by ticket and frame, e.g. `hab-25-f3a.png`). Check there for images of the screens this feature builds or changes. If none match, STOP and say which screens lack a mockup — do not proceed until the person provides one or says to proceed without.
-   - **V3 screens (HAB-26…50):** no PNG is required. Read `docs/mockups/v3/renders/INDEX.md`, then the matching section's `text.txt` for copy and rules, and its slices for layout if present locally (they are gitignored — `npm run mockups:render` creates them). If the ticket's frames are in none of them, STOP and say which.
-   - **Search before you plan:** `rg` the codebase for existing components, hooks, helpers and repositories that already do part of this (`components/ui/primitives|composite`, the module's components, `presenters/` (`*-helpers.ts`), services). List the shared components you will touch and who else uses them.
-   - Look at the current state of the relevant `modules/habits/` subfolders before assuming what exists.
+Sizes: specs 36–61 KB, backlog 83 KB, each `text.txt` 11–67 KB. Find the line with `grep -n`, then read a window with Read `offset`/`limit` (or `sed -n 'A,Bp'`).
 
-2. **Plan, then wait for "Go".** State:
-   - Files to add/change, and the layer of each (repository / service / hook / screen / component / strategy). A service only if genuinely composite — say why. Any new Zod schema, Strategy, or domain type.
-   - **Reuse table** — one row per UI element or helper: *existing / extend / new*, and why. Extending beats creating; "new" needs a reason the existing ones can't stretch.
-   - **Schema change?** Then a migration plan: what the migration does, whether it rebuilds a table (needs `defer_foreign_keys`), how it is tested with FK ON in the one-transaction chain with child rows, and the `.web.ts` twin. Hand this to the `migration-reviewer` subagent after implementing.
-   - **Baselines expected to change** (`docs/visual-baseline/` states, light/dark). The `today-menu-open*` states only change when the menu itself does.
-   - V1/V2 conflicts, open questions with your default answer.
+## 0. Resolve the ticket and the branch
 
-3. **Implement** per the plan and `CLAUDE.md`. Match the documented screen structure and component states. Colocated Jest/RNTL tests for everything you add. Edit/Write, not python/sed. No Maestro flow unless asked — but if you remove or rename a label/button an existing `/e2e` flow taps, update that flow.
+- **Spec section.** Heading patterns (verified): V1 `^## 03 — ` (two-digit id, no "HAB"); V2 and V3 `^## HAB-35 — `. So: `grep -n '^## HAB-35 \|^## HAB-36 ' <spec>` → section runs to the next `^## `. Read only that, plus the NEW-/VAR- entries it cites (V2) or the **Check against code** line (V3).
+- **V3 also:** read the `Standing decisions` table (D1–D15) and `Spec wins over the mockup` list at the top of `feature-spec-v3.md` once (~7 KB); they override the mockup. Design system: grep the ticket's `V3-xx` component ids and the `F-xx` tokens it names in `design-system-v3.md`, read those rows only. HAB-35–38 also read the matching rules in `progress-data.md`. V1/V2 tickets: `design-system.md` **Deltas** section plus the ticket's screen; for V2 skim the V1 section it revises (V2 wins; update V1 text and tests in the same change).
+- **Backlog, by grep only:** `grep -n 'HAB-35' docs/backlog.md` (a hit may be a heading or a bullet), plus the stage label from the spec's Build order (V3-0b: HAB-26/28/29/42 · V3-1: 27 · V3-2: 30–34, 48 · V3-3: 35–38 · V3-4: 39–45 · V3-5: 46–47 · V3-6: 49–50), e.g. `grep -n 'V3-3' docs/backlog.md`. Read those lines with a small window. Then read only the **"Decided — deviations the reviewers should not re-flag"** section: `sed -n '/^## Decided/,/^## Visual-check/p' docs/backlog.md`.
+- `architecture.md`: only the layers you touch (`grep -n '^## '` for the heading). Navigation or a pushed screen: `docs/decisions/006-navigation.md` too.
+- Branch `feat/hab-<id>-<slug>` (create if on `master`; one ticket per branch and PR).
 
-4. **Verify.**
-   - `make check` must be green (Biome, tsc, Jest, tooling tests, architecture rules). Fix failures; never hand back a failing build. Do not add allowlist entries or raise the token baseline to get green — fix the code (allowlist only with explicit approval).
-   - **Visual verification** (web target; setup and known web-only artifacts in `docs/dev-tooling.md`): register every screen **and state** you touched in `SCREENS` in `scripts/visual-check/screens.mjs`; run `npm run visual-check -- <screen>...` (fix reported page/console errors first), then the full `npm run visual-check`. Drift in other features' states means a shared component change leaked — inspect in `.visual-checks/report.html` and `--update-baseline` only intended ones. A `today-menu-open*` diff means the menu's placement or content changed — investigate before updating. Compare each `.visual-checks/<screen>.png` with its mockup, light **and dark**, fix discrepancies, at most 3 rounds. A new repository needs a `.web.ts` twin with the same exports.
-   - Only then ask for a real-device screenshot, as a *final confirmation*: say what the self-check verified, what it couldn't, and what to look at.
+## 1. Explore
 
-5. **Review.** Run the `spec-reviewer` subagent with the feature id (`HAB-<id>`) and fix everything it ranks blocking. If the schema changed, also run `migration-reviewer`. Re-run `make check` after fixes.
+- **V3 mockups (HAB-26–50):** take the frame ids from the ticket's **Frames** line (e.g. `P1–P6`). `grep -n 'P1' docs/mockups/v3/renders/INDEX.md` names the section (`## progress`); then in that section's `text.txt` run `grep -n '^P1 ·' <section>/text.txt` (each frame starts at `P1 · Light`) and read from that line to the next `· Light` header with a window (~70–90 lines per frame, Light only; Dark repeats it). Never open a whole `text.txt`. Slices (PNG) are gitignored (`npm run mockups:render` makes them): look at one only for layout you cannot get from text. If a frame is in none of them, STOP and say which.
+- **V1/V2 mockups (HAB-01–25):** only at git tag `mockups-v1-v2` (`git ls-tree --name-only mockups-v1-v2 docs/mockups/`, files named like `hab-25-f3a.png`). If no PNG matches the screens, STOP and say which lack one.
+- **Search before you plan:** `rg` for existing components, hooks, helpers, repositories (`components/ui/primitives|composite`, the module's components, `presenters/`, services). List the shared components you will touch and who else uses them.
 
-6. **Report.** What was built and which files changed; every acceptance criterion in the spec, met or not (don't tick what isn't verified); baselines changed and why; deviations logged in `docs/backlog.md` and an "As built" note added to the ticket's spec section; allowlist/baseline changes (should be none, or only removals); a short list of what only a real device can confirm. Leave everything uncommitted and ask whether to commit.
+## 2. Plan, then wait for "Go"
 
-Do not implement a feature outside this skill — if asked to "just add X" without this flow, point back here (small bug fixes may skip the plan, but not `make check`).
+State: files to add/change with the layer of each (service only if genuinely composite, and why); any new Zod schema, Strategy or domain type; a **reuse table** (one row per UI element/helper: existing / extend / new, and why; "new" needs a reason); **schema change?** → migration plan (rebuild needs `defer_foreign_keys`, FK-ON one-transaction test with child rows, `.web.ts` twin; hand to `migration-reviewer` after); baselines expected to change (`docs/visual-baseline/`, light and dark; `today-menu-open*` only if the menu changed); spec/mockup conflicts and open questions with your default. Finish with the list of files and sections you read.
+
+## 3. Implement
+
+Per the plan and `CLAUDE.md`; match the documented screen structure and component states. Colocated Jest/RNTL tests for everything you add. Edit/Write, not python/sed. No Maestro flow unless asked, but update an existing `/e2e` flow if you rename a label it taps.
+
+## 4. Verify
+
+- `make check` green, **run unpiped** (no `tail`/`head`/`grep`) so the exit code stays visible. Fix failures; never add allowlist entries or raise the token baseline to get green.
+- **Visual check** (setup in `docs/dev-tooling.md`): register every screen **and state** you touched in `SCREENS` in `scripts/visual-check/screens.mjs`. First targeted: `npm run visual-check -- <screen>...` (fix page/console errors), then once the full `npm run visual-check`. Drift in other features' states = a shared-component leak; inspect `.visual-checks/report.html`, `--update-baseline` only intended ones. Compare each screen with its mockup, light **and dark**, at most 3 rounds. New `-ax` states run with `?textSize=ax`.
+- Only then ask for a real-device screenshot as a final confirmation: what the self-check verified, what it could not, what to look at.
+
+## 5. Review
+
+Run `spec-reviewer` with `HAB-<id>`; fix everything it ranks blocking. Schema changed → also `migration-reviewer`. Re-run `make check`.
+
+## 6. Report
+
+What was built and which files changed; every acceptance criterion met or not (don't tick what isn't verified); baselines changed and why; deviations logged in the backlog and an "As built" note in the ticket's spec section; allowlist/baseline changes (none, or only removals); what only a real device can confirm. Leave uncommitted and ask whether to commit, unless the task says to commit per step. Never push; no attribution lines.
+
+"Just add X" without this flow → point back here (small bug fixes may skip the plan, never `make check`).
