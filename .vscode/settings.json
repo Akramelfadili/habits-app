@@ -1,4 +1,20 @@
 {
+	"files.exclude": {
+		".expo": true,
+		".visual-checks": true,
+		".e2e-output": true,
+		"tsconfig.tsbuildinfo": true,
+		"expo-env.d.ts": true,
+		"docs/mockups/v3/renders": true
+	},
+	"search.exclude": {
+		".expo": true,
+		".visual-checks": true,
+		".e2e-output": true,
+		"tsconfig.tsbuildinfo": true,
+		"expo-env.d.ts": true,
+		"docs/mockups/v3/renders": true
+	},
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "explicit",
 		"source.organizeImports": "explicit",
