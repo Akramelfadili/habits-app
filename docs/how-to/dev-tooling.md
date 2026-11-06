@@ -2,7 +2,7 @@
 
 | Command | What it does | When |
 |---|---|---|
-| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` | by hand, and on every `git push` (`.husky/pre-push`, which adds `JEST_ARGS=--maxWorkers=2`; CI and a hand run use all cores) |
+| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` → `check-repo-hygiene` → `check-doc-refs` | by hand, and on every `git push` (`.husky/pre-push`, which adds `JEST_ARGS=--maxWorkers=2`; CI and a hand run use all cores) |
 | `make check-repo-hygiene` (in `make check`) | `scripts/check-repo-hygiene.mjs`: fails if a tracked file is a secret/env/signing file, log, OS/editor file, archive, generated output, `ios/`, `android/` or `node_modules`, is over 1 MB outside a short allowlist, or contains a private-key header, AWS/Google/GitHub token shape or a literal `password = "..."` | every `make check` |
 | `make check-doc-refs` (in `make check`) | `scripts/check-doc-refs.mjs`: fails if a backticked path or markdown link in a tracked `.md`, `CLAUDE.md` or `.claude/` points at a file that does not exist, or a `` `path` § "Heading" `` / `→ "Heading"` reference names a heading the file lacks. Skips URLs, anchors, globs, `<placeholders>`, and `docs/archive/`; exceptions are in the script's `ALLOWLIST` (it only shrinks). Tested by `check-doc-refs.test.mjs` | in `make check` |
 | `.github/workflows/secret-scan.yml` / `make secrets` | gitleaks (pinned version, SHA-256 verified, `--redact`, full history, config `.gitleaks.toml`). Bump version and hash together | every pull request and push to `master`; locally with `make secrets` |
@@ -37,13 +37,13 @@ Counts raw colours (hex/rgba/oklch/'white'/'black'), shadow/elevation, `fontSize
 
 Since V3-0b it also counts (lines, like the others):
 
-| Key | What | Use instead | Baseline at V3-0b |
+| Key | What | Use instead | Baseline now (`token-ratchet.baseline.json`) |
 |---|---|---|---|
-| `spacing-literals` | non-zero numeric `padding*`, `margin*` (negative too), `gap`/`rowGap`/`columnGap` | `space[…]` (F-04) | 274 |
-| `radius-literals` | non-zero numeric `border*Radius` | `radius.*`, `cellRadius()`, `squareRadius()` (F-05) | 55 |
-| `off-scale-font-sizes` | `fontSize` 10 / 10.5 / 11 / 11.5 / 12.5, and `typeScale.micro` / `.caption` / `.subtitle` (10 / 11 / 12.5) | a `textStyles` style (F-03) | 56 |
+| `spacing-literals` | non-zero numeric `padding*`, `margin*` (negative too), `gap`/`rowGap`/`columnGap` | `space[…]` (F-04) | 2 |
+| `radius-literals` | non-zero numeric `border*Radius` | `radius.*`, `cellRadius()`, `squareRadius()` (F-05) | 8 |
+| `off-scale-font-sizes` | `fontSize` 10 / 10.5 / 11 / 11.5 / 12.5, and `typeScale.micro` / `.caption` / `.subtitle` (10 / 11 / 12.5) | a `textStyles` style (F-03) | 9 |
 
-An off-scale literal (`fontSize: 11`) counts under both `font-size-literals` and `off-scale-font-sizes`. Two literals on one line count once. `0` is not counted (a reset, not a step); sizes (`width`/`height`) are not counted (no size scale). The assessment's "~394" figure counted spacing *and* sizes, so it is higher than 274 + 55. The screens move onto the new tokens batch by batch during V3 (backlog), and each batch lowers these numbers with `npm run ratchet:update`. That script refuses a key the baseline does not have yet: a new key is added to the baseline by hand, in the commit that introduces it.
+An off-scale literal (`fontSize: 11`) counts under both `font-size-literals` and `off-scale-font-sizes`. Two literals on one line count once. `0` is not counted (a reset, not a step); sizes (`width`/`height`) are not counted (no size scale). The V3 assessment's "~394" figure (`docs/archive/assessment-v3.md`) counted spacing *and* sizes, and the baseline was 274 + 55 + 56 when the keys were added in V3-0b; the screens have since moved onto the tokens, and each batch lowers these numbers with `npm run ratchet:update`. That script refuses a key the baseline does not have yet: a new key is added to the baseline by hand, in the commit that introduces it.
 
 ## Chromium on the WSL dev box (visual-check)
 
