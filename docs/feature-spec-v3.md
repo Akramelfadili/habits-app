@@ -81,10 +81,10 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 
 **Notes (verified by the assessment)**
 - There is **no data**: the two tabs are placeholder routes sharing `placeholder-tab-screen`. No tables, migrations, repositories, flows or export fields exist. No migration needed.
-- Delete the 2 routes, the placeholder component and its test, the 2 visual states and 2 baseline PNGs; update README, CLAUDE.md, `docs/architecture.md`, `docs/design-system.md`, `docs/feature-spec.md`.
+- Delete the 2 routes, the placeholder component and its test, the 2 visual states and 2 baseline PNGs; update README, CLAUDE.md, `ARCHITECTURE.md`, `docs/design-system.md`, `docs/feature-spec.md`.
 - Remove the "future modules" promise from the docs; **keep** the module-isolation rules. Keep or rename the fake `todos` fixture in `check-architecture.test.mjs`.
 
-> **As built (V3-0b):** the 2 routes, their tab entries, `placeholder-tab-screen` + test, the `tab-todos` / `tab-expenses` visual states and PNGs are gone; the tabs layout keeps only Habits until HAB-27. README, CLAUDE.md, `architecture.md`, `design-system.md` and `feature-spec.md` reworded (no future-modules promise; module-isolation rule kept). The fake `src/modules/todos/…` fixture in `check-architecture.test.mjs` is kept as-is: it only exercises the module-isolation rule.
+> **As built (V3-0b):** the 2 routes, their tab entries, `placeholder-tab-screen` + test, the `tab-todos` / `tab-expenses` visual states and PNGs are gone; the tabs layout keeps only Habits until HAB-27. README, CLAUDE.md, `ARCHITECTURE.md`, `design-system.md` and `feature-spec.md` reworded (no future-modules promise; module-isolation rule kept). The fake `src/modules/todos/…` fixture in `check-architecture.test.mjs` is kept as-is: it only exercises the module-isolation rule.
 
 
 ---

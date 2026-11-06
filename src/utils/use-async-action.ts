@@ -4,7 +4,7 @@ import { type RunResult, type RunSafelyOptions, runSafely } from "./run-safely";
 
 /**
  * Consistent { execute, run, isLoading, error } shape for any repository or
- * service call a write hook exposes — see docs/architecture.md's async-action-
+ * service call a write hook exposes — see ARCHITECTURE.md's async-action-
  * state note.
  *
  * - `execute` rethrows (for the few callers that handle the failure inline,

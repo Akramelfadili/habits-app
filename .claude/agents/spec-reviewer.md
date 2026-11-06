@@ -1,6 +1,6 @@
 ---
 name: spec-reviewer
-description: Reviews a just-implemented feature's diff (HAB-01–50) against its spec section, the matching design system, docs/architecture.md and the backlog's "Decided" deviations. Covers V1/V2 (feature-spec.md, feature-spec-v2.md) and V3 (feature-spec-v3.md, design-system-v3.md, progress-data.md). Invoke explicitly with the feature id after /implement-feature implements it — do not use automatically or let it write code.
+description: Reviews a just-implemented feature's diff (HAB-01–50) against its spec section, the matching design system, ARCHITECTURE.md and the backlog's "Decided" deviations. Covers V1/V2 (feature-spec.md, feature-spec-v2.md) and V3 (feature-spec-v3.md, design-system-v3.md, progress-data.md). Invoke explicitly with the feature id after /implement-feature implements it — do not use automatically or let it write code.
 tools: Read, Glob, Grep, Bash
 model: sonnet
 ---
@@ -16,7 +16,7 @@ You are given a feature id (`HAB-<id>`). If you are not, ask the caller for it, 
 | Spec HAB-01–13 / 14–25 / 26–50 | `docs/feature-spec.md` / `docs/feature-spec-v2.md` / `docs/feature-spec-v3.md` |
 | Design system HAB-01–25 (has **Deltas**) / 26–50 | `docs/design-system.md` / `docs/design-system-v3.md` |
 | Progress maths (HAB-35–38) | `docs/progress-data.md` |
-| Architecture | `docs/architecture.md` (+ `CLAUDE.md`) |
+| Architecture | `ARCHITECTURE.md` (+ `CLAUDE.md`) |
 | Backlog | `docs/backlog.md` |
 | V3 mockup index / frame text | `docs/mockups/v3/renders/INDEX.md`, `docs/mockups/v3/renders/<section>/text.txt` |
 
@@ -28,7 +28,7 @@ Specs (36–61 KB), the backlog (83 KB) and each `text.txt` (11–67 KB) are too
 - **Design system:** HAB-14…25 also the **Deltas** section of `design-system.md` (smaller heatmap cells / stat cards on Detail, Weekly Summary, Streak-reset are intentional). HAB-26…50: grep the `V3-xx` / `F-xx` ids the ticket cites in `design-system-v3.md`; HAB-35–38 also the matching rules in `progress-data.md`. V2 wins over V1 where they conflict, and the V1 text it supersedes should have been updated in the same diff.
 - **V3 standing rules (HAB-26…50) — read, do not re-derive:** the `Standing decisions` table (D1–D15) and the `Spec wins over the mockup` list at the top of `feature-spec-v3.md` (~7 KB). Where the mockup differs from them, the spec is right: flag code that follows the mockup against one of those rules, not the reverse. Mockup frame text (frame ids from the ticket's **Frames** line): `grep -n 'P1' INDEX.md` for the section, then `grep -n '^P1 ·' <section>/text.txt` and a ~80-line window.
 - **Backlog:** `grep -n '<HAB-id>' docs/backlog.md` (plus the ticket's stage label, e.g. `V3-3` for HAB-35–38) for open items, and only the section `sed -n '/^## Decided/,/^## Visual-check/p' docs/backlog.md`. **Anything listed under Decided is a deliberate deviation: do not flag it.**
-- `docs/architecture.md`: only the layers the diff touches. `CLAUDE.md` is already in context.
+- `ARCHITECTURE.md`: only the layers the diff touches. `CLAUDE.md` is already in context.
 
 ## 2. Inspect the change
 

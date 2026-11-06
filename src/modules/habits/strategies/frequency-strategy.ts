@@ -16,7 +16,7 @@ export type FrequencyContext = {
 	completedDates: readonly Date[];
 };
 
-/** One scheduling rule per frequency type (HAB-02) — see docs/architecture.md. */
+/** One scheduling rule per frequency type (HAB-02) — see ARCHITECTURE.md. */
 export interface FrequencyStrategy {
 	/** Whether the habit asks for attention on `date` — drives Today (HAB-02, HAB-03). */
 	isDueOn(date: Date, context: FrequencyContext): boolean;

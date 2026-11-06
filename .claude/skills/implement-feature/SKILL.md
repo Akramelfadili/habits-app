@@ -13,7 +13,7 @@ disable-model-invocation: true
 | Spec HAB-01–13 / HAB-14–25 / HAB-26–50 | `docs/feature-spec.md` / `docs/feature-spec-v2.md` / `docs/feature-spec-v3.md` |
 | Design system HAB-01–25 (has **Deltas**) / HAB-26–50 | `docs/design-system.md` / `docs/design-system-v3.md` |
 | Progress maths (HAB-35–38) | `docs/progress-data.md` |
-| Architecture, navigation ADR | `docs/architecture.md`, `docs/decisions/006-navigation.md` |
+| Architecture, navigation ADR | `ARCHITECTURE.md`, `docs/decisions/006-navigation.md` |
 | Backlog (deviations, open items) | `docs/backlog.md` |
 | V3 mockup index and frame text | `docs/mockups/v3/renders/INDEX.md`, `docs/mockups/v3/renders/<section>/text.txt` |
 | Tooling, visual-check | `docs/dev-tooling.md` |
@@ -27,7 +27,7 @@ Sizes: specs 36–61 KB, backlog 83 KB, each `text.txt` 11–67 KB. Find the lin
 - **Spec section.** Heading patterns (verified): V1 `^## 03 — ` (two-digit id, no "HAB"); V2 and V3 `^## HAB-35 — `. So: `grep -n '^## HAB-35 \|^## HAB-36 ' <spec>` → section runs to the next `^## `. Read only that, plus the NEW-/VAR- entries it cites (V2) or the **Check against code** line (V3).
 - **V3 also:** read the `Standing decisions` table (D1–D15) and `Spec wins over the mockup` list at the top of `feature-spec-v3.md` once (~7 KB); they override the mockup. Design system: grep the ticket's `V3-xx` component ids and the `F-xx` tokens it names in `design-system-v3.md`, read those rows only. HAB-35–38 also read the matching rules in `progress-data.md`. V1/V2 tickets: `design-system.md` **Deltas** section plus the ticket's screen; for V2 skim the V1 section it revises (V2 wins; update V1 text and tests in the same change).
 - **Backlog, by grep only:** `grep -n 'HAB-35' docs/backlog.md` (a hit may be a heading or a bullet), plus the stage label from the spec's Build order (V3-0b: HAB-26/28/29/42 · V3-1: 27 · V3-2: 30–34, 48 · V3-3: 35–38 · V3-4: 39–45 · V3-5: 46–47 · V3-6: 49–50), e.g. `grep -n 'V3-3' docs/backlog.md`. Read those lines with a small window. Then read only the **"Decided — deviations the reviewers should not re-flag"** section: `sed -n '/^## Decided/,/^## Visual-check/p' docs/backlog.md`.
-- `architecture.md`: only the layers you touch (`grep -n '^## '` for the heading). Navigation or a pushed screen: `docs/decisions/006-navigation.md` too.
+- `ARCHITECTURE.md`: only the layers you touch (`grep -n '^## '` for the heading). Navigation or a pushed screen: `docs/decisions/006-navigation.md` too.
 - Branch `feat/hab-<id>-<slug>` (create if on `master`; one ticket per branch and PR).
 
 ## 1. Explore

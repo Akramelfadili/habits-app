@@ -458,7 +458,7 @@ Evidence: all config/docs read, `git log` for HAB-14…25, 12 V2 session transcr
 | no `npm install`, no commit/push | Yes | permissions deny |
 
 ### Lean doc set (proposal)
-`CLAUDE.md` ≈ 1.2k tokens; `AGENTS.md` stub; `docs/architecture.md` merging `app-architecture` + `technical-architecture` (≈ 4 KB: updated tree, the 10 rules with one-line reasons, patterns table; drop SOLID essays, sources, "still open"); one `design-system.md` with the V2 Deltas applied; one spec file per ticket `docs/specs/hab-NN.md` with "As built" in the same file plus an index (so `/implement-feature` reads 1–3 KB instead of `sed`-ing a 34 KB file); `docs/backlog.md` append-only and out of default context; `docs/audits/` for dated reports; `roadmap.md` collapsed to a status table; new `docs/decisions.md` for cross-ticket rulings (V2 beats V1, category order, archived-habit insight rule, flaky-baseline list).
+`CLAUDE.md` ≈ 1.2k tokens; `AGENTS.md` stub; `ARCHITECTURE.md` merging `app-architecture` + `technical-architecture` (≈ 4 KB: updated tree, the 10 rules with one-line reasons, patterns table; drop SOLID essays, sources, "still open"); one `design-system.md` with the V2 Deltas applied; one spec file per ticket `docs/specs/hab-NN.md` with "As built" in the same file plus an index (so `/implement-feature` reads 1–3 KB instead of `sed`-ing a 34 KB file); `docs/backlog.md` append-only and out of default context; `docs/audits/` for dated reports; `roadmap.md` collapsed to a status table; new `docs/decisions.md` for cross-ticket rulings (V2 beats V1, category order, archived-habit insight rule, flaky-baseline list).
 
 ---
 

@@ -1,6 +1,6 @@
 # Contributing
 
-How changes get into this repo. The rules themselves are in `CLAUDE.md`; the reasons in `docs/architecture.md` and `docs/decisions/`; the tools in `docs/dev-tooling.md`.
+How changes get into this repo. The rules themselves are in `CLAUDE.md`; the reasons in `ARCHITECTURE.md` and `docs/decisions/`; the tools in `docs/dev-tooling.md`.
 
 ## Branches, commits, pull requests
 

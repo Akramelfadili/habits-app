@@ -1,6 +1,6 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 # The repo is PUBLIC: anything committed is visible to everyone. See
-# docs/CONTRIBUTING.md "What never goes in git"; scripts/check-repo-hygiene.mjs
+# CONTRIBUTING.md "What never goes in git"; scripts/check-repo-hygiene.mjs
 # fails `make check` if a tracked file matches these classes.
 
 # --- dependencies ---

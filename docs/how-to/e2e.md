@@ -1,6 +1,6 @@
 # How to: E2E journeys (Maestro)
 
-Each flow in `e2e/` is a full user journey across several features, not an isolated screen. File names lead with the feature IDs they cover (per `docs/architecture.md`); multi-ID names deviate from the single-ID example in `CLAUDE.md` on purpose.
+Each flow in `e2e/` is a full user journey across several features, not an isolated screen. File names lead with the feature IDs they cover (per `ARCHITECTURE.md`); multi-ID names deviate from the single-ID example in `CLAUDE.md` on purpose.
 
 | Flow | Journey | Covers |
 |---|---|---|

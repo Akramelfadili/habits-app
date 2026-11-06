@@ -9,7 +9,7 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `../DESIGN.md` | Design principles, token rules, accessibility rules, who enforces each | Before any UI work | 1k |
 | `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.5k |
 | `CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
-| `architecture.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
+| `ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
 | `dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 2.8k |
 | `decisions/001…007` | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007) | Before changing what they decide | 0.6–2k each |
 | `design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
