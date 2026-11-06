@@ -115,9 +115,10 @@ export function useCollapsingHeader() {
 	useAnimatedReaction(
 		() => progress.value >= BAR_TAKES_OVER_AT,
 		(next, previous) => {
-			// `previous` is null on the first run, when `collapsed` already holds the
-			// start value (progress 0): setting it again is a stray render after mount.
-			if (previous !== null && next !== previous) {
+			// `previous` is null on the first run, when `collapsed` still holds its
+			// start value (false): setting it again would be a stray render after
+			// mount, but a first run that is already past the threshold must count.
+			if (next !== (previous ?? false)) {
 				scheduleOnRN(setCollapsed, next);
 			}
 		},

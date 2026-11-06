@@ -5,6 +5,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react-native";
+import { jumpAnimationsToTheirEnd } from "@/test-support/animation";
 import { expectConsole } from "@/test-support/console";
 import type { CategoryGroup } from "../presenters/today-screen-helpers";
 import { categoryNamed, makeHabit } from "../test-support/habit-builder";
@@ -215,7 +216,7 @@ jest.mock("../components/week-strip", () => {
 	};
 });
 
-import { Alert } from "react-native";
+import { Alert, Animated } from "react-native";
 import { ToastHost } from "@/components/ui/composite/toast-host";
 import { useToastStore } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
@@ -247,6 +248,7 @@ describe("TodayScreen", () => {
 
 	beforeEach(() => {
 		fakeDate(new Date(2026, 8, 16, 12));
+		jumpAnimationsToTheirEnd();
 		measureSpy = mockMeasureInWindow();
 		mockIsLoaded = true;
 		mockQueriesError = null;
@@ -524,6 +526,8 @@ describe("TodayScreen", () => {
 			mockIsLoaded = false;
 			mockViewState = "no-habits";
 			jest.useFakeTimers();
+			// The skeleton pulses in a loop; a jumped animation would restart forever.
+			jest.mocked(Animated.timing).mockRestore();
 		});
 		afterEach(() => jest.useRealTimers());
 

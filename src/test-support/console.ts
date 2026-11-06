@@ -4,6 +4,8 @@
 // A test that expects a message says so with `expectConsole`, which also
 // returns a mock to assert on.
 
+import { cleanup } from "@testing-library/react-native";
+
 type Method = "error" | "warn";
 type Matcher = string | RegExp;
 
@@ -62,7 +64,11 @@ export function installConsoleGuard(): void {
 		}
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
+		// Testing Library unmounts in its own afterEach, which runs after this one
+		// and awaits an act(): animation frames fire there, outside any test's
+		// console. Unmount first so that output is still caught.
+		await cleanup();
 		for (const method of METHODS) console[method] = originals[method];
 		const found = unexpected;
 		unexpected = [];

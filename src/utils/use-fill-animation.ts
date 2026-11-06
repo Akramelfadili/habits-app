@@ -12,11 +12,18 @@ export function useFillAnimation(fraction: number): Animated.Value {
 	const reduceMotion = useReducedMotion();
 	const animated = useRef(new Animated.Value(fraction)).current;
 
+	// What the value is heading to; on mount it already holds `fraction`, and
+	// animating to where it already is would only burn 450 ms of re-renders.
+	const target = useRef(fraction);
+
 	useEffect(() => {
 		if (reduceMotion) {
+			target.current = fraction;
 			animated.setValue(fraction);
 			return;
 		}
+		if (target.current === fraction) return;
+		target.current = fraction;
 		const run = Animated.timing(animated, {
 			toValue: fraction,
 			duration: motion.fill.duration,
