@@ -51,7 +51,7 @@ deadcode: ## Report unused files/exports/dependencies with knip (report only; no
 
 check: lint-check typecheck test test-tooling check-architecture check-repo-hygiene ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules + repo hygiene
 
-e2e: ## Run the Maestro journeys against the web build (setup: e2e/README.md)
+e2e: ## Run the Maestro journeys against the web build (setup: docs/how-to/e2e.md)
 	npm run e2e
 
 visual-check: ## Render every screen/state and diff against docs/visual-baseline/

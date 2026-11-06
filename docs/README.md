@@ -20,7 +20,8 @@ Which document answers which question. Sizes are estimated tokens (file bytes ÷
 | `mockups/v3/README.md`, `mockups/v3/renders/INDEX.md` | V3 design files; frame id → section | Visual work | 2.5k |
 | `mockups/v3/renders/<section>/text.txt` | All copy and rules of one mockup section | Wording for one frame, by `grep` | 3–17k each |
 | `visual-baseline/` | PNG baselines for `npm run visual-check` | Only through the tool | — |
-| `../e2e/README.md` | Maestro journeys, status, manual device checks | Touching `e2e/` | 2k |
+| `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 1.3k |
+| `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 2k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |
 | `feature-spec.md`, `feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 10k |
 | `assessment-v3.md` | V3 impact per ticket, batch plan. **Never read by default** | History | 16k |
@@ -78,4 +79,4 @@ A section runs to the next `^## `. Ticket → stage (used by `/implement-feature
 - `npm run visual-check -- <screen>`: targeted, for the screens you touched; then once the full `npm run visual-check` (light and dark). Setup: `dev-tooling.md`.
 - `npm run test:slow`: when you touch code the slow tests cover (CI runs it).
 - `npm run e2e`: Maestro journeys, when navigation or a tapped label changed.
-- Device validation: `gh workflow run ios-simulator.yml` (manual, not a gate). How-to in the root `README.md` for now.
+- Device validation: `gh workflow run ios-simulator.yml` (manual, not a gate). How-to: `how-to/device-validation.md`.
