@@ -41,7 +41,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - New frequency type or streak rule = new Strategy file, not an `if`. Do not change existing Strategy semantics.
 - Forms: React Hook Form + Zod. Dates: `date-fns`, never native `Date` math for streaks or weeks.
 - Reuse before create: search `components/ui/primitives|composite` and the module's components first. Colours, shadows, font sizes come from `src/theme` tokens.
-- Header buttons only via `composite/header-buttons.tsx` (iOS 26 Liquid Glass bug).
+- Header buttons only via `src/components/ui/composite/header-buttons.tsx` (iOS 26 Liquid Glass bug).
 - Categories: `habits.categoryId` supplies icon and color. Never read or write the legacy `habits.icon/color/category` columns; no free-text categories.
 - Allowlists (`scripts/check-architecture.allowlist.json`) and the token baseline only shrink.
 - Migrations (`src/lib/db/migrations/`) need approval. Test with foreign keys ON, whole chain in one transaction, child rows present; table rebuilds use `PRAGMA defer_foreign_keys`. Run the `migration-reviewer` agent.

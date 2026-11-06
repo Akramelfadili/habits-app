@@ -3,6 +3,8 @@
 Node scripts behind the `npm run` commands; details in `docs/dev-tooling.md`.
 
 - `check-architecture.mjs` enforces the layer rules (allowlist may only shrink; tested by `check-architecture.test.mjs`).
+- `check-repo-hygiene.mjs` fails on a tracked secret, log, archive, generated file or file over 1 MB.
+- `check-doc-refs.mjs` fails on a doc that points at a missing path or "§ section" heading (tested by `check-doc-refs.test.mjs`).
 - `token-ratchet-update.mjs` lowers the design-token baseline.
 - `visual-check.mjs` (+ `visual-check/screens.mjs`, the list of screen states) renders and diffs every state on the web build.
 - `e2e.mjs` runs the Maestro journeys in `e2e/`.

@@ -471,7 +471,7 @@ Evening review that closes the day (PR-01, T9 frame) · Today's log with times (
 ---
 
 ## HAB-50 — Visual baselines, e2e and docs
-**Rules:** regenerate web light/dark baselines (≈137 will change); update Maestro flows for 3 tabs; update CLAUDE.md "When you touch X, read Y" map and the architecture-check script for the new structure; update the docs index in `README.md` ("Where to read more") and `docs/roadmap.md` (V3 batches).
+**Rules:** regenerate web light/dark baselines (≈137 will change); update Maestro flows for 3 tabs; update CLAUDE.md "When you touch X, read Y" map and the architecture-check script for the new structure; update the docs index in `README.md` ("Where to read more") and `docs/README.md` (V3 batches).
 
 ---
 

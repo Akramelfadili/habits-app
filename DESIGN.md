@@ -25,7 +25,7 @@ Colour, spacing, radius, type size and weight, elevation and motion come from `s
 
 - Shared UI is in `src/components/ui/primitives` (one element: button, chip, toggle…) and `src/components/ui/composite` (assembled: sheet, banner, list item, header buttons…). Module-specific components stay in the module.
 - **Reuse before create:** search both folders first, then extend, then create in `components/ui/` with every documented state. No raw styled `Pressable`/`View`/`Text` for an element the design system documents. This is a review rule (`CLAUDE.md` rule 10); only the token part is mechanical (above).
-- Header buttons only from `composite/header-buttons.tsx`: `src/components/ui/composite/header-buttons.guard.test.ts` fails if any other file sets a `header*` button option (iOS 26 Liquid Glass).
+- Header buttons only from `src/components/ui/composite/header-buttons.tsx`: `src/components/ui/composite/header-buttons.guard.test.ts` fails if any other file sets a `header*` button option (iOS 26 Liquid Glass).
 - Every scrolling screen inside the tabs ends with `TAB_BAR_BOTTOM_PADDING` (the bar overlays content). Convention, no guard; `tab-bar-pill.test.tsx` pins the constant.
 
 ## Theme and dark mode

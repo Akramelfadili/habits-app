@@ -13,7 +13,7 @@ Mockup frame IDs in this file refer to the V1/V2 PNGs at git tag `mockups-v1-v2`
 V2 specs: see feature-spec-v2.md. Where V2 conflicts, V2 wins.
 
 > [!info] How to use this file
-> Features are ordered by **build sequence**, not by importance — each one only needs what came before it. Build straight down the list: get Feature 01 fully working end to end before starting 02. Every feature has an **Acceptance criteria** checklist at the end — this file was the build tracker for V1. The checkboxes were not maintained after the build, so treat them as the list of what each feature must satisfy, not as a record of status (the status of the work is in `docs/roadmap.md`).
+> Features are ordered by **build sequence**, not by importance — each one only needs what came before it. Build straight down the list: get Feature 01 fully working end to end before starting 02. Every feature has an **Acceptance criteria** checklist at the end — this file was the build tracker for V1. The checkboxes were not maintained after the build, so treat them as the list of what each feature must satisfy, not as a record of status (the status of the work is in `docs/README.md`).
 
 **Scope:** V1, iOS, single local user, no accounts, no cloud sync.
 **Replaces:** InnerGrow Habit Tracker (the app currently being used).

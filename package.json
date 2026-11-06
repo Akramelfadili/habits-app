@@ -68,6 +68,7 @@
 		"e2e": "node scripts/e2e.mjs",
 		"check-architecture": "node scripts/check-architecture.mjs",
 		"check-repo-hygiene": "node scripts/check-repo-hygiene.mjs",
+		"check-doc-refs": "node scripts/check-doc-refs.mjs",
 		"test:tooling": "node --test \"scripts/**/*.test.mjs\"",
 		"ratchet:update": "node scripts/token-ratchet-update.mjs",
 		"deadcode": "knip --production",

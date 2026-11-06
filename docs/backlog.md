@@ -162,7 +162,7 @@ Built on `chore/ios-simulator-validation` and merged (#36, #37); the workflow fi
 ## Decided — deviations the reviewers should not re-flag
 
 ### HAB-16 — Monthly
-- Slipping body omits C3's second sentence ("The drop started when Easy run moved to evenings") — a cause across habits isn't derivable. Insight thresholds are one named block in `services/monthly-insights.ts`.
+- Slipping body omits C3's second sentence ("The drop started when Easy run moved to evenings") — a cause across habits isn't derivable. Insight thresholds are one named block in `domain/monthly-insights.ts`.
 - Unlock date is first day + 30 (C6: since 4 Sep → 4 Oct), with "N of 30" counting full days before today.
 - Frozen days leave both sides of the rate (an excused miss), so the tile can differ slightly from a "scheduled" count that includes them.
 - The Year segment was disabled until HAB-17 (done).
