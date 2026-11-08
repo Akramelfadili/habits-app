@@ -1,6 +1,8 @@
-import { startOfDay, subDays } from "date-fns";
+import { addDays, startOfDay, subDays } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay } from "../types";
+import { calculateLongestStreak } from "./habit-history";
 
 import {
 	calculateCurrentStreak,
@@ -10,7 +12,9 @@ import {
 	isEntryComplete,
 } from "./streaks";
 
-const HABIT_CREATED = new Date("2026-01-01T00:00:00Z");
+// Local dates throughout: the app's days are local calendar days, and jest
+// runs in America/Los_Angeles, where a UTC midnight is the evening before.
+const HABIT_CREATED = new Date(2026, 0, 1);
 const dailyHabit = makeHabit({
 	id: 1,
 	frequency: { type: "daily" },
@@ -54,6 +58,51 @@ describe("isEntryComplete", () => {
 	});
 });
 
+describe("calculateCurrentStreak across the end of February (G-03)", () => {
+	const keysFrom = (from: Date, to: Date) => {
+		const keys: string[] = [];
+		for (let d = from; d <= to; d = addDays(d, 1)) keys.push(toDayKey(d));
+		return keys;
+	};
+
+	it.each([
+		// year, days from 20 Feb to 1 Mar inclusive
+		[2028, 11],
+		[2027, 10],
+	])(
+		"counts 28 Feb → 1 Mar %i as consecutive days (%i in the run)",
+		(year, run) => {
+			const habit = makeHabit({ id: 1, createdAt: new Date(year, 0, 1) });
+			const keys = keysFrom(new Date(year, 1, 20), new Date(year, 2, 1));
+			expect(keys.includes(`${year}-02-29`)).toBe(year === 2028);
+			const entries = keys.map((key) => entry(1, key));
+			expect(
+				calculateCurrentStreak(habit, entries, new Set(), new Date(year, 2, 1)),
+			).toBe(run);
+			expect(
+				calculateLongestStreak({
+					habit,
+					entries,
+					frozenDates: new Set(),
+					today: new Date(year, 2, 1),
+				}).days,
+			).toBe(run);
+		},
+	);
+
+	it("breaks on a missed 29 Feb 2028, and a frozen one keeps it", () => {
+		const habit = makeHabit({ id: 1, createdAt: new Date(2028, 0, 1) });
+		const entries = keysFrom(new Date(2028, 1, 20), new Date(2028, 2, 1))
+			.filter((key) => key !== "2028-02-29")
+			.map((key) => entry(1, key));
+		const march1 = new Date(2028, 2, 1);
+		expect(calculateCurrentStreak(habit, entries, new Set(), march1)).toBe(1);
+		expect(
+			calculateCurrentStreak(habit, entries, new Set(["2028-02-29"]), march1),
+		).toBe(11);
+	});
+});
+
 describe("calculateCurrentStreak", () => {
 	it("counts consecutive completed due days walking back from asOf", () => {
 		const entries = [
@@ -65,7 +114,7 @@ describe("calculateCurrentStreak", () => {
 			dailyHabit,
 			entries,
 			new Set(),
-			new Date("2026-09-14"),
+			new Date(2026, 8, 14),
 		);
 		expect(streak).toBe(3);
 	});
@@ -76,7 +125,7 @@ describe("calculateCurrentStreak", () => {
 			dailyHabit,
 			entries,
 			new Set(),
-			new Date("2026-09-14"),
+			new Date(2026, 8, 14),
 		);
 		expect(streak).toBe(1);
 	});
@@ -87,7 +136,7 @@ describe("calculateCurrentStreak", () => {
 			dailyHabit,
 			entries,
 			new Set(["2026-09-13"]),
-			new Date("2026-09-14"),
+			new Date(2026, 8, 14),
 		);
 		expect(streak).toBe(3);
 	});
@@ -104,7 +153,7 @@ describe("calculateCurrentStreak", () => {
 			weekdaysHabit,
 			entries,
 			new Set(),
-			new Date("2026-09-14"),
+			new Date(2026, 8, 14),
 		);
 		expect(streak).toBe(2);
 	});
@@ -138,14 +187,14 @@ describe("calculateCurrentStreak", () => {
 		const youngHabit = makeHabit({
 			id: 5,
 			frequency: { type: "daily" },
-			createdAt: new Date("2026-09-13T00:00:00Z"),
+			createdAt: new Date(2026, 8, 13),
 		});
 		const entries = [entry(5, "2026-09-13"), entry(5, "2026-09-14")];
 		const streak = calculateCurrentStreak(
 			youngHabit,
 			entries,
 			new Set(),
-			new Date("2026-09-14"),
+			new Date(2026, 8, 14),
 		);
 		expect(streak).toBe(2);
 	});
@@ -163,14 +212,14 @@ describe("calculateCurrentStreak", () => {
 			dailyHabit,
 			entries,
 			new Set(),
-			new Date("2026-09-14"),
+			new Date(2026, 8, 14),
 		);
 		expect(streak).toBe(3);
 	});
 });
 
 describe("getStreakAtRisk", () => {
-	const today = new Date("2026-09-16T12:00:00Z"); // Wednesday
+	const today = new Date(2026, 8, 16, 12); // Wednesday
 	const yesterday = "2026-09-15";
 
 	it("flags a habit due yesterday, not completed, with a streak at stake", () => {
@@ -336,7 +385,7 @@ describe("after a restore (HAB-20)", () => {
 
 describe("freezesRemainingInMonth", () => {
 	it("returns the full pool when nothing's been used", () => {
-		expect(freezesRemainingInMonth([], new Date("2026-09-16"))).toBe(2);
+		expect(freezesRemainingInMonth([], new Date(2026, 8, 16))).toBe(2);
 	});
 
 	it("subtracts freezes used within the given month, across every habit", () => {
@@ -344,14 +393,14 @@ describe("freezesRemainingInMonth", () => {
 			{ id: 1, habitId: 1, date: "2026-09-05", createdAt: new Date() },
 			{ id: 2, habitId: 2, date: "2026-09-20", createdAt: new Date() },
 		];
-		expect(freezesRemainingInMonth(frozenDays, new Date("2026-09-16"))).toBe(0);
+		expect(freezesRemainingInMonth(frozenDays, new Date(2026, 8, 16))).toBe(0);
 	});
 
 	it("ignores freezes used in a different month", () => {
 		const frozenDays: FrozenDay[] = [
 			{ id: 1, habitId: 1, date: "2026-08-31", createdAt: new Date() },
 		];
-		expect(freezesRemainingInMonth(frozenDays, new Date("2026-09-16"))).toBe(2);
+		expect(freezesRemainingInMonth(frozenDays, new Date(2026, 8, 16))).toBe(2);
 	});
 });
 
@@ -374,23 +423,23 @@ describe("the freeze pool by calendar month (D13)", () => {
 			frozen(3, "2026-08-31"),
 			frozen(4, "2026-10-01"),
 		];
-		expect(freezesUsedInMonth(days, new Date("2026-09-16"))).toBe(2);
-		expect(freezesUsedInMonth(days, new Date("2026-10-16"))).toBe(1);
+		expect(freezesUsedInMonth(days, new Date(2026, 8, 16))).toBe(2);
+		expect(freezesUsedInMonth(days, new Date(2026, 9, 16))).toBe(1);
 	});
 
 	it("counts a freeze against the month of the day it covers, not the day it was used", () => {
 		// Used on 1 October for Wednesday 30 September: September's pool pays for it.
 		const days = [frozen(1, "2026-09-30", new Date("2026-10-01T08:00:00"))];
-		expect(freezesUsedInMonth(days, new Date("2026-09-16"))).toBe(1);
-		expect(freezesRemainingInMonth(days, new Date("2026-10-02"))).toBe(2);
+		expect(freezesUsedInMonth(days, new Date(2026, 8, 16))).toBe(1);
+		expect(freezesRemainingInMonth(days, new Date(2026, 9, 2))).toBe(2);
 	});
 
 	it("resets on the 1st with no rollover, and never goes below zero", () => {
 		const days = [frozen(1, "2026-09-10"), frozen(2, "2026-09-11")];
-		expect(freezesRemainingInMonth(days, new Date("2026-09-30"))).toBe(0);
-		expect(freezesRemainingInMonth(days, new Date("2026-10-01"))).toBe(2);
+		expect(freezesRemainingInMonth(days, new Date(2026, 8, 30))).toBe(0);
+		expect(freezesRemainingInMonth(days, new Date(2026, 9, 1))).toBe(2);
 		const over = [...days, frozen(3, "2026-09-12")];
-		expect(freezesRemainingInMonth(over, new Date("2026-09-30"))).toBe(0);
+		expect(freezesRemainingInMonth(over, new Date(2026, 8, 30))).toBe(0);
 	});
 
 	it("is shared by every habit: two habits frozen the same day use two", () => {
@@ -398,6 +447,6 @@ describe("the freeze pool by calendar month (D13)", () => {
 			{ ...frozen(1, "2026-09-10"), habitId: 7 },
 			{ ...frozen(2, "2026-09-10"), habitId: 8 },
 		];
-		expect(freezesUsedInMonth(days, new Date("2026-09-10"))).toBe(2);
+		expect(freezesUsedInMonth(days, new Date(2026, 8, 10))).toBe(2);
 	});
 });

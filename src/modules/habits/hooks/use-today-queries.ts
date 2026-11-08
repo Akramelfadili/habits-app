@@ -1,7 +1,7 @@
-import { endOfWeek, parseISO, startOfWeek, subDays } from "date-fns";
+import { parseISO, subDays } from "date-fns";
 import { useToday } from "@/lib/today/use-today";
 import { fromDayKey, toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekWindow } from "@/utils/week-window";
 import { isHabitListedOn } from "../domain/selected-day";
 import {
 	calculateCurrentStreak,
@@ -70,9 +70,8 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	const categories = useCategories();
 	const today = useToday();
 	const selectedDay = selectedKey === null ? today : fromDayKey(selectedKey);
-	const weekStart = startOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON });
-	const weekEnd = endOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON });
-	const entries = useEntriesInRange(weekStart, weekEnd);
+	const week = weekWindow(selectedDay);
+	const entries = useEntriesInRange(week.start, week.end);
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
 	const habitsById = new Map(habits.map((habit) => [habit.id, habit]));

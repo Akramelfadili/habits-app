@@ -107,6 +107,13 @@ on device, and real safe-area insets. These stay on the manual checklist.
   spell the group out: `/(progress)/week`. In-app navigation keeps the
   current group, so `router.push`/`replace` from inside a tab is unambiguous
   and needs no prefix.
+- **Route params are untrusted** (audit 2026-11 D-09, `chore/dates-zones`).
+  `habitsapp://` links can come from any app, so the routes with a param
+  render a guard (`src/modules/habits/screens/route-param-guards.tsx`):
+  `edit-habit/[id]` takes only a plainly written positive integer,
+  `month/[month]` only a real `yyyy-MM-dd` day. Anything else redirects to
+  Today and logs `route.invalid_param` (scope and a reason code, never the
+  param). Pinned in `src/navigation.test.tsx`.
 - **Every route exists in all three groups.** `/(today)/manage` is a real
   route nothing navigates to. That is the price of one shared directory; the
   alternative (three directories plus a shared one for Detail) collides on

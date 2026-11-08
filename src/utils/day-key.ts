@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { addDays, format, parseISO, startOfDay } from "date-fns";
 
 /**
  * A calendar day as stored and compared everywhere — "yyyy-MM-dd", local time.
@@ -31,4 +31,15 @@ export function fromDayKey(key: string): Date {
 		}
 	}
 	return parseISO(key);
+}
+
+/**
+ * The local midnight of the day after `date` — the step of every day-by-day
+ * walk. Not bare `addDays`: in a zone whose DST starts at midnight (Sao Paulo
+ * until 2019, Santiago, Asunción, Havana) that day's "midnight" is 01:00, and
+ * `addDays` carries the 01:00 onto every later day, so a walk bounded by
+ * `!isAfter(cursor, end)` with a midnight `end` drops its last day.
+ */
+export function nextDay(date: Date): Date {
+	return startOfDay(addDays(date, 1));
 }

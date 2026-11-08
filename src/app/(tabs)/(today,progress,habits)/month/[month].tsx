@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
-import { ProgressMonthScreen } from "@/modules/habits/screens/progress-month-screen";
+import { ProgressMonthRouteScreen } from "@/modules/habits/screens/route-param-guards";
 
 export default function ProgressMonthRoute() {
 	const { month } = useLocalSearchParams<{ month: string }>();
-	return <ProgressMonthScreen month={month} />;
+	return <ProgressMonthRouteScreen month={month} />;
 }

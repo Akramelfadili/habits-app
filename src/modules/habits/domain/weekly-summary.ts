@@ -1,16 +1,13 @@
 import {
-	addDays,
-	endOfWeek,
 	getISODay,
 	isAfter,
 	min,
 	parseISO,
 	startOfDay,
-	startOfWeek,
 	subWeeks,
 } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { nextDay, toDayKey } from "@/utils/day-key";
+import { type DayWindow, weekWindow } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { addToTally, EMPTY_TALLY } from "./completion-rate";
 import { habitDayClassifier } from "./day-status";
@@ -31,15 +28,8 @@ import { habitDayClassifier } from "./day-status";
 /** A habit needs this many scheduled days this week before it can be flagged as slipping. */
 export const SLIPPING_MIN_SCHEDULED_DAYS = 3;
 
-export type WeekWindow = { start: Date; end: Date };
-
-/** The Mon–Sun week containing `today`. */
-export function weekWindowFor(today: Date): WeekWindow {
-	return {
-		start: startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON }),
-		end: startOfDay(endOfWeek(today, { weekStartsOn: WEEK_STARTS_ON })),
-	};
-}
+/** Monday 00:00 to Sunday 00:00, both days inclusive (`utils/week-window`). */
+export type WeekWindow = DayWindow;
 
 export type SummaryWeek = "this" | "last";
 
@@ -57,7 +47,7 @@ export function defaultSummaryWeek(today: Date): SummaryWeek {
 
 /** The Mon–Sun window `which` refers to, relative to `today`. */
 export function summaryWeekWindow(today: Date, which: SummaryWeek): WeekWindow {
-	return weekWindowFor(which === "last" ? subWeeks(today, 1) : today);
+	return weekWindow(which === "last" ? subWeeks(today, 1) : today);
 }
 
 export type WeeklyHabitRow = {
@@ -137,7 +127,7 @@ export function buildWeeklySummary({
 		for (
 			let cursor = week.start;
 			!isAfter(cursor, lastCountedDay);
-			cursor = addDays(cursor, 1)
+			cursor = nextDay(cursor)
 		) {
 			// The shared rule (completion-rate.ts): frozen and bonus days and a
 			// still-open today are not counted.

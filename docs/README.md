@@ -7,16 +7,16 @@ Which document answers which question. Sizes are estimated tokens (characters ÷
 | `../CLAUDE.md` | Working rules, guards, the "Specs and docs" list (which doc to read for each area), Definition of done | Every session (loaded automatically) | 1k |
 | `../README.md` | What the app is, how to run it | First visit | 0.5k |
 | `../DESIGN.md` | Design principles, token rules, accessibility rules, who enforces each | Before any UI work | 1.2k |
-| `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.3k |
+| `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.5k |
 | `../CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
-| `../ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9.4k |
-| `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 3.1k |
+| `../ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9.6k |
+| `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 3.6k |
 | `decisions/001…009` (001–004 and 006–009; there is no 005) | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007), logging (008), sync readiness (009) | Before changing what they decide | 0.5–1.8k each |
 | `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 4.6k |
 | `design/design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 8.7k |
 | `specs/feature-spec-v3.md` | HAB-26–50: rules, edge cases, "Spec wins", D1–D15 | Implementing or reworking a V3 ticket (one section only) | 15k |
 | `progress-data.md` | Progress maths (rates, cells, ranges) | HAB-35–38 | 2.8k |
-| `backlog.md` | Open work by theme, the **Decided** section, the deliberate V3 deviations | Before planning; open groups can be read whole, otherwise `grep` | 12.5k |
+| `backlog.md` | Open work by theme, the **Decided** section, the deliberate V3 deviations | Before planning; open groups can be read whole, otherwise `grep` | 12.8k |
 | `mockups/v3/README.md`, `mockups/v3/renders/INDEX.md` | V3 design files; frame id → section | Visual work | 3k |
 | `mockups/v3/renders/<section>/text.txt` | All copy and rules of one mockup section | Wording for one frame, by `grep` | 3–17k each |
 | `visual-baseline/` | PNG baselines for `npm run visual-check` | Only through the tool | — |

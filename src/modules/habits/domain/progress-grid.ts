@@ -1,6 +1,6 @@
-import { endOfWeek, getISODay, startOfDay, startOfWeek } from "date-fns";
+import { getISODay, startOfDay } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekAlignedSpan, weekWindow } from "@/utils/week-window";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { type DayLevel, percentOf, tallyOf } from "./completion-rate";
@@ -243,10 +243,7 @@ export function buildMonthCalendar(
 /** The Mon–Sun weeks a calendar month's cells need entries for (× per week judges a whole week). */
 export function calendarEntrySpan(month: Date): RangeWindow {
 	const window = monthWindowFor(month);
-	return {
-		start: startOfWeek(window.start, { weekStartsOn: WEEK_STARTS_ON }),
-		end: startOfDay(endOfWeek(window.end, { weekStartsOn: WEEK_STARTS_ON })),
-	};
+	return weekAlignedSpan(window.start, window.end);
 }
 
 // ─── Day detail ───────────────────────────────────────────────────────────────
@@ -323,8 +320,5 @@ export function buildDayDetail(input: GridInput & { date: Date }): DayDetail {
 
 /** The Monday–Sunday span to read entries for when showing one day's detail. */
 export function dayEntrySpan(date: Date): RangeWindow {
-	return {
-		start: startOfWeek(date, { weekStartsOn: WEEK_STARTS_ON }),
-		end: startOfDay(endOfWeek(date, { weekStartsOn: WEEK_STARTS_ON })),
-	};
+	return weekWindow(date);
 }

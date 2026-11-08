@@ -1,4 +1,5 @@
 import { addDays, format } from "date-fns";
+import { weekWindow } from "@/utils/week-window";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { monthWindowFor } from "./monthly-summary";
@@ -8,7 +9,6 @@ import {
 	rangeEntrySpan,
 	rangeWindowFor,
 } from "./range-summary";
-import { weekWindowFor } from "./weekly-summary";
 import { yearWindowFor } from "./yearly-summary";
 
 // Friday 18 Sep 2026 — the week is Mon 14 – Sun 20, the one before Mon 7 – Sun 13.
@@ -84,7 +84,7 @@ const summary = () =>
 
 describe("range windows", () => {
 	it("are the Mon–Sun week, the calendar month and the calendar year", () => {
-		expect(rangeWindowFor("week", today)).toEqual(weekWindowFor(today));
+		expect(rangeWindowFor("week", today)).toEqual(weekWindow(today));
 		expect(rangeWindowFor("month", today)).toEqual(monthWindowFor(today));
 		expect(rangeWindowFor("year", today)).toEqual(yearWindowFor(today));
 	});

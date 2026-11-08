@@ -1,5 +1,4 @@
-import { endOfWeek, startOfWeek } from "date-fns";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekWindow } from "@/utils/week-window";
 import {
 	type OffScheduleLog,
 	offScheduleCandidates,
@@ -22,10 +21,8 @@ export function useOffScheduleQueries(day: Date): {
 	loggedToday: OffScheduleLog[];
 } {
 	const { habits } = useActiveHabits();
-	const entries = useEntriesInRange(
-		startOfWeek(day, { weekStartsOn: WEEK_STARTS_ON }),
-		endOfWeek(day, { weekStartsOn: WEEK_STARTS_ON }),
-	);
+	const week = weekWindow(day);
+	const entries = useEntriesInRange(week.start, week.end);
 
 	return {
 		eligibleHabits: offScheduleCandidates(habits).filter((habit) =>

@@ -6,7 +6,6 @@ import {
 	buildWeeklySummary,
 	defaultSummaryWeek,
 	SLIPPING_MIN_SCHEDULED_DAYS,
-	weekWindowFor,
 } from "./weekly-summary";
 
 // Mid-day local, so date-only math never straddles a timezone boundary.
@@ -38,19 +37,6 @@ function daily(id: number, overrides: Partial<Habit> = {}): Habit {
 		...overrides,
 	});
 }
-
-describe("weekWindowFor", () => {
-	it("is Monday → Sunday, matching HAB-02's week", () => {
-		const { start, end } = weekWindowFor(new Date(2026, 8, 20, 22)); // Sunday night
-		expect(format(start, "EEE yyyy-MM-dd")).toBe("Mon 2026-09-14");
-		expect(format(end, "EEE yyyy-MM-dd")).toBe("Sun 2026-09-20");
-	});
-
-	it("puts a Monday in its own week, not the previous one", () => {
-		const { start } = weekWindowFor(monday);
-		expect(format(start, "yyyy-MM-dd")).toBe("2026-09-14");
-	});
-});
 
 describe("buildWeeklySummary", () => {
 	it("totals completed vs scheduled across every habit", () => {

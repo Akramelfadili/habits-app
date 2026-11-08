@@ -30,6 +30,7 @@ HAB-26–50. To-dos and expenses removed; Today, Progress and Habits rebuilt on 
 - **Starter habits** (branch `feat/starter-habits`, no PR number yet): a development build applies a list of habits from the gitignored `.env.local` at startup (versioned, one transaction, First Run skipped); `__DEV__`-gated, with a `check-architecture` site rule and a stricter env-file hygiene check; `docs/how-to/starter-habits.md`.
 - **Docs set** (branch `chore/docs-set`, no PR number yet): docs index, DESIGN.md, this file.
 - **Hardening 1** (branch `chore/hardening-1`, audit 2026-11 batch 13, no PR number yet): SHA-pinned workflows and least-privilege `check.yml`, CodeQL, Dependabot, PR and issue templates, CODEOWNERS, SECURITY.md, an all-rights-reserved LICENSE; zod 4.6.6 and Drizzle Studio dev-only; staged pre-commit, a cheaper Stop hook, `make check-ci`; docs index sizes; ADR 009 (sync parked).
+- **Dates, zones and boundaries** (branch `chore/dates-zones`, audit 2026-11 batch 14, no PR number yet): one week-window helper; Jest in a fixed zone (America/Los_Angeles) with a five-zone DST matrix, `withTimeZone` and `make test-tz` in CI; fixed day walks dropping their last day where DST starts at midnight; freeze-pool month edges and leap years tested; deep-link params validated (a bad `month` crashed the screen); contact-sheet test 15 s → 0.1 s.
 
 ## V2 — categories, summaries, settings (2026-10-02 → 2026-10-05)
 

@@ -85,6 +85,8 @@
 		"preset": "jest-expo",
 		"testTimeout": 15000,
 		"resolver": "./jest.resolver.js",
+		"globalSetup": "./jest.global-setup.js",
+		"testEnvironment": "./jest.environment.js",
 		"testPathIgnorePatterns": [
 			"/node_modules/",
 			"/__rsc_tests__/",

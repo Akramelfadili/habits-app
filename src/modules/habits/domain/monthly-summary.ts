@@ -1,7 +1,5 @@
 import {
-	addDays,
 	endOfMonth,
-	endOfWeek,
 	getISODay,
 	isAfter,
 	isBefore,
@@ -10,11 +8,10 @@ import {
 	parseISO,
 	startOfDay,
 	startOfMonth,
-	startOfWeek,
 	subMonths,
 } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { nextDay, toDayKey } from "@/utils/day-key";
+import { weekAlignedSpan, weekLastDay } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
 import { isPerfectDay } from "./completion-rate";
 import { type CellStatus, habitDayClassifier } from "./day-status";
@@ -64,12 +61,7 @@ export function historyStart(habits: readonly Habit[]): Date | null {
 
 /** Entries are needed from the Monday-aligned start of the previous month to the end of this month's last week. */
 export function monthEntryRange(month: MonthWindow): MonthWindow {
-	return {
-		start: startOfWeek(previousMonthWindow(month).start, {
-			weekStartsOn: WEEK_STARTS_ON,
-		}),
-		end: startOfDay(endOfWeek(month.end, { weekStartsOn: WEEK_STARTS_ON })),
-	};
+	return weekAlignedSpan(previousMonthWindow(month).start, month.end);
 }
 
 /** The month's Monday-based weeks, the first and last clipped to the month. */
@@ -77,11 +69,9 @@ export function monthWeeks(month: MonthWindow): MonthWindow[] {
 	const weeks: MonthWindow[] = [];
 	let start = month.start;
 	while (!isAfter(start, month.end)) {
-		const weekEnd = startOfDay(
-			endOfWeek(start, { weekStartsOn: WEEK_STARTS_ON }),
-		);
+		const weekEnd = weekLastDay(start);
 		weeks.push({ start, end: min([weekEnd, month.end]) });
-		start = addDays(weekEnd, 1);
+		start = nextDay(weekEnd);
 	}
 	return weeks;
 }
@@ -192,7 +182,7 @@ export function outcomesFor({
 		for (
 			let cursor = window.start;
 			!isAfter(cursor, lastCounted);
-			cursor = addDays(cursor, 1)
+			cursor = nextDay(cursor)
 		) {
 			const { status, isToday } = classify(cursor);
 			const outcome = outcomeOf(status, isToday);
@@ -283,7 +273,7 @@ function buildCalendar(
 		for (
 			let cursor = week.start;
 			!isAfter(cursor, week.end);
-			cursor = addDays(cursor, 1)
+			cursor = nextDay(cursor)
 		) {
 			row[getISODay(cursor) - 1] = { date: cursor, status: statusOf(cursor) };
 		}

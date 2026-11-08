@@ -11,8 +11,9 @@ function loadRepository(): typeof WebFrozenDayRepository {
 	return repository;
 }
 
-const MONTH_START = new Date("2026-09-01T00:00:00Z");
-const MONTH_END = new Date("2026-09-30T00:00:00Z");
+// Local dates, as the repository keys by the local calendar day (G-02).
+const MONTH_START = new Date(2026, 8, 1);
+const MONTH_END = new Date(2026, 8, 30);
 
 describe("frozen-day-repository.web", () => {
 	it("starts empty — no scenario pre-seeds a freeze", async () => {
@@ -26,7 +27,7 @@ describe("frozen-day-repository.web", () => {
 		const { result } = await renderHook(() => useFrozenDays());
 
 		await act(async () => {
-			await freezeHabitDay(1, new Date("2026-09-15T00:00:00Z"));
+			await freezeHabitDay(1, new Date(2026, 8, 15));
 		});
 
 		expect(
@@ -41,7 +42,7 @@ describe("frozen-day-repository.web", () => {
 		const { freezeHabitDay, unfreezeHabitDay, useFrozenDays } =
 			loadRepository();
 		const { result } = await renderHook(() => useFrozenDays());
-		const day = new Date("2026-09-15T00:00:00Z");
+		const day = new Date(2026, 8, 15);
 
 		await act(async () => {
 			await freezeHabitDay(1, day);
@@ -61,8 +62,8 @@ describe("frozen-day-repository.web", () => {
 		const { result } = await renderHook(() => useFrozenDays());
 
 		await act(async () => {
-			await freezeHabitDay(1, new Date("2026-09-15T00:00:00Z"));
-			await freezeHabitDay(1, new Date("2026-09-15T00:00:00Z"));
+			await freezeHabitDay(1, new Date(2026, 8, 15));
+			await freezeHabitDay(1, new Date(2026, 8, 15));
 		});
 
 		expect(
@@ -74,8 +75,8 @@ describe("frozen-day-repository.web", () => {
 		const { freezeHabitDay, getFreezesUsedInMonth } = loadRepository();
 
 		await act(async () => {
-			await freezeHabitDay(1, new Date("2026-09-05T00:00:00Z"));
-			await freezeHabitDay(2, new Date("2026-09-20T00:00:00Z"));
+			await freezeHabitDay(1, new Date(2026, 8, 5));
+			await freezeHabitDay(2, new Date(2026, 8, 20));
 		});
 
 		await expect(getFreezesUsedInMonth(MONTH_START, MONTH_END)).resolves.toBe(
@@ -87,11 +88,26 @@ describe("frozen-day-repository.web", () => {
 		const { freezeHabitDay, getFreezesUsedInMonth } = loadRepository();
 
 		await act(async () => {
-			await freezeHabitDay(1, new Date("2026-08-31T00:00:00Z"));
+			await freezeHabitDay(1, new Date(2026, 7, 31));
 		});
 
 		await expect(getFreezesUsedInMonth(MONTH_START, MONTH_END)).resolves.toBe(
 			0,
+		);
+	});
+
+	it("counts exactly 1 and 30 September out of 31 Aug, 1 Sep, 30 Sep, 1 Oct", async () => {
+		const { freezeHabitDay, getFreezesUsedInMonth } = loadRepository();
+
+		await act(async () => {
+			await freezeHabitDay(1, new Date(2026, 7, 31));
+			await freezeHabitDay(2, new Date(2026, 8, 1));
+			await freezeHabitDay(3, new Date(2026, 8, 30));
+			await freezeHabitDay(4, new Date(2026, 9, 1));
+		});
+
+		await expect(getFreezesUsedInMonth(MONTH_START, MONTH_END)).resolves.toBe(
+			2,
 		);
 	});
 });

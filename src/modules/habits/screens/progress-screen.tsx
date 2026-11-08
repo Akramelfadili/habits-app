@@ -1,4 +1,4 @@
-import { format, startOfWeek } from "date-fns";
+import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -24,6 +24,7 @@ import { habitAccentInk, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { toDayKey } from "@/utils/day-key";
 import { useTabRetapToTop } from "@/utils/use-on-tab-retap";
+import { weekStart } from "@/utils/week-window";
 import { EditDaySheet } from "../components/edit-day-sheet";
 import { ExportSheet } from "../components/export-sheet";
 import { HabitFilterSheet } from "../components/progress/habit-filter-sheet";
@@ -31,7 +32,6 @@ import { ProgressHeader } from "../components/progress/progress-header";
 import { ProgressMonth } from "../components/progress/progress-month";
 import { ProgressWeek } from "../components/progress/progress-week";
 import { ProgressYear } from "../components/progress/progress-year";
-import { WEEK_STARTS_ON } from "../constants";
 import { useProgressFilterQueries } from "../hooks/use-progress-filter-queries";
 import { useProgressShellQueries } from "../hooks/use-progress-shell-queries";
 import { useProgressViewActions } from "../hooks/use-progress-view-actions";
@@ -99,12 +99,7 @@ export function ProgressScreen() {
 
 	const eyebrow =
 		view.range === "week"
-			? progressCopy.eyebrow.week(
-					format(
-						startOfWeek(shell.today, { weekStartsOn: WEEK_STARTS_ON }),
-						"d MMMM",
-					),
-				)
+			? progressCopy.eyebrow.week(format(weekStart(shell.today), "d MMMM"))
 			: view.range === "month"
 				? format(shell.today, "MMMM yyyy")
 				: String(shell.today.getFullYear());

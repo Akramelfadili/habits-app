@@ -1,7 +1,7 @@
-import { endOfWeek, startOfWeek, subDays } from "date-fns";
+import { subDays } from "date-fns";
 import { useEffect, useRef, useState } from "react";
 import { toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekWindow } from "@/utils/week-window";
 import { type DaySummary, daySummary } from "../domain/day-summary";
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
@@ -33,10 +33,8 @@ export function useRolloverQueries(today: Date): {
 	// The tally needs the closed day's whole week; read it only once there is a notice.
 	const anchor = closed ?? today;
 	const { habits } = useActiveHabits();
-	const entries = useEntriesInRange(
-		startOfWeek(anchor, { weekStartsOn: WEEK_STARTS_ON }),
-		endOfWeek(anchor, { weekStartsOn: WEEK_STARTS_ON }),
-	);
+	const week = weekWindow(anchor);
+	const entries = useEntriesInRange(week.start, week.end);
 
 	return {
 		notice: closed

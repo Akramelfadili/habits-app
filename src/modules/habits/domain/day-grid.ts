@@ -1,5 +1,5 @@
-import { addDays, isAfter, isSameDay, startOfDay } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
+import { isAfter, isSameDay, startOfDay } from "date-fns";
+import { nextDay, toDayKey } from "@/utils/day-key";
 import type { Entry, FrozenDay, Habit } from "../types";
 import {
 	addToTally,
@@ -29,7 +29,7 @@ export function daysIn(start: Date, end: Date): Date[] {
 	for (
 		let cursor = startOfDay(start);
 		!isAfter(cursor, end);
-		cursor = addDays(cursor, 1)
+		cursor = nextDay(cursor)
 	) {
 		days.push(cursor);
 	}

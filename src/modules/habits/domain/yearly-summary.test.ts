@@ -295,6 +295,54 @@ describe("buildYearlySummary — month slots (HAB-17)", () => {
 	});
 });
 
+describe("buildYearlySummary — leap years (G-03)", () => {
+	it.each([
+		[2028, 366, 29],
+		[2027, 365, 28],
+	])(
+		"counts every day of %i (%i days, February %i)",
+		(year, days, february) => {
+			const habit = makeHabit({ id: 1, createdAt: day(year - 1, 12, 1) });
+			const today = day(year, 12, 31);
+			const summary = build(
+				[habit],
+				dailyEntries(1, day(year, 1, 1), today),
+				new Date(year, 11, 31, 20),
+			);
+			expect(summary.scheduled).toBe(days);
+			expect(summary.logged).toBe(days);
+			expect(summary.rate).toBe(1);
+			expect(summary.months[1]).toMatchObject({
+				kind: "counted",
+				completed: february,
+				scheduled: february,
+			});
+			// One unbroken run, 1 Jan → 31 Dec, across 29 Feb in a leap year.
+			expect(summary.longest.days).toBe(days);
+			expect(date(summary.longest.endedOn as Date)).toBe(date(today));
+		},
+	);
+
+	it("misses 29 Feb 2028 as a day like any other", () => {
+		const habit = makeHabit({ id: 1, createdAt: day(2027, 12, 1) });
+		const summary = build(
+			[habit],
+			dailyEntries(
+				1,
+				day(2028, 1, 1),
+				day(2028, 3, 31),
+				(d) => date(d) === "2028-02-29",
+			),
+			day(2028, 4, 1),
+		);
+		expect(summary.months[1]).toMatchObject({ completed: 28, scheduled: 29 });
+		expect(summary.months[2]).toMatchObject({ completed: 31, scheduled: 31 });
+		// 1 Jan → 28 Feb (31 + 28 days) beats 1 → 31 March (31) and the 1 April run.
+		expect(summary.longest.days).toBe(59);
+		expect(date(summary.longest.endedOn as Date)).toBe("2028-02-28");
+	});
+});
+
 describe("buildYearlySummary — calendar edge cases (HAB-17)", () => {
 	it("renders early January on older history without dividing by zero or going blank", () => {
 		const today = day(2027, 1, 3);
