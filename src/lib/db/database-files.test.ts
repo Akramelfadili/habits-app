@@ -35,6 +35,8 @@ jest.mock("expo-file-system", () => {
 			}
 			mockFiles.set(target.uri, mockFiles.get(this.uri) ?? "");
 			mockFiles.delete(this.uri);
+			// Like the native module: the moved File now points at the destination.
+			this.uri = target.uri;
 		}
 	}
 	class Directory {

@@ -70,8 +70,8 @@ export function retryOpenDatabase(): void {
  */
 export function setAsideDatabase(now: number): void {
 	const wasOpen = openError === null;
-	if (wasOpen) expoDb.closeSync();
 	try {
+		if (wasOpen) expoDb.closeSync();
 		renameDatabaseFile(
 			`${defaultDatabaseDirectory}/${DATABASE_NAME}`,
 			`habits.corrupt-${utcStamp(now)}.db`,

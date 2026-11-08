@@ -111,9 +111,11 @@ describe("database client", () => {
 				},
 			});
 			const client = require("./client");
+			mockOpen.mockReturnValue({ id: "reopened" });
 			expect(() => client.setAsideDatabase(NOW)).toThrow("busy");
 			expect(mockRename).not.toHaveBeenCalled();
-			expect(client.expoDb).toMatchObject({ id: "old" });
+			// A half-closed handle is replaced by a fresh open of the original.
+			expect(mockOpen).toHaveBeenCalledTimes(2);
 		});
 	});
 });

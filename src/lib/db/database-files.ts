@@ -65,16 +65,20 @@ export function renameDatabaseFile(
 	if (pairs.some((pair) => pair.to.exists)) {
 		throw new Error("set-aside target exists");
 	}
-	const moved: typeof pairs = [];
+	// `move()` repoints the File it is called on at the destination, so the
+	// rollback needs the original URIs, not the handles.
+	const moved: Array<{ fromUri: string; toUri: string }> = [];
 	try {
 		for (const pair of pairs) {
+			const fromUri = pair.from.uri;
+			const toUri = pair.to.uri;
 			pair.from.move(pair.to);
-			moved.push(pair);
+			moved.push({ fromUri, toUri });
 		}
 	} catch (error) {
-		for (const pair of moved.reverse()) {
+		for (const { fromUri, toUri } of moved.reverse()) {
 			try {
-				pair.to.move(pair.from);
+				new File(toUri).move(new File(fromUri));
 			} catch {
 				// Nothing more can be done; the original error is the one to report.
 			}
