@@ -156,7 +156,7 @@ Modules never import each other (rule 6). Habits is the only module today, but t
 
 ## Decision log
 
-If a package or approach is replaced, record the change here with a date rather than swapping it silently. Decisions with real trade-offs get an ADR in `docs/decisions/` (context, decision, consequences): 001 Drizzle + `useLiveRows`, 002 foreign keys off on device, 003 `run()` never rejects, 004 the design-token ratchet, 006 the navigation shell, 007 device validation on the iOS Simulator, 008 logging.
+If a package or approach is replaced, record the change here with a date rather than swapping it silently. Decisions with real trade-offs get an ADR in `docs/decisions/` (context, decision, consequences): 001 Drizzle + `useLiveRows`, 002 foreign keys off on device, 003 `run()` never rejects, 004 the design-token ratchet, 006 the navigation shell, 007 device validation on the iOS Simulator, 008 logging, 009 sync readiness (V4 sync parked, no schema work now).
 
 - 2026-09: Categories became a managed table (HAB-24/25). `habits.categoryId` is a NOT NULL FK; the legacy `icon/color/category` columns stay nullable and unused until a cleanup migration.
 - 2026-11: Logging (ADR 008): pluggable sinks, redaction in the core, a persistent 500-entry ring in a separate `logs.db`.

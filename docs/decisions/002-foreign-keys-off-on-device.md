@@ -24,7 +24,7 @@ Compensate in code and tests:
 ## Consequences
 
 - A write the code forgets to clean up can leave orphans silently. Known open cases (backlog):
-  - dev-only `deleteAllHabits`;
+  - ~~dev-only `deleteAllHabits`~~: removed in #48;
   - a stale Undo or open sheet writing for a habit deleted meanwhile;
   - `deleteCategory` racing a `createHabit`;
   - a stale `categoryId` in `createHabit`.
