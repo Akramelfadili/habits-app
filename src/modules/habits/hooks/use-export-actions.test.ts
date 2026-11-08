@@ -242,6 +242,24 @@ describe("useExportActions (EX1–EX4)", () => {
 			expect(hook.current.shareFailed).toBe(false);
 		});
 
+		it("returns to the choice screen once shared: the file is deleted, so another export is needed", async () => {
+			mockRunExport.mockResolvedValue(result);
+			mockShare.mockResolvedValue(undefined);
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.run(source, options));
+			await act(() => hook.current.share());
+			expect(hook.current.phase).toEqual({ name: "confirm" });
+		});
+
+		it("a failed share keeps the finished file on screen for a retry", async () => {
+			mockRunExport.mockResolvedValue(result);
+			mockShare.mockRejectedValue(new Error("no share sheet"));
+			const { result: hook } = await renderHook(() => useExportActions());
+			await act(() => hook.current.run(source, options));
+			await act(() => hook.current.share());
+			expect(hook.current.phase).toEqual({ name: "ready", result });
+		});
+
 		it("a failing share becomes an inline flag, never a rejection", async () => {
 			mockRunExport.mockResolvedValue(result);
 			mockShare.mockRejectedValue(new Error("no share sheet"));

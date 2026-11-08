@@ -1,27 +1,47 @@
 const mockShare = jest.fn();
-const mockCreate = jest.fn();
 const mockWrite = jest.fn();
+
+/** The fake disk: the uris that exist, and the ones whose delete should throw. */
+const mockDisk = new Set<string>();
+const mockStuck = new Set<string>();
+const mockEvents: string[] = [];
 
 jest.mock("expo-file-system", () => {
 	class File {
 		uri: string;
 		size = 3;
-		exists = false;
 		constructor(...parts: unknown[]) {
 			this.uri = parts.map(String).join("/");
 		}
-		create = (...args: unknown[]) => mockCreate(...args);
+		get exists() {
+			return mockDisk.has(this.uri);
+		}
+		create() {
+			mockDisk.add(this.uri);
+		}
 		writeSync = (...args: unknown[]) => mockWrite(...args);
+		delete() {
+			if (mockStuck.has(this.uri)) throw new Error("Operation not permitted");
+			mockEvents.push(`delete ${this.uri}`);
+			mockDisk.delete(this.uri);
+		}
 	}
 	class Directory {
-		exists = true;
 		uri: string;
 		constructor(...parts: unknown[]) {
 			this.uri = parts.map(String).join("/");
 		}
+		toString() {
+			return this.uri;
+		}
+		get exists() {
+			return true;
+		}
 		create() {}
 		list() {
-			return [];
+			return [...mockDisk]
+				.filter((uri) => uri.startsWith(`${this.uri}/`))
+				.map((uri) => new File(uri));
 		}
 	}
 	return { File, Directory, Paths: { cache: "cache" } };
@@ -30,9 +50,19 @@ jest.mock("expo-sharing", () => ({
 	shareAsync: (...args: unknown[]) => mockShare(...args),
 }));
 
-import { shareFile, shareText } from "./file-export";
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { clearExports, shareFile, shareText } from "./file-export";
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+	jest.clearAllMocks();
+	mockDisk.clear();
+	mockStuck.clear();
+	mockEvents.length = 0;
+	mockShare.mockReset().mockImplementation(async () => {
+		mockEvents.push("share");
+	});
+	clearLog();
+});
 
 describe("shareFile / shareText", () => {
 	it("shares with the file's type", async () => {
@@ -60,5 +90,62 @@ describe("shareFile / shareText", () => {
 		await expect(shareFile("file:///a.csv", "text/csv")).rejects.toThrow(
 			"no activity",
 		);
+	});
+});
+
+describe("the shared file is deleted (E-03)", () => {
+	it("deletes an export after the share sheet resolves, not before", async () => {
+		mockDisk.add("file:///exports/habits.json");
+		await shareFile("file:///exports/habits.json", "application/json");
+		expect(mockEvents).toEqual(["share", "delete file:///exports/habits.json"]);
+		expect(mockDisk.has("file:///exports/habits.json")).toBe(false);
+	});
+
+	it("keeps the file when the share fails, so Retry has something to send", async () => {
+		mockDisk.add("file:///exports/habits.csv");
+		mockShare.mockRejectedValue(new Error("no activity"));
+		await expect(
+			shareFile("file:///exports/habits.csv", "text/csv"),
+		).rejects.toThrow();
+		expect(mockDisk.has("file:///exports/habits.csv")).toBe(true);
+	});
+
+	it("deletes diagnostics.txt after it is shared", async () => {
+		await shareText("hello", "diagnostics.txt");
+		expect(mockEvents[0]).toBe("share");
+		expect(mockEvents[1]).toMatch(/^delete .*diagnostics\.txt$/);
+		expect([...mockDisk]).toEqual([]);
+	});
+
+	it("a failed delete is logged, never thrown", async () => {
+		mockDisk.add("file:///exports/stuck.json");
+		mockStuck.add("file:///exports/stuck.json");
+		await expect(
+			shareFile("file:///exports/stuck.json", "application/json"),
+		).resolves.toBeUndefined();
+		const logged = getLogEntries().filter(
+			(entry) => entry.event === "export.cleanup_failed",
+		);
+		expect(logged).toHaveLength(1);
+		expect(logged[0].level).toBe("warn");
+	});
+
+	it("a file that is already gone is not an error", async () => {
+		await expect(
+			shareFile("file:///exports/gone.json", "application/json"),
+		).resolves.toBeUndefined();
+		expect(
+			getLogEntries().some((e) => e.event === "export.cleanup_failed"),
+		).toBe(false);
+	});
+});
+
+describe("clearExports", () => {
+	it("removes every file left in the exports folder", () => {
+		mockDisk.add("cache/exports/habits-2026-09-16.json");
+		mockDisk.add("cache/exports/diagnostics.txt");
+		mockDisk.add("cache/exports/export-1.partial");
+		clearExports();
+		expect([...mockDisk]).toEqual([]);
 	});
 });

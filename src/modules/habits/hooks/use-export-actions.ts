@@ -118,6 +118,9 @@ export const useExportStore = create<ExportState>((set, get) => ({
 			// The share sheet resolves on dismissal either way — there is no
 			// "cancelled" to tell apart from "sent".
 			await shareFile(phase.result.uri, phase.result.mimeType);
+			// The file is deleted once shared, so a second Share would have
+			// nothing to send: back to the choice screen, where Export makes a new one.
+			if (get().phase === phase) set({ phase: { name: "confirm" } });
 		} catch (error) {
 			log.error("export.share_failed", { error });
 			set({ shareFailed: true });
