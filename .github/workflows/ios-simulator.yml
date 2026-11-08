@@ -49,6 +49,8 @@ env:
   # Bump to throw every native cache away.
   CACHE_VERSION: v1
   BUNDLE_ID: dev.habitsapp.validation
+  # Pinned: the installer downloads exactly this release (cli-<version>).
+  MAESTRO_VERSION: 2.12.1
   MAESTRO_CLI_NO_ANALYTICS: "1"
   MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
 
@@ -62,8 +64,8 @@ jobs:
       EXPO_PUBLIC_DEVICE_VALIDATION: "1"
       CI: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -88,7 +90,7 @@ jobs:
       - name: Generate ios/ (expo prebuild)
         run: npx expo prebuild --platform ios --no-install --clean
       - name: Cache Pods
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ios/Pods
@@ -98,7 +100,7 @@ jobs:
       - name: pod install
         run: cd ios && pod install
       - name: Cache DerivedData
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ios/build
           # The generated native project decides the key, so any native change
@@ -134,12 +136,12 @@ jobs:
           echo "APP=$APP" >> "$GITHUB_ENV"
           mkdir -p dist && ditto -c -k --keepParent "$APP" dist/app.zip
           ls -lh dist/app.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ios-app
           path: dist/app.zip
           retention-days: 2
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: build-log
@@ -171,11 +173,11 @@ jobs:
         # its web counterpart's colorScheme and `-ax` suffix say.
         shard: [light, dark, ax-light, ax-dark]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ios-app
           path: dist
@@ -202,14 +204,14 @@ jobs:
         if: always()
         run: |
           test -f out/summary.md && cat out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: shots-${{ matrix.shard }}
           path: out/shots
           retention-days: 14
           if-no-files-found: warn
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: capture-log-${{ matrix.shard }}
@@ -228,11 +230,11 @@ jobs:
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ios-app
           path: dist
@@ -253,7 +255,7 @@ jobs:
         if: always()
         run: |
           test -f out/summary.md && cat out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: videos
@@ -269,24 +271,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm install --no-save --no-audit --no-fund sharp
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: shots-*
           path: shots
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: capture-log-*
           path: logs
       - name: Build the contact sheet
         run: node scripts/device-validation/contact-sheet.mjs --shots shots --logs logs --out contact-sheet --summary "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: contact-sheet
           path: contact-sheet

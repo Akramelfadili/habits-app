@@ -5,10 +5,12 @@ A personal iOS habit-tracking app built with Expo, React Native and TypeScript. 
 ## Run it
 
 ```bash
-npm install
+npm ci                # lockfile-exact, as CI; Node 24+ (`.nvmrc`)
 npx expo start        # native modules need a dev-client build, not Expo Go
 make check            # the gate: Biome, tsc, Jest, tooling tests, architecture and repo-hygiene checks
 ```
+
+To get a dev client, build it once with `npx expo run:ios` on a Mac with Xcode (it generates the ignored `ios/`, installs a Debug build on the Simulator or a connected iPhone, and that build loads JavaScript from `npx expo start`); a cloud EAS build is the no-Mac route but needs an `eas.json` the repo does not have yet.
 
 Use `npx expo install <package>` (not `npm install`) for Expo / React Native packages. Versions: see `package.json`. More commands: `make help`.
 
@@ -26,3 +28,7 @@ A manual GitHub Actions run renders every state on an iOS Simulator: `gh workflo
 - [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, the gate, what never goes in git
 - [CHANGELOG.md](CHANGELOG.md): what shipped and what is next
 - [CLAUDE.md](CLAUDE.md): working rules for Claude Code sessions
+
+## Licence
+
+All rights reserved: the code is public to read, not licensed for reuse (see [LICENSE](LICENSE)). Security reports: [SECURITY.md](SECURITY.md).

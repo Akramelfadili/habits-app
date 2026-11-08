@@ -1,33 +1,33 @@
 # Docs index
 
-Which document answers which question. Sizes are estimated tokens (file bytes ÷ 4). **Never read by default** = big or historical: find the line with `grep -n`, then read a small window.
+Which document answers which question. Sizes are estimated tokens (characters ÷ 4, measured 2026-11-08). **Never read by default** = big or historical: find the line with `grep -n`, then read a small window.
 
 | Path | Answers | Read when | ~Tokens |
 |---|---|---|---|
-| `../CLAUDE.md` | Working rules, guards, the "when you touch X, read Y" table | Every session (loaded automatically) | 2.2k |
+| `../CLAUDE.md` | Working rules, guards, the "Specs and docs" list (which doc to read for each area), Definition of done | Every session (loaded automatically) | 1k |
 | `../README.md` | What the app is, how to run it | First visit | 0.5k |
-| `../DESIGN.md` | Design principles, token rules, accessibility rules, who enforces each | Before any UI work | 1k |
-| `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.5k |
+| `../DESIGN.md` | Design principles, token rules, accessibility rules, who enforces each | Before any UI work | 1.2k |
+| `../CHANGELOG.md` | What shipped, by version and batch; what is next | Coming back | 1.3k |
 | `../CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
-| `../ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9k |
-| `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 2.8k |
-| `decisions/001…008` | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007), logging (008) | Before changing what they decide | 0.6–2k each |
-| `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 5k |
-| `design/design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 9k |
+| `../ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9.4k |
+| `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 3.1k |
+| `decisions/001…009` (001–004 and 006–009; there is no 005) | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007), logging (008), sync readiness (009) | Before changing what they decide | 0.5–1.8k each |
+| `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 4.6k |
+| `design/design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 8.7k |
 | `specs/feature-spec-v3.md` | HAB-26–50: rules, edge cases, "Spec wins", D1–D15 | Implementing or reworking a V3 ticket (one section only) | 15k |
-| `progress-data.md` | Progress maths (rates, cells, ranges) | HAB-35–38 | 3k |
+| `progress-data.md` | Progress maths (rates, cells, ranges) | HAB-35–38 | 2.8k |
 | `backlog.md` | Open work by theme, the **Decided** section, the deliberate V3 deviations | Before planning; open groups can be read whole, otherwise `grep` | 12.5k |
-| `mockups/v3/README.md`, `mockups/v3/renders/INDEX.md` | V3 design files; frame id → section | Visual work | 2.5k |
+| `mockups/v3/README.md`, `mockups/v3/renders/INDEX.md` | V3 design files; frame id → section | Visual work | 3k |
 | `mockups/v3/renders/<section>/text.txt` | All copy and rules of one mockup section | Wording for one frame, by `grep` | 3–17k each |
 | `visual-baseline/` | PNG baselines for `npm run visual-check` | Only through the tool | — |
-| `how-to/starter-habits.md` | Dev builds: your own habits from `.env.local`, format, version bump, why dev-only | Setting up or changing the starter habits | 1.5k |
+| `how-to/starter-habits.md` | Dev builds: your own habits from `.env.local`, format, version bump, why dev-only | Setting up or changing the starter habits | 1.2k |
 | `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 0.9k |
-| `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 2k |
+| `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 1.7k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |
-| `specs/feature-spec.md`, `specs/feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 10k |
+| `specs/feature-spec.md`, `specs/feature-spec-v2.md` | HAB-01–13, HAB-14–25. **Never read by default** | One ticket section only | 9k, 9.6k |
 | `archive/assessment-v3.md` | V3 impact per ticket, batch plan. **Never read by default** | History | 16k |
 | `archive/audit.md` | Full audit, batches B0–B13 (superseded by `backlog.md` for what to fix next). **Never read by default** | History, or a finding id (`grep -n A12-02`) | 30k |
-| `archive/backlog-done.md` | Shipped and obsolete backlog entries with their "As built" notes, in their original sections. **Never read by default** | History, or an id (`grep -n 'HAB-30' docs/archive/backlog-done.md`) | 9.5k |
+| `archive/backlog-done.md` | Shipped and obsolete backlog entries with their "As built" notes, in their original sections. **Never read by default** | History, or an id (`grep -n 'HAB-30' docs/archive/backlog-done.md`) | 10k |
 | mockup `text.txt` dumps | **Never read whole** (`foundations` is 17k tokens) | One frame, by `grep` | — |
 
 ## Layout
@@ -40,9 +40,9 @@ docs/
   progress-data.md     Progress maths
   specs/               feature-spec.md (V1), feature-spec-v2.md, feature-spec-v3.md
   design/              design-system.md (V1+V2), design-system-v3.md
-  decisions/           ADRs 001-008
+  decisions/           ADRs 001-004, 006-009 (no 005)
   how-to/              dev-tooling.md, e2e.md, device-validation.md, starter-habits.md
-  archive/             audit.md, assessment-v3.md, backlog-done.md (history; not scanned by check-doc-refs)
+  archive/             audit.md, assessment-v3.md, backlog-done.md, audits-2026-11/ (history; not scanned by check-doc-refs)
   mockups/v3/          V3 design files and text renders
   visual-baseline/     web baselines for visual-check
 ```

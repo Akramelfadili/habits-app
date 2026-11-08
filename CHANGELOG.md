@@ -29,6 +29,7 @@ HAB-26–50. To-dos and expenses removed; Today, Progress and Habits rebuilt on 
 - **Logging** (branch `feat/logging`, no PR number yet): pluggable log sinks with redaction in the core, a persistent 500-entry log in its own `logs.db`, the recovery screen for a database that cannot open, Copy diagnostics with locale and time zone and the stored history; `no-console` architecture rule; ADR 008.
 - **Starter habits** (branch `feat/starter-habits`, no PR number yet): a development build applies a list of habits from the gitignored `.env.local` at startup (versioned, one transaction, First Run skipped); `__DEV__`-gated, with a `check-architecture` site rule and a stricter env-file hygiene check; `docs/how-to/starter-habits.md`.
 - **Docs set** (branch `chore/docs-set`, no PR number yet): docs index, DESIGN.md, this file.
+- **Hardening 1** (branch `chore/hardening-1`, audit 2026-11 batch 13, no PR number yet): SHA-pinned workflows and least-privilege `check.yml`, CodeQL, Dependabot, PR and issue templates, CODEOWNERS, SECURITY.md, an all-rights-reserved LICENSE; zod 4.6.6 and Drizzle Studio dev-only; staged pre-commit, a cheaper Stop hook, `make check-ci`; docs index sizes; ADR 009 (sync parked).
 
 ## V2 — categories, summaries, settings (2026-10-02 → 2026-10-05)
 

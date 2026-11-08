@@ -47,6 +47,10 @@ Built on `chore/ios-simulator-validation` and merged (#36, #37); the workflow fi
 
 ## Open — reliability follow-ups (audit B6)
 
+### Done
+
+- **Orphan risk (1): dev-only `deleteAllHabits` leaves entries/notes/freezes/reminders behind** (A7-04). **As built** (chore/hardening-1, audit 2026-11 C-05 / H-06): the function went with the dev controls in #48 (`grep -rn deleteAllHabits src` finds nothing), so the risk is gone; struck from `docs/backlog.md` and ADR 002's Consequences. The remaining destructive paths, `replaceHabitsWithStarterProfile` and `replaceAllData`, delete children first and have their own tests.
+
 ### Stale
 
 - **`expo-clipboard` is not installed yet.** "Copy diagnostics" falls back to sharing a `diagnostics.txt` file until it is: `npx expo install expo-clipboard`, then rebuild the dev client (native module).

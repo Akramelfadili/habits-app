@@ -1,5 +1,4 @@
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logger/logger";
 import { db, expoDb, getDatabaseOpenError, retryOpenDatabase } from "./client";
@@ -15,6 +14,14 @@ import migrations from "./migrations/migrations";
 import { SCHEMA_VERSION } from "./schema-version";
 
 type DatabaseProviderProps = PropsWithChildren<{ copy: DatabaseCopy }>;
+
+// Drizzle Studio is a dev-only tool (a dev-server connection to the DB), so the
+// plugin is a devDependency and a `__DEV__ ? require(...)` keeps it out of a
+// production bundle (audit D-10). `__DEV__` is constant per bundle, so the
+// no-op stand-in never changes the hook-call order within one build.
+const useDrizzleStudio: (database: typeof expoDb) => void = __DEV__
+	? require("expo-drizzle-studio-plugin").useDrizzleStudio
+	: () => {};
 
 /**
  * Runs the migrations before anything reads the database. A failure shows the
@@ -92,7 +99,7 @@ function RunMigrations({
 	onRetry,
 }: DatabaseProviderProps & { plan: MigrationPlan; onRetry: () => void }) {
 	const { success, error } = useMigrations(db, migrations);
-	useDrizzleStudio(__DEV__ ? expoDb : null);
+	useDrizzleStudio(expoDb);
 
 	useEffect(() => {
 		log.info("migration.start", { schemaVersion: SCHEMA_VERSION, plan });

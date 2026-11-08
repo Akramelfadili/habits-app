@@ -1,9 +1,9 @@
-.PHONY: help start ios android web test test-perf test-slow test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check e2e visual-check visual-baseline
+.PHONY: help start ios android web test test-perf test-slow test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
-start: ## Start the Expo dev server (scan QR with Expo Go)
+start: ## Start the Expo dev server (open it in a dev-client build, not Expo Go)
 	npx expo start
 
 ios: ## Start with the iOS simulator target (Mac only)
@@ -56,6 +56,8 @@ deadcode: ## Report unused files/exports/dependencies with knip (report only; no
 	-npm run deadcode
 
 check: lint-check typecheck test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references
+
+check-ci: check test-slow ## The CI gate (.github/workflows/check.yml): `make check` plus the slow tests
 
 e2e: ## Run the Maestro journeys against the web build (setup: docs/how-to/e2e.md)
 	npm run e2e
