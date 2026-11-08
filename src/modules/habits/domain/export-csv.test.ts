@@ -2,6 +2,7 @@ import {
 	EXPORT_TODAY,
 	makeExportSource,
 } from "../test-support/export-fixtures";
+import { makeHabit } from "../test-support/habit-builder";
 import {
 	CSV_COLUMNS,
 	describeFrequency,
@@ -30,6 +31,47 @@ describe("escapeCsvField", () => {
 	it("quotes fields with line breaks", () => {
 		expect(escapeCsvField("one\ntwo")).toBe('"one\ntwo"');
 		expect(escapeCsvField("one\r\ntwo")).toBe('"one\r\ntwo"');
+	});
+
+	describe("spreadsheet formulas (D-08)", () => {
+		it.each([
+			["=1+1", "'=1+1"],
+			["+SUM(A1)", "'+SUM(A1)"],
+			["-1 coffee", "'-1 coffee"],
+			["@cmd", "'@cmd"],
+			["\tindented", "'\tindented"],
+		])(
+			"puts an apostrophe in front of typed text starting %j",
+			(typed, written) => {
+				expect(escapeCsvField(typed)).toBe(written);
+			},
+		);
+
+		it("starts a carriage-return field with an apostrophe and still quotes it", () => {
+			expect(escapeCsvField("\rbad")).toBe('"\'\rbad"');
+		});
+
+		it("quotes after prefixing, so a formula with a comma stays one field", () => {
+			expect(escapeCsvField('=HYPERLINK("x","y")')).toBe(
+				'"\'=HYPERLINK(""x"",""y"")"',
+			);
+		});
+
+		it("leaves text that merely contains those characters alone", () => {
+			expect(escapeCsvField("1+1=2")).toBe("1+1=2");
+			expect(escapeCsvField("me@home")).toBe("me@home");
+			expect(escapeCsvField("it's -1")).toBe("it's -1");
+		});
+
+		it("never changes numbers or booleans, negative ones included", () => {
+			expect(escapeCsvField(-3)).toBe("-3");
+			expect(escapeCsvField(0)).toBe("0");
+			expect(escapeCsvField(true)).toBe("true");
+		});
+
+		it("raw leaves a column the app fills itself unchanged", () => {
+			expect(escapeCsvField("-2026", { raw: true })).toBe("-2026");
+		});
 	});
 
 	it("writes empties for null/undefined and keeps zero and false", () => {
@@ -109,6 +151,48 @@ describe("toCsv", () => {
 		expect(csv).toContain(
 			'note,1,"Café, then “read”",,,,,,,,,,,,2026-09-15,,,"Línea uno, ""dos""\nlínea tres"',
 		);
+	});
+
+	it("neutralizes formulas in typed text and leaves numbers and dates alone (D-08)", async () => {
+		const base = makeExportSource();
+		const csv = await toCsv(
+			buildExportModel(
+				{
+					...base,
+					habits: [
+						makeHabit({
+							id: 7,
+							name: "-1 coffee",
+							targetType: "quantity",
+							targetAmount: 3,
+							targetUnit: "=cups",
+							createdAt: new Date(2026, 8, 1),
+						}),
+					],
+					entries: [
+						{
+							id: 1,
+							habitId: 7,
+							date: "2026-09-14",
+							value: 2,
+							createdAt: new Date(2026, 8, 14),
+						},
+					],
+					notes: [{ habitId: 7, date: "2026-09-14", note: "=1+1" }],
+					frozenDays: [],
+					reminders: [],
+				},
+				{ format: "csv", includeArchived: true, includeNotes: true },
+				EXPORT_TODAY,
+			),
+		);
+		const rows = csv.split("\r\n");
+		const habitRow = rows.find((row) => row.startsWith("habit,"));
+		expect(habitRow).toContain("habit,7,'-1 coffee,");
+		expect(habitRow).toContain(",3,'=cups,");
+		expect(habitRow).toContain(",2026-09-01,");
+		expect(rows).toContain("entry,7,'-1 coffee,,,,,,,,,,,,2026-09-14,2,false,");
+		expect(rows).toContain("note,7,'-1 coffee,,,,,,,,,,,,2026-09-14,,,'=1+1");
 	});
 
 	it("writes no note rows when Include notes is off", async () => {
