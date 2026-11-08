@@ -11,6 +11,7 @@
 import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { renderRouter, screen, testRouter } from "expo-router/testing-library";
+import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { useFirstRunOfferStore } from "@/modules/habits/first-run-offer-store";
 import { expectConsole } from "@/test-support/console";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
@@ -321,6 +322,68 @@ describe("a Year month is a pushed route inside Progress (P13)", () => {
 		await testRouter.push("/month/2026-07-01");
 		expect(app.getPathname()).toBe("/month/2026-07-01");
 	});
+});
+
+describe("malformed route params go to Today, never crash (D-09)", () => {
+	beforeEach(() => clearLog());
+
+	function invalidParamLogs() {
+		return getLogEntries().filter(
+			(entry) => entry.event === "route.invalid_param",
+		);
+	}
+
+	/**
+	 * `habitsapp://<path>` opens `/<path>` (app.json `scheme`); the testing
+	 * router takes paths, so each link is opened as its path over Today, as
+	 * a link does while the app is running.
+	 */
+	async function openLink(link: string) {
+		const app = await renderApp("/");
+		// Plain router.push: testRouter.push asserts the pushed path is where it
+		// ends, and a refused link must end on Today instead.
+		await act(async () =>
+			router.push(link.replace(/^habitsapp:\//, "") as "/"),
+		);
+		return app;
+	}
+
+	it.each([
+		["habitsapp://month/garbage", "month", "bad_format"],
+		["habitsapp://month/2026-02-31", "month", "invalid_date"],
+		["habitsapp://edit-habit/-3", "edit-habit", "not_positive_integer"],
+		["habitsapp://edit-habit/abc", "edit-habit", "not_positive_integer"],
+	])(
+		"%s lands on Today and logs a warning without the param",
+		async (url, scope, reason) => {
+			const app = await openLink(url);
+			await waitFor(() => expect(app.getPathname()).toBe("/"));
+			expect(screen.getByText("today")).toBeTruthy();
+			expect(app.getPathname()).toBe("/");
+			expect(screen.queryByText("progress-month")).toBeNull();
+			expect(screen.queryByText("habit-form")).toBeNull();
+			const logs = invalidParamLogs();
+			expect(logs).toHaveLength(1);
+			expect(logs[0]).toMatchObject({
+				level: "warn",
+				fields: { scope, reason },
+			});
+			const raw = url.split("/").at(-1) as string;
+			expect(JSON.stringify(logs[0])).not.toContain(raw);
+		},
+	);
+
+	it.each([
+		["habitsapp://month/2026-07-01", "progress-month"],
+		["habitsapp://edit-habit/12", "habit-form"],
+	])(
+		"a valid %s still opens its screen, with nothing logged",
+		async (url, marker) => {
+			await openLink(url);
+			expect(screen.getByText(marker)).toBeTruthy();
+			expect(invalidParamLogs()).toHaveLength(0);
+		},
+	);
 });
 
 describe("the other shared routes stay in their tab", () => {
