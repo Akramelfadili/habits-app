@@ -3,12 +3,11 @@ import {
 	differenceInCalendarDays,
 	endOfMonth,
 	format,
-	startOfWeek,
 } from "date-fns";
 import type { CompletionRowsCell } from "@/components/ui/composite/completion-rows";
 import type { MonthListItemData } from "@/components/ui/composite/month-list";
 import type { YearBand } from "@/components/ui/composite/year-heat-map";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekStart } from "@/utils/week-window";
 import type {
 	CalendarDay,
 	DayDetail,
@@ -288,7 +287,7 @@ export function yearBandsProps(
 	return grid.bands.map((months, bandIndex) => {
 		const first = months[0].month;
 		const last = endOfMonth(months[months.length - 1].month);
-		const monday = startOfWeek(first, { weekStartsOn: WEEK_STARTS_ON });
+		const monday = weekStart(first);
 		const weeks = Math.ceil((differenceInCalendarDays(last, monday) + 1) / 7);
 		const columns = Array.from({ length: weeks }, (_, week) =>
 			Array.from({ length: 7 }, (_, weekday): CompletionRowsCell | null => {

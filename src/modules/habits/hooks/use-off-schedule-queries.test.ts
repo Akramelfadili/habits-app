@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react-native";
 import { endOfWeek, startOfWeek } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { WEEK_STARTS_ON } from "../constants";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
@@ -90,7 +91,11 @@ describe("useOffScheduleQueries", () => {
 			startOfWeek(SUNDAY, { weekStartsOn: WEEK_STARTS_ON }),
 		);
 		expect(start.getHours()).toBe(0);
-		expect(end).toEqual(endOfWeek(SUNDAY, { weekStartsOn: WEEK_STARTS_ON }));
+		// The last day itself, inclusive (utils/week-window): the Sunday's key.
+		expect(toDayKey(end)).toBe(
+			toDayKey(endOfWeek(SUNDAY, { weekStartsOn: WEEK_STARTS_ON })),
+		);
+		expect(end.getHours()).toBe(0);
 	});
 
 	it("lists today's bonus logs only for habits not due today", async () => {

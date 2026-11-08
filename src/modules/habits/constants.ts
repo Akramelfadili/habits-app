@@ -83,10 +83,10 @@ export const MAX_HABIT_NAME_LENGTH = 32;
 export const MAX_CATEGORY_NAME_LENGTH = 20;
 
 /**
- * Weeks run Monday → Sunday (HAB-02). The Weekly Summary (HAB-11) must use this
- * same constant so scheduling and summaries never disagree on a week's bounds.
+ * Weeks run Monday → Sunday (HAB-02). Defined once in `utils/week-window.ts`
+ * (with the week-bound helpers) so scheduling and summaries never disagree.
  */
-export const WEEK_STARTS_ON = 1;
+export { WEEK_STARTS_ON } from "@/utils/week-window";
 
 /** Days pre-filled by the "Weekdays shortcut" chip — Mon–Fri, still editable after. */
 export const WEEKDAY_SHORTCUT: IsoWeekday[] = [1, 2, 3, 4, 5];

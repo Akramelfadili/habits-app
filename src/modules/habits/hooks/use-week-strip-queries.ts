@@ -1,5 +1,4 @@
-import { endOfWeek, startOfWeek } from "date-fns";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekWindow } from "@/utils/week-window";
 import {
 	canShowNextWeek,
 	dayAfterWeekSwipe,
@@ -29,10 +28,8 @@ export function useWeekStripQueries(
 	showNextWeek: () => void;
 } {
 	const { habits } = useActiveHabits();
-	const entries = useEntriesInRange(
-		startOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON }),
-		endOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON }),
-	);
+	const week = weekWindow(selectedDay);
+	const entries = useEntriesInRange(week.start, week.end);
 	const go = (weeks: -1 | 1) => {
 		const next = dayAfterWeekSwipe(selectedDay, today, weeks);
 		if (next) onSelect(next);

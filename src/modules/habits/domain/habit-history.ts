@@ -8,12 +8,11 @@ import {
 	max,
 	startOfDay,
 	startOfMonth,
-	startOfWeek,
 	subDays,
 } from "date-fns";
 import type { HeatmapLevel } from "@/theme/theme";
 import { fromDayKey, toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekStart } from "@/utils/week-window";
 import {
 	getHabitStrategy,
 	habitPauses,
@@ -281,10 +280,7 @@ export function buildHeatmapWeeks(
 	const isOffSchedule = offScheduleChecker(habit, entries);
 	const todayStart = startOfDay(today);
 	const createdStart = startOfDay(habit.createdAt);
-	const firstWeek = addWeeks(
-		startOfWeek(todayStart, { weekStartsOn: WEEK_STARTS_ON }),
-		-(HEATMAP_WEEKS - 1),
-	);
+	const firstWeek = addWeeks(weekStart(todayStart), -(HEATMAP_WEEKS - 1));
 
 	function dayFor(date: Date): HeatmapDay {
 		const isToday = isSameDay(date, todayStart);

@@ -2,7 +2,6 @@ import {
 	addMonths,
 	differenceInCalendarDays,
 	endOfMonth,
-	endOfWeek,
 	endOfYear,
 	format,
 	isAfter,
@@ -10,10 +9,9 @@ import {
 	isSameMonth,
 	max,
 	startOfDay,
-	startOfWeek,
 	startOfYear,
 } from "date-fns";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekAlignedSpan } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { calculateLongestStreak } from "./habit-history";
 import {
@@ -51,10 +49,7 @@ export function yearWindowFor(date: Date): MonthWindow {
 
 /** Entries are needed from the Monday-aligned start of the year to the end of its last week (a per-week habit's week is judged whole). */
 export function yearEntryRange(year: MonthWindow): MonthWindow {
-	return {
-		start: startOfWeek(year.start, { weekStartsOn: WEEK_STARTS_ON }),
-		end: startOfDay(endOfWeek(year.end, { weekStartsOn: WEEK_STARTS_ON })),
-	};
+	return weekAlignedSpan(year.start, year.end);
 }
 
 export type YearUnlock = {

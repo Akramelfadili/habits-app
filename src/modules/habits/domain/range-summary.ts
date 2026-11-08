@@ -1,19 +1,17 @@
 import {
 	addDays,
 	differenceInCalendarDays,
-	endOfWeek,
 	getISODay,
 	isAfter,
 	isBefore,
 	max,
 	min,
 	startOfDay,
-	startOfWeek,
 	subWeeks,
 	subYears,
 } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
-import { WEEK_STARTS_ON } from "../constants";
+import { weekAlignedSpan, weekWindow } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
 import {
 	addToTally,
@@ -40,7 +38,6 @@ import {
 } from "./monthly-summary";
 import { isSlippingVsPrevious } from "./slipping";
 import { calculateCurrentStreak } from "./streaks";
-import { weekWindowFor } from "./weekly-summary";
 import { yearWindowFor } from "./yearly-summary";
 
 /**
@@ -58,7 +55,7 @@ export type RangeKind = "week" | "month" | "year";
 export type RangeWindow = { start: Date; end: Date };
 
 export function rangeWindowFor(kind: RangeKind, date: Date): RangeWindow {
-	if (kind === "week") return weekWindowFor(date);
+	if (kind === "week") return weekWindow(date);
 	if (kind === "month") return monthWindowFor(date);
 	return yearWindowFor(date);
 }
@@ -67,7 +64,7 @@ export function previousRangeWindow(
 	kind: RangeKind,
 	window: RangeWindow,
 ): RangeWindow {
-	if (kind === "week") return weekWindowFor(subWeeks(window.start, 1));
+	if (kind === "week") return weekWindow(subWeeks(window.start, 1));
 	if (kind === "month") return previousMonthWindow(window);
 	return yearWindowFor(subYears(window.start, 1));
 }
@@ -83,10 +80,7 @@ export function rangeEntrySpan(
 ): RangeWindow {
 	if (kind === "month") return monthEntryRange(window);
 	const previous = previousRangeWindow(kind, window);
-	return {
-		start: startOfWeek(previous.start, { weekStartsOn: WEEK_STARTS_ON }),
-		end: startOfDay(endOfWeek(window.end, { weekStartsOn: WEEK_STARTS_ON })),
-	};
+	return weekAlignedSpan(previous.start, window.end);
 }
 
 export type RangeHabitRow = {
