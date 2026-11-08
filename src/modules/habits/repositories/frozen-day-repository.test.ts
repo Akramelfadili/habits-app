@@ -13,8 +13,10 @@ const {
 }: typeof FrozenDayRepository = require("./frozen-day-repository");
 
 const DAY = new Date(2026, 8, 15);
-const MONTH_START = new Date("2026-09-01T00:00:00Z");
-const MONTH_END = new Date("2026-09-30T00:00:00Z");
+// Local dates: the repository keys by the local calendar day (toDayKey), so a
+// UTC midnight would make "September" 31 Aug – 29 Sep west of UTC (G-02).
+const MONTH_START = new Date(2026, 8, 1);
+const MONTH_END = new Date(2026, 8, 30);
 
 async function seedHabit(): Promise<number> {
 	const now = new Date();
@@ -81,7 +83,7 @@ describe("frozen-day-repository", () => {
 		const habitA = await seedHabit();
 		const habitB = await seedHabit();
 		await freezeHabitDay(habitA, DAY);
-		await freezeHabitDay(habitB, new Date("2026-09-20T00:00:00Z"));
+		await freezeHabitDay(habitB, new Date(2026, 8, 20));
 
 		const used = await getFreezesUsedInMonth(MONTH_START, MONTH_END);
 		expect(used).toBe(2);
@@ -89,9 +91,40 @@ describe("frozen-day-repository", () => {
 
 	it("excludes freezes outside the given month", async () => {
 		const habitId = await seedHabit();
-		await freezeHabitDay(habitId, new Date("2026-08-31T00:00:00Z"));
+		await freezeHabitDay(habitId, new Date(2026, 7, 31));
 
 		const used = await getFreezesUsedInMonth(MONTH_START, MONTH_END);
 		expect(used).toBe(0);
+	});
+
+	describe("the month's edges (the pool resets on the 1st)", () => {
+		it.each([
+			["2026-08-31", 0],
+			["2026-09-01", 1],
+			["2026-09-30", 1],
+			["2026-10-01", 0],
+		])("a freeze on %s counts %i for September", async (key, counted) => {
+			const habitId = await seedHabit();
+			const [y, m, d] = key.split("-").map(Number);
+			await freezeHabitDay(habitId, new Date(y, m - 1, d));
+			await expect(getFreezesUsedInMonth(MONTH_START, MONTH_END)).resolves.toBe(
+				counted,
+			);
+		});
+
+		it("counts exactly 1 and 30 September out of 31 Aug, 1 Sep, 30 Sep, 1 Oct", async () => {
+			const habitId = await seedHabit();
+			for (const day of [
+				new Date(2026, 7, 31),
+				new Date(2026, 8, 1),
+				new Date(2026, 8, 30),
+				new Date(2026, 9, 1),
+			]) {
+				await freezeHabitDay(habitId, day);
+			}
+			await expect(getFreezesUsedInMonth(MONTH_START, MONTH_END)).resolves.toBe(
+				2,
+			);
+		});
 	});
 });
