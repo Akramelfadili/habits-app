@@ -37,16 +37,48 @@ export function createBackupFiles(databasePath: string): BackupFiles {
 	};
 }
 
+/** SQLite's companions to the main file: both belong to the same database. */
+const SIDECARS = ["-wal", "-shm"];
+
 /**
- * Renames the database file inside its own folder; never deletes. The caller
- * has closed the database. Refuses to overwrite: a name that exists is an error.
+ * Renames the database file inside its own folder, with its `-wal` and `-shm`
+ * companions (a stale one left beside a fresh `habits.db` would be replayed
+ * into it). `newName` is the new main name, e.g. `habits.corrupt-<ts>.db`.
+ * Never deletes and never overwrites: a name that exists is an error. The
+ * caller has closed the database. On a failure part-way, what was already
+ * renamed is put back, so the folder is as it was found.
  */
 export function renameDatabaseFile(
 	databasePath: string,
 	newName: string,
 ): void {
-	const file = new File(toFileUri(databasePath));
-	const target = new File(file.parentDirectory, newName);
-	if (target.exists) throw new Error("set-aside target exists");
-	file.move(target);
+	const main = new File(toFileUri(databasePath));
+	const folder = main.parentDirectory;
+	const pairs = [
+		...SIDECARS.map((suffix) => ({
+			from: new File(folder, `${main.name}${suffix}`),
+			to: new File(folder, `${newName}${suffix}`),
+		})),
+		{ from: main, to: new File(folder, newName) },
+	].filter((pair) => pair.from.exists || pair.from === main);
+
+	if (pairs.some((pair) => pair.to.exists)) {
+		throw new Error("set-aside target exists");
+	}
+	const moved: typeof pairs = [];
+	try {
+		for (const pair of pairs) {
+			pair.from.move(pair.to);
+			moved.push(pair);
+		}
+	} catch (error) {
+		for (const pair of moved.reverse()) {
+			try {
+				pair.to.move(pair.from);
+			} catch {
+				// Nothing more can be done; the original error is the one to report.
+			}
+		}
+		throw error;
+	}
 }

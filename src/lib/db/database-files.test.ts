@@ -1,5 +1,6 @@
 const mockFiles = new Map<string, string>();
 const mockDirs = new Set<string>();
+let mockFailMoveTo: string | undefined;
 
 jest.mock("expo-file-system", () => {
 	const join = (parts: unknown[]) =>
@@ -29,6 +30,9 @@ jest.mock("expo-file-system", () => {
 			mockFiles.delete(this.uri);
 		}
 		move(target: File) {
+			if (mockFailMoveTo && target.uri.endsWith(mockFailMoveTo)) {
+				throw new Error("EIO");
+			}
 			mockFiles.set(target.uri, mockFiles.get(this.uri) ?? "");
 			mockFiles.delete(this.uri);
 		}
@@ -64,6 +68,7 @@ const DB = "/data/SQLite/habits.db";
 beforeEach(() => {
 	mockFiles.clear();
 	mockDirs.clear();
+	mockFailMoveTo = undefined;
 	mockFiles.set("file:///data/SQLite/habits.db", "main");
 });
 
@@ -107,5 +112,34 @@ describe("renameDatabaseFile", () => {
 		expect(mockFiles.get("file:///data/SQLite/habits.corrupt-1.db")).toBe(
 			"older",
 		);
+	});
+
+	it("takes the -wal and -shm companions along, so none is replayed into a fresh file", () => {
+		mockFiles.set("file:///data/SQLite/habits.db-wal", "wal");
+		mockFiles.set("file:///data/SQLite/habits.db-shm", "shm");
+		renameDatabaseFile(DB, "habits.corrupt-1.db");
+		expect([...mockFiles.keys()].sort()).toEqual([
+			"file:///data/SQLite/habits.corrupt-1.db",
+			"file:///data/SQLite/habits.corrupt-1.db-shm",
+			"file:///data/SQLite/habits.corrupt-1.db-wal",
+		]);
+	});
+
+	it("puts everything back when a rename fails part-way", () => {
+		mockFiles.set("file:///data/SQLite/habits.db-wal", "wal");
+		mockFailMoveTo = "habits.corrupt-1.db";
+		expect(() => renameDatabaseFile(DB, "habits.corrupt-1.db")).toThrow("EIO");
+		expect([...mockFiles.keys()].sort()).toEqual([
+			"file:///data/SQLite/habits.db",
+			"file:///data/SQLite/habits.db-wal",
+		]);
+		expect(mockFiles.get("file:///data/SQLite/habits.db")).toBe("main");
+	});
+
+	it("refuses when a companion's target already exists", () => {
+		mockFiles.set("file:///data/SQLite/habits.db-wal", "wal");
+		mockFiles.set("file:///data/SQLite/habits.corrupt-1.db-wal", "older");
+		expect(() => renameDatabaseFile(DB, "habits.corrupt-1.db")).toThrow();
+		expect(mockFiles.has("file:///data/SQLite/habits.db")).toBe(true);
 	});
 });

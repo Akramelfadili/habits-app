@@ -42,16 +42,19 @@ export type BackupResult =
 	| { status: "done"; name: string; bytes: number }
 	| { status: "failed" };
 
-/** `habits-20261108T101500Z-v12.db`: sortable by time, with the schema it holds. */
-export function backupName(schemaVersion: number, now: number): string {
-	// UTC, so retention order does not depend on the phone's time zone.
+/** `20261108T101500Z`: UTC, so file order does not depend on the phone's time zone. */
+export function utcStamp(now: number): string {
 	const instant = new Date();
 	instant.setTime(now);
-	const stamp = instant
+	return instant
 		.toISOString()
 		.replace(/[-:]/g, "")
 		.replace(/\.\d+Z$/, "Z");
-	return `habits-${stamp}-v${schemaVersion}.db`;
+}
+
+/** `habits-20261108T101500Z-v12.db`: sortable by time, with the schema it holds. */
+export function backupName(schemaVersion: number, now: number): string {
+	return `habits-${utcStamp(now)}-v${schemaVersion}.db`;
 }
 
 function appliedMigrations(database: BackupSource): number {

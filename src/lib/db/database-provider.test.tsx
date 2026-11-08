@@ -21,11 +21,13 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 }));
 const mockOpen: { error: unknown } = { error: null };
 const mockRetryOpen = jest.fn();
+const mockSetAside = jest.fn();
 jest.mock("./client", () => ({
 	db: {},
 	expoDb: {},
 	getDatabaseOpenError: () => mockOpen.error,
 	retryOpenDatabase: () => mockRetryOpen(),
+	setAsideDatabase: (...args: unknown[]) => mockSetAside(...args),
 }));
 jest.mock("./migrations/migrations", () => ({
 	__esModule: true,
@@ -99,18 +101,34 @@ describe("DatabaseProvider", () => {
 		expect(mockBackup).not.toHaveBeenCalled();
 	});
 
-	it.each(["newer", "unreadable"] as const)(
-		"never runs the migrator on a %s database",
-		async (plan) => {
-			mockPlan = plan;
-			mockUseMigrations.mockReturnValue({ success: true });
-			await render(app);
-			expect(mockUseMigrations).not.toHaveBeenCalled();
-			expect(mockBackup).not.toHaveBeenCalled();
-			expect(screen.queryByText("App")).toBeNull();
-			expect(screen.getByText(migrationCopy.openFailed.title)).toBeTruthy();
-		},
-	);
+	it("blocks data from a newer build: the words, Copy diagnostics, no Try again, nothing run or written", async () => {
+		mockPlan = "newer";
+		mockUseMigrations.mockReturnValue({ success: true });
+		await render(app);
+		expect(
+			screen.getByText(
+				"This data was made by a newer version of Habits. Update the app to open it.",
+			),
+		).toBeTruthy();
+		expect(screen.getByText("Copy diagnostics")).toBeTruthy();
+		expect(screen.queryByText("Try again")).toBeNull();
+		expect(screen.queryByText(/Set aside/)).toBeNull();
+		expect(screen.queryByText("App")).toBeNull();
+		expect(mockUseMigrations).not.toHaveBeenCalled();
+		expect(mockBackup).not.toHaveBeenCalled();
+		expect(mockSetAside).not.toHaveBeenCalled();
+		expect(mockHideSplash).toHaveBeenCalled();
+	});
+
+	it("never runs the migrator or the backup on an unreadable database", async () => {
+		mockPlan = "unreadable";
+		mockUseMigrations.mockReturnValue({ success: true });
+		await render(app);
+		expect(mockUseMigrations).not.toHaveBeenCalled();
+		expect(mockBackup).not.toHaveBeenCalled();
+		expect(screen.queryByText("App")).toBeNull();
+		expect(screen.getByText(migrationCopy.openFailed.title)).toBeTruthy();
+	});
 
 	it("logs migration.start with the schema version and plan", async () => {
 		mockUseMigrations.mockReturnValue({ success: true });
@@ -340,5 +358,106 @@ describe("DatabaseProvider", () => {
 			expect(mockCopyDiagnostics).toHaveBeenCalledTimes(1);
 			expect(await screen.findByText("Diagnostics copied.")).toBeTruthy();
 		});
+	});
+});
+
+describe("recovery: set aside old data (C-03)", () => {
+	const SET_ASIDE = "Set aside old data and start fresh";
+
+	beforeEach(() => {
+		jest.useFakeTimers();
+		mockUseMigrations.mockReturnValue({
+			success: false,
+			error: new Error("SQLITE_CORRUPT"),
+		});
+	});
+	afterEach(() => jest.useRealTimers());
+
+	async function failTwice() {
+		await render(app);
+		await fireEvent.press(screen.getByText("Try again"));
+	}
+
+	it("offers only Try again after the first failure", async () => {
+		await render(app);
+		expect(screen.getByText("Try again")).toBeTruthy();
+		expect(screen.queryByText(SET_ASIDE)).toBeNull();
+	});
+
+	it("offers the way out after the second failure in a row", async () => {
+		await failTwice();
+		expect(screen.getByText("Try again")).toBeTruthy();
+		expect(screen.getByText("Copy diagnostics")).toBeTruthy();
+		expect(screen.getByText(SET_ASIDE)).toBeTruthy();
+	});
+
+	it("asks first, says the old file is kept on the phone, and Cancel changes nothing", async () => {
+		await failTwice();
+		await fireEvent.press(screen.getByText(SET_ASIDE));
+
+		expect(screen.getByText(/kept on this phone/)).toBeTruthy();
+		expect(screen.getByText("Set aside and start fresh")).toBeTruthy();
+		expect(mockSetAside).not.toHaveBeenCalled();
+
+		await fireEvent.press(screen.getByText("Cancel"));
+		expect(screen.queryByText("Set aside and start fresh")).toBeNull();
+		expect(mockSetAside).not.toHaveBeenCalled();
+		expect(screen.getByText(SET_ASIDE)).toBeTruthy();
+	});
+
+	it("Confirm sets the data aside and starts again on a fresh database", async () => {
+		await failTwice();
+		await fireEvent.press(screen.getByText(SET_ASIDE));
+		mockUseMigrations.mockReturnValue({ success: true });
+
+		await fireEvent.press(screen.getByText("Set aside and start fresh"));
+		await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+
+		expect(mockSetAside).toHaveBeenCalledTimes(1);
+		expect(mockSetAside).toHaveBeenCalledWith(expect.any(Number));
+		expect(screen.getByText("App")).toBeTruthy();
+	});
+
+	it("a rename failure shows an error in the sheet, changes nothing and stays on the error screen", async () => {
+		await failTwice();
+		await fireEvent.press(screen.getByText(SET_ASIDE));
+		mockSetAside.mockImplementation(() => {
+			throw new Error("EIO: /private/habits.db");
+		});
+
+		await fireEvent.press(screen.getByText("Set aside and start fresh"));
+		await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+
+		expect(screen.getByText("Couldn\u2019t set the data aside")).toBeTruthy();
+		expect(screen.queryByText("App")).toBeNull();
+		expect(screen.queryByText(/EIO/)).toBeNull();
+		const failed = getLogEntries().find(
+			(e) => e.event === "database.set_aside_failed",
+		);
+		expect(failed?.fields).toEqual({ errorName: "error" });
+
+		// It can be tried again, or left.
+		mockSetAside.mockReset();
+		await fireEvent.press(screen.getByText("Cancel"));
+		expect(screen.queryByText("Couldn\u2019t set the data aside")).toBeNull();
+		expect(screen.getByText(migrationCopy.openFailed.title)).toBeTruthy();
+	});
+
+	it("also works when the file could not be opened at all", async () => {
+		mockOpen.error = new Error("SQLITE_CANTOPEN");
+		await render(app);
+		mockRetryOpen.mockImplementation(() => undefined);
+		await fireEvent.press(screen.getByText("Try again"));
+		expect(screen.getByText(SET_ASIDE)).toBeTruthy();
+
+		await fireEvent.press(screen.getByText(SET_ASIDE));
+		mockSetAside.mockImplementation(() => {
+			mockOpen.error = null;
+		});
+		mockUseMigrations.mockReturnValue({ success: true });
+		await fireEvent.press(screen.getByText("Set aside and start fresh"));
+		await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+
+		expect(screen.getByText("App")).toBeTruthy();
 	});
 });

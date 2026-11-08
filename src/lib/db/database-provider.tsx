@@ -4,15 +4,26 @@ import {
 	type RefObject,
 	useEffect,
 	useMemo,
+	useReducer,
 	useRef,
 	useState,
 } from "react";
 import { log } from "@/lib/logger/logger";
-import { db, expoDb, getDatabaseOpenError, retryOpenDatabase } from "./client";
+import {
+	db,
+	expoDb,
+	getDatabaseOpenError,
+	retryOpenDatabase,
+	setAsideDatabase,
+} from "./client";
 import { backupBeforeMigrating } from "./database-backup";
 import type { DatabaseCopy } from "./database-copy";
-import { DatabaseErrorScreen } from "./database-error-screen";
+import {
+	DatabaseErrorScreen,
+	type SetAsideControls,
+} from "./database-error-screen";
 import { createBackupFiles } from "./database-files";
+import { errorNameOf } from "./error-name";
 import {
 	MIGRATION_SCREEN_PAINT_MS,
 	type MigrationPlan,
@@ -20,6 +31,12 @@ import {
 } from "./migration-plan";
 import { MigrationScreen } from "./migration-screen";
 import migrations from "./migrations/migrations";
+import { NewerDatabaseScreen } from "./newer-database-screen";
+import {
+	canSetAside,
+	INITIAL_RECOVERY,
+	recoveryReducer,
+} from "./recovery-state";
 import { SCHEMA_VERSION } from "./schema-version";
 
 type DatabaseProviderProps = PropsWithChildren<{ copy: DatabaseCopy }>;
@@ -47,9 +64,45 @@ const useDrizzleStudio: (database: typeof expoDb) => void = __DEV__
  */
 export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	const [attempt, setAttempt] = useState(0);
+	const [recovery, dispatch] = useReducer(recoveryReducer, INITIAL_RECOVERY);
 	// One backup per launch: Try again re-mounts the gate with the same data,
 	// and a copy per retry would push the older, different backups out.
 	const backupTaken = useRef(false);
+
+	// Try again counts as a retry: the second failure in a row offers the way out.
+	function retry() {
+		dispatch({ type: "retry" });
+		if (getDatabaseOpenError() !== null) retryOpenDatabase();
+		setAttempt((n) => n + 1);
+	}
+
+	function confirmSetAside() {
+		dispatch({ type: "confirm" });
+		// A beat for the "working" state to be painted: the rename and reopen are synchronous.
+		setTimeout(() => {
+			try {
+				setAsideDatabase(Date.now());
+				dispatch({ type: "done" });
+				setAttempt((n) => n + 1);
+			} catch (error) {
+				log.error("database.set_aside_failed", {
+					errorName: errorNameOf(error),
+				});
+				dispatch({ type: "failed" });
+			}
+		}, MIGRATION_SCREEN_PAINT_MS);
+	}
+
+	const setAside: SetAsideControls | undefined = canSetAside(recovery)
+		? {
+				copy: copy.setAside,
+				sheet: recovery.sheet,
+				onAsk: () => dispatch({ type: "ask" }),
+				onCancel: () => dispatch({ type: "cancel" }),
+				onConfirm: confirmSetAside,
+			}
+		: undefined;
+
 	// The file could not be opened at all: nothing below can run, so say so
 	// here (the failure was logged by the client) instead of crashing.
 	if (getDatabaseOpenError() !== null) {
@@ -57,10 +110,8 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 			<DatabaseErrorScreen
 				error={getDatabaseOpenError()}
 				copy={copy.openFailed}
-				onRetry={() => {
-					retryOpenDatabase();
-					setAttempt((n) => n + 1);
-				}}
+				onRetry={retry}
+				setAside={setAside}
 			/>
 		);
 	}
@@ -69,7 +120,8 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 			key={attempt}
 			copy={copy}
 			backupTaken={backupTaken}
-			onRetry={() => setAttempt((n) => n + 1)}
+			onRetry={retry}
+			setAside={setAside}
 		>
 			{children}
 		</MigrationGate>
@@ -89,9 +141,11 @@ function MigrationGate({
 	copy,
 	onRetry,
 	backupTaken,
+	setAside,
 }: DatabaseProviderProps & {
 	onRetry: () => void;
 	backupTaken: RefObject<boolean>;
+	setAside: SetAsideControls | undefined;
 }) {
 	const plan = useMemo(() => planMigrations(expoDb, newestMigrationAt()), []);
 	const [started, setStarted] = useState(plan !== "upgrade");
@@ -115,19 +169,28 @@ function MigrationGate({
 		return () => clearTimeout(timer);
 	}, [started, backupTaken]);
 
-	// Never run the migrator on data this build cannot read or must not touch.
-	if (plan === "newer" || plan === "unreadable") {
+	// Never run the migrator, or write anything, on data made by a newer build.
+	if (plan === "newer") return <NewerDatabaseScreen copy={copy.newer} />;
+	// Nor on a file that could not be read: it is a failure like any other, with
+	// the same Try again and, from the second one, the way out.
+	if (plan === "unreadable") {
 		return (
 			<DatabaseErrorScreen
-				error={new Error(`database plan: ${plan}`)}
+				error={new Error("database unreadable")}
 				copy={copy.openFailed}
 				onRetry={onRetry}
+				setAside={setAside}
 			/>
 		);
 	}
 	if (!started) return <MigrationScreen copy={copy.updating} />;
 	return (
-		<RunMigrations plan={plan} copy={copy} onRetry={onRetry}>
+		<RunMigrations
+			plan={plan}
+			copy={copy}
+			onRetry={onRetry}
+			setAside={setAside}
+		>
 			{children}
 		</RunMigrations>
 	);
@@ -138,7 +201,12 @@ function RunMigrations({
 	copy,
 	plan,
 	onRetry,
-}: DatabaseProviderProps & { plan: MigrationPlan; onRetry: () => void }) {
+	setAside,
+}: DatabaseProviderProps & {
+	plan: MigrationPlan;
+	onRetry: () => void;
+	setAside: SetAsideControls | undefined;
+}) {
 	const { success, error } = useMigrations(db, migrations);
 	useDrizzleStudio(expoDb);
 
@@ -157,6 +225,7 @@ function RunMigrations({
 			<DatabaseErrorScreen
 				error={error}
 				onRetry={onRetry}
+				setAside={setAside}
 				copy={plan === "upgrade" ? copy.updateFailed : copy.openFailed}
 			/>
 		);
