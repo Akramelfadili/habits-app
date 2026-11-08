@@ -74,6 +74,7 @@ describe("useExportQueries", () => {
 			"habits.eveningReview": null,
 			"habits.eveningReviewTime": null,
 			"habits.seenFirstRun": null,
+			"habits.hideHabitNames": null,
 		});
 		delete mockSettings["app.themePreference"];
 	});

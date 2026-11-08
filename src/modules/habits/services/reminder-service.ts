@@ -15,7 +15,9 @@ import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME,
 	EVENING_REVIEW_TIME_SETTING_KEY,
+	HIDE_HABIT_NAMES_SETTING_KEY,
 	REMINDER_CAP,
+	REMINDER_TITLES_APPLIED_SETTING_KEY,
 	WEEKDAYS,
 } from "../constants";
 import {
@@ -89,6 +91,44 @@ function notificationBody(habit: Habit): string {
 		: notificationCopy.build;
 }
 
+/** Whether habit reminders use the generic title: on unless the person turned it off (E-01). */
+export async function getHideHabitNames(): Promise<boolean> {
+	return (await getSetting(HIDE_HABIT_NAMES_SETTING_KEY)) !== "false";
+}
+
+/** What the OS has been told about the title mode, for the launch reconcile. */
+export async function remindersTitlesAreCurrent(
+	hide: boolean,
+): Promise<boolean> {
+	return (
+		(await getSetting(REMINDER_TITLES_APPLIED_SETTING_KEY)) === String(hide)
+	);
+}
+
+export async function markReminderTitlesApplied(hide: boolean): Promise<void> {
+	await setSetting(REMINDER_TITLES_APPLIED_SETTING_KEY, String(hide));
+}
+
+/**
+ * Turns "Hide habit names" on or off (E-01). The choice is stored first (the
+ * source of truth), then every habit's reminders are rebuilt so the titles the
+ * OS holds follow. If any rebuild fails it is logged and the applied marker is
+ * left stale, so the next launch's reconcile finishes the job.
+ */
+export async function setHideHabitNames(hide: boolean): Promise<void> {
+	await setSetting(HIDE_HABIT_NAMES_SETTING_KEY, String(hide));
+	let failed = false;
+	for (const habit of await getAllHabits()) {
+		try {
+			await syncHabitReminders(habit);
+		} catch (error) {
+			failed = true;
+			log.error("reminders.retitle_failed", { habitId: habit.id, error });
+		}
+	}
+	if (!failed) await markReminderTitlesApplied(hide);
+}
+
 /** Identifiers currently scheduled under `prefix`. */
 async function scheduledWithPrefix(prefix: string): Promise<string[]> {
 	return (await listScheduledIdentifiers()).filter((identifier) =>
@@ -141,6 +181,9 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
 	// editing an archived habit's reminders must not make it fire.
 	if (!habit.archivedAt) {
 		const generation = newGeneration();
+		const title = (await getHideHabitNames())
+			? notificationCopy.genericTitle
+			: habit.name;
 		try {
 			for (const reminder of await getHabitReminders(habit.id)) {
 				if (!reminder.enabled) continue;
@@ -152,7 +195,7 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
 					...(await scheduleReminder(
 						{
 							id: reminderNotificationId(reminder),
-							title: habit.name,
+							title,
 							body: notificationBody(habit),
 							hour: reminder.hour,
 							minute: reminder.minute,

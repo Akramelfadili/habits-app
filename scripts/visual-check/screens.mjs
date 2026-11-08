@@ -2299,6 +2299,10 @@ const AX_VARIANTS = [
 	],
 	["tab-bar-toast", "A toast over bar A at AX3."],
 	["settings-notifications-off", "SY6 at AX3."],
+	[
+		"settings-notifications",
+		"Notifications with the Hide habit names switch at AX3.",
+	],
 	["settings-appearance", "S2 at AX3."],
 	["settings-evening-review-off", "S3 with the banner at AX3."],
 	["settings-freezes", "S4 at AX3: the stat cards stack one per row."],

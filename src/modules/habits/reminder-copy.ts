@@ -8,6 +8,8 @@ import { REMINDER_CAP } from "./constants";
 export const notificationCopy = {
 	build: "Time for this one — check it off on Today.",
 	break: "A nudge to keep resisting today.",
+	/** The title when "Hide habit names" is on (the default): the lock screen never shows the habit. */
+	genericTitle: "Habit reminder",
 	eveningTitle: "Evening review",
 	eveningBody: "Anything left to log today? Take a minute to catch up.",
 } as const;

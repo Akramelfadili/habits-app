@@ -7,6 +7,7 @@ import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME_SETTING_KEY,
 	FREEZE_POOL_SIZE,
+	HIDE_HABIT_NAMES_SETTING_KEY,
 } from "../constants";
 import { parseEveningReviewTime } from "../domain/evening-review-time";
 import { freezesUsedInMonth } from "../domain/streaks";
@@ -24,6 +25,7 @@ export function useSettingsQueries() {
 	const { scheme } = useTheme();
 	const eveningReview = useAppSetting(EVENING_REVIEW_SETTING_KEY);
 	const eveningTime = useAppSetting(EVENING_REVIEW_TIME_SETTING_KEY);
+	const hideNames = useAppSetting(HIDE_HABIT_NAMES_SETTING_KEY);
 	const permission = useNotificationPermission();
 	const frozenDays = useFrozenDays();
 	const reminders = useAllReminders();
@@ -36,6 +38,8 @@ export function useSettingsQueries() {
 		eveningReviewEnabled: eveningReview === "true",
 		/** The Evening review's time: the stored choice, else 21:30. */
 		eveningReviewTime: parseEveningReviewTime(eveningTime),
+		/** Reminders use a generic title: on unless the person turned it off (E-01). */
+		hideHabitNames: hideNames !== "false",
 		notificationsDenied: permission === "denied",
 		/** "granted", "denied" or "undetermined": the Notifications row says which. */
 		notificationPermission: permission,

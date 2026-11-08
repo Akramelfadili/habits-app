@@ -2,6 +2,7 @@ import { THEME_PREFERENCE_SETTING_KEY } from "@/lib/app-settings/keys";
 import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME_SETTING_KEY,
+	HIDE_HABIT_NAMES_SETTING_KEY,
 	LAST_EXPORT_SETTING_KEY,
 	SEEN_FIRST_RUN_SETTING_KEY,
 } from "../constants";
@@ -160,6 +161,7 @@ describe("toJson", () => {
 			eveningReview: null,
 			eveningReviewTime: null,
 			seenFirstRun: null,
+			hideHabitNames: null,
 		});
 	});
 
@@ -242,6 +244,7 @@ describe("toJson", () => {
 					[EVENING_REVIEW_SETTING_KEY]: "true",
 					[EVENING_REVIEW_TIME_SETTING_KEY]: "20:45",
 					[SEEN_FIRST_RUN_SETTING_KEY]: "true",
+					[HIDE_HABIT_NAMES_SETTING_KEY]: "false",
 				},
 			};
 			const parsed = JSON.parse(await toJson(modelFor(true, true, source)));
@@ -250,6 +253,7 @@ describe("toJson", () => {
 				eveningReview: true,
 				eveningReviewTime: "20:45",
 				seenFirstRun: true,
+				hideHabitNames: false,
 			});
 		});
 
@@ -270,6 +274,7 @@ describe("toJson", () => {
 				eveningReview: null,
 				eveningReviewTime: null,
 				seenFirstRun: null,
+				hideHabitNames: null,
 			});
 		});
 

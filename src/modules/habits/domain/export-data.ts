@@ -3,6 +3,7 @@ import { toDayKey } from "@/utils/day-key";
 import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME_SETTING_KEY,
+	HIDE_HABIT_NAMES_SETTING_KEY,
 	SEEN_FIRST_RUN_SETTING_KEY,
 } from "../constants";
 import type {
@@ -73,6 +74,8 @@ export type ExportSettings = {
 	eveningReview: boolean | null;
 	eveningReviewTime: string | null;
 	seenFirstRun: boolean | null;
+	/** Whether reminders hide the habit name (E-01); null = never set, which the app treats as hidden. */
+	hideHabitNames: boolean | null;
 };
 
 export type ExportModel = {
@@ -102,6 +105,7 @@ function readSettings(source: ExportSource["settings"]): ExportSettings {
 		eveningReview: readBoolean(source[EVENING_REVIEW_SETTING_KEY]),
 		eveningReviewTime: source[EVENING_REVIEW_TIME_SETTING_KEY] ?? null,
 		seenFirstRun: readBoolean(source[SEEN_FIRST_RUN_SETTING_KEY]),
+		hideHabitNames: readBoolean(source[HIDE_HABIT_NAMES_SETTING_KEY]),
 	};
 }
 

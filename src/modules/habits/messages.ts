@@ -1310,6 +1310,11 @@ export const settingsCopy = {
 		title: "Notifications",
 		status: "Notifications",
 		note: "Change this in iOS Settings.",
+		/** E-01: the switch under the status group, and the lock-screen hint under it. */
+		hideNames: "Hide habit names",
+		hideNamesBody: "Reminders say “Habit reminder” instead of the name",
+		hideNamesHint:
+			"The lock screen can also hide previews: iOS Settings › Notifications › Show Previews.",
 	},
 	streaks: {
 		header: "Streaks",

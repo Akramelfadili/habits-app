@@ -5,6 +5,8 @@
  */
 export type FakeScheduled = {
 	identifier: string;
+	/** The notification's title, as the lock screen would show it. */
+	title?: string;
 	hour: number;
 	minute: number;
 };
@@ -58,6 +60,7 @@ export function createFakeNotifications() {
 			setNotificationHandler: () => {},
 			async scheduleNotificationAsync(request: {
 				identifier: string;
+				content: { title: string };
 				trigger: { hour: number; minute: number };
 			}) {
 				scheduleCalls++;
@@ -67,6 +70,7 @@ export function createFakeNotifications() {
 				events.push(`schedule:${request.identifier}`);
 				scheduled.set(request.identifier, {
 					identifier: request.identifier,
+					title: request.content.title,
 					hour: request.trigger.hour,
 					minute: request.trigger.minute,
 				});

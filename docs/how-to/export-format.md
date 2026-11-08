@@ -37,8 +37,9 @@ Files are named `habits-<yyyy-MM-dd>.json` or `.csv`. They are temporary: the fi
 | `eveningReview` | `true` / `false` |
 | `eveningReviewTime` | `HH:mm` |
 | `seenFirstRun` | `true` / `false` |
+| `hideHabitNames` | `true` / `false`. Whether reminders show a generic title instead of the habit name. `null` (never set) means hidden, the app's default. |
 
-Never in the file: the date of the last export and any development key.
+Never in the file: the date of the last export, the internal marker that records which title mode the scheduled reminders were built with, and any development key.
 
 ## `categories[]`
 

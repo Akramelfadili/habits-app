@@ -106,6 +106,8 @@ describe("buildExportModel", () => {
 					"habits.eveningReview": "true",
 					"habits.eveningReviewTime": "21:00",
 					"habits.seenFirstRun": "true",
+					"habits.hideHabitNames": "false",
+					"habits.reminderTitlesHidden": "false",
 					"habits.lastExport": "2026-09-01",
 				},
 			},
@@ -117,6 +119,7 @@ describe("buildExportModel", () => {
 			eveningReview: true,
 			eveningReviewTime: "21:00",
 			seenFirstRun: true,
+			hideHabitNames: false,
 		});
 	});
 
