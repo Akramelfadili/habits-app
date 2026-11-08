@@ -22,6 +22,7 @@ Which document answers which question. Sizes are estimated tokens (characters ÷
 | `visual-baseline/` | PNG baselines for `npm run visual-check` | Only through the tool | — |
 | `how-to/starter-habits.md` | Dev builds: your own habits from `.env.local`, format, version bump, why dev-only | Setting up or changing the starter habits | 1.2k |
 | `how-to/backups-and-recovery.md` | App variants and ids, the backup taken before an upgrade, restoring one by hand, what the recovery screens do, recovering a set-aside file | Data-safety questions, or a phone that will not open its data | 1.3k |
+| `how-to/export-format.md` | Every field of the JSON export (version 2), the `derived` object, `notesIncluded`, the CSV columns, the compatibility rule for a future importer | Building the importer, or reading an export file | 1.8k |
 | `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 0.9k |
 | `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 1.7k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |
@@ -42,7 +43,7 @@ docs/
   specs/               feature-spec.md (V1), feature-spec-v2.md, feature-spec-v3.md
   design/              design-system.md (V1+V2), design-system-v3.md
   decisions/           ADRs 001-004, 006-009 (no 005)
-  how-to/              dev-tooling.md, e2e.md, device-validation.md, starter-habits.md
+  how-to/              dev-tooling.md, e2e.md, device-validation.md, starter-habits.md, export-format.md
   archive/             audit.md, assessment-v3.md, backlog-done.md, audits-2026-11/ (history; not scanned by check-doc-refs)
   mockups/v3/          V3 design files and text renders
   visual-baseline/     web baselines for visual-check
