@@ -1,9 +1,18 @@
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { type PropsWithChildren, useEffect, useMemo, useState } from "react";
+import {
+	type PropsWithChildren,
+	type RefObject,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { log } from "@/lib/logger/logger";
 import { db, expoDb, getDatabaseOpenError, retryOpenDatabase } from "./client";
+import { backupBeforeMigrating } from "./database-backup";
 import type { DatabaseCopy } from "./database-copy";
 import { DatabaseErrorScreen } from "./database-error-screen";
+import { createBackupFiles } from "./database-files";
 import {
 	MIGRATION_SCREEN_PAINT_MS,
 	type MigrationPlan,
@@ -33,10 +42,14 @@ const useDrizzleStudio: (database: typeof expoDb) => void = __DEV__
  * On the first launch after an update the update screen (SY3) is up before the
  * migrator starts. It does not change what the migrator does — only when it
  * begins, a moment later, so the screen can be painted before the JavaScript
- * thread is busy.
+ * thread is busy. In that moment a backup of the old database is taken
+ * (`database-backup.ts`).
  */
 export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	const [attempt, setAttempt] = useState(0);
+	// One backup per launch: Try again re-mounts the gate with the same data,
+	// and a copy per retry would push the older, different backups out.
+	const backupTaken = useRef(false);
 	// The file could not be opened at all: nothing below can run, so say so
 	// here (the failure was logged by the client) instead of crashing.
 	if (getDatabaseOpenError() !== null) {
@@ -55,6 +68,7 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 		<MigrationGate
 			key={attempt}
 			copy={copy}
+			backupTaken={backupTaken}
 			onRetry={() => setAttempt((n) => n + 1)}
 		>
 			{children}
@@ -74,15 +88,32 @@ function MigrationGate({
 	children,
 	copy,
 	onRetry,
-}: DatabaseProviderProps & { onRetry: () => void }) {
+	backupTaken,
+}: DatabaseProviderProps & {
+	onRetry: () => void;
+	backupTaken: RefObject<boolean>;
+}) {
 	const plan = useMemo(() => planMigrations(expoDb, newestMigrationAt()), []);
 	const [started, setStarted] = useState(plan !== "upgrade");
 
 	useEffect(() => {
 		if (started) return;
-		const timer = setTimeout(() => setStarted(true), MIGRATION_SCREEN_PAINT_MS);
+		const timer = setTimeout(() => {
+			// Upgrade plan only (this effect never runs for another). A failed
+			// backup is logged and does not stop the update: the migrator is one
+			// atomic transaction (docs/how-to/backups-and-recovery.md).
+			if (!backupTaken.current) {
+				backupTaken.current = true;
+				backupBeforeMigrating(
+					expoDb,
+					() => createBackupFiles(expoDb.databasePath),
+					Date.now(),
+				);
+			}
+			setStarted(true);
+		}, MIGRATION_SCREEN_PAINT_MS);
 		return () => clearTimeout(timer);
-	}, [started]);
+	}, [started, backupTaken]);
 
 	if (!started) return <MigrationScreen copy={copy.updating} />;
 	return (

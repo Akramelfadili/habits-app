@@ -28,6 +28,7 @@ export const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"resynced",
 	"pending",
 	"neededBytes",
+	"bytes",
 	"schemaVersion",
 	"durationMs",
 	"isFatal",
@@ -47,6 +48,7 @@ export const TOKEN_FIELDS: ReadonlySet<string> = new Set([
 	"step",
 	"why",
 	"status",
+	"errorName",
 ]);
 
 export const MAX_MESSAGE_LENGTH = 160;

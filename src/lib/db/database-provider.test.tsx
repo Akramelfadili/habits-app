@@ -36,6 +36,13 @@ jest.mock("./migration-plan", () => ({
 	...jest.requireActual("./migration-plan"),
 	planMigrations: () => mockPlan,
 }));
+const mockBackup = jest.fn();
+jest.mock("./database-backup", () => ({
+	backupBeforeMigrating: (...args: unknown[]) => mockBackup(...args),
+}));
+jest.mock("./database-files", () => ({
+	createBackupFiles: jest.fn(() => ({})),
+}));
 const mockHideSplash = jest.fn();
 jest.mock("expo-splash-screen", () => ({ hide: () => mockHideSplash() }));
 const mockCopyDiagnostics = jest.fn();
@@ -81,6 +88,14 @@ describe("DatabaseProvider", () => {
 		expect(screen.getByText("App")).toBeTruthy();
 	});
 
+	it("takes no backup when the data is current or the install is fresh", async () => {
+		mockUseMigrations.mockReturnValue({ success: true });
+		await render(app);
+		mockPlan = "fresh";
+		await render(app);
+		expect(mockBackup).not.toHaveBeenCalled();
+	});
+
 	it("logs migration.start with the schema version and plan", async () => {
 		mockUseMigrations.mockReturnValue({ success: true });
 		await render(app);
@@ -124,6 +139,39 @@ describe("DatabaseProvider", () => {
 			expect(screen.getByText("Updating your data")).toBeTruthy();
 			expect(mockHideSplash).toHaveBeenCalled();
 			expect(mockUseMigrations).not.toHaveBeenCalled();
+		});
+
+		it("backs up the old database once, before the migrator starts", async () => {
+			mockUseMigrations.mockReturnValue({ success: false });
+			mockBackup.mockImplementation(() => {
+				expect(mockUseMigrations).not.toHaveBeenCalled();
+			});
+			await render(app);
+			expect(mockBackup).not.toHaveBeenCalled();
+			await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+			expect(mockBackup).toHaveBeenCalledTimes(1);
+			expect(mockUseMigrations).toHaveBeenCalled();
+		});
+
+		it("a failed backup does not stop the update", async () => {
+			mockBackup.mockReturnValue({ status: "failed" });
+			mockUseMigrations.mockReturnValue({ success: true });
+			await render(app);
+			await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+			expect(mockBackup).toHaveBeenCalledTimes(1);
+			expect(screen.getByText("App")).toBeTruthy();
+		});
+
+		it("a failed update's Try again does not take a second backup", async () => {
+			mockUseMigrations
+				.mockReturnValueOnce({ success: false, error: new Error("x") })
+				.mockReturnValue({ success: true });
+			await render(app);
+			await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+			await fireEvent.press(screen.getByText("Try again"));
+			await act(() => jest.advanceTimersByTime(MIGRATION_SCREEN_PAINT_MS));
+			expect(mockBackup).toHaveBeenCalledTimes(1);
+			expect(screen.getByText("App")).toBeTruthy();
 		});
 
 		it("starts the migrator one paint later, and keeps the update screen up while it runs", async () => {
