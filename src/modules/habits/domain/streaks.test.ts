@@ -1,6 +1,8 @@
-import { startOfDay, subDays } from "date-fns";
+import { addDays, startOfDay, subDays } from "date-fns";
+import { toDayKey } from "@/utils/day-key";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay } from "../types";
+import { calculateLongestStreak } from "./habit-history";
 
 import {
 	calculateCurrentStreak,
@@ -53,6 +55,51 @@ describe("isEntryComplete", () => {
 
 	it("is direction-agnostic — a Break habit's entry means resisted, same signal", () => {
 		expect(isEntryComplete(breakHabit, entry(2, "2026-09-01"))).toBe(true);
+	});
+});
+
+describe("calculateCurrentStreak across the end of February (G-03)", () => {
+	const keysFrom = (from: Date, to: Date) => {
+		const keys: string[] = [];
+		for (let d = from; d <= to; d = addDays(d, 1)) keys.push(toDayKey(d));
+		return keys;
+	};
+
+	it.each([
+		// year, days from 20 Feb to 1 Mar inclusive
+		[2028, 11],
+		[2027, 10],
+	])(
+		"counts 28 Feb → 1 Mar %i as consecutive days (%i in the run)",
+		(year, run) => {
+			const habit = makeHabit({ id: 1, createdAt: new Date(year, 0, 1) });
+			const keys = keysFrom(new Date(year, 1, 20), new Date(year, 2, 1));
+			expect(keys.includes(`${year}-02-29`)).toBe(year === 2028);
+			const entries = keys.map((key) => entry(1, key));
+			expect(
+				calculateCurrentStreak(habit, entries, new Set(), new Date(year, 2, 1)),
+			).toBe(run);
+			expect(
+				calculateLongestStreak({
+					habit,
+					entries,
+					frozenDates: new Set(),
+					today: new Date(year, 2, 1),
+				}).days,
+			).toBe(run);
+		},
+	);
+
+	it("breaks on a missed 29 Feb 2028, and a frozen one keeps it", () => {
+		const habit = makeHabit({ id: 1, createdAt: new Date(2028, 0, 1) });
+		const entries = keysFrom(new Date(2028, 1, 20), new Date(2028, 2, 1))
+			.filter((key) => key !== "2028-02-29")
+			.map((key) => entry(1, key));
+		const march1 = new Date(2028, 2, 1);
+		expect(calculateCurrentStreak(habit, entries, new Set(), march1)).toBe(1);
+		expect(
+			calculateCurrentStreak(habit, entries, new Set(["2028-02-29"]), march1),
+		).toBe(11);
 	});
 });
 

@@ -165,6 +165,40 @@ describe("buildYearMap", () => {
 	});
 });
 
+describe("buildYearMap — leap years (G-03)", () => {
+	function yearOf(y: number) {
+		const habit = makeHabit({ id: 1, createdAt: new Date(y - 1, 11, 1) });
+		return buildYearMap({
+			habits: [habit],
+			entries: logs(1, new Date(y, 0, 1), new Date(y, 11, 31)),
+			frozenDays: [],
+			today: new Date(y + 1, 0, 10),
+			year: rangeWindowFor("year", new Date(y, 5, 15)),
+		});
+	}
+
+	it.each([2024, 2028])("draws 366 cells for %i, with 29 February", (y) => {
+		const result = yearOf(y);
+		expect(result.days).toHaveLength(366);
+		expect(new Set(result.days.map((d) => d.key)).size).toBe(366);
+		// 31 January days, then 1–29 February: 29 Feb is the 60th cell.
+		expect(result.days[59].key).toBe(`${y}-02-29`);
+		expect(result.days[60].key).toBe(`${y}-03-01`);
+		expect(result.days[59]).toMatchObject({ done: 1, due: 1 });
+		expect(result.months[1].days).toHaveLength(29);
+		expect(result.months.reduce((sum, m) => sum + m.days.length, 0)).toBe(366);
+	});
+
+	it.each([2026, 2027])("draws 365 cells for %i, with no 29 February", (y) => {
+		const result = yearOf(y);
+		expect(result.days).toHaveLength(365);
+		expect(result.days.some((d) => d.key.endsWith("-02-29"))).toBe(false);
+		expect(result.days[59].key).toBe(`${y}-03-01`);
+		expect(result.months[1].days).toHaveLength(28);
+		expect(result.months.reduce((sum, m) => sum + m.days.length, 0)).toBe(365);
+	});
+});
+
 describe("one classification shared by the year map and the range summary", () => {
 	const habits = progressHabits;
 	const entries = progressEntries();
