@@ -35,7 +35,11 @@ import {
 import { useExportActions, useExportStore } from "./use-export-actions";
 
 const source = makeExportSource();
-const options: ExportOptions = { format: "json", includeArchived: true };
+const options: ExportOptions = {
+	format: "json",
+	includeArchived: true,
+	includeNotes: true,
+};
 const result = {
 	uri: "file:///habits.json",
 	name: "habits-2026-10-23.json",

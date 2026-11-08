@@ -13,7 +13,7 @@ import { toJson } from "./export-json";
 
 const model = buildExportModel(
 	makeExportSource(),
-	{ format: "csv", includeArchived: true },
+	{ format: "csv", includeArchived: true, includeNotes: true },
 	EXPORT_TODAY,
 );
 
@@ -83,7 +83,7 @@ describe("toCsv", () => {
 	it("includes a habit with no logs, and marks archived habits", async () => {
 		const empty = buildExportModel(
 			{ ...makeExportSource(), entries: [], notes: [], frozenDays: [] },
-			{ format: "csv", includeArchived: true },
+			{ format: "csv", includeArchived: true, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		const csv = await toCsv(empty);
@@ -111,6 +111,18 @@ describe("toCsv", () => {
 		);
 	});
 
+	it("writes no note rows when Include notes is off", async () => {
+		const withoutNotes = buildExportModel(
+			makeExportSource(),
+			{ format: "csv", includeArchived: true, includeNotes: false },
+			EXPORT_TODAY,
+		);
+		const csv = await toCsv(withoutNotes);
+		expect(csv).not.toContain("note,1,");
+		expect(csv).not.toContain("Línea uno");
+		expect(csv).toContain("entry,1,");
+	});
+
 	it("reports progress after each habit with the running log count", async () => {
 		const seen: number[] = [];
 		await toCsv(model, (done) => {
@@ -123,17 +135,19 @@ describe("toCsv", () => {
 describe("toJson", () => {
 	it("nests each habit's logs, notes and frozen days, with streaks and category name", async () => {
 		const parsed = JSON.parse(await toJson(model));
-		expect(parsed.version).toBe(1);
+		expect(parsed.version).toBe(2);
 		const [cafe, water] = parsed.habits;
 		expect(cafe).toMatchObject({
 			name: "Café, then “read”",
 			category: "Morning",
-			status: "active",
 			notes: [{ date: "2026-09-15", note: 'Línea uno, "dos"\nlínea tres' }],
+			derived: { status: "active" },
 		});
-		expect(water.frozenDays).toEqual(["2026-09-02"]);
+		expect(water.frozenDays).toEqual([
+			{ date: "2026-09-02", createdAt: expect.any(String) },
+		]);
 		expect(water.frequency).toBe("weekdays:Mon|Wed|Fri");
-		expect(cafe).toHaveProperty("currentStreak");
-		expect(cafe).toHaveProperty("longestStreak");
+		expect(cafe.derived).toHaveProperty("currentStreak");
+		expect(cafe.derived).toHaveProperty("longestStreak");
 	});
 });

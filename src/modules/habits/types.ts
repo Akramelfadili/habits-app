@@ -164,6 +164,8 @@ export type EntryNote = {
 	/** Calendar day, "yyyy-MM-dd". */
 	date: string;
 	note: string;
+	/** When the note was last saved; absent from in-memory fixtures. Carried into the export (v2). */
+	updatedAt?: Date;
 };
 
 /**
@@ -196,6 +198,8 @@ export type Reminder = {
 	/** Sorted Mon → Sun. */
 	weekdays: IsoWeekday[];
 	enabled: boolean;
+	/** When the reminder was added; absent from in-memory fixtures. Carried into the export (v2). */
+	createdAt?: Date;
 };
 
 export type CreateReminderInput = Omit<Reminder, "id">;
@@ -220,4 +224,6 @@ export type ExportFailureReason =
 export type ExportOptions = {
 	format: ExportFormat;
 	includeArchived: boolean;
+	/** Leave every free-text note out of the file (default on). */
+	includeNotes: boolean;
 };

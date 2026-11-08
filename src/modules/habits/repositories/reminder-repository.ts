@@ -22,6 +22,7 @@ function rowToReminder(row: ReminderRow): Reminder {
 			.filter(Boolean)
 			.map((day) => Number(day) as IsoWeekday),
 		enabled: row.enabled,
+		createdAt: row.createdAt,
 	};
 }
 
@@ -101,7 +102,7 @@ export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
 			minute: reminder.minute,
 			weekdays: weekdaysToColumn(reminder.weekdays),
 			enabled: reminder.enabled,
-			createdAt: new Date(),
+			createdAt: reminder.createdAt ?? new Date(),
 		})
 		.returning();
 	return rowToReminder(row);

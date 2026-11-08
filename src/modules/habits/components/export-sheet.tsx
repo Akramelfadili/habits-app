@@ -5,6 +5,7 @@ import { FileCard } from "@/components/ui/composite/file-card";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { Sheet } from "@/components/ui/composite/sheet";
 import { SheetHeader } from "@/components/ui/composite/sheet-header";
+import { ToggleRow } from "@/components/ui/composite/toggle-row";
 import { Button } from "@/components/ui/primitives/button";
 import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { SectionLabel } from "@/components/ui/primitives/section-label";
@@ -113,6 +114,15 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 						<FieldHelper plain tone="hint">
 							{exportCopy.explain}
 						</FieldHelper>
+						<ToggleRow
+							title={exportCopy.includeNotes}
+							subtitle={exportCopy.includeNotesHint}
+							accessibilityLabel={exportCopy.includeNotesLabel}
+							value={options.includeNotes}
+							onValueChange={(next) =>
+								setOptions((current) => ({ ...current, includeNotes: next }))
+							}
+						/>
 						<Button
 							label={exportCopy.button(FORMAT_WORD[options.format])}
 							onPress={() => void exporter.run(source, options)}

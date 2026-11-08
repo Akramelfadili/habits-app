@@ -135,7 +135,7 @@ export async function toCsv(
 				}),
 			);
 		}
-		for (const date of record.frozenDates) {
+		for (const { date } of record.frozenDays) {
 			lines.push(toLine({ record_type: "frozen_day", ...owner, date }));
 		}
 		logsDone += record.logs.length;

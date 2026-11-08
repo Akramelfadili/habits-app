@@ -20,6 +20,9 @@ jest.mock("../repositories/reminder-repository", () => ({
 jest.mock("../repositories/category-repository", () => ({
 	useCategories: () => mockSource.categories,
 }));
+jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
+	useAppSetting: () => null,
+}));
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
@@ -106,6 +109,7 @@ describe("ExportSheet — choose a format (EX1)", () => {
 		expect(mockRunExport.mock.calls[0][0].options).toEqual({
 			format: "json",
 			includeArchived: true,
+			includeNotes: true,
 		});
 		// Every kind of data goes to the service: habits, entries, categories, reminders, frozen days.
 		const sent = mockRunExport.mock.calls[0][0].source;
@@ -114,6 +118,28 @@ describe("ExportSheet — choose a format (EX1)", () => {
 		expect(sent.categories).toHaveLength(11);
 		expect(sent.frozenDays).toHaveLength(1);
 		expect(sent.entries).toHaveLength(4);
+	});
+
+	it("has an Include notes switch, on by default, named for VoiceOver", async () => {
+		await render(<ExportSheet visible onClose={jest.fn()} />);
+		const toggle = screen.getByRole("switch", {
+			name: "Include notes in the export",
+		});
+		expect(toggle.props.accessibilityState.checked).toBe(true);
+	});
+
+	it("turning Include notes off sends includeNotes: false to the export", async () => {
+		mockRunExport.mockImplementation(() => new Promise(() => {}));
+		await render(<ExportSheet visible onClose={jest.fn()} />);
+		await fireEvent.press(
+			screen.getByRole("switch", { name: "Include notes in the export" }),
+		);
+		expect(
+			screen.getByRole("switch", { name: "Include notes in the export" }).props
+				.accessibilityState.checked,
+		).toBe(false);
+		await fireEvent.press(screen.getByText("Export JSON"));
+		expect(mockRunExport.mock.calls[0][0].options.includeNotes).toBe(false);
 	});
 
 	it("Close leaves without exporting", async () => {

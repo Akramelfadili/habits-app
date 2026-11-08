@@ -393,6 +393,31 @@ describe("check-architecture", () => {
 		assert.match(out, /\[web-twin\]/);
 	});
 
+	it("test-support-site: app code importing test-support or the test database fails; test-support itself may use Drizzle and tests may import it", () => {
+		expectViolation(
+			{
+				"src/modules/habits/test-support/loader.ts": `import { eq } from "drizzle-orm";\nexport const load = eq;\n`,
+				"src/modules/habits/services/bad-service.ts": `import { load } from "../test-support/loader";\nexport const x = load;\n`,
+				"src/modules/habits/services/bad-service.test.ts": "",
+			},
+			"test-support-site",
+		);
+		expectViolation(
+			{
+				"src/lib/db/test-db.ts": "export const createTestDb = 1;\n",
+				"src/modules/habits/services/bad-db.ts": `import { createTestDb } from "@/lib/db/test-db";\nexport const x = createTestDb;\n`,
+				"src/modules/habits/services/bad-db.test.ts": "",
+			},
+			"test-support-site",
+		);
+		const { code, out } = run({
+			...GOOD,
+			"src/modules/habits/test-support/loader.ts": `import { eq } from "drizzle-orm";\nexport const load = eq;\n`,
+			"src/modules/habits/services/ok.test.ts": `import { load } from "../test-support/loader";\n`,
+		});
+		assert.equal(code, 0, out);
+	});
+
 	it("hex-colour: a colour literal outside the theme fails; inside the theme is fine", () => {
 		expectViolation(
 			{
