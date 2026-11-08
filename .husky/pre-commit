@@ -1,1 +1,1 @@
-npx biome check --write .
+npx biome check --staged --no-errors-on-unmatched

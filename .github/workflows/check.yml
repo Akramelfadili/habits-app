@@ -1,6 +1,7 @@
 # The same gate as `.husky/pre-push`: Biome (no writes), tsc, Jest, the
 # tooling tests and the architecture rules, plus the slow tests
-# (`*.slow.test.ts`) the pre-push gate skips. Visual-check and Maestro stay
+# (`*.slow.test.ts`) the pre-push gate skips: `make check-ci`, so the step
+# list lives in the Makefile, not here. Visual-check and Maestro stay
 # manual (they need a browser/simulator and pinned fonts).
 name: check
 
@@ -27,5 +28,4 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: make check
-      - run: npm run test:slow
+      - run: make check-ci
