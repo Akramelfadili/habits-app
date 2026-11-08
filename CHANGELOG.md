@@ -52,3 +52,4 @@ Release prerequisites (from `docs/backlog.md`, "Release prerequisites"):
 - Device-only checks: VoiceOver, Dynamic Type AX1–AX5, Reduce Motion, reminders firing, share sheet, drag-to-reorder and swipe-to-archive, update-screen first paint.
 
 Hardening still to do (`docs/archive/audit.md` §16): folder moves, error handling, accessibility, diagnostics, crash reporting and versioning.
+- **Data safety, part A** (branch `feat/data-safety-a`, no PR number yet): app variants (`app.config.ts`, the dev client is its own app with bundle id `com.akramelfadili.habits.dev`), a starter-profile guard, a backup before each upgrade migration, distinct `newer` and `unreadable` database plans, a blocking screen for data from a newer build, and a confirm-gated "set aside old data and start fresh"; ADR 010, `docs/how-to/backups-and-recovery.md`.

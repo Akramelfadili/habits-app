@@ -11,7 +11,7 @@ Which document answers which question. Sizes are estimated tokens (characters ÷
 | `../CONTRIBUTING.md` | Branches, commits, the gate, what never goes in git, migrations, session rules | Before the first commit | 1.5k |
 | `../ARCHITECTURE.md` | Folders, layers, patterns, stack, navigation, decision log | Touching `src/modules`, data or layering (read the heading you need) | 9.6k |
 | `how-to/dev-tooling.md` | Hooks, `make check`, ratchets, visual-check setup, WSL Chromium | Tooling, CI, visual-check | 3.6k |
-| `decisions/001…009` (001–004 and 006–009; there is no 005) | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007), logging (008), sync readiness (009) | Before changing what they decide | 0.5–1.8k each |
+| `decisions/001…010` (001–004 and 006–010; there is no 005) | Why: live queries, FKs off on device, `run()`, token ratchet, navigation (006), device validation (007), logging (008), sync readiness (009), app variants and recovery (010) | Before changing what they decide | 0.5–1.8k each |
 | `design/design-system-v3.md` | V3 tokens (F-xx) and components (V3-xx) | Any UI work on HAB-26–50 | 4.6k |
 | `design/design-system.md` | V1+V2 tokens and components; **Deltas** section | UI work, or a component V3 does not redefine | 8.7k |
 | `specs/feature-spec-v3.md` | HAB-26–50: rules, edge cases, "Spec wins", D1–D15 | Implementing or reworking a V3 ticket (one section only) | 15k |
@@ -21,6 +21,7 @@ Which document answers which question. Sizes are estimated tokens (characters ÷
 | `mockups/v3/renders/<section>/text.txt` | All copy and rules of one mockup section | Wording for one frame, by `grep` | 3–17k each |
 | `visual-baseline/` | PNG baselines for `npm run visual-check` | Only through the tool | — |
 | `how-to/starter-habits.md` | Dev builds: your own habits from `.env.local`, format, version bump, why dev-only | Setting up or changing the starter habits | 1.2k |
+| `how-to/backups-and-recovery.md` | App variants and ids, the backup taken before an upgrade, restoring one by hand, what the recovery screens do, recovering a set-aside file | Data-safety questions, or a phone that will not open its data | 1.3k |
 | `how-to/device-validation.md` | Run the iOS Simulator validation, read its artifacts, add a state | Device-only questions | 0.9k |
 | `how-to/e2e.md` (`../e2e/README.md` is a pointer) | Maestro journeys, status, coverage gaps, manual device checks | Touching `e2e/` | 1.7k |
 | `../scripts/README.md` | What each script does | Touching `scripts/` | 0.3k |

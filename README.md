@@ -10,6 +10,8 @@ npx expo start        # native modules need a dev-client build, not Expo Go
 make check            # the gate: Biome, tsc, Jest, tooling tests, architecture and repo-hygiene checks
 ```
 
+`APP_VARIANT` (`development` when unset, `preview`, `production`) picks the app's name, bundle id and scheme in `app.config.ts`; the dev client is a separate app (`com.akramelfadili.habits.dev`) with its own data. See [docs/how-to/backups-and-recovery.md](docs/how-to/backups-and-recovery.md).
+
 To get a dev client, build it once with `npx expo run:ios` on a Mac with Xcode (it generates the ignored `ios/`, installs a Debug build on the Simulator or a connected iPhone, and that build loads JavaScript from `npx expo start`); a cloud EAS build is the no-Mac route but needs an `eas.json` the repo does not have yet.
 
 Use `npx expo install <package>` (not `npm install`) for Expo / React Native packages. Versions: see `package.json`. More commands: `make help`.
