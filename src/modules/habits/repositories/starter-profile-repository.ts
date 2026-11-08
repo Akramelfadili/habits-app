@@ -1,3 +1,4 @@
+import { count } from "drizzle-orm";
 import { setSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { db } from "@/lib/db/client";
 import {
@@ -18,6 +19,22 @@ import type { Habit } from "../types";
 import { getCategories } from "./category-repository";
 import { createHabit } from "./habit-repository";
 import { createReminder } from "./reminder-repository";
+
+export type UserDataCounts = {
+	entries: number;
+	notes: number;
+	frozenDays: number;
+};
+
+/** How much history the database holds — the starter profile's guard. */
+export async function countUserData(): Promise<UserDataCounts> {
+	const [[e], [n], [f]] = await Promise.all([
+		db.select({ n: count() }).from(entries),
+		db.select({ n: count() }).from(entryNotes),
+		db.select({ n: count() }).from(frozenDays),
+	]);
+	return { entries: e.n, notes: n.n, frozenDays: f.n };
+}
 
 export type AppliedStarterHabit = {
 	habit: Habit;

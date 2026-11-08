@@ -58,6 +58,11 @@ const habitSchema = z.object({
 export const starterProfileSchema = z
 	.object({
 		version: z.number().int().min(1),
+		/**
+		 * Opt in to replacing a database that already holds check-ins, notes or
+		 * frozen days when no version marker exists (a first apply on real data).
+		 */
+		replace: z.boolean().optional(),
 		habits: z.array(habitSchema).min(1).max(100),
 	})
 	.refine(
