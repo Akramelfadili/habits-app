@@ -1,4 +1,5 @@
 import { addDays, format, getDate } from "date-fns";
+import { inTimeZoneEachTest } from "@/test-support/time-zone";
 import { habitFixturesFor } from "../dev/habit-fixtures";
 import { monthlyEntries, monthlyFrozenDays } from "../dev/monthly-fixtures";
 import { makeHabit } from "../test-support/habit-builder";
@@ -273,17 +274,18 @@ describe("per-habit rows and delta", () => {
 });
 
 describe("Paris daylight-saving", () => {
-	const originalZone = process.env.TZ;
-	afterEach(() => {
-		if (originalZone === undefined) delete process.env.TZ;
-		else process.env.TZ = originalZone;
+	// Assigning process.env.TZ here used to be a no-op (Jest's env copy), so
+	// this ran in the machine's zone; the environment hook really switches it.
+	inTimeZoneEachTest("Europe/Paris");
+
+	it("runs in Paris", () => {
+		expect(new Date(2026, 6, 1).getTimezoneOffset()).toBe(-120);
 	});
 
 	it.each([
 		["spring forward", 2026, 2], // 29 Mar 2026
 		["fall back", 2026, 9], // 25 Oct 2026
 	])("counts every day once across %s", (_label, year, monthIndex) => {
-		process.env.TZ = "Europe/Paris";
 		const month = monthWindowFor(new Date(year, monthIndex, 10));
 		const days = new Date(year, monthIndex + 1, 0).getDate();
 		const habits = [daily(1, { createdAt: new Date(2025, 0, 1) })];

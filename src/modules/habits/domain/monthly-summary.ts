@@ -1,5 +1,4 @@
 import {
-	addDays,
 	endOfMonth,
 	getISODay,
 	isAfter,
@@ -11,7 +10,7 @@ import {
 	startOfMonth,
 	subMonths,
 } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
+import { nextDay, toDayKey } from "@/utils/day-key";
 import { weekAlignedSpan, weekLastDay } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
 import { isPerfectDay } from "./completion-rate";
@@ -72,7 +71,7 @@ export function monthWeeks(month: MonthWindow): MonthWindow[] {
 	while (!isAfter(start, month.end)) {
 		const weekEnd = weekLastDay(start);
 		weeks.push({ start, end: min([weekEnd, month.end]) });
-		start = addDays(weekEnd, 1);
+		start = nextDay(weekEnd);
 	}
 	return weeks;
 }
@@ -183,7 +182,7 @@ export function outcomesFor({
 		for (
 			let cursor = window.start;
 			!isAfter(cursor, lastCounted);
-			cursor = addDays(cursor, 1)
+			cursor = nextDay(cursor)
 		) {
 			const { status, isToday } = classify(cursor);
 			const outcome = outcomeOf(status, isToday);
@@ -274,7 +273,7 @@ function buildCalendar(
 		for (
 			let cursor = week.start;
 			!isAfter(cursor, week.end);
-			cursor = addDays(cursor, 1)
+			cursor = nextDay(cursor)
 		) {
 			row[getISODay(cursor) - 1] = { date: cursor, status: statusOf(cursor) };
 		}

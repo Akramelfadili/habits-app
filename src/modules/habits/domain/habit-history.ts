@@ -11,7 +11,7 @@ import {
 	subDays,
 } from "date-fns";
 import type { HeatmapLevel } from "@/theme/theme";
-import { fromDayKey, toDayKey } from "@/utils/day-key";
+import { fromDayKey, nextDay, toDayKey } from "@/utils/day-key";
 import { weekStart } from "@/utils/week-window";
 import {
 	getHabitStrategy,
@@ -92,7 +92,7 @@ export function calculateLongestStreak({
 	for (
 		let cursor = startOfDay(habit.createdAt);
 		!isAfter(cursor, todayStart);
-		cursor = addDays(cursor, 1)
+		cursor = nextDay(cursor)
 	) {
 		const dateString = toDayKey(cursor);
 		if (restarts.has(dateString)) run = 0;
@@ -169,7 +169,7 @@ function tallyWindow(
 ) {
 	const tally = { ...EMPTY_TALLY };
 	let skippedPaused = false;
-	for (let cursor = start; !isAfter(cursor, end); cursor = addDays(cursor, 1)) {
+	for (let cursor = start; !isAfter(cursor, end); cursor = nextDay(cursor)) {
 		if (isPausedOn(cursor, habit.pauses)) skippedPaused = true;
 		addToTally(tally, classify(cursor));
 	}

@@ -13,7 +13,7 @@ const {
 	setHabitQuantityOn,
 }: typeof EntryRepository = require("./entry-repository");
 
-const DAY_1 = new Date("2026-09-14T00:00:00Z"); // Monday
+const DAY_1 = new Date(2026, 8, 14); // Monday, local midnight
 
 async function seedHabit(): Promise<number> {
 	const now = new Date();

@@ -1,5 +1,6 @@
 import { addDays, parseISO } from "date-fns";
-import { DAY_KEY_FORMAT, fromDayKey, toDayKey } from "./day-key";
+import { withTimeZone } from "@/test-support/time-zone";
+import { DAY_KEY_FORMAT, fromDayKey, nextDay, toDayKey } from "./day-key";
 
 describe("day keys", () => {
 	it("uses the stored calendar-day format", () => {
@@ -44,5 +45,27 @@ describe("fromDayKey — the fast path", () => {
 
 	it("falls back to parseISO for anything that is not yyyy-MM-dd", () => {
 		expect(fromDayKey("2026-10-24T09:00:00").getHours()).toBe(9);
+	});
+});
+
+describe("nextDay", () => {
+	it("is the next day's local midnight", () => {
+		const next = nextDay(new Date(2026, 9, 24, 23, 59));
+		expect(toDayKey(next)).toBe("2026-10-25");
+		expect(next.getHours()).toBe(0);
+	});
+
+	// Sao Paulo's DST began at midnight on 4 Nov 2018, so that day's first
+	// instant is 01:00. Bare addDays carried 01:00 onto every later day, and a
+	// walk bounded by a midnight end dropped its last day.
+	it("snaps back to midnight after a day whose midnight did not exist", () => {
+		withTimeZone("America/Sao_Paulo", () => {
+			const gapDay = fromDayKey("2018-11-04");
+			expect(gapDay.getHours()).toBe(1);
+			expect(addDays(gapDay, 1).getHours()).toBe(1);
+			const next = nextDay(gapDay);
+			expect(toDayKey(next)).toBe("2018-11-05");
+			expect(next.getHours()).toBe(0);
+		});
 	});
 });

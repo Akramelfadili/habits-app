@@ -12,7 +12,7 @@ const {
 	unfreezeHabitDay,
 }: typeof FrozenDayRepository = require("./frozen-day-repository");
 
-const DAY = new Date("2026-09-15T00:00:00Z");
+const DAY = new Date(2026, 8, 15);
 const MONTH_START = new Date("2026-09-01T00:00:00Z");
 const MONTH_END = new Date("2026-09-30T00:00:00Z");
 

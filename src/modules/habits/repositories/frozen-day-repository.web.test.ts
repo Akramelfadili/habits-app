@@ -26,7 +26,7 @@ describe("frozen-day-repository.web", () => {
 		const { result } = await renderHook(() => useFrozenDays());
 
 		await act(async () => {
-			await freezeHabitDay(1, new Date("2026-09-15T00:00:00Z"));
+			await freezeHabitDay(1, new Date(2026, 8, 15));
 		});
 
 		expect(
@@ -41,7 +41,7 @@ describe("frozen-day-repository.web", () => {
 		const { freezeHabitDay, unfreezeHabitDay, useFrozenDays } =
 			loadRepository();
 		const { result } = await renderHook(() => useFrozenDays());
-		const day = new Date("2026-09-15T00:00:00Z");
+		const day = new Date(2026, 8, 15);
 
 		await act(async () => {
 			await freezeHabitDay(1, day);
@@ -61,8 +61,8 @@ describe("frozen-day-repository.web", () => {
 		const { result } = await renderHook(() => useFrozenDays());
 
 		await act(async () => {
-			await freezeHabitDay(1, new Date("2026-09-15T00:00:00Z"));
-			await freezeHabitDay(1, new Date("2026-09-15T00:00:00Z"));
+			await freezeHabitDay(1, new Date(2026, 8, 15));
+			await freezeHabitDay(1, new Date(2026, 8, 15));
 		});
 
 		expect(

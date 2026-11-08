@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-perf test-slow test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline
+.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -23,6 +23,11 @@ test-perf: ## Run the timing tests (*.perf.test.ts) alone, in band, so other tes
 
 test-slow: ## Run only the slow tests (*.slow.test.ts); CI runs them, pre-push does not
 	npm run test:slow
+
+test-tz: ## Run the domain and utils tests in three more zones (UTC, Europe/Paris, Pacific/Auckland); `make test` runs in America/Los_Angeles
+	JEST_TZ=UTC npx jest src/utils src/test-support src/modules/habits/domain
+	JEST_TZ=Europe/Paris npx jest src/utils src/test-support src/modules/habits/domain
+	JEST_TZ=Pacific/Auckland npx jest src/utils src/test-support src/modules/habits/domain
 
 test-tooling: ## Run the tests for scripts/ (check-architecture rules) with node --test
 	npm run test:tooling
@@ -57,7 +62,7 @@ deadcode: ## Report unused files/exports/dependencies with knip (report only; no
 
 check: lint-check typecheck test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references
 
-check-ci: check test-slow ## The CI gate (.github/workflows/check.yml): `make check` plus the slow tests
+check-ci: check test-slow test-tz ## The CI gate (.github/workflows/check.yml): `make check` plus the slow tests and the time-zone runs
 
 e2e: ## Run the Maestro journeys against the web build (setup: docs/how-to/e2e.md)
 	npm run e2e

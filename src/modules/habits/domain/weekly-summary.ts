@@ -1,5 +1,4 @@
 import {
-	addDays,
 	getISODay,
 	isAfter,
 	min,
@@ -7,7 +6,7 @@ import {
 	startOfDay,
 	subWeeks,
 } from "date-fns";
-import { toDayKey } from "@/utils/day-key";
+import { nextDay, toDayKey } from "@/utils/day-key";
 import { type DayWindow, weekWindow } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { addToTally, EMPTY_TALLY } from "./completion-rate";
@@ -128,7 +127,7 @@ export function buildWeeklySummary({
 		for (
 			let cursor = week.start;
 			!isAfter(cursor, lastCountedDay);
-			cursor = addDays(cursor, 1)
+			cursor = nextDay(cursor)
 		) {
 			// The shared rule (completion-rate.ts): frozen and bonus days and a
 			// still-open today are not counted.
