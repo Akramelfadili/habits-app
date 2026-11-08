@@ -36,8 +36,8 @@ export const FORBIDDEN_PATHS = [
 	[/(^|\/)node_modules\//, "node_modules"],
 	[/^(ios|android)\//, "generated native folder (ios/, android/)"],
 	[
-		/(^|\/)\.env($|\.)(?!example$)/,
-		"env file (only .env.example may be tracked)",
+		/(^|\/)\.env($|\.)(?!(local\.)?example$)/,
+		"env file (only .env.example and .env.local.example may be tracked)",
 	],
 	[
 		/\.(pem|p8|p12|key|mobileprovision|keystore|jks|cer|certSigningRequest)$/i,

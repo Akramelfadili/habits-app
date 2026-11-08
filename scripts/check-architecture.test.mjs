@@ -186,6 +186,84 @@ describe("check-architecture", () => {
 		);
 	});
 
+	describe("starter-profile-site", () => {
+		const SITE = {
+			"src/modules/habits/dev/starter-profile.ts": "export const v = 1;\n",
+			"src/modules/habits/dev/starter-profile.test.ts": "",
+			"src/modules/habits/repositories/starter-profile-repository.ts": `import { v } from "../dev/starter-profile";\nexport const r = v;\n`,
+			"src/modules/habits/repositories/starter-profile-repository.web.ts": `import type * as N from "./starter-profile-repository";\nexport type T = typeof N;\n`,
+			"src/modules/habits/repositories/starter-profile-repository.test.ts": "",
+			"src/modules/habits/services/starter-profile-service.ts": `import { r } from "../repositories/starter-profile-repository";\nexport const s = r;\n`,
+			"src/modules/habits/services/starter-profile-service.test.ts": "",
+			"src/modules/habits/screens/starter-profile-gate.tsx": `import { s } from "../services/starter-profile-service";\nexport const G = s;\nexport const raw = process.env.EXPO_PUBLIC_STARTER_PROFILE;\n`,
+			"src/modules/habits/screens/starter-profile-gate.test.tsx": "",
+			"src/app/_layout.tsx": `export const G = __DEV__ ? require("@/modules/habits/screens/starter-profile-gate").G : null;\n`,
+		};
+
+		it("passes when only the root layout loads the gate, behind __DEV__", () => {
+			const { code, out } = run({ ...GOOD, ...SITE });
+			assert.equal(code, 0, out);
+		});
+
+		it("fails when the gate is imported anywhere else", () => {
+			expectViolation(
+				{
+					...SITE,
+					"src/modules/habits/screens/other-screen.tsx": `import { G } from "./starter-profile-gate";\nexport const O = G;\n`,
+					"src/modules/habits/screens/other-screen.test.tsx": "",
+				},
+				"starter-profile-site",
+			);
+		});
+
+		it("fails when the service or repository is imported outside their owner", () => {
+			expectViolation(
+				{
+					...SITE,
+					"src/modules/habits/hooks/use-seed-actions.ts": `import { s } from "../services/starter-profile-service";\nexport function useSeedActions() { return s; }\n`,
+					"src/modules/habits/hooks/use-seed-actions.test.ts": "",
+				},
+				"starter-profile-site",
+			);
+			expectViolation(
+				{
+					...SITE,
+					"src/modules/habits/services/other-service.ts": `import { r } from "../repositories/starter-profile-repository";\nexport const o = r;\n`,
+					"src/modules/habits/services/other-service.test.ts": "",
+				},
+				"starter-profile-site",
+			);
+		});
+
+		it("fails when the root layout imports the gate without __DEV__", () => {
+			expectViolation(
+				{
+					...SITE,
+					"src/app/_layout.tsx": `import { G } from "@/modules/habits/screens/starter-profile-gate";\nexport const X = G;\n`,
+				},
+				"starter-profile-site",
+			);
+			expectViolation(
+				{
+					...SITE,
+					"src/app/_layout.tsx": `export const G = require("@/modules/habits/screens/starter-profile-gate").G;\n`,
+				},
+				"starter-profile-site",
+			);
+		});
+
+		it("fails when the env variable is read outside the gate", () => {
+			expectViolation(
+				{
+					...SITE,
+					"src/utils/profile.ts": `export const p = process.env.EXPO_PUBLIC_STARTER_PROFILE;\n`,
+					"src/utils/profile.test.ts": "",
+				},
+				"starter-profile-site",
+			);
+		});
+	});
+
 	it("no-console: raw console.* in src fails, the console sink and tests are fine", () => {
 		expectViolation(
 			{

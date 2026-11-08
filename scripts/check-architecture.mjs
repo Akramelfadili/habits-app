@@ -395,6 +395,67 @@ for (const file of productionFiles) {
 		);
 }
 
+// 12. The development-only starter profile (docs/how-to/starter-habits.md) is
+//     reachable from exactly one place, and only through a `__DEV__` branch, so
+//     the production bundle never contains it. Each file may be imported only
+//     by its one owner, the gate only by the root layout, and the env variable
+//     (inlined by Expo at build time) is read only inside the gate.
+const STARTER_SITE = {
+	"src/modules/habits/screens/starter-profile-gate": ["src/app/_layout.tsx"],
+	"src/modules/habits/services/starter-profile-service": [
+		"src/modules/habits/screens/starter-profile-gate.tsx",
+	],
+	"src/modules/habits/repositories/starter-profile-repository": [
+		"src/modules/habits/services/starter-profile-service.ts",
+		// The web twin's compile-time `import type` of the native shape.
+		"src/modules/habits/repositories/starter-profile-repository.web.ts",
+	],
+	"src/modules/habits/dev/starter-profile": [
+		"src/modules/habits/services/starter-profile-service.ts",
+		"src/modules/habits/repositories/starter-profile-repository.ts",
+	],
+};
+const STARTER_GATE = "src/modules/habits/screens/starter-profile-gate";
+const STARTER_ENV = "EXPO_PUBLIC_STARTER_PROFILE";
+for (const file of productionFiles) {
+	const r = rel(file);
+	for (const { spec, line } of importsOf(file)) {
+		const target = resolveImport(file, spec)?.replace(/\.web$/, "");
+		const owners = target && STARTER_SITE[target];
+		if (!owners || owners.includes(r)) continue;
+		report(
+			"starter-profile-site",
+			file,
+			line,
+			`imports the dev-only starter profile (${target}) — only ${owners.join(" / ")} may`,
+			spec,
+		);
+	}
+	const text = sources.get(file);
+	if (r !== `${STARTER_GATE}.tsx`) {
+		const at = text.indexOf(STARTER_ENV);
+		if (at !== -1)
+			report(
+				"starter-profile-site",
+				file,
+				text.slice(0, at).split("\n").length,
+				`${STARTER_ENV} may be read only inside the starter-profile gate (the dead branch of __DEV__)`,
+			);
+	}
+	if (r === "src/app/_layout.tsx") {
+		const gated =
+			/__DEV__\s*\?\s*require\(\s*["'][^"']*starter-profile-gate["']\s*\)/;
+		const mentions = text.match(/starter-profile-gate/g)?.length ?? 0;
+		if (mentions > 0 && (mentions !== 1 || !gated.test(text)))
+			report(
+				"starter-profile-site",
+				file,
+				1,
+				"the starter-profile gate must be required exactly once, as `__DEV__ ? require(...)`, so production bundles drop it",
+			);
+	}
+}
+
 // --- allowlist ------------------------------------------------------------
 
 /** Allowlist entries are file-level (+ the import, for import rules). */

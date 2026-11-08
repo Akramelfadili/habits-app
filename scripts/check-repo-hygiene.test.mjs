@@ -16,6 +16,7 @@ describe("check-repo-hygiene paths", () => {
 			checkPaths([
 				"src/app/index.tsx",
 				".env.example",
+				".env.local.example",
 				".vscode/settings.json",
 				".vscode/extensions.json",
 				"docs/mockups/v3/renders/INDEX.md",
@@ -31,6 +32,8 @@ describe("check-repo-hygiene paths", () => {
 		const bad = [
 			".env",
 			".env.local",
+			".env.development.local",
+			".env.local.bak",
 			"config/.env.production",
 			"certs/dev.pem",
 			"AuthKey.p8",
