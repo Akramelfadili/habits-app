@@ -43,7 +43,9 @@ jest.mock("@/lib/diagnostics/diagnostics", () => ({
 	copyDiagnostics: () => mockCopyDiagnostics(),
 }));
 
+import { Linking } from "react-native";
 import { useToastStore } from "@/store/toast-store";
+import { PRIVACY_POLICY_URL } from "../constants";
 import { SettingsAboutScreen } from "./settings-about-screen";
 
 beforeEach(() => {
@@ -53,13 +55,28 @@ beforeEach(() => {
 });
 
 describe("SettingsAboutScreen (S6)", () => {
-	it("has a heading, shows the version and build as read-only text, and builds no Privacy or feedback rows", async () => {
+	it("has a heading, shows the version and build as read-only text, and builds no feedback row", async () => {
 		await render(<SettingsAboutScreen />);
 		expect(screen.getByRole("header", { name: "About" })).toBeTruthy();
 		expect(screen.getByText("3.0 (412)")).toBeTruthy();
 		expect(screen.queryByRole("button", { name: /^Version/ })).toBeNull();
-		expect(screen.queryByText("Privacy")).toBeNull();
 		expect(screen.queryByText("Send feedback")).toBeNull();
+	});
+
+	it("says under Copy diagnostics what it holds", async () => {
+		await render(<SettingsAboutScreen />);
+		expect(screen.getByText("Contains no habit names or notes.")).toBeTruthy();
+	});
+
+	it("the Privacy policy row opens the hosted policy", async () => {
+		const open = jest.spyOn(Linking, "openURL").mockResolvedValue();
+		await render(<SettingsAboutScreen />);
+		await fireEvent.press(
+			screen.getByRole("button", { name: /^Privacy policy/ }),
+		);
+		expect(open).toHaveBeenCalledTimes(1);
+		expect(open).toHaveBeenCalledWith(PRIVACY_POLICY_URL);
+		open.mockRestore();
 	});
 
 	it.each([

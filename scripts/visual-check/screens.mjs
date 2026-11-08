@@ -2304,6 +2304,7 @@ const AX_VARIANTS = [
 		"Notifications with the Hide habit names switch at AX3.",
 	],
 	["settings-appearance", "S2 at AX3."],
+	["settings-about", "S6 at AX3: Copy diagnostics note and Privacy policy."],
 	["settings-evening-review-off", "S3 with the banner at AX3."],
 	["settings-freezes", "S4 at AX3: the stat cards stack one per row."],
 	["export-ready", "EX3 at AX3."],

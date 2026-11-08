@@ -159,6 +159,13 @@ export const EVENING_REVIEW_TIME_SETTING_KEY = "habits.eveningReviewTime";
 export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
 
 /**
+ * Where the hosted privacy policy lives (GitHub Pages, from `site/`). The only
+ * web address in the app: the no-network guard allows it here and nowhere else.
+ */
+export const PRIVACY_POLICY_URL =
+	"https://akramelfadili.github.io/habits-app/privacy.html";
+
+/**
  * `app_settings` key for "Hide habit names" in reminders (E-01) — "true" or
  * "false"; absent means the default, which is hidden (habit names can be
  * health-related, and the lock screen shows a notification's title).

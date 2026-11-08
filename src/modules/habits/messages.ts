@@ -1343,6 +1343,10 @@ export const settingsCopy = {
 		copy: "Copy diagnostics",
 		copyBody: "Version, device and recent errors",
 		copyValue: "Copy",
+		/** E-05: said before the text is pasted anywhere public. */
+		copyNote: "Contains no habit names or notes.",
+		/** E-02: opens the hosted policy in the browser. */
+		privacy: "Privacy policy",
 	},
 } as const;
 
