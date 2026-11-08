@@ -105,6 +105,9 @@ const DRIZZLE_HOMES = [
 	/^src\/modules\/[^/]+\/repositories\//,
 	/^src\/lib\/[^/]+\/repositories\//,
 	/^src\/lib\/db\//,
+	// Jest-only helpers that load a test database. The "test-support-site"
+	// rule below keeps every file in them out of the app bundle.
+	/^src\/(modules\/[^/]+\/)?test-support\//,
 ];
 const inDrizzleHome = (file) => DRIZZLE_HOMES.some((re) => re.test(rel(file)));
 
@@ -139,6 +142,27 @@ for (const file of productionFiles) {
 			line,
 			"uses useLiveQuery outside a repositories/ folder — wrap it in a repository-exported hook",
 		);
+	}
+}
+
+// 2b. Test-only code (test-support/ folders, the test database and its live-query
+//     stand-in) is never imported by app code: only by tests and by other
+//     test-only files. Nothing in it may reach the production bundle.
+const isTestOnly = (relPath) =>
+	/(^|\/)test-support(\/|$)/.test(relPath) ||
+	/^src\/lib\/db\/(test-db|test-live-query)(\.ts)?$/.test(relPath);
+for (const file of productionFiles) {
+	if (isTestOnly(rel(file))) continue;
+	for (const { spec, line } of importsOf(file)) {
+		const target = resolveImport(file, spec);
+		if (target && isTestOnly(target))
+			report(
+				"test-support-site",
+				file,
+				line,
+				`app code imports test-only code (${target}) — test-support/, test-db and test-live-query are for tests only`,
+				spec,
+			);
 	}
 }
 

@@ -68,5 +68,6 @@ export function makeExportSource(): ExportSource {
 			},
 		],
 		categories: [...TEST_BUILT_IN_CATEGORIES, categoryNamed("Morning")],
+		settings: {},
 	};
 }

@@ -29,7 +29,7 @@ describe("EXPORT_FORMATS", () => {
 		async (format) => {
 			const model = buildExportModel(
 				makeExportSource(),
-				{ format, includeArchived: true },
+				{ format, includeArchived: true, includeNotes: true },
 				EXPORT_TODAY,
 			);
 

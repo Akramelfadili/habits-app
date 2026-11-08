@@ -11,7 +11,7 @@ describe("buildExportModel", () => {
 	it("includes archived habits when asked, with their logs", () => {
 		const model = buildExportModel(
 			source,
-			{ format: "csv", includeArchived: true },
+			{ format: "csv", includeArchived: true, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		expect(model.habits.map((record) => record.habit.name)).toContain(
@@ -23,7 +23,7 @@ describe("buildExportModel", () => {
 	it("drops archived habits and everything belonging to them when off", () => {
 		const model = buildExportModel(
 			source,
-			{ format: "csv", includeArchived: false },
+			{ format: "csv", includeArchived: false, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		expect(model.habits).toHaveLength(2);
@@ -33,7 +33,7 @@ describe("buildExportModel", () => {
 	it("keeps a habit with no logs, and gives each habit its streaks", () => {
 		const model = buildExportModel(
 			{ ...source, entries: [], notes: [], frozenDays: [] },
-			{ format: "json", includeArchived: true },
+			{ format: "json", includeArchived: true, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		expect(model.habits).toHaveLength(3);
@@ -65,7 +65,7 @@ describe("buildExportModel", () => {
 				notes: [],
 				frozenDays: [],
 			},
-			{ format: "json", includeArchived: true },
+			{ format: "json", includeArchived: true, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		expect(model.habits[0]).toMatchObject({
@@ -74,15 +74,66 @@ describe("buildExportModel", () => {
 		});
 	});
 
+	it("leaves every note out when Include notes is off, and says so", () => {
+		const options = { format: "json", includeArchived: true } as const;
+		const withNotes = buildExportModel(
+			source,
+			{ ...options, includeNotes: true },
+			EXPORT_TODAY,
+		);
+		const without = buildExportModel(
+			source,
+			{ ...options, includeNotes: false },
+			EXPORT_TODAY,
+		);
+		expect(withNotes.noteCount).toBe(1);
+		expect(withNotes.notesIncluded).toBe(true);
+		expect(without.noteCount).toBe(0);
+		expect(without.notesIncluded).toBe(false);
+		expect(without.habits.every((record) => record.notes.length === 0)).toBe(
+			true,
+		);
+		// Nothing else changes.
+		expect(without.logCount).toBe(withNotes.logCount);
+	});
+
+	it("reads only the user-facing settings", () => {
+		const model = buildExportModel(
+			{
+				...source,
+				settings: {
+					"app.themePreference": "light",
+					"habits.eveningReview": "true",
+					"habits.eveningReviewTime": "21:00",
+					"habits.seenFirstRun": "true",
+					"habits.lastExport": "2026-09-01",
+				},
+			},
+			{ format: "json", includeArchived: true, includeNotes: true },
+			EXPORT_TODAY,
+		);
+		expect(model.settings).toEqual({
+			themePreference: "light",
+			eveningReview: true,
+			eveningReviewTime: "21:00",
+			seenFirstRun: true,
+		});
+	});
+
 	it("marks a quantity log below target as logged but not completed", () => {
 		const model = buildExportModel(
 			source,
-			{ format: "csv", includeArchived: true },
+			{ format: "csv", includeArchived: true, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		const water = model.habits.find((record) => record.habit.id === 2);
 		expect(water?.logs).toEqual([
-			{ date: "2026-09-14", value: 5, completed: false },
+			{
+				date: "2026-09-14",
+				value: 5,
+				completed: false,
+				createdAt: expect.any(Date),
+			},
 		]);
 	});
 });
@@ -92,7 +143,7 @@ describe("summarizeExport", () => {
 		expect(
 			summarizeExport(
 				source,
-				{ format: "csv", includeArchived: true },
+				{ format: "csv", includeArchived: true, includeNotes: true },
 				EXPORT_TODAY,
 			),
 		).toEqual({
@@ -107,7 +158,7 @@ describe("summarizeExport", () => {
 	it("the archived toggle changes the counts and the range", () => {
 		const summary = summarizeExport(
 			source,
-			{ format: "csv", includeArchived: false },
+			{ format: "csv", includeArchived: false, includeNotes: true },
 			EXPORT_TODAY,
 		);
 		expect(summary).toMatchObject({
@@ -127,8 +178,9 @@ describe("summarizeExport", () => {
 					frozenDays: [],
 					reminders: [],
 					categories: [],
+					settings: {},
 				},
-				{ format: "csv", includeArchived: true },
+				{ format: "csv", includeArchived: true, includeNotes: true },
 				EXPORT_TODAY,
 			).range,
 		).toBeNull();

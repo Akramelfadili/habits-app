@@ -1355,6 +1355,9 @@ export const exportCopy = {
 	csv: "CSV",
 	explain:
 		"JSON has everything, for backup or another app. CSV has one row per log, for spreadsheets.",
+	includeNotes: "Include notes",
+	includeNotesHint: "Turn off to leave your day notes out of the file.",
+	includeNotesLabel: "Include notes in the export",
 	button: (format: "JSON" | "CSV") => `Export ${format}`,
 	exporting: "Exporting…",
 	writing: (name: string) => `Writing ${name}`,

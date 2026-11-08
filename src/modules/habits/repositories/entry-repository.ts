@@ -21,7 +21,12 @@ function rowToEntry(row: EntryRow): Entry {
 }
 
 function rowToEntryNote(row: EntryNoteRow): EntryNote {
-	return { habitId: row.habitId, date: row.date, note: row.note };
+	return {
+		habitId: row.habitId,
+		date: row.date,
+		note: row.note,
+		updatedAt: row.updatedAt,
+	};
 }
 
 /** Live-query hook — entries with a date in `[start, end]`, inclusive. */

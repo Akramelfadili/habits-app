@@ -46,6 +46,7 @@ describe("reminder-repository", () => {
 			minute: 20,
 			weekdays: [1, 3, 5],
 			enabled: true,
+			createdAt: expect.any(Date),
 		});
 		const [row] = await mockDb.select().from(reminders);
 		expect(row.weekdays).toBe("1,3,5");

@@ -17,6 +17,8 @@ import type { ExportModel } from "./export-data";
  * own; columns that don't apply are left empty. Quoting follows RFC 4180
  * (commas, quotes and line breaks inside a field), rows end CRLF, and the file
  * starts with a UTF-8 byte-order mark so Numbers and Excel read accents right.
+ * Typed text that a spreadsheet would run as a formula is written with a
+ * leading apostrophe (see `escapeCsvField`).
  */
 
 export const CSV_COLUMNS = [
@@ -68,16 +70,40 @@ export function describeFrequency(frequency: Frequency): string {
 	}
 }
 
+/** A spreadsheet reads a cell that starts with one of these as a formula (D-08). */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+/**
+ * One CSV field. Text the person typed (names, categories, notes, units) that
+ * starts with = + - @ or a tab or carriage return gets a leading apostrophe,
+ * so Excel, Numbers and Sheets show it as text instead of running it. Numbers
+ * and booleans are never changed (-3 stays -3), and `raw` skips the check for
+ * columns the app fills itself: dates, ids, fixed words.
+ */
 export function escapeCsvField(
 	value: string | number | boolean | null | undefined,
+	{ raw = false }: { raw?: boolean } = {},
 ) {
 	if (value === null || value === undefined) return "";
-	const text = String(value);
+	let text = String(value);
+	if (!raw && typeof value === "string" && FORMULA_START.test(text)) {
+		text = `'${text}`;
+	}
 	return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
+/** Columns that hold what the person typed; every other column is the app's own. */
+const TEXT_COLUMNS: ReadonlySet<Column> = new Set([
+	"habit_name",
+	"category",
+	"target_unit",
+	"note",
+]);
+
 function toLine(row: Row): string {
-	return CSV_COLUMNS.map((column) => escapeCsvField(row[column])).join(",");
+	return CSV_COLUMNS.map((column) =>
+		escapeCsvField(row[column], { raw: !TEXT_COLUMNS.has(column) }),
+	).join(",");
 }
 
 /** Local calendar day — the app never deals in UTC dates. */
@@ -135,7 +161,7 @@ export async function toCsv(
 				}),
 			);
 		}
-		for (const date of record.frozenDates) {
+		for (const { date } of record.frozenDays) {
 			lines.push(toLine({ record_type: "frozen_day", ...owner, date }));
 		}
 		logsDone += record.logs.length;

@@ -34,7 +34,11 @@ import {
 } from "./export-service";
 
 const source = makeExportSource();
-const csv = { format: "csv", includeArchived: true } as const;
+const csv = {
+	format: "csv",
+	includeArchived: true,
+	includeNotes: true,
+} as const;
 
 beforeEach(() => {
 	jest.clearAllMocks();
@@ -70,7 +74,7 @@ describe("runExport", () => {
 	it("writes JSON with the right extension and type", async () => {
 		const result = await runExport({
 			source,
-			options: { format: "json", includeArchived: false },
+			options: { format: "json", includeArchived: false, includeNotes: true },
 			today: EXPORT_TODAY,
 		});
 		expect(result).toMatchObject({

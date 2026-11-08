@@ -1,3 +1,10 @@
+import { THEME_PREFERENCE_SETTING_KEY } from "@/lib/app-settings/keys";
+import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
+import {
+	EVENING_REVIEW_SETTING_KEY,
+	EVENING_REVIEW_TIME_SETTING_KEY,
+	SEEN_FIRST_RUN_SETTING_KEY,
+} from "../constants";
 import {
 	type ExportSource,
 	type ExportSummary,
@@ -14,6 +21,7 @@ import type { ExportOptions } from "../types";
 export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 	format: "json",
 	includeArchived: true,
+	includeNotes: true,
 };
 
 /** The export sheet's data and the counts/range it quotes for the current options. */
@@ -27,7 +35,24 @@ export function useExportQueries(options: ExportOptions): {
 	const frozenDays = useFrozenDays();
 	const reminders = useAllReminders();
 	const categories = useCategories();
-	const source = { habits, entries, notes, frozenDays, reminders, categories };
+	// Only the user-facing keys; `useAppSetting` is undefined until it has loaded.
+	const settings = {
+		[THEME_PREFERENCE_SETTING_KEY]: useAppSetting(THEME_PREFERENCE_SETTING_KEY),
+		[EVENING_REVIEW_SETTING_KEY]: useAppSetting(EVENING_REVIEW_SETTING_KEY),
+		[EVENING_REVIEW_TIME_SETTING_KEY]: useAppSetting(
+			EVENING_REVIEW_TIME_SETTING_KEY,
+		),
+		[SEEN_FIRST_RUN_SETTING_KEY]: useAppSetting(SEEN_FIRST_RUN_SETTING_KEY),
+	};
+	const source = {
+		habits,
+		entries,
+		notes,
+		frozenDays,
+		reminders,
+		categories,
+		settings,
+	};
 
 	return { source, summary: summarizeExport(source, options, new Date()) };
 }

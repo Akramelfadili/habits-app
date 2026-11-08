@@ -11,6 +11,6 @@ Inside, dependencies point down only, enforced by `npm run check-architecture`: 
 - `presenters/` turns results into labels and view models.
 - `hooks/` splits `use<X>Queries` (reads) from `use<X>Actions` (writes).
 - `components/` and `screens/` are the UI; routes in `src/app/` only render a screen.
-- `test-support/` holds builders for tests and is never imported by app code.
+- `test-support/` holds builders and test-only loaders (the export v2 reader) and is never imported by app code: `check-architecture` rule `test-support-site` fails if anything outside tests and `test-support/` itself imports it, and only these folders and `repositories/` may touch Drizzle.
 
 Reasons and conventions: `ARCHITECTURE.md`.
