@@ -17,7 +17,7 @@ runs on a pull request or a push.
 ## Options
 
 **A. `npx expo prebuild --platform ios` + `xcodebuild -sdk iphonesimulator`.**
-`ios/` is generated from `app.json` and the config plugins (it is gitignored
+`ios/` is generated from `app.config.ts` and the config plugins (it is gitignored
 and CLAUDE.md forbids hand-editing it, so nothing changes), then built with the
 Release configuration. In Release the Xcode build phase "Bundle React Native
 code and images" runs Metro once and embeds `main.jsbundle`, so the app needs
@@ -72,7 +72,7 @@ likes. Rejected for control, not capability.
 4. **Caches cannot let a stale native build pass.** The Pods and DerivedData
    cache keys hash the *generated* native project (`ios/Podfile.lock`,
    `project.pbxproj`, `Info.plist`) together with `package-lock.json`,
-   `app.json`, the Xcode version and a manual `CACHE_VERSION`; there are no
+   `app.config.ts`, the Xcode version and a manual `CACHE_VERSION`; there are no
    `restore-keys`, so a key that changed is a clean build. The JS is never
    cached: Xcode re-runs the bundle phase every build, and the job then
    **fails if `main.jsbundle` is older than the build step** that just ran.
@@ -88,7 +88,7 @@ likes. Rejected for control, not capability.
 
 ## Consequences
 
-- A change to a native dependency, `app.json` or a config plugin changes the
+- A change to a native dependency, `app.config.ts` or a config plugin changes the
   cache key and rebuilds from scratch (about 20–30 min); JS-only changes reuse
   the Pods and DerivedData and take a few minutes to build.
 - I could not run Xcode where this was written (WSL); the workflow's first runs

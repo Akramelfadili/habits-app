@@ -1092,6 +1092,31 @@ export const migrationCopy = {
 		message:
 			"The app couldn\u2019t prepare its database. Nothing was lost. Try again, and if it keeps happening, copy the diagnostics and send them over.",
 	},
+	newer: {
+		title: "Update needed",
+		message:
+			"This data was made by a newer version of Habits. Update the app to open it.",
+	},
+	setAside: {
+		action: "Set aside old data and start fresh",
+		hint: "Keeps the old file on this phone and opens the app empty.",
+		confirm: {
+			headline: "Set aside old data?",
+			body: "The app will open empty, as if newly installed. The old data file is kept on this phone, not deleted, so it can still be recovered later.",
+			confirmLabel: "Set aside and start fresh",
+			confirmHint: "The old file stays on this phone.",
+			busy: {
+				label: "Setting aside\u2026",
+				hint: "Keep the app open. This takes a moment.",
+			},
+			error: {
+				title: "Couldn\u2019t set the data aside",
+				message:
+					"Nothing was changed. Try again, or copy diagnostics for support.",
+			},
+			cancelLabel: "Cancel",
+		},
+	},
 } satisfies DatabaseCopy;
 
 /**

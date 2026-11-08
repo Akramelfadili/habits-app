@@ -62,6 +62,10 @@ jobs:
     env:
       # The one place the hook is switched on (device-validation.guard.test.ts).
       EXPO_PUBLIC_DEVICE_VALIDATION: "1"
+      # Keeps the URL scheme `habitsapp` (the flows and dev-state links use it);
+      # an unset variant would mean the dev scheme. app.config.ts reads BUNDLE_ID
+      # only for a device-validation build.
+      APP_VARIANT: production
       CI: "1"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -77,16 +81,6 @@ jobs:
           xcodebuild -version
           xcrun simctl list runtimes
       - run: npm ci --no-audit --no-fund
-      - name: Give the generated project a bundle identifier
-        # app.json has none and the validation build must not change it: the
-        # id is set on the runner's checkout only.
-        run: |
-          node -e '
-            const fs = require("fs");
-            const app = JSON.parse(fs.readFileSync("app.json", "utf8"));
-            app.expo.ios = { ...app.expo.ios, bundleIdentifier: process.env.BUNDLE_ID };
-            fs.writeFileSync("app.json", JSON.stringify(app, null, 2));
-          '
       - name: Generate ios/ (expo prebuild)
         run: npx expo prebuild --platform ios --no-install --clean
       - name: Cache Pods
@@ -96,7 +90,7 @@ jobs:
             ios/Pods
             ~/Library/Caches/CocoaPods
           # No restore-keys: a changed dependency, config or Xcode is a clean install.
-          key: pods-${{ env.CACHE_VERSION }}-${{ env.XCODE_VERSION }}-${{ hashFiles('package-lock.json', 'app.json', 'ios/Podfile', 'ios/Podfile.properties.json') }}
+          key: pods-${{ env.CACHE_VERSION }}-${{ env.XCODE_VERSION }}-${{ hashFiles('package-lock.json', 'app.config.ts', 'ios/Podfile', 'ios/Podfile.properties.json') }}
       - name: pod install
         run: cd ios && pod install
       - name: Cache DerivedData
@@ -105,7 +99,7 @@ jobs:
           path: ios/build
           # The generated native project decides the key, so any native change
           # rebuilds from scratch. JS is never taken from the cache (below).
-          key: derived-${{ env.CACHE_VERSION }}-${{ env.XCODE_VERSION }}-${{ hashFiles('package-lock.json', 'app.json', 'ios/Podfile.lock', 'ios/Podfile', 'ios/**/Info.plist', 'ios/**/*.entitlements') }}
+          key: derived-${{ env.CACHE_VERSION }}-${{ env.XCODE_VERSION }}-${{ hashFiles('package-lock.json', 'app.config.ts', 'ios/Podfile.lock', 'ios/Podfile', 'ios/**/Info.plist', 'ios/**/*.entitlements') }}
       - name: Build (Release, iphonesimulator)
         run: |
           set -o pipefail

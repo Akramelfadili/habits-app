@@ -83,10 +83,13 @@ _Resolved items of this group: `docs/archive/backlog-done.md`._
 
 ## Release prerequisites
 
-- **Back up the database before migrating** (A7-08): a migration that succeeds with wrong data cannot be undone; copy `habits.db` to `habits.db.bak` first and say so on the update screen (SY3/SY4 promise nothing about a backup today).
 - **Import from the JSON export** (HAB-15 exports; nothing reads it back). Without it a lost phone loses the history. The file carries `version: 1`, categories (name, built-in, order) and each habit's reminders.
-- **Legacy column drop (B11):** `habits.icon/color/category` are nullable and unused; a cleanup migration (with `migration-reviewer`) removes them, after the backup above exists.
+- **Legacy column drop (B11):** `habits.icon/color/category` are nullable and unused; a cleanup migration (with `migration-reviewer`) removes them. A backup is taken before every upgrade now (ADR 010).
 - **`PRAGMA foreign_key_check` in dev builds** and the three orphan risks listed under "Open — reliability" (A7-04): foreign keys stay off on device by decision (ADR 002).
+- **Lossless export v2** (audit C-02, data safety part B): the v1 file omits `pausedRanges`, category shape and hue, habit order, created/updated times, entry times and the settings, so it is not a backup. Add them, bump `version` to 2 with a v1 reader, and a round-trip test.
+- **Delete all data** (audit C-04/C-05, part B): no in-app way to erase everything. It has to clear the database, `logs.db`, scheduled notifications, the `backups` folder and any `habits.corrupt-*` set-aside files, and ADR 002 and this file still mention a removed `deleteAllHabits`.
+- **App Store identity leftovers** (audit F-02): the bundle id is decided (ADR 010) but `ios.infoPlist.ITSAppUsesNonExemptEncryption: false`, `supportsTablet` (iPad yes/no) and an `eas.json` with a `production` profile that sets `APP_VARIANT=production` and autoincrements the build number are not done. Until `eas.json` exists the production-profile guard in `app.config.ts` is unreachable.
+- **No in-app restore or list of backups** (follows A7-08): restoring a pre-upgrade backup or a set-aside file is a manual container edit (`docs/how-to/backups-and-recovery.md`). Set-aside files and backups are never cleaned up automatically.
 - **`expo-clipboard`**: `npx expo install expo-clipboard` and a dev-client rebuild, so "Copy diagnostics" copies instead of sharing a file.
 - **Device-only checks, none of which the web build can show** (phone checklist in the V3-6 report): VoiceOver landing and reading order on every screen, the Magic Tap for a toast's Undo, Dynamic Type at AX1–AX5 (web only emulates AX3), Reduce Motion / Reduce Transparency / Increase Contrast on the pill, a reminder actually firing and not firing (`e2e/README.md`, manual checks 1–7), the share sheet for the export file, drag-to-reorder and swipe-to-archive, the splash → First Run hand-off and the update screen's first paint, the release build's promise-rejection tracking, Hermes timings for Year, the midnight rollover with the phone clock moved, the SF Symbols the web build cannot draw.
 
@@ -202,6 +205,13 @@ _Resolved items of this group: `docs/archive/backlog-done.md`._
 - **Week-level freeze for × per week habits (Later).** They are never at risk by day (HAB-33). A week that ends below its target still breaks the streak with no prompt; covering it needs a freeze that spans the week (a Sunday-only freeze that the per-week strategy reads as covering it, or a week-level row) — a streak-semantics change with its own ADR.
 
 _Resolved items of this group: `docs/archive/backlog-done.md`._
+
+## Data safety, part A: deviations
+
+- **Preview variant uses the dev bundle id**, not the production one (ADR 010): a preview build over the real app would replace it and share its data. It has its own name ("Habits Preview"), so it replaces the dev client, not the real app.
+- **A failed backup does not block the update.** The brief allowed it; the migrator is atomic, so the backup guards only against a migration that succeeds with wrong data.
+- **"Fresh" also requires no untracked tables.** A database with tables but no migration record is `unreadable`, not a first install; a hand-made or `drizzle-kit push` database would be refused (nothing in the app creates one).
+- **Phone checks for this batch are not done** (the web build cannot show them): the new dev client opening empty, the update backup being written, a real unopenable file and the set-aside flow, the newer-data screen. Steps are in the batch 15 report.
 
 ## Deliberate V3 deviations (built on purpose, not to re-flag)
 

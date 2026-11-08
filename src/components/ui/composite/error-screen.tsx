@@ -18,7 +18,13 @@ import { Banner } from "./banner";
 type ErrorScreenProps = {
 	title: string;
 	message: string;
-	onRetry: () => void;
+	/** Omitted when trying again cannot help (data from a newer version). */
+	onRetry?: () => void;
+	/**
+	 * A last-resort way out under Copy diagnostics (audit C-03): a quieter
+	 * button, never the default. The caller owns the confirm it opens.
+	 */
+	recovery?: { label: string; hint?: string; onPress: () => void };
 	/**
 	 * Why it stopped, as an error banner under the message (SY4): a title and
 	 * what that means for the person's data. Never raw error text.
@@ -44,6 +50,7 @@ export function ErrorScreen({
 	title,
 	message,
 	onRetry,
+	recovery,
 	reason,
 }: ErrorScreenProps) {
 	const { colors } = useTheme();
@@ -84,12 +91,20 @@ export function ErrorScreen({
 					</Banner>
 				) : null}
 				<View style={styles.actions}>
-					<Button label="Try again" onPress={onRetry} />
+					{onRetry ? <Button label="Try again" onPress={onRetry} /> : null}
 					<Button
 						label="Copy diagnostics"
-						variant="secondary"
+						variant={onRetry ? "secondary" : "primary"}
 						onPress={handleCopy}
 					/>
+					{recovery ? (
+						<Button
+							label={recovery.label}
+							variant="secondary"
+							accessibilityHint={recovery.hint}
+							onPress={recovery.onPress}
+						/>
+					) : null}
 					{copyResult ? (
 						<Caption tone={copyResult === "failed" ? "error" : "default"}>
 							{COPY_RESULT_MESSAGE[copyResult]}

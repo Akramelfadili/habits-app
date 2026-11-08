@@ -15,17 +15,22 @@ import type * as StarterProfileService from "./starter-profile-service";
 const mockDb = createTestDb({ foreignKeys: true });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 const mockSyncAfterWrite = jest.fn().mockResolvedValue(undefined);
+const mockCancel = jest.fn().mockResolvedValue(undefined);
+const callOrder: string[] = [];
 jest.doMock("./reminder-service", () => ({
 	syncAfterWrite: mockSyncAfterWrite,
+	cancelHabitNotifications: mockCancel,
 }));
 
 const {
 	applyStarterProfile,
 }: typeof StarterProfileService = require("./starter-profile-service");
 
-const profileJson = (version: number, names: string[]) =>
+// The seeded old data has history and no marker, so tests that replace it opt in.
+const profileJson = (version: number, names: string[], replace = true) =>
 	JSON.stringify({
 		version,
+		replace,
 		habits: names.map((name) => ({ name, category: "Health" })),
 	});
 
@@ -94,6 +99,14 @@ describe("applyStarterProfile", () => {
 	beforeEach(async () => {
 		jest.restoreAllMocks();
 		mockSyncAfterWrite.mockClear();
+		mockCancel.mockClear();
+		callOrder.length = 0;
+		mockCancel.mockImplementation(async () => {
+			callOrder.push("cancel");
+		});
+		mockSyncAfterWrite.mockImplementation(async () => {
+			callOrder.push("sync");
+		});
 		await seedOldData();
 	});
 
@@ -115,6 +128,7 @@ describe("applyStarterProfile", () => {
 		await applyStarterProfile(
 			JSON.stringify({
 				version: 1,
+				replace: true,
 				habits: [
 					{
 						name: "Alpha",
@@ -208,6 +222,7 @@ describe("applyStarterProfile", () => {
 		// Fails on the second habit, after the old rows were already deleted.
 		const brokenSecond = JSON.stringify({
 			version: 1,
+			replace: true,
 			habits: [
 				{ name: "Alpha", category: "Health" },
 				{
@@ -240,6 +255,7 @@ describe("applyStarterProfile", () => {
 		await applyStarterProfile(
 			JSON.stringify({
 				version: 1,
+				replace: true,
 				habits: [
 					{ name: "Alpha", category: "Health" },
 					{
@@ -259,5 +275,97 @@ describe("applyStarterProfile", () => {
 			count: 2,
 			withReminders: 1,
 		});
+	});
+
+	describe("guard for a database that already has history", () => {
+		it("refuses without a marker or replace, logs counts only, changes nothing", async () => {
+			const warn = jest.spyOn(log, "warn").mockImplementation(() => undefined);
+
+			const result = await applyStarterProfile(
+				profileJson(1, ["Alpha"], false),
+			);
+
+			expect(result).toBe("refused");
+			expect(await habitNames()).toEqual(["Old habit"]);
+			expect(await rowCount(entries)).toBe(1);
+			expect(await setting("dev.starterProfile")).toBeUndefined();
+			expect(warn).toHaveBeenCalledWith("dev.starter_profile.refused", {
+				entries: 1,
+				notes: 1,
+				frozenDays: 1,
+			});
+			expect(mockCancel).not.toHaveBeenCalled();
+		});
+
+		it("refuses when only a note or a frozen day exists", async () => {
+			jest.spyOn(log, "warn").mockImplementation(() => undefined);
+			await mockDb.delete(entries);
+			await mockDb.delete(entryNotes);
+			expect(await applyStarterProfile(profileJson(1, ["A"], false))).toBe(
+				"refused",
+			);
+		});
+
+		it("applies on a database with habits but no history", async () => {
+			await mockDb.delete(entries);
+			await mockDb.delete(entryNotes);
+			await mockDb.delete(frozenDays);
+			expect(await applyStarterProfile(profileJson(1, ["Alpha"], false))).toBe(
+				"applied",
+			);
+			expect(await habitNames()).toEqual(["Alpha"]);
+		});
+
+		it("applies on an empty database", async () => {
+			await mockDb.delete(entries);
+			await mockDb.delete(entryNotes);
+			await mockDb.delete(frozenDays);
+			await mockDb.delete(reminders);
+			await mockDb.delete(habits);
+			expect(await applyStarterProfile(profileJson(1, ["Alpha"], false))).toBe(
+				"applied",
+			);
+		});
+
+		it("a bumped version (marker present) still re-applies without replace", async () => {
+			await applyStarterProfile(profileJson(1, ["Alpha"]));
+			await mockDb.insert(entries).values({
+				habitId: (await mockDb.select().from(habits))[0].id,
+				date: "2026-02-01",
+				createdAt: new Date(),
+			});
+			expect(await applyStarterProfile(profileJson(2, ["Beta"], false))).toBe(
+				"applied",
+			);
+			expect(await habitNames()).toEqual(["Beta"]);
+		});
+	});
+
+	it("cancels the deleted habits' notifications before syncing the new ones", async () => {
+		const oldIds = (await mockDb.select().from(habits)).map((row) => row.id);
+		await applyStarterProfile(
+			JSON.stringify({
+				version: 1,
+				replace: true,
+				habits: [
+					{
+						name: "Beta",
+						category: "Health",
+						reminders: [{ hour: 8, minute: 0 }],
+					},
+				],
+			}),
+		);
+
+		expect(mockCancel.mock.calls.map((call) => call[0])).toEqual(oldIds);
+		expect(callOrder).toEqual(["cancel", "sync"]);
+	});
+
+	it("does not stop applying when a cancel fails", async () => {
+		jest.spyOn(log, "error").mockImplementation(() => undefined);
+		mockCancel.mockRejectedValueOnce(new Error("no permission"));
+		expect(await applyStarterProfile(profileJson(1, ["Alpha"]))).toBe(
+			"applied",
+		);
 	});
 });

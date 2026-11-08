@@ -84,3 +84,29 @@ describe("ErrorScreen", () => {
 		expect(await screen.findByText(message)).toBeTruthy();
 	});
 });
+
+describe("ErrorScreen without Try again, and with a recovery action", () => {
+	it("leaves out Try again when it cannot help, and keeps Copy diagnostics", async () => {
+		await render(
+			<ErrorScreen title="Update needed" message="Update the app." />,
+		);
+		expect(screen.queryByText("Try again")).toBeNull();
+		expect(screen.getByText("Copy diagnostics")).toBeTruthy();
+	});
+
+	it("shows the recovery action under Copy diagnostics, with its hint, and presses it", async () => {
+		const onPress = jest.fn();
+		await render(
+			<ErrorScreen
+				title="t"
+				message="m"
+				onRetry={jest.fn()}
+				recovery={{ label: "Set aside", hint: "Keeps the old file.", onPress }}
+			/>,
+		);
+		const button = screen.getByRole("button", { name: "Set aside" });
+		expect(button.props.accessibilityHint).toBe("Keeps the old file.");
+		await fireEvent.press(screen.getByText("Set aside"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+});

@@ -25,6 +25,7 @@ The list lives in `.env.local`, which git ignores. The repo is public and real h
 | Field | Meaning |
 |---|---|
 | `version` | Whole number, 1 or more. See "Change the list" below. |
+| `replace` | Optional `true`. Allows the first apply to delete a database that already has check-ins, notes or frozen days. Leave it out unless you mean it. |
 | `name` | Required, up to 32 characters, unique within the list. |
 | `category` | Required, one of the ten built-in categories: Health, Fitness, Mindfulness, Productivity, Learning, Finance, Social, Home, Creativity, Other. A habit's icon and color come from its category, so this is how you pick them. |
 | `perWeek` | Optional, 1 to 7 times a week. Leave it out for a daily habit. |
@@ -42,7 +43,8 @@ Only in a development build (`__DEV__`), after the database is ready and before 
 1. If the variable is missing, nothing happens.
 2. If it is not valid JSON or does not match the format, the app logs a warning (`dev.starter_profile.invalid`, with a reason code, never the content) and changes nothing.
 3. If the stored marker (the `dev.starterProfile` setting) equals the profile's `version`, nothing happens, so changes you make in the app afterwards stay.
-4. Otherwise, in one transaction: delete every habit and everything that hangs off them (check-ins, notes, freezes, reminders), create the profile's habits, mark First Run as seen so its screens are skipped, and store the new version in the marker. If any step fails, nothing is changed and `dev.starter_profile.failed` is logged.
+4. If there is no marker yet and the database already holds any check-in, note or frozen day, the profile is **refused** unless it contains `"replace": true`. The app logs `dev.starter_profile.refused` (counts only) and changes nothing. This protects real data on a phone where a dev build runs; the dev variant (`APP_VARIANT=development`, bundle id `com.akramelfadili.habits.dev`) is a separate app with its own database, so it normally starts empty. Once a marker exists, raising `version` re-applies without `replace`, as before.
+5. Otherwise, in one transaction: delete every habit and everything that hangs off them (check-ins, notes, freezes, reminders), create the profile's habits, mark First Run as seen so its screens are skipped, and store the new version in the marker. If any step fails, nothing is changed and `dev.starter_profile.failed` is logged. After the commit, the scheduled notifications of the deleted habits are cancelled, and then the new habits' reminders are scheduled.
 
 App settings (theme, evening review time) and categories are kept. The success log, `dev.starter_profile.applied`, carries counts only.
 

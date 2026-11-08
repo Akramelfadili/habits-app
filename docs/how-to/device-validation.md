@@ -30,7 +30,7 @@ The job summary lists the runner image, Xcode, the simulator model and iOS runti
 
 ## How a state is opened
 
-The build is made with `EXPO_PUBLIC_DEVICE_VALIDATION=1` (set only by the workflow; `src/lib/device-validation/device-validation.guard.test.ts` keeps it out of every other config). The driver writes `Documents/dev-state.json` (`{ route, clock }`) into the app's container and relaunches it; the app pins the clock, loads that route's `?fixtures=` scenario into SQLite from the same fixture generators the web repositories use (`src/modules/habits/dev/device-state.ts`) and opens the route. `habitsapp://dev-state?route=…&clock=…` does the same from a URL. Elsewhere the route redirects to Today and loads nothing.
+The build is made with `EXPO_PUBLIC_DEVICE_VALIDATION=1` and `APP_VARIANT=production` (both set only by the workflow; the second keeps the `habitsapp` scheme, because an unset variant means the dev scheme `habitsapp-dev`, and `app.config.ts` takes the throwaway bundle id `BUNDLE_ID` from the workflow only for this build; `src/lib/device-validation/device-validation.guard.test.ts` keeps it out of every other config). The driver writes `Documents/dev-state.json` (`{ route, clock }`) into the app's container and relaunches it; the app pins the clock, loads that route's `?fixtures=` scenario into SQLite from the same fixture generators the web repositories use (`src/modules/habits/dev/device-state.ts`) and opens the route. `habitsapp://dev-state?route=…&clock=…` does the same from a URL. Elsewhere the route redirects to Today and loads nothing.
 
 ## Add a state
 
