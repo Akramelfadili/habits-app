@@ -8,5 +8,6 @@
 	],
 	"project": ["src/**/*.{ts,tsx,js}!", "scripts/**/*.{js,mjs,cjs}"],
 	"ignore": ["src/modules/habits/test-support/**"],
-	"ignoreDependencies": ["expo-updates"]
+	"ignoreDependencies": ["expo-updates"],
+	"ignoreBinaries": ["maestro"]
 }
