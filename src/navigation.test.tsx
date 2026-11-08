@@ -334,7 +334,7 @@ describe("malformed route params go to Today, never crash (D-09)", () => {
 	}
 
 	/**
-	 * `habitsapp://<path>` opens `/<path>` (app.json `scheme`); the testing
+	 * `habitsapp://<path>` opens `/<path>` (app.config.ts `scheme`); the testing
 	 * router takes paths, so each link is opened as its path over Today, as
 	 * a link does while the app is running.
 	 */

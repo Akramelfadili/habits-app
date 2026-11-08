@@ -47,7 +47,7 @@ describe("device validation stays out of production", () => {
 
 	it("is set by no build config except the manual simulator workflow", () => {
 		const configs = [
-			"app.json",
+			"app.config.ts",
 			"package.json",
 			"babel.config.js",
 			"metro.config.js",
@@ -61,8 +61,14 @@ describe("device validation stays out of production", () => {
 				.map((file) => `.github/workflows/${file}`),
 		].filter((file) => fs.existsSync(path.join(ROOT, file)));
 
-		const setters = configs.filter((file) => read(file).includes(FLAG));
+		// app.config.ts only reads the flag, to refuse it in a production build.
+		const setters = configs
+			.filter((file) => file !== "app.config.ts")
+			.filter((file) => read(file).includes(FLAG));
 		expect(setters).toEqual([".github/workflows/ios-simulator.yml"]);
+		expect(read("app.config.ts")).not.toMatch(
+			new RegExp(`${FLAG}\\s*(=[^=]|:)`),
+		);
 	});
 
 	it("the simulator workflow is manual-only", () => {

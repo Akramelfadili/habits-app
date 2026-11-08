@@ -18,7 +18,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 
 - Code files: use Edit/Write, not sed/python (the format hook only fires on those). Docs and text files: edit any way that works.
 - `npx expo install <pkg>`, never `npm install`.
-- `ios/` and `android/` are generated; never hand-edit. Native config goes in `app.json` / config plugins. Native-code libraries need a dev-client build, not Expo Go.
+- `ios/` and `android/` are generated; never hand-edit. Native config goes in `app.config.ts` / config plugins. Native-code libraries need a dev-client build, not Expo Go.
 - Before touching an Expo, EAS or RN API: read the docs for `expo`'s major version in `package.json` (`https://docs.expo.dev/llms.txt`). Do not trust training data.
 - After adding or moving a route file, start `npx expo start` once so `tsc` sees the generated typed routes.
 
