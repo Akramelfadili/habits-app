@@ -31,7 +31,7 @@ jest.mock("./migrations/migrations", () => ({
 	__esModule: true,
 	default: { journal: { entries: [{ when: 100 }, { when: 500 }] } },
 }));
-let mockPlan: "fresh" | "current" | "upgrade" = "current";
+let mockPlan: MigrationPlan = "current";
 jest.mock("./migration-plan", () => ({
 	...jest.requireActual("./migration-plan"),
 	planMigrations: () => mockPlan,
@@ -51,7 +51,10 @@ jest.mock("@/lib/diagnostics/diagnostics", () => ({
 }));
 
 import { DatabaseProvider } from "./database-provider";
-import { MIGRATION_SCREEN_PAINT_MS } from "./migration-plan";
+import {
+	MIGRATION_SCREEN_PAINT_MS,
+	type MigrationPlan,
+} from "./migration-plan";
 
 const app = (
 	<DatabaseProvider copy={migrationCopy}>
@@ -95,6 +98,19 @@ describe("DatabaseProvider", () => {
 		await render(app);
 		expect(mockBackup).not.toHaveBeenCalled();
 	});
+
+	it.each(["newer", "unreadable"] as const)(
+		"never runs the migrator on a %s database",
+		async (plan) => {
+			mockPlan = plan;
+			mockUseMigrations.mockReturnValue({ success: true });
+			await render(app);
+			expect(mockUseMigrations).not.toHaveBeenCalled();
+			expect(mockBackup).not.toHaveBeenCalled();
+			expect(screen.queryByText("App")).toBeNull();
+			expect(screen.getByText(migrationCopy.openFailed.title)).toBeTruthy();
+		},
+	);
 
 	it("logs migration.start with the schema version and plan", async () => {
 		mockUseMigrations.mockReturnValue({ success: true });

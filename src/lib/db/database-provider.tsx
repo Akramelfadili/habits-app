@@ -115,6 +115,16 @@ function MigrationGate({
 		return () => clearTimeout(timer);
 	}, [started, backupTaken]);
 
+	// Never run the migrator on data this build cannot read or must not touch.
+	if (plan === "newer" || plan === "unreadable") {
+		return (
+			<DatabaseErrorScreen
+				error={new Error(`database plan: ${plan}`)}
+				copy={copy.openFailed}
+				onRetry={onRetry}
+			/>
+		);
+	}
 	if (!started) return <MigrationScreen copy={copy.updating} />;
 	return (
 		<RunMigrations plan={plan} copy={copy} onRetry={onRetry}>

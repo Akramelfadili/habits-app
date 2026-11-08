@@ -1,4 +1,5 @@
 import { log } from "@/lib/logger/logger";
+import { errorNameOf } from "./error-name";
 
 /**
  * A copy of `habits.db` taken just before the migrator runs on an upgrade
@@ -102,7 +103,9 @@ export function backupBeforeMigrating(
 		try {
 			prune(files);
 		} catch (error) {
-			log.warn("migration.backup_prune_failed", { errorName: nameOf(error) });
+			log.warn("migration.backup_prune_failed", {
+				errorName: errorNameOf(error),
+			});
 		}
 		log.info("migration.backup_done", { bytes, schemaVersion });
 		return { status: "done", name, bytes };
@@ -114,11 +117,7 @@ export function backupBeforeMigrating(
 				// Pruned with the next backup.
 			}
 		}
-		log.error("migration.backup_failed", { errorName: nameOf(error) });
+		log.error("migration.backup_failed", { errorName: errorNameOf(error) });
 		return { status: "failed" };
 	}
-}
-
-function nameOf(error: unknown): string {
-	return error instanceof Error ? error.name.toLowerCase() : "nonerror";
 }
