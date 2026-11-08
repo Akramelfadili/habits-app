@@ -18,7 +18,6 @@ import { appendSummary, parseArgs } from "./sh.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 const BASELINES = path.join(ROOT, "docs/visual-baseline");
-export const ROOT_BASELINES = BASELINES;
 
 function walk(dir, found = []) {
 	if (!dir || !fs.existsSync(dir)) return found;
@@ -56,7 +55,18 @@ function readResults(logsDir) {
 	return results;
 }
 
-export async function buildSheet({ shots, logs, out, width = 300, summary }) {
+/**
+ * `baselines` is the folder of web baselines (`docs/visual-baseline`); a test
+ * passes a small fixture folder so it does not resize all ~400 of them.
+ */
+export async function buildSheet({
+	shots,
+	logs,
+	out,
+	width = 300,
+	summary,
+	baselines = BASELINES,
+}) {
 	let sharp = null;
 	try {
 		sharp = (await import("sharp")).default;
@@ -95,7 +105,7 @@ export async function buildSheet({ shots, logs, out, width = 300, summary }) {
 	const rows = [];
 	for (const item of plan) {
 		const web = await thumb(
-			path.join(BASELINES, `${item.name}.png`),
+			path.join(baselines, `${item.name}.png`),
 			"web",
 			item.name,
 		);

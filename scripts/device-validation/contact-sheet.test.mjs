@@ -3,26 +3,55 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { buildSheet, ROOT_BASELINES } from "./contact-sheet.mjs";
+import sharp from "sharp";
+import { buildSheet } from "./contact-sheet.mjs";
+
+// A tiny generated baseline instead of docs/visual-baseline: resizing all ~400
+// real baselines made this test take 15-19 s once sharp was installed. sharp
+// still really runs, so the sheet's thumbnails are checked as images.
+async function tinyPng(file, width = 40, height = 80) {
+	await sharp({
+		create: { width, height, channels: 3, background: "#3366cc" },
+	})
+		.png()
+		.toFile(file);
+}
 
 test("pairs a baseline with its screenshot and lists what is missing", async () => {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sheet-"));
+	const baselines = path.join(dir, "baselines");
 	const shots = path.join(dir, "shots", "shots-light");
+	fs.mkdirSync(baselines, { recursive: true });
 	fs.mkdirSync(shots, { recursive: true });
-	fs.copyFileSync(
-		path.join(ROOT_BASELINES, "first-run.png"),
-		path.join(shots, "first-run.png"),
-	);
+	await tinyPng(path.join(baselines, "first-run.png"));
+	await tinyPng(path.join(shots, "first-run.png"), 600, 1200);
 	const out = path.join(dir, "sheet");
-	const result = await buildSheet({ shots: path.join(dir, "shots"), out });
+	const result = await buildSheet({
+		shots: path.join(dir, "shots"),
+		out,
+		width: 30,
+		baselines,
+	});
 
 	assert.equal(result.captured, 1);
 	const html = fs.readFileSync(path.join(out, "index.html"), "utf8");
 	assert.match(html, /data-name="first-run" data-status="captured"/);
+	assert.match(html, /src="img\/web\/first-run\.jpg"/);
+	assert.match(html, /src="img\/ios\/first-run\.jpg"/);
 	assert.match(
 		html,
 		/data-name="today-loading" data-status="not reproducible"/,
 	);
+
+	// Both thumbnails are real JPEGs, shrunk to the requested width.
+	for (const kind of ["web", "ios"]) {
+		const meta = await sharp(
+			path.join(out, "img", kind, "first-run.jpg"),
+		).metadata();
+		assert.equal(meta.format, "jpeg");
+		assert.equal(meta.width, 30);
+	}
+
 	const missing = JSON.parse(
 		fs.readFileSync(path.join(out, "missing.json"), "utf8"),
 	);
