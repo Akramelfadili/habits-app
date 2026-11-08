@@ -26,3 +26,7 @@ A manual GitHub Actions run renders every state on an iOS Simulator: `gh workflo
 - [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, the gate, what never goes in git
 - [CHANGELOG.md](CHANGELOG.md): what shipped and what is next
 - [CLAUDE.md](CLAUDE.md): working rules for Claude Code sessions
+
+## Licence
+
+All rights reserved: the code is public to read, not licensed for reuse (see [LICENSE](LICENSE)). Security reports: [SECURITY.md](SECURITY.md).
