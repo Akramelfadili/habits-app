@@ -8,7 +8,7 @@ The audit found that nothing separated a development build on the owner's phone 
 
 ## Decision
 
-**Variants.** `app.config.ts` replaces `app.json` and is driven by `APP_VARIANT`:
+**Variants.** `app.config.ts` replaces the former static app config and is driven by `APP_VARIANT`:
 
 | `APP_VARIANT` | Name | Bundle id | Scheme |
 |---|---|---|---|
