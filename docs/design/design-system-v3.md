@@ -117,10 +117,12 @@ Density (T-18): habit row **60 pt flat with hairlines** (was 56 + 6 inset), icon
 | radius-s | (see master) | Checkbox, toast action, inline tags |
 | radius-m | (see master) | Lifted row, inset fields |
 | radius-l | 20 | Every card, banner, field (form cards 18 → 20, T-09) |
-| radius-xl | 28 | Sheet top corners |
+| radius-xl | 28 | Sheet top corners (the alert dialog is the one 24 in the mockups; it is built with `radius.l`) |
 | radius-pill | 999 | Buttons, chips, segmented, toggle, toast, circles |
 | rule · cell | floor(size ÷ 3) | Completion cells: 12→4, 16→5, 24→8, 40→13 |
 | rule · square | round(size × 0.31) | Icon squares: 28→9, 32→10, 56→17 |
+
+**Decided (batch 20, I-02): one value per role, from tokens.** `Container` cards and `ActionCard` were 16 and sheet tops 24 in code, against 20 and 28 here. The mockups decide: in the V3 files `border-radius:20px` is on about 150 cards, banners and fields (16 px on five), and every sheet is `28px 28px 0 0`. So the code follows the spec: `radius.l` for every card (`Container` card / inset / outlined, `ActionCard`) and `radius.xl` for the sheet. No delta was recorded because there is none. The outlined card is one component: `Container variant="outlined"` (padding `default` 16 pt or `snug` 14 pt); the day-detail card, the "nothing logged" card and the all-done card use it instead of private copies, which also moves their border from a hairline to the outlined 1 pt.
 
 ## F-06 Elevation, focus, touch
 
@@ -146,9 +148,23 @@ Motion confirms an action; it never decorates. With Reduce Motion nothing moves 
 | reorder | Lift scale 1.02 + E2 shadow | Shadow only |
 | header collapse | scroll-linked, no duration: title scale 1 → .88 and opacity 1 → 0 over 0–60 % of the range, bar name and buttons 50–100 %, bar background and hairline 70–100 %; settles on the nearer end when scrolling stops inside it (`useCollapsingHeader`) | No interpolation, no settle; 150 ms crossfade at 50 % |
 | celebrate | 600 ms once, check draws | Static check |
-| skeleton | 1.2 s loop, only after 300 ms | Static |
+| skeleton | 1.2 s loop, only after 300 ms, ease-in-out `cubic-bezier(.42,0,.58,1)`; the indeterminate progress bar sweep uses the same token (`motion.skeleton`) | Static |
+
+## F-07a Haptics
+
+Decided in batch 20 (I-09): yes, light and restrained, and the person can turn them off. Three moments only; everything else stays silent.
+
+| Moment | Feedback | Where |
+|---|---|---|
+| A completion circle is tapped (on or off) | selection | `CompletionCircle` |
+| The last due habit of the shown day is completed and the all-done card appears | success | `TodayHabitList`; not when a day that is already done opens |
+| A destructive confirm: the red action of the delete sheet or a Discard dialog | warning | `DestructiveConfirmSheet`, `AlertDialog` (destructive tone) |
+
+Rules: a **Haptics** switch in Settings › Appearance (default on, `app_settings` key `app.haptics`, in the export's `settings` as `haptics`) turns all three off; calls go through `useHaptics()` so the setting is honoured in one place; a device without a haptic engine, or the web, does nothing and never throws. Reduce Motion does not change haptics (they are not motion). No haptic on Undo, toasts, errors or navigation. How it feels is a device check (`docs/how-to/release.md`, "Device checklist").
 
 ## F-08 Iconography
+
+SF Symbol sizes are tokens: `iconSize` xs 12 (badge, chip and remove glyphs), s 14 (chevrons, add, checkbox), m 16 (bar, toast, field glyphs), l 18 (header and drag glyphs). The 17 pt back chevron is the one off-scale size. Tracking is a token too: `letterSpacing.label` 0.6 (stat label) and `.eyebrow` 1.2 (caps section labels).
 
 One geometric set from rings, squares, bars, lines; 2 pt stroke at 38 pt, scaled with the square; one colour per glyph; system glyphs in sub ink (text when active). No emoji, no illustrations. Tab icons: Today = ring with check (T-17), Progress = rising bars, Habits = list. Settings = 8-tooth gear (T-19). Others: Add, Export, Reorder, Remove, Warning, Info, Archive, Paused, File, Calendar, Error, Freeze.
 
