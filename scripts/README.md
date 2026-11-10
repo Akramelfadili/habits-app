@@ -6,6 +6,7 @@ Node scripts behind the `npm run` commands; details in `docs/how-to/dev-tooling.
 - `check-repo-hygiene.mjs` fails on a tracked secret, log, archive, generated file or file over 1 MB.
 - `check-doc-refs.mjs` fails on a doc that points at a missing path or "§ section" heading (tested by `check-doc-refs.test.mjs`).
 - `token-ratchet-update.mjs` lowers the design-token baseline.
+- `check-release-bundle.mjs` (`make release-check`) exports the production iOS bundle outside the repo and fails on dev-only code in it or more than 10% growth over `bundle-size.baseline.json` (tested by `check-release-bundle.test.mjs`).
 - `visual-check.mjs` (+ `visual-check/screens.mjs`, the list of screen states) renders and diffs every state on the web build.
 - `e2e.mjs` runs the Maestro journeys in `e2e/`.
 - `render-mockups.mjs` turns the V3 design files into PNG slices and text (`docs/mockups/v3/renders/`).
