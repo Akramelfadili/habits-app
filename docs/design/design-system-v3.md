@@ -79,7 +79,15 @@ SF Pro, built-in. Nine styles, two weights (400/500; 600 only for the selected t
 | footnote | 13 / 18 · 400 | Sublines, body copy, group header (500) | 33→36 |
 | caption | 12 / 16 · 500 | Eyebrow (caps), axis, tab label, counter | 32; **tab label fixed** |
 
-React Native `allowFontScaling` on everywhere except the tab bar label. AX3 sizes follow the iOS text-style ramp (08.6a).
+React Native `allowFontScaling` is on everywhere except three deliberate sites (I-07):
+
+| Site | Why it is fixed |
+|---|---|
+| Tab bar label (`tab-bar-pill.tsx`) | Like iOS's own tab bar; long-press shows the Large Content Viewer |
+| Week matrix day letter (`week-matrix.tsx`, 12 pt) | It labels a fixed 16 to 44 pt cell column; the matrix has an AX fallback layout (the month list) |
+| Completion cell digit (`completion-cell.tsx`, 13 pt) | It sits inside a fixed-size square cell (12 / 16 / 24 / 40); scaling it would overflow the cell |
+
+Bars and header pills cap growth with `barMaxFontMultiplier` instead of turning scaling off. AX3 sizes follow the iOS text-style ramp (08.6a).
 
 ## F-04 Spacing (new; code had none)
 

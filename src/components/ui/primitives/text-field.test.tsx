@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { StyleSheet } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { TextField } from "./text-field";
 
@@ -27,6 +27,56 @@ describe("TextField", () => {
 			/>,
 		);
 		expect(screen.getByText("Give this habit a name.")).toBeTruthy();
+	});
+
+	describe("accessibility (I-05)", () => {
+		let announce: jest.SpyInstance;
+		beforeEach(() => {
+			announce = jest
+				.spyOn(AccessibilityInfo, "announceForAccessibility")
+				.mockImplementation(() => undefined);
+		});
+		afterEach(() => announce.mockRestore());
+
+		const field = (props: { error?: string; helper?: string }) => (
+			<TextField label="Name" value="" onChangeText={jest.fn()} {...props} />
+		);
+
+		it("uses the error as the input's hint, ahead of the helper", async () => {
+			await render(field({ error: "Give this habit a name.", helper: "Hi" }));
+			expect(screen.getByLabelText("Name")).toHaveProp(
+				"accessibilityHint",
+				"Give this habit a name.",
+			);
+		});
+
+		it("uses the helper as the hint when there is no error", async () => {
+			await render(field({ helper: "Shown after the number" }));
+			expect(screen.getByLabelText("Name")).toHaveProp(
+				"accessibilityHint",
+				"Shown after the number",
+			);
+		});
+
+		it("announces the error once when it goes from empty to set, not on re-render", async () => {
+			const view = await render(field({}));
+			expect(announce).not.toHaveBeenCalled();
+
+			await view.rerender(field({ error: "Give this habit a name." }));
+			expect(announce).toHaveBeenCalledTimes(1);
+			expect(announce).toHaveBeenCalledWith("Give this habit a name.");
+
+			await view.rerender(field({ error: "Give this habit a name." }));
+			expect(announce).toHaveBeenCalledTimes(1);
+		});
+
+		it("announces again after the error was cleared and returns", async () => {
+			const view = await render(field({ error: "Too short." }));
+			expect(announce).toHaveBeenCalledTimes(1);
+			await view.rerender(field({}));
+			await view.rerender(field({ error: "Too short." }));
+			expect(announce).toHaveBeenCalledTimes(2);
+		});
 	});
 
 	it("renders no error text when none is passed", async () => {

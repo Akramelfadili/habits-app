@@ -4,6 +4,8 @@ import {
 	screen,
 	within,
 } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { interactionOpacity } from "@/theme/theme";
 import {
 	bandRows,
 	YEAR_CELL,
@@ -95,6 +97,24 @@ describe("YearHeatMap", () => {
 			}),
 		);
 		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("dims a month label while it is pressed (I-06)", async () => {
+		await render(<YearHeatMap bands={[band("a", 18, jest.fn())]} />);
+		const label = () =>
+			screen.getByRole("button", {
+				name: "February, 90 percent. Opens Month.",
+			});
+		expect(StyleSheet.flatten(label().props.style).opacity).toBeUndefined();
+		await fireEvent(label(), "responderGrant", {
+			nativeEvent: { touches: [], changedTouches: [] },
+			touchHistory: { touchBank: [] },
+			persist: jest.fn(),
+			timeStamp: 0,
+		});
+		expect(StyleSheet.flatten(label().props.style).opacity).toBe(
+			interactionOpacity.pressed,
+		);
 	});
 
 	it("gives a month label a 44 pt target and sets it over its week column", async () => {
