@@ -95,3 +95,23 @@ Jest runs in one fixed zone, whatever the machine's: `jest.global-setup.js` sets
 One test in another zone: `withTimeZone(zone, fn)` (also async), or `inTimeZoneEachTest(zone)` in a `describe`, from `src/test-support/time-zone.ts`. Assigning `process.env.TZ` inside a test does **nothing** (Jest hands each file a copy of `process.env`); the helpers go through a hook that `jest.environment.js` (jest-expo's environment plus that hook) exposes from the real process, and the zone is restored when the file ends. Create dates inside `fn` or the test, not in the describe body. `dstTransitionDays(zone, year)` returns a zone's clock-change days from Intl, so tests never hard-code DST dates. The matrix over UTC, Paris, Sao Paulo, Los Angeles and Auckland is `src/modules/habits/domain/date-zones.test.ts`.
 
 Day-by-day walks step with `nextDay` (`src/utils/day-key.ts`), not bare `addDays`: where DST starts at midnight (Sao Paulo until 2019, Santiago, Havana) that day begins at 01:00 and `addDays` would carry the 01:00 forward. Week bounds come from `src/utils/week-window.ts`.
+
+## Testing
+
+What a new test should reach for. The test-naming and time-zone rules are in the two subsections above ("Test naming", "Time zones in tests").
+
+**Zones.** Jest runs in America/Los_Angeles; a test that cares about another zone uses `withTimeZone` and takes `TEST_ZONES` from `src/test-support/time-zone.ts`. Anything that walks days, weeks or years gets the five-zone treatment, not only the default one.
+
+**Property tests** (`*.property.test.ts`, fast-check, a dev dependency). They state an invariant over random inputs and shrink a failure to a small counterexample; they run in the default `make check`, so each uses 100–200 runs (`PROPERTY_RUNS` in `src/modules/habits/test-support/habit-arbitraries.ts`, fewer for the year map) and all four files together add about 5 s of file time (3 s of wall time in a parallel run). Where they are: day keys (`src/utils/day-key.property.test.ts`), the Monday–Sunday week (`src/utils/week-window.property.test.ts`), the three frequency strategies against a plain reference (`src/modules/habits/strategies/frequency-strategies.property.test.ts`), and rates, streaks and the year map (`src/modules/habits/domain/history.property.test.ts`). Seeds are random per run, so a red run is a find, not a flake: the output prints the seed and the shrunk case; paste it into a normal example test (`fc.assert(..., { seed, path })` replays it) and fix or record it. `per-week-frequency.equivalence.slow.test.ts` stays because it also pins the history and summary functions; the property over the strategies does not replace it. Arbitraries build a habit and its log from plain numbers (`historyArb`, `buildHistory`); add a new rule's generator there.
+
+**Builders** (`src/modules/habits/test-support/habit-builder.ts`). `makeHabit`, `makeHabitInput`, `makeCategory`, `makeEntry`, `makeFreeze`, and the frequency literals `daily()`, `weekdays(1, 3, 5)`, `perWeek(3)`. Start from them and override only what the test is about, so a field added to `Habit`, `Entry` or `FrozenDay` is one edit. Do not write `frequency: { type: ... }` or a full `Entry` literal in a test.
+
+**Time budgets.** The whole default run is about 50 s on this box (4 workers, warm cache; 107 s with a cold transform cache). The median test file takes 0.2 s and none of the 3,500 tests takes 5 s. A test over 5 s alone is a finding: look for real timers, `waitFor` polling, an unmocked animation or a large fixture in `beforeEach` before anything else. Never raise `testTimeout` (15 s) or skip a test to make a run pass. `package.json` caps Jest at `"maxWorkers": "50%"`: the default of cores minus one (7 here) oversubscribed the 8 GB machine and took 94 s against 51 s. The React Compiler is not in the Jest transform (babel-jest does not tell `babel-preset-expo` the compiler is supported), so screen tests do not pay for it.
+
+**Measuring.** Run the whole suite once with a JSON report written outside the repo, never piped or redirected:
+
+```sh
+npx jest --maxWorkers=2 --json --outputFile=<a file outside the repo>
+```
+
+Then read `testResults[].endTime - startTime` per file and `assertionResults[].duration` per test, and the wall time as the last `endTime` minus `startTime`. `--no-cache` gives the cold-cache figure. `--detectOpenHandles` runs in band and is slow (about 85 s for five files); use it on named files, not the suite.
