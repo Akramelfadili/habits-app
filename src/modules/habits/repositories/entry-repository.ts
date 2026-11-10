@@ -1,7 +1,12 @@
-import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
-import { useMemo } from "react";
+import { and, asc, eq, sql } from "drizzle-orm";
+import { useCallback, useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes, frozenDays } from "@/lib/db/schema";
+import {
+	createSharedLiveTable,
+	sameElements,
+	useSharedLiveTable,
+} from "@/lib/db/shared-live-table";
 import { runInTransaction } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import { toDayKey } from "@/utils/day-key";
@@ -29,23 +34,50 @@ function rowToEntryNote(row: EntryNoteRow): EntryNote {
 	};
 }
 
-/** Live-query hook — entries with a date in `[start, end]`, inclusive. */
+/**
+ * The one live read of the whole entry log (audit A-03, B-07). Every hook below
+ * that shows entries reads a slice of this, so Today, Habits, Detail, Progress
+ * and Retro-log share one query and one change listener however many are
+ * mounted, and a write re-renders only the slices it changed. The rows are
+ * ordered by date, as the unbounded read always was.
+ */
+const entryLog = createSharedLiveTable({
+	table: "entries",
+	read: () => db.select().from(entries).orderBy(asc(entries.date)),
+	map: rowToEntry,
+	key: (entry) => entry.id,
+	same: (a, b) =>
+		a.habitId === b.habitId &&
+		a.date === b.date &&
+		a.value === b.value &&
+		a.createdAt.getTime() === b.createdAt.getTime(),
+});
+
+const allEntries = (rows: Entry[]): Entry[] => rows;
+
+/**
+ * Live-query hook — entries with a date in `[start, end]`, inclusive: a slice of
+ * the shared log, so the Progress maths built on it can be memoised (same
+ * entries, same array) and a write outside the range does not re-render.
+ */
 export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	const startDate = toDayKey(start);
 	const endDate = toDayKey(end);
-	const { data } = useLiveRows<EntryRow>(
-		db
-			.select()
-			.from(entries)
-			.where(and(gte(entries.date, startDate), lte(entries.date, endDate)))
-			.orderBy(asc(entries.date)),
-		// `useLiveQuery` subscribes once per `deps` — without these, the first
-		// render's range would be queried forever.
+	const inRange = useCallback(
+		(rows: Entry[]) =>
+			rows.filter((entry) => entry.date >= startDate && entry.date <= endDate),
 		[startDate, endDate],
 	);
-	// Stable between renders until the rows change, so the Progress maths built on
-	// these entries can be memoised.
-	return useMemo(() => data.map(rowToEntry), [data]);
+	return useSharedLiveTable(entryLog, inRange, sameElements);
+}
+
+/** Live-query hook — one habit's entries, oldest first: a slice of the shared log (Habit detail). */
+export function useHabitEntries(habitId: number): Entry[] {
+	const ofHabit = useCallback(
+		(rows: Entry[]) => rows.filter((entry) => entry.habitId === habitId),
+		[habitId],
+	);
+	return useSharedLiveTable(entryLog, ofHabit, sameElements);
 }
 
 /**
@@ -56,7 +88,7 @@ export function useLoggedDays(): LoggedDays {
 	const { data, loaded } = useLiveRows<{
 		count: number | null;
 		first: string | null;
-	}>(
+	}>(() =>
 		db
 			.select({
 				count: sql<number>`count(distinct ${entries.date})`,
@@ -72,7 +104,7 @@ export function useLoggedDays(): LoggedDays {
 }
 
 /**
- * Live-query hook — every entry, unbounded. Streak calculation (HAB-08) can
+ * Live-query hook — every entry, unbounded (the shared log itself). Streak calculation (HAB-08) can
  * need history arbitrarily far back (and a week-bounded range has a real gap
  * around Sunday/Monday for a per-week habit's own week), so this fetches
  * everything rather than trying to bound the range correctly — a personal
@@ -80,10 +112,7 @@ export function useLoggedDays(): LoggedDays {
  * and cheaper than getting a tight range right.
  */
 export function useAllEntries(): Entry[] {
-	const { data } = useLiveRows<EntryRow>(
-		db.select().from(entries).orderBy(asc(entries.date)),
-	);
-	return useMemo(() => data.map(rowToEntry), [data]);
+	return useSharedLiveTable(entryLog, allEntries);
 }
 
 /**
@@ -197,10 +226,11 @@ export async function setHabitQuantityOn(
 
 /** Live-query hook — every habit's day notes (HAB-10). Same "small enough to fetch whole" reasoning as `useAllEntries`. */
 export function useEntryNotes(): EntryNote[] {
-	const { data } = useLiveRows<EntryNoteRow>(
+	const { data } = useLiveRows<EntryNoteRow>(() =>
 		db.select().from(entryNotes).orderBy(asc(entryNotes.date)),
 	);
-	return data.map(rowToEntryNote);
+	// Stable until a row changes (audit B-10): the mapping ran on every render.
+	return useMemo(() => data.map(rowToEntryNote), [data]);
 }
 
 /**

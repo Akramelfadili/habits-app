@@ -27,6 +27,8 @@ jest.mock("../repositories/habit-repository", () => ({
 }));
 jest.mock("../repositories/entry-repository", () => ({
 	useAllEntries: () => mockEntries,
+	useHabitEntries: (habitId: number) =>
+		mockEntries.filter((candidate) => candidate.habitId === habitId),
 	useEntryNotes: () => mockNotes,
 }));
 jest.mock("../repositories/reminder-repository", () => ({

@@ -43,7 +43,7 @@ function habitRemindersQuery(habitId: number) {
 /** Live-query hook — one habit's reminder times, earliest first. */
 export function useHabitReminders(habitId: number): Reminder[] {
 	const { data } = useLiveRows<ReminderRow>(
-		habitRemindersQuery(habitId),
+		() => habitRemindersQuery(habitId),
 		[habitId],
 		{ resetOnDepsChange: true },
 	);
@@ -52,7 +52,7 @@ export function useHabitReminders(habitId: number): Reminder[] {
 
 /** Live-query hook — every habit's reminders (Today's tomorrow preview, HAB-14). */
 export function useAllReminders(): Reminder[] {
-	const { data } = useLiveRows<ReminderRow>(
+	const { data } = useLiveRows<ReminderRow>(() =>
 		db
 			.select()
 			.from(reminders)

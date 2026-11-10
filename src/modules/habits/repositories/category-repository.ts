@@ -1,4 +1,5 @@
 import { and, asc, eq, max, sql } from "drizzle-orm";
+import { useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { categories, habits } from "@/lib/db/schema";
 import { rollbackQuietly } from "@/lib/db/transaction";
@@ -10,10 +11,10 @@ import { allCategoriesQuery, rowToCategory } from "./category-rows";
 
 /** Live-query hook — every category in the stored group order (HAB-42). */
 export function useCategories(): Category[] {
-	const { data } = useLiveRows<typeof categories.$inferSelect>(
-		allCategoriesQuery(),
-	);
-	return data.map(rowToCategory);
+	const { data } =
+		useLiveRows<typeof categories.$inferSelect>(allCategoriesQuery);
+	// Stable until a row changes, so what Today and Habits group by it can be memoised.
+	return useMemo(() => data.map(rowToCategory), [data]);
 }
 
 /** One-off read — e.g. resolving built-ins by name outside a component. */

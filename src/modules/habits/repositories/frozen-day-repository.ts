@@ -2,6 +2,10 @@ import { and, asc, eq, gte, lte } from "drizzle-orm";
 import { useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { frozenDays } from "@/lib/db/schema";
+import {
+	createSharedLiveTable,
+	useSharedLiveTable,
+} from "@/lib/db/shared-live-table";
 import { useLiveRows } from "@/lib/db/use-live-rows";
 import { toDayKey } from "@/utils/day-key";
 import type { FrozenDay } from "../types";
@@ -17,12 +21,23 @@ function rowToFrozenDay(row: FrozenDayRow): FrozenDay {
 	};
 }
 
+/** The one live read of every frozen day, shared by the screens that want the pool (audit B-07, as `entry-repository.ts`'s log). */
+const frozenLog = createSharedLiveTable({
+	table: "frozen_days",
+	read: () => db.select().from(frozenDays).orderBy(asc(frozenDays.date)),
+	map: rowToFrozenDay,
+	key: (frozenDay) => frozenDay.id,
+	same: (a, b) =>
+		a.habitId === b.habitId &&
+		a.date === b.date &&
+		a.createdAt.getTime() === b.createdAt.getTime(),
+});
+
+const allFrozenDays = (rows: FrozenDay[]): FrozenDay[] => rows;
+
 /** Live-query hook — every frozen day, across every habit (the pool is shared, not per-habit). */
 export function useFrozenDays(): FrozenDay[] {
-	const { data } = useLiveRows<FrozenDayRow>(
-		db.select().from(frozenDays).orderBy(asc(frozenDays.date)),
-	);
-	return useMemo(() => data.map(rowToFrozenDay), [data]);
+	return useSharedLiveTable(frozenLog, allFrozenDays);
 }
 
 /** Live-query hook — frozen days with a date in `[start, end]`, inclusive, across every habit. */
@@ -30,13 +45,14 @@ export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
 	const startDate = toDayKey(start);
 	const endDate = toDayKey(end);
 	const { data } = useLiveRows<FrozenDayRow>(
-		db
-			.select()
-			.from(frozenDays)
-			.where(
-				and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
-			)
-			.orderBy(asc(frozenDays.date)),
+		() =>
+			db
+				.select()
+				.from(frozenDays)
+				.where(
+					and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
+				)
+				.orderBy(asc(frozenDays.date)),
 		// Subscribes once per deps: without them the first range would be read forever.
 		[startDate, endDate],
 	);

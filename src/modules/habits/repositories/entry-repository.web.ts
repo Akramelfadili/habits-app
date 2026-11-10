@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import {
 	makeEntryFixtures,
 	makeEntryNoteFixtures,
@@ -55,8 +55,26 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	);
 	const startDate = format(start, "yyyy-MM-dd");
 	const endDate = format(end, "yyyy-MM-dd");
-	return entries.filter(
-		(entry) => entry.date >= startDate && entry.date <= endDate,
+	// Memoised like the native slice, so what Today derives from it stays memoised.
+	return useMemo(
+		() =>
+			entries.filter(
+				(entry) => entry.date >= startDate && entry.date <= endDate,
+			),
+		[entries, startDate, endDate],
+	);
+}
+
+/** Web counterpart of the native per-habit slice of the shared log. */
+export function useHabitEntries(habitId: number): Entry[] {
+	const entries = useSyncExternalStore(
+		subscribe,
+		getEntries,
+		() => [] as Entry[],
+	);
+	return useMemo(
+		() => entries.filter((entry) => entry.habitId === habitId),
+		[entries, habitId],
 	);
 }
 
@@ -190,6 +208,7 @@ export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 const _sameShape: typeof NativeEntryRepository = {
 	useEntriesInRange,
 	useAllEntries,
+	useHabitEntries,
 	useLoggedDays,
 	setHabitCompletedOn,
 	setHabitQuantityOn,

@@ -125,7 +125,7 @@ function useHabitsWithCategories(
 	query: Parameters<typeof useLiveRows>[0],
 ): HabitsResult {
 	const habitsResult = useLiveRows<HabitRow>(query);
-	const categoriesResult = useLiveRows<CategoryRow>(allCategoriesQuery());
+	const categoriesResult = useLiveRows<CategoryRow>(allCategoriesQuery);
 	// The two queries resolve independently. Until both have, report what an
 	// unresolved live query always reports — nothing yet, not loaded — rather
 	// than a partial list missing whichever habits' categories haven't arrived.
@@ -212,14 +212,14 @@ export async function updateHabit(
  * working for an archived habit's history. Manual order (HAB-13).
  */
 export function useHabitsList(): HabitsResult {
-	return useHabitsWithCategories(
+	return useHabitsWithCategories(() =>
 		db.select().from(habits).orderBy(asc(habits.sortOrder), asc(habits.id)),
 	);
 }
 
 /** Live-query hook — habits not archived (Today, Weekly Summary, Manage), in manual order. */
 export function useActiveHabits(): HabitsResult {
-	return useHabitsWithCategories(
+	return useHabitsWithCategories(() =>
 		db
 			.select()
 			.from(habits)
@@ -230,7 +230,7 @@ export function useActiveHabits(): HabitsResult {
 
 /** Live-query hook — archived habits, most recently archived first (HAB-13). */
 export function useArchivedHabits(): HabitsResult {
-	return useHabitsWithCategories(
+	return useHabitsWithCategories(() =>
 		db
 			.select()
 			.from(habits)

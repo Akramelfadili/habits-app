@@ -15,7 +15,10 @@ import {
 	streakResetInfo,
 } from "../domain/habit-history";
 import { freezesRemainingInMonth } from "../domain/streaks";
-import { useAllEntries, useEntryNotes } from "../repositories/entry-repository";
+import {
+	useEntryNotes,
+	useHabitEntries,
+} from "../repositories/entry-repository";
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
 import { useHabitReminders } from "../repositories/reminder-repository";
@@ -51,17 +54,17 @@ export type HabitDetail = {
 
 /**
  * Everything Habit Detail shows for one habit, or null when the id doesn't
- * resolve (deleted, or a stale link), or undefined while loading. Reads the same
- * live, unbounded entry/freeze queries Today uses and narrows them here —
- * history needs everything since the habit was created anyway, so a per-habit
- * query would save nothing worth a second set of repository functions.
+ * resolve (deleted, or a stale link), or undefined while loading. Reads this
+ * habit's slice of the shared entry log (no query or listener of its own, A-03)
+ * and the shared frozen days, narrowing the latter here — the pool is shared, so
+ * the month's remaining count needs every habit's.
  */
 export function useHabitDetailQueries(
 	habitId: number,
 ): HabitDetail | null | undefined {
 	const { habits, loaded } = useHabitsList();
 	const today = useToday();
-	const allEntries = useAllEntries();
+	const entries = useHabitEntries(habitId);
 	const frozenDays = useFrozenDays();
 	const notes = useEntryNotes();
 	const reminders = useHabitReminders(habitId);
@@ -72,7 +75,6 @@ export function useHabitDetailQueries(
 	if (!loaded) return undefined;
 	if (!habit) return null;
 
-	const entries = allEntries.filter((entry) => entry.habitId === habitId);
 	const frozenDates = new Set(
 		frozenDays
 			.filter((frozenDay) => frozenDay.habitId === habitId)

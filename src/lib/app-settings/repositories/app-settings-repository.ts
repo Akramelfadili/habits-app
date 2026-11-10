@@ -28,7 +28,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
  */
 export function useAppSetting(key: string): string | null | undefined {
 	const { data, loaded } = useLiveRows<typeof appSettings.$inferSelect>(
-		db.select().from(appSettings).where(eq(appSettings.key, key)),
+		() => db.select().from(appSettings).where(eq(appSettings.key, key)),
 		[key],
 		{ resetOnDepsChange: true },
 	);
