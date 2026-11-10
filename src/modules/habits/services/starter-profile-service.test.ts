@@ -219,7 +219,6 @@ describe("applyStarterProfile", () => {
 	});
 
 	it("a failure rolls back and keeps the old data and marker", async () => {
-		// Fails on the second habit, after the old rows were already deleted.
 		const brokenSecond = JSON.stringify({
 			version: 1,
 			replace: true,
@@ -232,7 +231,6 @@ describe("applyStarterProfile", () => {
 				},
 			],
 		});
-		// Reject reminder inserts: the profile's reminder is the failing step.
 		await mockDb.run(
 			sql`create trigger fail_reminder before insert on reminders begin select raise(abort, 'boom'); end`,
 		);

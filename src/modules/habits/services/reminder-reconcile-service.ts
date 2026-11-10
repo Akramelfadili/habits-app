@@ -47,7 +47,6 @@ async function expectedKeys(habit: Habit): Promise<string[]> {
 	return keys;
 }
 
-/** The evening review's triggers for the days with open habits — none when no habit is ever due. */
 function eveningReviewKeys(
 	habits: readonly Habit[],
 	review: { hour: number; minute: number },
@@ -58,7 +57,6 @@ function eveningReviewKeys(
 	return reminderSlots(days).map((slot) => `${EVENING_PREFIX}${slot}:${time}`);
 }
 
-/** Whether what the OS holds is exactly `expected` — right triggers, right times, no duplicate generations. */
 function matches(
 	owned: readonly string[],
 	expected: readonly string[],
@@ -73,16 +71,16 @@ function matches(
 }
 
 /**
- * Brings the OS's scheduled notifications back in line with the database
- * (audit A3-05), once per launch. The database is the source of truth; the OS
- * can drift from it — a crash between a save and its scheduling, a failed
- * cancel, an older identifier format, a delete while a cancel was failing.
+ * Brings the OS's scheduled notifications back in line with the database, once per
+ * launch. The database is the source of truth; the OS can drift from it: a crash between a
+ * save and its scheduling, a failed cancel, an older identifier format, a delete while a
+ * cancel was failing.
  *
  * Deliberately conservative:
- * - it never asks for permission, and does nothing at all unless it is already
- *   granted (when denied or undecided nothing could be delivered anyway);
- * - it schedules only what an enabled reminder (or the Evening review) says
- *   should exist — with everything off it can only cancel;
+ * - it never asks for permission, and does nothing at all unless it is already granted
+ *   (when denied or undecided nothing could be delivered anyway);
+ * - it schedules only what an enabled reminder (or the Evening review) says should exist,
+ *   so with everything off it can only cancel;
  * - a habit already matching is not touched;
  * - it never throws: a failure is logged and the app starts normally.
  */
@@ -99,8 +97,8 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			log.warn("reminders.near_pending_limit", { pending: scheduled.length });
 		}
 
-		// Identifiers say nothing about titles, so after "Hide habit names" changed
-		// (or on the first launch with the setting, E-01) rebuild every habit once.
+		// Identifiers say nothing about titles, so after "Hide habit names" changed (or on the
+		// first launch with the setting) rebuild every habit once.
 		const hide = await getHideHabitNames();
 		const titlesStale = !(await remindersTitlesAreCurrent(hide));
 		let retitleFailed = false;
@@ -110,7 +108,6 @@ export async function reconcileScheduledReminders(): Promise<void> {
 		let resynced = 0;
 		let cancelled = 0;
 
-		// Notifications that belong to a habit that no longer exists.
 		const orphans = scheduled.filter((identifier) => {
 			const id = identifier.match(HABIT_ID_OF)?.[1];
 			return id !== undefined && !known.has(Number(id));
@@ -127,7 +124,6 @@ export async function reconcileScheduledReminders(): Promise<void> {
 				const expected = await expectedKeys(habit);
 				if (!titlesStale && matches(owned, expected)) continue;
 				if (expected.length === 0) {
-					// Archived, or nothing enabled: only ever cancel.
 					if (await cancelQuietly(owned, "reconcile_nothing_expected")) {
 						cancelled += owned.length;
 					}

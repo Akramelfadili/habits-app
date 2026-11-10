@@ -9,11 +9,8 @@ export type RowStatus = { text: string; tone: RowStatusTone };
 type RowStatusInput = {
 	habit: Habit;
 	completed: boolean;
-	/** The shown day's logged amount (quantity habits). */
 	quantityValue: number;
-	/** Days completed so far in the shown day's week (per-week habits). */
 	completedThisWeek: number;
-	/** The running streak, when there is one (`useTodayQueries().streakByHabitId`). */
 	streak: number | undefined;
 	atRisk: { missedDate: Date; freezesRemaining: number } | undefined;
 	frozenYesterday: { date: Date; streak: number } | undefined;
@@ -24,10 +21,9 @@ type RowStatusInput = {
 };
 
 /**
- * The line under a Today row's name (V3-13, HAB-31): the streak or the amount,
- * never a completion time. At risk and frozen win over everything else, since
- * they are what the row needs from you. `undefined` = a plain habit with no
- * streak yet, whose row shows just its name.
+ * The line under a Today row's name: the streak or the amount, never a completion time.
+ * At risk and frozen win over everything else, since they are what the row needs from you.
+ * `undefined` = a plain habit with no streak yet, whose row shows just its name.
  */
 export function todayRowStatus(input: RowStatusInput): RowStatus | undefined {
 	const { habit, completed, atRisk, frozenYesterday } = input;

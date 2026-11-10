@@ -14,7 +14,7 @@ const {
 	setQuantityOnDay,
 }: typeof DayLogService = require("./day-log-service");
 
-const SEPT_22 = new Date(2026, 8, 22); // the frozen day
+const SEPT_22 = new Date(2026, 8, 22);
 const FROZEN_AT = new Date("2026-09-23T07:00:00Z");
 
 async function seedHabit(name = "Read"): Promise<number> {
@@ -53,12 +53,11 @@ describe("day-log-service", () => {
 			await freeze(a, "2026-08-31");
 			expect(await freezesLeftIn(SEPT_22)).toBe(0);
 			expect(await freezesLeftIn(new Date(2026, 7, 10))).toBe(1);
-			// The 1st: a fresh pool, nothing rolls over.
 			expect(await freezesLeftIn(new Date(2026, 9, 1))).toBe(2);
 		});
 	});
 
-	describe("logging a frozen day returns the freeze (PR-11)", () => {
+	describe("logging a frozen day returns the freeze", () => {
 		it("ticking a frozen check habit writes the entry and deletes the freeze, reporting it", async () => {
 			const id = await seedHabit();
 			await freeze(id);
@@ -148,7 +147,7 @@ describe("day-log-service", () => {
 		it("a quantity: the previous amount is back and so is the freeze", async () => {
 			const id = await seedHabit();
 			await freeze(id);
-			await setQuantityOnDay(id, SEPT_22, 3, 8); // partial: freeze stays
+			await setQuantityOnDay(id, SEPT_22, 3, 8);
 			const write = await setQuantityOnDay(id, SEPT_22, 8, 8);
 			expect(await frozenRows()).toEqual([]);
 

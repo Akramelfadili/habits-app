@@ -77,7 +77,7 @@ describe("habit-lifecycle-service", () => {
 		);
 	});
 
-	it("restores with the closed pause — the days read as paused, and the streak starts fresh (HAB-20)", async () => {
+	it("restores with the closed pause: the days read as paused, and the streak starts fresh", async () => {
 		const archived = makeHabit({ id: 3, archivedAt: new Date(2000, 0, 1) });
 		const restored = makeHabit({ id: 3 });
 		mockGetHabit.mockResolvedValue(archived);

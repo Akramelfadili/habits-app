@@ -8,24 +8,21 @@ import { syncAfterWrite } from "./reminder-service";
 
 export type CreatedHabit = {
 	habit: Habit;
-	/** The habit is saved but some queued reminders were not (the form says so). */
 	remindersFailed: boolean;
 };
 
 /**
- * Saves a new habit together with the reminders queued on the form (F7): the
- * habit first, then each reminder on its own days, then one sync so every
- * enabled day has exactly one scheduled notification. The habit row is the
- * thing the person asked for, so a reminder that fails to write is logged and
- * reported, not rolled back — the habit stays and the reminder can be added
- * from its Reminders screen.
+ * Saves a new habit together with the reminders queued on the form: the habit first, then
+ * each reminder on its own days, then one sync so every enabled day has exactly one
+ * scheduled notification. The habit row is the thing the person asked for, so a reminder
+ * that fails to write is logged and reported, not rolled back: the habit stays and the
+ * reminder can be added from its Reminders screen.
  */
 export async function createHabitWithReminders(
 	input: CreateHabitInput,
 	reminders: readonly ReminderDraft[] = [],
 ): Promise<CreatedHabit> {
-	// Turning a reminder on first makes sure the OS has been asked; a denial
-	// never blocks the save (HAB-12).
+	// Turning a reminder on first makes sure the OS has been asked; a denial never blocks the save.
 	if (reminders.length > 0) await ensureNotificationPermission();
 	const habit = await createHabit(input);
 	if (reminders.length === 0) return { habit, remindersFailed: false };

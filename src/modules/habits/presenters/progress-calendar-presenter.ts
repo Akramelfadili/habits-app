@@ -25,9 +25,6 @@ import { calendarStateOf, type DotColor } from "./progress-presenter";
 const cell = progressCopy.cell;
 const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
-// ─── Month calendar ───────────────────────────────────────────────────────────
-
-/** "Tuesday 14 July, 80 percent" — one calendar day as VoiceOver reads it. */
 export function calendarDayLabel(day: CalendarDay): string {
 	const date = format(day.date, "EEEE d MMMM");
 	switch (day.status) {
@@ -52,7 +49,6 @@ export function calendarDayLabel(day: CalendarDay): string {
 	}
 }
 
-/** The month calendar's rows of 40 pt day cells; a tap on a day rings it and opens its detail card. */
 export function monthCalendarProps(
 	calendar: MonthCalendar,
 	selectedKey: string | null,
@@ -78,7 +74,6 @@ export function monthCalendarProps(
 	};
 }
 
-/** "14–15", "7, 22" — consecutive days collapse to a range; with a month, "7 Oct". */
 export function dayListLabel(
 	days: readonly Date[],
 	withMonth: boolean,
@@ -104,11 +99,6 @@ export function dayListLabel(
 	return withMonth ? `${text} ${format(atIndex(days, 0), "MMM")}` : text;
 }
 
-/**
- * The line under the calendar: "7 Oct frozen · 24–31 still ahead" (P7), the
- * one-habit "Meditate · 14–15 missed · 7 frozen" (P10), or too early's
- * "Started Wed 21 Oct · earlier days dashed" (P9).
- */
 export function monthNote(
 	calendar: MonthCalendar,
 	options: {
@@ -156,24 +146,18 @@ export function monthNote(
 	);
 }
 
-// ─── Per-habit rates ──────────────────────────────────────────────────────────
-
 export type MonthRateRow = {
 	key: string;
 	name: string;
 	dot: string;
 	isBreak: boolean;
 	slipping: boolean;
-	/** "Daily · 21 of 22 · 1 frozen" — each rule visible where it applies (P8). */
 	sub: string;
-	/** "95%", or a dash before anything was due. */
 	rate: string;
-	/** 0–1. */
 	bar: number;
 	accessibilityLabel: string;
 };
 
-/** The ranked per-habit rows: slipping last, the Break habit tagged, frozen days and bonus logs named. */
 export function monthRateRows(
 	rows: readonly RangeHabitRow[],
 	dot: DotColor,
@@ -208,8 +192,6 @@ function scheduleLabelFor(habit: Habit): string {
 		: scheduleLabel(habit);
 }
 
-// ─── Day detail ───────────────────────────────────────────────────────────────
-
 export type DayDetailCardData = {
 	title: string;
 	summary: string;
@@ -219,7 +201,6 @@ export type DayDetailCardData = {
 	accessibilityLabel: string;
 };
 
-/** Month's day card (P13): the date, "4 of 5 done · 80%", each habit's state. */
 export function dayDetailProps(
 	detail: DayDetail,
 	dot: DotColor,
@@ -269,8 +250,6 @@ export function dayDetailProps(
 		accessibilityLabel: `${format(detail.date, "EEEE d MMMM")}, ${summary}`,
 	};
 }
-
-// ─── Year ─────────────────────────────────────────────────────────────────────
 
 function monthPercentLabel(percent: number | null): string {
 	return percent === null
@@ -324,7 +303,7 @@ export function yearBandsProps(
 	});
 }
 
-/** Which band holds the month `today` is in — the only one Year shows while too early (P14). */
+/** Which band holds the month today is in: the only one Year shows while too early. */
 export function currentBandIndex(grid: YearMap, today: Date): number {
 	const index = grid.bands.findIndex((band) =>
 		band.some(
@@ -336,7 +315,7 @@ export function currentBandIndex(grid: YearMap, today: Date): number {
 	return Math.max(0, index);
 }
 
-/** The month list: VoiceOver's and AX3's view of the year (P16). */
+/** The month list: the view of the year for VoiceOver and the largest text sizes. */
 export function yearMonthListProps(
 	grid: YearMap,
 	openMonth: (month: Date) => void,

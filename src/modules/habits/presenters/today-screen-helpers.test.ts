@@ -36,7 +36,7 @@ describe("groupHabitsByCategory", () => {
 		]);
 	});
 
-	it("orders groups by the stored category order (HAB-42), not habit order", () => {
+	it("orders groups by the stored category order, not habit order", () => {
 		const evening = makeHabit({ id: 1, category: categoryNamed("Evening") });
 		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
 		const secondEvening = makeHabit({
@@ -88,7 +88,7 @@ describe("groupHabitsByCategory", () => {
 		]);
 	});
 
-	it("puts Other (V1's Anytime) last, regardless of creation order", () => {
+	it("puts Other last, regardless of creation order", () => {
 		const noCategory = makeHabit({ id: 1, category: categoryNamed("Other") });
 		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });
 
@@ -188,7 +188,7 @@ describe("resolveTodayViewState", () => {
 	});
 });
 
-describe("foldSummary (T1)", () => {
+describe("foldSummary", () => {
 	const names = ["Upper body", "Cold shower", "Stretch"].map((name, index) =>
 		makeHabit({ id: index + 1, name }),
 	);
@@ -212,7 +212,7 @@ describe("foldSummary (T1)", () => {
 	});
 });
 
-describe("bonusRowStatus (T3)", () => {
+describe("bonusRowStatus", () => {
 	it("invites a bonus log, naming the schedule", () => {
 		const habit = makeHabit({ frequency: { type: "weekdays", days: [2, 4] } });
 		expect(bonusRowStatus(habit, 0, false)).toBe(
@@ -236,7 +236,7 @@ describe("bonusRowStatus (T3)", () => {
 	});
 });
 
-describe("allDoneBody (T8)", () => {
+describe("allDoneBody", () => {
 	const habits = [
 		makeHabit({ id: 1, name: "Meditate" }),
 		makeHabit({ id: 2, name: "Read" }),

@@ -16,7 +16,6 @@ function dayName(day: IsoWeekday): string {
 	return WEEKDAYS.find((option) => option.day === day)?.name ?? "";
 }
 
-/** "a", "a and b", "a, b and c". */
 function joinList(items: string[]): string {
 	if (items.length <= 1) return items.join("");
 	return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
@@ -30,7 +29,6 @@ export function formatReminderTime({
 	return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-/** A reminder card's subtitle: "Every day", "Weekdays", or "Mon, Wed, Fri". */
 export function reminderDaysLabel(weekdays: readonly IsoWeekday[]): string {
 	const days = [...new Set(weekdays)].sort((a, b) => a - b);
 	if (days.length === 0) return reminderDaysCopy.none;
@@ -44,7 +42,6 @@ export function reminderDaysLabel(weekdays: readonly IsoWeekday[]): string {
 	return days.map((day) => SHORT_DAY_NAMES[day]).join(", ");
 }
 
-/** The inline warning under a reminder set for days the habit isn't scheduled on. */
 export function unscheduledDaysWarning(days: readonly IsoWeekday[]): string {
 	const names = joinList(days.map(dayName));
 	return reminderDaysCopy.unscheduled(names, days.length);

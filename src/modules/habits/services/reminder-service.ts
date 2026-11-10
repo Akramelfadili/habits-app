@@ -48,12 +48,11 @@ import type {
 } from "../types";
 
 /**
- * Reminders (HAB-12). Every write here is composite: the stored reminder
- * changes, *and* the OS's scheduled notifications have to be brought back in
- * line with it — so each write ends in `syncHabitReminders`, which rebuilds
- * the habit's notifications from what's stored rather than patching them.
- * Reminders are purely a notification layer; nothing here touches whether a
- * habit is due or counts on Today.
+ * Every write here is composite: the stored reminder changes, and the OS's scheduled
+ * notifications have to be brought back in line with it, so each write ends in
+ * `syncHabitReminders`, which rebuilds the habit's notifications from what is stored
+ * rather than patching them. Reminders are purely a notification layer; nothing here
+ * touches whether a habit is due or counts on Today.
  */
 
 const EVERY_DAY: IsoWeekday[] = WEEKDAYS.map(({ day }) => day);
@@ -61,9 +60,9 @@ const EVERY_DAY: IsoWeekday[] = WEEKDAYS.map(({ day }) => day);
 const EVENING_REVIEW_NOTIFICATION_ID = "evening-review";
 
 /**
- * Prefix shared by every notification one habit owns. The trailing "-"
- * keeps habit 1's prefix from matching habit 12's. Archive/delete (HAB-13)
- * cancels with this so no reminder outlives its habit.
+ * Prefix shared by every notification one habit owns. The trailing "-" keeps habit 1's
+ * prefix from matching habit 12's. Archive and delete cancel with this so no reminder
+ * outlives its habit.
  */
 export function habitNotificationPrefix(habitId: number): string {
 	return `habit-${habitId}-`;
@@ -74,9 +73,9 @@ export function reminderNotificationId(reminder: Reminder): string {
 }
 
 /**
- * The reminder's own days that the habit can never be due on — flagged on
- * screen as pointless, and never scheduled (HAB-12's edge case: "rather than
- * silently firing a notification for a habit that isn't due").
+ * The reminder's own days that the habit can never be due on: flagged on screen as
+ * pointless, and never scheduled (rather than silently firing a notification for a habit
+ * that is not due).
  */
 export function unscheduledReminderDays(
 	habit: Pick<Habit, "frequency">,
@@ -91,12 +90,11 @@ function notificationBody(habit: Habit): string {
 		: notificationCopy.build;
 }
 
-/** Whether habit reminders use the generic title: on unless the person turned it off (E-01). */
+/** Whether habit reminders use the generic title: on unless the person turned it off. */
 export async function getHideHabitNames(): Promise<boolean> {
 	return (await getSetting(HIDE_HABIT_NAMES_SETTING_KEY)) !== "false";
 }
 
-/** What the OS has been told about the title mode, for the launch reconcile. */
 export async function remindersTitlesAreCurrent(
 	hide: boolean,
 ): Promise<boolean> {
@@ -110,10 +108,10 @@ export async function markReminderTitlesApplied(hide: boolean): Promise<void> {
 }
 
 /**
- * Turns "Hide habit names" on or off (E-01). The choice is stored first (the
- * source of truth), then every habit's reminders are rebuilt so the titles the
- * OS holds follow. If any rebuild fails it is logged and the applied marker is
- * left stale, so the next launch's reconcile finishes the job.
+ * Turns "Hide habit names" on or off. The choice is stored first (the source of truth),
+ * then every habit's reminders are rebuilt so the titles the OS holds follow. If any rebuild
+ * fails it is logged and the applied marker is left stale, so the next launch's reconcile
+ * finishes the job.
  */
 export async function setHideHabitNames(hide: boolean): Promise<void> {
 	await setSetting(HIDE_HABIT_NAMES_SETTING_KEY, String(hide));
@@ -129,7 +127,6 @@ export async function setHideHabitNames(hide: boolean): Promise<void> {
 	if (!failed) await markReminderTitlesApplied(hide);
 }
 
-/** Identifiers currently scheduled under `prefix`. */
 async function scheduledWithPrefix(prefix: string): Promise<string[]> {
 	return (await listScheduledIdentifiers()).filter((identifier) =>
 		identifier.startsWith(prefix),
@@ -139,7 +136,6 @@ async function scheduledWithPrefix(prefix: string): Promise<string[]> {
 /** Cancels these identifiers; a failure is logged, never thrown — see the callers for why. */
 export async function cancelQuietly(
 	identifiers: readonly string[],
-	/** A short lowercase code (`replace_old_set`) — it goes into the log. */
 	why: string,
 ): Promise<boolean> {
 	if (identifiers.length === 0) return true;
@@ -177,8 +173,8 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
 	const previous = await scheduledWithPrefix(habitNotificationPrefix(habit.id));
 	const created: string[] = [];
 
-	// Paused while archived (HAB-20): rows are kept, but nothing is scheduled —
-	// editing an archived habit's reminders must not make it fire.
+	// Paused while archived: rows are kept, but nothing is scheduled; editing an archived
+	// habit's reminders must not make it fire.
 	if (!habit.archivedAt) {
 		const generation = newGeneration();
 		const title = (await getHideHabitNames())
@@ -261,10 +257,10 @@ export class ReminderCapError extends Error {
 }
 
 /**
- * Adds a reminder at the time and on the days the person chose in the sheet
- * (R2). With no draft it starts at the default time on the days the habit can
- * actually fall on, so a fresh reminder never starts out flagged. Blocked at
- * the cap with an explanation, not silently.
+ * Adds a reminder at the time and on the days the person chose in the sheet. With no
+ * draft it starts at the default time on the days the habit can actually fall on, so a
+ * fresh reminder never starts out flagged. Blocked at the cap with an explanation, not
+ * silently.
  */
 export async function addReminder(
 	habit: Habit,
@@ -283,7 +279,6 @@ export async function addReminder(
 	return reminder;
 }
 
-/** Changes one reminder's time, days, and/or on/off state. */
 export async function editReminder(
 	habit: Habit,
 	reminderId: number,
@@ -334,8 +329,8 @@ export async function updateHabitAndSyncReminders(
 }
 
 /**
- * The days the Evening review is worth sending on (HAB-44): those on which at
- * least one active habit can be due. A day nothing is due on gets no nudge.
+ * The days the Evening review is worth sending on: those on which at least one active
+ * habit can be due. A day nothing is due on gets no nudge.
  */
 export function eveningReviewDays(habits: readonly Habit[]): IsoWeekday[] {
 	const active = habits.filter((habit) => !habit.archivedAt);
@@ -344,7 +339,6 @@ export function eveningReviewDays(habits: readonly Habit[]): IsoWeekday[] {
 	);
 }
 
-/** The Evening review's time now: the stored choice, else the default. */
 export async function getEveningReviewTime(): Promise<{
 	hour: number;
 	minute: number;
@@ -354,7 +348,6 @@ export async function getEveningReviewTime(): Promise<{
 	);
 }
 
-/** Schedules the review for today's set of days; nothing at all when no habit is ever due. */
 async function scheduleEveningReview(): Promise<string[]> {
 	const days = eveningReviewDays(await getAllHabits());
 	if (days.length === 0) return [];
@@ -365,10 +358,9 @@ async function scheduleEveningReview(): Promise<string[]> {
 }
 
 /**
- * Changes the Evening review's time (HAB-44). The time is stored first — it is
- * the source of truth — and, while the review is on, the notifications are
- * rebuilt at the new time; a failed rebuild is logged for the launch-time
- * reconcile to finish.
+ * Changes the Evening review's time. The time is stored first (it is the source of
+ * truth) and, while the review is on, the notifications are rebuilt at the new time; a
+ * failed rebuild is logged for the launch-time reconcile to finish.
  */
 export async function setEveningReviewTime(time: {
 	hour: number;

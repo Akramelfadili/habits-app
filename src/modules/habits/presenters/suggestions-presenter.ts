@@ -6,14 +6,11 @@ import type { CategoryAppearance, Frequency, Habit } from "../types";
 import type { HabitFormPrefill } from "./habit-form-prefill";
 import { weekdaysLabel } from "./habit-schedule-label";
 
-/** One suggestion as Browse suggestions draws it (BS1). */
 export type SuggestionItem = {
 	suggestion: Suggestion;
-	/** "Quantity · 8 glasses a day", "3× per week", "Mon, Wed, Fri", "Break · daily". */
 	subtitle: string;
 	/** A habit with this name already exists, archived included: shown as Added and not selectable. */
 	added: boolean;
-	/** The category's icon and colour. */
 	appearance: CategoryAppearance;
 };
 
@@ -32,7 +29,6 @@ function frequencyLabel(frequency: Frequency): string {
 	return weekdaysLabel(frequency.days);
 }
 
-/** The line under a suggestion's name; it names only what the habit will really have. */
 export function suggestionSubtitle(suggestion: Suggestion): string {
 	const { target, direction, frequency } = suggestion;
 	if (direction === "break") {
@@ -45,11 +41,10 @@ export function suggestionSubtitle(suggestion: Suggestion): string {
 }
 
 /**
- * The bundle grouped as BS1 draws it: one section per category in the order
- * the bundle first names it, and the Break habits together at the end whatever
- * their category. `habits` (archived included) decides which are Added: the
- * same duplicate rule the New habit form applies, so a suggestion marked Added
- * is exactly one the form would refuse.
+ * The bundle grouped: one section per category in the order the bundle first names it,
+ * and the Break habits together at the end whatever their category. `habits` (archived
+ * included) decides which are Added: the same duplicate rule the New habit form applies,
+ * so a suggestion marked Added is exactly one the form would refuse.
  */
 export function groupSuggestions(
 	habits: readonly Habit[],
@@ -85,7 +80,6 @@ export function groupSuggestions(
 	return sections;
 }
 
-/** What the New habit form is opened with for a suggestion (BS2): every field it knows. */
 export function suggestionToPrefill(suggestion: Suggestion): HabitFormPrefill {
 	return {
 		name: suggestion.name,

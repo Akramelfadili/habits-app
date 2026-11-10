@@ -5,9 +5,9 @@ import { makeHabitInput } from "../test-support/habit-builder";
 import type * as FreezeService from "./freeze-service";
 
 /**
- * The shared freeze pool at a month's edge (HAB-08, "resets on the 1st"),
- * through the service and the real repository on a test database — the unit
- * test (`freeze-service.test.ts`) mocks the count and never sees a date.
+ * The shared freeze pool at a month's edge (resets on the 1st), through the service and
+ * the real repository on a test database: the unit test (`freeze-service.test.ts`) mocks
+ * the count and never sees a date.
  */
 const mockDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
@@ -35,7 +35,6 @@ describe("applyFreeze at a month's edge", () => {
 		await applyFreeze(habitId, new Date(2026, 7, 31));
 		await applyFreeze(habitId, new Date(2026, 9, 1));
 
-		// 31 Aug and 1 Oct belong to other months: September's pool is untouched.
 		await expect(applyFreeze(habitId, new Date(2026, 8, 1))).resolves.toEqual({
 			freezesLeft: 1,
 		});
@@ -52,7 +51,6 @@ describe("applyFreeze at a month's edge", () => {
 		await expect(
 			applyFreeze(habitId, new Date(2026, 8, 30, 23, 59)),
 		).rejects.toThrow("No freezes remaining this month");
-		// The 1st starts a fresh pool, with no rollover.
 		await expect(
 			applyFreeze(habitId, new Date(2026, 9, 1, 0, 0)),
 		).resolves.toEqual({ freezesLeft: 1 });

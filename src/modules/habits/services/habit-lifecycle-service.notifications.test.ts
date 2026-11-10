@@ -2,7 +2,6 @@ import { fakeNotifications as fake } from "../test-support/fake-expo-notificatio
 import { makeHabit } from "../test-support/habit-builder";
 import type { Habit, Reminder } from "../types";
 
-// The real reminder service and notifications adapter on an in-memory expo-notifications.
 jest.mock(
 	"expo-notifications",
 	() =>
@@ -64,7 +63,7 @@ beforeEach(() => {
 	});
 });
 
-describe("archive and restore never stack scheduled notifications (HAB-43)", () => {
+describe("archive and restore never stack scheduled notifications", () => {
 	it("archiving cancels every one the habit owns", async () => {
 		await syncHabitReminders(mockHabit);
 		expect(fake.scheduled.size).toBe(FIVE_WEEKDAYS_PLUS_THURSDAY);

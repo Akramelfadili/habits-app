@@ -9,14 +9,11 @@ export type CategoryGroup = {
 };
 
 /**
- * Groups habits by category, groups in the stored category order (HAB-42:
- * `categories` as `useCategories()` returns them, which migration 0011
- * backfilled from the old first-appearance rule). A category missing from
- * `categories` (not loaded yet) follows the known ones, in first appearance.
- * The built-in "Other" — V1's "Anytime", and where uncategorised habits
- * migrated to (HAB-24) — is always forced last: a new custom category is
- * stored after it (max + 1), and only the HAB-42 reorder may say otherwise.
- * Within a group, input order is preserved — HAB-13's manual order.
+ * Groups habits by category, in the stored category order (`categories` as
+ * `useCategories()` returns them). A category missing from `categories` (not loaded yet)
+ * follows the known ones, in first appearance. The built-in "Other" is always forced last:
+ * a new custom category is stored after it (max + 1), and only an explicit reorder may
+ * say otherwise. Within a group, input order (the manual order) is preserved.
  */
 export function groupHabitsByCategory(
 	habits: Habit[],
@@ -69,13 +66,12 @@ export function computeProgress(
 	return { completed, total, fraction: total === 0 ? 0 : completed / total };
 }
 
-/** Today's three mutually-exclusive display states (HAB-05, HAB-32). Everything done is still "populated": no extra "day closed" screen (PR-01 is Later). */
+/** Today's three mutually exclusive display states. Everything done is still populated: there is no extra "day closed" screen. */
 export type TodayViewState = "no-habits" | "rest-day" | "populated";
 
 /**
- * "No habits yet" always wins over "rest day" when both could apply (a brand
- * new user, zero habits, on a day nothing would be scheduled anyway) — check
- * habit count first, per the HAB-05 edge case.
+ * "No habits yet" always wins over "rest day" when both could apply (a brand new user,
+ * zero habits, on a day nothing would be scheduled anyway): check habit count first.
  */
 export function resolveTodayViewState(input: {
 	totalHabitCount: number;
@@ -87,7 +83,7 @@ export function resolveTodayViewState(input: {
 }
 
 /**
- * T1's fold row summary: "1 not due today · Upper body". Two names, then "+N".
+ * The fold row summary: "1 not due today · Upper body". Two names, then "+N".
  * On a past day it reads "not due" without "today".
  */
 export function foldSummary(
@@ -103,10 +99,9 @@ export function foldSummary(
 }
 
 /**
- * The line under a not-due habit's name (T3, the fold row): a per-week habit
- * that has met its target says it is back next week; anything else says how it
- * is scheduled and that a log is a bonus. A logged bonus says it changes no
- * streak.
+ * The line under a not-due habit's name (the fold row): a per-week habit that has met its
+ * target says it is back next week; anything else says how it is scheduled and that a log
+ * is a bonus. A logged bonus says it changes no streak.
  */
 export function bonusRowStatus(
 	habit: Habit,
@@ -127,7 +122,6 @@ export function bonusRowStatus(
 		: todayCopy.bonusSchedule(scheduleLabel(habit));
 }
 
-/** T8's second line: "5 of 5 · Meditate is on a 13-day streak" — the longest running streak among today's habits, if any. */
 export function allDoneBody(
 	habits: readonly Habit[],
 	streaks: ReadonlyMap<number, number>,

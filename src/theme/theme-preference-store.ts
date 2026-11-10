@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { log } from "@/lib/logger/logger";
 import type { ColorScheme } from "./theme";
 
-/** The Appearance choice (HAB-15). "system" follows iOS. */
+/** The Appearance choice. "system" follows iOS. */
 export type ThemePreference = "light" | "dark" | "system";
 
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = "system";

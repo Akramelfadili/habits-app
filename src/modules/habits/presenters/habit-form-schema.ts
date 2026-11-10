@@ -12,9 +12,9 @@ import { formCopy } from "../messages";
 import type { Frequency, IsoWeekday } from "../types";
 
 /**
- * Whether `name` breaks the 32-character cap (HAB-22). A V1 habit saved with
- * a longer name (up to 40) keeps it while it's left unchanged, so its other
- * fields can still be edited; any change to the name brings it under the cap.
+ * Whether name breaks the 32-character cap. A legacy habit saved with a longer name (up
+ * to 40) keeps it while it is left unchanged, so its other fields can still be edited; any
+ * change to the name brings it under the cap.
  */
 export function isNameOverLimit(name: string, originalName?: string): boolean {
 	const trimmed = name.trim();
@@ -48,7 +48,6 @@ export function makeHabitFormSchema(originalName?: string) {
 	});
 }
 
-/** The create-mode schema — every name capped at 32. */
 export const habitFormSchema = makeHabitFormSchema();
 
 function habitFormObject(originalName: string | undefined) {
@@ -61,7 +60,7 @@ function habitFormObject(originalName: string | undefined) {
 				(name) => !isNameOverLimit(name, originalName),
 				formCopy.name.tooLong(MAX_HABIT_NAME_LENGTH),
 			),
-		/** Null until picked: the category is optional, and a habit without one goes to Other (HAB-41). */
+		/** Null until picked: the category is optional, and a habit without one goes to Other. */
 		categoryId: z.number().int().nullable(),
 		direction: z.enum(["build", "break"]),
 		targetType: z.enum(["simple", "quantity"]),
@@ -87,9 +86,7 @@ function habitFormObject(originalName: string | undefined) {
 	});
 }
 
-/** What the form holds while editing — `categoryId` may be null (none picked). */
 export type HabitFormInput = z.input<typeof habitFormSchema>;
-/** What a valid submit produces — `categoryId` still null when none was picked. */
 export type HabitFormValues = z.output<typeof habitFormSchema>;
 
 type FrequencyFormValues = Pick<

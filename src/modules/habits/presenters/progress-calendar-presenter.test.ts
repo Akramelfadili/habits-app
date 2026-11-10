@@ -62,7 +62,6 @@ describe("the month calendar (P7)", () => {
 		);
 		expect(letters).toEqual(["M", "T", "W", "T", "F", "S", "S"]);
 		expect(weeks.every((week) => week.length === 7)).toBe(true);
-		// 1 October 2026 is a Thursday: three blank days first.
 		expect(weeks[0].slice(0, 3)).toEqual([null, null, null]);
 		const cells = weeks.flat().filter((cell) => cell !== null);
 		expect(cells).toHaveLength(31);
@@ -243,7 +242,6 @@ describe("the year heat map (P12)", () => {
 		for (const band of bands) {
 			expect(band.columns.every((column) => column.length === 7)).toBe(true);
 		}
-		// 1 January 2026 is a Thursday: the first column starts with three blanks.
 		expect(bands[0].columns[0].slice(0, 3)).toEqual([null, null, null]);
 		expect(bands[0].columns[0][3]?.key).toBe("2026-01-01");
 		const days = bands.flatMap((band) =>

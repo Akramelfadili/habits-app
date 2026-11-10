@@ -36,7 +36,7 @@ describe("habitFormSchema", () => {
 		}
 	});
 
-	it("rejects a name over 32 characters on create (HAB-22)", () => {
+	it("rejects a name over 32 characters on create", () => {
 		const result = habitFormSchema.safeParse({
 			...validInput,
 			name: "a".repeat(33),
@@ -82,7 +82,7 @@ describe("habitFormSchema", () => {
 		expect(result.success).toBe(true);
 	});
 
-	it("accepts no category: the habit goes to Other (HAB-41)", () => {
+	it("accepts no category: the habit goes to Other", () => {
 		const result = habitFormSchema.safeParse({
 			...validInput,
 			categoryId: null,
@@ -206,8 +206,8 @@ describe("frequency form mapping", () => {
 	});
 });
 
-describe("makeHabitFormSchema — legacy V1 names on edit (HAB-22)", () => {
-	const legacyName = "Read twenty pages before a morning tea"; // 38
+describe("makeHabitFormSchema: legacy names on edit", () => {
+	const legacyName = "Read twenty pages before a morning tea";
 	const editSchema = makeHabitFormSchema(legacyName);
 
 	it("keeps an unchanged 38-character name valid", () => {

@@ -18,7 +18,6 @@ function toHex(value: number): string {
 	return byte.toString(16).padStart(2, "0");
 }
 
-/** L: 0–1, C: chroma (typically 0–0.4), H: hue in degrees. */
 export function oklch(l: number, c: number, hDegrees: number): string {
 	const h = (hDegrees * Math.PI) / 180;
 	const a = c * Math.cos(h);

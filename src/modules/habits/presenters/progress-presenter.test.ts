@@ -42,7 +42,7 @@ function ready() {
 	return view;
 }
 
-describe("cellStateOf (V3-05)", () => {
+describe("cellStateOf", () => {
 	it.each([
 		[
 			{ status: "done", level: 3 },
@@ -148,7 +148,6 @@ describe("the week matrix (P1)", () => {
 			habit: { ...row.habit, targetAmount: 10 },
 		};
 		expect(matrixCellWord(target, partial)).toBe("partial 60 percent");
-		// With no target to divide by, the level's midpoint.
 		expect(matrixCellWord(row, { ...partial, value: undefined })).toBe(
 			"partial 75 percent",
 		);
@@ -195,7 +194,6 @@ describe("the week matrix (P1)", () => {
 			false,
 		]);
 		days[2].onPress?.();
-		// Saturday and Sunday have not happened: no Edit this day target.
 		expect(days[5].onPress).toBeUndefined();
 		expect(days[6].onPress).toBeUndefined();
 		expect(onEditDay).toHaveBeenCalledWith(view.grid.days[2].date);
@@ -210,7 +208,6 @@ describe("the week matrix (P1)", () => {
 		expect(rows.every((r) => r.cells.length === 7 && r.dot === "#123456")).toBe(
 			true,
 		);
-		// A partly missed week has met nothing yet.
 		expect(rows.some((r) => r.met)).toBe(false);
 	});
 
@@ -391,7 +388,7 @@ describe("stat tiles", () => {
 	});
 });
 
-describe("insights (HAB-38)", () => {
+describe("insights", () => {
 	const week = ready();
 	const context = {
 		kind: "week" as const,

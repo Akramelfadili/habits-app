@@ -8,7 +8,7 @@ export const surfaceColors = {
 		card: "#FFFFFF",
 		inner: "#EFEEEC",
 		ink: "#1A1A19",
-		/** The one accent (F-01): fills, selection, focus ring, intensity. Ink on paper. */
+		/** The one accent: fills, selection, focus ring, intensity. Ink on paper. */
 		accent: "#1A1A19",
 		onAccent: "#FFFFFF",
 		sub: "#5E5E5C",
@@ -20,7 +20,7 @@ export const surfaceColors = {
 		toastInk: "#FFFFFF",
 		toastBtn: "rgba(255,255,255,0.14)",
 		scrim: "rgba(26,26,25,0.32)",
-		/** The floating tab-bar pill's fill (V3-01 bar B), under a blur; solid `card` with Reduce Transparency. */
+		/** The floating tab-bar pill's fill, under a blur; solid `card` with Reduce Transparency. */
 		pillBg: "rgba(255,255,255,0.88)",
 	},
 	dark: {
@@ -62,7 +62,6 @@ export const semanticColors = {
 
 export const typeScale = {
 	stat: 30,
-	/** VAR-14's single stat-card numeral (V2 consolidated V1's 28/30 sizes). */
 	statCompact: 26,
 	screenTitle: 24,
 	section: 17,
@@ -84,11 +83,9 @@ export const iconSize = {
 } as const;
 
 /**
- * The V3 type scale (F-03): nine styles, two weights (600 only for the
- * selected tab and today's weekday letter, applied at the call site). Lives
- * alongside the V1/V2 `typeScale` until each screen moves to it in its V3
- * batch. Nothing renders below 12 pt.
- * Numbers use tabular figures at the call site.
+ * The type scale: nine styles, two weights (600 only for the selected tab and today's
+ * weekday letter, applied at the call site). Nothing renders below 12 pt. Numbers use
+ * tabular figures at the call site.
  */
 export const textStyles = {
 	display: { fontSize: 32, lineHeight: 38, fontWeight: "500" },
@@ -105,9 +102,8 @@ export const textStyles = {
 export type TextStyleName = keyof typeof textStyles;
 
 /**
- * Each style's size at Dynamic Type AX3, on the iOS text-style ramp (F-03).
- * subhead and footnote are 36, not the mockup's 34 / 33: T-30 moves them onto
- * the iOS ramp.
+ * Each style's size at Dynamic Type AX3, on the iOS text-style ramp. subhead and footnote
+ * are 36, not the mockup's 34 / 33, so that they sit on the iOS ramp.
  */
 export const textStylesAx3: Record<TextStyleName, number> = {
 	display: 52,
@@ -122,9 +118,9 @@ export const textStylesAx3: Record<TextStyleName, number> = {
 };
 
 /**
- * Spacing scale (F-04), in pt. Keys follow the mockup's names (value × 25):
- * its `space-350` is `space[350]`, 14 pt. Odd one-offs (9, 11, 18, 22) snap to the
- * nearest step. `space[400]` is for AX sizes only (card padding and gaps).
+ * Spacing scale, in pt. Keys follow the mockup's names (value x 25): its `space-350` is
+ * `space[350]`, 14 pt. Odd one-offs (9, 11, 18, 22) snap to the nearest step. `space[400]`
+ * is for AX sizes only (card padding and gaps).
  */
 export const space = {
 	50: 2,
@@ -141,9 +137,9 @@ export const space = {
 } as const;
 
 /**
- * Radius scale (F-05). `l` is every card, banner and field; `xl` the sheet's
- * top corners; `pill` buttons, chips, segmented, toggle, toast and circles.
- * Completion cells and icon squares use the size rules below instead.
+ * Radius scale. `l` is every card, banner and field; `xl` the sheet's top corners; `pill`
+ * buttons, chips, segmented, toggle, toast and circles. Completion cells and icon squares
+ * use the size rules below instead.
  */
 export const radius = {
 	xs: 4,
@@ -154,21 +150,20 @@ export const radius = {
 	pill: 999,
 } as const;
 
-/** F-05 cell rule: a completion cell's radius is floor(size ÷ 3) — 12→4, 16→5, 24→8, 40→13. */
+/** Cell rule: a completion cell's radius is floor(size / 3): 12 to 4, 16 to 5, 24 to 8, 40 to 13. */
 export function cellRadius(size: number): number {
 	return Math.floor(size / 3);
 }
 
-/** F-05 square rule: an icon square's radius is round(size × 0.31) — 28→9, 32→10, 56→17. */
+/** Square rule: an icon square's radius is round(size x 0.31): 28 to 9, 32 to 10, 56 to 17. */
 export function squareRadius(size: number): number {
 	return Math.round(size * 0.31);
 }
 
 /**
- * Elevation (F-06) for the things that float. Flat by default: E0 screen and
- * E1 card (a surface step plus a hairline) never get a shadow, and E4 sheet is
- * the bg surface over the scrim. In dark, height mostly reads as a lighter
- * surface; the shadows are kept but do little.
+ * Elevation for the things that float. Flat by default: E0 screen and E1 card (a surface
+ * step plus a hairline) never get a shadow, and E4 sheet is the bg surface over the scrim.
+ * In dark, height mostly reads as a lighter surface; the shadows are kept but do little.
  */
 export const elevation = {
 	light: {
@@ -176,7 +171,7 @@ export const elevation = {
 		lifted: { boxShadow: "0 10px 28px rgba(26,26,25,0.14)" },
 		/** E3: a toast floating above the tab bar. */
 		toast: { boxShadow: "0 18px 44px rgba(26,26,25,0.18)" },
-		/** The floating tab-bar pill (V3-01 bar B). */
+		/** The floating tab-bar pill. */
 		pill: { boxShadow: "0 8px 24px rgba(26,26,25,0.10)" },
 	},
 	dark: {
@@ -186,33 +181,31 @@ export const elevation = {
 	},
 } as const;
 
-/** Every tappable element's hit area is at least this square, even when the visual is smaller (F-06, T-11). */
+/** Every tappable element's hit area is at least this square, even when the visual is smaller. */
 export const minTouchTarget = 44;
 
 /** How far Dynamic Type may grow text in the 44 pt inline bar and the header pills; like iOS's own bars they hold their size beyond it (08.6). */
 export const barMaxFontMultiplier = 1.3;
 
-/** Focus ring (F-06, T-13): a gap in the surface colour, then the accent; follows the element's radius. */
+/** Focus ring: a gap in the surface colour, then the accent; follows the element's radius. */
 const focusRing = {
 	gap: 2,
 	width: 2,
 } as const;
 
-/** The focus ring as a `boxShadow`, drawn on `surface` (the colour the element sits on). */
 export function focusRingShadow(surface: string, scheme: ColorScheme): string {
 	const outer = focusRing.gap + focusRing.width;
 	return `0 0 0 ${focusRing.gap}px ${surface}, 0 0 0 ${outer}px ${surfaceColors[scheme].accent}`;
 }
 
-/** A CSS-style cubic-bezier, as `Easing.bezier(...)` takes it. */
 type Bezier = readonly [number, number, number, number];
 
 const EASE: Bezier = [0.25, 0.1, 0.25, 1];
 const EASE_OUT: Bezier = [0, 0, 0.58, 1];
 
 /**
- * Motion (F-07): motion confirms an action, it never decorates. Durations in
- * ms. `reduced` is what Reduce Motion does instead; Undo timings never change.
+ * Motion confirms an action, it never decorates. Durations in ms. `reduced` is what
+ * Reduce Motion does instead; Undo timings never change.
  */
 export const motion = {
 	/** Buttons, rows, circles scale to 92–98 %. */
@@ -231,8 +224,8 @@ export const motion = {
 	/** Sheet / push: the iOS spring (≈ 340 ms) and the iOS default; Reduce Motion uses the system crossfade. */
 	sheet: { duration: 340 },
 	/**
-	 * Rise + fade; Reduce Motion fades only. `hold` is how long each tone stays
-	 * up (V3-26); errors stay until Retry or swipe, so they have none.
+	 * Rise + fade; Reduce Motion fades only. `hold` is how long each tone stays up; errors
+	 * stay until Retry or swipe, so they have none.
 	 */
 	toast: {
 		in: 200,
@@ -267,14 +260,14 @@ export const motion = {
 export const interactionOpacity = {
 	pressed: 0.7,
 	disabled: 0.4,
-	/** A row that's present but not the focus — e.g. Retro log's not-yet-done habits (HAB-10). */
+	/** A row that is present but not the focus, e.g. Retro log's not-yet-done habits. */
 	dimmed: 0.5,
 } as const;
 
 /**
- * A habit's accent hue — its category's (HAB-24). `null` is the neutral
- * accent (built-in "Other"): it renders with the monochrome chrome tokens
- * (`sub`/`inner`), deliberately outside the color system.
+ * A habit's accent hue: its category's. `null` is the neutral accent (built-in "Other"):
+ * it renders with the monochrome chrome tokens (`sub`/`inner`), deliberately outside the
+ * color system.
  */
 export type AccentHue = number | null;
 
@@ -290,13 +283,13 @@ export function habitAccentTint(hue: AccentHue, scheme: ColorScheme): string {
 	return scheme === "light" ? oklch(0.93, 0.045, hue) : oklch(0.3, 0.085, hue);
 }
 
-/** A completion level, 0 (nothing / missed) to 3 (complete) — V3-05's intensity steps. */
+/** A completion level, 0 (nothing / missed) to 3 (complete). */
 export type IntensityLevel = 0 | 1 | 2 | 3;
 
-/** T-05 / F-02: the accent mixed into the track at 0 / 28 / 58 / 100 %. */
+/** The accent mixed into the track at 0 / 28 / 58 / 100 %. */
 const intensityMix = [0, 0.28, 0.58, 1] as const;
 
-/** Edge length of a partial cell's corner notch, as a share of the cell (T-24). */
+/** Edge length of a partial cell's corner notch, as a share of the cell. */
 export const notchShare = 0.22;
 
 function hexChannels(hex: string): [number, number, number] {
@@ -313,8 +306,8 @@ function mixHex(from: string, to: string, share: number): string {
 }
 
 /**
- * The fill of a completion cell at `level` (V3-05): the one accent mixed into
- * the track. One meaning for colour — never a habit or category hue (T-05).
+ * The fill of a completion cell at `level`: the one accent mixed into the track. One
+ * meaning for colour, never a habit or category hue.
  */
 export function intensityColor(
 	level: IntensityLevel,
@@ -332,7 +325,6 @@ function luminance([red, green, blue]: [number, number, number]): number {
 	return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
 }
 
-/** WCAG contrast ratio of two `#rrggbb` / `rgb(r,g,b)` colours. */
 export function contrastRatio(first: string, second: string): number {
 	const parse = (color: string): [number, number, number] =>
 		color.startsWith("rgb(")
@@ -345,7 +337,6 @@ export function contrastRatio(first: string, second: string): number {
 	return (lighter + 0.05) / (darker + 0.05);
 }
 
-/** The text colour that reads best on `fill`: ink or onAccent, whichever contrasts more. */
 export function readableInk(fill: string, scheme: ColorScheme): string {
 	const { ink, onAccent } = surfaceColors[scheme];
 	return contrastRatio(fill, ink) >= contrastRatio(fill, onAccent)
@@ -354,8 +345,8 @@ export function readableInk(fill: string, scheme: ColorScheme): string {
 }
 
 /**
- * Today's ring on a cell (V3-05): a gap in the surface colour, then the ink.
- * A `boxShadow`, so it hugs the cell's radius without taking layout space.
+ * Today's ring on a cell: a gap in the surface colour, then the ink. A `boxShadow`, so it
+ * hugs the cell's radius without taking layout space.
  */
 export function todayRingShadow(surface: string, scheme: ColorScheme): string {
 	return `0 0 0 1.5px ${surface}, 0 0 0 3px ${surfaceColors[scheme].ink}`;
