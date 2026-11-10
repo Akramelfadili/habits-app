@@ -6,9 +6,9 @@ import { CompletionCell } from "./completion-cell";
 import type { CompletionRowsCell } from "./completion-rows";
 
 /** V3-06's week matrix cell (T-10): 24 pt, below 44 by design — not tappable. */
-export const MATRIX_CELL = 24;
+const MATRIX_CELL = 24;
 /** The AX3 / one-habit block's cell: 40 pt. */
-export const BLOCK_CELL = 40;
+const BLOCK_CELL = 40;
 const TOTAL_WIDTH = 32;
 
 export type MatrixDayHeader = {

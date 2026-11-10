@@ -20,7 +20,8 @@ export function useProgressFilterQueries(): {
 		return {
 			active,
 			archived,
-			onlyHabit: habits.length === 1 && active.length === 1 ? active[0] : null,
+			onlyHabit:
+				habits.length === 1 && active.length === 1 ? (active[0] ?? null) : null,
 		};
 	}, [habits]);
 }

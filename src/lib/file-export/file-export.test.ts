@@ -21,7 +21,7 @@ jest.mock("expo-file-system", () => {
 		}
 		writeSync = (...args: unknown[]) => mockWrite(...args);
 		/** Like expo-file-system: the file keeps existing, at the target's uri. */
-		move(target: File) {
+		moveSync(target: File) {
 			mockDisk.delete(this.uri);
 			this.uri = target.uri;
 			mockDisk.add(this.uri);

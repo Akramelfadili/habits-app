@@ -1,4 +1,5 @@
 import { addDays, format, startOfDay } from "date-fns";
+import { atIndex } from "@/utils/indexed";
 import type { Entry } from "../types";
 import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
@@ -69,8 +70,8 @@ function spread(first: number, last: number, count: number): number[] {
  * none of them can run longer than 32 days.
  */
 function missedDays(habitId: number, index: number): Set<number> {
-	const { month, first, last } = MONTHS[index];
-	const count = MISS_COUNTS[habitId][index];
+	const { month, first, last } = atIndex(MONTHS, index);
+	const count = MISS_COUNTS[habitId]?.[index] ?? 0;
 	let days = spread(first, last, count);
 	if (habitId === IDS.water) {
 		if (month === 5) days = [3, 8, 14, 20];

@@ -4,7 +4,7 @@ import { useTheme } from "@/theme/use-theme";
 import { CompletionRows, type CompletionRowsCell } from "./completion-rows";
 
 /** V3-06's month calendar cell (T-10): 40 pt, a real tap target with its day number. */
-export const CALENDAR_CELL = 40;
+const CALENDAR_CELL = 40;
 
 type MonthCalendarProps = {
 	/** Seven weekday letters, Monday first. */

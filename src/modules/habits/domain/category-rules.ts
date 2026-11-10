@@ -1,3 +1,4 @@
+import { atIndex } from "@/utils/indexed";
 import { CATEGORY_ROTATION, OTHER_CATEGORY_NAME } from "../constants";
 import type {
 	Category,
@@ -57,7 +58,7 @@ export function nextCategoryAppearance(
 		(slot) => customs.filter((custom) => sameAppearance(custom, slot)).length,
 	);
 	const fewest = Math.min(...uses);
-	return CATEGORY_ROTATION[uses.indexOf(fewest)];
+	return atIndex(CATEGORY_ROTATION, uses.indexOf(fewest));
 }
 
 /**

@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
+import { log } from "@/lib/logger/logger";
 import { useScreenReader } from "./use-screen-reader";
 
 describe("useScreenReader", () => {
@@ -41,5 +42,19 @@ describe("useScreenReader", () => {
 
 		await unmount();
 		expect(remove).toHaveBeenCalled();
+	});
+
+	it("logs a warning and stays false when the probe rejects", async () => {
+		const warn = jest.spyOn(log, "warn").mockImplementation(() => {});
+		const failure = new Error("probe failed");
+		jest
+			.spyOn(AccessibilityInfo, "isScreenReaderEnabled")
+			.mockRejectedValue(failure);
+		const { result } = await renderHook(() => useScreenReader());
+		await act(async () => {});
+		expect(result.current).toBe(false);
+		expect(warn).toHaveBeenCalledWith("a11y.screen_reader_read_failed", {
+			error: failure,
+		});
 	});
 });

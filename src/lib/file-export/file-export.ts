@@ -47,7 +47,7 @@ export function promoteScratchFile(
 	const target = new File(exportsDirectory(), finalName);
 	if (target.exists) target.delete();
 	const file = new File(scratch.uri);
-	file.move(target);
+	file.moveSync(target);
 	return { uri: file.uri, name: finalName, sizeBytes: file.size };
 }
 

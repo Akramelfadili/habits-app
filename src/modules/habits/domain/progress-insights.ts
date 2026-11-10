@@ -21,7 +21,7 @@ import { yearUnlock } from "./yearly-summary";
  * Archived habits are never named or offered as an action target.
  */
 
-export const MAX_PROGRESS_INSIGHTS = 3;
+const MAX_PROGRESS_INSIGHTS = 3;
 
 export type InsightTone = "warning" | "positive" | "neutral";
 

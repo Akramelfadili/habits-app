@@ -2,13 +2,15 @@
 
 | Command | What it does | When |
 |---|---|---|
-| `make check` | `biome check .` (no writes) → `tsc --noEmit` → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` → `check-repo-hygiene` → `check-doc-refs` | by hand, and on every `git push` (`.husky/pre-push`, which adds `JEST_ARGS=--maxWorkers=2`; CI and a hand run use all cores) |
+| `make check` | `biome check .` (no writes) → `tsc --noEmit` → `tsc -p tsconfig.strict.json` (see "Strict project") → Jest → Jest perf tests (`make test-perf`, in band) → `node --test scripts/**/*.test.mjs` → `check-architecture` → `check-repo-hygiene` → `check-doc-refs` | by hand, and on every `git push` (`.husky/pre-push`, which adds `JEST_ARGS=--maxWorkers=2`; CI and a hand run use all cores) |
 | `make check-repo-hygiene` (in `make check`) | `scripts/check-repo-hygiene.mjs`: fails if a tracked file is a secret/env/signing file, log, OS/editor file, archive, generated output, `ios/`, `android/` or `node_modules`, is over 1 MB outside a short allowlist, or contains a private-key header, AWS/Google/GitHub token shape or a literal `password = "..."` | every `make check` |
 | `make check-doc-refs` (in `make check`) | `scripts/check-doc-refs.mjs`: fails if a backticked path or markdown link in a tracked `.md`, `CLAUDE.md` or `.claude/` points at a file that does not exist, or a `` `path` § "Heading" `` / `→ "Heading"` reference names a heading the file lacks. Skips URLs, anchors, globs, `<placeholders>`, and `docs/archive/`; exceptions are in the script's `ALLOWLIST` (it only shrinks). Tested by `check-doc-refs.test.mjs` | in `make check` |
 | `.github/workflows/secret-scan.yml` / `make secrets` | gitleaks (pinned version, SHA-256 verified, `--redact`, full history, config `.gitleaks.toml`). Bump version and hash together | every pull request and push to `master`; locally with `make secrets` |
 | `make clean` / `make clean-all` | `git clean -fdX` on explicit ignored paths only (dry-run listing first). `clean-all` adds `.expo` and the mockup PNGs (re-run `npm run mockups:render`) | by hand |
 | `npm run lint` / `make lint-check` / `make lint` | `npm run lint` and `make lint-check` are Biome **without writes** (what `make check` runs); `make lint` is `biome check --write .` and **rewrites files** | by hand |
 | `.github/workflows/check.yml` | `npm ci` → `make check-ci` (`make check` + `make test-slow` + `make test-tz`) on Node from `.nvmrc` (npm cache) | every pull request and every push to `master` |
+| `make coverage` (`npm run coverage`) | Jest with coverage (`collectCoverageFrom`: `src/**` minus tests, `test-support` and `*.d.ts`) and the floors in `package.json` → `coverageThreshold`: global 96 % lines / 90 % branches / 93 % functions (Jest computes "global" without the two folders that have their own floor, so it is below the 94.2 % overall), 98 % lines for `modules/habits/domain/` and `modules/habits/strategies/`. Fails under a floor. **Thresholds may only go up**: raise them when a batch lifts the numbers, never lower one to make a run pass (add the missing test). Output goes to the gitignored `coverage/` | by hand; CI job `coverage`. Not in `make check` (a coverage run is about twice as slow) |
+| `.github/workflows/check.yml` job `coverage` | `npm ci` → `make coverage`, in parallel with `check` and `release-bundle`; not part of `make check-ci`; coverage output is not uploaded or committed | every pull request and push to `master` |
 | `.github/workflows/check.yml` job `release-bundle` | `npm ci` → `make release-check` (production iOS export, dev-only code scan, bundle-size ratchet; `docs/how-to/release.md`) | in parallel with `check`, same triggers |
 | `.github/workflows/ios-simulator.yml` (manual) | builds the app for the iOS Simulator, opens every visual-check state on it (`scripts/device-validation/`), records the flows in `scripts/device-validation/flows/` on video and writes a web-vs-simulator contact sheet | `gh workflow run ios-simulator.yml`; never on a push or PR. See `docs/how-to/device-validation.md` and ADR 007 |
 | `npm run test:perf` (`make test-perf`) | only the `*.perf.test.ts(x)` timing tests, in band (`--runInBand`), after the main Jest run, so parallel workers cannot skew their thresholds. The default run ignores them. Thresholds are unchanged | every `make check` and pre-push |
@@ -16,7 +18,7 @@
 | `make test-tz` | the domain, `src/utils` and `src/test-support` tests again with `JEST_TZ` = UTC, Europe/Paris and Pacific/Auckland (`make test` runs in America/Los_Angeles); see "Time zones in tests" below | CI (`make check-ci`); by hand after date changes. Not in `make check` / pre-push |
 | `.husky/pre-commit` | `biome check --staged --no-errors-on-unmatched` only: the staged files, **no writes**, so the commit holds exactly what was checked (fix with `make lint` or the format hook, then re-stage) | every `git commit` |
 | Claude Code `PostToolUse` → `.claude/hooks/format.sh` | Biome-fixes the single file that was just edited with Edit/Write | after every Edit/Write |
-| Claude Code `Stop` → `.claude/hooks/verify.sh` | on a dirty tree: (`tsc --incremental` if a `.ts`/`.tsx` file changed) → `check-architecture` → (`test:tooling` if `scripts/` changed) → `jest --onlyChanged`; exit 2 blocks the stop. Skipped on a clean tree, when only `*.md` or `docs/` changed, and when `stop_hook_active` | when Claude finishes a turn |
+| Claude Code `Stop` → `.claude/hooks/verify.sh` | on a dirty tree: (`tsc --incremental` and the strict project if a `.ts`/`.tsx` file changed) → `check-architecture` → (`test:tooling` if `scripts/` changed) → `jest --onlyChanged`; exit 2 blocks the stop. Skipped on a clean tree, when only `*.md` or `docs/` changed, and when `stop_hook_active` | when Claude finishes a turn |
 | `npm run check-architecture` | the architecture rules below | part of all of the above |
 | `npm run deadcode` / `deadcode:all` | knip: unused files, exports, dependencies (**report only**, not in `make check`) | before cleanup PRs |
 | `npm run ratchet:update` | rewrites `src/theme/token-ratchet.baseline.json` to the current (lower) counts | after removing design-token escapes |
@@ -24,6 +26,20 @@
 | `src/components/ui/touch-targets.guard.test.ts` (in `make check`) | reads every `Pressable` / `Touchable*` in `src/` and fails unless its style and `hitSlop` prove 44 × 44 pt, or it has a reasoned exception in the file; a stale exception fails too | every Jest run |
 | `npm run visual-check` | renders every screen/state on web (2 pages at a time), diffs vs `docs/visual-baseline/`; a state that differs or errors is re-captured once before it is reported | per feature; never gate commits on it |
 | `src/lib/db/migrations.safety.test.ts` (in `make check`) | journal / snapshot / file parity, every migration step upgraded from a seeded DB with FK on and off, a committed V1-era DB (`src/lib/db/__fixtures__/v1-era-0008.sql`) upgraded to HEAD, and a drizzle-kit drift check against `schema.ts` | every Jest run |
+
+## Strict project (`tsconfig.strict.json`)
+
+`tsconfig.json` is `strict` plus `noFallthroughCasesInSwitch`, `noUnusedLocals`, `noUnusedParameters` and `noImplicitOverride`. `tsconfig.strict.json` extends it with **`noUncheckedIndexedAccess`**, so `items[i]` is `T | undefined` and a computed-offset off-by-one fails the build, not a release. It runs as `make typecheck-strict` (inside `make check`, about 4 s warm, 10 s cold, incremental via `tsconfig.strict.tsbuildinfo`) and in the Stop hook whenever a `.ts`/`.tsx` file changed.
+
+**Exclusions** (one commented list in the file, which may only shrink): `**/*.test.ts(x)` and `**/test-support/**`, about 400 errors, mostly `result[0]` after an assertion (counts in `docs/backlog.md`). `exclude` only removes *root* files: a file that production code imports is checked anyway, which is why the dev fixtures are fixed, not excluded.
+
+**To shrink the list:** delete one pattern (or narrow it to a folder), run `npx tsc -p tsconfig.strict.json --noEmit`, fix every error, run that folder's tests, commit. Fix with narrowing or an early return; `atIndex(items, i)` for a list built to be long enough (fixed-size grids, cells aligned with a date list: it throws a `RangeError` naming the index); `present(value, "what")` for a row an INSERT/UPDATE returns; `Array.at()` with a guard. No blanket `!` and no `as` to silence it; a `!` needs a one-line comment saying why it cannot be undefined.
+
+**Parked flags** (not on, counts in `docs/backlog.md` § Parked): `noPropertyAccessFromIndexSignature` (style only) and `exactOptionalPropertyTypes`.
+
+## Floating promises (Biome `nursery/noFloatingPromises`)
+
+On as an error in `biome.json` (Biome 2.5; type-aware, so `biome check` takes a few seconds longer). A promise is awaited, returned, handled with `.catch`, or deliberately dropped with `void` and a one-line comment saying why that is safe. Never silence it with a `biome-ignore`. In tests, `await` `fireEvent.*` and `act(...)`.
 
 ## `check-architecture` rules (`scripts/check-architecture.mjs`)
 

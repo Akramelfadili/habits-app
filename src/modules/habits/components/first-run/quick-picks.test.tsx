@@ -21,7 +21,7 @@ describe("QuickPicks (FR2)", () => {
 		const onPick = jest.fn();
 		await render(<QuickPicks selectedName="" onPick={onPick} />);
 		const second = findSuggestion(FIRST_RUN_QUICK_PICK_IDS[1]);
-		fireEvent.press(screen.getByText(second?.name ?? ""));
+		await fireEvent.press(screen.getByText(second?.name ?? ""));
 		expect(onPick).toHaveBeenCalledWith(second);
 	});
 });

@@ -9,6 +9,7 @@ import type {
 	WeekBlockData,
 } from "@/components/ui/composite/week-matrix";
 import { fromDayKey } from "@/utils/day-key";
+import { atIndex } from "@/utils/indexed";
 import type { CellStatus } from "../domain/day-status";
 import type {
 	CalendarDay,
@@ -239,7 +240,7 @@ export function weekdayRunLabel(weekdays: readonly number[]): string {
 	const runs: number[][] = [];
 	for (const day of sorted) {
 		const last = runs[runs.length - 1];
-		if (last && day === last[last.length - 1] + 1) last.push(day);
+		if (last && day === atIndex(last, last.length - 1) + 1) last.push(day);
 		else runs.push([day]);
 	}
 	return runs
@@ -260,7 +261,9 @@ export function weekStartedNote(
 	const before = matrix.days
 		.map((_, index) => index)
 		.filter((index) =>
-			matrix.rows.every((row) => row.cells[index].status === "before-start"),
+			matrix.rows.every(
+				(row) => atIndex(row.cells, index).status === "before-start",
+			),
 		)
 		.map((index) => index + 1);
 	if (before.length === 0) return null;

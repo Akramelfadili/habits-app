@@ -1,5 +1,6 @@
 import { isAfter, isSameDay, startOfDay } from "date-fns";
 import { nextDay, toDayKey } from "@/utils/day-key";
+import { atIndex } from "@/utils/indexed";
 import type { Entry, FrozenDay, Habit } from "../types";
 import {
 	addToTally,
@@ -126,7 +127,7 @@ export function aggregateDays(
 			STATUSES.map((status) => [status, 0]),
 		) as Record<CellStatus, number>;
 		for (const { cells } of perHabit) {
-			const cell = cells[index];
+			const cell = atIndex(cells, index);
 			addToTally(tally, cell);
 			counts[cell.status] += 1;
 		}

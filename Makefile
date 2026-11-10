@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
+.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling coverage lint lint-check typecheck typecheck-strict check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -29,6 +29,9 @@ test-tz: ## Run the domain and utils tests in three more zones (UTC, Europe/Pari
 	JEST_TZ=Europe/Paris npx jest src/utils src/test-support src/modules/habits/domain
 	JEST_TZ=Pacific/Auckland npx jest src/utils src/test-support src/modules/habits/domain
 
+coverage: ## Run Jest with coverage and fail under the thresholds in package.json (global 96 lines / 90 branches / 93 functions, domain and strategies 98 lines; not part of `make check`; they may only go up)
+	npm run coverage
+
 test-tooling: ## Run the tests for scripts/ (check-architecture rules) with node --test
 	npm run test:tooling
 
@@ -40,6 +43,9 @@ lint-check: ## Lint with Biome without changing files (what `make check` and pre
 
 typecheck: ## Run TypeScript's type checker
 	npx tsc --noEmit
+
+typecheck-strict: ## Run tsc with noUncheckedIndexedAccess on production code (tsconfig.strict.json; tests and dev fixtures are excluded there)
+	npx tsc -p tsconfig.strict.json --noEmit --incremental
 
 doctor: ## Diagnose Expo dependency/config issues
 	npx expo-doctor
@@ -60,7 +66,7 @@ secrets: ## Scan the git history for secrets with gitleaks (same config as CI; -
 deadcode: ## Report unused files/exports/dependencies with knip (report only; not part of `make check`)
 	-npm run deadcode
 
-check: lint-check typecheck test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references
+check: lint-check typecheck typecheck-strict test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + strict tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references
 
 check-ci: check test-slow test-tz ## The CI gate (.github/workflows/check.yml): `make check` plus the slow tests and the time-zone runs
 
@@ -80,7 +86,7 @@ visual-baseline: ## Accept the current renders as the new baseline (review the r
 # and untracked-but-not-ignored files, the paths are explicit (never a bare
 # `git clean`), and node_modules and git state are never touched. A dry run
 # lists what will go before the real run.
-CLEAN_PATHS = .visual-checks .e2e-output tsconfig.tsbuildinfo tmp scratch
+CLEAN_PATHS = .visual-checks .e2e-output tsconfig.tsbuildinfo tsconfig.strict.tsbuildinfo tmp scratch
 CLEAN_ALL_PATHS = $(CLEAN_PATHS) .expo docs/mockups/v3/renders
 
 clean: ## Delete ignored local output: .visual-checks, .e2e-output, tsbuildinfo, tmp/, scratch/ (lists first)

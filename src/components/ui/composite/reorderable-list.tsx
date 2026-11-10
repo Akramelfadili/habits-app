@@ -10,6 +10,7 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { DragHandle } from "@/components/ui/primitives/drag-handle";
 import { MoveButton } from "@/components/ui/primitives/move-button";
+import { atIndex } from "@/utils/indexed";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import {
 	dragTargetIndex,
@@ -202,8 +203,9 @@ export function ReorderableList<T>({
 	const runs: { key: string; start: number; end: number }[] = [];
 	for (let i = 0; i < shown.length; i += 1) {
 		const last = runs[runs.length - 1];
-		if (last && groups[i] === last.key) last.end = i;
-		else runs.push({ key: groups[i], start: i, end: i });
+		const group = atIndex(groups, i); // `groups` is `shown` mapped, so same length
+		if (last && group === last.key) last.end = i;
+		else runs.push({ key: group, start: i, end: i });
 	}
 	return (
 		<View>

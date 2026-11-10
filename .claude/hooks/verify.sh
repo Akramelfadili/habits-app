@@ -35,6 +35,7 @@ fail() {
 
 if printf '%s\n' "$CODE" | grep -q -E '\.tsx?$'; then
   OUTPUT=$(npx tsc --noEmit --incremental 2>&1) || fail "typecheck (tsc)" "$OUTPUT"
+  OUTPUT=$(npx tsc -p tsconfig.strict.json --noEmit --incremental 2>&1) || fail "typecheck (tsc, strict project)" "$OUTPUT"
 fi
 OUTPUT=$(node scripts/check-architecture.mjs 2>&1) || fail "check-architecture" "$OUTPUT"
 # The architecture script's own tests, only when scripts/ changed.

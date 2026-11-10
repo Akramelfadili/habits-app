@@ -4,7 +4,7 @@ import { isDeviceValidationBuild } from "./enabled";
 /** A state to open at launch: the visual-check route and the clock it is pinned to. */
 export type LaunchRequest = { route: string; clock?: string };
 
-export const LAUNCH_REQUEST_FILE = "dev-state.json";
+const LAUNCH_REQUEST_FILE = "dev-state.json";
 
 /**
  * The CI driver writes `Documents/dev-state.json` into the app's data

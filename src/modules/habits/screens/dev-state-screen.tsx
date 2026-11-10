@@ -44,7 +44,8 @@ export function DevStateScreen() {
 		if (!enabled || !route || !deviceState) return;
 		let cancelled = false;
 		const [, query = ""] = route.split("?");
-		(async () => {
+		// Fire-and-forget: `applyDeviceState` never rejects (it logs and carries on), and the effect has nothing to await it with.
+		void (async () => {
 			await deviceState.applyDeviceState(`?${query}`, clock ?? null);
 			if (!cancelled) router.replace(route as Href);
 		})();

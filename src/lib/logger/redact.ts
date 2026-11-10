@@ -18,7 +18,7 @@ import type { LogEntry, LogFields, SerializedError } from "./types";
  *
  * To log a new field, add its name here. That is a deliberate, reviewable step.
  */
-export const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
+const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"habitId",
 	"categoryId",
 	"reminderId",
@@ -39,7 +39,7 @@ export const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"withReminders",
 ]);
 
-export const TOKEN_FIELDS: ReadonlySet<string> = new Set([
+const TOKEN_FIELDS: ReadonlySet<string> = new Set([
 	"scope",
 	"reason",
 	"kind",
@@ -62,7 +62,8 @@ const QUOTED_SEGMENT = /(["'`‘“])[^"'`’”]*(["'`’”])/g;
 function scrubMessage(raw: string): string {
 	// Drizzle's "Failed query: <sql>\nparams: <values>" carries the written
 	// values unquoted (a habit or category name) — keep the SQL, drop the params.
-	const withoutParams = raw.split(/\r?\nparams:/i)[0];
+	// split() always yields at least one piece; `?? raw` only satisfies the type.
+	const withoutParams = raw.split(/\r?\nparams:/i)[0] ?? raw;
 	const scrubbed = withoutParams.replace(QUOTED_SEGMENT, "$1…$2");
 	return scrubbed.length > MAX_MESSAGE_LENGTH
 		? `${scrubbed.slice(0, MAX_MESSAGE_LENGTH)}…`

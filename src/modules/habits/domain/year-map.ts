@@ -8,6 +8,7 @@ import {
 	isSameMonth,
 	startOfDay,
 } from "date-fns";
+import { atIndex } from "@/utils/indexed";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { percentOf } from "./completion-rate";
 import { aggregateDays, classifyHabits, daysIn } from "./day-grid";
@@ -85,7 +86,7 @@ export function buildYearMap(input: YearMapInput): YearMap {
 	const dates = daysIn(year.start, year.end);
 	const { classified } = input;
 	const offset = classified
-		? differenceInCalendarDays(year.start, classified.dates[0])
+		? differenceInCalendarDays(year.start, atIndex(classified.dates, 0))
 		: 0;
 	const perHabit = classified
 		? classified.perHabit.map(({ habit, cells }) => ({

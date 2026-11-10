@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { reminders } from "@/lib/db/schema";
 import { useLiveRows } from "@/lib/db/use-live-rows";
+import { present } from "@/utils/indexed";
 import type {
 	CreateReminderInput,
 	IsoWeekday,
@@ -84,7 +85,7 @@ export async function createReminder(
 			createdAt: new Date(),
 		})
 		.returning();
-	return rowToReminder(row);
+	return rowToReminder(present(row, "the reminder row"));
 }
 
 /**
@@ -105,7 +106,7 @@ export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
 			createdAt: reminder.createdAt ?? new Date(),
 		})
 		.returning();
-	return rowToReminder(row);
+	return rowToReminder(present(row, "the reminder row"));
 }
 
 export async function updateReminder(
@@ -120,7 +121,7 @@ export async function updateReminder(
 		})
 		.where(eq(reminders.id, id))
 		.returning();
-	return rowToReminder(row);
+	return rowToReminder(present(row, "the reminder row"));
 }
 
 export async function deleteReminder(id: number): Promise<void> {

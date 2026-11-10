@@ -26,7 +26,7 @@ export function shiftClockTo(value: string | null): boolean {
 			}
 		}
 
-		static now(): number {
+		static override now(): number {
 			return RealDate.now() + offset;
 		}
 	}

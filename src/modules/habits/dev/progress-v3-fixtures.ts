@@ -1,4 +1,4 @@
-import { addDays, format, parseISO } from "date-fns";
+import { addDays, parseISO } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
 import type { Entry, FrozenDay } from "../types";
 import { builtInFixture } from "./category-fixtures";
@@ -228,9 +228,3 @@ export function progressV3FrozenDays(
 		createdAt: parseISO(`${date}T09:00:00`),
 	}));
 }
-
-/** The week of the frames, for the visual-check interactions. */
-export const PROGRESS_V3_FRIDAY = format(
-	parseISO("2026-10-23T09:00:00"),
-	"yyyy-MM-dd",
-);

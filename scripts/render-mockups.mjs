@@ -313,4 +313,4 @@ async function main() {
 	if (failed) process.exit(1);
 }
 
-main();
+await main();

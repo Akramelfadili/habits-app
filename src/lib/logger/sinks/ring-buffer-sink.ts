@@ -4,7 +4,7 @@ import {
 } from "../repositories/log-repository";
 import type { LogEntry, LogSink } from "../types";
 
-export const RING_SIZE = 500;
+const RING_SIZE = 500;
 const FLUSH_DELAY_MS = 2000;
 /** More than this waiting means the store is stuck: drop the oldest, never grow. */
 const MAX_PENDING = 200;
@@ -44,6 +44,7 @@ export function createRingBufferSink(
 		const batch = pending;
 		pending = [];
 		if (batch.length === 0) return chain;
+		// A failed write drops its batch (logging must never throw into the app) but keeps the chain alive for the next one.
 		chain = chain.then(() => store.append(batch, keep)).catch(() => undefined);
 		return chain;
 	}

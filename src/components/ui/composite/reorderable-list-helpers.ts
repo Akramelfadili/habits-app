@@ -70,13 +70,12 @@ export function moveItem<T>(
 	to: number,
 ): T[] {
 	const next = [...items];
-	const [moved] = next.splice(from, 1);
-	next.splice(to, 0, moved);
+	next.splice(to, 0, ...next.splice(from, 1));
 	return next;
 }
 
 /** How long a dropped or displaced row takes to settle; none with Reduce Motion on. */
-export const SETTLE_MS = 150;
+const SETTLE_MS = 150;
 
 export function settleDuration(reducedMotion: boolean): number {
 	return reducedMotion ? 0 : SETTLE_MS;

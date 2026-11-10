@@ -1,4 +1,5 @@
 import { getISODay, subDays } from "date-fns";
+import { atIndex } from "@/utils/indexed";
 import type { Habit, IsoWeekday } from "../types";
 import {
 	builtInFixture,
@@ -800,7 +801,7 @@ function withLongNames(habits: FixtureHabit[]): FixtureHabit[] {
 		return habits;
 	return habits.map((habit, index) =>
 		index < LONG_FIXTURE_NAMES.length
-			? { ...habit, name: LONG_FIXTURE_NAMES[index] }
+			? { ...habit, name: atIndex(LONG_FIXTURE_NAMES, index) }
 			: habit,
 	);
 }

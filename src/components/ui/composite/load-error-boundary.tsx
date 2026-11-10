@@ -23,13 +23,13 @@ export class LoadErrorBoundary extends Component<
 	LoadErrorBoundaryProps,
 	LoadErrorBoundaryState
 > {
-	state: LoadErrorBoundaryState = { failed: false, attempt: 0 };
+	override state: LoadErrorBoundaryState = { failed: false, attempt: 0 };
 
 	static getDerivedStateFromError(): Partial<LoadErrorBoundaryState> {
 		return { failed: true };
 	}
 
-	componentDidCatch(error: Error) {
+	override componentDidCatch(error: Error) {
 		log.warn("boundary.load_failed", { scope: this.props.scope, error });
 	}
 
@@ -37,7 +37,7 @@ export class LoadErrorBoundary extends Component<
 		this.setState((state) => ({ failed: false, attempt: state.attempt + 1 }));
 	};
 
-	render() {
+	override render() {
 		if (this.state.failed) return this.props.fallback(this.retry);
 		return (
 			<FragmentKeyed key={this.state.attempt}>

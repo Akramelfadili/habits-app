@@ -9,6 +9,7 @@ import {
 	reminders,
 } from "@/lib/db/schema";
 import { runInTransaction } from "@/lib/db/transaction";
+import { present } from "@/utils/indexed";
 import { SEEN_FIRST_RUN_SETTING_KEY } from "../constants";
 import {
 	reminderWeekdays,
@@ -33,7 +34,12 @@ export async function countUserData(): Promise<UserDataCounts> {
 		db.select({ n: count() }).from(entryNotes),
 		db.select({ n: count() }).from(frozenDays),
 	]);
-	return { entries: e.n, notes: n.n, frozenDays: f.n };
+	// An aggregate select without GROUP BY always returns one row.
+	return {
+		entries: present(e, "an entries count").n,
+		notes: present(n, "a notes count").n,
+		frozenDays: present(f, "a frozen-days count").n,
+	};
 }
 
 export type AppliedStarterHabit = {

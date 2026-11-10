@@ -154,7 +154,7 @@ export function monthlyEntries(tooEarly: boolean): Entry[] {
 		return entriesFor(
 			daysOf(startOfDay(new Date(2026, 8, 4)), 12),
 			(habitId, _day, dayOfMonth) =>
-				TOO_EARLY_MISSES[habitId].includes(dayOfMonth),
+				TOO_EARLY_MISSES[habitId]?.includes(dayOfMonth) ?? false,
 		);
 	}
 	const frozen = new Set(
@@ -163,12 +163,12 @@ export function monthlyEntries(tooEarly: boolean): Entry[] {
 	const july = entriesFor(
 		daysOf(startOfDay(new Date(2026, 6, 1)), 31),
 		(habitId, _day, dayOfMonth) =>
-			spreadMisses(31 - JULY_DONE[habitId]).includes(dayOfMonth),
+			spreadMisses(31 - (JULY_DONE[habitId] ?? 31)).includes(dayOfMonth),
 	);
 	const august = entriesFor(
 		daysOf(startOfDay(new Date(2026, 7, 1)), 31),
 		(habitId, _day, dayOfMonth) =>
-			AUGUST_MISSES[habitId].includes(dayOfMonth) ||
+			AUGUST_MISSES[habitId]?.includes(dayOfMonth) ||
 			frozen.has(`${habitId}:${dayOfMonth}`),
 	);
 	return [...july, ...august].map((entry, index) => ({

@@ -52,8 +52,9 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 		if (width > 0) setIndex(Math.round(nativeEvent.contentOffset.x / width));
 	};
 
-	if (count === 0) return null;
-	if (count === 1) return <InsightCard {...insights[0]} />;
+	const first = insights[0];
+	if (!first) return null;
+	if (count === 1) return <InsightCard {...first} />;
 
 	return (
 		<View
@@ -90,7 +91,7 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 				// text ran off the edge on one line. Until then the first card sits in
 				// the pager's own column, which wraps it at the real width.
 				<InsightCard
-					{...insights[0]}
+					{...first}
 					position={{
 						label: positionLabel(0, count),
 						onStep: (direction) => goTo(direction),
