@@ -20,6 +20,12 @@ jest.mock("expo-file-system", () => {
 			mockDisk.add(this.uri);
 		}
 		writeSync = (...args: unknown[]) => mockWrite(...args);
+		/** Like expo-file-system: the file keeps existing, at the target's uri. */
+		move(target: File) {
+			mockDisk.delete(this.uri);
+			this.uri = target.uri;
+			mockDisk.add(this.uri);
+		}
 		delete() {
 			if (mockStuck.has(this.uri)) throw new Error("Operation not permitted");
 			mockEvents.push(`delete ${this.uri}`);
@@ -51,7 +57,14 @@ jest.mock("expo-sharing", () => ({
 }));
 
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
-import { clearExports, shareFile, shareText } from "./file-export";
+import {
+	clearExports,
+	discardFile,
+	promoteScratchFile,
+	shareFile,
+	shareText,
+	writeScratchFile,
+} from "./file-export";
 
 beforeEach(() => {
 	jest.clearAllMocks();
@@ -147,5 +160,55 @@ describe("clearExports", () => {
 		mockDisk.add("cache/exports/export-1.partial");
 		clearExports();
 		expect([...mockDisk]).toEqual([]);
+	});
+});
+
+describe("scratch files", () => {
+	it("writes the text to a .partial file in the exports folder", () => {
+		const scratch = writeScratchFile("{}");
+		expect(mockWrite).toHaveBeenCalledWith("{}", { encoding: "utf8" });
+		expect(scratch.name).toMatch(/^export-\d+\.partial$/);
+		expect(scratch.uri).toBe(`cache/exports/${scratch.name}`);
+		expect(scratch.sizeBytes).toBe(3);
+		expect(mockDisk.has(scratch.uri)).toBe(true);
+	});
+
+	it("promotes a scratch file to its final name and leaves no .partial behind", () => {
+		const scratch = writeScratchFile("{}");
+		const done = promoteScratchFile(scratch, "habits-2026-11-10.json");
+		expect(done).toEqual({
+			uri: "cache/exports/habits-2026-11-10.json",
+			name: "habits-2026-11-10.json",
+			sizeBytes: 3,
+		});
+		expect([...mockDisk]).toEqual(["cache/exports/habits-2026-11-10.json"]);
+	});
+
+	it("replaces an earlier export of the same name when promoting", () => {
+		mockDisk.add("cache/exports/habits-2026-11-10.json");
+		const scratch = writeScratchFile("{}");
+		promoteScratchFile(scratch, "habits-2026-11-10.json");
+		expect(mockEvents).toEqual(["delete cache/exports/habits-2026-11-10.json"]);
+		expect([...mockDisk]).toEqual(["cache/exports/habits-2026-11-10.json"]);
+	});
+});
+
+describe("discardFile", () => {
+	it("deletes a file that exists", () => {
+		mockDisk.add("file:///exports/a.json");
+		discardFile("file:///exports/a.json");
+		expect(mockDisk.has("file:///exports/a.json")).toBe(false);
+	});
+
+	it("does nothing for a file that is already gone", () => {
+		expect(() => discardFile("file:///exports/gone.json")).not.toThrow();
+		expect(mockEvents).toEqual([]);
+	});
+
+	it("swallows a delete that throws, and says nothing", () => {
+		mockDisk.add("file:///exports/stuck.json");
+		mockStuck.add("file:///exports/stuck.json");
+		expect(() => discardFile("file:///exports/stuck.json")).not.toThrow();
+		expect(mockDisk.has("file:///exports/stuck.json")).toBe(true);
 	});
 });
