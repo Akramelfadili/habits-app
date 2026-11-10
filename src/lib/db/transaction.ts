@@ -42,6 +42,7 @@ export function runInTransaction<T>(work: () => Promise<T>): Promise<T> {
 		}
 	};
 	const next = queue.then(execute, execute);
+	// Only keeps the queue running after a failure; the caller still gets the rejection through `next`.
 	queue = next.catch(() => undefined);
 	return next;
 }

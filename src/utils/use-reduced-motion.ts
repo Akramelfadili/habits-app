@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AccessibilityInfo } from "react-native";
+import { log } from "@/lib/logger/logger";
 
 /**
  * True while the OS "Reduce Motion" setting is on, and live as it changes.
@@ -17,7 +18,9 @@ export function useReducedMotion(): boolean {
 			.then((enabled) => {
 				if (active) setReduced(enabled);
 			})
-			.catch(() => {});
+			.catch((error) => {
+				log.warn("a11y.reduce_motion_read_failed", { error });
+			});
 		const subscription = AccessibilityInfo.addEventListener(
 			"reduceMotionChanged",
 			setReduced,

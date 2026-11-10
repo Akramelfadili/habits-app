@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AccessibilityInfo } from "react-native";
+import { log } from "@/lib/logger/logger";
 
 /**
  * True while the OS "Reduce Transparency" setting is on, and live as it
@@ -27,7 +28,9 @@ export function useReducedTransparency(): boolean {
 			.then((enabled) => {
 				if (active) setReduced(enabled);
 			})
-			.catch(() => {});
+			.catch((error) => {
+				log.warn("a11y.reduce_transparency_read_failed", { error });
+			});
 		const subscription = AccessibilityInfo.addEventListener(
 			"reduceTransparencyChanged",
 			setReduced,

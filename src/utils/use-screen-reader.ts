@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AccessibilityInfo, Platform } from "react-native";
+import { log } from "@/lib/logger/logger";
 
 /** True while VoiceOver / TalkBack is running, and live as it changes. */
 export function useScreenReader(): boolean {
@@ -14,7 +15,9 @@ export function useScreenReader(): boolean {
 			.then((value) => {
 				if (active) setEnabled(value);
 			})
-			.catch(() => {});
+			.catch((error) => {
+				log.warn("a11y.screen_reader_read_failed", { error });
+			});
 		const subscription = AccessibilityInfo.addEventListener(
 			"screenReaderChanged",
 			setEnabled,
