@@ -1,12 +1,10 @@
 /**
- * The message catalogue (HAB-48): every toast, banner and inline message the
- * module shows lives here, so wording, tone and timing are reviewed in one
- * place instead of being scattered across screens. New copy goes here; existing
- * strings move in as their screens are rebuilt in V3 (docs/specs/feature-spec-v3.md).
- *
- * Rules (D12): toasts report events, banners describe states that last. Copy
- * names the habit, date or count — never "Success!" or "Oops". Never put raw
- * error text in a message; that goes to the log.
+ * The message catalogue: every toast, banner and inline message the module shows lives
+ * here, so wording, tone and timing are reviewed in one place instead of being scattered
+ * across screens. New copy goes here; existing strings move in as their screens are rebuilt.
+ * Rules: toasts report events, banners describe states that last. Copy names the habit,
+ * date or count, never "Success!" or "Oops". Never put raw error text in a message; that
+ * goes to the log.
  */
 
 import { toastHoldMs } from "@/components/ui/composite/toast-host";
@@ -19,7 +17,6 @@ export type MessageTone = ToastTone;
 
 export type MessageSpec<Params extends readonly unknown[] = never[]> = {
 	tone: MessageTone;
-	/** Fixed copy, or copy built from what it names (habit, date, count). */
 	text: string | ((...params: Params) => string);
 	/**
 	 * How long a toast stays, in ms. Omit for the tone's default
@@ -28,7 +25,7 @@ export type MessageSpec<Params extends readonly unknown[] = never[]> = {
 	durationMs?: number | null;
 };
 
-/** How long `spec` stays on screen (HAB-48): the host's hold for its tone, or the Undo window when it offers Undo. */
+/** How long `spec` stays on screen: the host's hold for its tone, or the Undo window when it offers Undo. */
 export function defaultDurationMs(
 	spec: Pick<MessageSpec, "tone" | "durationMs">,
 	{ hasUndo = false }: { hasUndo?: boolean } = {},
@@ -41,7 +38,6 @@ export function defaultDurationMs(
 	});
 }
 
-/** The text of `spec`, with its params filled in. */
 export function messageText<Params extends readonly unknown[]>(
 	spec: MessageSpec<Params>,
 	...params: Params
@@ -49,14 +45,10 @@ export function messageText<Params extends readonly unknown[]>(
 	return typeof spec.text === "string" ? spec.text : spec.text(...params);
 }
 
-/** " · Wed 21 Oct" when a toast is about a day that isn't today (HAB-30, T10), else nothing. */
+/** " · Wed 21 Oct" when a toast is about a day that isn't today, else nothing. */
 const onDay = (day?: string) => (day ? ` · ${day}` : "");
 
-/**
- * The catalogue. Today's toasts live here (V3-2a); the rest of the module's
- * strings move in as their screens are rebuilt. `day` is the date to name
- * ("Wed 21 Oct") and is omitted for today.
- */
+/** The catalogue. `day` is the date to name ("Wed 21 Oct") and is omitted for today. */
 export const messages = {
 	completed: {
 		tone: "success",
@@ -82,7 +74,7 @@ export const messages = {
 		text: (habit: string, day?: string) =>
 			`Logged '${habit}' · off-schedule${onDay(day)}`,
 	},
-	/** D6: "Drink water +1 · 3 of 8 glasses". Above target it keeps counting: "9 of 8 glasses". */
+	/** "Drink water +1 · 3 of 8 glasses". Above target it keeps counting: "9 of 8 glasses". */
 	quantityAdded: {
 		tone: "success",
 		text: (
@@ -94,7 +86,7 @@ export const messages = {
 		) =>
 			`${habit} +1 · ${count} of ${target}${unit ? ` ${unit}` : ""}${onDay(day)}`,
 	},
-	/** RL2: a tap in Edit this day — "Read 20 min logged for Wed 21" — Undo targets that date. */
+	/** A tap in Edit this day: "Read 20 min logged for Wed 21"; Undo targets that date. */
 	dayLogged: {
 		tone: "success",
 		text: (habit: string, day: string) => `${habit} logged for ${day}`,
@@ -107,7 +99,7 @@ export const messages = {
 		tone: "success",
 		text: (habit: string, day: string) => `${habit} resisted on ${day}`,
 	},
-	/** QS1: closing the quantity sheet after changes that neither cross the target nor cover a frozen day: "Drink water · 6 of 8 glasses". */
+	/** Closing the quantity sheet after changes that neither cross the target nor cover a frozen day: "Drink water · 6 of 8 glasses". */
 	quantitySet: {
 		tone: "success",
 		text: (
@@ -119,7 +111,7 @@ export const messages = {
 		) =>
 			`${habit} · ${count} of ${target}${unit ? ` ${unit}` : ""}${onDay(day)}`,
 	},
-	/** T7: "Freeze used for Thu 22 · 0 left" — Undo takes it back. */
+	/** "Freeze used for Thu 22 · 0 left"; Undo takes it back. */
 	freezeUsed: {
 		tone: "success",
 		text: (day: string, left: number) =>
@@ -131,76 +123,76 @@ export const messages = {
 		text: (day: string) =>
 			`Too late for a freeze on ${day}. The streak restarts with your next log.`,
 	},
-	/** PR-11: logging a frozen day gives its freeze back. */
+	/** Logging a frozen day gives its freeze back. */
 	freezeReturned: {
 		tone: "success",
 		text: (day: string, left: number) =>
 			`Freeze returned for ${day} · ${left} left`,
 	},
-	/** H5, D5: Restore is instant, so the toast carries the Undo. */
+	/** Restore is instant, so the toast carries the Undo. */
 	habitRestored: {
 		tone: "success",
 		text: (habit: string) => `${habit} is back on Today`,
 	},
-	/** DC5: after Archive habit, Detail pops and the toast offers Undo. */
+	/** After Archive habit, Detail pops and the toast offers Undo. */
 	habitArchived: {
 		tone: "success",
 		text: (habit: string) => `${habit} archived`,
 	},
-	/** DC3: permanent, so no Undo. */
+	/** Permanent, so no Undo. */
 	habitDeleted: {
 		tone: "success",
 		text: (habit: string) => `${habit} deleted`,
 	},
-	/** EX2: the sheet was closed while the file was writing. */
+	/** The sheet was closed while the file was writing. */
 	exportReady: {
 		tone: "success",
 		text: (name: string) => `Export ready · ${name}`,
 	},
-	/** EX4: the sheet was closed and the export then failed; it stays until dismissed. */
+	/** The sheet was closed and the export then failed; it stays until dismissed. */
 	exportFailedWhileClosed: {
 		tone: "error",
 		text: "Export failed. Open Export data to retry — nothing was changed.",
 	},
-	/** S6: confirmed by a toast, no Undo — nothing changed. */
+	/** Confirmed by a toast, no Undo: nothing changed. */
 	diagnosticsCopied: { tone: "info", text: "Diagnostics copied" },
 	diagnosticsShared: { tone: "info", text: "Diagnostics ready to share" },
 	diagnosticsFailed: {
 		tone: "error",
 		text: "Couldn’t copy diagnostics. Try again.",
 	},
-	/** R3: removal is instant, so the toast carries the Undo (5 s). */
+	/** Removal is instant, so the toast carries the Undo (5 s). */
 	reminderRemoved: {
 		tone: "success",
 		text: (time: string) => `Reminder at ${time} removed`,
 	},
-	/** FR3: Allow reminders on First Run's pre-prompt (4 s). */
+	/** Allow reminders on First Run's pre-prompt (4 s). */
 	reminderSaved: {
 		tone: "success",
 		text: (time: string) => `Reminder saved \u00b7 ${time}`,
 	},
-	/** FR3 / R2: the reminder is stored, but iOS notifications are off (6 s). */
+	/** The reminder is stored, but iOS notifications are off (6 s). */
 	reminderSavedOff: {
 		tone: "warning",
 		text: "Reminder saved, but notifications are off",
 	},
-	/** DC6: a category nobody used is gone at once; Undo puts it back (5 s). */
+	/** A category nobody used is gone at once; Undo puts it back (5 s). */
 	categoryDeleted: {
 		tone: "success",
 		text: (name: string) => `${name} deleted`,
 	},
-	/** C5: a category in use is gone; its habits moved to Other and keep their history. */
+	/** A category in use is gone; its habits moved to Other and keep their history. */
 	categoryDeletedMoved: {
 		tone: "success",
 		text: (name: string, count: number) =>
 			`${name} deleted · ${count} ${count === 1 ? "habit" : "habits"} moved to Other`,
 	},
-	/** F7: the habit saved, but a reminder queued on the form did not. */
+	/** The habit saved, but a reminder queued on the form did not. */
 	habitSavedReminderFailed: {
 		tone: "warning",
 		text: "Saved, but a reminder couldn’t be set. Add it from the habit’s Reminders.",
 	},
-	/** P3: Export tapped while there is nothing to export — says why, in a toast. */
+	/** Export tapped while there is nothing to export: says why, in a toast. */
 	exportNothing: {
 		tone: "info",
 		text: "Nothing to export yet. Log a habit on Today first, then come back.",
@@ -212,18 +204,17 @@ export const messages = {
 >;
 
 /**
- * Inline Today copy (HAB-30–32): row status lines, group counts, the fold row,
- * the rest day and the empty state. Plain strings, not toasts, so they sit
- * beside the toast catalogue rather than inside it. No completion time ever
- * appears in a status line (spec: "Spec wins over the mockup").
+ * Inline Today copy: row status lines, group counts, the fold row, the rest day and the
+ * empty state. Plain strings, not toasts, so they sit beside the toast catalogue rather than
+ * inside it. No completion time ever appears in a status line (the spec wins over the mockup).
  */
 const plural = (count: number, one: string, many: string) =>
 	`${count} ${count === 1 ? one : many}`;
 
 export const todayCopy = {
-	/** SY1: what a screen reader says for the skeleton while Today loads. */
+	/** What a screen reader says for the skeleton while Today loads. */
 	loading: "Loading your habits",
-	/** SY5: the app stayed open across midnight; Today has moved to the new day. */
+	/** The app stayed open across midnight; Today has moved to the new day. */
 	rollover: {
 		title: (weekday: string) => `It\u2019s ${weekday} now`,
 		body: (weekday: string, completed: number, total: number) =>
@@ -232,14 +223,14 @@ export const todayCopy = {
 				: `${weekday} closed at midnight with ${completed} of ${total} done. You can still log ${weekday} from the week strip.`,
 		dismiss: "Dismiss",
 	},
-	/** SY2: Today could not read its habits; the header and tab bar stay. */
+	/** Today could not read its habits; the header and tab bar stay. */
 	loadError: {
 		title: "Couldn\u2019t load your habits",
 		body: "Your data is safe. Trying again usually fixes this.",
 		retry: "Try again",
 		copyDiagnostics: "Copy diagnostics",
 	},
-	/** Week strip VoiceOver actions (08.3). */
+	/** Week strip VoiceOver actions. */
 	changeDayLabel: (day: string) => `${day} · Change day`,
 	changeDayTitle: "Change day",
 	previousWeek: "Previous week",
@@ -260,7 +251,7 @@ export const todayCopy = {
 					: `, ${day.done} of ${day.due} done`
 		}`,
 	stripDayHint: "Shows this day's habits",
-	/** Streak at risk sheets (SR1/SR3, HAB-33). */
+	/** Streak at risk sheets. */
 	atRiskTitle: (habit: string) => `Keep your ${habit} streak?`,
 	atRiskTitleNone: "No freezes left this month",
 	atRiskBody: (streak: number) =>
@@ -271,7 +262,7 @@ export const todayCopy = {
 	atRiskNotNow: "Not now",
 	atRiskGotIt: "Got it",
 	atRiskResetsOn: (date: string) => `Resets on ${date}`,
-	/** The off-schedule picker (HAB-18). */
+	/** The off-schedule picker. */
 	pickerTitle: "Log off-schedule",
 	pickerIntro:
 		"Nothing is due today. Anything you log counts as a bonus — it can't break or extend a streak.",
@@ -282,7 +273,7 @@ export const todayCopy = {
 	pickerLogQuantity: (habit: string) => `Log ${habit}, set an amount`,
 	pickerLog: (habit: string) => `Log ${habit} off-schedule`,
 	pickerAmount: "Amount",
-	/** Edit this day (RL1–RL3, HAB-34). */
+	/** Edit this day. */
 	editDayIntro:
 		"Tap a circle to set that day. Streaks and rates update when you close.",
 	editDayDone: "Done",
@@ -295,7 +286,7 @@ export const todayCopy = {
 	editDayRowFrozen: "Frozen · logging it returns the freeze",
 	editDayRowAmount: (value: number, target: number, unit: string | null) =>
 		`${value} of ${target}${unit ? ` ${unit}` : ""} · tap for amount`,
-	/** Quantity sheet (QS1–QS3). */
+	/** Quantity sheet. */
 	quantityClose: "Close",
 	quantityDone: "Done",
 	/** Distinct from the day sheet's "Done" underneath it: two sheets can be stacked (Edit this day → amount). */
@@ -379,7 +370,6 @@ export const todayCopy = {
 	showToday: "Show today",
 	weekStripLabel: (range: string) => `Week of ${range}`,
 	cantLogAhead: "Can\u2019t log ahead \u2014 pick today or an earlier day",
-	/** VoiceOver (08.3). */
 	openDetails: "Opens details.",
 	openStreakOptions: "Opens the streak options.",
 	openQuantity: "Opens the quantity sheet.",
@@ -404,9 +394,9 @@ export const todayCopy = {
 } as const;
 
 /**
- * Progress copy (HAB-35–38, V3-3b): the three ranges' titles, stats, insights,
- * legends and VoiceOver wording. Whole-number percentages everywhere; Break
- * habits say resisted and slipped, never failed (D8).
+ * Progress copy: the three ranges' titles, stats, insights, legends and VoiceOver
+ * wording. Whole-number percentages everywhere; Break habits say resisted and slipped,
+ * never failed.
  */
 export const progressCopy = {
 	screenTitle: "Progress",
@@ -636,9 +626,9 @@ export const progressCopy = {
 } as const;
 
 /**
- * The Habits tab (HAB-39, V3-4a): its header, search, library, archived section
- * and empty states, with the VoiceOver wording of 08.3. "Weeks start Monday"
- * and every date style follow the rest of the app; nothing here says "failed".
+ * The Habits tab: its header, search, library, archived section and empty states, with
+ * the VoiceOver wording. "Weeks start Monday" and every date style follow the rest of the
+ * app; nothing here says "failed".
  */
 export const habitsCopy = {
 	screenTitle: "Habits",
@@ -653,7 +643,7 @@ export const habitsCopy = {
 		none: "No habits",
 		reorder: "Reorder · drag within a category",
 	},
-	/** 08.3: "Habits, heading. 7 active, 1 archived." — VoiceOver adds "heading" from the role. */
+	/** "Habits, heading. 7 active, 1 archived." VoiceOver adds "heading" from the role. */
 	headerLabel: (counts: string) => `Habits, ${counts}`,
 	counts: (active: number, archived: number) =>
 		archived > 0
@@ -683,20 +673,20 @@ export const habitsCopy = {
 	moveButton: (habit: string, direction: "up" | "down") =>
 		`Move ${habit} ${direction}`,
 	archiveAction: "Archive",
-	/** What a library row's tap does, for VoiceOver (08.3). */
+	/** What a library row's tap does, for VoiceOver. */
 	rowHint: "Opens details.",
 	archived: {
 		header: (count: number) => `Archived · ${count}`,
 		show: "Show",
 		hide: "Hide",
-		/** 08.3: "Archived, 2, collapsed. Button." */
+		/** "Archived, 2, collapsed. Button." */
 		toggleLabel: (count: number, expanded: boolean) =>
 			`Archived, ${count}, ${expanded ? "expanded" : "collapsed"}`,
 		restore: "Restore",
 		restoreLabel: (habit: string) => `Restore ${habit}`,
 		since: (date: string) => `Archived ${date}`,
 		bestStreak: (days: number) => `best streak ${days}`,
-		/** 08.3: "Morning run, archived 12 October. Restore, button." */
+		/** "Morning run, archived 12 October. Restore, button." */
 		rowLabel: (habit: string, date: string) => `${habit}, archived ${date}`,
 		note: "A restored habit starts a fresh streak. Paused days stay paused.",
 	},
@@ -707,7 +697,7 @@ export const habitsCopy = {
 		body: "Search looks through active and archived habits.",
 		add: (name: string) => `Add “${name}” as a habit`,
 	},
-	/** H6: no habits at all. The suggestions link joins it with HAB-46. */
+	/** No habits at all. The suggestions link joins it. */
 	empty: {
 		title: "No habits yet",
 		body: "Add your first habit, or start from a suggestion.",
@@ -721,15 +711,14 @@ export const habitsCopy = {
 } as const;
 
 /**
- * Habit Detail (HAB-40, V3-4a) and its two confirm sheets (HAB-45): the tiles,
- * the five-week grid, the history rows, the archived and restored banners and
- * the delete and archive sheets, with the VoiceOver wording of 08.3. A Break
- * habit says resisting, resisted and slipped — never failed (D8, D7). No time
- * ever appears in the history (per-entry timestamps may not exist).
+ * Habit Detail and its two confirm sheets: the tiles, the five-week grid, the history
+ * rows, the archived and restored banners and the delete and archive sheets, with the
+ * VoiceOver wording. A Break habit says resisting, resisted and slipped, never failed. No
+ * time ever appears in the history (per-entry timestamps may not exist).
  */
 export const detailCopy = {
 	edit: "Edit",
-	/** The eyebrow and VoiceOver's cadence (08.3). */
+	/** The eyebrow and VoiceOver's cadence. */
 	words: {
 		daily: "Daily",
 		dailySpoken: "daily",
@@ -760,18 +749,18 @@ export const detailCopy = {
 		nightsInARow: "nights in a row",
 		days: "days",
 		nights: "nights",
-		/** D3: nothing has been logged yet. */
+		/** Nothing has been logged yet. */
 		startsWithFirstLog: "starts with your first log",
 		noneYet: "none yet",
 		afterSevenDays: "after 7 days",
-		/** D4: archived — the streak is paused, not zero. */
+		/** Archived: the streak is paused, not zero. */
 		paused: "paused",
 		untilArchive: (date: string) => `until ${date}`,
-		/** D5: restored — a fresh start, and the rate leaves the paused days out. */
+		/** Restored: a fresh start, and the rate leaves the paused days out. */
 		freshStart: "fresh start",
 		pausedDaysExcluded: "paused days excluded",
 		resisted: "resisted",
-		/** D6: the freezes tile. */
+		/** The freezes tile. */
 		freezesLeft: (count: number) =>
 			`${count} ${count === 1 ? "freeze" : "freezes"} left`,
 		delta: (points: number) =>
@@ -799,7 +788,7 @@ export const detailCopy = {
 			reset: "Reset",
 			beforeStart: "Before start",
 		},
-		/** 08.3: "Week of 19 October: Monday bonus, Tuesday done, Thursday not logged yet. Button. Opens Edit this day." */
+		/** "Week of 19 October: Monday bonus, Tuesday done, Thursday not logged yet. Button. Opens Edit this day." */
 		weekLabel: (start: string, days: string) => `Week of ${start}: ${days}`,
 		weekHint: "Opens Edit this day.",
 		status: {
@@ -817,7 +806,7 @@ export const detailCopy = {
 			notLoggedYet: "not logged yet",
 			upcoming: "upcoming",
 		},
-		/** D6: shown only in the month the streak reset. */
+		/** Shown only in the month the streak reset. */
 		resetNotice: (date: string) =>
 			`Streak reset on ${date} — no freezes were left.`,
 	},
@@ -827,7 +816,7 @@ export const detailCopy = {
 		allOff: "All off",
 		nOn: (count: number, times: string) => `${count} on · ${times}`,
 		timeDays: (time: string, days: string) => `${time} · ${days}`,
-		/** 08.3: "Reminders, 07:00, Tuesday and Thursday." */
+		/** "Reminders, 07:00, Tuesday and Thursday." */
 		spoken: (time: string, days: string) => `Reminders, ${time}, ${days}`,
 		none: "None",
 		paused: "Paused",
@@ -864,7 +853,7 @@ export const detailCopy = {
 		restoredBody:
 			"Your streak starts fresh with the next log. Paused days stay paused.",
 	},
-	/** DC1–DC5: the delete and archive confirms. */
+	/** The delete and archive confirms. */
 	confirm: {
 		cancel: "Cancel",
 		deleteTitle: (habit: string) => `Delete ${habit}?`,
@@ -898,9 +887,8 @@ export const detailCopy = {
 } as const;
 
 /**
- * The Add / Edit habit form (HAB-41, F1–F10, BS2): headers, field labels,
- * helpers, inline errors, the Save reason and the discard prompt. Errors sit
- * next to their fields, never in an alert (F8).
+ * The Add / Edit habit form: headers, field labels, helpers, inline errors, the Save
+ * reason and the discard prompt. Errors sit next to their fields, never in an alert.
  */
 export const formCopy = {
 	newTitle: "New habit",
@@ -911,10 +899,10 @@ export const formCopy = {
 		label: "Type",
 		build: "Build",
 		break: "Break",
-		/** F5: said once Break is picked. */
+		/** Said once Break is picked. */
 		breakNote:
 			"A Break habit counts the days you resist. Tick the circle on each day you held off.",
-		/** Edit: the direction is fixed at creation (HAB-01) — a streak means the opposite. */
+		/** Edit: the direction is fixed at creation; a streak means the opposite. */
 		locked: "Build and Break can’t be switched after saving.",
 	},
 	name: {
@@ -923,7 +911,7 @@ export const formCopy = {
 		limit: (limit: number) => `${limit} characters max`,
 		duplicate: (name: string) =>
 			`You already have a habit called ${name}. Choose another name.`,
-		/** An edited V1 name still over the cap (HAB-22). */
+		/** A name saved under the older, longer cap that is still over the current one. */
 		tooLong: (limit: number) => `Shorten the name to ${limit} characters.`,
 	},
 	category: {
@@ -935,7 +923,7 @@ export const formCopy = {
 		label: "Goal",
 		check: "Check",
 		quantity: "Quantity",
-		/** F5: Quantity is off for a Break habit, with its reason. */
+		/** Quantity is off for a Break habit, with its reason. */
 		breakReason: "Break habits are yes or no, so Quantity is off.",
 		target: "Daily target",
 		targetCaption: (unit: string) => `${unit || "units"} a day`,
@@ -943,7 +931,7 @@ export const formCopy = {
 		unitPlaceholder: "glasses",
 		unitMissing: "Give this target a unit, e.g. “glasses”.",
 		unitTooLong: (limit: number) => `Keep the unit under ${limit} characters.`,
-		/** F3: the live example of how Today reads. */
+		/** The live example of how Today reads. */
 		example: (target: number, unit: string) =>
 			`Shown after the number: ${Math.max(1, Math.min(5, target - 1))} of ${target}${unit ? ` ${unit}` : ""}`,
 	},
@@ -955,7 +943,7 @@ export const formCopy = {
 		noDays: "Pick at least one day",
 		timesPerWeek: "Times per week",
 		timesCaption: "times a week",
-		/** F4: the Monday–Sunday rule (D9) and when it leaves Today. */
+		/** The Monday-Sunday rule and when it leaves Today. */
 		perWeekRule: (times: number) =>
 			`Weeks run Monday to Sunday. Once you reach ${times}, it leaves Today until the next week starts.`,
 	},
@@ -983,7 +971,7 @@ export const formCopy = {
 		keep: "Keep editing",
 		discard: "Discard",
 	},
-	/** BS2: where the filled-in fields came from. */
+	/** Where the filled-in fields came from. */
 	prefill: {
 		title: "From a suggestion",
 		body: (name: string) =>
@@ -992,13 +980,12 @@ export const formCopy = {
 } as const;
 
 /**
- * First run (HAB-46, FR1–FR4): the welcome, the slim first-habit form's extras
- * and our own notification pre-prompt. The Today empty state (FR4) is
- * `todayCopy`; the suggestions list is `suggestionsCopy`.
+ * First run: the welcome, the slim first-habit form's extras and our own notification
+ * pre-prompt. The empty Today state is `todayCopy`; the suggestions list is `suggestionsCopy`.
  */
 export const firstRunCopy = {
 	welcome: {
-		/** Two balanced lines, as FR1 draws them; read as one sentence. */
+		/** Two balanced lines, as the welcome mockup draws them; read as one sentence. */
 		title: "Small habits,\nevery day",
 		body: "Tick them off on Today, see your week in Progress, and keep streaks going on off days with freezes.",
 		features: [
@@ -1012,7 +999,7 @@ export const firstRunCopy = {
 		],
 		addFirst: "Add your first habit",
 		browse: "Browse suggestions",
-		/** Not drawn in FR1: every first-run screen has a way to an empty Today. */
+		/** Not drawn in the welcome mockup: every first-run screen has a way to an empty Today. */
 		skip: "Skip for now",
 	},
 	/** The welcome could not write its flag: an inline banner, since no toast host exists before the tabs. */
@@ -1020,10 +1007,10 @@ export const firstRunCopy = {
 	habit: {
 		title: "Your first habit",
 		pickLabel: "Or pick one",
-		/** FR2's reassurance. The frame also says "icon": a habit's icon is its category's, so it is left out. */
+		/** The first-habit form's reassurance. The frame also says "icon": a habit's icon is its category's, so it is left out. */
 		note: "Category and reminders can wait \u2014 change them any time.",
 	},
-	/** FR3: the pre-prompt shown before iOS asks for permission. */
+	/** The pre-prompt shown before iOS asks for permission. */
 	offer: {
 		title: "Remind you each day?",
 		body: (habit: string, time: string) =>
@@ -1037,8 +1024,8 @@ export const firstRunCopy = {
 } as const;
 
 /**
- * Browse suggestions (HAB-46, BS1): the intro, the group headings, the
- * subtitle under each suggestion and the "Added" mark.
+ * Browse suggestions: the intro, the group headings, the subtitle under each suggestion
+ * and the "Added" mark.
  */
 export const suggestionsCopy = {
 	title: "Suggestions",
@@ -1048,7 +1035,7 @@ export const suggestionsCopy = {
 	/** The heading of the suggestions that are Break habits, whatever their category. */
 	breakGroup: "Break a habit",
 	added: "Added",
-	/** One stop per suggestion (08.3 has no row for it; wording is ours, logged in the backlog). */
+	/** One stop per suggestion (the accessibility spec has no row for it; wording is ours, logged in the backlog). */
 	rowLabel: (name: string, subtitle: string) => `${name}, ${subtitle}`,
 	rowHint: "Opens Add habit with this filled in.",
 	addedLabel: (name: string, subtitle: string) => `${name}, ${subtitle}. Added`,
@@ -1059,17 +1046,16 @@ export const suggestionsCopy = {
 	daily: "Daily",
 	breakWord: "Break",
 	breakDaily: "Break \u00b7 daily",
-	/** The link in the empty Today (T2, FR4) and the empty Habits tab (H6), and FR1's second action. */
+	/** The link in the empty Today and the empty Habits tab, and the welcome's second action. */
 	browse: "Browse suggestions",
 } as const;
 
 /**
- * The database gate (HAB-47, SY3 and SY4), handed to `DatabaseProvider` by the
- * root layout. Every claim is checked against the migrator: it runs all pending
- * migrations in one transaction, so a failed run is rolled back whole ("Nothing
- * was changed", "as they were") and a run never deletes a person's habits
- * ("Nothing is deleted"). There is no step or count to report, so neither
- * screen names one (the frames' "Step 2 of 3", "64%").
+ * The database gate, handed to `DatabaseProvider` by the root layout. Every claim is
+ * checked against the migrator: it runs all pending migrations in one transaction, so a
+ * failed run is rolled back whole ("Nothing was changed", "as they were") and a run never
+ * deletes a person's habits ("Nothing is deleted"). There is no step or count to report, so
+ * neither screen names one (the frames' "Step 2 of 3", "64%").
  */
 export const migrationCopy = {
 	updating: {
@@ -1120,18 +1106,17 @@ export const migrationCopy = {
 } satisfies DatabaseCopy;
 
 /**
- * Categories (HAB-42, C1–C6, DC6): the screen's header and groups, the rows,
- * the inline rename, the add sheet and the two delete confirms. Counts always
- * include archived habits.
+ * Categories: the screen's header and groups, the rows, the inline rename, the add sheet
+ * and the two delete confirms. Counts always include archived habits.
  */
 export const categoriesCopy = {
 	title: "Categories",
-	/** The eyebrow: "10 built-in · 2 custom", or just the built-ins before any custom exists (C6). */
+	/** The eyebrow: "10 built-in · 2 custom", or just the built-ins before any custom exists. */
 	eyebrow: (builtIn: number, custom: number) =>
 		custom > 0
 			? `${builtIn} built-in · ${custom} custom`
 			: `${builtIn} built-in`,
-	/** 08.3: "Categories, heading. 10 built-in, 2 custom." */
+	/** "Categories, heading. 10 built-in, 2 custom." */
 	headerLabel: (builtIn: number, custom: number) =>
 		custom > 0
 			? `Categories, ${builtIn} built-in, ${custom} custom`
@@ -1144,7 +1129,7 @@ export const categoriesCopy = {
 	builtInHeader: (count: number) => `Built-in · ${count}`,
 	builtInNote: "Built-ins can’t be renamed or deleted.",
 	builtInTag: "Built-in",
-	/** "2 habits", "2 habits · 1 archived", "1 archived", or "Not used" — archived habits are counted (C1). */
+	/** "2 habits", "2 habits · 1 archived", "1 archived", or "Not used"; archived habits are counted. */
 	count: (active: number, archived: number) => {
 		if (active === 0 && archived === 0) return "Not used";
 		const habits = `${active} ${active === 1 ? "habit" : "habits"}`;
@@ -1157,7 +1142,7 @@ export const categoriesCopy = {
 	renameLabel: (name: string) => `Rename ${name}`,
 	deleteLabel: (name: string) => `Delete ${name}`,
 	delete: "Delete",
-	/** C6: the empty custom section teaches the feature. */
+	/** The empty custom section teaches the feature. */
 	empty: { title: "Add a category", body: "Group habits your own way" },
 	reorderMode: {
 		eyebrow: "Reorder · sets group order",
@@ -1171,14 +1156,14 @@ export const categoriesCopy = {
 		moved: (name: string, place: number, total: number) =>
 			`${name}, ${place} of ${total}`,
 	},
-	/** The inline rename (C3). */
+	/** The inline rename. */
 	renameField: {
 		label: (name: string) => `Rename ${name}`,
 		save: "Done",
 		saveLabel: (name: string) => `Save new name for ${name}`,
 		failed: "Couldn’t rename this category. Try again.",
 	},
-	/** Rename and add share one rule: no two groups with the same name (C3). */
+	/** Rename and add share one rule: no two groups with the same name. */
 	duplicate: (name: string) => `${name} already exists. Choose another name.`,
 	addSheet: {
 		title: "New category",
@@ -1194,12 +1179,12 @@ export const categoriesCopy = {
 	},
 	deleteSheet: {
 		headline: (name: string) => `Delete ${name}?`,
-		/** C5: names how many habits move, and that nothing about them is lost. */
+		/** Names how many habits move, and that nothing about them is lost. */
 		inUse: (count: number) =>
 			count === 1
 				? "1 habit uses it. It moves to Other — its history and streak are kept."
 				: `${count} habits use it. They move to Other — their history and streaks are kept.`,
-		/** DC6: nothing is lost, so one button. */
+		/** Nothing is lost, so one button. */
 		unused: "No habit uses it, so nothing else changes.",
 		move: (from: string, to: string) => `${from} → ${to}`,
 		confirmUnused: "Delete category",
@@ -1221,9 +1206,9 @@ export const reminderDaysCopy = {
 } as const;
 
 /**
- * The Reminders screen (HAB-43, R1–R3, R5): one habit's 24-hour times, each with
- * its own days. Removal is instant with an Undo toast; the notifications-off
- * banner explains why nothing arrives while the times stay editable.
+ * The Reminders screen: one habit's 24-hour times, each with its own days. Removal is
+ * instant with an Undo toast; the notifications-off banner explains why nothing arrives
+ * while the times stay editable.
  */
 export const remindersCopy = {
 	title: "Reminders",
@@ -1231,18 +1216,17 @@ export const remindersCopy = {
 	eyebrow: (habit: string, schedule: string) => `${habit} · ${schedule}`,
 	add: "Add time",
 	cap: reminderCapMessage,
-	/** R1: nothing yet — one clear action. */
+	/** Nothing yet: one clear action. */
 	empty: {
 		title: "No reminders yet",
 		body: "Add a time and choose the days it repeats.",
 	},
 	hint: "24-hour times. Tap a time to change its days.",
 	remove: (time: string) => `Remove reminder at ${time}`,
-	/** What a row says it does, for VoiceOver (08.3). */
+	/** What a row says it does, for VoiceOver. */
 	rowHint: "Opens its time and days.",
-	/** A reminder switched off before V3 (the toggle is gone): said on its row, turned on again by editing. */
+	/** A reminder switched off in an earlier version (the toggle is gone): said on its row, turned on again by editing. */
 	off: "Off",
-	/** R5. */
 	denied: {
 		title: "Notifications are off",
 		body: "Reminders won’t arrive until you allow them in iOS Settings.",
@@ -1251,13 +1235,13 @@ export const remindersCopy = {
 } as const;
 
 /**
- * Settings (HAB-44, S1–S7, SY6): Appearance, Reminders (the evening review and
- * what notifications being off affects), Streaks (the freeze rule in plain
- * words), Data and About. Week start and text size are explained, not set.
+ * Settings: Appearance, Reminders (the evening review and what notifications being off
+ * affects), Streaks (the freeze rule in plain words), Data and About. Week start and text
+ * size are explained, not set.
  */
 export const settingsCopy = {
 	title: "Settings",
-	/** S1: the hub's group labels. */
+	/** The hub's group labels. */
 	groups: {
 		appearance: "Appearance",
 		reminders: "Reminders",
@@ -1265,7 +1249,6 @@ export const settingsCopy = {
 		data: "Data",
 		about: "About",
 	},
-	/** S2 */
 	appearance: {
 		header: "Appearance",
 		themeHeader: "Theme",
@@ -1277,7 +1260,7 @@ export const settingsCopy = {
 		hapticsBody: "A light tap when you complete a habit",
 		hapticsHint: "Also on finishing the day and on confirming a delete.",
 	},
-	/** S3 and the hub's Reminders group. */
+	/** The Reminders page and the hub's Reminders group. */
 	reminders: {
 		header: "Reminders",
 		evening: "Evening review",
@@ -1289,11 +1272,11 @@ export const settingsCopy = {
 		off: "Off",
 		notAsked: "Not asked yet",
 	},
-	/** SY6: one banner for the whole impact, and what is affected. */
+	/** One banner for the whole impact, and what is affected. */
 	denied: {
 		title: "Notifications are off",
 		body: "Reminders and the evening review won’t arrive until you allow them in iOS Settings.",
-		/** S3's own sentence: only the evening review is at stake there. */
+		/** The Reminders page's own sentence: only the evening review is at stake there. */
 		eveningBody:
 			"The evening review can’t arrive until you allow notifications.",
 		action: "Open Settings",
@@ -1313,7 +1296,7 @@ export const settingsCopy = {
 		title: "Notifications",
 		status: "Notifications",
 		note: "Change this in iOS Settings.",
-		/** E-01: the switch under the status group, and the lock-screen hint under it. */
+		/** The switch under the status group, and the lock-screen hint under it. */
 		hideNames: "Hide habit names",
 		hideNamesBody: "Reminders say “Habit reminder” instead of the name",
 		hideNamesHint:
@@ -1346,17 +1329,16 @@ export const settingsCopy = {
 		copy: "Copy diagnostics",
 		copyBody: "Version, device and recent errors",
 		copyValue: "Copy",
-		/** E-05: said before the text is pasted anywhere public. */
+		/** Said before the text is pasted anywhere public. */
 		copyNote: "Contains no habit names or notes.",
-		/** E-02: opens the hosted policy in the browser. */
+		/** Opens the hosted policy in the browser. */
 		privacy: "Privacy policy",
 	},
 } as const;
 
 /**
- * Export data (HAB-44, EX1–EX4): choose JSON or CSV, watch it write, then share
- * the file — or read why it failed. Closing the sheet keeps a running export
- * going; a toast says when it is ready.
+ * Export data: choose JSON or CSV, watch it write, then share the file, or read why it
+ * failed. Closing the sheet keeps a running export going; a toast says when it is ready.
  */
 export const exportCopy = {
 	title: "Export data",
@@ -1395,7 +1377,7 @@ export const exportCopy = {
 	},
 } as const;
 
-/** The reminder sheet (F7, R3): the time wheel and the days a time repeats on. */
+/** The reminder sheet: the time wheel and the days a time repeats on. */
 export const reminderSheetCopy = {
 	add: "Add time",
 	edit: "Reminder time",

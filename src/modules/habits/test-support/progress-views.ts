@@ -9,7 +9,7 @@ import type { ProgressView } from "../hooks/use-progress-base-queries";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { builtInCategory, makeHabit } from "./habit-builder";
 
-/** Friday 23 October 2026 — P1's week (19–25 Oct). */
+/** Friday 23 October 2026: the week of 19-25 Oct. */
 export const PROGRESS_TODAY = addHours(fromDayKey("2026-10-23"), 12);
 
 const LONG_AGO = fromDayKey("2026-10-12");

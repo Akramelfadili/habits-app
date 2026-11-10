@@ -4,18 +4,17 @@ import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
 /**
- * Fixture data for Monthly Summary (HAB-16): the V1/V2 mockup hab-16-c2 (tag mockups-v1-v2) and
- * c3.png's six habits over August 2026 (the visual check pins "now" to 2 Sep,
- * so August is the last complete month), and c6.png's under-a-month history.
- *
- * Every habit is daily; each is described by the days it was *missed*, so the
- * misses — not the completions — are what the insight thresholds are tuned
- * against (`monthly-insights.ts`, pinned by `monthly-summary.test.ts`):
- * - Mobility drifts down week over week (6, 5, 4, 3 of 7) → slipping.
- * - Read is the only habit up 10+ points on July → improved.
- * - Weekends trail weekdays, and Meditate's five Saturdays are the biggest
- *   single cause → pattern with an action.
- * - Easy run's two freezes (7 and 22 Aug) → the freeze card.
+ * Fixture data for Monthly Summary: the mockup's six habits over August 2026 (the visual
+ * check pins "now" to 2 Sep, so August is the last complete month), and the
+ * under-a-month history.
+ * Every habit is daily; each is described by the days it was missed, so the misses, not
+ * the completions, are what the insight thresholds are tuned against
+ * (`monthly-insights.ts`, pinned by `monthly-summary.test.ts`):
+ * - Mobility drifts down week over week (6, 5, 4, 3 of 7): slipping.
+ * - Read is the only habit up 10+ points on July: improved.
+ * - Weekends trail weekdays, and Meditate's five Saturdays are the biggest single cause:
+ *   pattern with an action.
+ * - Easy run's two freezes (7 and 22 Aug): the freeze card.
  */
 
 const READY_CREATED = new Date("2025-01-01T00:00:00Z");

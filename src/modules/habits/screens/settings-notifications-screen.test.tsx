@@ -118,7 +118,7 @@ describe("SettingsNotificationsScreen (SY6)", () => {
 		await render(<SettingsNotificationsScreen />);
 		expect(screen.getByText("Not asked yet")).toBeTruthy();
 	});
-	describe("Hide habit names (E-01)", () => {
+	describe("Hide habit names", () => {
 		it.each([
 			["allowed", () => {}],
 			[

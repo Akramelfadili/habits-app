@@ -17,11 +17,11 @@ import type { ExportOptions } from "../types";
 import { loadExportV2 } from "./export-v2-reader";
 
 /**
- * The round-trip proof for export v2 (C-02): seed a database with every kind
- * of data the file claims to carry, export it through the real hooks and
- * serializer, load that file into a second, clean database with the test-only
- * reader, export again, and compare. `exportedAt` and `derived` are the only
- * things allowed to differ (the first is a clock, the second is recomputed).
+ * The round-trip proof for export v2: seed a database with every kind of data the file
+ * claims to carry, export it through the real hooks and serializer, load that file into a
+ * second, clean database with the test-only reader, export again, and compare. `exportedAt`
+ * and `derived` are the only things allowed to differ (the first is a clock, the second is
+ * recomputed).
  */
 
 // The hooks read `db` from the client module on every render, so swapping this
@@ -74,7 +74,6 @@ async function seed(db: ReturnType<typeof createTestDb>): Promise<Counts> {
 			createdAt: made,
 		},
 	]);
-	// "Wind-down" first in the group order; the neutral built-in "Other" last.
 	await db.update(categories).set({ sortOrder: -1 }).where(eqName("Wind-down"));
 	await db.update(categories).set({ sortOrder: 99 }).where(eqName("Other"));
 
@@ -212,7 +211,6 @@ function eqName(name: string) {
 	return eq(categories.name, name);
 }
 
-/** Exports whatever the current database holds, through the hooks the sheet uses. */
 async function exportNow(options: ExportOptions, expected: Counts) {
 	const { result } = await renderHook(() => useExportQueries(options));
 	await waitFor(() => {
@@ -258,7 +256,6 @@ describe("export v2 round trip", () => {
 	it("loads into a clean database and exports again to the same file", async () => {
 		const first = await exportNow(ALL, counts);
 
-		// The file says what it is, and holds the set-up facts v1 dropped.
 		expect(first.version).toBe(2);
 		expect(first.notesIncluded).toBe(true);
 		const meditate = first.habits.find(
@@ -289,7 +286,6 @@ describe("export v2 round trip", () => {
 			haptics: false,
 		});
 
-		// A clean database, the file loaded through the reader, exported again.
 		currentDb = createTestDb();
 		await loadExportV2(currentDb, JSON.stringify(first));
 		const second = await exportNow(ALL, counts);

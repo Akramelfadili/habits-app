@@ -384,7 +384,7 @@ describe("TodayScreen on the in-memory database", () => {
 				archivedAt: null,
 				createdAt: new Date(2026, 0, 1),
 			} as unknown as Habit;
-			const asOf = new Date(2026, 8, 16); // the Wednesday itself
+			const asOf = new Date(2026, 8, 16);
 			const streakBefore = calculateCurrentStreak(
 				habit,
 				before,
@@ -406,7 +406,6 @@ describe("TodayScreen on the in-memory database", () => {
 			expect(calculateCurrentStreak(habit, after, new Set(), asOf)).toBe(
 				streakBefore,
 			);
-			// The row now says it is a bonus that changed nothing.
 			expect(await screen.findByText("Bonus · streak unchanged")).toBeTruthy();
 			// Still a rest day: nothing was due, so nothing became "done" or at risk.
 			expect(await screen.findByText("Rest day")).toBeTruthy();
@@ -439,7 +438,6 @@ describe("TodayScreen on the in-memory database", () => {
 				]),
 			);
 			expect(toast()?.message).toBe("Freeze used for Tue 15 · 1 left");
-			// At-risk cleared, the sheet closed.
 			await waitFor(() =>
 				expect(screen.queryByText("Keep your Read streak?")).toBeNull(),
 			);
@@ -448,7 +446,6 @@ describe("TodayScreen on the in-memory database", () => {
 				await toast()?.onAction?.();
 			});
 			expect(await frozenRows()).toEqual([]);
-			// Exactly as before: at risk again, two left.
 			await fireEvent.press(await screen.findByText("Read"));
 			expect(await screen.findByText("2 freezes left")).toBeTruthy();
 		});
@@ -520,7 +517,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 
 	it("lists only the habits that existed and were due then, and logs to that date with Undo on that date", async () => {
 		const read = await addHabit({ name: "Read" });
-		await addHabit({ name: "New one" }, new Date(2026, 8, 15)); // created Tue 15th
+		await addHabit({ name: "New one" }, new Date(2026, 8, 15));
 		const { result } = await renderHook(() => useTodayDay(null));
 		await waitFor(() => expect(result.current.today.isLoaded).toBe(true));
 
@@ -576,7 +573,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 		expect(result.current.today.selectedDay.getDate()).toBe(17);
 	});
 
-	describe("logging a frozen day returns its freeze (PR-11)", () => {
+	describe("logging a frozen day returns its freeze", () => {
 		async function frozenTuesday() {
 			const id = await addHabit({ name: "Read" });
 			for (const date of ["2026-09-11", "2026-09-12", "2026-09-13", MONDAY]) {
@@ -629,7 +626,7 @@ describe("Today for a selected past day, on the in-memory database", () => {
 
 			await act(() => result.current.logging.addOne(habit));
 			await waitForDb(async () => expect(await entryRows()).toHaveLength(1));
-			expect(await frozenRows()).toHaveLength(1); // 1 of 3: still missed
+			expect(await frozenRows()).toHaveLength(1);
 
 			await act(() => result.current.logging.openQuantitySheet(id));
 			const sheet = result.current.logging.quantitySheet;

@@ -165,7 +165,7 @@ jest.mock("../hooks/use-rollover-queries", () => ({
 		dismiss: mockDismissRollover,
 	}),
 }));
-// FR3's pre-prompt has its own tests; here it only has to stay out of the way.
+// The first-run reminder pre-prompt has its own tests; here it only has to stay out of the way.
 jest.mock("../components/first-run/first-run-reminder-offer", () => ({
 	FirstRunReminderOffer: () => null,
 }));
@@ -272,7 +272,7 @@ describe("TodayScreen", () => {
 		).toBeTruthy();
 	});
 
-	it("offers Browse suggestions in the empty state, and it opens the suggestions screen (T2, FR4)", async () => {
+	it("offers Browse suggestions in the empty state, and it opens the suggestions screen", async () => {
 		await render(<TodayScreen />);
 		await fireEvent.press(screen.getByText("Browse suggestions"));
 		expect(mockPush).toHaveBeenCalledWith("/suggestions");
@@ -296,7 +296,7 @@ describe("TodayScreen", () => {
 		expect(screen.queryByText("Nothing to track yet")).toBeNull();
 	});
 
-	describe("rest day: Log something anyway (HAB-18)", () => {
+	describe("rest day: Log something anyway", () => {
 		const read = makeHabit({ id: 5, name: "Read" });
 		const water = makeHabit({
 			id: 6,
@@ -352,7 +352,6 @@ describe("TodayScreen", () => {
 			);
 			expect(mockToggleCompletion).toHaveBeenCalledTimes(1);
 			expect(mockRestoreDay).toHaveBeenCalledTimes(1);
-			// The picker closed.
 			await waitFor(() =>
 				expect(screen.queryByText("Log off-schedule")).toBeNull(),
 			);
@@ -487,7 +486,7 @@ describe("TodayScreen", () => {
 		expect(mockRestoreDay).toHaveBeenLastCalledWith(1, mockToday, false, null);
 	});
 
-	it("renders a neutral blank — not the empty state — until habits have loaded (A5-04)", async () => {
+	it("renders a neutral blank, not the empty state, until habits have loaded", async () => {
 		mockIsLoaded = false;
 		mockViewState = "no-habits";
 
@@ -563,7 +562,6 @@ describe("TodayScreen", () => {
 			expect(
 				screen.getByText(/Tuesday closed at midnight with 4 of 5 done/),
 			).toBeTruthy();
-			// The list is still there: nothing was lost with the refresh.
 			expect(screen.getByText("Glass of water")).toBeTruthy();
 			await fireEvent.press(screen.getByText("Dismiss"));
 			expect(mockDismissRollover).toHaveBeenCalledTimes(1);
@@ -635,7 +633,7 @@ describe("TodayScreen", () => {
 		});
 	});
 
-	it("confirms a Break habit as resisted, never as complete (HAB-04)", async () => {
+	it("confirms a Break habit as resisted, never as complete", async () => {
 		const breakHabit = makeHabit({
 			id: 7,
 			name: "No phone in bed",
@@ -672,8 +670,7 @@ describe("TodayScreen", () => {
 		});
 		afterEach(() => jest.useRealTimers());
 
-		// The 18:00 rule only words the status line ("Resist tonight"); the circle
-		// logs at any hour (feature-spec-v3: "the circle always logs").
+		// The 18:00 rule only words the status line ("Resist tonight"); the circle logs at any hour.
 		it.each([
 			["15:30", new Date(2026, 8, 16, 15, 30), "Resisting"],
 			["17:59", new Date(2026, 8, 16, 17, 59), "Resisting"],
@@ -699,7 +696,7 @@ describe("TodayScreen", () => {
 		);
 	});
 
-	describe("un-ticking offers Undo (A5-06)", () => {
+	describe("un-ticking offers Undo", () => {
 		const waterGroup = () => [
 			{ category: categoryNamed("Morning"), habits: [morningHabit] },
 		];
@@ -720,7 +717,6 @@ describe("TodayScreen", () => {
 				actionLabel: "Undo",
 			});
 
-			// The app is left open past midnight before Undo is tapped.
 			fakeDate(new Date(2026, 8, 17, 0, 5));
 			toast?.onAction?.();
 			expect(mockRestoreDay).toHaveBeenLastCalledWith(1, mockToday, true, null);
@@ -981,7 +977,7 @@ describe("TodayScreen", () => {
 		expect(mockPush).toHaveBeenCalledWith("/new-habit");
 	});
 
-	describe("header (HAB-27)", () => {
+	describe("header", () => {
 		const states = ["no-habits", "rest-day", "populated"] as const;
 
 		beforeEach(() => {
@@ -998,8 +994,6 @@ describe("TodayScreen", () => {
 			expect(mockPush).toHaveBeenCalledWith("/new-habit");
 		});
 
-		// The ⋯ menu is gone (D2): summaries live on the Progress tab, Manage and
-		// Settings on the Habits tab.
 		it.each(states)("has no ⋯ menu in the %s state", async (state) => {
 			mockViewState = state;
 			await render(<TodayScreen />);
@@ -1018,7 +1012,7 @@ describe("TodayScreen", () => {
 		});
 	});
 
-	describe("streak-at-risk (HAB-08)", () => {
+	describe("streak-at-risk", () => {
 		it("tapping an at-risk habit's row opens the sheet instead of navigating", async () => {
 			mockViewState = "populated";
 			mockGroups = [
@@ -1072,7 +1066,7 @@ describe("TodayScreen", () => {
 	});
 });
 
-describe("TodayScreen day tap (HAB-30)", () => {
+describe("TodayScreen day tap", () => {
 	async function scrollTo(y: number) {
 		await fireEvent.scroll(screen.getByTestId("today-scroll"), {
 			nativeEvent: { contentOffset: { y } },

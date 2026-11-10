@@ -18,9 +18,9 @@ import { formatReminderTime } from "../presenters/reminders-helpers";
 import { notificationValue } from "../presenters/settings-helpers";
 
 /**
- * Settings › Notifications (SY6): when iOS has them off, one banner with Open
- * Settings and what that holds back (reminders, the evening review); otherwise
- * the state and a way to iOS Settings. Times stay editable either way.
+ * Settings > Notifications: when iOS has them off, one banner with Open Settings and what
+ * that holds back (reminders, the evening review); otherwise the state and a way to iOS
+ * Settings. Times stay editable either way.
  */
 export function SettingsNotificationsScreen() {
 	const router = useRouter();

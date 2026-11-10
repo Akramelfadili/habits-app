@@ -10,10 +10,10 @@ import { HabitFormScreen } from "./habit-form-screen";
 import { ProgressMonthScreen } from "./progress-month-screen";
 
 /**
- * Deep-link guards for the routes that take a param (D-09). `habitsapp://…`
- * can be opened by any app or page on the phone, so a param is checked before
- * a screen sees it; a malformed one goes to Today with a warning in the log
- * (the route and a reason code — never the param, which is outside text).
+ * Deep-link guards for the routes that take a param. `habitsapp://...` can be opened by
+ * any app or page on the phone, so a param is checked before a screen sees it; a malformed
+ * one goes to Today with a warning in the log (the route and a reason code, never the
+ * param, which is outside text).
  */
 type Scope = "edit-habit" | "month";
 type Refusal = Extract<ParamResult<unknown>, { ok: false }>["reason"];
@@ -37,7 +37,7 @@ export function EditHabitRouteScreen({
 	if (!habitId.ok) {
 		return <InvalidParam scope="edit-habit" reason={habitId.reason} />;
 	}
-	// Only "frequency" is understood (Monthly's slipping insight, HAB-16); anything else is ignored.
+	// Only "frequency" is understood (Monthly's slipping insight); anything else is ignored.
 	return (
 		<HabitFormScreen
 			habitId={habitId.value}

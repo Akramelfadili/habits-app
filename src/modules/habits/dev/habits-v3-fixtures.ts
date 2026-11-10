@@ -5,16 +5,14 @@ import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
 /**
- * The Habits tab and Habit Detail frames' data (H1–H10, D1–D8, DC1–DC7,
- * docs/mockups/v3/renders/habits and sheets), pinned to Friday 23 Oct 2026 by
- * the visual checks. `habits-v3` is the library and every Detail but two:
- * `habits-v3-new` (D3) is Drink water created today with nothing logged, and
- * `habits-v3-reset` (D6) spends the month's second freeze, so Meditate's missed
+ * The Habits tab and Habit Detail frames' data (docs/mockups/v3/renders/habits and
+ * sheets), pinned to Friday 23 Oct 2026 by the visual checks. `habits-v3` is the library
+ * and every Detail but two: `habits-v3-new` is Drink water created today with nothing
+ * logged, and `habits-v3-reset` spends the month's second freeze, so Meditate's missed
  * Wednesday 14 Oct reads as a streak reset.
- *
- * Ids: 1 Drink water · 2 Cold shower · 3 Upper body · 4 Meditate · 5 Read 20 min
- * · 6 No social media · 7 No phone in bed · 8 Morning run (archived 12 Oct) ·
- * 9 Journal 5 min (archived 2 Oct). Read 20 min has exactly 214 logs, as DC1 says.
+ * Ids: 1 Drink water · 2 Cold shower · 3 Upper body · 4 Meditate · 5 Read 20 min · 6 No
+ * social media · 7 No phone in bed · 8 Morning run (archived 12 Oct) · 9 Journal 5 min
+ * (archived 2 Oct). Read 20 min has exactly 214 logs, as the mockup says.
  */
 export type HabitsV3Scenario =
 	| "habits-v3"
@@ -112,7 +110,7 @@ const JOURNAL: FixtureHabit = {
 
 export function habitsV3Habits(scenario: HabitsV3Scenario): FixtureHabit[] {
 	if (scenario === "habits-v3-new") {
-		// D3: created today, nothing logged.
+		// Created today, nothing logged.
 		return [{ ...DRINK_WATER, createdAt: new Date(), updatedAt: new Date() }];
 	}
 	return [
@@ -197,7 +195,7 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 		addRun(4, 1, 13);
 	}
 
-	// Read 20 min: 12 days in a row, a gap, then 202 more — 214 logs in all (DC1).
+	// Read 20 min: 12 days in a row, a gap, then 202 more: 214 logs in all.
 	addRun(5, 1, 12);
 	addRun(5, 14, 215);
 
@@ -224,7 +222,7 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 	return entries;
 }
 
-/** Thu 15 Oct (Upper body) uses one of the month's two freezes; the reset scenario spends the other (D6). */
+/** Thu 15 Oct (Upper body) uses one of the month's two freezes; the reset scenario spends the other. */
 export function habitsV3FrozenDays(scenario: HabitsV3Scenario): FrozenDay[] {
 	if (scenario === "habits-v3-new") return [];
 	const now = new Date();

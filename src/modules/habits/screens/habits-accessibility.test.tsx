@@ -50,7 +50,7 @@ jest.mock("../hooks/use-habits-actions", () => ({
 
 import { HabitsScreen } from "./habits-screen";
 
-/** What VoiceOver stops on, in reading order: every labelled element (08.3, 08.4). */
+/** What VoiceOver stops on, in reading order: every labelled element. */
 function readingOrder(): string[] {
 	const out: string[] = [];
 	const walk = (node: ReactTestRendererJSON | string | null) => {
@@ -85,7 +85,7 @@ describe("the Habits tab for VoiceOver (08.3, 08.4)", () => {
 		expect(at("Archived, 1, collapsed")).toBeLessThan(at("Categories, 12"));
 	});
 
-	it("a lifted row only gains a shadow: no scale, which Reduce Motion would have to undo (F-07)", async () => {
+	it("a lifted row only gains a shadow: no scale, which Reduce Motion would have to undo", async () => {
 		await render(<HabitsScreen />, { wrapper: GestureHandlerRootView });
 		const rows = screen.getAllByTestId("list-item");
 		for (const row of rows) {

@@ -18,25 +18,17 @@ import { useToastStore } from "@/store/toast-store";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 /**
- * The three V3 tabs (HAB-27, D2): Today, Progress, Habits. Each tab is a
- * *group* of the one shared stack in `(today,progress,habits)/`, so Detail
- * pushes inside the tab it came from (ADR 006).
- *
- * The bar is the floating pill (V3-01 B) through the navigator's `tabBar`
- * prop. It is absolutely positioned, so it takes no layout height and the
- * screens — which are `flex: 1` siblings — scroll under it, each paying
- * `TAB_BAR_BOTTOM_PADDING` at the bottom of its content (T-25).
- *
- * No screen draws this navigator's own header bar: every screen title is
- * screen content (V3-02).
- *
- * One toast slot for the whole shell, 12 pt above the pill (T-21), so a
- * confirmation outlives both the screen and the tab that raised it (archive
- * on Detail → toast on Today). It sits here and not in the shared stack,
- * which is mounted once per tab.
+ * Each tab is a group of the one shared stack in `(today,progress,habits)/`, so Detail
+ * pushes inside the tab it came from.
+ * The bar is the floating pill through the navigator's `tabBar` prop. It is absolutely
+ * positioned, so it takes no layout height and the screens (flex: 1 siblings) scroll under
+ * it, each paying `TAB_BAR_BOTTOM_PADDING` at the bottom of its content.
+ * No screen draws this navigator's own header bar: every screen title is screen content.
+ * One toast slot for the whole shell, 12 pt above the pill, so a confirmation outlives
+ * both the screen and the tab that raised it (archive on Detail, toast on Today). It sits
+ * here and not in the shared stack, which is mounted once per tab.
  */
 
-/** Route name → the tab's F-08 glyph and label. */
 const TABS: Record<string, { label: string; icon: TabBarIconName }> = {
 	"(today)": { label: "Today", icon: "today" },
 	"(progress)": { label: "Progress", icon: "progress" },
@@ -45,23 +37,20 @@ const TABS: Record<string, { label: string; icon: TabBarIconName }> = {
 
 export default function TabsLayout() {
 	const insets = useSafeAreaInsets();
-	// The toast sits 12 pt over the pill, 16 pt over bar A (T-21).
+	// The toast sits 12 pt over the pill, 16 pt over bar A.
 	const accessibilityTextSize = useAccessibilityTextSize();
-	// A sheet's native Modal already covers the pill and dims it with the
-	// scrim; this also stops it taking taps through, so there is no tab
-	// switching mid-decision (H8). A native Alert blocks touches by itself.
-	// During the migration (SY3) the pill does not exist yet: MigrationGate
-	// renders before the tabs do.
+	// A sheet's native Modal already covers the pill and dims it with the scrim; this also
+	// stops it taking taps through, so there is no tab switching mid-decision. A native Alert
+	// blocks touches by itself.
+	// During the migration the pill does not exist yet: MigrationGate renders before the tabs do.
 	const sheetOpen = useToastStore((state) => state.openSheets > 0);
-	// First Run (HAB-46) opens instead of the tabs — no habits and never seen —
-	// so the pill is never drawn over it. An install that already has habits
-	// but predates the flag gets it written once, so deleting every habit later
-	// can never bring First Run back.
+	// First Run opens instead of the tabs (no habits and never seen), so the pill is never
+	// drawn over it. An install that already has habits but predates the flag gets it written
+	// once, so deleting every habit later can never bring First Run back.
 	const { gate, needsSeenMark } = useFirstRunQueries();
-	// Only First Run (FR1–FR4 and Browse suggestions from it, which are root
-	// routes outside this layout) and the FR3 reminder question draw no bar. The
-	// empty Today is an ordinary tab root: the bar stays, and Progress and
-	// Habits work with no habits.
+	// Only First Run (and Browse suggestions from it, which are root routes outside this
+	// layout) and its reminder question draw no bar. The empty Today is an ordinary tab root:
+	// the bar stays, and Progress and Habits work with no habits.
 	const offerOpen = useFirstRunOfferStore((state) => state.habit !== null);
 	const hideBar = offerOpen;
 	// Leaving First Run says so at once; the gate's live flag catches up a moment
@@ -107,7 +96,7 @@ export default function TabsLayout() {
 										});
 										if (event.defaultPrevented) return;
 										if (focused) {
-											// 08.4: the screen scrolls to the top and reads its title.
+											// The screen scrolls to the top and reads its title.
 											useTabRetapStore.getState().retap(route.name);
 										} else {
 											navigateToTab(route.key);

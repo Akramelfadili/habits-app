@@ -5,7 +5,6 @@
  * changes its clocks, from Intl rather than from memory.
  */
 
-/** The zones the date matrices run in: no DST, both hemispheres' DST, a negative offset without DST. */
 export const TEST_ZONES = [
 	"UTC",
 	"Europe/Paris",
@@ -36,7 +35,6 @@ function setZone(zone: string | undefined): void {
 	hooks.__setProcessTimeZone(zone);
 }
 
-/** The zone the process is in right now. */
 export function currentTimeZone(): string | undefined {
 	return (globalThis as ZoneHooks).__getProcessTimeZone?.();
 }

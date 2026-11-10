@@ -130,7 +130,7 @@ describe("HabitsScreen — the library (H1)", () => {
 		expect(screen.queryByText(/^Delete/)).toBeNull();
 	});
 
-	it("renders a neutral blank — not the empty state — until the lists load (A5-04)", async () => {
+	it("renders a neutral blank, not the empty state, until the lists load", async () => {
 		mockLibrary = { ...libraryOf([]), isLoaded: false };
 		await renderScreen();
 		expect(screen.getByTestId("screen-loading")).toBeTruthy();
@@ -323,7 +323,7 @@ describe("HabitsScreen — empty states (H6)", () => {
 		expect(screen.getByRole("button", { name: "Categories, 12" })).toBeTruthy();
 	});
 
-	it("says what the frame says and offers Browse suggestions, which opens the suggestions screen (HAB-46)", async () => {
+	it("says what the frame says and offers Browse suggestions, which opens the suggestions screen", async () => {
 		mockLibrary = libraryOf([]);
 		await renderScreen();
 		expect(

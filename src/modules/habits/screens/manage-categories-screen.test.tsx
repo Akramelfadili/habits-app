@@ -187,7 +187,7 @@ describe("ManageCategoriesScreen — browse (C1)", () => {
 				name: "Add a category, Group habits your own way",
 			}),
 		).toBeTruthy();
-		// Deliberately unlike the C6 frame: the built-ins reorder too.
+		// Deliberately unlike the mockup's empty frame: the built-ins reorder too.
 		expect(screen.getByRole("button", { name: "Reorder" })).toBeTruthy();
 	});
 

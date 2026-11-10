@@ -162,7 +162,7 @@ beforeEach(() => {
 });
 
 describe("loading and not found", () => {
-	it("renders a neutral blank, not 'not found', until the habit loads (A5-04)", async () => {
+	it("renders a neutral blank, not the not-found state, until the habit loads", async () => {
 		mockDetail = undefined;
 		await render(<HabitDetailScreen habitId={1} />);
 		expect(screen.getByTestId("screen-loading")).toBeTruthy();

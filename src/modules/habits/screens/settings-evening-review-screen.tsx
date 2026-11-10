@@ -20,9 +20,9 @@ import { formatReminderTime } from "../presenters/reminders-helpers";
 const ALL_DAYS = WEEKDAYS.map(({ day }) => day);
 
 /**
- * Settings › Evening review (S3): the notifications-off notice first when iOS
- * has them off, then the switch and its time (the shared time wheel in a sheet
- * without days), and the rule for when it is sent.
+ * Settings > Evening review: the notifications-off notice first when iOS has them off,
+ * then the switch and its time (the shared time wheel in a sheet without days), and the
+ * rule for when it is sent.
  */
 export function SettingsEveningReviewScreen() {
 	const settings = useSettingsQueries();

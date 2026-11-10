@@ -1,12 +1,10 @@
 /**
- * Route-level guard for the V3 navigation shell (HAB-27, ADR 006): the three
- * tabs are groups of one shared stack, so Detail — pushed from any of them —
- * opens inside the tab it came from, that tab stays selected, and Back
- * returns to that tab's root.
- *
- * It renders the real `src/app` tree (layouts, anchors, group syntax) with
- * only the module screens stubbed. It lives here, not under `src/app/`,
- * because every `.tsx` in the app directory is picked up as a route.
+ * Route-level guard for the navigation shell: the three tabs are groups of one shared
+ * stack, so Detail, pushed from any of them, opens inside the tab it came from, that tab
+ * stays selected, and Back returns to that tab's root.
+ * It renders the real `src/app` tree (layouts, anchors, group syntax) with only the module
+ * screens stubbed. It lives here, not under `src/app/`, because every `.tsx` in the app
+ * directory is picked up as a route.
  */
 import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
@@ -84,7 +82,7 @@ jest.mock("@/lib/db/client", () => ({ db: {}, expoDb: {} }));
 jest.mock("@/lib/db/database-provider", () => ({
 	DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
-// Where the app opens (HAB-46): the tabs, or First Run with no tab bar.
+// Where the app opens: the tabs, or First Run with no tab bar.
 let mockGate: "loading" | "first-run" | "done" = "done";
 let mockNeedsSeenMark = false;
 let mockHabitCount: number | undefined = 1;
@@ -133,7 +131,7 @@ function tabGroup(app: { getSegments(): string[] }) {
 		.find((segment) => /^\((today|progress|habits)\)$/.test(segment));
 }
 
-describe("First Run opens instead of the tabs (HAB-46)", () => {
+describe("First Run opens instead of the tabs", () => {
 	it("a new install lands on First Run and no tab bar is drawn", async () => {
 		mockGate = "first-run";
 		const app = await renderApp("/");
@@ -252,7 +250,7 @@ describe("only First Run hides the tab bar (UI fix batch)", () => {
 	});
 });
 
-describe("Browse suggestions is a root screen (HAB-46, BS1)", () => {
+describe("Browse suggestions is a root screen", () => {
 	it("opens from First Run, still without a tab bar", async () => {
 		mockGate = "first-run";
 		const app = await renderApp("/");
@@ -295,7 +293,6 @@ describe("Detail opens inside the tab it came from (D4)", () => {
 
 		await testRouter.push("/habit/1");
 		expect(screen.getByText("detail")).toBeTruthy();
-		// The push stayed in the group it started in: the tab is still selected.
 		expect(tabGroup(app)).toBe(group);
 
 		await testRouter.back();
@@ -324,7 +321,7 @@ describe("a Year month is a pushed route inside Progress (P13)", () => {
 	});
 });
 
-describe("malformed route params go to Today, never crash (D-09)", () => {
+describe("malformed route params go to Today, never crash", () => {
 	beforeEach(() => clearLog());
 
 	function invalidParamLogs() {
@@ -421,7 +418,6 @@ describe("Add and Edit habit are root modals, outside the tabs", () => {
 });
 
 describe("every pushed screen can be left (UI fix batch)", () => {
-	// Pushed inside a tab: the header's own back button, naming where it goes back to.
 	it.each([
 		["Detail from Today", "/", "/habit/1", "Back to Today"],
 		[

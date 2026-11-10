@@ -16,8 +16,8 @@ import { settingsCopy } from "../messages";
 const THEMES: ThemePreference[] = ["light", "dark", "system"];
 
 /**
- * Settings › Appearance (S2): Light, Dark or System as radio rows. Week start
- * (Monday, D9) and text size are explained, not configurable.
+ * Settings > Appearance: Light, Dark or System as radio rows. Week start (Monday) and
+ * text size are explained, not configurable.
  */
 export function SettingsAppearanceScreen() {
 	const settings = useSettingsQueries();

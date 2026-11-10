@@ -5,7 +5,6 @@
  */
 export type FakeScheduled = {
 	identifier: string;
-	/** The notification's title, as the lock screen would show it. */
 	title?: string;
 	hour: number;
 	minute: number;
@@ -25,7 +24,6 @@ export function createFakeNotifications() {
 	return {
 		scheduled,
 		events,
-		/** The calls made (1-based) that should reject. */
 		failScheduleOn,
 		failCancelOn,
 		get scheduleCalls() {

@@ -33,7 +33,6 @@ export const isoWeekdayArb: fc.Arbitrary<IsoWeekday> = fc.constantFrom(
 	7,
 );
 
-/** One of the three frequency types, with its own parameters. */
 export const frequencyArb: fc.Arbitrary<Frequency> = fc.oneof(
 	fc.constant(daily()),
 	fc

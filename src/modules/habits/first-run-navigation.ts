@@ -1,6 +1,5 @@
 import { useFirstRunOfferStore } from "./first-run-offer-store";
 
-/** The slice of the router First Run's exits use. */
 export type FirstRunRouter = {
 	canDismiss: () => boolean;
 	dismissAll: () => void;

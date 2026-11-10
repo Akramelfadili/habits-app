@@ -18,7 +18,6 @@ import { makeReminderFixtures } from "./reminder-fixtures";
  * a state means the same thing on the phone as in the baseline.
  */
 export type DeviceState = {
-	/** The scenario the route's `?fixtures=` named; unknown names fall back to "default", as on web. */
 	scenario: FixtureScenario;
 	categories: Category[];
 	habits: Habit[];
@@ -32,7 +31,6 @@ export type DeviceState = {
 const SEEN_FIRST_RUN_KEY = "habits.seenFirstRun";
 const EVENING_REVIEW_KEY = "habits.eveningReview";
 
-/** The Settings rows `app-settings-repository.web.ts` seeds for a scenario. */
 function settingsFor(
 	scenario: string | null,
 	theme: string | null,

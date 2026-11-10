@@ -2,18 +2,17 @@ import type { BuiltInCategoryName } from "./constants";
 import type { Frequency, HabitDirection } from "./types";
 
 /**
- * The bundled suggestions (HAB-46, D10): ready-made habits kept in the app,
- * shown on Browse suggestions (BS1) and as First Run's quick picks (FR2). One
- * typed list, in display order; the copy around it lives in `messages.ts`.
- *
- * Each one carries every field the New habit form can be prefilled with (BS2),
- * so picking it never leaves a field to guess. A Break habit is always a check.
+ * The bundled suggestions: ready-made habits kept in the app, shown on Browse suggestions
+ * and as First Run's quick picks. One typed list, in display order; the copy around it
+ * lives in `messages.ts`.
+ * Each one carries every field the New habit form can be prefilled with, so picking it
+ * never leaves a field to guess. A Break habit is always a check.
  */
 export type Suggestion = {
 	/** Stable id for keys and tests; never shown. */
 	id: string;
 	name: string;
-	/** A built-in's name: it supplies the icon and colour, and the BS1 group. */
+	/** A built-in's name: it supplies the icon and colour, and the Browse group. */
 	category: BuiltInCategoryName;
 	direction: HabitDirection;
 	/** A daily quantity target, or null for a check. */
@@ -79,7 +78,7 @@ export const SUGGESTIONS: readonly Suggestion[] = [
 		frequency: { type: "daily" },
 	},
 	{
-		// Productivity, as SY5 draws it ("No social media" under PRODUCTIVITY).
+		// Productivity, as the mockup draws it ("No social media" under PRODUCTIVITY).
 		id: "no-social-media",
 		name: "No social media",
 		category: "Productivity",
@@ -97,7 +96,7 @@ export const SUGGESTIONS: readonly Suggestion[] = [
 	},
 ];
 
-/** FR2's "Or pick one": five of the bundle, in the frame's order. */
+/** First Run's "Or pick one": five of the bundle, in the frame's order. */
 export const FIRST_RUN_QUICK_PICK_IDS: readonly string[] = [
 	"drink-water",
 	"read-20-min",

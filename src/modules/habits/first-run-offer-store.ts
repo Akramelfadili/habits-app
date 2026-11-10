@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { Habit } from "./types";
 
 type FirstRunOfferState = {
-	/** The first habit, waiting for the person's answer to "Remind you each day?" (FR3); null when nothing is offered. */
+	/** The first habit, waiting for the answer to "Remind you each day?"; null when nothing is offered. */
 	habit: Habit | null;
 	/**
 	 * Set the moment First Run is left, before the "seen" flag's live query has
@@ -10,7 +10,7 @@ type FirstRunOfferState = {
 	 * First Run on the stale flag (the skip flake). Cleared once the gate agrees.
 	 */
 	leftFirstRun: boolean;
-	/** The Close on FR2 (a skip) could not write the "seen" flag: FR2 says so inline. */
+	/** The welcome's Close (a skip) could not write the "seen" flag: the screen says so inline. */
 	skipFailed: boolean;
 	setSkipFailed: (failed: boolean) => void;
 	offer: (habit: Habit) => void;

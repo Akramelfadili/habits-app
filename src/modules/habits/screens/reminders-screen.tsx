@@ -38,19 +38,17 @@ type RemindersScreenProps = {
 	habitId: number;
 };
 
-/** The reminder sheet is open on a new time, or on a stored one. */
 type SheetState =
 	| { kind: "add"; draft: ReminderDraft }
 	| { kind: "edit"; id: number; draft: ReminderDraft }
 	| null;
 
 /**
- * Reminders (HAB-43, R1–R3, R5): one habit's list of 24-hour times, each with
- * its own days. The red minus on the left removes a time at once with an Undo
- * toast; a tap opens the sheet to change its time and days; + (or the empty
- * state's button) opens it on 09:00. With iOS notifications off a banner says
- * why nothing will arrive and the times stay editable. The app-wide Evening
- * review lives in Settings, not here.
+ * Reminders: one habit's list of 24-hour times, each with its own days. The red minus on
+ * the left removes a time at once with an Undo toast; a tap opens the sheet to change its
+ * time and days; + (or the empty state's button) opens it on 09:00. With iOS notifications
+ * off a banner says why nothing will arrive and the times stay editable. The app-wide
+ * Evening review lives in Settings, not here.
  */
 export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const router = useRouter();
@@ -59,7 +57,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const actions = useReminderActions();
 	const [sheet, setSheet] = useState<SheetState>(null);
 
-	// Still loading: a neutral blank, never a "not found" flash (audit A5-04).
+	// Still loading: a neutral blank, never a "not found" flash.
 	if (data === undefined) {
 		return (
 			<View
