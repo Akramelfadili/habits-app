@@ -23,7 +23,6 @@ import { ToastHost } from "./toast-host";
 
 type SheetProps = PropsWithChildren<{
 	visible: boolean;
-	/** Called on scrim tap and on the Android back gesture/button. */
 	onDismiss: () => void;
 	/**
 	 * When false, tapping the scrim does nothing and the sheet can only be left
@@ -32,18 +31,14 @@ type SheetProps = PropsWithChildren<{
 	 */
 	dismissible?: boolean;
 	/**
-	 * Where a toast raised while the sheet is open shows. "top" (default) is the
-	 * Modal's own host; "inline" leaves it to the caller, who puts a
-	 * `<ToastHost placement="inline" />` above the sheet's last button (HAB-48, RL2).
+	 * Where a toast raised while the sheet is open shows. "top" (default) is the Modal's own host;
+	 * "inline" leaves it to the caller, who puts a `<ToastHost placement="inline" />` above the sheet's
+	 * last button.
 	 */
 	toast?: "top" | "inline";
 }>;
 
-/**
- * Bottom sheet over a dimmed background: the Modal + scrim + sheet chrome that
- * every sheet shares (category picker, Quantity log, Streak at risk, Retro
- * log, Delete confirmation). Callers pass only the sheet's content.
- */
+/** The Modal + scrim + sheet chrome that every sheet shares. Callers pass only the sheet's content. */
 export function Sheet({
 	visible,
 	onDismiss,
@@ -87,9 +82,8 @@ export function Sheet({
 			animationType={reducedMotion ? "fade" : "slide"}
 			onRequestClose={dismissible ? onDismiss : undefined}
 		>
-			{/* Keeps a sheet's text field (Retro log's note) above the keyboard. */}
 			<KeyboardAvoidingView
-				// iOS: VoiceOver stays inside the sheet while it is open (08.4).
+				// iOS: VoiceOver stays inside the sheet while it is open.
 				accessibilityViewIsModal
 				style={styles.root}
 				behavior={Platform.OS === "ios" ? "padding" : undefined}

@@ -14,38 +14,33 @@ import { Button } from "../primitives/button";
 import { IconBadge } from "../primitives/icon-badge";
 
 type BannerProps = {
-	/** The message. With a `title` it is the line under it. */
 	children: string;
-	/** A first line in the body ink — "Archived on 12 October" (V3-27's card). */
 	title?: string;
 	/**
-	 * "warning" is the amber conflict banner (a reminder on a day the habit
-	 * isn't scheduled); "neutral" the grey persistent notice (notifications
-	 * turned off for the app, an archived or restored habit); "notice" the
-	 * quiet grey line with an amber dot (D6's streak-reset note); "error" a
-	 * failed write where no toast can show (DC4).
+	 * "warning" is the amber conflict banner (a reminder on a day the habit isn't scheduled);
+	 * "neutral" the grey persistent notice (notifications off, an archived or restored habit);
+	 * "notice" the quiet grey line with an amber dot (streak-reset note);
+	 * "error" a failed write where no toast can show.
 	 */
 	tone?: "warning" | "neutral" | "notice" | "error";
 	/**
-	 * A glyph in an icon square: the banner becomes V3-27's card (surface and
-	 * hairline, danger outline for an error) instead of the one-line marker.
+	 * A glyph in an icon square: the banner becomes a card (surface and hairline, danger outline
+	 * for an error) instead of the one-line marker.
 	 */
 	symbol?: SFSymbol;
-	/** A link under the message — "Open iOS Settings →" (HAB-15). */
 	action?: { label: string; onPress: () => void };
-	/** A compact button after the text — "Restore" (D4). Drops under the text at accessibility sizes. */
+	/** A compact button after the text. Drops under the text at accessibility sizes. */
 	button?: { label: string; onPress: () => void; disabled?: boolean };
 	/** The message element, for a caller that moves the screen reader's focus onto a failure (`useInitialFocus`). */
 	messageRef?: Ref<HostInstance>;
 };
 
 /**
- * V3-27 · inline banner: a state that lasts, inside the content and never over
- * it. The marker form is one line with a dot; the card form (with a `symbol`)
- * is an icon square, an optional title, the message and optionally a button.
- * The title and message are one VoiceOver stop; the button and link are their
- * own. An error banner is an alert, so it is read out when it appears. Meaning
- * is never colour alone: the dot, the glyph and the words say it too.
+ * Inline banner: a state that lasts, inside the content and never over it. The marker form is one
+ * line with a dot; the card form (with a `symbol`) is an icon square, an optional title, the message
+ * and optionally a button. The title and message are one VoiceOver stop; the button and link are
+ * their own. An error banner is an alert, so it is read out when it appears. Meaning is never
+ * colour alone: the dot, the glyph and the words say it too.
  */
 export function Banner({
 	children,
@@ -110,8 +105,7 @@ export function Banner({
 			style={[
 				styles.banner,
 				card && warning
-					? // R5 / SY6: the amber card — warn tint, no outline, the title in warn ink.
-						{ backgroundColor: colors.warnTint }
+					? { backgroundColor: colors.warnTint }
 					: card
 						? {
 								backgroundColor: colors.card,

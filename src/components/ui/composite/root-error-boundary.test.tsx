@@ -62,7 +62,6 @@ describe("RootErrorBoundary", () => {
 		);
 		expect(screen.getByText("Something went wrong")).toBeTruthy();
 
-		// The cause is gone (a transient failure) — the new subscription succeeds.
 		mockQueryFails = false;
 		await fireEvent.press(screen.getByText("Try again"));
 

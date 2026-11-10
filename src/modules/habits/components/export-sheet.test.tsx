@@ -111,7 +111,6 @@ describe("ExportSheet — choose a format (EX1)", () => {
 			includeArchived: true,
 			includeNotes: true,
 		});
-		// Every kind of data goes to the service: habits, entries, categories, reminders, frozen days.
 		const sent = mockRunExport.mock.calls[0][0].source;
 		expect(sent.habits).toHaveLength(3);
 		expect(sent.reminders).toHaveLength(2);
@@ -172,7 +171,6 @@ describe("ExportSheet — writing (EX2)", () => {
 			screen.getByLabelText("Writing habits-2026-10-23.json, 62 percent"),
 		).toBeTruthy();
 		expect(screen.getByText("62%")).toBeTruthy();
-		// Locked: the other format is off, the one being written stays picked.
 		expect(
 			screen.getByRole("tab", { name: "CSV" }).props.accessibilityState
 				.disabled,

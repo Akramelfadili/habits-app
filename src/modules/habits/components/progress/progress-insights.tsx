@@ -4,11 +4,10 @@ import type { InsightCardData } from "../../presenters/progress-presenter";
 
 type ProgressInsightsProps = {
 	insights: InsightCardData[];
-	/** A slipping card's link: Edit habit, scrolled to Frequency. */
 	onChangeFrequency: (habitId: number) => void;
 };
 
-/** The ranked insights (HAB-38): one card on screen, a pager for up to three. */
+/** The ranked insights: one card on screen, a pager for up to three. */
 export function ProgressInsights({
 	insights,
 	onChangeFrequency,

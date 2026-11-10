@@ -5,11 +5,10 @@ import { motion } from "@/theme/theme";
 import { useScreenReader } from "@/utils/use-screen-reader";
 
 /**
- * Mounted once in the shell: a toast that has been up for a while goes when the
- * screen changes. One raised by the action that also changes the screen
- * (archive, then back) is younger than `motion.toast.navigationGrace` and
- * survives the navigation, which is where its confirmation has to show. With a
- * screen reader on a toast is kept until dismissed (HAB-48), navigation or not.
+ * Mounted once in the shell: a toast that has been up for a while goes when the screen changes. One
+ * raised by the action that also changes the screen (archive, then back) is younger than
+ * `motion.toast.navigationGrace` and survives the navigation, which is where its confirmation has to
+ * show. With a screen reader on a toast is kept until dismissed, navigation or not.
  */
 export function ToastRouteWatcher() {
 	const pathname = usePathname();

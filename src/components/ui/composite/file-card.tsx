@@ -7,13 +7,12 @@ import { Container } from "./container";
 
 type FileCardProps = {
 	name: string;
-	/** "48 KB · 9 habits · 1,284 logs". */
 	meta: string;
 	/** The card's element, for a sheet that moves the screen reader onto the finished file (`useInitialFocus`). */
 	cardRef?: Ref<HostInstance>;
 };
 
-/** V3-30: the finished export — a document square, the file name and its size line (EX3). */
+/** The finished export: a document square, the file name and its size line. */
 export function FileCard({ name, meta, cardRef }: FileCardProps) {
 	const { colors } = useTheme();
 

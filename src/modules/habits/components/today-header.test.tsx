@@ -21,7 +21,7 @@ async function renderHeader() {
 	return { view, onAddHabit };
 }
 
-describe("TodayHeader (V3-02)", () => {
+describe("TodayHeader", () => {
 	it("shows the date eyebrow and the Today title", async () => {
 		await renderHeader();
 		expect(screen.getByText("Today")).toBeTruthy();

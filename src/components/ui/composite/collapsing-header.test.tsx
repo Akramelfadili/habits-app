@@ -63,7 +63,7 @@ async function scrollTo_(y: number) {
 const opacityOf = (id: string) =>
 	screen.getByTestId(id).props.jestAnimatedStyle?.value?.opacity;
 
-describe("useCollapsingHeader (V3-02, T5)", () => {
+describe("useCollapsingHeader", () => {
 	beforeEach(() => {
 		jest.useFakeTimers();
 		mockReduced = false;
@@ -265,7 +265,6 @@ describe("PinnedBelowBar (Progress's range switcher, P1 → P8)", () => {
 
 	it("sits in its own slot until it is scrolled, then follows the content up", async () => {
 		await render(<PinnedHarness />);
-		// The layer starts PINNED_PADDING_TOP above the control's slot.
 		expect(translateY()).toBe(200 - PINNED_PADDING_TOP);
 		await scrollTo_(60);
 		expect(translateY()).toBe(140 - PINNED_PADDING_TOP);

@@ -20,7 +20,7 @@ const improved = {
 	tone: "success" as const,
 };
 
-describe("ProgressInsights (HAB-38)", () => {
+describe("ProgressInsights", () => {
 	it("sends a slipping card's link to Edit habit for that habit", async () => {
 		const onChangeFrequency = jest.fn();
 		await render(

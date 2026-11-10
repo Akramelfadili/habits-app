@@ -33,7 +33,6 @@ describe("InsightCard", () => {
 		expect(screen.getByTestId("insight-card-icon")).toHaveStyle({
 			backgroundColor: light.warnTint,
 		});
-		// The body is never a target; only the link is.
 		expect(screen.getAllByRole("button")).toHaveLength(1);
 		await fireEvent.press(screen.getByText("Change frequency ›"));
 		expect(onPress).toHaveBeenCalledTimes(1);

@@ -17,9 +17,8 @@ const CHECK_HEIGHT = 8;
 const CHECK_STROKE = 2;
 
 /**
- * T8: a quiet card at the top once everything due is done — an accent square
- * whose check draws left to right over 600 ms, once. Static with Reduce
- * Motion. No confetti, no banner.
+ * A quiet card at the top once everything due is done: an accent square whose check draws left to
+ * right over 600 ms, once. Static with Reduce Motion. No confetti, no banner.
  */
 export function TodayAllDoneCard({ title, body }: TodayAllDoneCardProps) {
 	const { colors } = useTheme();

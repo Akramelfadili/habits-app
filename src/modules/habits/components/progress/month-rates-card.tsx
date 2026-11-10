@@ -8,14 +8,13 @@ import type { MonthRateRow } from "../../presenters/progress-calendar-presenter"
 
 type MonthRatesCardProps = {
 	rows: MonthRateRow[];
-	/** "October so far". */
 	meta: string;
 };
 
 /**
- * Per-habit rates (P8): ranked by rate, slipping last on the amber bar. A Break
- * habit carries an amber "Break" tag and counts resisted days; frozen days and
- * bonus logs are named in the line under the name. One VoiceOver stop per habit.
+ * Per-habit rates: ranked by rate, slipping last on the amber bar. A Break habit carries an amber
+ * "Break" tag and counts resisted days; frozen days and bonus logs are named in the line under the
+ * name. One VoiceOver stop per habit.
  */
 export function MonthRatesCard({ rows, meta }: MonthRatesCardProps) {
 	const { colors } = useTheme();

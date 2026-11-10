@@ -10,20 +10,16 @@ import { useInitialFocus } from "@/utils/use-initial-focus";
 import { detailCopy } from "../../messages";
 
 type DetailHeaderProps = {
-	/** "FITNESS · TUE, THU" — the caps line over the title. */
 	eyebrow: string;
 	title: string;
-	/** "Upper body. Fitness, Tuesday and Thursday." */
 	accessibilityLabel: string;
 	onEdit: () => void;
 };
 
 /**
- * V3-02 for Habit Detail (D1): the category and cadence as an eyebrow, the
- * habit's name as the display title (two lines, then it truncates; at
- * accessibility sizes it wraps freely, D8), and Edit as a 44 pt pill. At
- * accessibility sizes Edit moves above the title. Eyebrow and title are one
- * VoiceOver stop.
+ * The category and cadence as an eyebrow, the habit's name as the display title (two lines, then it
+ * truncates; at accessibility sizes it wraps freely), and Edit as a 44 pt pill. At accessibility
+ * sizes Edit moves above the title. Eyebrow and title are one VoiceOver stop.
  */
 export function DetailHeader({
 	eyebrow,
@@ -33,7 +29,7 @@ export function DetailHeader({
 }: DetailHeaderProps) {
 	const { colors } = useTheme();
 	const stacked = useAccessibilityTextSize();
-	// 08.4: a pushed screen starts the screen reader on its title.
+	// A pushed screen starts the screen reader on its title.
 	const titleRef = useRef<HostInstance>(null);
 	useInitialFocus(titleRef, true, ROUTE_FOCUS_DELAY_MS);
 

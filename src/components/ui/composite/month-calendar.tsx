@@ -3,21 +3,19 @@ import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { CompletionRows, type CompletionRowsCell } from "./completion-rows";
 
-/** V3-06's month calendar cell (T-10): 40 pt, a real tap target with its day number. */
+/** A month calendar cell: 40 pt, a real tap target with its day number. */
 const CALENDAR_CELL = 40;
 
 type MonthCalendarProps = {
-	/** Seven weekday letters, Monday first. */
 	letters: string[];
 	/** Rows of seven (Monday → Sunday); `null` pads the days outside the month. */
 	weeks: (CompletionRowsCell | null)[][];
 };
 
 /**
- * V3-06 · month calendar: a weekday axis over 40 pt day cells that carry their
- * number. A day with `onPress` is a button — Month's day-detail entry (P13);
- * the ring marks today and the selected day. The cells spread across the width
- * so the axis letters sit over their columns.
+ * A weekday axis over 40 pt day cells that carry their number. A day with `onPress` is a button
+ * (Month's day-detail entry); the ring marks today and the selected day. The cells spread across the
+ * width so the axis letters sit over their columns.
  */
 export function MonthCalendar({ letters, weeks }: MonthCalendarProps) {
 	const { colors } = useTheme();

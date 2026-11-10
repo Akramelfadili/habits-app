@@ -5,7 +5,6 @@ import { useTheme } from "@/theme/use-theme";
 type ToggleProps = {
 	value: boolean;
 	onValueChange: (value: boolean) => void;
-	/** Screen-reader name — a bare switch says nothing about what it controls. */
 	accessibilityLabel: string;
 	disabled?: boolean;
 	/**
@@ -22,9 +21,9 @@ const INSET = 2;
 const OUTLINE = 1.5;
 
 /**
- * V3-20 toggle: an accent track with an onAccent knob when on; off is the
- * `track` fill with a 3:1 `outline` ring (not colour alone), the knob on the
- * left. 44 pt hit area around the 51 × 31 visual. Disabled fades.
+ * An accent track with an onAccent knob when on; off is the `track` fill with a 3:1 `outline` ring
+ * (not colour alone), the knob on the left. 44 pt hit area around the 51 × 31 visual. Disabled
+ * fades.
  */
 export function Toggle({
 	value,

@@ -12,7 +12,6 @@ type SegmentedControlOption<T extends string> = {
 };
 
 type SegmentedControlProps<T extends string> = {
-	/** Two options (Direction, Week), three (Appearance, HAB-15; Progress's Week / Month / Year). */
 	options:
 		| [SegmentedControlOption<T>, SegmentedControlOption<T>]
 		| [
@@ -25,25 +24,21 @@ type SegmentedControlProps<T extends string> = {
 	disabled?: boolean;
 	/** "compact" hugs its labels so it can sit trailing in a row (Direction); default fills the width. */
 	size?: "full" | "compact";
-	/** Names the group for a screen reader — "Direction", "Appearance". */
 	label?: string;
 	/**
-	 * What the control does at accessibility text sizes (08.6): "stack" lists the
-	 * options one under another (forms, F10); "collapse" shows only the selected
-	 * one with a chevron, and a tap opens the stacked list (Progress's range, P6 /
-	 * P11) so the pinned bar stays one line tall.
+	 * What the control does at accessibility text sizes: "stack" lists the options one under another
+	 * (forms); "collapse" shows only the selected one with a chevron, and a tap opens the stacked list
+	 * (Progress's range) so the pinned bar stays one line tall.
 	 */
 	axLayout?: "stack" | "collapse";
-	/** What the collapsed button says it does ("Opens the list of ranges"); the caller owns the words. */
 	collapsedHint?: string;
 	/** The collapsed list opened or closed — a pinned bar keeps its slot the same height either way. */
 	onOpenChange?: (open: boolean) => void;
 };
 
-/** The selected pill and its track: V3-17 is 40 pt tall to the eye inside a 48 pt hit area (4 pt inset). */
+/** The selected pill and its track: 40 pt tall to the eye inside a 48 pt hit area (4 pt inset). */
 const HIT_HEIGHT = 48;
 
-/** A drawn check: two borders of a turned square, so it needs no icon font. */
 function Check({ color }: { color: string }) {
 	return (
 		<View
@@ -53,7 +48,6 @@ function Check({ color }: { color: string }) {
 	);
 }
 
-/** A drawn chevron-down. */
 function Chevron({ color }: { color: string }) {
 	return (
 		<View
@@ -64,9 +58,9 @@ function Chevron({ color }: { color: string }) {
 }
 
 /**
- * V3-17 · segmented control: a 40 pt selected pill in a 48 pt hit area on the
- * `inner` track, pill radius, subhead labels. Selection is state, not colour
- * alone: the selected segment is filled and announced ("selected, 1 of 3").
+ * A 40 pt selected pill in a 48 pt hit area on the `inner` track, pill radius, subhead labels.
+ * Selection is state, not colour alone: the selected segment is filled and announced ("selected,
+ * 1 of 3").
  */
 export function SegmentedControl<T extends string>({
 	options,

@@ -19,29 +19,20 @@ import type { Habit } from "../types";
 import { quickAddChips } from "./quantity-log-sheet-helpers";
 
 type QuantityLogSheetProps = {
-	/** A targetType === "quantity" habit. */
 	habit: Habit;
-	/** The day's logged amount when the sheet opens — 0 when nothing is logged yet. */
 	value: number;
-	/** The day every change lands on, fixed at open. */
 	day: Date;
-	/** "Wed 21 Oct" when the day isn't today: named in the title and the toast. */
 	dayLabel?: string;
-	/** A bonus log: the closing toast says so. */
 	offSchedule?: boolean;
-	/** The sheet has closed (its last write landed, its toast is up). */
 	onClosed: () => void;
 };
 
-/** How many digits the exact-value field takes: MAX_QUANTITY_VALUE's length. */
 const MAX_DIGITS = String(MAX_QUANTITY_VALUE).length;
 
 /**
- * Quantity sheet (HAB-34, QS1–QS3): the stepper with 44 pt buttons, quick
- * +1/+2/+3 and Fill to target, and Set exact value on the number pad. Every
- * change saves at once; closing shows one toast with Undo (see
- * `useQuantitySheetActions`). At the target Fill is disabled and extra amounts
- * still count.
+ * The stepper with 44 pt buttons, quick +1/+2/+3 and Fill to target, and Set exact value on the
+ * number pad. Every change saves at once; closing shows one toast with Undo (see
+ * `useQuantitySheetActions`). At the target Fill is disabled and extra amounts still count.
  */
 export function QuantityLogSheet({
 	habit,

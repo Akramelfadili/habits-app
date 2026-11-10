@@ -137,7 +137,7 @@ describe("ListItem", () => {
 		expect(row.boxShadow).toBe(elevation.light.lifted.boxShadow);
 	});
 
-	it("is a 60 pt row, with the 14 pt side padding of T-18", async () => {
+	it("is a 60 pt row, with 14 pt side padding", async () => {
 		await render(<ListItem title="Drink water" onPress={jest.fn()} />);
 		expect(
 			StyleSheet.flatten(screen.getByRole("button").props.style),
@@ -169,7 +169,7 @@ describe("ListItem", () => {
 		);
 	});
 
-	describe("long names and large text (A5-15)", () => {
+	describe("long names and large text", () => {
 		it("wraps a title to two lines then ends in an ellipsis, and keeps the subtitle to two", async () => {
 			await render(
 				<ListItem

@@ -19,9 +19,8 @@ type HabitFilterSheetProps = {
 	visible: boolean;
 	active: Habit[];
 	archived: Habit[];
-	/** The current choice; null is "All habits". */
 	selectedId: number | null;
-	/** One choice: the sheet closes on tap (HP1/HP2). */
+	/** One choice: the sheet closes on tap. */
 	onSelect: (habitId: number | null) => void;
 	onDismiss: () => void;
 };
@@ -38,8 +37,8 @@ function Check() {
 }
 
 /**
- * Habit picker (HP1/HP2): "Show habit" — All habits first, then the active
- * habits, then the archived ones. One choice; filtering never leaves the tab.
+ * Habit picker: "Show habit", All habits first, then the active habits, then the archived ones.
+ * One choice; filtering never leaves the tab.
  */
 export function HabitFilterSheet({
 	visible,

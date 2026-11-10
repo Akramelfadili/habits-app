@@ -78,7 +78,6 @@ describe("AddCategorySheet", () => {
 		expect(isAddDisabled()).toBe(false);
 
 		await fireEvent.press(addButton());
-		// Music holds slot 1, so the pick is slot 2; the name is trimmed.
 		await waitFor(() =>
 			expect(create).toHaveBeenCalledWith({
 				name: "Journaling",
@@ -134,7 +133,6 @@ describe("AddCategorySheet", () => {
 			pressing = fireEvent.press(addButton());
 			await waitFor(() => expect(create).toHaveBeenCalled());
 		});
-		// In flight: busy, so it can't be pressed twice.
 		await waitFor(() =>
 			expect(addButton().props.accessibilityState).toMatchObject({
 				disabled: true,
@@ -152,12 +150,10 @@ describe("AddCategorySheet", () => {
 		expect(isAddDisabled()).toBe(false);
 		expect(onCreated).not.toHaveBeenCalled();
 		expect(onDismiss).not.toHaveBeenCalled();
-		// The NEW-24 error slot — the same one a duplicate uses — so the
-		// preview stays (the name itself is fine).
+		// The error slot, the same one a duplicate uses, so the preview stays (the name itself is fine).
 		expect(screen.getByRole("alert")).toBeTruthy();
 		expect(screen.getByTestId("category-preview")).toBeTruthy();
 
-		// Editing the name clears the stale message; retrying works.
 		await fireEvent.changeText(nameField(), "Journaling!");
 		expect(screen.queryByText(CREATE_FAILED_MESSAGE)).toBeNull();
 	});
@@ -171,7 +167,7 @@ describe("AddCategorySheet", () => {
 		expect(create).not.toHaveBeenCalled();
 	});
 
-	describe("Return key (A5-13)", () => {
+	describe("Return key", () => {
 		it("adds the category when Return is pressed on a valid name", async () => {
 			const created = makeCategory({ id: 12, name: "Journaling" });
 			const create = jest.fn().mockResolvedValue(created);

@@ -19,10 +19,9 @@ type ReminderDraftsProps = {
 };
 
 /**
- * Reminders queued before the habit exists (F7): each time with its own days,
- * a red minus on the left that removes it at once, a tap that edits it, and
- * "Add time" under them (up to the cap of four). Nothing is written until the
- * form's Save.
+ * Reminders queued before the habit exists: each time with its own days, a red minus on the left
+ * that removes it at once, a tap that edits it, and "Add time" under them (up to the cap of four).
+ * Nothing is written until the form's Save.
  */
 export function ReminderDrafts({
 	reminders,

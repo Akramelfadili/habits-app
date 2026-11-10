@@ -1,10 +1,8 @@
 /**
- * Pure move math for `ReorderableList`. The functions the drag gesture calls
- * on the UI thread are marked as worklets; they also run as plain functions
- * (tests, the accessibility "Move up/down" path).
+ * Pure move math for `ReorderableList`. The functions the drag gesture calls on the UI thread are
+ * marked as worklets; they also run as plain functions (tests, the accessibility Move up/down path).
  */
 
-/** The inclusive index range of the run of same-group items around `index`. */
 export function groupBounds(
 	groups: readonly string[],
 	index: number,
@@ -49,7 +47,6 @@ export function dragTargetIndex(
 	return target;
 }
 
-/** How far the dragged row travels to sit exactly in `to`'s slot. */
 export function offsetBetween(
 	from: number,
 	to: number,

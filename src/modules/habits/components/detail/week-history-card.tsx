@@ -9,28 +9,25 @@ import { useTheme } from "@/theme/use-theme";
 import { detailCopy } from "../../messages";
 import type { WeekRow } from "../../presenters/habit-detail-presenter";
 
-/** The V3 history grid's cell (D1): 24 pt. */
 const CELL = 24;
 
-/** M T W T F S S — the column heads, Monday first (D9: weeks start Monday). */
+/** M T W T F S S: the column heads, Monday first (weeks start Monday). */
 const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 type WeekHistoryCardProps = {
-	/** "Tue, Thu", "Daily" or "Created today" — right of the title. */
 	rangeLabel: string;
 	rows: readonly WeekRow[];
 	legend: readonly LegendEntry[];
-	/** D6: "Streak reset on Wed 14 Oct — no freezes were left." — only in the month it happened. */
+	/** "Streak reset on Wed 14 Oct — no freezes were left." Only in the month it happened. */
 	notice: string | null;
-	/** A week row was tapped: open Edit this day for that date (HAB-34). */
+	/** A week row was tapped: open Edit this day for that date. */
 	onEditDay: (date: Date) => void;
 };
 
 /**
- * The "Last 5 weeks" card (D1, V3-06 mini): five rows of seven 24 pt cells under
- * Monday-first column heads. Each week row is ONE 44 pt target that opens Edit
- * this day, and one VoiceOver stop that reads the whole week ("Week of 19
- * October: Monday bonus, Tuesday done…"); the cells are decorative. A week with
+ * The "Last 5 weeks" card: five rows of seven 24 pt cells under Monday-first column heads. Each
+ * week row is ONE 44 pt target that opens Edit this day, and one VoiceOver stop that reads the whole
+ * week ("Week of 19 October: Monday bonus, Tuesday done…"); the cells are decorative. A week with
  * nothing to edit is plain, not a button.
  */
 export function WeekHistoryCard({
@@ -79,7 +76,6 @@ export function WeekHistoryCard({
 	);
 }
 
-/** One week: a button that opens Edit this day, or — with nothing to edit — a read-only stop. */
 function WeekRowTarget({
 	row,
 	onEditDay,

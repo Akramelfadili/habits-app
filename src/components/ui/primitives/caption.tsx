@@ -8,7 +8,6 @@ type CaptionProps = {
 	tone?: "default" | "error";
 };
 
-/** Smallest helper text — locked-field explanations, hints next to controls. */
 export function Caption({ children, tone = "default" }: CaptionProps) {
 	const { colors } = useTheme();
 

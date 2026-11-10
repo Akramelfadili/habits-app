@@ -13,12 +13,11 @@ import type { Habit } from "../../types";
 import { HabitBadge } from "../habit-badge";
 
 type HabitFilterChipProps = {
-	/** The habit the year is filtered to; null reads "All habits". */
 	habit: Habit | null;
 	onPress: () => void;
 };
 
-/** The Year chip (P15): the current filter, always visible, opening the habit picker (HP1/HP2). */
+/** The Year chip: the current filter, always visible, opening the habit picker. */
 export function HabitFilterChip({ habit, onPress }: HabitFilterChipProps) {
 	const { colors, opacity } = useTheme();
 	const scope = habit ? habit.name : progressCopy.year.allHabits;

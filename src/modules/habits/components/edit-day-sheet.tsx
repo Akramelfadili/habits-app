@@ -23,17 +23,15 @@ import { HabitRow } from "./habit-row";
 import { QuantityLogSheet } from "./quantity-log-sheet";
 
 type EditDaySheetProps = {
-	/** The day being edited — null hides the sheet. */
 	day: RetroLogDay | null;
 	onDismiss: () => void;
 };
 
 /**
- * Edit this day (HAB-34, RL1–RL3): one sheet for any past day. Every habit due
- * that day sits in a row with its circle; a tap saves at once and a toast
- * above Done names the date and offers Undo. Quantity rows open the quantity
- * sheet for that date. A frozen day shows the violet circle, and logging it
- * returns the freeze (PR-11). Future days are not editable.
+ * One sheet for any past day. Every habit due that day sits in a row with its circle; a tap saves
+ * at once and a toast above Done names the date and offers Undo. Quantity rows open the quantity
+ * sheet for that date. A frozen day shows the violet circle, and logging it returns the freeze.
+ * Future days are not editable.
  */
 export function EditDaySheet({ day, onDismiss }: EditDaySheetProps) {
 	const { colors } = useTheme();

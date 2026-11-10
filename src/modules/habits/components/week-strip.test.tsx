@@ -48,7 +48,7 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 	useAccessibilityTextSize: () => mockAccessibilityText,
 }));
 
-describe("WeekStrip (V3-03)", () => {
+describe("WeekStrip", () => {
 	it("shows seven days Monday first", async () => {
 		await setup().view;
 		expect(screen.getByText("19")).toBeTruthy();

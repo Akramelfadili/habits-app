@@ -12,25 +12,16 @@ import { useTheme } from "@/theme/use-theme";
 type AddRowProps = {
 	label: string;
 	onPress: () => void;
-	/** Trailing count, e.g. "3 of 4". */
 	count?: string;
-	/** A line under the label — C6's "Group habits your own way". */
 	subtitle?: string;
 	/** At a cap — faded and inert. Pair with a caption saying why. */
 	disabled?: boolean;
-	/**
-	 * Closes out a list *inside* a card (Manage Categories' "Add category",
-	 * HAB-25) — no dashed outline of its own, the card is the boundary.
-	 */
+	/** Closes out a list inside a card: no dashed outline of its own, the card is the boundary. */
 	embedded?: boolean;
 };
 
 const BADGE = 32;
 
-/**
- * Dashed "add another" row that closes out a list of cards (Reminders'
- * "Add a time", HAB-12): a + badge, label, and an optional trailing count.
- */
 export function AddRow({
 	label,
 	onPress,

@@ -25,29 +25,25 @@ type AlertDialogProps = {
 	visible: boolean;
 	title: string;
 	message: string;
-	/** Stacked top to bottom; the primary one first (F9: Keep editing, then Discard). */
+	/** Stacked top to bottom; the primary one first. */
 	actions: AlertAction[];
 	/** Android back / the system dismiss gesture: it chooses the safe action. */
 	onRequestClose: () => void;
 	/**
-	 * "list" (F9, the default): text actions under hairlines. "offer" (FR3): the
-	 * first action is a full-width primary button, the rest are quiet links
-	 * under it — a question with a yes to lean towards, not a warning.
+	 * "list" (default): text actions under hairlines. "offer": the first action is a full-width
+	 * primary button, the rest are quiet links under it: a question with a yes to lean towards.
 	 */
 	layout?: "list" | "offer";
 };
 
-/** The dialog is 270 pt wide, like the system alert it follows (F9). */
+/** 270 pt wide, like the system alert it follows. */
 const WIDTH = 270;
 
 /**
- * V3 alert (F9): a centred card over the scrim with a title, one line of
- * explanation and stacked text actions under hairlines — Keep editing bold,
- * Discard in danger red. It is drawn here, not with the system alert, so it
- * looks and behaves the same on web and in the flows. Focus starts on the
- * primary action, and a scrim tap does nothing: a decision has to be made.
- * At accessibility sizes (08.6) the card takes the screen width less 16 pt
- * insets, so the buttons have room to stack and wrap.
+ * A centred card over the scrim: title, one line of explanation, stacked text actions under hairlines.
+ * Drawn here, not with the system alert, so it looks and behaves the same on web and in the flows.
+ * Focus starts on the primary action; a scrim tap does nothing, a decision has to be made.
+ * At accessibility sizes the card takes the screen width less 16 pt insets so buttons can stack and wrap.
  */
 export function AlertDialog({
 	visible,

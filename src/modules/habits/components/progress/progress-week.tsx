@@ -29,7 +29,7 @@ import { ProgressNoHabits, ProgressNothingLogged } from "./progress-states";
 import { WeekSummaryCard } from "./week-summary-card";
 
 type ProgressWeekProps = {
-	/** The one habit Progress is scoped to (P5), or null for all habits. */
+	/** The one habit Progress is scoped to, or null for all habits. */
 	oneHabit: Habit | null;
 	dot: DotColor;
 	today: Date;
@@ -40,11 +40,10 @@ type ProgressWeekProps = {
 };
 
 /**
- * Progress · Week (HAB-35, P1–P6): three stat tiles, one insight card with a
- * pager, the week's habits × days matrix, then the daily bars and week summary.
- * Too early swaps the tiles and insights for the unlock card (P2); no habits and
- * nothing logged are their own views (P3, P4). One habit, or large text, turns
- * the matrix into blocks of 40 pt days.
+ * Three stat tiles, one insight card with a pager, the week's habits × days matrix, then the daily
+ * bars and week summary. Too early swaps the tiles and insights for the unlock card; no habits and
+ * nothing logged are their own views. One habit, or large text, turns the matrix into blocks of
+ * 40 pt days.
  */
 export function ProgressWeek({
 	oneHabit,
@@ -86,7 +85,7 @@ export function ProgressWeek({
 			: view.state === "too-early"
 				? weekStartedNote(grid, view.unlock)
 				: null;
-	// One habit: a bare card, since the block names itself and shows its own days (P5).
+	// One habit: a bare card, since the block names itself and shows its own days.
 	const body = oneHabit ? (
 		<ChartCard testID="week-card">{matrix}</ChartCard>
 	) : (

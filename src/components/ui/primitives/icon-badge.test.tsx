@@ -28,7 +28,7 @@ describe("IconBadge", () => {
 	});
 });
 
-describe("IconBadge — small (VAR-02)", () => {
+describe("IconBadge — small", () => {
 	it("draws the 22px inline badge", async () => {
 		await render(<IconBadge size="small" symbol="line.3.horizontal" />);
 		expect(screen.getByTestId("symbol").props.size).toBe(11);
@@ -36,7 +36,7 @@ describe("IconBadge — small (VAR-02)", () => {
 	});
 });
 
-describe("IconBadge — compact (NEW-21)", () => {
+describe("IconBadge — compact", () => {
 	it("draws the 28px habit badge on summary rows", async () => {
 		await render(<IconBadge size="compact" symbol="book.fill" />);
 		expect(screen.getByTestId("symbol").props.size).toBe(14);

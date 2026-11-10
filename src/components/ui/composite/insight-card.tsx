@@ -11,7 +11,6 @@ import {
 import { useTheme } from "@/theme/use-theme";
 import { Button } from "../primitives/button";
 
-/** V3-32's icon square on a card: 32 pt. */
 const ICON = 32;
 
 export type InsightCardProps = {
@@ -37,7 +36,6 @@ export type InsightCardProps = {
 	};
 };
 
-/** V3-12 · insight card: icon square, title, body, an optional link. Padding 14, radius 20, a hairline, no shadow. */
 export function InsightCard({
 	symbol,
 	title,

@@ -29,7 +29,7 @@ describe("TextField", () => {
 		expect(screen.getByText("Give this habit a name.")).toBeTruthy();
 	});
 
-	describe("accessibility (I-05)", () => {
+	describe("accessibility", () => {
 		let announce: jest.SpyInstance;
 		beforeEach(() => {
 			announce = jest
@@ -162,7 +162,7 @@ describe("TextField", () => {
 	});
 });
 
-describe("TextField — near-limit name field (VAR-12)", () => {
+describe("TextField — near-limit name field", () => {
 	it("trims pasted text to the limit instead of rejecting it", async () => {
 		const onChangeText = jest.fn();
 		await render(
@@ -199,7 +199,7 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 		expect(screen.getByText("38 / 32")).toBeTruthy();
 	});
 
-	it("shows the NEW-23 counter from 80% only, never the legacy one", async () => {
+	it("shows the counter from 80% only, never the legacy one", async () => {
 		const { rerender } = await render(
 			<TextField
 				label="Name"
@@ -316,7 +316,7 @@ describe("TextField — near-limit name field (VAR-12)", () => {
 		expect(onSubmitEditing).toHaveBeenCalled();
 	});
 
-	it("announces its error as an alert to screen readers (A6-17)", async () => {
+	it("announces its error as an alert to screen readers", async () => {
 		await render(
 			<TextField
 				label="Name"

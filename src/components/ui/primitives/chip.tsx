@@ -13,9 +13,8 @@ type ChipProps = {
 };
 
 /**
- * Pill for filter/mode choices (frequency, category, quick-add). Selected is
- * the accent fill and a drawn check before the label, so it is not colour
- * alone (08.7).
+ * Pill for filter/mode choices (frequency, category, quick-add). Selected is the accent fill and a
+ * drawn check before the label, so it is not colour alone.
  */
 export function Chip({
 	label,
@@ -69,7 +68,6 @@ export function Chip({
 }
 
 const styles = StyleSheet.create({
-	// The pill is unchanged; its touch area is 44pt tall.
 	touch: {
 		minHeight: minTouchTarget,
 		justifyContent: "center",

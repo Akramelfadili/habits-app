@@ -116,7 +116,7 @@ describe("Button", () => {
 	});
 });
 
-describe("Button — disabled with reason (VAR-13)", () => {
+describe("Button — disabled with reason", () => {
 	it("shows the reason above the button only while disabled", async () => {
 		const { rerender } = await render(
 			<Button
@@ -162,7 +162,7 @@ describe("Button — disabled with reason (VAR-13)", () => {
 	);
 });
 
-describe("Button — V3-22 geometry", () => {
+describe("Button — geometry", () => {
 	it("gives the full-width pill and the compact pill a 44 pt minimum", async () => {
 		const { rerender } = await render(
 			<Button label="Add habit" onPress={jest.fn()} />,
@@ -182,7 +182,7 @@ describe("Button — V3-22 geometry", () => {
 	});
 });
 
-describe("Button — compact (V3-22)", () => {
+describe("Button — compact", () => {
 	it("is a 36 pt pill on the inset surface with a hit area of 44", async () => {
 		await render(
 			<Button

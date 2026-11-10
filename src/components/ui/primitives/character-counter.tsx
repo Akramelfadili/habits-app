@@ -2,10 +2,9 @@ import { StyleSheet, Text } from "react-native";
 import { textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/** The counter appears from this fraction of the limit onward (design-system NEW-23). */
+/** The counter appears from this fraction of the limit onward. */
 const COUNTER_FROM_RATIO = 0.8;
 
-/** The first length at which a counter for `limit` shows — 16 of 20, 26 of 32. */
 export function counterThreshold(limit: number): number {
 	return Math.ceil(limit * COUNTER_FROM_RATIO);
 }
@@ -16,9 +15,8 @@ type CharacterCounterProps = {
 };
 
 /**
- * NEW-23 character counter — shared by the habit-name and category-name
- * fields. Hidden below 80% of the limit so normal typing isn't cluttered;
- * amber once the limit is reached (the field itself stops accepting more).
+ * Shared by the habit-name and category-name fields. Hidden below 80% of the limit so normal typing
+ * isn't cluttered; amber once the limit is reached (the field itself stops accepting more).
  */
 export function CharacterCounter({ length, limit }: CharacterCounterProps) {
 	const { colors } = useTheme();

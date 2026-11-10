@@ -83,7 +83,6 @@ describe("Today week strip: browse back, then tap a day", () => {
 		await render(<Harness />);
 		await fireEvent.press(screen.getByTestId("prev"));
 		await act(() => jest.advanceTimersByTime(500));
-		// the swipe selected last Wednesday: its week is shown, with it selected
 		expect(
 			screen.getByTestId("week-strip-day-2026-10-28").props.accessibilityState
 				.selected,

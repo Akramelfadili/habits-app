@@ -10,10 +10,7 @@ import {
 } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/**
- * NEW-28 states (design-system.md). `locked` is Manage Categories'
- * built-ins (HAB-25): tinted with the category's own color, never interactive.
- */
+/** `locked` is Manage Categories' built-ins: tinted with the category's own color, never interactive. */
 export type CategoryChipState =
 	| "unselected"
 	| "selected"
@@ -33,16 +30,15 @@ type CategoryChipProps = {
 	 * and `locked` ignore it — they're never interactive.
 	 */
 	onPress?: () => void;
-	/** "compact" is a list row's chip (Manage Categories, HAB-25) — smaller than the picker grid's. */
+	/** "compact" is a list row's chip (Manage Categories), smaller than the picker grid's. */
 	size?: "default" | "compact";
 };
 
 /**
- * Category chip — icon + label in the category's *own* color, unlike `Chip`,
- * which fills with the app accent (kept separate on purpose, per
- * design-system). Selected fills with the accent (V3-14) and gains a
- * check; long labels truncate rather than wrap, so a 2-up grid stays aligned.
- * Locked fills with the category's tint instead of an outline.
+ * Icon + label in the category's *own* color, unlike `Chip`, which fills with the app accent (kept
+ * separate on purpose, per design-system). Selected fills with the accent and gains a check; long
+ * labels truncate rather than wrap, so a 2-up grid stays aligned. Locked fills with the category's
+ * tint instead of an outline.
  */
 export function CategoryChip({
 	label,
@@ -118,7 +114,7 @@ export function CategoryChip({
 		styles.chip,
 		isCompact && styles.compactChip,
 		{ backgroundColor: colors.card, borderColor: colors.border },
-		// V3-14: selected is the one accent, not the category's own colour.
+		// Selected is the one accent, not the category's own colour.
 		isSelected && {
 			backgroundColor: colors.accent,
 			borderColor: colors.accent,
@@ -164,7 +160,6 @@ const ICON = 24;
 const COMPACT_ICON = 20;
 
 const styles = StyleSheet.create({
-	// An interactive chip's touch area is 44pt tall around the 36pt pill.
 	touch: {
 		minHeight: minTouchTarget,
 		justifyContent: "center",

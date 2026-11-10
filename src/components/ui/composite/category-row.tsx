@@ -12,37 +12,26 @@ export type CategoryRowAction = {
 	/** Names what it acts on ("Rename Music") — the visible label alone repeats on every row. */
 	accessibilityLabel: string;
 	onPress: () => void;
-	/** The red text style, for a permanent action (Delete). */
 	destructive?: boolean;
 	disabled?: boolean;
 };
 
 type CategoryRowProps = {
 	name: string;
-	/** The category's own icon square (V3-32): its symbol and tint/ink. */
 	symbol: SFSymbol;
 	accent: { tint: string; ink: string };
-	/** Live count, e.g. "2 habits", "2 habits · 1 archived" or "Not used"; omitted while reordering (C2). */
+	/** Live count, e.g. "2 habits", "2 habits · 1 archived" or "Not used"; omitted while reordering. */
 	meta?: string;
-	/** Quiet trailing tag ("Built-in") — for a row with no actions. */
 	tag?: string;
 	actions?: CategoryRowAction[];
-	/** Reorder mode (C2): the drag grip replaces the actions and the tag. */
+	/** Reorder mode: the drag grip replaces the actions and the tag. */
 	handle?: ReactNode;
-	/** Held mid-drag: the E2 lift. */
 	lifted?: boolean;
-	/** VoiceOver's move actions (C2): the gestures a screen reader cannot make. */
+	/** VoiceOver's move actions: the gestures a screen reader cannot make. */
 	accessibilityActions?: { label: string; onAction: () => void }[];
-	/** Replaces the whole row while editing in place (inline rename). */
 	editor?: ReactNode;
 };
 
-/**
- * V3-15 category row on V3-23: the category's icon square, name and a count
- * line (archived habits included), then either a quiet "Built-in" tag
- * (locked, no actions), the text actions Rename and Delete (custom), or —
- * while reordering — the drag grip.
- */
 export function CategoryRow({
 	name,
 	symbol,

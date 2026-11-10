@@ -5,28 +5,23 @@ import { ProgressBar } from "./progress-bar";
 
 export type MonthListItemData = {
 	key: string;
-	/** "September". */
 	label: string;
 	/** Whole points; null when nothing was counted that month. */
 	percent: number | null;
-	/** 0–1 bar length. */
 	bar: number;
-	/** "September, 100 percent. Opens Month." */
 	accessibilityLabel: string;
 	onPress: () => void;
 };
 
 type MonthListProps = {
 	items: MonthListItemData[];
-	/** "No data" when a month has no rate. */
 	emptyLabel: string;
 };
 
 /**
- * V3-06's list fallback for the year (P16): a month per row with a bar and a
- * whole-number %, one VoiceOver stop and one 44 pt target each. It is what
- * VoiceOver and the accessibility text sizes get instead of a wall of 16 pt
- * squares.
+ * List fallback for the year: a month per row with a bar and a whole-number %, one VoiceOver stop
+ * and one 44 pt target each. It is what VoiceOver and the accessibility text sizes get instead of a
+ * wall of 16 pt squares.
  */
 export function MonthList({ items, emptyLabel }: MonthListProps) {
 	const { colors, opacity } = useTheme();

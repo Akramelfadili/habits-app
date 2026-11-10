@@ -6,15 +6,14 @@ import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type SettingsPageProps = {
-	/** The page's large title; the screen reader starts on it (08.4). */
+	/** The page's large title; the screen reader starts on it. */
 	title: string;
 	children: ReactNode;
 };
 
 /**
- * One Settings page (S1–S6, SY6): the large title, then its groups in one
- * scroll, ending clear of the tab bar. The hub and every sub-page share it, so
- * the spacing is the same everywhere.
+ * One Settings page: the large title, then its groups in one scroll, ending clear of the tab bar.
+ * The hub and every sub-page share it, so the spacing is the same everywhere.
  */
 export function SettingsPage({ title, children }: SettingsPageProps) {
 	const { colors } = useTheme();
@@ -28,7 +27,6 @@ export function SettingsPage({ title, children }: SettingsPageProps) {
 	);
 }
 
-/** A group's label, card and footnote stay together with a small gap. */
 export const settingsGroupStyle = {
 	gap: space[150],
 } as const;

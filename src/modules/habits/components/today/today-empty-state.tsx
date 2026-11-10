@@ -4,11 +4,11 @@ import { todayCopy } from "../../messages";
 
 type TodayEmptyStateProps = {
 	onAddHabit: () => void;
-	/** The suggestions screen (HAB-46). */
+	/** The suggestions screen. */
 	onBrowseSuggestions: () => void;
 };
 
-/** No habits at all (HAB-05, HAB-32 T2): one primary action and a link to suggestions. */
+/** No habits at all: one primary action and a link to suggestions. */
 export function TodayEmptyState({
 	onAddHabit,
 	onBrowseSuggestions,

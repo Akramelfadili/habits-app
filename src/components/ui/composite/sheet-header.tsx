@@ -7,15 +7,13 @@ import { useInitialFocus } from "@/utils/use-initial-focus";
 
 type SheetHeaderProps = {
 	title: string;
-	/** Trailing text action, e.g. "Close". */
 	actionLabel: string;
 	onAction: () => void;
 };
 
 /**
- * A bottom sheet's title row: title left, a small text action right — Retro
- * log's "Tuesday, 8 September … Close" (HAB-10). A screen reader starts on the
- * title when the sheet opens (08.4: "Sheet — default focus: Title").
+ * A bottom sheet's title row: title left, a small text action right (Retro log's "Tuesday, 8 September … Close").
+ * A screen reader starts on the title when the sheet opens.
  */
 export function SheetHeader({
 	title,

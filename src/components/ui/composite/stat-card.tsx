@@ -4,23 +4,18 @@ import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 type StatCardProps = {
-	/** Small all-caps eyebrow ("COMPLETION", "BEST STREAK"). */
 	label: string;
-	/** The large numeral ("24", "87%", "—"). */
 	value: string;
-	/** One short line under the numeral ("day streak", "+6 pts vs Sep"); wraps, never clips. */
 	caption: string;
-	/** "warning" is amber for the at-risk fact only (V3-10): the numeral and caption, on the card. */
+	/** "warning" is amber for the at-risk fact only: the numeral and caption, on the card. */
 	tone?: "default" | "warning";
-	/** Nothing to show yet (zero / dash): the numeral recedes to secondary ink. */
 	muted?: boolean;
 };
 
 /**
- * V3-10 · stat card: one size everywhere — padding 12 (16 at AX sizes), 2 pt
- * between label, value and sub, no minimum height, no icons. Label caption in
- * caps, value in the stat style, sub in footnote. A tile is one VoiceOver stop.
- * At AX sizes the screen lays tiles out 1-up.
+ * One size everywhere: padding 12 (16 at AX sizes), 2 pt between label, value and sub, no minimum
+ * height, no icons. Label caption in caps, value in the stat style, sub in footnote. A tile is one
+ * VoiceOver stop. At AX sizes the screen lays tiles out 1-up.
  */
 export function StatCard({
 	label,

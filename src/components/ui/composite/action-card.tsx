@@ -8,17 +8,14 @@ import { useTheme } from "@/theme/use-theme";
 type ActionCardProps = {
 	title: string;
 	subtitle: string;
-	/** Neutral grey leading badge (E7's archive box). */
 	symbol: SFSymbol;
 	onPress: () => void;
 	disabled?: boolean;
 };
 
 /**
- * NEW-25 Action card (design-system.md): an outlined card where the whole
- * card is the button, marked by a trailing chevron — "Archive instead" on the
- * delete sheet (HAB-23, E7). Deliberately not `InsightCard` (VAR-04), whose
- * body is never tappable: merging them would hide a tap target.
+ * An outlined card where the whole card is the button, marked by a trailing chevron.
+ * Deliberately not `InsightCard`, whose body is never tappable: merging them would hide a tap target.
  */
 export function ActionCard({
 	title,

@@ -5,10 +5,9 @@ import { categoriesCopy } from "../messages";
 import type { Category } from "../types";
 
 /**
- * The category name, for the add sheet (C4) and the inline rename (C3):
- * trimmed, 1–20 characters, and not a duplicate of any category — built-ins
- * included, ignoring case and surrounding whitespace. `ignoreId` lets a
- * rename keep its own name.
+ * The category name, for the add sheet and the inline rename: trimmed, 1–20 characters, and not a
+ * duplicate of any category (built-ins included, ignoring case and surrounding whitespace).
+ * `ignoreId` lets a rename keep its own name.
  */
 export function makeCategoryNameSchema(
 	categories: readonly Category[],

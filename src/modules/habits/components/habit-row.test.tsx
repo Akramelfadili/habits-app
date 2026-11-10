@@ -154,7 +154,7 @@ describe("HabitRow", () => {
 		});
 	});
 
-	describe("at risk (HAB-33)", () => {
+	describe("at risk", () => {
 		it("shows the amber dot, opens the streak options from the name, and still logs from the circle", async () => {
 			const onPress = jest.fn();
 			const onToggle = jest.fn();
@@ -178,7 +178,7 @@ describe("HabitRow", () => {
 		});
 	});
 
-	describe("a quantity habit (HAB-07, D6)", () => {
+	describe("a quantity habit", () => {
 		function renderQuantity(value: number, completed = false) {
 			const handlers = {
 				onToggle: jest.fn(),
@@ -238,7 +238,7 @@ describe("HabitRow", () => {
 		});
 	});
 
-	describe("not due (T3)", () => {
+	describe("not due", () => {
 		it("draws a dashed circle that logs a bonus, and no count button", async () => {
 			const onToggle = jest.fn();
 			await render(
@@ -259,7 +259,7 @@ describe("HabitRow", () => {
 		});
 	});
 
-	describe("layout (T-18, 08.6)", () => {
+	describe("layout", () => {
 		afterEach(() => {
 			mockAccessibilityText = false;
 		});

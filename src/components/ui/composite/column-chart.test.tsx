@@ -93,7 +93,6 @@ describe("ColumnChart", () => {
 		await fireEvent(chart, "accessibilityAction", {
 			nativeEvent: { actionName: "decrement" },
 		});
-		// Clamped at the first bar.
 		expect(
 			screen.getByLabelText("Meditate, best March 100 percent").props
 				.accessibilityValue,

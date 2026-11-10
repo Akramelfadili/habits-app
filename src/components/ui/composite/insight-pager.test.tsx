@@ -93,7 +93,6 @@ describe("InsightPager", () => {
 			screen.getAllByTestId(/^insight-dot/, { includeHiddenElements: true })[1]
 				.props.testID,
 		).toBe("insight-dot-active");
-		// Stepping past the last card stays on it.
 		for (let step = 0; step < 4; step += 1) {
 			await fireEvent(
 				screen.getByLabelText("Insight 3 of 3. Nothing else. c"),

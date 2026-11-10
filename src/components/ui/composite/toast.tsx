@@ -14,13 +14,13 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 type ToastProps = {
 	message: string;
-	/** Tone sets the leading glyph, never the surface: the toast is always ink-on-toast (V3-26). */
+	/** Tone sets the leading glyph, never the surface: the toast is always ink-on-toast. */
 	tone?: ToastTone;
 	actionLabel?: string;
 	onAction?: () => void;
 };
 
-/** The shape that carries the tone, so colour is never the only signal (08.7). */
+/** The shape that carries the tone, so colour is never the only signal. */
 const TONE_GLYPH: Record<Exclude<ToastTone, "info">, SFSymbol> = {
 	success: "checkmark.circle.fill",
 	warning: "exclamationmark.triangle.fill",
@@ -28,9 +28,8 @@ const TONE_GLYPH: Record<Exclude<ToastTone, "info">, SFSymbol> = {
 };
 
 /**
- * Floating event feedback with an optional inline action (Undo, Retry). At
- * accessibility sizes (08.6) the message wraps in full and the action drops
- * below it, on a 20 pt card rather than a pill.
+ * Floating event feedback with an optional inline action (Undo, Retry). At accessibility sizes the
+ * message wraps in full and the action drops below it, on a 20 pt card rather than a pill.
  */
 export function Toast({
 	message,

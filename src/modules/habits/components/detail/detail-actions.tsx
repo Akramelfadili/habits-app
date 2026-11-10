@@ -5,17 +5,15 @@ import { useTheme } from "@/theme/use-theme";
 import { detailCopy } from "../../messages";
 
 type DetailActionsProps = {
-	/** An archived habit has nothing to archive: Delete is all there is. */
 	canArchive: boolean;
 	onArchive: () => void;
 	onDelete: () => void;
 };
 
 /**
- * The last things on Habit Detail (D2): Archive habit (hide from Today, keep
- * history) and Delete habit, after everything that informs them. Both open a
- * confirm sheet. Delete reads in the danger ink with a minus in its square, so
- * it says what it is in a shape and in words as well as in colour.
+ * The last things on Habit Detail: Archive habit (hide from Today, keep history) and Delete habit,
+ * after everything that informs them. Both open a confirm sheet. Delete reads in the danger ink with
+ * a minus in its square, so it says what it is in a shape and in words as well as in colour.
  */
 export function DetailActions({
 	canArchive,

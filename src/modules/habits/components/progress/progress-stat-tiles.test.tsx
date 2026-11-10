@@ -13,7 +13,7 @@ const tiles = [
 	{ key: "c", label: "Best day", value: "Mon", caption: "5 of 6 done" },
 ];
 
-describe("ProgressStatTiles (V3-10)", () => {
+describe("ProgressStatTiles", () => {
 	beforeEach(() => {
 		mockAccessibilityText = false;
 	});

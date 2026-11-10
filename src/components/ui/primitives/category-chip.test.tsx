@@ -35,7 +35,7 @@ describe("CategoryChip", () => {
 		);
 	});
 
-	it("selected: fills with the accent, not the category's colour, and gains a check (V3-14)", async () => {
+	it("selected: fills with the accent, not the category's colour, and gains a check", async () => {
 		await render(
 			<CategoryChip
 				label="Learning"
@@ -98,7 +98,7 @@ describe("CategoryChip", () => {
 		expect(label.props.ellipsizeMode).toBe("tail");
 	});
 
-	it("locked (HAB-25): tinted with the category's own color, not a button", async () => {
+	it("locked: tinted with the category's own color, not a button", async () => {
 		await render(
 			<CategoryChip
 				label="Health"

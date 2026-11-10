@@ -10,7 +10,7 @@ import { minTouchTarget, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { CompletionRows, type CompletionRowsCell } from "./completion-rows";
 
-/** V3-06's year cell (T-10): 16 pt, below 44 by design — never tappable. */
+/** A year cell: 16 pt, below 44 by design, never tappable. */
 export const YEAR_CELL = 16;
 const WIDE_GAP = space[50];
 const NARROW_GAP = 1;
@@ -18,20 +18,15 @@ const WEEKDAYS = 7;
 
 export type YearMonthLabel = {
 	key: string;
-	/** "Jan ›". */
 	label: string;
-	/** The week column the month starts in. */
 	column: number;
-	/** "July, 88 percent. Opens Month." */
 	accessibilityLabel: string;
-	/** Opens that month in Month; Back returns to Year. */
 	onPress: () => void;
 };
 
 export type YearBand = {
 	key: string;
 	months: YearMonthLabel[];
-	/** Week columns, Monday → Sunday top to bottom; `null` pads the band's ragged ends. */
 	columns: (CompletionRowsCell | null)[][];
 };
 
@@ -41,7 +36,6 @@ type YearHeatMapProps = {
 	onlyBand?: number;
 };
 
-/** Rows (Mon → Sun) from week columns, which is how a band is stored. */
 export function bandRows(columns: YearBand["columns"]) {
 	return Array.from({ length: WEEKDAYS }, (_, weekday) =>
 		columns.map((column) => column[weekday] ?? null),
@@ -49,10 +43,9 @@ export function bandRows(columns: YearBand["columns"]) {
 }
 
 /**
- * V3-06 · year heat map: three bands of four months, one 16 pt cell per day,
- * a column per week and a row per weekday (Mon → Sun). The month labels are the
- * only targets (44 pt high, via hitSlop) and open that month; the cells are
- * hidden from VoiceOver — the month list is the screen-reader view (P16).
+ * Three bands of four months, one 16 pt cell per day, a column per week and a row per weekday
+ * (Mon → Sun). The month labels are the only targets (44 pt high, via hitSlop) and open that month;
+ * the cells are hidden from VoiceOver, as the month list is the screen-reader view.
  */
 export function YearHeatMap({ bands, onlyBand }: YearHeatMapProps) {
 	const { colors, opacity } = useTheme();

@@ -4,15 +4,11 @@ import { useTheme } from "@/theme/use-theme";
 import { todayCopy } from "../../messages";
 
 type PastDayBarProps = {
-	/** "Wed 21 Oct" — the day logs go to. */
 	dayLabel: string;
 	onShowToday: () => void;
 };
 
-/**
- * T10: while a past day is selected, a bar says where logs land and the way
- * back. It replaces V1's "Log a past day" link (HAB-30).
- */
+/** While a past day is selected, a bar says where logs land and the way back. */
 export function PastDayBar({ dayLabel, onShowToday }: PastDayBarProps) {
 	const { colors, opacity } = useTheme();
 

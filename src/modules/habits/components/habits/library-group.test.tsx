@@ -37,7 +37,7 @@ describe("LibraryGroup", () => {
 		expect(screen.getAllByTestId("container-section")).toHaveLength(2);
 	});
 
-	it("leaves 20 pt before the next group (F-04 space-500)", async () => {
+	it("leaves 20 pt before the next group", async () => {
 		await render(
 			<LibraryGroup name="Health" count={1}>
 				<Text>Drink water</Text>

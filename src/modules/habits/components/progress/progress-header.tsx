@@ -9,7 +9,6 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { progressCopy } from "../../messages";
 
 type ProgressHeaderProps = {
-	/** "Week of 19 October", "October 2026", "2026". */
 	eyebrow: string;
 	/** Export can't run yet (no habits, nothing logged): it says why when tapped. */
 	exportUnavailable: boolean;
@@ -18,15 +17,14 @@ type ProgressHeaderProps = {
 	animatedStyle?: object;
 	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
 	collapsed?: boolean;
-	/** The title block, so a re-tap of the tab can put the screen reader on it (08.4). */
+	/** The title block, so a re-tap of the tab can put the screen reader on it. */
 	titleRef?: RefObject<HostInstance | null>;
 };
 
 /**
- * V3-02 for Progress: the range's eyebrow, the display title and a trailing
- * Export pill. At accessibility text sizes the button moves above the title
- * (08.6). Eyebrow and title are one VoiceOver stop: "Progress, heading. Week of
- * 19 October."
+ * The range's eyebrow, the display title and a trailing Export pill. At accessibility text sizes the
+ * button moves above the title. Eyebrow and title are one VoiceOver stop: "Progress, heading. Week
+ * of 19 October."
  */
 export function ProgressHeader({
 	eyebrow,

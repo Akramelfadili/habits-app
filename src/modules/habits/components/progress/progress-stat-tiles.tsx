@@ -5,8 +5,8 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import type { StatTileData } from "../../presenters/progress-presenter";
 
 /**
- * The three stat tiles (V3-10): 2-up gaps of 8 pt side by side, one under another
- * at accessibility sizes (P11). Each tile is one VoiceOver stop.
+ * The three stat tiles: 2-up gaps of 8 pt side by side, one under another at accessibility sizes.
+ * Each tile is one VoiceOver stop.
  */
 export function ProgressStatTiles({ tiles }: { tiles: StatTileData[] }) {
 	const stacked = useAccessibilityTextSize();

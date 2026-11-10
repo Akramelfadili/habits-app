@@ -139,7 +139,7 @@ describe("ProgressYear — states", () => {
 		await render(<ProgressYear oneHabit={null} {...handlers} />);
 		expect(screen.getByText("Year view unlocks in 4 days")).toBeTruthy();
 		expect(screen.getAllByTestId(/^year-band-band-/)).toHaveLength(1);
-		expect(screen.getAllByRole("button")).toHaveLength(5); // the chip and four month labels
+		expect(screen.getAllByRole("button")).toHaveLength(5);
 	});
 
 	it("nothing logged: a link to Today above the outlined map", async () => {

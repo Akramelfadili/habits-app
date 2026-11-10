@@ -16,20 +16,17 @@ import {
 
 type CategoryNameEditorProps = {
 	category: Category;
-	/** Every category — the duplicate check covers built-ins and other customs. */
 	categories: readonly Category[];
 	onRename: (name: string) => Promise<unknown>;
-	/** Leaves edit mode — after a save, or on Cancel. */
 	onDone: () => void;
 	isSaving?: boolean;
 };
 
 /**
- * Inline rename (C3, V3-15 + V3-16): the row's name becomes a field with a
- * Done beside it. 20 characters with the counter from 16, a paste trimmed to
- * fit, and a name that clashes with any category — built-ins included, case
- * and spaces ignored — says so under the field in danger ink. The category's
- * own name in another case is allowed.
+ * Inline rename: the row's name becomes a field with a Done beside it. 20 characters with the
+ * counter from 16, a paste trimmed to fit, and a name that clashes with any category (built-ins
+ * included, case and spaces ignored) says so under the field in danger ink. The category's own name
+ * in another case is allowed.
  */
 export function CategoryNameEditor({
 	category,

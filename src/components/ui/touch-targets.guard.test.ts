@@ -4,41 +4,38 @@ import path from "node:path";
 import ts from "typescript";
 
 /**
- * HAB-49 / 08.2: every pressable has a hit area of at least 44 × 44 pt, or an
- * entry in the exceptions map below that says why not.
+ * Every pressable has a hit area of at least 44 × 44 pt, or an entry in the exceptions map below
+ * that says why not.
  *
- * Static, because Jest has no layout: for each `<Pressable>` (and the other
- * `Touchable*` components) in the app source it reads the element's `style`
- * (resolving `styles.x` against the file's `StyleSheet.create`) and its
- * `hitSlop`, and checks both axes:
+ * Static, because Jest has no layout: for each `<Pressable>` (and the other `Touchable*`
+ * components) in the app source it reads the element's `style` (resolving `styles.x` against the
+ * file's `StyleSheet.create`) and its `hitSlop`, and checks both axes:
  *
- *  - an explicit `width` / `height` / `minWidth` / `minHeight` (plus the slop on
- *    both sides) under 44 fails;
- *  - an axis with no explicit size passes only if the element fills it
- *    (`flex` or `alignSelf: "stretch"` for the width only, `width: "100%"`, absolute fill) or it sets
- *    `minHeight`/`minWidth` of 44 on the other route; otherwise it is
- *    "unproven" and fails too, so a new pressable has to say how big it is.
+ *  - an explicit `width` / `height` / `minWidth` / `minHeight` (plus the slop on both sides) under
+ *    44 fails;
+ *  - an axis with no explicit size passes only if the element fills it (`flex` or
+ *    `alignSelf: "stretch"` for the width only, `width: "100%"`, absolute fill) or it sets
+ *    `minHeight`/`minWidth` of 44 on the other route; otherwise it is "unproven" and fails too, so a
+ *    new pressable has to say how big it is.
  *
- * Limits, so nobody trusts it more than it earns: it reads only styles named
- * `styles.*` in the same file (anything else shows as "unproven", which fails
- * safe); an exception is keyed by the pressable's position in its file, so
- * inserting one above it shifts the key (the stale-entry check then fails and
- * the index is fixed by hand); an exception covers every problem on its
- * element, so its reason must say which axis it is about; a computed `hitSlop`
- * is read as the smallest number in its source, never trusted.
+ * Limits, so nobody trusts it more than it earns: it reads only styles named `styles.*` in the same
+ * file (anything else shows as "unproven", which fails safe); an exception is keyed by the
+ * pressable's position in its file, so inserting one above it shifts the key (the stale-entry check
+ * then fails and the index is fixed by hand); an exception covers every problem on its element, so
+ * its reason must say which axis it is about; a computed `hitSlop` is read as the smallest number in
+ * its source, never trusted.
  *
- * An exception is keyed `file::index` (the nth pressable in the file) and
- * carries its reason. Removing a pressable leaves a stale entry, which fails.
+ * An exception is keyed `file::index` (the nth pressable in the file) and carries its reason.
+ * Removing a pressable leaves a stale entry, which fails.
  */
 
 /**
- * Pressables the touch-target guard cannot prove are 44 × 44 pt, each with the
- * reason (HAB-49, 08.2). Keyed `file::n` (the nth pressable in the file).
+ * Pressables the touch-target guard cannot prove are 44 × 44 pt, each with the reason. Keyed
+ * `file::n` (the nth pressable in the file).
  *
- * Two kinds: the size comes from something the static reader cannot follow
- * (padding plus content, a computed hit slop, a parent that stretches it), or
- * it really is under 44 and the spec says so. The second kind is marked
- * "BELOW 44". Add nothing here without a reason a reviewer could check.
+ * Two kinds: the size comes from something the static reader cannot follow (padding plus content, a
+ * computed hit slop, a parent that stretches it), or it really is under 44 and the spec says so. The
+ * second kind is marked "BELOW 44". Add nothing here without a reason a reviewer could check.
  */
 const TOUCH_TARGET_EXCEPTIONS: Record<string, string> = {
 	"components/ui/composite/action-card.tsx::0":
@@ -97,7 +94,6 @@ function sourceFiles(dir: string): string[] {
 
 type Props = Record<string, number | string | boolean>;
 
-/** A tiny constant evaluator: literals, known tokens, local numeric consts, + - * /. */
 function evaluate(
 	node: ts.Node,
 	consts: Map<string, number>,
@@ -326,7 +322,7 @@ export function scanTouchTargets(): Finding[] {
 	return sourceFiles(SRC).flatMap(check);
 }
 
-describe("touch-target guard (HAB-49, 08.2)", () => {
+describe("touch-target guard", () => {
 	const findings = scanTouchTargets();
 
 	it("every pressable is 44 pt or has a documented exception", () => {

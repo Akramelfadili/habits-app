@@ -5,9 +5,8 @@ import { useTheme } from "@/theme/use-theme";
 import { CompletionCell } from "./completion-cell";
 import type { CompletionRowsCell } from "./completion-rows";
 
-/** V3-06's week matrix cell (T-10): 24 pt, below 44 by design — not tappable. */
+/** A week matrix cell: 24 pt, below 44 by design, not tappable. */
 const MATRIX_CELL = 24;
-/** The AX3 / one-habit block's cell: 40 pt. */
 const BLOCK_CELL = 40;
 const TOTAL_WIDTH = 32;
 
@@ -15,24 +14,19 @@ export type MatrixDayHeader = {
 	key: string;
 	letter: string;
 	today: boolean;
-	/** "Wednesday 21 October. Edit this day". */
 	accessibilityLabel: string;
-	/** Opens Edit this day; the 44 pt-high header is the matrix's only tap target. */
 	onPress?: () => void;
 };
 
 export type MatrixRowData = {
 	key: string;
 	name: string;
-	/** The category's 8 pt dot (identity colour, never a fill). */
 	dot: string;
-	/** "3/7". */
 	total: string;
-	/** The target was met: the total is set in the heavier weight. */
 	met?: boolean;
 	/**
-	 * One VoiceOver stop per habit: its name and total, then every day as
-	 * "Wed, done" (08.3). The cells themselves are not separate stops.
+	 * One VoiceOver stop per habit: its name and total, then every day as "Wed, done". The cells
+	 * themselves are not separate stops.
 	 */
 	accessibilityLabel: string;
 	cells: CompletionRowsCell[];
@@ -44,10 +38,9 @@ type WeekMatrixProps = {
 };
 
 /**
- * V3-06 · week matrix: habits down, Monday → Sunday across, a row total on the
- * right. Cells are 24 pt and read-only; each day header is a 44 pt-high target
- * that opens Edit this day (08.2). 28 pt wide because that is the cell pitch —
- * a wider target would overlap its neighbour.
+ * Habits down, Monday → Sunday across, a row total on the right. Cells are 24 pt and read-only; each
+ * day header is a 44 pt-high target that opens Edit this day. 28 pt wide because that is the cell
+ * pitch: a wider target would overlap its neighbour.
  */
 export function WeekMatrix({ days, rows }: WeekMatrixProps) {
 	const { colors } = useTheme();
@@ -131,9 +124,7 @@ export function WeekMatrix({ days, rows }: WeekMatrixProps) {
 }
 
 export type WeekBlockCell = CompletionRowsCell & {
-	/** Read after the label when the cell is a button ("Edit this day"). */
 	accessibilityHint?: string;
-	/** The weekday letter above the cell. */
 	letter: string;
 };
 
@@ -141,11 +132,10 @@ export type WeekBlockData = {
 	key: string;
 	name: string;
 	dot: string;
-	/** Under the name: "Daily · your only habit". */
 	subline?: string;
 	total: string;
 	met?: boolean;
-	/** A habit badge in front of the name (the one-habit card, P5). */
+	/** A habit badge in front of the name (the one-habit card). */
 	leading?: ReactNode;
 	cells: WeekBlockCell[];
 };
@@ -155,10 +145,9 @@ type WeekBlocksProps = {
 };
 
 /**
- * V3-06's list layout: one block per habit — name and total, then seven 40 pt
- * cells with their date. It is the one-habit card (P5) and what the matrix
- * becomes at AX3 (P6), so nothing clips at large text. Every cell is its own
- * VoiceOver stop ("Wed, done").
+ * List layout: one block per habit, name and total, then seven 40 pt cells with their date. It is
+ * the one-habit card and what the matrix becomes at AX3, so nothing clips at large text. Every cell
+ * is its own VoiceOver stop ("Wed, done").
  */
 export function WeekBlocks({ blocks }: WeekBlocksProps) {
 	const { colors } = useTheme();

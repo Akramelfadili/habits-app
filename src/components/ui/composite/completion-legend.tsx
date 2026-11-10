@@ -3,7 +3,6 @@ import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { CompletionCell, type CompletionCellState } from "./completion-cell";
 
-/** The legend's swatch: the smallest cell (T-10). */
 const SWATCH = 12;
 
 export type LegendEntry = {
@@ -12,7 +11,7 @@ export type LegendEntry = {
 };
 
 type CompletionLegendProps = {
-	/** Week's list: one swatch and word per state the matrix can show (P1). */
+	/** Week's list: one swatch and word per state the matrix can show. */
 	entries: LegendEntry[];
 	/**
 	 * Month and Year's scale: "Less ▢▢▢▢ More" (0 / 28 / 58 / 100 %, the partial
@@ -23,8 +22,8 @@ type CompletionLegendProps = {
 };
 
 /**
- * V3-05's legend. A frozen cell is never guessed at: it is always named, and
- * words sit beside every swatch so colour is never the only signal.
+ * A frozen cell is never guessed at: it is always named, and words sit beside every swatch so colour
+ * is never the only signal.
  */
 export function CompletionLegend({ entries, scale }: CompletionLegendProps) {
 	const { colors } = useTheme();

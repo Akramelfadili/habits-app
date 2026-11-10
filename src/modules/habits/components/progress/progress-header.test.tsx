@@ -22,7 +22,7 @@ const props = {
 	onExport: jest.fn(),
 };
 
-describe("ProgressHeader (V3-02, P1)", () => {
+describe("ProgressHeader", () => {
 	it("reads the title and the eyebrow as one heading", async () => {
 		await render(<ProgressHeader {...props} />);
 		const heading = screen.getByRole("header", {

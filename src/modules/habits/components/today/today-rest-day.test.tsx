@@ -35,7 +35,7 @@ function setup(overrides = {}) {
 	return { view, ...handlers };
 }
 
-describe("TodayRestDay (T3)", () => {
+describe("TodayRestDay", () => {
 	it("says a rest day keeps every streak safe and that a log is a bonus", async () => {
 		await setup().view;
 		expect(screen.getByText("Rest day")).toBeTruthy();

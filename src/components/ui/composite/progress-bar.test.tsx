@@ -29,7 +29,7 @@ describe("ProgressBar", () => {
 	});
 });
 
-describe("ProgressBar with a label (V3-07)", () => {
+describe("ProgressBar with a label", () => {
 	it("shows the count left and a whole-number percentage right", async () => {
 		await render(<ProgressBar value={0.2} label="1 of 5 done" />);
 		expect(screen.getByText("1 of 5 done")).toBeTruthy();

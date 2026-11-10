@@ -57,7 +57,7 @@ describe("MonthList", () => {
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
-	it("dims a row while it is pressed (I-06)", async () => {
+	it("dims a row while it is pressed", async () => {
 		await render(
 			<MonthList
 				emptyLabel="–"

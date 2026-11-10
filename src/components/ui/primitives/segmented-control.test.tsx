@@ -60,7 +60,7 @@ describe("SegmentedControl", () => {
 		expect(onChange).not.toHaveBeenCalled();
 	});
 
-	it("supports three options and reports the tapped one (Appearance, HAB-15)", async () => {
+	it("supports three options and reports the tapped one (Appearance)", async () => {
 		const onChange = jest.fn();
 		await render(
 			<SegmentedControl
@@ -79,7 +79,7 @@ describe("SegmentedControl", () => {
 	});
 });
 
-describe("SegmentedControl — accessibility and touch targets (A6-03, A6-05)", () => {
+describe("SegmentedControl — accessibility and touch targets", () => {
 	it("is a labelled tab list whose segments are tabs", async () => {
 		await render(
 			<SegmentedControl
@@ -107,7 +107,7 @@ describe("SegmentedControl — accessibility and touch targets (A6-03, A6-05)", 
 	});
 });
 
-describe("SegmentedControl — one segment disabled (range switcher, HAB-16)", () => {
+describe("SegmentedControl — one segment disabled (range switcher)", () => {
 	const three: [
 		{ value: "week"; label: string },
 		{ value: "month"; label: string },
@@ -135,7 +135,7 @@ describe("SegmentedControl — one segment disabled (range switcher, HAB-16)", (
 	});
 });
 
-describe("SegmentedControl — V3-17 look", () => {
+describe("SegmentedControl — look", () => {
 	it("fills the selected pill with the accent inside a 4 pt inset, so the pill is 40 pt of the 48 pt hit area", async () => {
 		await render(
 			<SegmentedControl options={options} value="build" onChange={jest.fn()} />,
@@ -185,7 +185,6 @@ describe("SegmentedControl — accessibility text sizes (08.6, P6, P11)", () => 
 		expect(screen.getByTestId("segmented-stack")).toBeTruthy();
 		await fireEvent.press(screen.getByRole("tab", { name: "Break" }));
 		expect(onChange).toHaveBeenCalledWith("break");
-		// Choosing closes the list again.
 		expect(screen.queryByTestId("segmented-stack")).toBeNull();
 	});
 });

@@ -10,7 +10,6 @@ import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useFillAnimation } from "@/utils/use-fill-animation";
 
-/** V3-08's chart: 12 columns × 96 pt by default. */
 const CHART_HEIGHT = 96;
 const STUB = 3;
 const MAX_RADIUS = 6;
@@ -29,9 +28,7 @@ export type ChartColumn = {
 	/** 0–1; ignored for before-start and future. */
 	value: number;
 	state?: ChartColumnState;
-	/** The axis: a month initial or weekday letter. */
 	label: string;
-	/** A second axis line under the label ("83%"). */
 	valueLabel?: string;
 	/** What the rotor reads for this bar: "September, 100 percent". */
 	accessibilityLabel: string;
@@ -40,7 +37,6 @@ export type ChartColumn = {
 type ColumnChartProps = {
 	columns: ChartColumn[];
 	height?: number;
-	/** The whole chart in one sentence ("Meditate, Mar to Oct, best September 100 percent"). */
 	summary: string;
 };
 
@@ -98,10 +94,9 @@ function Bar({
 }
 
 /**
- * V3-08 · chart: one column per period, scaled to the tallest possible (1),
- * radius min(width ÷ 2, 6). Bars rise over the "fill" token and jump with
- * Reduce Motion. For VoiceOver it is one adjustable element: the summary,
- * and swipe up or down steps from bar to bar (08.3).
+ * One column per period, scaled to the tallest possible (1), radius min(width ÷ 2, 6). Bars rise over
+ * the "fill" token and jump with Reduce Motion. For VoiceOver it is one adjustable element: the
+ * summary, and swipe up or down steps from bar to bar.
  */
 export function ColumnChart({
 	columns,

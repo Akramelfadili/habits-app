@@ -7,19 +7,16 @@ import { useReducedMotion } from "@/utils/use-reduced-motion";
 type SkeletonProps = {
 	width?: DimensionValue;
 	height: number;
-	/** A fully round shape (the row's circle). */
 	circle?: boolean;
-	/** The corner radius; an icon square passes `squareRadius(size)`. Defaults to a pill. */
 	radius?: number;
 };
 
-/** The dimmest the pulse goes (V3-07's loop). */
 const PULSE_LOW = 0.5;
 
 /**
- * V3-07 skeleton: one placeholder shape on the inset surface. It pulses on a
- * 1.2 s loop and sits still with Reduce Motion. Callers decide when it shows
- * (only after 300 ms, SY1) and hide its shapes from the screen reader.
+ * One placeholder shape on the inset surface. It pulses on a 1.2 s loop and sits still with Reduce
+ * Motion. Callers decide when it shows (only after 300 ms) and hide its shapes from the screen
+ * reader.
  */
 export function Skeleton({
 	width = "100%",

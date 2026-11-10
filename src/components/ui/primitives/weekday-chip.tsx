@@ -3,7 +3,6 @@ import { minTouchTarget, radius, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type WeekdayChipProps = {
-	/** Single-letter label ("M", "T", …). */
 	letter: string;
 	/** Full day name, for screen readers — letters alone are ambiguous (T/T, S/S). */
 	accessibilityLabel: string;
@@ -13,9 +12,9 @@ type WeekdayChipProps = {
 };
 
 /**
- * V3-19: a 44 pt day circle (the touch target itself, so neighbours abut and
- * never overlap). Off is the card with a 3:1 outline; selected is the accent
- * fill. The letter is the second signal, the checked state the third.
+ * A 44 pt day circle (the touch target itself, so neighbours abut and never overlap). Off is the
+ * card with a 3:1 outline; selected is the accent fill. The letter is the second signal, the checked
+ * state the third.
  */
 export function WeekdayChip({
 	letter,
@@ -39,7 +38,7 @@ export function WeekdayChip({
 					? { backgroundColor: colors.accent, borderColor: colors.accent }
 					: { backgroundColor: colors.card, borderColor: colors.outline },
 				disabled && { opacity: opacity.disabled },
-				// "Pressed: inner fill" (V3-19), not a fade.
+				// Pressed: inner fill, not a fade.
 				pressed && !disabled && !selected && { backgroundColor: colors.inner },
 			]}
 		>

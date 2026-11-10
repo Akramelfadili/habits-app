@@ -57,7 +57,7 @@ describe("StatCard", () => {
 		});
 	});
 
-	it("uses V3-10's one size: padding 12, 2 pt gaps, caption label, stat numeral, footnote sub", async () => {
+	it("uses one size: padding 12, 2 pt gaps, caption label, stat numeral, footnote sub", async () => {
 		await render(<StatCard label="Current" value="24" caption="day streak" />);
 		expect(screen.getByLabelText("Current: 24, day streak")).toHaveStyle({
 			padding: 12,

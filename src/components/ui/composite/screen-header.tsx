@@ -10,21 +10,17 @@ import { useInitialFocus } from "@/utils/use-initial-focus";
 export const ROUTE_FOCUS_DELAY_MS = 400;
 
 type ScreenHeaderProps = {
-	/** The caps line over the title ("10 built-in · 2 custom", "Upper body · Tue, Thu"). */
 	eyebrow?: string;
 	title: string;
-	/** What VoiceOver says for the title block when the visible words alone are not enough. */
 	accessibilityLabel?: string;
-	/** Up to two trailing 44 pt buttons (`HeaderCircleButton`, `HeaderPillButton`). */
 	children?: ReactNode;
 };
 
 /**
- * V3-02 for a pushed screen that draws its own title (Categories, Reminders,
- * Settings): an optional eyebrow, the display title and the trailing buttons
- * on one row. At accessibility sizes the buttons move above the title (H10).
- * Eyebrow and title are one VoiceOver stop, and the screen reader starts on it
- * when the screen opens (08.4: a pushed screen's default focus is its title).
+ * For a pushed screen that draws its own title (Categories, Reminders, Settings): an optional
+ * eyebrow, the display title and the trailing buttons on one row. At accessibility sizes the buttons
+ * move above the title. Eyebrow and title are one VoiceOver stop, and the screen reader starts on it
+ * when the screen opens (a pushed screen's default focus is its title).
  */
 export function ScreenHeader({
 	eyebrow,

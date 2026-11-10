@@ -26,7 +26,7 @@ describe("SectionHeader", () => {
 		});
 	});
 
-	it("group: compact label with its count right beside it (HAB-25)", async () => {
+	it("group: compact label with its count right beside it", async () => {
 		await render(<SectionHeader size="group" title="Built-in" count="10" />);
 		expect(screen.getByText("Built-in")).toHaveStyle({
 			fontSize: textStyles.footnote.fontSize,
@@ -36,7 +36,7 @@ describe("SectionHeader", () => {
 		});
 	});
 
-	it("group: a tag sits at the far edge, only when given (HAB-19)", async () => {
+	it("group: a tag sits at the far edge, only when given", async () => {
 		const view = await render(<SectionHeader size="group" title="Training" />);
 		expect(screen.queryByText(/Reordering/)).toBeNull();
 		await view.rerender(
@@ -51,7 +51,7 @@ describe("SectionHeader", () => {
 		});
 	});
 
-	it("is one heading stop reading the title and count together (A6-09, A6-10)", async () => {
+	it("is one heading stop reading the title and count together", async () => {
 		await render(<SectionHeader title="Morning" count="2/3" />);
 		const heading = screen.getByRole("header", { name: "Morning, 2 of 3" });
 		expect(heading.props.accessible).toBe(true);
@@ -67,7 +67,7 @@ describe("SectionHeader", () => {
 	});
 });
 
-describe("SectionHeader — eyebrow (T1 group header)", () => {
+describe("SectionHeader eyebrow", () => {
 	it("shows a caps title and the count at the far edge", async () => {
 		await render(
 			<SectionHeader size="eyebrow" title="Health" count="0 of 2" />,
