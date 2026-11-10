@@ -85,11 +85,15 @@ describe("device validation stays out of production", () => {
 		const importers = walk("src")
 			.filter((file) => /\.(ts|tsx)$/.test(file) && !file.includes(".test."))
 			.filter((file) =>
-				/load-device-state|dev-state-repository/.test(read(file)),
+				/load-device-state|dev-state-repository|device-validation\/launch-request/.test(
+					read(file),
+				),
 			)
 			.filter(
 				(file) =>
-					!/(load-device-state|dev-state-repository)(\.web)?\.ts$/.test(file),
+					!/(load-device-state|dev-state-repository|launch-request)(\.web)?\.ts$/.test(
+						file,
+					),
 			);
 		expect(importers).toEqual([
 			"src/modules/habits/screens/dev-state-screen.tsx",
@@ -98,7 +102,67 @@ describe("device validation stays out of production", () => {
 		const screen = read("src/modules/habits/screens/dev-state-screen.tsx");
 		expect(screen).toContain("isDeviceValidationBuild()");
 		expect(screen).toMatch(/if \(!enabled\) return <Redirect href="\/" \/>/);
-		expect(screen).toMatch(/if \(!enabled \|\| !route\) return/);
+		expect(screen).toMatch(
+			/if \(!enabled \|\| !route \|\| !deviceState\) return/,
+		);
+		expect(screen).toMatch(/!isDeviceValidationBuild\(\) \|\| !launchFile/);
+	});
+
+	it("the screen reaches the loader only through a require inside the inline flag check", () => {
+		const screen = read("src/modules/habits/screens/dev-state-screen.tsx");
+		// No static import of the loader or the launch-file reader: a static
+		// import keeps them (and the fixtures behind them) in a release bundle.
+		for (const module of [
+			"load-device-state",
+			"dev-state-repository",
+			"device-state",
+			"launch-request",
+		]) {
+			expect(screen).not.toMatch(
+				new RegExp(`^\\s*import[^;]*from\\s+["'][^"']*${module}["']`, "m"),
+			);
+			expect(screen).not.toMatch(
+				new RegExp(`^\\s*import\\s+["'][^"']*${module}["']`, "m"),
+			);
+		}
+		// Every require of them sits in `FLAG === "1" ? require("…") : null`.
+		const required = [
+			...screen.matchAll(
+				/require\(\s*["']([^"']*(?:load-device-state|dev-state-repository|device-state|launch-request))["']\s*\)/g,
+			),
+		].map((match) => match[1]);
+		expect(required.sort()).toEqual([
+			"../services/load-device-state",
+			"@/lib/device-validation/launch-request",
+		]);
+		const gated = [
+			...screen.matchAll(
+				new RegExp(
+					`process\\.env\\.${FLAG}\\s*===\\s*"1"\\s*\\?\\s*require\\(\\s*"([^"]+)"\\s*\\)\\s*:\\s*null`,
+					"g",
+				),
+			),
+		].map((match) => match[1]);
+		expect(gated.sort()).toEqual(required.sort());
+		// No dynamic import() either: it would be a second, ungated way in
+		// (`typeof import(…)` in a type is erased and fine).
+		expect(screen).not.toMatch(
+			/(?<!typeof\s)\bimport\(\s*["'][^"']*(?:load-device-state|launch-request)/,
+		);
+	});
+
+	it("a static import or an ungated require would be caught by the pattern", () => {
+		const gate = new RegExp(
+			`process\\.env\\.${FLAG}\\s*===\\s*"1"\\s*\\?\\s*require\\(\\s*"([^"]+)"\\s*\\)\\s*:\\s*null`,
+			"g",
+		);
+		const ungated =
+			'const x = isOn() ? require("../services/load-device-state") : null;';
+		expect([...ungated.matchAll(gate)]).toEqual([]);
+		const noFlag = `const x = process.env.${FLAG} ? require("../services/load-device-state") : null;`;
+		expect([...noFlag.matchAll(gate)]).toEqual([]);
+		const gated = `const x = process.env.${FLAG} === "1" ? require("../services/load-device-state") : null;`;
+		expect([...gated.matchAll(gate)]).toHaveLength(1);
 	});
 
 	it("the only route is a thin render of that screen", () => {
@@ -111,11 +175,25 @@ describe("device validation stays out of production", () => {
 		]);
 	});
 
-	it("the flag is read in one place, as a literal Metro can inline", () => {
+	it("the flag is read in two places, both as a literal Metro can inline", () => {
 		const readers = walk("src")
 			.filter((file) => /\.(ts|tsx)$/.test(file))
 			.filter((file) => read(file).includes(`process.env.${FLAG}`))
 			.filter((file) => !file.includes(".test."));
-		expect(readers).toEqual(["src/lib/device-validation/enabled.ts"]);
+		expect(readers).toEqual([
+			"src/lib/device-validation/enabled.ts",
+			"src/modules/habits/screens/dev-state-screen.tsx",
+		]);
+		// In the screen every read is the `=== "1" ? require(…)` gate.
+		const screen = read("src/modules/habits/screens/dev-state-screen.tsx");
+		const reads = screen.match(new RegExp(`process\\.env\\.${FLAG}`, "g"));
+		const gates = screen.match(
+			new RegExp(
+				`process\\.env\\.${FLAG}\\s*===\\s*"1"\\s*\\?\\s*require\\(`,
+				"g",
+			),
+		);
+		expect(reads).toHaveLength(2);
+		expect(gates).toHaveLength(2);
 	});
 });
