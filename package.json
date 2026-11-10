@@ -67,6 +67,7 @@
 		"prepare": "husky",
 		"test": "jest",
 		"test:perf": "jest --runInBand --testPathIgnorePatterns /node_modules/ /__rsc_tests__/ \"<rootDir>/scripts/\" --testPathPatterns \"\\\\.perf\\\\.test\\\\.tsx?$\"",
+		"coverage": "jest --coverage",
 		"test:slow": "jest --testPathIgnorePatterns /node_modules/ --testPathPatterns \"\\\\.slow\\\\.test\\\\.tsx?$\"",
 		"visual-check": "node scripts/visual-check.mjs",
 		"mockups:render": "node scripts/render-mockups.mjs",
@@ -102,6 +103,29 @@
 		],
 		"setupFilesAfterEnv": [
 			"./jest.setup-after-env.js"
-		]
+		],
+		"collectCoverageFrom": [
+			"src/**/*.{ts,tsx}",
+			"!src/**/*.test.{ts,tsx}",
+			"!src/**/*.d.ts",
+			"!src/**/test-support/**"
+		],
+		"coverageReporters": [
+			"text-summary",
+			"lcov"
+		],
+		"coverageThreshold": {
+			"global": {
+				"lines": 96,
+				"branches": 90,
+				"functions": 94
+			},
+			"./src/modules/habits/domain/": {
+				"lines": 98
+			},
+			"./src/modules/habits/strategies/": {
+				"lines": 98
+			}
+		}
 	}
 }

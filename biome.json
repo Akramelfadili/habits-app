@@ -22,6 +22,9 @@
 		"enabled": true,
 		"rules": {
 			"preset": "recommended",
+			"nursery": {
+				"noFloatingPromises": "error"
+			},
 			"style": {
 				"noRestrictedImports": {
 					"level": "error",

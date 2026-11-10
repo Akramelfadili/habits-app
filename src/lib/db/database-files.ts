@@ -29,7 +29,7 @@ export function createBackupFiles(databasePath: string): BackupFiles {
 		names: () => directory.list().map((item) => item.name),
 		pathFor: (name) => decodeURI(fileOf(name).uri.replace(/^file:\/\//, "")),
 		sizeOf: (name) => fileOf(name).size,
-		rename: (from, to) => fileOf(from).move(fileOf(to)),
+		rename: (from, to) => fileOf(from).moveSync(fileOf(to)),
 		remove: (name) => {
 			const file = fileOf(name);
 			if (file.exists) file.delete();
@@ -65,20 +65,20 @@ export function renameDatabaseFile(
 	if (pairs.some((pair) => pair.to.exists)) {
 		throw new Error("set-aside target exists");
 	}
-	// `move()` repoints the File it is called on at the destination, so the
+	// `moveSync()` (`move()` returns a Promise in SDK 58) repoints the File it is called on at the destination, so the
 	// rollback needs the original URIs, not the handles.
 	const moved: Array<{ fromUri: string; toUri: string }> = [];
 	try {
 		for (const pair of pairs) {
 			const fromUri = pair.from.uri;
 			const toUri = pair.to.uri;
-			pair.from.move(pair.to);
+			pair.from.moveSync(pair.to);
 			moved.push({ fromUri, toUri });
 		}
 	} catch (error) {
 		for (const { fromUri, toUri } of moved.reverse()) {
 			try {
-				new File(toUri).move(new File(fromUri));
+				new File(toUri).moveSync(new File(fromUri));
 			} catch {
 				// Nothing more can be done; the original error is the one to report.
 			}

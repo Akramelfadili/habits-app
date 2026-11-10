@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling lint lint-check typecheck typecheck-strict check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
+.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling coverage lint lint-check typecheck typecheck-strict check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -28,6 +28,9 @@ test-tz: ## Run the domain and utils tests in three more zones (UTC, Europe/Pari
 	JEST_TZ=UTC npx jest src/utils src/test-support src/modules/habits/domain
 	JEST_TZ=Europe/Paris npx jest src/utils src/test-support src/modules/habits/domain
 	JEST_TZ=Pacific/Auckland npx jest src/utils src/test-support src/modules/habits/domain
+
+coverage: ## Run Jest with coverage and fail under the thresholds in package.json (global 96 lines / 90 branches / 94 functions, domain and strategies 98 lines; not part of `make check`; they may only go up)
+	npm run coverage
 
 test-tooling: ## Run the tests for scripts/ (check-architecture rules) with node --test
 	npm run test:tooling

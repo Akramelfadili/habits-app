@@ -43,7 +43,7 @@ describe("useTabRetapToTop", () => {
 		await act(async () => useTabRetapStore.getState().retap("(today)"));
 		expect(scrollToTop).toHaveBeenCalledTimes(1);
 		expect(send).not.toHaveBeenCalled();
-		act(() => jest.advanceTimersByTime(400));
+		await act(() => jest.advanceTimersByTime(400));
 		expect(send).toHaveBeenCalledTimes(1);
 		await unmount();
 	});

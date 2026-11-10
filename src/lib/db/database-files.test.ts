@@ -29,7 +29,7 @@ jest.mock("expo-file-system", () => {
 		delete() {
 			mockFiles.delete(this.uri);
 		}
-		move(target: File) {
+		moveSync(target: File) {
 			if (mockFailMoveTo && target.uri.endsWith(mockFailMoveTo)) {
 				throw new Error("EIO");
 			}
