@@ -36,16 +36,32 @@ describe.each(["light", "dark"] as const)(
 			}
 		});
 
-		it("warning text clears 4.5:1 on its tint and on the page and card", () => {
-			for (const ground of [semantic.warnTint, surface.bg, surface.card]) {
+		it("secondary text clears 4.5:1 on the frozen day's fill", () => {
+			expect(contrast(surface.sub, semantic.frozenBg)).toBeGreaterThanOrEqual(
+				TEXT_AA,
+			);
+		});
+
+		it("warning text clears 4.5:1 on its tint and on the page, card and inner surface", () => {
+			for (const ground of [
+				semantic.warnTint,
+				surface.bg,
+				surface.card,
+				surface.inner,
+			]) {
 				expect(contrast(semantic.warnInk, ground)).toBeGreaterThanOrEqual(
 					TEXT_AA,
 				);
 			}
 		});
 
-		it("danger text (field errors, destructive link) clears 4.5:1 on the page and card", () => {
-			for (const ground of [surface.bg, surface.card]) {
+		it("danger text (field errors, destructive rows) clears 4.5:1 on the page, card, inner surface and warning tint", () => {
+			for (const ground of [
+				surface.bg,
+				surface.card,
+				surface.inner,
+				semantic.warnTint,
+			]) {
 				expect(contrast(semantic.dangerBg, ground)).toBeGreaterThanOrEqual(
 					TEXT_AA,
 				);
@@ -91,8 +107,8 @@ describe.each(["light", "dark"] as const)(
 			);
 		});
 
-		it("freeze count text clears 4.5:1 on the page and card", () => {
-			for (const ground of [surface.bg, surface.card]) {
+		it("freeze count text clears 4.5:1 on the page, card and inner surface", () => {
+			for (const ground of [surface.bg, surface.card, surface.inner]) {
 				expect(contrast(semantic.frozenInk, ground)).toBeGreaterThanOrEqual(
 					TEXT_AA,
 				);

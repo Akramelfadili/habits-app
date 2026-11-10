@@ -60,10 +60,10 @@ Refined monochrome. Black, white, and grey only for all UI chrome (backgrounds, 
 | Token | Light | Dark | Used for |
 |---|---|---|---|
 | `warnTint` | `#FDF0D5` | `#3A2A0E` | Warning background fill (streak-at-risk icon, slipping-habit card, conflict banners) |
-| `warnInk` | `#966408` | `#E8A93A` | Warning foreground (icon strokes, text, "At risk" stat) — 4.5:1 on `warnTint` and `bg` (was `#9A6708` at 4.31 / 4.39) |
-| `dangerBg` | `#C9372F` | `#E56059` | Danger (dark was `#D9544D`, 3.93:1 as text on `card`; now 4.53:1) — used for permanent/destructive actions (e.g. delete confirmation) and for inline validation errors; not used elsewhere as decoration. |
+| `warnInk` | `#946208` | `#E8A93A` | Warning foreground (icon strokes, text, "At risk" stat) — 4.5:1 on `warnTint` and `bg` (was `#9A6708` at 4.31 / 4.39) |
+| `dangerBg` | `#C7362F` | `#E8716B` | Danger (dark was `#D9544D`, 3.93:1 as text on `card`; now 4.53:1) — used for permanent/destructive actions (e.g. delete confirmation) and for inline validation errors; not used elsewhere as decoration. |
 | `frozenBg` | `#EDE8F8` | `#262036` | Frozen-day background fill (heatmap frozen cell, freeze-related chrome) |
-| `frozenInk` | `#7A5AC4` | `#A98FE0` | Frozen-day foreground |
+| `frozenInk` | `#7858C3` | `#A98FE0` | Frozen-day foreground |
 
 **Habit accents** (identity dots only, never used as chrome) — parametric, not six arbitrary hex picks. Each accent is one hue run through a fixed OKLCH formula, so a 7th+ accent can be added later just by picking a new hue:
 
@@ -155,7 +155,7 @@ Weight: regular body text, medium-weight for row labels/section headers only —
 
 **Long names and large text.** `ListItem` titles and subtitles wrap to two lines then end in "…" (the whole text stays in the accessibility label); a trailing value stays on one line, shrinks and is capped at 45 % of the row. Sheets and the nav menu scroll when large text outgrows them (the sheet also shrinks above the keyboard).
 
-**Contrast (WCAG AA, enforced by `src/theme/contrast.test.ts`).** Text ≥ 4.5:1, an unchecked control's outline ≥ 3:1. The token changes were: `faint` (light) `#6E6E6B` → `#6C6C69`; `warnInk` (light) `#9A6708` → `#966408`; `dangerBg` (dark) `#D9544D` → `#E56059`; and a new `outline` token for the outline of an unchecked Checkbox / Completion circle (`#898987` light, `#777778` dark) — hairline `border` stays ≈ 1.3:1 because it is decoration, not the control's boundary. The partial quantity pie keeps its `border` track.
+**Contrast (WCAG AA, enforced by `src/theme/contrast.test.ts`).** Text ≥ 4.5:1, an unchecked control's outline ≥ 3:1. The token changes were: `faint` (light) `#6E6E6B` → `#6C6C69`; `warnInk` (light) `#9A6708` → `#966408` → `#946208`; `dangerBg` (dark) `#D9544D` → `#E56059` → `#E8716B`, (light) `#C9372F` → `#C7362F`; `frozenInk` (light) `#7A5AC4` → `#7858C3` (batch 20, I-04: danger, warning and freeze text also clear 4.5:1 on the `inner` surface, danger on `warnTint`); and a new `outline` token for the outline of an unchecked Checkbox / Completion circle (`#898987` light, `#777778` dark) — hairline `border` stays ≈ 1.3:1 because it is decoration, not the control's boundary. The partial quantity pie keeps its `border` track.
 
 **Selection semantics.** Segmented control → `tab` in a `tablist`; weekday chip → `checkbox`; Stepper → the numeral is `adjustable` (swipe up/down to step within min–max) beside the −/+ buttons.
 

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { AccessibilityInfo, Text } from "react-native";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { useToastStore } from "@/store/toast-store";
+import { semanticColors } from "@/theme/theme";
 import { failureMessage } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
 import { DestructiveConfirmSheet } from "./destructive-confirm-sheet";
@@ -64,9 +65,11 @@ describe("DestructiveConfirmSheet", () => {
 	it("the destructive action is an outlined pill with red text, never filled", async () => {
 		await renderSheet();
 		const button = screen.getByRole("button", { name: "Delete category" });
-		expect(button).not.toHaveStyle({ backgroundColor: "#C9372F" });
+		expect(button).not.toHaveStyle({
+			backgroundColor: semanticColors.light.dangerBg,
+		});
 		expect(screen.getByText("Delete category")).toHaveStyle({
-			color: "#C9372F",
+			color: semanticColors.light.dangerBg,
 		});
 	});
 

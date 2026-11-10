@@ -35,11 +35,11 @@ tags: [design-system, ui, habits, v3]
 | outline | #898987 (was rgba(0,0,0,.18)) | #777778 (was rgba(255,255,255,.22)) | Unchecked circle/checkbox, off toggle, empty cell outline; 3:1 |
 | accent | = text ink* | = text ink* | The one accent: fills, selection, focus ring, intensity |
 | onAccent | white* | bg ink* | Text and glyphs on accent |
-| warnInk | #966408 (was #9A6708) | #E8A93A | Break habits, warnings, at-risk |
+| warnInk | #946208 (was #966408, #9A6708) | #E8A93A | Break habits, warnings, at-risk |
 | warnTint | #FDF0D5 | #3A2A0E | Break resisted fill, warning banner/icon square |
-| danger | #C9372F | #E56059 (was #D9544D) | Destructive actions and errors only |
+| danger | #C7362F (was #C9372F) | #E8716B (was #E56059, #D9544D) | Destructive actions and errors only |
 | frozenBg | #EDE8F8 | #262036 | Frozen day, freeze token |
-| frozenInk | #7A5AC4 | #A98FE0 | Frozen border, freeze count; **text on frozenBg uses text ink** (light frozenInk on frozenBg is 4.28:1, T-15) |
+| frozenInk | #7858C3 (was #7A5AC4) | #A98FE0 | Frozen border, freeze count; **text on frozenBg uses text ink** (light frozenInk on frozenBg is 4.39:1, T-15). Batch 20 (I-04): warnInk, danger and frozenInk text now clear 4.5:1 on `inner` too, and danger on `warnTint`. |
 | toast | (see master) | #35353A | Toast surface; toastInk on it ≥ 10:1 |
 
 \* accent/onAccent values are derived from the mockup's contrast figures (accent vs card 17.42:1 light / 13.20:1 dark); confirm against the master file when building tokens.

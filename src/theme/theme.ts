@@ -46,15 +46,15 @@ export const surfaceColors = {
 export const semanticColors = {
 	light: {
 		warnTint: "#FDF0D5",
-		warnInk: "#966408",
-		dangerBg: "#C9372F",
+		warnInk: "#946208",
+		dangerBg: "#C7362F",
 		frozenBg: "#EDE8F8",
-		frozenInk: "#7A5AC4",
+		frozenInk: "#7858C3",
 	},
 	dark: {
 		warnTint: "#3A2A0E",
 		warnInk: "#E8A93A",
-		dangerBg: "#E56059",
+		dangerBg: "#E8716B",
 		frozenBg: "#262036",
 		frozenInk: "#A98FE0",
 	},
