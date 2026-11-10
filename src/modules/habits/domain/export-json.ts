@@ -18,7 +18,7 @@ import type { ExportModel, ExportSettings } from "./export-data";
  *   any habit, and no note text anywhere.
  */
 
-export const EXPORT_JSON_VERSION = 2;
+const EXPORT_JSON_VERSION = 2;
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
@@ -86,7 +86,7 @@ export type ExportDocumentV2 = {
 };
 
 /** The document as a plain object — what `toJson` writes, and what a reader of the file gets back. */
-export function buildExportDocument(
+function buildExportDocument(
 	model: ExportModel,
 	app: { version: string; build: string; schemaVersion: number },
 ): ExportDocumentV2 {

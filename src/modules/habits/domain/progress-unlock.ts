@@ -14,7 +14,7 @@ import { fromDayKey } from "@/utils/day-key";
  * not missed), and too early (P2).
  */
 
-export const PROGRESS_UNLOCK_DAYS = 7;
+const PROGRESS_UNLOCK_DAYS = 7;
 
 export type ProgressUnlock = {
 	/** Days with a log so far, capped at `neededDays`. */

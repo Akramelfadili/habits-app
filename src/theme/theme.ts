@@ -193,7 +193,7 @@ export const minTouchTarget = 44;
 export const barMaxFontMultiplier = 1.3;
 
 /** Focus ring (F-06, T-13): a gap in the surface colour, then the accent; follows the element's radius. */
-export const focusRing = {
+const focusRing = {
 	gap: 2,
 	width: 2,
 } as const;
@@ -294,7 +294,7 @@ export function habitAccentTint(hue: AccentHue, scheme: ColorScheme): string {
 export type IntensityLevel = 0 | 1 | 2 | 3;
 
 /** T-05 / F-02: the accent mixed into the track at 0 / 28 / 58 / 100 %. */
-export const intensityMix = [0, 0.28, 0.58, 1] as const;
+const intensityMix = [0, 0.28, 0.58, 1] as const;
 
 /** Edge length of a partial cell's corner notch, as a share of the cell (T-24). */
 export const notchShare = 0.22;

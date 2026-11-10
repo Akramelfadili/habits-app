@@ -162,7 +162,7 @@ export function makeEntryFixtures(
 }
 
 /** The past day the `retro-log` visual check taps — inside the 24-day run, where Glass of water is logged at exactly its target (8). */
-export const RETRO_LOG_DAYS_AGO = 3;
+const RETRO_LOG_DAYS_AGO = 3;
 
 /**
  * Notes backing the web-only repository (HAB-10): the two Recent entries

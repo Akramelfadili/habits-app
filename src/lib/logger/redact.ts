@@ -18,7 +18,7 @@ import type { LogEntry, LogFields, SerializedError } from "./types";
  *
  * To log a new field, add its name here. That is a deliberate, reviewable step.
  */
-export const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
+const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"habitId",
 	"categoryId",
 	"reminderId",
@@ -39,7 +39,7 @@ export const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"withReminders",
 ]);
 
-export const TOKEN_FIELDS: ReadonlySet<string> = new Set([
+const TOKEN_FIELDS: ReadonlySet<string> = new Set([
 	"scope",
 	"reason",
 	"kind",

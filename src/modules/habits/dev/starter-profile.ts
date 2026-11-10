@@ -55,7 +55,7 @@ const habitSchema = z.object({
 	reminders: z.array(reminderSchema).max(5).optional(),
 });
 
-export const starterProfileSchema = z
+const starterProfileSchema = z
 	.object({
 		version: z.number().int().min(1),
 		/**

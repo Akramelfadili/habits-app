@@ -18,7 +18,7 @@ function fire(feedback: () => Promise<void>) {
 	}
 }
 
-export const haptics = {
+const haptics = {
 	/** A toggle changing state: the completion circle. */
 	selection: () => fire(() => Haptics.selectionAsync()),
 	/** Something finished well: the all-done card appearing. */

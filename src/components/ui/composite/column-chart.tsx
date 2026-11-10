@@ -11,7 +11,7 @@ import { useTheme } from "@/theme/use-theme";
 import { useFillAnimation } from "@/utils/use-fill-animation";
 
 /** V3-08's chart: 12 columns × 96 pt by default. */
-export const CHART_HEIGHT = 96;
+const CHART_HEIGHT = 96;
 const STUB = 3;
 const MAX_RADIUS = 6;
 

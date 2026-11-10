@@ -4,7 +4,7 @@ import {
 } from "../repositories/log-repository";
 import type { LogEntry, LogSink } from "../types";
 
-export const RING_SIZE = 500;
+const RING_SIZE = 500;
 const FLUSH_DELAY_MS = 2000;
 /** More than this waiting means the store is stuck: drop the oldest, never grow. */
 const MAX_PENDING = 200;

@@ -46,7 +46,7 @@ export function defaultSummaryWeek(today: Date): SummaryWeek {
 }
 
 /** The Mon–Sun window `which` refers to, relative to `today`. */
-export function summaryWeekWindow(today: Date, which: SummaryWeek): WeekWindow {
+function summaryWeekWindow(today: Date, which: SummaryWeek): WeekWindow {
 	return weekWindow(which === "last" ? subWeeks(today, 1) : today);
 }
 

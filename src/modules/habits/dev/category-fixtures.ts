@@ -102,7 +102,7 @@ const MANY_CUSTOM_FIXTURES = customFixtures([
 const F3C_CUSTOM_FIXTURES = customFixtures(["Music", "Language", "Garden"]);
 export const MUSIC_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 0);
 export const LANGUAGE_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 1);
-export const GARDEN_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 2);
+const GARDEN_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 2);
 
 /**
  * The picker's rows per `?fixtures=` scenario: no customs where nothing exists

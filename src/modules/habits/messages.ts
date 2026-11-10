@@ -13,7 +13,7 @@ import { toastHoldMs } from "@/components/ui/composite/toast-host";
 import type { DatabaseCopy } from "@/lib/db/database-copy";
 import { showToast, type ToastTone } from "@/store/toast-store";
 import { motion } from "@/theme/theme";
-import { notificationCopy, reminderCapMessage } from "./reminder-copy";
+import { reminderCapMessage } from "./reminder-copy";
 
 export type MessageTone = ToastTone;
 
@@ -1421,5 +1421,3 @@ export function showMessage<Params extends readonly unknown[]>(
 		...(undo ? { actionLabel: "Undo", onAction: undo } : {}),
 	});
 }
-
-export { notificationCopy };
