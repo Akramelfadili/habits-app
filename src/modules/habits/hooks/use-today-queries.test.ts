@@ -56,9 +56,7 @@ type MockFrozenDay = {
 
 let mockHabits = [dailyHabit, alsoDailyHabit, perWeekHabit];
 let mockEntries: MockEntry[] = [];
-// Defaults to the full history `mockEntries` holds — most tests only care
-// about "today," so the week-bounded and unbounded reads can share one list;
-// tests that need streak history further back set this separately.
+// Defaults to the full `mockEntries` history: the week-bounded and unbounded reads share one list.
 let mockAllEntries: MockEntry[] | undefined;
 let mockFrozenDays: MockFrozenDay[] = [];
 let mockEntriesRangeCalls: [Date, Date][] = [];
@@ -320,7 +318,7 @@ describe("useTodayQueries", () => {
 		});
 
 		it("counts the sheet's pool in the missed day's month: on the 1st that is last month's", async () => {
-			jest.setSystemTime(new Date(2026, 9, 1, 12)); // Thu 1 Oct; yesterday = Wed 30 Sep
+			jest.setSystemTime(new Date(2026, 9, 1, 12));
 			mockHabits = [dailyHabit];
 			mockAllEntries = ["2026-09-28", "2026-09-29"].map((date) => ({
 				habitId: 1,
@@ -363,7 +361,7 @@ describe("useTodayQueries", () => {
 
 		it("does not flag a habit with no streak standing before the miss — nothing to lose", async () => {
 			mockHabits = [dailyHabit];
-			mockAllEntries = []; // No history at all — yesterday was due and missed, but streak-before-miss is 0.
+			mockAllEntries = [];
 			const { result } = await renderHook(() => useTodayQueries());
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
 		});
@@ -385,13 +383,13 @@ describe("useTodayQueries", () => {
 			const wednesdayOnly = makeHabit({
 				id: 6,
 				name: "Yoga",
-				frequency: weekdays(3), // Wednesday (TODAY) only — Tuesday (yesterday) isn't scheduled.
+				frequency: weekdays(3),
 			});
 			mockHabits = [wednesdayOnly];
 			mockAllEntries = [
 				{
 					habitId: 6,
-					date: "2026-09-09", // last Wednesday — a real prior streak, just not "missed yesterday."
+					date: "2026-09-09",
 					createdAt: new Date("2026-09-09"),
 				},
 			];
@@ -481,7 +479,6 @@ describe("useTodayQueries", () => {
 					createdAt: TODAY,
 				}),
 			);
-			// Today: yesterday (15th) was missed with a 3-day streak before it.
 			const followed = await renderHook(() => useTodayQueries());
 			expect(followed.result.current.atRiskByHabitId.size).toBe(1);
 

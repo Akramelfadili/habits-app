@@ -24,11 +24,8 @@ import { type HabitDayCell, habitDayClassifier } from "./day-status";
 import { offScheduleChecker } from "./off-schedule";
 import { calculateCurrentStreak, isEntryComplete } from "./streaks";
 
-/**
- * Habit Detail's history math: pure functions over a habit's own entries and frozen days. Every
- * "was this day owed" question goes through the habit's FrequencyStrategy (`wasScheduledOn`), so
- * the streaks, the 90-day rate, and the heatmap can never disagree about which days counted.
- */
+// Every "was this day owed" question goes through `wasScheduledOn`, so streaks, the 90-day
+// rate and the heatmap cannot disagree.
 
 const COMPLETION_RATE_WINDOW_DAYS = 90;
 export const HEATMAP_WEEKS = 5;
@@ -48,11 +45,8 @@ function completedDatesOf(habit: Habit, entries: readonly Entry[]) {
 	};
 }
 
-/**
- * The streak as it stands right now. A still-open today that isn't logged yet
- * hasn't broken anything, so the count runs up to yesterday instead of reading
- * as 0 every morning; once today is logged, it counts.
- */
+// An unlogged, still-open today hasn't broken anything: count up to yesterday so the
+// streak doesn't read 0 every morning.
 export function currentStreakAsOf({
 	habit,
 	entries,
@@ -104,22 +98,14 @@ export function calculateLongestStreak({
 
 export type CompletionRate = {
 	completed: number;
-	/** Due days in the window: frozen and bonus days are on neither side. */
 	scheduled: number;
 	frozen: number;
 	fraction: number | null;
-	/** An archive pause falls inside the window: its days were skipped, not missed. */
 	skippedPaused: boolean;
 };
 
-/**
- * Completion rate over the last 90 days: the shared rule (`completion-rate.ts`, done ÷ due) over
- * the habit's **scheduled** days only, clipped to the habit's own creation date rather than
- * padded to 90. Today joins the denominator only once it's logged, since it can't have been
- * missed yet. A frozen day is excused: it leaves both the completions and the denominator, as on
- * Progress. An archived habit's window ends the day before it was archived, so the rate reads
- * "before archive" rather than decaying over days it was never asked of.
- */
+// Today joins the denominator only once logged (it can't have been missed yet). An archived
+// habit's window ends the day before archiving so the rate doesn't decay over days never asked of.
 export function calculateCompletionRate({
 	habit,
 	entries,
@@ -166,18 +152,9 @@ function tallyWindow(
 	return { tally, skippedPaused };
 }
 
-/**
- * The fewest due days the earlier window needs before the 90-day rate is
- * compared with it: a tile that says "+4 pts" over two days would be noise.
- */
+// Below this many due days a "+4 pts" comparison would be noise.
 const MIN_DUE_FOR_DELTA = 7;
 
-/**
- * The 90-day rate minus the rate over the 90 days before it, in whole points ("+4 pts"); null
- * when there is nothing fair to compare: a habit younger than 90 days, an earlier window with
- * fewer than 7 due days, no rate yet, or an archived habit (its tile says "until <date>" instead).
- * Both windows use the one rate rule, so frozen days and bonus logs leave both sides.
- */
 export function completionRateDelta({
 	habit,
 	entries,
@@ -209,24 +186,16 @@ export function completionRateDelta({
 	);
 }
 
-/**
- * One heatmap day. `pending` is today while it's still open and unlogged,
- * `future` is later this week; neither can be missed yet.
- */
 export type HeatmapDayStatus =
 	| "not-scheduled"
 	| "missed"
 	| "frozen"
 	| "logged"
-	/** Logged on a day that wasn't scheduled: informational, never counted. */
 	| "bonus"
-	/** Inside an archive period: read as paused, never as missed. */
 	| "paused"
-	/** The unfrozen missed day that reset a streak with no freezes left. */
 	| "reset"
 	| "pending"
 	| "future"
-	/** Before the habit was created: drawn dashed, "before start". */
 	| "before-start";
 
 export type HeatmapDay = {
@@ -234,15 +203,9 @@ export type HeatmapDay = {
 	status: HeatmapDayStatus;
 	isToday: boolean;
 	level?: HeatmapLevel;
-	/** Past and today are the entry point into retro logging; future and pre-creation days aren't. */
 	selectable: boolean;
 };
 
-/**
- * Quantity habits shade by how much of the target was reached — under half,
- * under target, at/over. A simple-check entry is all-or-nothing, so it's
- * always the full shade.
- */
 export function heatmapLevelFor(habit: Habit, entry: Entry): HeatmapLevel {
 	if (habit.targetType !== "quantity" || !habit.targetAmount) return 3;
 	const ratio = (entry.value ?? 0) / habit.targetAmount;
@@ -252,7 +215,6 @@ export function heatmapLevelFor(habit: Habit, entry: Entry): HeatmapLevel {
 
 export function buildHeatmapWeeks(
 	{ habit, entries, frozenDates, today }: History,
-	/** The day a streak reset on (`streakResetInfo`), outlined in the grid. */
 	resetOn: Date | null = null,
 ): HeatmapDay[][] {
 	const strategy = getHabitStrategy(habit);
@@ -280,9 +242,8 @@ export function buildHeatmapWeeks(
 
 		if (isFuture) return { date, status: "future", selectable };
 		if (entry) {
-			// A real log always shows, even on an off-schedule day — hiding it
-			// would misreport what happened; the rate still ignores it. A frozen
-			// day is never a bonus: the freeze says it was owed.
+			// A real log always shows, even off-schedule; hiding it would misreport what
+			// happened. A frozen day is never a bonus: the freeze says it was owed.
 			const bonus = !frozenDates.has(dateString) && isOffSchedule(entry);
 			return {
 				date,
@@ -291,8 +252,8 @@ export function buildHeatmapWeeks(
 				selectable,
 			};
 		}
-		// Checked before scheduling: a freeze is always shown as one, even if
-		// the per-week rule wouldn't count that day as owed in hindsight.
+		// Before scheduling: a freeze always shows as one, even if the per-week rule
+		// wouldn't count the day as owed in hindsight.
 		if (frozenDates.has(dateString)) {
 			return { date, status: "frozen", selectable };
 		}
@@ -324,7 +285,6 @@ export type HistoryKind =
 	| "partial"
 	| "missed"
 	| "frozen"
-	/** Logged on a day that was not due: shown, tagged "not counted". */
 	| "bonus"
 	| "noted";
 
@@ -337,19 +297,10 @@ export type HistoryRow = {
 
 const HISTORY_LIMIT = 10;
 
-/**
- * How far back the scan goes looking for them: a year. Without a bound a habit
- * with few days to list walked every day back to the day it was created.
- */
+// Bound the scan: a habit with few days to list otherwise walked back to its creation.
 const HISTORY_LOOKBACK_DAYS = 366;
 
-/**
- * Habit Detail's History: the latest days that were done, missed, frozen or an off-schedule
- * bonus, and a day that carries a note, newest first. A day that was not due, a paused day and
- * today while still open say nothing. A habit nothing has ever been logged for lists no missed
- * days: it has not started. Every answer comes from the one day classifier, so History can never
- * disagree with the grid or the rate about what a day was.
- */
+// A habit nothing has ever been logged for lists no missed days: it has not started.
 export function habitHistoryRows(
 	history: History,
 	notes: readonly EntryNote[],
@@ -400,12 +351,7 @@ export type StreakReset = {
 	poolRefillsOn: Date;
 };
 
-/**
- * Whether Detail should explain a streak reset: this month, a streak was standing, a scheduled
- * day went unlogged, and the shared pool had nothing left to cover it. A historical note, not a
- * badge: only the month it happened in, and only while the pool is still empty. Scans back from
- * yesterday, so a run of misses reports the first one (the day it broke).
- */
+// Scans back from yesterday, so a run of misses reports the first one (the day it broke).
 export function streakResetInfo(
 	{ habit, entries, frozenDates, today }: History,
 	freezesRemaining: number,

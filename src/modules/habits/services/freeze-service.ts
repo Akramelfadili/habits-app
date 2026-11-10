@@ -5,13 +5,8 @@ import {
 	getFreezesUsedInMonth,
 } from "../repositories/frozen-day-repository";
 
-/**
- * The one composite operation this feature needs: freezing a missed day means
- * checking the shared pool's *current* eligibility (a fresh DB read, not
- * whatever a hook last rendered) and then writing the freeze — together, so
- * a stale UI can't push the pool over its monthly limit. Resolves with what is
- * left in the missed day's month, for the toast ("… · 0 left").
- */
+// The eligibility check is a fresh DB read, done together with the write, so a stale UI can't
+// push the pool over its monthly limit.
 export async function applyFreeze(
 	habitId: number,
 	missedDate: Date,

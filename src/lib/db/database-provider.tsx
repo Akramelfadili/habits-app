@@ -41,29 +41,19 @@ import { SCHEMA_VERSION } from "./schema-version";
 
 type DatabaseProviderProps = PropsWithChildren<{ copy: DatabaseCopy }>;
 
-// Drizzle Studio is a dev-only tool (a dev-server connection to the DB), so the plugin is a
-// devDependency and a `__DEV__ ? require(...)` keeps it out of a production bundle. `__DEV__` is
-// constant per bundle, so the no-op stand-in never changes the hook-call order within one build.
+// A `__DEV__ ? require(...)` keeps the dev-only plugin out of a production bundle; `__DEV__` is
+// constant per bundle, so the no-op stand-in never changes hook-call order.
 const useDrizzleStudio: (database: typeof expoDb) => void = __DEV__
 	? require("expo-drizzle-studio-plugin").useDrizzleStudio
 	: () => {};
 
-/**
- * Runs the migrations before anything reads the database. A failure shows the error screen with
- * Retry. The migrator is one atomic transaction, so a failed run leaves the old schema and every
- * row intact; Retry re-runs it on a fresh mount (`useMigrations` only runs once per mount), which
- * mainly helps with transient errors.
- *
- * On the first launch after an update the update screen is up before the migrator starts. It does
- * not change what the migrator does, only when it begins, a moment later, so the screen can be
- * painted before the JavaScript thread is busy. In that moment a backup of the old database is
- * taken (`database-backup.ts`).
- */
+// The migrator is one atomic transaction, so a failed run leaves the old schema and every row intact.
+// Retry re-runs it on a fresh mount (`useMigrations` runs once per mount). After an update the migrator
+// starts a moment later so the update screen paints before the JS thread is busy.
 export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	const [attempt, setAttempt] = useState(0);
 	const [recovery, dispatch] = useReducer(recoveryReducer, INITIAL_RECOVERY);
-	// One backup per launch: Try again re-mounts the gate with the same data,
-	// and a copy per retry would push the older, different backups out.
+	// One backup per launch: a copy per retry would push the older, different backups out.
 	const backupTaken = useRef(false);
 
 	function retry() {
@@ -74,7 +64,7 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 
 	function confirmSetAside() {
 		dispatch({ type: "confirm" });
-		// A beat for the "working" state to be painted: the rename and reopen are synchronous.
+		// A beat for the "working" state to paint: the rename and reopen are synchronous.
 		setTimeout(() => {
 			try {
 				setAsideDatabase(Date.now());
@@ -99,8 +89,7 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 			}
 		: undefined;
 
-	// The file could not be opened at all: nothing below can run, so say so
-	// here (the failure was logged by the client) instead of crashing.
+	// The file could not be opened: nothing below can run, so show it instead of crashing.
 	if (getDatabaseOpenError() !== null) {
 		return (
 			<DatabaseErrorScreen
@@ -148,9 +137,7 @@ function MigrationGate({
 	useEffect(() => {
 		if (started) return;
 		const timer = setTimeout(() => {
-			// Upgrade plan only (this effect never runs for another). A failed
-			// backup is logged and does not stop the update: the migrator is one
-			// atomic transaction (docs/how-to/backups-and-recovery.md).
+			// A failed backup is logged and does not stop the update: the migrator is one atomic transaction.
 			if (!backupTaken.current) {
 				backupTaken.current = true;
 				backupBeforeMigrating(
@@ -166,8 +153,6 @@ function MigrationGate({
 
 	// Never run the migrator, or write anything, on data made by a newer build.
 	if (plan === "newer") return <NewerDatabaseScreen copy={copy.newer} />;
-	// Nor on a file that could not be read: it is a failure like any other, with
-	// the same Try again and, from the second one, the way out.
 	if (plan === "unreadable") {
 		return (
 			<DatabaseErrorScreen
@@ -226,7 +211,6 @@ function RunMigrations({
 		);
 	}
 
-	// Splash still covers a launch with nothing to show; an update keeps its screen up.
 	if (!success) {
 		return plan === "upgrade" ? <MigrationScreen copy={copy.updating} /> : null;
 	}

@@ -133,7 +133,6 @@ const nameInput = () => screen.getByLabelText("Name");
 const typeName = (text: string) => fireEvent.changeText(nameInput(), text);
 // Category chips report `selected`; weekday chips are checkboxes and report `checked`.
 type A11yState = { selected?: boolean; checked?: boolean; disabled?: boolean };
-/** The nearest ancestor of the text that carries an accessibility state (segments, mode chips). */
 function stateOfText(label: string): A11yState {
 	type Node = {
 		props: { accessibilityState?: A11yState };
@@ -152,7 +151,6 @@ const isSelected = (label: string) => {
 };
 const isDisabled = (label: string) => stateOfText(label).disabled;
 
-/** The navigator removing the screen (Close, a swipe, Android back): it reaches the guard only while it is preventing. */
 async function tryToLeave(action: unknown = { type: "POP" }) {
 	let prevented = false;
 	await act(async () => {
@@ -195,7 +193,6 @@ describe("HabitFormScreen — create", () => {
 		];
 		const found = labels.map((label) => screen.getByText(label));
 		expect(found).toHaveLength(labels.length);
-		// Source order = render order: each label appears after the previous one.
 		const rendered = JSON.stringify(screen.toJSON());
 		const positions = labels.map((label) => rendered.indexOf(`"${label}"`));
 		expect(positions).toEqual([...positions].sort((a, b) => a - b));
@@ -678,7 +675,6 @@ describe("HabitFormScreen — discard prompt (F9)", () => {
 		await typeName("Read");
 		await fireEvent.press(saveButton() as never);
 		await waitFor(() => expect(mockBack).toHaveBeenCalled());
-		// The guard is off by the time the form leaves, so nothing is asked.
 		expect(await tryToLeave()).toBe(false);
 		expect(screen.queryByText("Discard changes?")).toBeNull();
 	});

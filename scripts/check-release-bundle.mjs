@@ -1,41 +1,11 @@
 #!/usr/bin/env node
-// Release-bundle guard (`make release-check`). Builds the iOS JS bundle the way
-// a production EAS build does (APP_VARIANT=production) into a temp folder
-// OUTSIDE the repo and fails if anything dev-only is inside it, or if the
-// bundle grew more than 10 percent over scripts/bundle-size.baseline.json.
-//
-//   node scripts/check-release-bundle.mjs                   export, scan, compare
-//   node scripts/check-release-bundle.mjs --update-baseline write the baseline (set it, or lower it)
-//
-// The export is a Hermes bytecode bundle (.hbc). Hermes keeps string literals
-// and function names, not comments or local names, so every marker below is a
-// string literal or a named function that only the dev-only code defines. Two
-// look-alikes are deliberately NOT markers: `useDrizzleStudio` and
-// `StarterProfileGate` also name the no-op stand-ins in `database-provider.tsx`
-// and `_layout.tsx`, so they appear in every bundle.
-//
-// Markers (derived from the source; each must be absent from a release bundle):
-//  - The starter profile (src/modules/habits/dev/starter-profile.ts, the gate in
-//    screens/starter-profile-gate.tsx, services/starter-profile-service.ts):
-//    log events "dev.starter_profile.*", the settings key "dev.starterProfile",
-//    and the functions applyStarterProfile, parseStarterProfile,
-//    starterProfileSchema. The gate has no string of its own; it is reached
-//    only through applyStarterProfile.
-//  - The dev-state loader (screens/dev-state-screen.tsx, services/load-device-state.ts,
-//    dev/device-state.ts, repositories/dev-state-repository.ts,
-//    lib/device-validation/launch-request.ts): the log event "devstate.load_failed",
-//    the launch file name "dev-state.json", and the functions loadDeviceState,
-//    buildDeviceState, replaceAllData. The route name "dev-state" itself is not
-//    a marker: the route file exists in every build and redirects to Today.
-//  - Drizzle Studio (src/lib/db/database-provider.tsx): the plugin names its
-//    devtools client "expo-drizzle-studio-plugin".
-//  - A canary: this script sets EXPO_PUBLIC_STARTER_PROFILE to a profile naming
-//    a unique habit. If the gate were compiled in, Metro would inline the value
-//    and the canary would be in the bundle.
-//
-// The size baseline only shrinks, like the token baseline: --update-baseline
-// refuses to raise it. Growth of up to 10 percent over the baseline passes; a
-// bigger step needs a reviewed hand edit of the baseline file with a reason.
+// `make release-check`: builds the iOS bundle like a production EAS build into a temp folder outside the repo;
+// fails on any dev-only marker or growth over 10 percent of scripts/bundle-size.baseline.json.
+//   node scripts/check-release-bundle.mjs [--update-baseline]
+// Hermes keeps string literals and function names, not comments or locals, so markers are strings or named functions only dev code defines.
+// `useDrizzleStudio` and `StarterProfileGate` are NOT markers: no-op stand-ins in `database-provider.tsx` and `_layout.tsx` appear in every bundle.
+// The canary profile names a unique habit: if the starter-profile gate were compiled in, Metro would inline it and it would show up here.
+// The baseline only shrinks: --update-baseline refuses to raise it; a bigger step needs a reviewed hand edit.
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -48,7 +18,6 @@ export const CANARY_PROFILE = JSON.stringify({
 	habits: [{ name: CANARY_HABIT_NAME, category: "Health", frequency: "daily" }],
 });
 
-/** [group, needle] pairs; a needle in the bundle is a leak. */
 export const MARKERS = [
 	["canary", CANARY_HABIT_NAME],
 	["starter profile", "dev.starter_profile."],
@@ -66,7 +35,7 @@ export const MARKERS = [
 
 export const MAX_GROWTH = 0.1;
 
-/** Hermes stores a string as one byte per character when it is ASCII and as UTF-16 otherwise; both are searched. */
+// Hermes stores a string as one byte per character when ASCII and as UTF-16 otherwise; both are searched.
 export function findLeaks(bundle, markers = MARKERS) {
 	return markers
 		.filter(
@@ -98,7 +67,6 @@ export function checkSize(bytes, baseline) {
 	};
 }
 
-/** What --update-baseline may write: a first value, or a lower one. */
 export function checkBaselineUpdate(bytes, baseline) {
 	if (baseline !== undefined && bytes > baseline.bytes) {
 		return {
@@ -131,9 +99,7 @@ function readBaseline() {
 }
 
 function exportBundle(outDir) {
-	// A production build's environment, plus the canary. The device-validation
-	// flag is set to empty, not left unset: Expo would otherwise fill an unset
-	// variable from a developer's .env.local, and process.env wins over it.
+	// The device-validation flag is set to empty, not left unset: Expo would fill an unset variable from a developer's .env.local.
 	const env = {
 		...process.env,
 		APP_VARIANT: "production",

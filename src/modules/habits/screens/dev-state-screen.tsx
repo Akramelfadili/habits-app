@@ -25,13 +25,6 @@ const launchFile:
 		? require("@/lib/device-validation/launch-request")
 		: null;
 
-/**
- * `habitsapp://dev-state?route=<web route>&clock=<local date-time>`: opens one
- * visual-check state on the device-validation build. It pins the clock, writes
- * the route's `?fixtures=` scenario into the database, applies the stored
- * Appearance and replaces itself with the route. In any other build the link
- * goes straight to Today and does nothing else (`device-validation.guard.test.ts`).
- */
 export function DevStateScreen() {
 	const enabled = isDeviceValidationBuild();
 	const { route, clock } = useLocalSearchParams<{
@@ -58,12 +51,6 @@ export function DevStateScreen() {
 	return null;
 }
 
-/**
- * Rendered once by the root layout: when the CI driver left a launch request
- * (`lib/device-validation/launch-request.ts`), opens `dev-state` for it as soon
- * as the navigator is ready. Renders nothing, and does nothing, in any other
- * build.
- */
 export function DeviceValidationLaunch() {
 	const router = useRouter();
 	const navigationReady = Boolean(useRootNavigationState()?.key);

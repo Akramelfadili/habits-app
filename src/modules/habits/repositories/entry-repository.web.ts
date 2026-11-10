@@ -12,11 +12,6 @@ import { freezeHabitDay, unfreezeHabitDay } from "./frozen-day-repository.web";
 
 export type FreezeChange = NativeEntryRepository.FreezeChange;
 
-/**
- * Web-only stand-in for `entry-repository.ts` (see `habit-repository.web.ts`
- * for why web exists at all — in-memory fixtures, no expo-sqlite binding).
- */
-
 let store: Entry[] | undefined;
 const listeners = new Set<() => void>();
 
@@ -55,7 +50,6 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	);
 	const startDate = format(start, "yyyy-MM-dd");
 	const endDate = format(end, "yyyy-MM-dd");
-	// Memoised like the native slice, so what Today derives from it stays memoised.
 	return useMemo(
 		() =>
 			entries.filter(
@@ -95,7 +89,6 @@ export function useAllEntries(): Entry[] {
 	return useSyncExternalStore(subscribe, getEntries, () => [] as Entry[]);
 }
 
-/** Web counterpart of the native freeze change: no real transaction, one store. */
 async function changeFreeze(
 	habitId: number,
 	date: Date,

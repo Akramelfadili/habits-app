@@ -13,7 +13,7 @@ beforeEach(() => {
 });
 
 describe("Toast", () => {
-	it("at accessibility sizes wraps the whole message and drops the action below it (08.6)", async () => {
+	it("at accessibility sizes wraps the whole message and drops the action below it", async () => {
 		mockAccessibilityText = true;
 		const long = "Couldn't update this habit. Try again in a moment, please.";
 		await render(<Toast message={long} actionLabel="Retry" />);

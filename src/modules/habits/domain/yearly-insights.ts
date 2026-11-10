@@ -1,48 +1,27 @@
 import type { Habit } from "../types";
 import type { YearlyHabitRow, YearMonthCell } from "./yearly-summary";
 
-/**
- * Yearly Summary's insights. Every threshold lives in this one block, like
- * `monthly-insights.ts`, and the `yearly-summary` fixture's test pins that these defaults give
- * the expected cards, in order.
- *
- * Insights are about habits you still have: the caller passes **active habits only** (months,
- * rows and the longest streak alike), so an archived habit is never named, counted toward a
- * month's rate, or linked to.
- *
- * Only **judgeable** months are looked at: a month with scheduled days that has finished. Months
- * before a habit started, months that were all frozen or rest days, and the month still in
- * progress never count, toward a streak of good months or toward "under half", and a month that
- * doesn't count also breaks a run of good ones (it can't be one of the four).
- */
+// Callers pass active habits only, so an archived habit is never named or counted. Only
+// finished months with scheduled days are judgeable; one that doesn't count also breaks a run.
 
 export const MAX_YEARLY_INSIGHTS = 3;
 
-/** "Stuck": at or above this rate (0–1)… */
 const STUCK_MIN_RATE = 0.85;
-/** …for this many judgeable months in a row. */
 export const STUCK_MIN_MONTHS = 4;
 
-/** "Never stuck": below this rate (0–1)… */
 const NEVER_STUCK_MAX_RATE = 0.5;
-/** …in at least this many judgeable months (not necessarily in a row). */
 export const NEVER_STUCK_MIN_MONTHS = 5;
 
-/** Best month and seasonal dip need this many judgeable months to compare. */
 const BEST_MONTH_MIN_MONTHS = 2;
-/** A dip: this many percentage points under the best month… */
 const SEASONAL_MIN_POINTS = 8;
-/** …for this many judgeable months in a row. */
 const SEASONAL_MIN_MONTHS = 2;
 
 export type YearlyInsight =
-	/** The year has no finished month yet (early January, or a first month still running). */
 	| { type: "early" }
 	| { type: "perfect" }
 	| {
 			type: "best-month";
 			cell: YearMonthCell;
-			/** Set only when the year's longest streak ended in this month. */
 			streak: { days: number; habit: Habit } | null;
 	  }
 	| { type: "stuck"; row: YearlyHabitRow; months: number }
@@ -72,12 +51,8 @@ export function isJudgeable(cell: YearMonthCell): boolean {
 
 const points = (rate: number) => Math.round(rate * 100);
 
-/**
- * Gate order: (1) the screen has already checked too-early (< 3 months of history); here
- * (2) no finished month yet, (3) perfect, only with something scheduled, then the rest in card
- * order. Of those, only the first `MAX_YEARLY_INSIGHTS` show; a fourth (the seasonal dip) is the
- * first to go.
- */
+// The screen has already checked too-early. Only the first `MAX_YEARLY_INSIGHTS` show; the
+// seasonal dip is the first to go.
 export function yearlyInsightsFor(input: InsightInput): YearlyInsight[] {
 	const judged = input.months.filter(isJudgeable);
 	if (judged.length === 0) return [{ type: "early" }];
@@ -186,7 +161,7 @@ function seasonalInsight(
 			cell.rate !== null &&
 			bestPoints - points(cell.rate) >= SEASONAL_MIN_POINTS;
 		run = dip ? [...run, cell] : [];
-		// `>=`: of two equal dips, the more recent one is the one worth saying.
+		// `>=`: of two equal dips, the more recent is worth saying.
 		if (run.length >= longest.length) longest = run;
 	}
 	if (longest.length < SEASONAL_MIN_MONTHS) return null;

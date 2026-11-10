@@ -68,7 +68,7 @@ export function cellStateOf(day: {
 			return { kind: "before-start" };
 		case "future":
 			return { kind: "future" };
-		// Due, nothing logged yet — and today, still open: an outline, never "missed".
+		// An outline, never "missed": nothing logged yet, or today still open.
 		case "nothing-logged":
 		case "today":
 			return { kind: "nothing-logged" };
@@ -95,7 +95,6 @@ export function calendarStateOf(day: CalendarDay): CompletionCellState {
 	}
 }
 
-/** The whole-number share a quantity habit's partial cell reached; the level's midpoint without a target. */
 function partialPercent(row: MatrixRow, day: MatrixCell): number {
 	const target = row.habit.targetAmount;
 	if (target && day.value !== undefined) {
@@ -163,7 +162,6 @@ export function weekMatrixProps(
 			accessibilityLabel: progressCopy.week.editDayLabel(
 				format(day.date, "EEEE d MMMM"),
 			),
-			// Days that have not happened cannot be edited ("Can't log ahead"): no target.
 			onPress:
 				day.date > startOfDay(today) ? undefined : () => onEditDay(day.date),
 		})),
@@ -198,7 +196,7 @@ export function weekBlocksProps(
 			letter: format(day.date, "EEEEE"),
 			text: format(day.date, "d"),
 			accessibilityLabel: matrixCellLabel(row, day),
-			// 40 pt with a 2 pt slop is a real 44 pt target: here a cell opens its day.
+			// 40 pt with a 2 pt slop is a real 44 pt target.
 			onPress:
 				day.date > startOfDay(today) ? undefined : () => onEditDay(day.date),
 			accessibilityHint:
@@ -474,7 +472,6 @@ export type InsightCardData = {
 	title: string;
 	body: string;
 	tone: "warning" | "success" | "neutral";
-	/** Slipping only: Change frequency → Edit habit scrolled to Frequency. */
 	action?: { label: string; habitId: number };
 };
 

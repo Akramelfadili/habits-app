@@ -16,45 +16,26 @@ import type { Habit } from "../types";
 import { categorySymbol } from "./category-symbol";
 import { CompletionCircle } from "./completion-circle";
 
-/** A flat 60 pt row: 44 pt circle plus `space[200]` above and below. */
 const ROW_MIN_HEIGHT = minTouchTarget + 2 * space[200];
 
 type HabitRowProps = {
 	habit: Habit;
 	completed: boolean;
-	/** The shown day's logged amount; only meaningful for a quantity habit. */
 	quantityValue?: number;
-	/** The line under the name (see `todayRowStatus`); none for a plain habit with no streak. */
 	status?: RowStatus;
 	onToggle: () => void;
-	/** A tap on a quantity habit's circle adds one. */
 	onIncrement?: () => void;
-	/** The count button and the circle's long-press open the quantity sheet. */
 	onOpenQuantitySheet?: () => void;
-	/** The name area: opens Detail — or, on an at-risk row, the streak sheet. The circle always logs. */
 	onPress?: () => void;
 	nameHint?: string;
-	/** Streak at risk: the amber dot on the circle. */
 	atRisk?: boolean;
-	/** Frozen day: violet circle. */
 	frozen?: boolean;
-	/**
-	 * What the circle does when it isn't the plain log: "amount" opens the quantity
-	 * sheet (Edit this day), "details" opens Detail (a bonus already logged). VoiceOver
-	 * says so instead of "log one more" / "mark done".
-	 */
 	circleAction?: "log" | "amount" | "details";
-	/** False for a day in the past (Edit this day): VoiceOver asks "resisted?", not "resisted today?". */
 	isToday?: boolean;
-	/** Not due on this day (the fold row): a dashed circle; a log is a bonus. */
 	notDue?: boolean;
 };
 
-/**
- * What VoiceOver says for the circle: the state is in the words, since a resisted Break habit
- * announced as "checked" is the wrong "did the thing" framing. The circle is a plain button, not a
- * checkbox.
- */
+// The circle is a plain button, not a checkbox: "checked" would be the wrong framing for a resisted Break habit.
 function circleAccessibility(
 	habit: Habit,
 	completed: boolean,
@@ -99,12 +80,6 @@ function nameLabel(habit: Habit, status?: RowStatus): string {
 	return status ? `${habit.name}, ${status.text}` : habit.name;
 }
 
-/**
- * A Today row: icon square, name and status line (the name area opens Detail), a count button for a
- * quantity habit, and the completion circle. Two tap zones, so a mis-tap on the name never logs. At
- * accessibility text sizes the row stacks: the name on top, count button and circle on their own
- * line, each with its 44 pt target.
- */
 export function HabitRow({
 	habit,
 	completed,
@@ -236,14 +211,12 @@ const styles = StyleSheet.create({
 		paddingVertical: space[200],
 		gap: space[200],
 	},
-	/** AX sizes restore 16 pt padding and stack the row. */
 	stackedRow: {
 		paddingHorizontal: space[400],
 		paddingVertical: space[400],
 		gap: space[200],
 	},
 	nameArea: {
-		// In the stacked accessibility layout the row's height is its content's.
 		minHeight: minTouchTarget,
 		flex: 1,
 		alignSelf: "stretch",

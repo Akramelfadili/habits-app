@@ -14,15 +14,9 @@ import { suggestionToPrefill } from "../presenters/suggestions-presenter";
 import type { Suggestion } from "../suggestions";
 
 type SuggestionsScreenProps = {
-	/** Opened from First Run: a saved habit finishes First Run, and Skip for now leads to an empty Today. */
 	firstRun?: boolean;
 };
 
-/**
- * Browse suggestions: the bundled habits grouped by category, the Break habits last.
- * Tapping one opens Add habit filled in (nothing is created here), and one the person
- * already has says Added. The header's Close is the route's own (`src/app/_layout.tsx`).
- */
 export function SuggestionsScreen({
 	firstRun = false,
 }: SuggestionsScreenProps) {

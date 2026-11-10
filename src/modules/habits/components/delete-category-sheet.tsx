@@ -14,13 +14,6 @@ type DeleteCategorySheetProps = {
 	isWorking?: boolean;
 };
 
-/**
- * Delete a custom category. In use: says how many habits move to Other and that their history and
- * streaks are kept, and lists each one with its move ("Outdoors → Other") before the "Delete and
- * move 1 habit" button. Not in use: one destructive button and Cancel; nothing is lost, so there is
- * no lock, and the Undo toast comes after. There is no "move habits first" step: the delete always
- * reassigns to Other in the same action.
- */
 export function DeleteCategorySheet({
 	usage,
 	other,

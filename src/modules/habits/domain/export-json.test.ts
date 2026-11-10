@@ -234,7 +234,6 @@ describe("toJson", () => {
 				"Café, then “read”",
 				"Water",
 			]);
-			// Categories are the person's setup, not a habit's data: they stay.
 			expect(parsed.categories).toHaveLength(11);
 		});
 	});

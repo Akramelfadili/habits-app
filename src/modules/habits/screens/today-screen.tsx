@@ -52,17 +52,9 @@ import { useTodayQueries } from "../hooks/use-today-queries";
 import { useWeekStripQueries } from "../hooks/use-week-strip-queries";
 import { todayCopy } from "../messages";
 
-/**
- * No bottom edge: the floating pill carries its own 22 pt float over the home indicator
- * and every scroller pays `TAB_BAR_BOTTOM_PADDING`, so a bottom safe-area inset here would
- * stack a third gap on top of both.
- */
+// No bottom edge: the pill and every scroller already pay for the home indicator, so an inset here would stack a third gap.
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
-/**
- * The Today tab: Today itself, inside a boundary that keeps a failed read in this tab: the
- * header and the tab bar stay and Try again re-runs it.
- */
 export function TodayScreen() {
 	const router = useRouter();
 	return (
@@ -81,7 +73,6 @@ export function TodayScreen() {
 	);
 }
 
-/** Thin: reads from the hooks, picks the view state, hands props to the sections in `components/today/`. */
 function TodayContent() {
 	const router = useRouter();
 	const { colors } = useTheme();
@@ -298,11 +289,9 @@ const styles = StyleSheet.create({
 		paddingBottom: TAB_BAR_BOTTOM_PADDING,
 		gap: space[500],
 	},
-	/** The list and what follows it: one child, so one layout transition moves them. */
 	body: {
 		gap: space[500],
 	},
-	/** Title and week strip read as one block. */
 	top: {
 		gap: HEADER_BLOCK_GAP,
 	},

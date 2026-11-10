@@ -17,13 +17,6 @@ import { calculateCurrentStreak } from "../domain/streaks";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type { Entry, Habit } from "../types";
 
-/**
- * Today driven through the real hooks and a real, migrated in-memory database
- * (only expo-router, the symbols and the live-query driver are stand-ins): what
- * a person does and what lands in the tables. The mock-hook screen tests
- * (`today-screen.test.tsx`) keep the rendering detail; the write paths, Undo,
- * the freeze pool and the clock live here.
- */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -52,7 +45,6 @@ const { useTodayQueries } = require("../hooks/use-today-queries");
 const { useTodayLogActions } = require("../hooks/use-today-log-actions");
 const { useOffScheduleQueries } = require("../hooks/use-off-schedule-queries");
 
-/** Only Date and the midnight timer move: promises and the live-query stand-in run for real. */
 function fakeClock(now: Date) {
 	jest.useFakeTimers({
 		now,
@@ -69,11 +61,7 @@ function fakeClock(now: Date) {
 	});
 }
 
-/**
- * The frozen clock never reaches an animation's end, so a fill or a drawn check
- * would keep requesting frames for the rest of the file. Motion has its own
- * tests; here every animation lands at once.
- */
+// The frozen clock never reaches an animation's end, so a fill or drawn check would keep requesting frames: every animation lands at once.
 function jumpAnimationsToTheirEnd() {
 	jest.spyOn(Animated, "timing").mockImplementation((value, config) => ({
 		start: (done) => {
@@ -85,7 +73,7 @@ function jumpAnimationsToTheirEnd() {
 	}));
 }
 
-const WED_NOON = new Date(2026, 8, 16, 12, 0, 0); // Wed 16 Sep 2026
+const WED_NOON = new Date(2026, 8, 16, 12, 0, 0);
 const MONDAY = "2026-09-14";
 const TUESDAY = "2026-09-15";
 const WEDNESDAY = "2026-09-16";
@@ -142,12 +130,7 @@ const entryRows = () => mockDb.select().from(entries);
 const frozenRows = () => mockDb.select().from(frozenDays);
 const toast = () => useToastStore.getState().toast;
 
-/**
- * Wait for a database state. waitFor with a frozen clock advances timers inside
- * an act scope whose flag it has switched off, so the live-query stand-in's
- * state updates log "not configured to support act". Here each retry flushes
- * one real macrotask inside an awaited act instead.
- */
+// waitFor with a frozen clock advances timers inside an act scope it has switched off, so the live-query stand-in logs "not configured to support act"; each retry flushes one real macrotask in an awaited act instead.
 async function waitForDb(check: () => Promise<void>) {
 	let failure: unknown;
 	for (let attempt = 0; attempt < 100; attempt++) {
@@ -228,7 +211,6 @@ describe("TodayScreen on the in-memory database", () => {
 			);
 			expect(toast()?.message).toBe("Water +1 · 2 of 8 glasses");
 
-			// Undo of the second tap restores 1 — the value before *that* tap.
 			await act(async () => {
 				await toast()?.onAction?.();
 			});
@@ -260,7 +242,6 @@ describe("TodayScreen on the in-memory database", () => {
 					expect.objectContaining({ habitId: id, value: 8 }),
 				]),
 			);
-			// One toast on close, naming the habit complete; nothing before that.
 			expect(toast()).toBeNull();
 			await act(async () => {
 				await fireEvent.press(screen.getByText("Done"));
@@ -349,7 +330,7 @@ describe("TodayScreen on the in-memory database", () => {
 			});
 
 			expect(await entryRows()).toEqual([]);
-			await log(id, "2026-09-17"); // and nothing was written to the 17th by Undo
+			await log(id, "2026-09-17");
 			expect(await entryRows()).toHaveLength(1);
 		});
 
@@ -369,7 +350,6 @@ describe("TodayScreen on the in-memory database", () => {
 
 	describe("a rest-day bonus log never affects streaks (D11)", () => {
 		it("logs the habit on its off day, shows the bonus, and leaves every streak as it was", async () => {
-			// Thursdays only; today is Wednesday, a rest day. A Thursday streak of 2 stands.
 			const id = await addHabit({
 				name: "Gym",
 				frequency: { type: "weekdays", days: [4] },
@@ -402,12 +382,10 @@ describe("TodayScreen on the in-memory database", () => {
 
 			const after = (await entryRows()) as Entry[];
 			expect(after.map((entry) => entry.date)).toContain(WEDNESDAY);
-			// Thursday's streak is exactly what it was, and Wednesday adds nothing to it.
 			expect(calculateCurrentStreak(habit, after, new Set(), asOf)).toBe(
 				streakBefore,
 			);
 			expect(await screen.findByText("Bonus · streak unchanged")).toBeTruthy();
-			// Still a rest day: nothing was due, so nothing became "done" or at risk.
 			expect(await screen.findByText("Rest day")).toBeTruthy();
 			expect(await frozenRows()).toEqual([]);
 		});
@@ -415,7 +393,6 @@ describe("TodayScreen on the in-memory database", () => {
 
 	describe("freezes", () => {
 		async function atRiskHabit() {
-			// Done Fri 11 – Mon 14, missed Tue 15, today Wed 16: a 4-day streak at risk.
 			const id = await addHabit({ name: "Read" });
 			for (const date of ["2026-09-11", "2026-09-12", "2026-09-13", MONDAY]) {
 				await log(id, date);
@@ -483,11 +460,6 @@ describe("TodayScreen on the in-memory database", () => {
 	});
 });
 
-/**
- * A past day's logging, over the same database: the selected-day state, the
- * day-keyed queries and the write path composed as the screen composes them.
- * There is no week strip yet, so these drive the hooks directly.
- */
 function useTodayDay(selectedInitially: Date | null) {
 	const selected = useSelectedDayQueries();
 	const today = useTodayQueries(selected.selectedKey);

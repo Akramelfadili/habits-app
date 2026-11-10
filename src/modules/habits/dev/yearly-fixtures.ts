@@ -4,21 +4,8 @@ import type { Entry } from "../types";
 import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
-/**
- * Fixture data for Yearly Summary: the yearly mockup's six habits from 3 March to 15
- * September 2026 (the visual check pins "now" to 16 Sep, so the title reads "3 March —
- * 16 September"). The under-three-months history reuses Monthly's "too early" fixture
- * (same "since 4 September", same clock).
- * Every habit is daily; each is described by how many days it missed per month, so the
- * misses are what the insight thresholds are tuned against (`yearly-insights.ts`, pinned by
- * `yearly-summary.test.ts`):
- * - June is the best month (91% across everything), and Glass of water's 41-day streak
- *   (21 May to 30 Jun) is the year's longest: best month.
- * - Read holds 85%+ from March to June, exactly four months: stuck.
- * - Mobility is under 50% in five of the six finished months: never stuck.
- * - July and August trail June by 17 points: a seasonal dip, which is the fourth card and
- *   so is cut by the three-card cap.
- */
+// Misses per month are tuned against the insight thresholds (pinned by `yearly-summary.test.ts`);
+// the seasonal dip is the fourth card and is cut by the three-card cap.
 
 const CREATED = new Date(2026, 2, 3, 8);
 
@@ -31,7 +18,6 @@ const IDS = {
 	upperBody: 6,
 } as const;
 
-/** March … September 2026, with the first and last day logged in each. */
 const MONTHS = [
 	{ month: 3, first: 3, last: 31 },
 	{ month: 4, first: 1, last: 30 },
@@ -39,11 +25,9 @@ const MONTHS = [
 	{ month: 6, first: 1, last: 30 },
 	{ month: 7, first: 1, last: 31 },
 	{ month: 8, first: 1, last: 31 },
-	// Today (16 Sep) is still open, so the last logged day is the 15th.
 	{ month: 9, first: 1, last: 15 },
 ] as const;
 
-/** Missed days per month, March → September. */
 const MISS_COUNTS: Record<number, number[]> = {
 	[IDS.water]: [3, 5, 4, 0, 6, 6, 2],
 	[IDS.meditate]: [4, 6, 3, 0, 6, 6, 2],
@@ -53,7 +37,6 @@ const MISS_COUNTS: Record<number, number[]> = {
 	[IDS.upperBody]: [3, 5, 4, 0, 6, 5, 2],
 };
 
-/** Spreads `count` misses evenly over the month's logged days, deterministically. */
 function spread(first: number, last: number, count: number): number[] {
 	const length = last - first + 1;
 	return Array.from(
@@ -62,11 +45,7 @@ function spread(first: number, last: number, count: number): number[] {
 	);
 }
 
-/**
- * Water's streak is pinned: May's last miss is the 20th, June is perfect, and
- * 1 July is missed. Every other habit is made to miss 30 May and 2 July, so
- * none of them can run longer than 32 days.
- */
+// Every habit but Water misses 30 May and 2 July, so none can out-run Water's pinned streak.
 function missedDays(habitId: number, index: number): Set<number> {
 	const { month, first, last } = atIndex(MONTHS, index);
 	const count = MISS_COUNTS[habitId]?.[index] ?? 0;

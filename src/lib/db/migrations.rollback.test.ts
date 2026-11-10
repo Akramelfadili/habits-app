@@ -1,19 +1,12 @@
 /** @jest-environment node */
 /// <reference types="node" />
-// Node ambient types are scoped to this file — it only ever runs under Jest.
 import fs from "node:fs";
 import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { createPartiallyMigratedTestDb } from "./test-db";
 
-/**
- * "Nothing was changed" is only a promise the app may make if a failed update really leaves the
- * database as it was. The device migrator runs every pending migration between one BEGIN and one
- * COMMIT and ROLLBACKs on any error (`SQLiteSyncDialect.migrate`). This runs the real pending
- * migrations of an old-schema database the way it does, forces a failure after the very last
- * statement (the worst moment, with every table already rebuilt), and checks the schema and every
- * row are exactly what they were.
- */
+// "Nothing was changed" is only a promise the app may make if a failed update really leaves the
+// database as it was, so the failure is forced after the very last statement (every table already rebuilt).
 
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
 const fixture = fs.readFileSync(
@@ -112,7 +105,7 @@ describe("'No habits or history are deleted' (SY3) stays true", () => {
 			.map((line) => line.replace(/--.*$/, ""))
 			.join("\n");
 
-	/** Statements that remove user rows or columns; helper tables (`__old_*`) and TEMP tables are the migrator's own scratch. */
+	// Helper tables (`__old_*`) and TEMP tables are the migrator's own scratch, not user data.
 	const DESTRUCTIVE =
 		/(delete\s+from\s+"?(?!sqlite_sequence)(\w+)"?|drop\s+table\s+(?:if\s+exists\s+)?"?(?!__)(\w+)"?|drop\s+column)/gi;
 

@@ -126,7 +126,6 @@ describe("calculateCompletionRate", () => {
 			frequency: weekdaysFrequency(1, 3, 5),
 			createdAt: subDays(today, 20),
 		});
-		// 3 Sep → 23 Sep scheduled: 4,7,9,11,14,16,18,21,23 — today (23rd) unlogged so excluded → 8.
 		const entries = [entry(19), entry(16), entry(14)];
 		const rate = calculateCompletionRate({
 			frozenDates: noFreezes,

@@ -12,15 +12,8 @@ import {
 import { runInTransaction } from "@/lib/db/transaction";
 import type { DeviceState } from "../dev/device-state";
 
-/**
- * Device-validation only (`src/lib/device-validation`): replaces everything
- * the app shows with one visual-check state's fixture data, so the simulator
- * can open the same state the web baseline was captured from. The caller
- * checks the build flag; this only writes. Its web twin does nothing.
- *
- * Fixture rows keep their ids (`/habit/1` must be the same habit), so the
- * autoincrement counters are reset too.
- */
+// The caller checks the build flag; this only writes. Fixture rows keep their ids
+// (`/habit/1` must be the same habit), so the autoincrement counters are reset too.
 export async function replaceAllData(state: DeviceState): Promise<void> {
 	const now = new Date();
 	await runInTransaction(async () => {
@@ -35,8 +28,6 @@ export async function replaceAllData(state: DeviceState): Promise<void> {
 			sql`delete from sqlite_sequence where name in ('entries','entry_notes','frozen_days','reminders','habits')`,
 		);
 
-		// Built-ins already exist (migration 0008); only their group order moves.
-		// A custom fixture takes its id and order from the list.
 		const stored = await db.select({ id: categories.id }).from(categories);
 		const storedIds = new Set(stored.map((row) => row.id));
 		for (const [index, category] of state.categories.entries()) {

@@ -31,13 +31,9 @@ type TodayHabitListProps = {
 	>;
 	streakByHabitId: ReadonlyMap<number, number>;
 	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
-	/** False on a past day: copy drops "today". */
 	isToday: boolean;
-	/** After the evening hour on the real today ("Resist tonight"). */
 	isEvening?: boolean;
-	/** "Wed 21": the past day, named in the progress line. */
 	dayLabel: string;
-	/** Habits that existed but are not due on the shown day: the fold row. */
 	notDueHabits: readonly Habit[];
 	loggedBonusIds: ReadonlySet<number>;
 	bonusValues?: ReadonlyMap<number, number>;
@@ -49,10 +45,6 @@ type TodayHabitListProps = {
 	onLogBonus: (habit: Habit) => void;
 };
 
-/**
- * The day's body: the all-done card when everything is done, one progress bar, a flat card per
- * category with its "0 of 2" count, and the one dashed row the not-due habits fold into.
- */
 export function TodayHabitList({
 	progress,
 	groups,
@@ -204,10 +196,6 @@ type TodayNotDueCardProps = {
 	onOpenHabit: (habitId: number) => void;
 };
 
-/**
- * The not-due habits as dashed-circle rows: a tap logs a bonus, which never touches a streak. Shared
- * by the fold row and the rest day.
- */
 export function TodayNotDueCard({
 	habits,
 	loggedBonusIds,
@@ -249,7 +237,6 @@ export function TodayNotDueCard({
 							tone: "default",
 						}}
 						onPress={() => onOpenHabit(habit.id)}
-						// A logged check bonus is undone from Detail; a quantity one reopens its sheet.
 						onToggle={() =>
 							hasLog ? onOpenHabit(habit.id) : onLogBonus(habit)
 						}

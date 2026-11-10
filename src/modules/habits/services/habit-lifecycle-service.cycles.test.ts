@@ -3,12 +3,8 @@ import { fakeNotifications as fake } from "../test-support/fake-expo-notificatio
 import { makeHabit } from "../test-support/habit-builder";
 import type { DayRange, Habit, Reminder } from "../types";
 
-/**
- * Archive → restore → undo → restore against the real lifecycle and reminder
- * services, with only the edges faked: an in-memory habit row, one mockStored
- * reminder, and a scheduler that records every notification it holds — so a
- * restore that *appended* instead of rebuilding would show up as a duplicate.
- */
+// The scheduler records every notification it holds, so a restore that appended instead of
+// rebuilding would show up as a duplicate.
 
 let mockStored: Habit;
 jest.mock(

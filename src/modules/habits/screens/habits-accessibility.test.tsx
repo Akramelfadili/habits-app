@@ -50,7 +50,6 @@ jest.mock("../hooks/use-habits-actions", () => ({
 
 import { HabitsScreen } from "./habits-screen";
 
-/** What VoiceOver stops on, in reading order: every labelled element. */
 function readingOrder(): string[] {
 	const out: string[] = [];
 	const walk = (node: ReactTestRendererJSON | string | null) => {

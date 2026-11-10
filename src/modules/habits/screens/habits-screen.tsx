@@ -45,19 +45,9 @@ import {
 } from "../presenters/habits-library-presenter";
 import type { Habit } from "../types";
 
-/**
- * No bottom edge: the floating pill carries its own float over the home indicator and
- * every scroller pays `TAB_BAR_BOTTOM_PADDING`.
- */
+// No bottom edge: the floating pill carries its own float over the home indicator and every scroller pays `TAB_BAR_BOTTOM_PADDING`.
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
-/**
- * The Habits tab: the library. A collapsing "Habits" header with the gear and the plus, a
- * search over active and archived habits, the active ones by category with Reorder, the
- * archived ones folded away with an instant Restore, and the way to Categories. Thin: it
- * holds the three bits of UI state (the query, reorder mode, whether Archived is open) and
- * hands the rest to its sections.
- */
 export function HabitsScreen() {
 	const router = useRouter();
 	const { colors } = useTheme();

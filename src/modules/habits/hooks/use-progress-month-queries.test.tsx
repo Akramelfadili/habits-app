@@ -16,7 +16,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 
 const { createHabit } = require("../repositories/habit-repository");
 
-/** A habit created at `createdAt`, so entries before today still count. */
 async function createHabitAt(
 	input: Parameters<typeof createHabit>[0],
 	createdAt: Date,

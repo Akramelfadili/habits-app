@@ -1,5 +1,3 @@
-// Finds the comments and the test titles (describe, it, test strings) of a
-// TypeScript or JavaScript source text, with their line numbers.
 import { createRequire } from "node:module";
 
 const ts = createRequire(import.meta.url)("typescript");
@@ -21,7 +19,6 @@ function kindFor(file) {
 	return ts.ScriptKind.JS;
 }
 
-/** @returns {{comments: {line: number, endLine: number, text: string}[], titles: {line: number, text: string}[]}} */
 export function scanSource(file, text) {
 	const sf = ts.createSourceFile(
 		file,

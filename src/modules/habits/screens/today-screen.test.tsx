@@ -318,7 +318,6 @@ describe("TodayScreen", () => {
 			await fireEvent.press(screen.getByText("Log a different habit"));
 
 			expect(screen.getByText("Log off-schedule")).toBeTruthy();
-			// Once on the rest-day card, once in the picker.
 			expect(screen.getAllByText("Read")).toHaveLength(2);
 			expect(mockPush).not.toHaveBeenCalled();
 		});
@@ -421,7 +420,6 @@ describe("TodayScreen", () => {
 		expect(screen.getByText("100%")).toBeTruthy();
 		expect(screen.queryByText(/^All .* done$/)).toBeNull();
 		expect(screen.queryByText("TOMORROW")).toBeNull();
-		// Nothing conjures an Undo from an earlier visit's entries.
 		expect(useToastStore.getState().toast).toBeNull();
 	});
 
@@ -886,7 +884,6 @@ describe("TodayScreen", () => {
 
 		expect(screen.getByText("0 of 20 pages")).toBeTruthy();
 		expect(screen.getByText("3× per week · 2 done")).toBeTruthy();
-		// A plain daily check has nothing to add under its name.
 		expect(screen.queryByText(/daily/i)).toBeNull();
 	});
 
@@ -1073,7 +1070,6 @@ describe("TodayScreen day tap", () => {
 		});
 	}
 
-	/** The inline bar is always mounted; it is "showing" once VoiceOver can reach its name. */
 	const barShowing = () =>
 		screen.queryByRole("header", { name: "Today" }) !== null;
 

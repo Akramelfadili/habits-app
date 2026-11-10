@@ -48,7 +48,6 @@ export function useHabitReminders(habitId: number): Reminder[] {
 	return data.map(rowToReminder);
 }
 
-/** Live-query hook: every habit's reminders (Today's tomorrow preview). */
 export function useAllReminders(): Reminder[] {
 	const { data } = useLiveRows<ReminderRow>(() =>
 		db
@@ -59,11 +58,7 @@ export function useAllReminders(): Reminder[] {
 	return data.map(rowToReminder);
 }
 
-/**
- * A one-off (non-reactive) read of one habit's reminders — the service's
- * cap check and notification re-sync need what's stored right now, not what
- * a hook last rendered.
- */
+// The cap check and re-sync need what's stored now, not what a hook last rendered.
 export async function getHabitReminders(habitId: number): Promise<Reminder[]> {
 	const rows = await habitRemindersQuery(habitId);
 	return rows.map(rowToReminder);
@@ -86,11 +81,7 @@ export async function createReminder(
 	return rowToReminder(present(row, "the reminder row"));
 }
 
-/**
- * Puts a removed reminder back under its original id (the Undo for Remove).
- * Ids are autoincrement and never reused, so the id is free unless the row
- * was never deleted — in which case the insert fails rather than duplicating.
- */
+// Ids are autoincrement and never reused, so the insert fails rather than duplicating a live row.
 export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
 	const [row] = await db
 		.insert(reminders)

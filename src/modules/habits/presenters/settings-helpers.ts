@@ -10,7 +10,6 @@ export function versionLabel(info: { version: string; build: string }): string {
 	return `${info.version} (${info.build})`;
 }
 
-/** What a denied iOS permission holds back: the enabled times and the active habits they belong to. */
 export function notificationImpact(
 	reminders: readonly Pick<Reminder, "habitId" | "enabled">[],
 	habits: readonly Pick<Habit, "id" | "archivedAt">[],

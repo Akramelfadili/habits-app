@@ -13,14 +13,8 @@ type QuickPickInput = {
 	categories: readonly Category[];
 };
 
-/**
- * Quick picks. A pick fills every field the suggestion knows (category and target stay out of
- * sight), and typing a different name drops those two again, so a renamed habit is never saved
- * under a category or amount nobody chose. `changeName` is the name field's handler on every
- * form; it only has something to undo after a pick.
- */
+// Typing a different name drops the hidden category and target again, so a renamed habit is never saved under a category or amount nobody chose.
 export function useQuickPickActions({ setValue, categories }: QuickPickInput) {
-	// The pick whose hidden fields (category, target) are still in the form.
 	const picked = useRef<Suggestion | null>(null);
 
 	function pickSuggestion(suggestion: Suggestion) {

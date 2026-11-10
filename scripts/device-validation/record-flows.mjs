@@ -1,20 +1,6 @@
 #!/usr/bin/env node
-/**
- * Behaviour flows on the simulator, each recorded on video.
- *
- *   node record-flows.mjs --bundle-id <id> --out out [--only "day-strip toast"]
- *
- * Two groups: the known-bug flows in scripts/device-validation/flows (a–f of the device-validation
- * brief), and every web journey in e2e/*.yaml converted on the fly (the
- * `url:` header becomes a launch request, `id:` selectors become `text:`).
- * Every flow runs from a freshly opened state: the driver writes
- * `Documents/dev-state.json`, relaunches the app, starts
- * `simctl io booted recordVideo`, runs Maestro, stops the recording.
- *
- * Output per flow: <id>.mp4, <id>/ (Maestro's screenshots and command log),
- * and a row in results.json / summary.md. Maestro records each command's
- * duration; the toast flow's `notVisible` wait is the time the toast stayed.
- */
+// node record-flows.mjs --bundle-id <id> --out out [--only "day-strip toast"]
+// Maestro records each command's duration; the toast flow's `notVisible` wait is how long the toast stayed.
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";

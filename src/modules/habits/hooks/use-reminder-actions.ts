@@ -10,11 +10,7 @@ import {
 } from "../services/reminder-service";
 import type { Habit, ReminderDraft, ReminderPatch } from "../types";
 
-/*
- * Anything that turns a notification *on* first makes sure the OS has been
- * asked — once, the first time it matters. A denial never blocks the save:
- * settings are kept, and the screen shows a persistent notice instead.
- */
+// A denial never blocks the save: settings are kept and the screen shows a persistent notice instead.
 
 async function addTime(habit: Habit, draft?: ReminderDraft) {
 	await ensureNotificationPermission();
@@ -30,7 +26,6 @@ async function editTime(
 	return editReminder(habit, reminderId, patch);
 }
 
-/** Used by Settings (`useSettingsActions`), the Evening review's only home. */
 export async function toggleEveningReview(enabled: boolean) {
 	if (enabled) await ensureNotificationPermission();
 	return setEveningReview(enabled);

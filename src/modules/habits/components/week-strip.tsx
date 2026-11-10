@@ -32,22 +32,14 @@ type WeekStripProps = {
 	onSelect: (date: Date) => void;
 	onPreviousWeek: () => void;
 	onNextWeek: () => void;
-	/** False once the shown week is the current one: there is no later week to swipe to. */
 	canShowNext: boolean;
 };
 
 const SWIPE_DISTANCE = space[800] + space[300];
-/** The number circle, a fixed 40 pt. */
 const DAY_SIZE = 40;
 const DOT = 6;
 const RING = 2;
 
-/**
- * Seven days, Monday first. Today is ringed, the selected day is filled with the accent, a dot
- * appears only when everything due that day was done, and future days are faint and inert. Swipe for
- * other weeks (160 ms crossfade + 12 pt slide; Reduce Motion crossfades only). VoiceOver sees one
- * adjustable element, not seven.
- */
 export function WeekStrip({
 	days,
 	selectedKey,
@@ -215,7 +207,6 @@ const styles = StyleSheet.create({
 	change: {
 		minHeight: minTouchTarget,
 		paddingVertical: space[200],
-		// Only drawn at accessibility sizes, where the label wraps: 20 pt, not a pill.
 		borderRadius: radius.l,
 		borderWidth: 1,
 		paddingHorizontal: space[400],
@@ -270,10 +261,7 @@ type ChangeDayButtonProps = Pick<
 	| "canShowNext"
 >;
 
-/**
- * At accessibility text sizes (AX1+) seven fixed 40 pt days no longer fit, so the strip becomes one
- * button, "Friday 23 · Change day", that opens the week as a list.
- */
+// Seven fixed 40 pt days no longer fit at AX1+, so the strip collapses to one button.
 function ChangeDayButton({
 	days,
 	selectedKey,

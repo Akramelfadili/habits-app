@@ -308,7 +308,7 @@ describe("insights on the monthly-summary fixture", () => {
 		monthlyFrozenDays(),
 	);
 
-	it("produces exactly the mockup's three insights, in order", () => {
+	it("produces the three expected insights, in order", () => {
 		expect(summary.insights.map((insight) => insight.type)).toEqual([
 			"slipping",
 			"improved",

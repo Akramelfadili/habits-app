@@ -1,10 +1,3 @@
-/**
- * Time-zone helpers for tests (docs/how-to/dev-tooling.md § "Time zones in
- * tests"). Jest's globalSetup pins TZ (America/Los_Angeles unless JEST_TZ says
- * otherwise); these let one test run in another zone and find the days a zone
- * changes its clocks, from Intl rather than from memory.
- */
-
 export const TEST_ZONES = [
 	"UTC",
 	"Europe/Paris",
@@ -20,11 +13,8 @@ type ZoneHooks = {
 	__getProcessTimeZone?: () => string | undefined;
 };
 
-/**
- * Sets the zone of the real process. A test's `process.env` is Jest's copy, so
- * assigning `process.env.TZ` in a test changes nothing; `jest.environment.js`
- * provides this hook from the outer realm, where Node re-reads TZ on assignment.
- */
+// A test's `process.env` is Jest's copy, so assigning TZ there changes nothing; `jest.environment.js`
+// provides this hook from the outer realm, where Node re-reads TZ on assignment.
 function setZone(zone: string | undefined): void {
 	const hooks = globalThis as ZoneHooks;
 	if (!hooks.__setProcessTimeZone) {
@@ -39,12 +29,7 @@ export function currentTimeZone(): string | undefined {
 	return (globalThis as ZoneHooks).__getProcessTimeZone?.();
 }
 
-/**
- * Runs `fn` with the process in `zone` (`new Date(y, m, d)`, `getHours()` and
- * date-fns all follow), then puts the previous zone back, also when `fn`
- * throws or its promise rejects. Build every date inside `fn`: a date made
- * before the switch is still the instant of the old zone's midnight.
- */
+// Build every date inside `fn`: a date made before the switch is still the old zone's midnight.
 export function withTimeZone<T>(zone: string, fn: () => T): T {
 	const previous = currentTimeZone();
 	setZone(zone);
@@ -62,10 +47,7 @@ export function withTimeZone<T>(zone: string, fn: () => T): T {
 	return result;
 }
 
-/**
- * For a `describe` body: every test in it runs in `zone`, set before each test
- * and restored after. Build dates inside the tests, not in the describe body.
- */
+// Build dates inside the tests, not in the describe body.
 export function inTimeZoneEachTest(zone: string): void {
 	let previous: string | undefined;
 	beforeEach(() => {
@@ -84,17 +66,11 @@ function offsetAt(offsets: Intl.DateTimeFormat, instant: number): string {
 
 const HOUR = 3_600_000;
 
-/**
- * The local days ("yyyy-MM-dd") in `year` on which `zone`'s UTC offset changes
- * (a 23 h or 25 h day), read from Intl by scanning the year hour by hour.
- * Empty for a zone without DST that year (UTC, America/Sao_Paulo since 2019).
- */
 export function dstTransitionDays(zone: string, year: number): string[] {
 	const offsets = new Intl.DateTimeFormat("en-US", {
 		timeZone: zone,
 		timeZoneName: "longOffset",
 	});
-	// en-CA formats as yyyy-MM-dd.
 	const dayKeys = new Intl.DateTimeFormat("en-CA", {
 		timeZone: zone,
 		year: "numeric",

@@ -158,9 +158,7 @@ describe("ProgressScreen — the shell", () => {
 	it("opens on the range last chosen, however the screen came to be mounted — a tab switch", async () => {
 		const first = await render(<ProgressScreen />);
 		await fireEvent.press(screen.getByRole("tab", { name: "Year" }));
-		// A fresh mount reads the same store: the range is not screen state.
 		expect(useProgressViewStore.getState().range).toBe("year");
-		// The first screen is gone (the tab switch) before the store is touched.
 		await first.unmount();
 		resetProgressView();
 		useProgressViewStore.setState({ range: "year" });
@@ -193,7 +191,6 @@ describe("ProgressScreen — under the tab bar", () => {
 		await render(<ProgressScreen />);
 		expect(screen.getAllByTestId("progress-range-bar")).toHaveLength(1);
 		expect(screen.getAllByTestId("progress-inline-bar")).toHaveLength(1);
-		// One switcher on screen: the pinned layer is the only one.
 		expect(screen.getAllByLabelText("Range")).toHaveLength(1);
 	});
 });
@@ -263,7 +260,6 @@ describe("ProgressScreen — navigation inside Progress", () => {
 			}),
 		);
 		expect(mockPush).toHaveBeenCalledWith("/month/2026-10-01");
-		// Nothing changes in place: Year stays the range, with no Back row of its own.
 		expect(useProgressViewStore.getState().range).toBe("year");
 		expect(screen.getByTestId("year-heat-map")).toBeTruthy();
 	});

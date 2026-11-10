@@ -334,7 +334,6 @@ function day(
 	};
 }
 
-/** A week from Mon 19 Oct 2026: Mon bonus, Tue done, Wed/Fri/Sat/Sun not scheduled, Thu pending (today), the rest future. */
 const week = [
 	day("2026-10-19", "bonus"),
 	day("2026-10-20", "logged", { level: 3 }),

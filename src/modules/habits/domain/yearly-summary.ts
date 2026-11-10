@@ -28,16 +28,8 @@ import {
 	yearlyInsightsFor,
 } from "./yearly-insights";
 
-/**
- * Yearly Summary's math: pure functions on top of Monthly's: the same `outcomesFor` decides
- * what counted (every "was this day owed" question goes through the habit's FrequencyStrategy),
- * and the same `historyStart` decides when history began, so Monthly and Yearly can never
- * disagree.
- *
- * The year is the calendar year of "today" ("2026 so far"); all twelve month slots always exist
- * so the shape of the year is visible from day one. A slot is one of: before the habit/history
- * started, still ahead, started but with nothing counted (rest days, all frozen), or counted.
- */
+// Built on Monthly's `outcomesFor` and `historyStart` so the two can never disagree. All twelve
+// month slots always exist so the year's shape is visible from day one.
 
 export const YEAR_UNLOCK_MONTHS = 3;
 
@@ -56,7 +48,7 @@ export type YearUnlock = {
 	isUnlocked: boolean;
 };
 
-/** "Under three months of history": `addMonths` from the first day, so a 31st clamps (31 Aug → 30 Nov). */
+// `addMonths` from the first day, so a 31st clamps (31 Aug -> 30 Nov).
 export function yearUnlock(firstDay: Date, today: Date): YearUnlock {
 	const todayStart = startOfDay(today);
 	const unlockDate = addMonths(firstDay, YEAR_UNLOCK_MONTHS);
@@ -154,7 +146,7 @@ function byCreationOrder(a: Habit, b: Habit): number {
 	return a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id;
 }
 
-/** The year's longest run, via Detail's own streak function — clipped to the year so a December streak doesn't count in January's. */
+// Clipped to the year so a December streak doesn't count in January's.
 function longestOf({
 	habits,
 	entries,
@@ -210,8 +202,7 @@ export function buildYearlySummary(input: YearlySummaryInput): YearlySummary {
 	const { completed, scheduled } = counts(outcomes);
 	const longest = longestOf({ ...input, habits: ordered });
 
-	// Insights look at active habits only (an archived one is never named or
-	// linked); the tiles, chart and strips keep the whole history, as Monthly's do.
+	// Insights look at active habits only; the tiles, chart and strips keep the whole history.
 	const active = ordered.filter((habit) => habit.archivedAt === null);
 	const activeIds = new Set(active.map((habit) => habit.id));
 	const activeOutcomes = outcomes.filter(({ habitId }) =>

@@ -4,13 +4,8 @@ import { frequencyArb, isoWeekdayArb } from "../test-support/habit-arbitraries";
 import type { Frequency, IsoWeekday } from "../types";
 import { getFrequencyStrategy } from "./frequency-strategy";
 
-/**
- * Each frequency strategy against a deliberately plain reference written from
- * the rule's wording (frequency-strategy.ts, per-week-frequency.ts), over random
- * completion logs, in every zone of the date matrix. It does not replace
- * `per-week-frequency.equivalence.slow.test.ts`, which also pins the history and
- * summary functions built on the strategies.
- */
+// The plain reference is written from the rule's wording. It does not replace the equivalence
+// suite, which also pins the history and summary functions built on the strategies.
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) =>
@@ -64,7 +59,7 @@ function referenceFor(frequency: Frequency): Reference {
 	};
 }
 
-/** Four weeks of completion offsets from a base day, over 2015-2030 so DST changes fall inside. */
+// Spans 2015-2030 so DST changes fall inside.
 const scenarioArb = fc.record({
 	frequency: frequencyArb,
 	baseDay: fc.integer({ min: 0, max: 5800 }),

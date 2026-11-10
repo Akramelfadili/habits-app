@@ -70,7 +70,6 @@ describe("createStreakReader", () => {
 				TODAY,
 			),
 		);
-		// A habit with no entries and no freezes: nothing to walk, nothing at risk.
 		expect(reader.streakAsOf(makeHabit({ id: 9 }), asOf)).toBe(0);
 		expect(reader.atRisk(makeHabit({ id: 9 }), TODAY)).toBeNull();
 	});

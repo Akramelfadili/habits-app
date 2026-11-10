@@ -1,12 +1,4 @@
-/**
- * Progress's real hooks on 5 years × 20 habits (~29k entries): how long Month
- * and Year take to produce their view, through `useProgressMonthQueries` /
- * `useProgressYearQueries` / `useProgressWeekQueries` — the base reads, the
- * bounded entry reads and the memoised build. The repositories are in-memory
- * stand-ins that filter by range exactly as the real reads do, so what is
- * measured is the app's own work (not SQLite). Ceilings are generous; set
- * PERF_REPORT=1 to print the numbers.
- */
+// The repositories are in-memory stand-ins, so this measures the app's own work, not SQLite. Ceilings are generous; PERF_REPORT=1 prints the numbers.
 import { renderHook } from "@testing-library/react-native";
 import { addDays, format, subYears } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";

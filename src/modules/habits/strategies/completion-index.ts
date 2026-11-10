@@ -1,23 +1,12 @@
 import { startOfDay, startOfWeek } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 
-/**
- * A habit's completed dates, bucketed once so a strategy can answer "what was done this week /
- * on this day" in O(1) instead of scanning every completion for every day it is asked about.
- * History walks call a strategy once per day over years, so the scan made per-week habits
- * quadratic.
- *
- * Keys are the same instants date-fns compares: `isSameWeek(a, b)` is
- * `startOfWeek(a) === startOfWeek(b)` and `isSameDay(a, b)` is `startOfDay(a) === startOfDay(b)`,
- * so answers are identical to the scans they replace
- * (`per-week-frequency.equivalence.slow.test.ts`).
- */
+// Bucketed so history walks (one strategy call per day over years) answer in O(1) instead of
+// scanning every completion, which made per-week habits quadratic. Keys are the instants
+// date-fns compares, so answers equal the old scans (`per-week-frequency.equivalence.slow.test.ts`).
 export type CompletionIndex = {
-	/** startOfWeek(…).getTime() → each completion's own instant, duplicates kept. */
 	timesByWeek: ReadonlyMap<number, readonly number[]>;
-	/** startOfWeek(…).getTime() → the distinct startOfDay(…).getTime() completed that week. */
 	daysByWeek: ReadonlyMap<number, ReadonlySet<number>>;
-	/** Every distinct startOfDay(…).getTime() completed. */
 	days: ReadonlySet<number>;
 };
 
@@ -50,13 +39,8 @@ function buildIndex(dates: readonly Date[]): CompletionIndex {
 	return { timesByWeek, daysByWeek, days };
 }
 
-/**
- * Built once per `completedDates` array and reused for every day a caller asks
- * about (callers build one array per habit per computation). The cache is keyed
- * by the array itself and rebuilt if its length changed, so an array that is
- * appended to before use (`isOffScheduleEntry`) is still read correctly. Treat
- * the array as frozen once a strategy has seen it.
- */
+// Keyed by the array and rebuilt if its length changed, so an array appended to before use
+// (`isOffScheduleEntry`) is still read correctly. Treat the array as frozen once seen.
 const cache = new WeakMap<
 	readonly Date[],
 	{ length: number; index: CompletionIndex }

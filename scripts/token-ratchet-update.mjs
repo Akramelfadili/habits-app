@@ -1,6 +1,4 @@
-// `npm run ratchet:update` — rewrites src/theme/token-ratchet.baseline.json to the
-// CURRENT counts. Use it after you have removed design-token escapes (the guard
-// test tells you when the baseline can be lowered). It refuses to raise a count.
+// `npm run ratchet:update` rewrites src/theme/token-ratchet.baseline.json to the current counts; it refuses to raise one.
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";

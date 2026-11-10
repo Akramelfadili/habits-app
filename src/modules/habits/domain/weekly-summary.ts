@@ -12,31 +12,17 @@ import type { Entry, FrozenDay, Habit } from "../types";
 import { addToTally, EMPTY_TALLY } from "./completion-rate";
 import { habitDayClassifier } from "./day-status";
 
-/**
- * Weekly Summary's math: pure functions over this week's habits and entries. The window is the
- * same Mon–Sun week habits are scheduled against (`WEEK_STARTS_ON`), and every "was this day
- * owed" question goes through the habit's FrequencyStrategy (`wasScheduledOn`), exactly like
- * Habit Detail's history, so a 3×/week habit done three times reads 3/3, not 3/7.
- *
- * Counts run up to today only: future days aren't owed yet, and today joins once it's logged
- * (same rule as Habit Detail's 90-day rate). Mid-week, a habit is judged on the days that have
- * actually happened; a finished week (last week) counts all seven.
- */
+// Counts run up to today only, so mid-week a habit is judged on days that have happened and
+// a 3x/week habit done three times reads 3/3, not 3/7.
 
-/** A habit needs this many scheduled days this week before it can be flagged as slipping. */
 export const SLIPPING_MIN_SCHEDULED_DAYS = 3;
 
-/** Monday 00:00 to Sunday 00:00, both days inclusive (`utils/week-window`). */
 export type WeekWindow = DayWindow;
 
 export type SummaryWeek = "this" | "last";
 
-/**
- * The first ISO weekday (Wednesday) the summary opens on this week. Before
- * it, this week has at most two days in it — nothing can have been due three
- * times — so the summary opens on the week that just finished instead: the
- * Sunday-night/Monday-morning review is exactly when people look.
- */
+// Before Wednesday nothing can have been due three times, so the summary opens on the week
+// that just finished: Sunday night / Monday morning is when people look.
 const THIS_WEEK_FROM_ISO_DAY = 3;
 
 export function defaultSummaryWeek(today: Date): SummaryWeek {
@@ -78,7 +64,6 @@ export type WeeklySummary = {
 type WeeklySummaryInput = {
 	habits: readonly Habit[];
 	entries: readonly Entry[];
-	/** Freezes in the week, any habit: an excused day leaves the counts. */
 	frozenDays?: readonly FrozenDay[];
 	today: Date;
 	week?: SummaryWeek;
@@ -120,8 +105,6 @@ export function buildWeeklySummary({
 			!isAfter(cursor, lastCountedDay);
 			cursor = nextDay(cursor)
 		) {
-			// The shared rule (completion-rate.ts): frozen and bonus days and a
-			// still-open today are not counted.
 			const day = addToTally({ ...EMPTY_TALLY }, classify(cursor));
 			if (day.due === 0) continue;
 			const dateString = toDayKey(cursor);
@@ -146,7 +129,6 @@ export function buildWeeklySummary({
 		}
 	}
 
-	// Stable sort keeps creation order among ties.
 	rows.sort((a, b) => a.fraction - b.fraction);
 
 	const completed = rows.reduce((sum, row) => sum + row.completed, 0);
@@ -178,14 +160,8 @@ function bestDayOf(
 	return best;
 }
 
-/**
- * One verdict for the week, behind one gate: until some habit has been due
- * SLIPPING_MIN_SCHEDULED_DAYS times, it's too early to call *either way* — a
- * single perfect Monday isn't a perfect week any more than one missed Monday
- * is a slipping habit. Past the gate: perfect if everything's done, otherwise
- * the single worst eligible habit (`rows` is already worst-first, ties in
- * creation order).
- */
+// Too early to call either way until some habit has been due SLIPPING_MIN_SCHEDULED_DAYS
+// times: one perfect Monday isn't a perfect week, one miss isn't a slipping habit.
 function insightFor(
 	rows: readonly WeeklyHabitRow[],
 	isPerfect: boolean,

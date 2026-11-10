@@ -7,11 +7,6 @@ import { detailCopy } from "../../messages";
 import type { HistoryRowView } from "../../presenters/habit-detail-presenter";
 import { HabitHistoryRow } from "../habit-history-row";
 
-/**
- * Habit Detail's History: the days that were done, missed, frozen or an off-schedule bonus, newest
- * first, in one flat card; or, for a habit with no logs, one line saying how to start. No times, and
- * no "See all" yet (the list is the last ten days that say something).
- */
 export function DetailHistory({ rows }: { rows: readonly HistoryRowView[] }) {
 	const { colors } = useTheme();
 

@@ -11,17 +11,10 @@ import { TodayHeader } from "../today-header";
 
 type TodayLoadErrorProps = {
 	onRetry: () => void;
-	/** The `+` still works: the data is only unreadable, not gone. */
 	onAddHabit: () => void;
-	/** The day the header names — today, known without the database. */
 	day: Date;
 };
 
-/**
- * Today could not read its habits. The header and the tab bar stay, so the app is still usable;
- * under them one calm line (the data is safe), then Try again, and Copy diagnostics for anyone who
- * needs to report it. Everything the person is told is true: a failed read changes nothing.
- */
 export function TodayLoadError({
 	onRetry,
 	onAddHabit,

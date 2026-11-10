@@ -4,11 +4,7 @@ import { readRecentLogEntries } from "@/lib/logger/install";
 import { log } from "@/lib/logger/logger";
 import { getAppInfo, getLocaleInfo } from "./app-info";
 
-/**
- * Plain text a person can paste into a message: version and device facts, then
- * the recent log, newest last. Everything in it is already redacted by the
- * logger core; the header holds no personal data (no habit text, no ids).
- */
+// The log is already redacted by the logger core; the header holds no personal data (no habit text, no ids).
 export async function buildDiagnosticsReport(): Promise<string> {
 	const info = getAppInfo();
 	const { locale, timeZone } = getLocaleInfo();
@@ -36,7 +32,7 @@ export async function buildDiagnosticsReport(): Promise<string> {
 
 export type DiagnosticsResult = "copied" | "shared" | "failed";
 
-/** Never rejects: the screens that call it are the ones already showing a failure. */
+// Never rejects: its callers are already showing a failure.
 export async function copyDiagnostics(): Promise<DiagnosticsResult> {
 	try {
 		return await copyText(await buildDiagnosticsReport(), "diagnostics.txt");

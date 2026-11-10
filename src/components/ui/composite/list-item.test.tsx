@@ -24,7 +24,7 @@ jest.mock("expo-symbols", () => {
 import { ListItem } from "./list-item";
 
 describe("ListItem", () => {
-	it("an embedded row keeps a 44 pt hit area (08.2)", async () => {
+	it("an embedded row keeps a 44 pt hit area", async () => {
 		await render(
 			<ListItem embedded title="Set exact value" onPress={() => {}} />,
 		);
@@ -229,7 +229,7 @@ describe("ListItem", () => {
 		});
 	});
 
-	describe("accessibility text sizes (08.6)", () => {
+	describe("accessibility text sizes", () => {
 		it("never truncates: the title and subtitle wrap freely and the row stacks", async () => {
 			mockAccessibilityText = true;
 			await render(

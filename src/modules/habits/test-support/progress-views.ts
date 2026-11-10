@@ -9,7 +9,6 @@ import type { ProgressView } from "../hooks/use-progress-base-queries";
 import type { Entry, FrozenDay, Habit } from "../types";
 import { builtInCategory, makeHabit } from "./habit-builder";
 
-/** Friday 23 October 2026: the week of 19-25 Oct. */
 export const PROGRESS_TODAY = addHours(fromDayKey("2026-10-23"), 12);
 
 const LONG_AGO = fromDayKey("2026-10-12");
@@ -46,15 +45,12 @@ function entry(habit: Habit, date: Date): Entry {
 	};
 }
 
-/** Last week every habit every day; this week Read slips (2 of 5), the rest hold. */
 export function progressEntries(): Entry[] {
 	const entries: Entry[] = [];
-	// 12 – 18 Oct: everything done.
 	for (let offset = 0; offset < 7; offset += 1) {
 		const date = addDays(fromDayKey("2026-10-12"), offset);
 		for (const habit of progressHabits) entries.push(entry(habit, date));
 	}
-	// 19 – 23 Oct: Drink water and No social media every day, Read on Mon and Tue.
 	for (let offset = 0; offset < 5; offset += 1) {
 		const date = addDays(fromDayKey("2026-10-19"), offset);
 		entries.push(entry(water, date), entry(noSocial, date));
@@ -63,7 +59,6 @@ export function progressEntries(): Entry[] {
 	return entries;
 }
 
-/** Read 20 min's freeze on Thu 22 Oct — a violet cell, and a day out of the rate. */
 export const progressFrozen: FrozenDay[] = [
 	{ id: 1, habitId: read.id, date: "2026-10-22", createdAt: PROGRESS_TODAY },
 ];

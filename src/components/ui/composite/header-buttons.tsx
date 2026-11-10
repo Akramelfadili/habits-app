@@ -11,38 +11,22 @@ import {
 } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/**
- * The ONE place header buttons are defined: the navigation-bar ones (back, Cancel, Edit, any future
- * Done/Save) and the circle buttons a screen draws in its own large-title header (at most two
- * trailing 44 pt buttons: the `+` on Today and Habits, the gear on Habits). A guard test
- * (`header-buttons.guard.test.ts`) fails if any other file sets a header button option directly.
- *
- * Why: on iOS 26 every native nav-bar item is wrapped in a shared Liquid Glass capsule unless the
- * item sets `hidesSharedBackground`. A plain `headerRight` element can't carry that flag, and the
- * system back button can't be opted out at all, so header buttons here are custom items with
- * `hidesSharedBackground: true` (`unstable_header*Items`, iOS-only), plus the same element via
- * `headerLeft`/`headerRight` for web/Android, which the items override on iOS. Liquid Glass stays on
- * everywhere else (tab bar etc.).
- *
- * The back button is ours too (the system one is hidden), at the cost of the system long-press back
- * menu. Swipe-back is unaffected: react-native-screens owns that gesture, independent of which
- * button is showing.
- */
+// On iOS 26 every native nav-bar item is wrapped in a shared Liquid Glass capsule unless it sets
+// `hidesSharedBackground`. A plain `headerRight` can't carry that flag and the system back button
+// can't opt out, so header buttons are custom items (iOS-only) plus the same element via
+// `headerLeft`/`headerRight` for web/Android. Costs the system long-press back menu; swipe-back is unaffected.
 
-/** The drawn `+`: 16 pt across, 2 pt stroke. */
 const PLUS_SIZE = 16;
 const PLUS_STROKE = 2;
 
 export const HEADER_BUTTON_MIN_SIZE = 44;
 
-/** The compact pill: 36 pt drawn, 4 pt of hit slop above and below make 44. */
 const COMPACT_PILL_HEIGHT = 36;
 const COMPACT_PILL_SLOP = { top: 4, bottom: 4 };
 
 type HeaderButtonProps = {
 	label: string;
 	onPress: () => void;
-	/** "back" leads with a chevron and reads in ink; "action" is a quiet text action. */
 	variant: "back" | "action";
 	accessibilityLabel?: string;
 };
@@ -94,12 +78,7 @@ type HeaderButtonOptions = Pick<
 	| "unstable_headerRightItems"
 >;
 
-/**
- * A plain back button reading the previous screen's title ("‹ Today").
- * `onPress` should be `navigation.goBack()` / `router.back()` — the standard
- * back action, so anything listening for it (a future `beforeRemove` guard)
- * still fires.
- */
+// `onPress` should be the standard back action so `beforeRemove` listeners still fire.
 export function headerBackOptions({
 	title,
 	onPress,
@@ -115,8 +94,7 @@ export function headerBackOptions({
 			onPress={onPress}
 		/>
 	);
-	// Like the system button it replaces: nothing to show when there's
-	// nothing to go back to (a deep link straight into a pushed screen).
+	// Nothing to show after a deep link straight into a pushed screen, like the system button.
 	return {
 		headerBackVisible: false,
 		headerLeft: ({ canGoBack }) => (canGoBack ? element : null),
@@ -154,16 +132,10 @@ export function headerActionOptions({
 
 type HeaderCircleButtonProps = {
 	symbol: SFSymbol;
-	/** What it does — "Add habit", "Settings". Becomes the accessibility label. */
 	accessibilityLabel: string;
 	onPress: () => void;
 };
 
-/**
- * A trailing button in a screen's own large-title header: a 44 pt card-coloured circle with a
- * hairline, so a pair of them reads as one group. Not a navigation-bar item; those are the
- * `*Options` helpers above.
- */
 export function HeaderCircleButton({
 	symbol,
 	accessibilityLabel,
@@ -195,25 +167,14 @@ export function HeaderCircleButton({
 type HeaderPillButtonProps = {
 	label: string;
 	symbol?: SFSymbol;
-	/** What it does, when the visible label alone is ambiguous — "Export data". */
 	accessibilityLabel?: string;
-	/**
-	 * Looks and reads as disabled, but still takes the tap: Progress's Export explains why it can't run
-	 * in a toast instead of going silent.
-	 */
+	// Reads as disabled but still takes the tap, so Export can explain in a toast why it can't run.
 	unavailable?: boolean;
-	/**
-	 * Drawn 36 pt high with a 44 pt hit area, for the 44 pt inline bar: a full
-	 * 44 pt pill would touch the bar's top and bottom edges.
-	 */
+	// 36 pt drawn with a 44 pt hit area: a full 44 pt pill would touch the inline bar's edges.
 	compact?: boolean;
 	onPress: () => void;
 };
 
-/**
- * A labelled trailing button in a screen's own large-title header (Progress's Export): the same
- * 44 pt-high card pill with a hairline as the circles, with its words beside the glyph.
- */
 export function HeaderPillButton({
 	label,
 	symbol,
@@ -244,7 +205,6 @@ export function HeaderPillButton({
 				<SymbolView name={symbol} size={iconSize.m} tintColor={colors.ink} />
 			) : null}
 			<Text
-				// A 44 pt control holds its size: Dynamic Type may grow the label only so far.
 				maxFontSizeMultiplier={barMaxFontMultiplier}
 				style={[styles.pillLabel, { color: colors.ink }]}
 			>
@@ -254,11 +214,7 @@ export function HeaderPillButton({
 	);
 }
 
-/**
- * The `+`, drawn from two bars: an SF Symbol renders nothing on web, which left
- * Today's and Habits' header circles blank in the web baselines. Same on every
- * platform, so the glyph never differs between a phone and a visual check.
- */
+// Drawn from two bars: an SF Symbol renders nothing on web, which left the header circles blank in the web baselines.
 function PlusGlyph({ color }: { color: string }) {
 	return (
 		<View style={styles.plus} testID="header-circle-plus-glyph">
@@ -280,7 +236,6 @@ function PlusGlyph({ color }: { color: string }) {
 	);
 }
 
-/** No leading button at all — a modal form leaves only through its Cancel. */
 export function headerNoBackOptions(): HeaderButtonOptions {
 	return {
 		headerBackVisible: false,

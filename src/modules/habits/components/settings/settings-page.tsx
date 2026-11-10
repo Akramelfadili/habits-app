@@ -6,15 +6,10 @@ import { space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type SettingsPageProps = {
-	/** The page's large title; the screen reader starts on it. */
 	title: string;
 	children: ReactNode;
 };
 
-/**
- * One Settings page: the large title, then its groups in one scroll, ending clear of the tab bar.
- * The hub and every sub-page share it, so the spacing is the same everywhere.
- */
 export function SettingsPage({ title, children }: SettingsPageProps) {
 	const { colors } = useTheme();
 	return (

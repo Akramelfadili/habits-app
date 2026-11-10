@@ -23,7 +23,6 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 
 const TODAY = new Date(2026, 10, 4, 10);
 
-/** Today's wiring: a selection (null follows today) feeding the real strip hook. */
 function Harness() {
 	const [selected, setSelected] = useState<Date | null>(null);
 	const selectedDay = selected ?? TODAY;

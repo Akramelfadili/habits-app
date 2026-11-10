@@ -21,14 +21,8 @@ test("every web journey converts: route, clock, no launchApp, text selectors", (
 	}
 });
 
-/**
- * Flow lint. The journeys cannot run in `make check` (they need Maestro and a
- * dev server), so this catches what a run would: a line Maestro's YAML would
- * reject, and a tap or assertion on text that no longer exists in the app.
- * `yaml` is not a dependency of this repo, so the flows' small, regular shape is
- * checked by hand: a header, `---`, then `- command` lines with optional nested
- * `key: value` lines.
- */
+// The journeys cannot run in `make check` (they need Maestro and a dev server), so this lints them.
+// `yaml` is not a dependency, so the flows' small regular shape is checked by hand.
 const SELECTOR_COMMANDS = new Set([
 	"tapOn",
 	"assertVisible",
@@ -105,7 +99,6 @@ test("every e2e flow is well-formed and taps or asserts only text the app contai
 			file,
 		);
 		assert.ok(commands.length > 3, `${file}: no commands`);
-		// Text the journey types itself ("Floss", a note) is in no source file.
 		const typed = new Set(
 			commands
 				.filter((command) => command.name === "inputText")

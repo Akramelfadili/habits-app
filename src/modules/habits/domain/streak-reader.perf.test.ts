@@ -1,11 +1,5 @@
-/**
- * Performance smoke for Today's derivation on a large log: 20 habits (12 daily, 4 on specific
- * days, 4 at 3× per week) over 5 years, ~29k entries. It does what `useTodayQueries` does when the
- * log changes (group the entries by habit, then the current streak and the at-risk check for every
- * due habit) and then what a re-render does, which must be a lookup. The ceiling is about four
- * times the time measured in Node, so a slow CI box does not flake but a return to walking every
- * habit's history per render fails. Set PERF_REPORT=1 to print the measured times.
- */
+// The ceiling is about 4x the time measured in Node: a slow CI box doesn't flake, but walking
+// every habit's history per render fails. PERF_REPORT=1 prints the measured times.
 import { addDays, format, subDays, subYears } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";

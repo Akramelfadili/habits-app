@@ -21,29 +21,22 @@ import type {
 import { calculateLongestStreak, currentStreakAsOf } from "./habit-history";
 import { isEntryComplete } from "./streaks";
 
-/**
- * What an export is built from, and the format-independent shape it's turned into before either
- * serializer sees it. Pure (no I/O), so the confirm sheet's counts and the written file can never
- * disagree: both come from `buildExportModel`.
- */
+// Pure, so the confirm sheet's counts and the written file both come from `buildExportModel`
+// and can never disagree.
 
 export type ExportSource = {
 	habits: readonly Habit[];
 	entries: readonly Entry[];
 	notes: readonly EntryNote[];
 	frozenDays: readonly FrozenDay[];
-	/** Every reminder row: the file carries each habit's own. */
 	reminders: readonly Reminder[];
-	/** Every category in the stored order, so the file keeps the group order too. */
 	categories: readonly Category[];
-	/** The raw `app_settings` values by key; a key never set is absent. Only the user-facing keys are read. */
 	settings: Readonly<Record<string, string | null | undefined>>;
 };
 
 type ExportLog = {
 	date: string;
 	value: number | null;
-	/** Whether the day counted — a quantity log below target is logged but not complete. */
 	completed: boolean;
 	createdAt: Date;
 };
@@ -58,7 +51,6 @@ export type ExportFrozenDay = { date: string; createdAt: Date };
 
 type ExportHabitRecord = {
 	habit: Habit;
-	/** Computed from the logs — the file keeps them under `derived`; an importer ignores them. */
 	currentStreak: number;
 	longestStreak: number;
 	logs: ExportLog[];
@@ -67,22 +59,19 @@ type ExportHabitRecord = {
 	reminders: Reminder[];
 };
 
-/** The user-facing settings an export carries — never `lastExport`, never a dev key. null = never set (the app's default). */
+// Never `lastExport` or a dev key; null means never set, so the app default applies.
 export type ExportSettings = {
 	themePreference: string | null;
 	eveningReview: boolean | null;
 	eveningReviewTime: string | null;
 	seenFirstRun: boolean | null;
-	/** Whether reminders hide the habit name; null = never set, which the app treats as hidden. */
 	hideHabitNames: boolean | null;
-	/** The Haptics switch; null = never set, which the app treats as on. */
 	haptics: boolean | null;
 };
 
 export type ExportModel = {
 	exportedOn: string;
 	exportedAt: Date;
-	/** False when the person left notes out: no note text is in the model, or in either file. */
 	notesIncluded: boolean;
 	settings: ExportSettings;
 	categories: Category[];
@@ -154,7 +143,7 @@ export function buildExportModel(
 					createdAt: entry.createdAt,
 				}))
 				.sort(byDate),
-			// Left out here, at the source, so no serializer can write one by mistake.
+			// Left out at the source so no serializer can write a note by mistake.
 			notes: options.includeNotes
 				? source.notes
 						.filter((note) => note.habitId === habit.id)

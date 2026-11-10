@@ -1,9 +1,5 @@
-/**
- * Performance smoke for history on a large log: 20 habits (12 daily, 4 on specific days, 4 at
- * 3× per week) over 5 years, ~29k entries, per-week habits never breaking their streak (the worst
- * case). The ceilings are generous so a slow CI box never flakes, and low enough that a return to
- * per-day scans fails.
- */
+// Ceilings are generous so a slow CI box never flakes, but low enough that a return to per-day
+// scans fails.
 import { addDays, format, subDays, subYears } from "date-fns";
 import {
 	buildHeatmapWeeks,

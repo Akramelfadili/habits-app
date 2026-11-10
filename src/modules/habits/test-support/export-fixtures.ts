@@ -5,14 +5,8 @@ import {
 	TEST_BUILT_IN_CATEGORIES,
 } from "./habit-builder";
 
-/** Wednesday 16 Sep 2026 — the day every export test runs "on". */
 export const EXPORT_TODAY = new Date(2026, 8, 16, 12);
 
-/**
- * Two active habits and one archived, covering every row kind the export
- * writes: a plain log, a quantity log, a note, a frozen day, and a habit with
- * no logs at all.
- */
 export function makeExportSource(): ExportSource {
 	const created = new Date(2026, 8, 1);
 	return {

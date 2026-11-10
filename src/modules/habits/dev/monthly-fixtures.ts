@@ -3,19 +3,8 @@ import type { Entry, FrozenDay } from "../types";
 import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
-/**
- * Fixture data for Monthly Summary: the mockup's six habits over August 2026 (the visual
- * check pins "now" to 2 Sep, so August is the last complete month), and the
- * under-a-month history.
- * Every habit is daily; each is described by the days it was missed, so the misses, not
- * the completions, are what the insight thresholds are tuned against
- * (`monthly-insights.ts`, pinned by `monthly-summary.test.ts`):
- * - Mobility drifts down week over week (6, 5, 4, 3 of 7): slipping.
- * - Read is the only habit up 10+ points on July: improved.
- * - Weekends trail weekdays, and Meditate's five Saturdays are the biggest single cause:
- *   pattern with an action.
- * - Easy run's two freezes (7 and 22 Aug): the freeze card.
- */
+// The misses, not the completions, are tuned against the insight thresholds (pinned by
+// `monthly-summary.test.ts`).
 
 const READY_CREATED = new Date("2025-01-01T00:00:00Z");
 const TOO_EARLY_CREATED = new Date("2026-09-04T08:00:00Z");
@@ -29,7 +18,6 @@ const IDS = {
 	mobility: 6,
 } as const;
 
-/** August 2026 days of the month each habit was missed (1 Aug is a Saturday). */
 const AUGUST_MISSES: Record<number, number[]> = {
 	[IDS.water]: [12, 30],
 	[IDS.meditate]: [1, 8, 15, 22, 29, 9, 23],
@@ -39,13 +27,11 @@ const AUGUST_MISSES: Record<number, number[]> = {
 	[IDS.mobility]: [4, 11, 13, 18, 19, 21, 25, 26, 27, 28],
 };
 
-/** The two freezes — both Easy run, both missed days that would otherwise count. */
 const AUGUST_FROZEN: { habitId: number; day: number }[] = [
 	{ habitId: IDS.easyRun, day: 7 },
 	{ habitId: IDS.easyRun, day: 22 },
 ];
 
-/** How many July days each habit was done on — Read's the only big climb into August. */
 const JULY_DONE: Record<number, number> = {
 	[IDS.water]: 28,
 	[IDS.meditate]: 23,
@@ -55,7 +41,6 @@ const JULY_DONE: Record<number, number> = {
 	[IDS.mobility]: 28,
 };
 
-/** Spreads `count` misses evenly over a 31-day month, deterministically. */
 function spreadMisses(count: number): number[] {
 	return Array.from(
 		{ length: count },
@@ -63,7 +48,6 @@ function spreadMisses(count: number): number[] {
 	);
 }
 
-/** 4 Sep → 15 Sep (12 days, matching c6.png's "12 days tracked"). */
 const TOO_EARLY_MISSES: Record<number, number[]> = {
 	[IDS.water]: [],
 	[IDS.meditate]: [5, 12],

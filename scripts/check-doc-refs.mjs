@@ -1,24 +1,6 @@
 #!/usr/bin/env node
-// Doc-reference checker. Fails when a tracked Markdown file (plus CLAUDE.md,
-// .claude/skills/** and .claude/agents/**) points at a repo path that does not
-// exist, or at a "§ section" heading that is not in the target file.
-//
-//   node scripts/check-doc-refs.mjs        check the repo
-//
-// Rules:
-//   1. A `backticked` span or a markdown link target that LOOKS like a repo
-//      path (contains "/" or ends in a known extension) must exist. Links
-//      resolve from the file's folder; backticked paths from the file's
-//      folder, then from the repo root.
-//   2. A fenced code block is checked token by token, with the same test, for
-//      plain path-shaped tokens only (no spaces, globs, regexes or flags).
-//   3. `path` § "Heading" (or → "Heading") needs a heading in that file whose
-//      text starts with the quoted words (case-insensitive).
-//   Ignored: URLs, anchor-only links, globs (*), placeholders (<...>, {...},
-//   $VAR), absolute and home paths, and the allowlist below. A trailing
-//   #anchor, :line or :line-line is stripped before the lookup.
-//
-// The checks are exported as pure functions; the tests use synthetic texts.
+// node scripts/check-doc-refs.mjs
+// Fails when a tracked Markdown file points at a repo path or a "§ section" heading that does not exist.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -42,8 +24,6 @@ export const KNOWN_EXTENSIONS = [
 	"sh",
 ];
 
-// Paths that are allowed not to exist (kept short; each with its reason).
-// Entries are exact paths or regexes, matched on the repo-root-relative form.
 export const ALLOWLIST = [
 	// Local output, ignored by git (see .gitignore): absent on a fresh clone.
 	/^\.(visual-checks|e2e-output|expo)(\/|$)/,
@@ -103,7 +83,6 @@ export function normalizeRef(raw) {
 export function extractRefs(text) {
 	const out = [];
 	const lineAt = (i) => text.slice(0, i).split("\n").length;
-	// Blank out fenced blocks for the inline scan, collect their tokens apart.
 	const fenceRe = /^( {0,3})(```|~~~)[^\n]*\n([\s\S]*?)^\1\2[ \t]*$/gm;
 	let inline = text;
 	for (const m of text.matchAll(fenceRe)) {
@@ -195,8 +174,6 @@ export function checkFile(file, text, fsApi) {
 		const found = candidates.find((c) => fsApi.exists(c));
 		if (!found && kind !== "link") {
 			if (!ref.includes("/")) {
-				// A bare file name ("types.ts", "design-system.md"): it only has
-				// to exist somewhere in the repo.
 				if (ref.startsWith(".") || fsApi.baseNames.has(ref)) continue;
 			} else if (!EXT_RE.test(ref) && !fsApi.topLevel.has(ref.split("/")[0])) {
 				// "week/day", "chore/docs-set": prose, not a repo path.
@@ -210,7 +187,7 @@ export function checkFile(file, text, fsApi) {
 			!fsApi.topLevel.has(ref.split("/")[0]) &&
 			fsApi.endsWith(ref)
 		) {
-			continue; // module-relative path, resolves under src/
+			continue;
 		}
 		if (!found) {
 			problems.push(`${file}:${line}: missing path "${ref}"`);

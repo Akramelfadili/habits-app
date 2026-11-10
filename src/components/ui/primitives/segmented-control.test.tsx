@@ -146,7 +146,7 @@ describe("SegmentedControl — look", () => {
 	});
 });
 
-describe("SegmentedControl — accessibility text sizes (08.6, P6, P11)", () => {
+describe("SegmentedControl — accessibility text sizes", () => {
 	beforeEach(() => {
 		mockAccessibilityText = true;
 	});

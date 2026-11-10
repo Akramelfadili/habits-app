@@ -3,40 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 
-/**
- * Every pressable has a hit area of at least 44 × 44 pt, or an entry in the exceptions map below
- * that says why not.
- *
- * Static, because Jest has no layout: for each `<Pressable>` (and the other `Touchable*`
- * components) in the app source it reads the element's `style` (resolving `styles.x` against the
- * file's `StyleSheet.create`) and its `hitSlop`, and checks both axes:
- *
- *  - an explicit `width` / `height` / `minWidth` / `minHeight` (plus the slop on both sides) under
- *    44 fails;
- *  - an axis with no explicit size passes only if the element fills it (`flex` or
- *    `alignSelf: "stretch"` for the width only, `width: "100%"`, absolute fill) or it sets
- *    `minHeight`/`minWidth` of 44 on the other route; otherwise it is "unproven" and fails too, so a
- *    new pressable has to say how big it is.
- *
- * Limits, so nobody trusts it more than it earns: it reads only styles named `styles.*` in the same
- * file (anything else shows as "unproven", which fails safe); an exception is keyed by the
- * pressable's position in its file, so inserting one above it shifts the key (the stale-entry check
- * then fails and the index is fixed by hand); an exception covers every problem on its element, so
- * its reason must say which axis it is about; a computed `hitSlop` is read as the smallest number in
- * its source, never trusted.
- *
- * An exception is keyed `file::index` (the nth pressable in the file) and carries its reason.
- * Removing a pressable leaves a stale entry, which fails.
- */
+// Static because Jest has no layout. It reads only `styles.*` from the same file (anything else is
+// "unproven", which fails safe). Exceptions are keyed by the pressable's position, so inserting one
+// above shifts the key and the stale-entry check fails; fix the index by hand.
 
-/**
- * Pressables the touch-target guard cannot prove are 44 × 44 pt, each with the reason. Keyed
- * `file::n` (the nth pressable in the file).
- *
- * Two kinds: the size comes from something the static reader cannot follow (padding plus content, a
- * computed hit slop, a parent that stretches it), or it really is under 44 and the spec says so. The
- * second kind is marked "BELOW 44". Add nothing here without a reason a reviewer could check.
- */
+// Either the size comes from something the static reader can't follow, or it really is under 44
+// and is marked "BELOW 44".
 const TOUCH_TARGET_EXCEPTIONS: Record<string, string> = {
 	"components/ui/composite/action-card.tsx::0":
 		"A full-width card row: 14 pt padding top and bottom around a 40 pt icon square, so it is at least 68 pt tall and as wide as its column.",
@@ -134,7 +106,6 @@ function evaluate(
 	return undefined;
 }
 
-/** `const styles = StyleSheet.create({ a: { ... } })` → { a: { width: 40, ... } }. */
 function readStyles(
 	source: ts.SourceFile,
 	consts: Map<string, number>,
@@ -176,7 +147,6 @@ function readStyles(
 
 function readConsts(source: ts.SourceFile): Map<string, number> {
 	const consts = new Map<string, number>();
-	// Two passes so a const may use an earlier one.
 	for (let pass = 0; pass < 2; pass++) {
 		source.forEachChild((node) => {
 			if (!ts.isVariableStatement(node)) return;
@@ -217,8 +187,7 @@ function slopOf(
 			y: Math.min(get("top"), get("bottom")),
 		};
 	}
-	// A variable or a conditional: take the smallest literal we can see (a
-	// conditional slop is not proof).
+	// A conditional slop is not proof: take the smallest literal we can see.
 	const nums = [...e.getText().matchAll(/\b(\d+)\b/g)].map((m) => Number(m[1]));
 	const via = nums.length ? Math.min(...nums) : 0;
 	return { x: via, y: via };
@@ -275,8 +244,7 @@ function check(file: string): Finding[] {
 					const props = styles.get(ref);
 					if (!props) continue;
 					if (
-						// `flex` says nothing about height without the parent's direction,
-						// so it counts as filling the width only; a height must be stated.
+						// `flex` says nothing about height without the parent's direction: width only.
 						(axis === "x" &&
 							(props.flex !== undefined ||
 								props.flexGrow !== undefined ||
@@ -296,8 +264,7 @@ function check(file: string): Finding[] {
 				if (explicit.length > 0 && Math.min(...explicit) < MIN && !fills) {
 					problems.push(`${label} ${Math.min(...explicit)} < ${MIN}`);
 				} else if (explicit.length === 0 && !fills) {
-					// A labelled control is as wide as its label plus padding: a text
-					// control that is 44 tall is not narrower than 44 in practice.
+					// A text control that is 44 tall is not narrower than 44 in practice.
 					if (axis === "x" && labelled && heightOk) continue;
 					problems.push(`${label} unproven`);
 				} else if (

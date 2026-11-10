@@ -25,7 +25,7 @@ describe("SheetHeader", () => {
 		expect(onAction).toHaveBeenCalledTimes(1);
 	});
 
-	it("starts the screen reader on the title once the sheet has settled (08.4)", async () => {
+	it("starts the screen reader on the title once the sheet has settled", async () => {
 		jest.useFakeTimers();
 		const focus = jest
 			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")

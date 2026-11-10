@@ -8,28 +8,16 @@ import {
 	progressV3FrozenDays,
 } from "./progress-v3-fixtures";
 
-/**
- * Missed days the `habit-detail` scenario covered with a freeze: two, like the mockup's
- * heatmap. `entry-fixtures.ts` leaves these days without an entry.
- */
 export const HABIT_DETAIL_FROZEN_DAYS_AGO = [38, 59];
 
-/** `no-freezes` and `streak-at-risk-no-freezes`: the two days this month's freeze pool was spent on. */
 const NO_FREEZES_SPENT_DAYS_AGO = [3, 6];
 
-/**
- * Static fake frozen days backing the web-only repository
- * (`frozen-day-repository.web.ts`). Only `habit-detail` and `no-freezes` have any:
- * `streak-at-risk` wants the full pool available (0 used this month) so both freeze slots
- * show as open, matching the mockup.
- */
+// `streak-at-risk` has none: it needs the full pool available so both freeze slots show open.
 export function makeFrozenDayFixtures(
 	scenario: FixtureScenario = "default",
 ): FrozenDay[] {
 	if (scenario === "no-freezes" || scenario === "streak-at-risk-no-freezes") {
-		// Both of this month's freezes already spent (on another habit), as
-		// long as "now" is at least a week into the month — the visual check
-		// pins it to the 24th.
+		// Both spent only while "now" is at least a week into the month; the check pins it to the 24th.
 		return NO_FREEZES_SPENT_DAYS_AGO.map((daysAgo, index) => ({
 			id: index + 1,
 			habitId: 2,

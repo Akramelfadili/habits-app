@@ -29,34 +29,20 @@ export type HabitDetail = {
 	currentStreak: number;
 	longestStreak: LongestStreak;
 	completionRate: CompletionRate;
-	/** The 90-day rate against the 90 days before it, in whole points; null with nothing to compare. */
 	rateDelta: number | null;
-	/** 5 Mon-Sun weeks, oldest first. */
 	heatmapWeeks: HeatmapDay[][];
-	/** Days that were done, missed, frozen or a bonus, with their notes, newest first. */
 	history: HistoryRow[];
-	/** Anything has ever been logged; drives the new-habit variant. */
 	hasEntries: boolean;
-	/** Every log: what a delete would erase, and names in its sheet. */
 	logCount: number;
 	reminders: Reminder[];
-	/** The shared pool's remaining freezes this month. */
 	freezesRemaining: number;
-	/** Set only in the month a streak reset with the pool empty. */
 	streakReset: StreakReset | null;
-	/** Restored today (its last pause ended yesterday): the one-time banner. */
 	restoredToday: boolean;
-	/** Restored and not yet logged since: a streak of 0 is a fresh start, not a loss. */
 	freshStart: boolean;
 	today: Date;
 };
 
-/**
- * Everything Habit Detail shows for one habit, or null when the id doesn't resolve (deleted, or
- * a stale link), or undefined while loading. Reads this habit's slice of the shared entry log (no
- * query or listener of its own) and the shared frozen days, narrowing the latter here: the pool
- * is shared, so the month's remaining count needs every habit's.
- */
+// Frozen days are read unnarrowed: the pool is shared, so the month's remaining count needs every habit's.
 export function useHabitDetailQueries(
 	habitId: number,
 ): HabitDetail | null | undefined {

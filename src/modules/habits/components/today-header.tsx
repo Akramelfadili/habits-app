@@ -10,23 +10,13 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { todayCopy } from "../messages";
 
 type TodayHeaderProps = {
-	/** The day shown: the eyebrow carries its date, so a past day reads as one. */
 	day: Date;
-	/** Opens New habit: the `+`. */
 	onAddHabit: () => void;
-	/** Scroll-linked shrink and fade of the whole row, from `useCollapsingHeader`. */
 	animatedStyle?: object;
-	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
 	collapsed?: boolean;
-	/** The title block, so a re-tap of the tab can put the screen reader on it. */
 	titleRef?: RefObject<HostInstance | null>;
 };
 
-/**
- * The date as an eyebrow, the display title, and a trailing 44 pt circle `+`. At accessibility text
- * sizes the title wraps and the button moves above it. Eyebrow and title are one VoiceOver stop:
- * "Today, heading. Friday 23 October."
- */
 export function TodayHeader({
 	day,
 	onAddHabit,

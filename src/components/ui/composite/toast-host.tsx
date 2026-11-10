@@ -20,15 +20,10 @@ import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { useScreenReader } from "@/utils/use-screen-reader";
 import { Toast } from "./toast";
 
-/** Screen margin for a toast with no tab bar under it. */
 const DEFAULT_TOAST_BOTTOM = space[400];
 
 const SWIPE_START = space[800];
 
-/**
- * How long a toast stays up: an Undo 5 s, success and info 4 s, warning 6 s; an error has no timer
- * and stays until Retry or a swipe. `null` = never auto-dismiss.
- */
 export function toastHoldMs(toast: ToastMessage): number | null {
 	if (toast.tone === "error") return null;
 	if (toast.actionLabel) return motion.toast.hold.undo;
@@ -37,29 +32,14 @@ export function toastHoldMs(toast: ToastMessage): number | null {
 }
 
 type ToastHostProps = {
-	/**
-	 * "bottom" is the page-level host; "top" is the one a `Sheet` mounts inside its own Modal; "inline"
-	 * is one the sheet places in its own flow, above its last button, so the toast never covers the
-	 * content it reports on. A native Modal covers the page, so a toast raised while a sheet is open (a
-	 * failed save) would otherwise be invisible. While any sheet is open the page-level host steps
-	 * aside, so there is one toast.
-	 */
+	// A native Modal covers the page, so a toast raised while a sheet is open would be invisible:
+	// the sheet mounts its own host ("top" or "inline") and the page-level host steps aside.
 	placement?: "bottom" | "top" | "inline";
-	/**
-	 * How far above the bottom edge a "bottom" toast floats. The shell passes the tab bar's offset (12 pt
-	 * above the pill, 16 pt above bar A); a host with no bar above it keeps the plain screen margin.
-	 */
 	bottomOffset?: number;
 };
 
-/**
- * Renders the current toast (see `@/store/toast-store`) pinned to the bottom
- * of its parent, and dismisses it after `toastHoldMs`. One host per
- * navigator, so a toast survives navigating between that navigator's screens.
- * The action runs once, then the toast goes away. A failing action (an Undo
- * that throws or rejects) is logged and answered with an error toast — it
- * never escapes as a floating rejection.
- */
+// One host per navigator, so a toast survives navigating between its screens. A failing action
+// is logged and answered with an error toast rather than escaping as a floating rejection.
 export function ToastHost({
 	placement = "bottom",
 	bottomOffset = DEFAULT_TOAST_BOTTOM,
@@ -72,8 +52,7 @@ export function ToastHost({
 	const reduceMotion = useReducedMotion();
 	const toastId = toast?.id;
 
-	// `shown` is what is drawn: it outlives the store's toast by the exit
-	// animation, and a newer toast swaps in at once (no stacking, no replay).
+	// `shown` outlives the store's toast by the exit animation; a newer toast swaps in at once.
 	const [shown, setShown] = useState<ShownToast | null>(toast);
 	const progress = useRef(new Animated.Value(toast ? 1 : 0)).current;
 	const target = useRef(toast ? 1 : 0);
@@ -87,8 +66,6 @@ export function ToastHost({
 		if (toast) {
 			setShown(toast);
 		}
-		// Already at the end the toast is heading to (mount with no toast, or one
-		// toast replacing another): nothing to animate.
 		const end = toast ? 1 : 0;
 		if (target.current === end) return;
 		target.current = end;
@@ -109,22 +86,18 @@ export function ToastHost({
 	useEffect(() => {
 		if (!toast) return;
 		const hold = toastHoldMs(toast);
-		// A screen-reader user keeps every toast until they dismiss it.
 		if (hold === null || screenReader) return;
 		const timer = setTimeout(() => dismissToast(toast.id), hold);
 		return () => clearTimeout(timer);
 	}, [toast, screenReader, dismissToast]);
 
-	// Spoken once per toast (keyed by its id, not by re-renders), and only by
-	// the host that is actually showing it — the page host steps aside while a
-	// sheet is open, and the sheet's own host announces instead.
+	// Spoken once per toast (keyed by id), and only by the host actually showing it.
 	const visible = toast !== null && !(placement === "bottom" && openSheets > 0);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: the id is the trigger; `message` is read at that moment.
 	useEffect(() => {
 		if (visible && message) AccessibilityInfo.announceForAccessibility(message);
 	}, [visible, toastId]);
 
-	// A downward or sideways swipe dismisses (an error stays until Retry or a swipe).
 	const swipe = useMemo(
 		() =>
 			PanResponder.create({

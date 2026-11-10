@@ -16,32 +16,14 @@ import { IconBadge } from "../primitives/icon-badge";
 type BannerProps = {
 	children: string;
 	title?: string;
-	/**
-	 * "warning" is the amber conflict banner (a reminder on a day the habit isn't scheduled);
-	 * "neutral" the grey persistent notice (notifications off, an archived or restored habit);
-	 * "notice" the quiet grey line with an amber dot (streak-reset note);
-	 * "error" a failed write where no toast can show.
-	 */
 	tone?: "warning" | "neutral" | "notice" | "error";
-	/**
-	 * A glyph in an icon square: the banner becomes a card (surface and hairline, danger outline
-	 * for an error) instead of the one-line marker.
-	 */
 	symbol?: SFSymbol;
 	action?: { label: string; onPress: () => void };
-	/** A compact button after the text. Drops under the text at accessibility sizes. */
 	button?: { label: string; onPress: () => void; disabled?: boolean };
-	/** The message element, for a caller that moves the screen reader's focus onto a failure (`useInitialFocus`). */
 	messageRef?: Ref<HostInstance>;
 };
 
-/**
- * Inline banner: a state that lasts, inside the content and never over it. The marker form is one
- * line with a dot; the card form (with a `symbol`) is an icon square, an optional title, the message
- * and optionally a button. The title and message are one VoiceOver stop; the button and link are
- * their own. An error banner is an alert, so it is read out when it appears. Meaning is never
- * colour alone: the dot, the glyph and the words say it too.
- */
+// Meaning is never colour alone: the dot, the glyph and the words say it too.
 export function Banner({
 	children,
 	title,

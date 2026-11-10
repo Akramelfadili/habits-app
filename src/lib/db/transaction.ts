@@ -2,12 +2,8 @@ import { sql } from "drizzle-orm";
 import { log } from "@/lib/logger/logger";
 import { db } from "./client";
 
-/**
- * Ends a failed raw `begin ... commit` block. A rollback can itself throw (the connection is
- * gone, the transaction already ended); if that error replaced the one being handled, the
- * original cause would be lost, so it is logged and swallowed, and the caller rethrows its own
- * error.
- */
+// A rollback can itself throw; if that error replaced the one being handled the original cause
+// would be lost, so it is logged and swallowed.
 export async function rollbackQuietly(): Promise<void> {
 	try {
 		await db.run(sql`rollback`);
@@ -18,17 +14,10 @@ export async function rollbackQuietly(): Promise<void> {
 
 let queue: Promise<unknown> = Promise.resolve();
 
-/**
- * Runs `work` between a raw `begin` and `commit`, rolling back if it throws.
- * Awaited statements, not Drizzle's `db.transaction()`: that helper's
- * expo-sqlite implementation commits as soon as its callback returns, which
- * for an async callback is at the first `await`.
- *
- * Runs are serialised: a second `begin` on the one connection would fail with
- * "cannot start a transaction within a transaction", and its catch would roll
- * back the *first* run. Two taps in quick succession wait for each other
- * instead. `work` must not call `runInTransaction` itself.
- */
+// Not Drizzle's `db.transaction()`: its expo-sqlite implementation commits when the callback
+// returns, which for an async callback is at the first `await`. Runs are serialised: a second
+// `begin` on the one connection would fail, and its catch would roll back the *first* run.
+// `work` must not call `runInTransaction` itself.
 export function runInTransaction<T>(work: () => Promise<T>): Promise<T> {
 	const execute = async () => {
 		await db.run(sql`begin`);

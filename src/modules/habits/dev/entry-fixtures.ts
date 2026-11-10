@@ -17,23 +17,10 @@ import {
 import { TODAY_V3_SCENARIOS, todayV3Entries } from "./today-v3-fixtures";
 import { yearlyEntries } from "./yearly-fixtures";
 
-/**
- * Consecutive prior days completed for the `streak-at-risk` scenario, matching the
- * mockup's "24-day streak" copy.
- */
 const STREAK_AT_RISK_DAYS = 24;
 
-/**
- * Static fake entries backing the web-only repository (`entry-repository.web.ts`).
- * Habits #2 ("Read before bed") and #3 ("Glass of water") are both daily, so they are due
- * whichever weekday the visual check runs on; both are marked done today so Today's
- * progress bar and per-group counts render non-zero instead of a flat 0%.
- * `empty`/`rest-day` have no due-today habits to complete. `quantity-log` logs the quantity
- * fixture habit partway to its target (6 of 8), matching the mockup exactly.
- * Habit #2 is a quantity habit (target 20 pages): its entry carries `value: 20` (full
- * target) rather than just presence, so it still reads as complete under value-based
- * completion and the default Today screenshot keeps matching the mockup.
- */
+// Habits #2 and #3 are daily, so they are due whichever weekday the check runs on. #2 is a
+// quantity habit, so its entry carries `value: 20` (the full target) to read as complete.
 export function makeEntryFixtures(
 	scenario: FixtureScenario = "default",
 ): Entry[] {
@@ -63,7 +50,6 @@ export function makeEntryFixtures(
 	}
 
 	if (scenario === "rest-day-logged") {
-		// Read, logged off-schedule at 10:42 today.
 		const loggedAt = new Date();
 		loggedAt.setHours(10, 42, 0, 0);
 		return [{ id: 1, habitId: 3, date: today, createdAt: loggedAt }];
@@ -80,7 +66,6 @@ export function makeEntryFixtures(
 	}
 
 	if (scenario === "habit-detail-archived") {
-		// Nothing after the archive day; a simple check, so no values.
 		const archivedOn = format(
 			subDays(new Date(), HABIT_DETAIL_ARCHIVED_DAYS_AGO),
 			"yyyy-MM-dd",
@@ -103,8 +88,6 @@ export function makeEntryFixtures(
 	}
 
 	if (scenario === "retro-log") {
-		// The tapped day: Read done, Meditate and Mobility not, matching the retro-log mockup
-		// (Glass of water's own history covers it).
 		const entries = habitDetailEntries();
 		entries.push({
 			id: entries.length + 1,
@@ -120,9 +103,7 @@ export function makeEntryFixtures(
 		scenario === "streak-at-risk" ||
 		scenario === "streak-at-risk-no-freezes"
 	) {
-		// Day -1 (yesterday) is intentionally left uncompleted — that's the miss
-		// the streak-at-risk sheet is showing. Days -2 through -25 are all
-		// completed, giving a 24-day streak standing before that miss.
+		// Yesterday is left uncompleted on purpose: that's the miss the at-risk sheet shows.
 		return Array.from({ length: STREAK_AT_RISK_DAYS }, (_, index) => {
 			const daysAgo = index + 2;
 			return {
@@ -158,13 +139,8 @@ export function makeEntryFixtures(
 	];
 }
 
-/** The past day the `retro-log` visual check taps — inside the 24-day run, where Glass of water is logged at exactly its target (8). */
 const RETRO_LOG_DAYS_AGO = 3;
 
-/**
- * Notes backing the web-only repository: the two Recent entries subtitles the
- * habit-detail mockup shows and, for `retro-log`, the tapped day's note.
- */
 export function makeEntryNoteFixtures(
 	scenario: FixtureScenario = "default",
 ): EntryNote[] {
@@ -193,18 +169,11 @@ export function makeEntryNoteFixtures(
 	return notes;
 }
 
-/** The `habit-detail` scenario's current streak, matching the mockup's "24". */
 const HABIT_DETAIL_CURRENT_STREAK = 24;
-/** Its longest run (41, as in the mockup), ending this many days ago. */
 const HABIT_DETAIL_LONGEST = { days: 41, endedDaysAgo: 100 };
 
-/**
- * ~5 months of "Glass of water" (target 8) history for Habit Detail: today
- * partway (6 / 8, as the mockup's first entry), an unbroken 24-day run behind
- * it, a 41-day run back in early summer, and a deterministic mix of full,
- * partial, and missed days in between — so every heatmap shade shows. The
- * frozen days (`frozen-day-fixtures.ts`) are left without an entry.
- */
+// A deterministic mix of full, partial and missed days so every heatmap shade shows. The
+// frozen days are left without an entry.
 function habitDetailEntries(): Entry[] {
 	const frozen = new Set<number>(HABIT_DETAIL_FROZEN_DAYS_AGO);
 	const longestEnd = HABIT_DETAIL_LONGEST.endedDaysAgo;
@@ -213,7 +182,6 @@ function habitDetailEntries(): Entry[] {
 	function valueFor(daysAgo: number): number | null {
 		if (daysAgo === 0) return 6;
 		if (daysAgo <= HABIT_DETAIL_CURRENT_STREAK) return 8 + (daysAgo % 3);
-		// The misses that bound each run, so neither grows past its target length.
 		if (daysAgo === HABIT_DETAIL_CURRENT_STREAK + 1) return null;
 		if (daysAgo === longestEnd - 1 || daysAgo === longestStart + 1) return null;
 		if (daysAgo >= longestEnd && daysAgo <= longestStart) return 8;
@@ -240,13 +208,8 @@ function habitDetailEntries(): Entry[] {
 	return entries;
 }
 
-/**
- * Mon to Sun (index 0-6) days each `weekly-summary` habit was done this week, matching
- * the mockup's bars (Mobility 2/7, Easy run 4/7, Read 5/7, No phone 5/7, Meditate 6/7,
- * Water 7/7) with Tuesday the best day at 6 of 6. Every habit is logged on Sunday, so
- * with the visual check's clock pinned to Sunday evening each bar reads out of 7. (The
- * mockup's "34 of 42" tile doesn't match its own bars, which sum to 29.)
- */
+// Every habit is logged on Sunday, so with the clock pinned to Sunday evening each bar reads
+// out of 7.
 const WEEKLY_SUMMARY_DONE: Record<number, number[]> = {
 	1: [0, 1, 2, 3, 4, 5, 6],
 	2: [0, 1, 2, 3, 4, 6],
@@ -256,7 +219,6 @@ const WEEKLY_SUMMARY_DONE: Record<number, number[]> = {
 	6: [0, 1, 4, 5, 6],
 };
 
-/** The perfect-week mockup: every scheduled day done (Read Mon-Fri, Easy run 3x). */
 const PERFECT_WEEK_DONE: Record<number, number[]> = {
 	1: [0, 1, 2, 3, 4, 5, 6],
 	2: [0, 1, 2, 3, 4, 5, 6],
@@ -269,9 +231,7 @@ const PERFECT_WEEK_DONE: Record<number, number[]> = {
 function weeklySummaryEntries(
 	scenario: "weekly-summary" | "weekly-summary-last-week" | "perfect-week",
 ): Entry[] {
-	// `weekly-summary-last-week` is the same mockup week, one week back: the summary opens
-	// on last week on a Monday, so the visual check can compare that default against the
-	// mockup too.
+	// One week back: the summary opens on last week on a Monday.
 	const thisWeek = startOfWeek(new Date(), { weekStartsOn: WEEK_STARTS_ON });
 	const weekStart =
 		scenario === "weekly-summary-last-week" ? subWeeks(thisWeek, 1) : thisWeek;
@@ -287,10 +247,6 @@ function weeklySummaryEntries(
 	);
 }
 
-/**
- * The manage-archive mockup's "41 logs kept" (Cold shower, #6) and "96 logs kept" (No
- * phone in bed, #7): consecutive days up to each one's archive date.
- */
 function manageArchiveEntries(): Entry[] {
 	const runs = [
 		{ habitId: 6, count: 41, until: MANAGE_ARCHIVE_ARCHIVED_AT.coldShower },

@@ -11,25 +11,16 @@ import type { WeekRow } from "../../presenters/habit-detail-presenter";
 
 const CELL = 24;
 
-/** M T W T F S S: the column heads, Monday first (weeks start Monday). */
 const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 type WeekHistoryCardProps = {
 	rangeLabel: string;
 	rows: readonly WeekRow[];
 	legend: readonly LegendEntry[];
-	/** "Streak reset on Wed 14 Oct — no freezes were left." Only in the month it happened. */
 	notice: string | null;
-	/** A week row was tapped: open Edit this day for that date. */
 	onEditDay: (date: Date) => void;
 };
 
-/**
- * The "Last 5 weeks" card: five rows of seven 24 pt cells under Monday-first column heads. Each
- * week row is ONE 44 pt target that opens Edit this day, and one VoiceOver stop that reads the whole
- * week ("Week of 19 October: Monday bonus, Tuesday done…"); the cells are decorative. A week with
- * nothing to edit is plain, not a button.
- */
 export function WeekHistoryCard({
 	rangeLabel,
 	rows,

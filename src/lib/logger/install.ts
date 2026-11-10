@@ -7,11 +7,6 @@ import type { LogEntry } from "./types";
 let installed = false;
 const ringBuffer = createRingBufferSink();
 
-/**
- * The one place sinks are registered. A new sink (a remote crash reporter, say)
- * is a new file under `sinks/` plus one `registerSink` line here — no call site
- * changes. Call once at module load of the root layout, before anything logs.
- */
 export function installLogging(): void {
 	if (installed) return;
 	installed = true;

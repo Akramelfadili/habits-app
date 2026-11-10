@@ -5,7 +5,6 @@ import { useTheme } from "@/theme/use-theme";
 import { CompletionCell } from "./completion-cell";
 import type { CompletionRowsCell } from "./completion-rows";
 
-/** A week matrix cell: 24 pt, below 44 by design, not tappable. */
 const MATRIX_CELL = 24;
 const BLOCK_CELL = 40;
 const TOTAL_WIDTH = 32;
@@ -24,10 +23,6 @@ export type MatrixRowData = {
 	dot: string;
 	total: string;
 	met?: boolean;
-	/**
-	 * One VoiceOver stop per habit: its name and total, then every day as "Wed, done". The cells
-	 * themselves are not separate stops.
-	 */
 	accessibilityLabel: string;
 	cells: CompletionRowsCell[];
 };
@@ -37,11 +32,7 @@ type WeekMatrixProps = {
 	rows: MatrixRowData[];
 };
 
-/**
- * Habits down, Monday → Sunday across, a row total on the right. Cells are 24 pt and read-only; each
- * day header is a 44 pt-high target that opens Edit this day. 28 pt wide because that is the cell
- * pitch: a wider target would overlap its neighbour.
- */
+// Day headers are 28 pt wide because that is the cell pitch: a wider target would overlap its neighbour.
 export function WeekMatrix({ days, rows }: WeekMatrixProps) {
 	const { colors } = useTheme();
 
@@ -135,7 +126,6 @@ export type WeekBlockData = {
 	subline?: string;
 	total: string;
 	met?: boolean;
-	/** A habit badge in front of the name (the one-habit card). */
 	leading?: ReactNode;
 	cells: WeekBlockCell[];
 };
@@ -144,11 +134,6 @@ type WeekBlocksProps = {
 	blocks: WeekBlockData[];
 };
 
-/**
- * List layout: one block per habit, name and total, then seven 40 pt cells with their date. It is
- * the one-habit card and what the matrix becomes at AX3, so nothing clips at large text. Every cell
- * is its own VoiceOver stop ("Wed, done").
- */
 export function WeekBlocks({ blocks }: WeekBlocksProps) {
 	const { colors } = useTheme();
 
@@ -294,7 +279,6 @@ const styles = StyleSheet.create({
 	},
 	blockTotal: {
 		width: undefined,
-		// The name wraps before the total does: "2 / 3" never breaks in two.
 		flexShrink: 0,
 	},
 	blockRow: {

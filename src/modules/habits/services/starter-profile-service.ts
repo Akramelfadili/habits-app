@@ -19,18 +19,9 @@ export type StarterProfileResult =
 	| "applied"
 	| "failed";
 
-/**
- * Development builds only: makes the app hold exactly the starter profile's
- * habits (docs/how-to/starter-habits.md). Applies when the stored version
- * marker differs from the profile's version, and does nothing when it matches,
- * so changes made in the app afterwards persist. With no marker yet it refuses
- * to replace a database that already holds check-ins, notes or frozen days,
- * unless the profile says `"replace": true` (logs `dev.starter_profile.refused`,
- * counts only). An invalid profile, a refusal or a failed write changes nothing. Never rejects; never logs a habit name.
- *
- * The caller owns the dev flag (`__DEV__`) and the raw value — this module has
- * no way to be reached from production code.
- */
+// Applies only when the stored version marker differs, so later in-app changes persist. With no
+// marker it refuses to replace a database holding real logs unless the profile says
+// `"replace": true`. Never logs a habit name. The caller owns the dev flag.
 export async function applyStarterProfile(
 	raw: string | undefined,
 ): Promise<StarterProfileResult> {
@@ -60,7 +51,6 @@ export async function applyStarterProfile(
 		const previousIds = (await getAllHabits()).map((habit) => habit.id);
 		const applied = await replaceHabitsWithStarterProfile(profile);
 
-		// The old habits' schedules would otherwise outlive them.
 		for (const id of previousIds) {
 			try {
 				await cancelHabitNotifications(id);

@@ -1,8 +1,8 @@
 import { format, subDays } from "date-fns";
 import { todayV3Entries, todayV3Habits } from "./today-v3-fixtures";
 
-describe("today-v3 fixtures", () => {
-	it("gives the main Today habits: one per row the mockup draws", () => {
+describe("today fixtures", () => {
+	it("gives the main Today habits, one per row", () => {
 		expect(todayV3Habits("today-v3").map((habit) => habit.name)).toEqual([
 			"Drink water",
 			"Cold shower",

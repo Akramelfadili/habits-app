@@ -27,11 +27,6 @@ type GoalFieldsProps = {
 	onUnitFocus?: () => void;
 };
 
-/**
- * The Goal field: Check, or Quantity with a daily target, a unit and the live example of how Today
- * will read. A Break habit is yes or no, so Quantity is switched off and the reason is written under
- * the control.
- */
 export function GoalFields({
 	direction,
 	targetType,

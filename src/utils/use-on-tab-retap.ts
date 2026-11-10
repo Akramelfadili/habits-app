@@ -4,7 +4,6 @@ import { useTabRetapStore } from "@/store/tab-retap-store";
 import { moveFocusTo } from "./use-initial-focus";
 import { useReducedMotion } from "./use-reduced-motion";
 
-/** Runs `handler` each time the person taps the already-selected tab `tab`. */
 export function useOnTabRetap(tab: string, handler: () => void): void {
 	const latest = useRef(handler);
 	latest.current = handler;
@@ -21,12 +20,8 @@ export function useOnTabRetap(tab: string, handler: () => void): void {
 
 const SCROLL_SETTLE_MS = 400;
 
-/**
- * For a tab's root screen: a re-tap of the selected tab scrolls to the top and puts the screen
- * reader on the title (the large title has to be back on screen first, so the focus follows the
- * scroll; with Reduce Motion the scroll is instant and so is the focus). The pending focus is
- * dropped when the screen goes.
- */
+// The large title has to be back on screen first, so the screen-reader focus follows the scroll
+// (instant with Reduce Motion). The pending focus is dropped when the screen goes.
 export function useTabRetapToTop(
 	tab: string,
 	scrollToTop: () => void,

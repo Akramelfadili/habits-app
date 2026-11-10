@@ -9,7 +9,6 @@ import { ListItem } from "./list-item";
 
 export type CategoryRowAction = {
 	label: string;
-	/** Names what it acts on ("Rename Music") — the visible label alone repeats on every row. */
 	accessibilityLabel: string;
 	onPress: () => void;
 	destructive?: boolean;
@@ -20,14 +19,11 @@ type CategoryRowProps = {
 	name: string;
 	symbol: SFSymbol;
 	accent: { tint: string; ink: string };
-	/** Live count, e.g. "2 habits", "2 habits · 1 archived" or "Not used"; omitted while reordering. */
 	meta?: string;
 	tag?: string;
 	actions?: CategoryRowAction[];
-	/** Reorder mode: the drag grip replaces the actions and the tag. */
 	handle?: ReactNode;
 	lifted?: boolean;
-	/** VoiceOver's move actions: the gestures a screen reader cannot make. */
 	accessibilityActions?: { label: string; onAction: () => void }[];
 	editor?: ReactNode;
 };
@@ -84,8 +80,7 @@ export function CategoryRow({
 				leading={<IconBadge symbol={symbol} accent={accent} />}
 				trailing={trailing}
 				lifted={lifted}
-				// Built-ins and rows with their own buttons read as one line; a
-				// reorder row gets the move actions on the row itself.
+				// A reorder row gets the move actions on the row itself; rows with their own buttons read as one line.
 				accessibilityLabel={[name, meta, tag?.toLowerCase()]
 					.filter(Boolean)
 					.join(", ")}

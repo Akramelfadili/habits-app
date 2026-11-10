@@ -6,9 +6,7 @@ import test from "node:test";
 import sharp from "sharp";
 import { buildSheet } from "./contact-sheet.mjs";
 
-// A tiny generated baseline instead of docs/visual-baseline: resizing all ~400
-// real baselines made this test take 15-19 s once sharp was installed. sharp
-// still really runs, so the sheet's thumbnails are checked as images.
+// A tiny generated baseline: resizing all ~400 real ones took 15-19 s once sharp was installed.
 async function tinyPng(file, width = 40, height = 80) {
 	await sharp({
 		create: { width, height, channels: 3, background: "#3366cc" },

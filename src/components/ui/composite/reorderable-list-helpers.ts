@@ -1,7 +1,4 @@
-/**
- * Pure move math for `ReorderableList`. The functions the drag gesture calls on the UI thread are
- * marked as worklets; they also run as plain functions (tests, the accessibility Move up/down path).
- */
+// Functions the drag gesture calls on the UI thread are worklets; they also run as plain functions.
 
 export function groupBounds(
 	groups: readonly string[],
@@ -15,11 +12,6 @@ export function groupBounds(
 	return [start, end];
 }
 
-/**
- * Where a row dragged from `from` by `translationY` would land: it passes a
- * neighbour once it's covered more than half that neighbour's height, and
- * never leaves `bounds` (its own group).
- */
 export function dragTargetIndex(
 	from: number,
 	translationY: number,
@@ -71,7 +63,6 @@ export function moveItem<T>(
 	return next;
 }
 
-/** How long a dropped or displaced row takes to settle; none with Reduce Motion on. */
 const SETTLE_MS = 150;
 
 export function settleDuration(reducedMotion: boolean): number {

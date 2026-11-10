@@ -291,7 +291,7 @@ describe("TabBarPill", () => {
 		});
 	});
 
-	describe("Reduce Transparency (08.5)", () => {
+	describe("Reduce Transparency", () => {
 		it("blurs a translucent card by default", async () => {
 			await renderPill();
 

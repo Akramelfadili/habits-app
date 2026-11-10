@@ -1,16 +1,6 @@
 #!/usr/bin/env node
-/**
- * Opens every state of one shard on the booted simulator and screenshots it.
- *
- *   node capture.mjs --shard light|dark|ax-light|ax-dark --bundle-id <id> \
- *     [--ax-size accessibility-extra-extra-extra-large] [--only "a b"] --out out
- *
- * Per state: write `Documents/dev-state.json` into the app's data container
- * (the build's launch hook reads it), relaunch the app, wait for it to settle,
- * run the state's Maestro steps if it has any, then `xcrun simctl io booted
- * screenshot`. Files are named like the web baselines (`<state>.png`).
- * Appearance and text size are set once per shard with `simctl ui`.
- */
+// node capture.mjs --shard light|dark|ax-light|ax-dark --bundle-id <id> [--ax-size <size>] [--only "a b"] --out out
+// Files are named like the web baselines (`<state>.png`).
 import fs from "node:fs";
 import path from "node:path";
 import { buildPlan } from "./plan.mjs";
@@ -27,7 +17,7 @@ const only = String(args.only === true ? "" : (args.only ?? ""))
 	.split(/\s+/)
 	.filter(Boolean);
 const SETTLE_MS = Number(process.env.SETTLE_MS ?? 4500);
-/** A PNG smaller than this is the splash or a blank frame at 3x; it is retaken once. */
+// A PNG smaller than this is the splash or a blank frame at 3x; it is retaken once.
 const BLANK_BYTES = 20_000;
 
 const shotsDir = path.join(out, "shots");

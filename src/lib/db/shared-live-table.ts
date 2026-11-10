@@ -2,18 +2,9 @@ import { useRef, useSyncExternalStore } from "react";
 import { log } from "@/lib/logger/logger";
 import { onTableChange } from "./table-change";
 
-/**
- * One live read of a whole table, shared by every screen that wants it. Drizzle's
- * `useLiveQuery` is one query and one change listener *per hook call*; with the Today, Habits and
- * Progress tabs all mounted that was a dozen re-reads of the same table per write, each
- * rebuilding its own array. Here the first consumer opens the one subscription and the last one
- * closes it (reference counted through `useSyncExternalStore`'s subscribe), and every consumer
- * reads a slice of the one snapshot (`useSharedLiveTable`).
- *
- * The snapshot keeps the previous row objects whenever a row did not change, and keeps the
- * previous array when nothing did, so a write that touches one row leaves every slice that does
- * not contain it equal to what it was.
- */
+// Drizzle's `useLiveQuery` is one query and listener per hook call; with all tabs mounted that was
+// a dozen re-reads of one table per write. Here one subscription is shared (reference counted).
+// Unchanged rows keep their previous objects, so a write leaves slices that don't contain it equal.
 
 export type SharedSnapshot<Row> = {
 	rows: Row[];
@@ -28,7 +19,6 @@ export type SharedLiveTable<Row> = {
 
 type Definition<Source, Row> = {
 	table: string;
-	/** A fresh query each time (a Drizzle builder re-runs on every `then`). */
 	read: () => PromiseLike<Source[]>;
 	map: (source: Source) => Row;
 	key: (row: Row) => number | string;
@@ -47,9 +37,8 @@ export function createSharedLiveTable<Source, Row>({
 	const listeners = new Set<() => void>();
 	let snapshot: SharedSnapshot<Row> = { rows: [], ...EMPTY };
 	let stopListening: (() => void) | undefined;
-	// Bumped on every read and on stop: a result that is not the latest read of
-	// the current subscription is dropped (a late result after the last unmount
-	// must not leak into the next subscription).
+	// A result that is not the latest read of the current subscription is dropped, so a late one
+	// after the last unmount can't leak into the next subscription.
 	let latest = 0;
 
 	function publish(next: SharedSnapshot<Row>) {
@@ -95,7 +84,6 @@ export function createSharedLiveTable<Source, Row>({
 		stopListening?.();
 		stopListening = undefined;
 		latest += 1;
-		// A later first consumer starts as the hooks always did: nothing, not loaded.
 		snapshot = { rows: [], ...EMPTY };
 	}
 
@@ -114,14 +102,8 @@ export function createSharedLiveTable<Source, Row>({
 
 type Selection<Slice> = { snapshot: unknown; select: unknown; slice: Slice };
 
-/**
- * Reads `select(rows)` from a shared table. The component re-renders only when
- * the slice changes by `isEqual` (default: the same value), so a consumer of a
- * date range or one habit's rows ignores writes elsewhere. `select` must be
- * stable between renders for as long as its meaning is (`useCallback`) — a new
- * function is a new question and is asked again. A failed read is logged once
- * and thrown, like `useLiveRows`, so it lands in the ErrorBoundary.
- */
+// `select` must be stable between renders (`useCallback`): a new function is a new question and
+// is asked again. A failed read is logged once and thrown into the ErrorBoundary.
 export function useSharedLiveTable<Row, Slice>(
 	source: SharedLiveTable<Row>,
 	select: (rows: Row[]) => Slice,

@@ -5,11 +5,7 @@ import { useFirstRunOfferQueries } from "../../hooks/use-first-run-offer-queries
 import { firstRunCopy, messages, showMessage } from "../../messages";
 import { formatReminderTime } from "../../presenters/reminders-helpers";
 
-/**
- * Our own question, before iOS gets to ask. Shown on Today right after the first habit is saved.
- * "Allow reminders" adds the default 09:00 reminder and only then raises the iOS prompt; "Not now"
- * does nothing, and iOS is asked the first time a reminder is added later.
- */
+// Our own question first, so the iOS permission prompt is raised only after "Allow reminders".
 export function FirstRunReminderOffer() {
 	const { habit } = useFirstRunOfferQueries();
 	const { allow, notNow, clear } = useFirstRunOfferActions();

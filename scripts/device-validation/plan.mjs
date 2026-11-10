@@ -1,30 +1,9 @@
 #!/usr/bin/env node
-/**
- * The device-validation plan: every state in the visual-check registry
- * (scripts/visual-check/screens.mjs) and how to reproduce it on the iOS
- * Simulator build.
- *
- *   node scripts/device-validation/plan.mjs            # prints coverage.json
- *   node scripts/device-validation/plan.mjs --list     # one line per state
- *
- * A state is
- * - `static`: the route alone (the build's `dev-state` hook loads its fixture
- *   scenario and opens the route), or
- * - `flow`: it needs taps first. The registry's Playwright `interact()` is run
- *   against a recorder that turns each locator call into a Maestro command, so
- *   the same steps drive the phone, or
- * - `unsupported`: web-only machinery (the migration screens `DatabaseProvider.web`
- *   fakes, the loading and load-failure fixtures, forced write failures) or a
- *   step Maestro cannot take (a pointer drag, a key press on an input). The
- *   reason is recorded; every run lists them.
- *
- * `caveats` name captures that will legitimately differ from the web baseline
- * (a fixed simulator size, a real permission prompt, the share sheet).
- */
+// node scripts/device-validation/plan.mjs [--list]
+// Each visual-check state is `static` (route only), `flow` (the registry's Playwright `interact()` replayed against a recorder that emits Maestro commands) or `unsupported` (web-only machinery or a step Maestro cannot take).
 import { fileURLToPath } from "node:url";
 import { DEFAULT_CLOCK, SCREENS } from "../visual-check/screens.mjs";
 
-/** `?fixtures=` values that only `DatabaseProvider.web.tsx` and the web repositories simulate. */
 const WEB_ONLY_FIXTURES = {
 	"migration-running": "the update screen is faked by DatabaseProvider.web.tsx",
 	"migration-fails":

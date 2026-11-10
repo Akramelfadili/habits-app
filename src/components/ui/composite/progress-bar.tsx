@@ -13,26 +13,15 @@ import { useFillAnimation } from "@/utils/use-fill-animation";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 
 type ProgressBarProps = {
-	/** 0–1. Values outside that range are clamped. */
 	value: number;
 	tone?: "default" | "warning";
-	/**
-	 * The count on the left ("1 of 5 done"). When given, a whole-number percentage sits on the right
-	 * and both read as one stop for VoiceOver.
-	 */
 	label?: string;
-	/**
-	 * Work with no measurable progress (a migration): a segment sweeps along the track instead of a
-	 * fill, `value` is ignored and no percentage is said. With Reduce Motion the segment sits still.
-	 */
 	indeterminate?: boolean;
 };
 
 const PERCENT = 100;
 const TRACK_HEIGHT = 6;
-/** The sweeping segment's share of the track, and how long one pass takes. */
 const SEGMENT_SHARE = 0.35;
-/** 6 pt track, count left, whole-number % right. Fills over 450 ms; Reduce Motion jumps. */
 export function ProgressBar({
 	value,
 	tone = "default",

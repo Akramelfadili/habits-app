@@ -7,14 +7,9 @@ import { createTestDb } from "@/lib/db/test-db";
 import { builtInCategory, makeHabitInput } from "../test-support/habit-builder";
 import type * as HabitRepository from "./habit-repository";
 
-/**
- * Reactivity of the habit live hooks. Real `useLiveQuery` needs expo-sqlite's
- * change listener, which doesn't run under Jest — so this stand-in keeps the
- * real hook's contract: `data` starts empty and `updatedAt` undefined until
- * the first result, and a query re-runs only when *its own `from` table*
- * changes. Tables in `mockHeld` don't deliver until `release()`, so a test
- * can make habits arrive before categories (or the reverse).
- */
+// Real `useLiveQuery` needs expo-sqlite's change listener, which doesn't run under Jest, so this
+// stand-in keeps its contract: empty until the first result, re-run only when its own `from`
+// table changes. `mockHeld` tables don't deliver until `release()`.
 const mockDb = createTestDb();
 const mockListeners = new Set<(table: string) => void>();
 const mockHeld = new Set<string>();
@@ -39,7 +34,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 			data: unknown[];
 			updatedAt: Date | undefined;
 		}>({ data: [], updatedAt: undefined });
-		// Subscribes once, like the real hook's default `deps = []`.
 		// biome-ignore lint/correctness/useExhaustiveDependencies: mirrors useLiveQuery's run-once subscription
 		useEffect(() => {
 			const table = query.config.table;
@@ -92,7 +86,6 @@ describe("habit live hooks", () => {
 			expect(result.current[0]?.category.name).toBe("Health"),
 		);
 
-		// A rename writes `categories` only; `habits` never changes.
 		await mockDb
 			.update(categories)
 			.set({ name: "Wellbeing" })

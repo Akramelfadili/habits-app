@@ -1,12 +1,5 @@
-/**
- * The per-week pre-bucketing (completion-index.ts) and the shared parsed history
- * (streaks.ts, off-schedule.ts) must not change a single
- * answer. This runs the current code and the original scanning versions —
- * kept here, and only here, as the reference — over 200 seeded random
- * histories (daily, specific days and × per week; build and break; simple
- * and quantity; frozen days, closed and open pauses, off-schedule logs) and
- * asserts every strategy call and every history/summary function agrees.
- */
+// The pre-bucketing and shared parsed history must not change a single answer, so the original
+// scanning versions are kept here, and only here, as the reference.
 import {
 	addDays,
 	endOfWeek,
@@ -89,11 +82,6 @@ function referenceWithPauses(
 	};
 }
 
-/**
- * The domain functions before they shared one parsed history per habit
- * (`streaks.ts` `completionsOf`, `off-schedule.ts` `offScheduleChecker`),
- * verbatim, wired to the reference strategies.
- */
 function referenceDomain() {
 	const { getHabitStrategy } = require("./frequency-strategy");
 	const { restartDays } = require("./paused-schedule");
@@ -139,7 +127,7 @@ function referenceDomain() {
 	}
 
 	// Verbatim, except the pool check (at-risk no longer depends on the pool) and the per-week
-	// gate (× per week habits are never at risk by day).
+	// gate (per-week habits are never at risk by day).
 	function getStreakAtRisk(
 		habit: Habit,
 		entries: readonly Entry[],
@@ -280,8 +268,7 @@ function randomHistory(index: number): History {
 	const chance = (p: number) => rand() < p;
 
 	const today = startOfDay(addDays(new Date(2025, 0, 1), int(0, 660)));
-	// Up to ~6 months: long enough for many weeks, months and pauses, short
-	// enough that the quadratic reference keeps this suite fast.
+	// Short enough that the quadratic reference keeps this suite fast.
 	const length = int(20, 180);
 	const createdAt = new Date(
 		subDays(today, length).getTime() + int(0, 20) * 3_600_000,
@@ -359,7 +346,6 @@ function randomHistory(index: number): History {
 			});
 		}
 	}
-	// Entries arrive in random order, as an unsorted query could return them.
 	entries.sort(() => rand() - 0.5);
 	return { habit, entries, frozenDays, today };
 }
@@ -423,8 +409,7 @@ describe("per-week pre-bucketing is equivalent to the original scans", () => {
 				today: h.today,
 			};
 			const yesterday = subDays(h.today, 1);
-			// The heatmap asks about at most 70 logged days; 40 sampled entries
-			// cover off-schedule logs without making this check quadratic.
+			// 40 sampled entries cover off-schedule logs without making this check quadratic.
 			const sampled = h.entries.slice(0, 40);
 			const run = (g: Graph) => ({
 				current: g.streaks.calculateCurrentStreak(

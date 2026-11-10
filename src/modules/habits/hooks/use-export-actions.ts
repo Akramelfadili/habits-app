@@ -32,11 +32,7 @@ type ExportState = {
 	reset: () => void;
 };
 
-/**
- * The export's state lives here, not in the sheet, so closing the sheet while the file is
- * writing leaves the export running and the next time any export sheet opens (from Settings or
- * from Progress) it shows where things stand: still writing, ready, or failed.
- */
+// State lives here, not in the sheet: closing the sheet mid-write leaves the export running, and any export sheet shows where it stands.
 export const useExportStore = create<ExportState>((set, get) => ({
 	phase: { name: "confirm" },
 	openSheets: 0,

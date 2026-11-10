@@ -1,17 +1,10 @@
 import { Directory, File } from "expo-file-system";
 import type { BackupFiles } from "./database-backup";
 
-/**
- * The only place the database's own files are touched (backups folder, the
- * set-aside rename). A thin adapter over `expo-file-system`, like
- * `lib/file-export`, so the logic above it is tested with a fake and an SDK
- * change lands here. Everything lives next to `habits.db`, in the app's
- * Documents area, which an iOS device backup includes.
- */
+// Everything lives next to `habits.db` in the Documents area, which an iOS device backup includes.
 
 const BACKUPS_FOLDER = "backups";
 
-/** expo-sqlite reports a plain path; expo-file-system wants a file URI. */
 export function toFileUri(path: string): string {
 	return path.startsWith("file://") ? path : `file://${path}`;
 }
@@ -36,17 +29,10 @@ export function createBackupFiles(databasePath: string): BackupFiles {
 	};
 }
 
-/** SQLite's companions to the main file: both belong to the same database. */
 const SIDECARS = ["-wal", "-shm"];
 
-/**
- * Renames the database file inside its own folder, with its `-wal` and `-shm`
- * companions (a stale one left beside a fresh `habits.db` would be replayed
- * into it). `newName` is the new main name, e.g. `habits.corrupt-<ts>.db`.
- * Never deletes and never overwrites: a name that exists is an error. The
- * caller has closed the database. On a failure part-way, what was already
- * renamed is put back, so the folder is as it was found.
- */
+// The `-wal` and `-shm` companions move too: a stale one left beside a fresh `habits.db` would be
+// replayed into it. Never deletes or overwrites; a failure part-way puts back what was renamed.
 export function renameDatabaseFile(
 	databasePath: string,
 	newName: string,
@@ -64,8 +50,7 @@ export function renameDatabaseFile(
 	if (pairs.some((pair) => pair.to.exists)) {
 		throw new Error("set-aside target exists");
 	}
-	// `moveSync()` (`move()` returns a Promise in SDK 58) repoints the File it is called on at the destination, so the
-	// rollback needs the original URIs, not the handles.
+	// `moveSync()` repoints the File it is called on at the destination, so the rollback needs the original URIs.
 	const moved: Array<{ fromUri: string; toUri: string }> = [];
 	try {
 		for (const pair of pairs) {

@@ -32,13 +32,7 @@ const FORMAT_WORD: Record<ExportFormat, "JSON" | "CSV"> = {
 	csv: "CSV",
 };
 
-/**
- * Opened from Settings and from Progress › Export. One sheet, four states of one export: choose JSON
- * or CSV with a line on what each is for; writing, with the file's name, a real percentage, the
- * format locked and the button reading Exporting…; ready, as a file card with Share file; failed,
- * with the reason and Retry first. Archived habits are always in. The export lives in a store, so
- * closing the sheet while it writes leaves it running and a toast says when it is ready.
- */
+// The export lives in a store, so closing the sheet mid-write leaves it running.
 export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 	const [options, setOptions] = useState<ExportOptions>(DEFAULT_EXPORT_OPTIONS);
 	const { source } = useExportQueries(options);
@@ -76,7 +70,6 @@ export function ExportSheet({ visible, onClose }: ExportSheetProps) {
 			<SectionLabel>{exportCopy.format}</SectionLabel>
 			<SegmentedControl<ExportFormat>
 				label={exportCopy.formatLabel}
-				// Locked while writing: the other format is switched off and the one being written stays as it is.
 				options={[
 					{
 						value: "json",

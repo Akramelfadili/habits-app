@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-// Prints the 15 files with the highest share of comment lines and the comment
-// totals per folder (not part of `make check`).
-//
-//   node scripts/comment-report.mjs
+// node scripts/comment-report.mjs
+// Prints the 15 files with the most comment lines and the totals per folder; not part of `make check`.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

@@ -19,15 +19,8 @@ import type {
 import { getCategories } from "./category-repository.web";
 import type * as NativeHabitRepository from "./habit-repository";
 
-/**
- * Web-only stand-in for `habit-repository.ts`, picked by Metro's `.web.ts` platform resolution.
- * expo-sqlite has no web binding without WASM + COOP/COEP headers, and web only exists here for
- * visual checks against the mockups (scripts/visual-check.mjs), so it's backed by in-memory
- * fixtures instead. Hooks and screens import `./habit-repository` either way and never know.
- *
- * Append `?fixtures=empty` (no habits) or `?fixtures=rest-day` to any URL to render those Today
- * states.
- */
+// expo-sqlite has no web binding without WASM + COOP/COEP headers, and web exists only for
+// visual checks, so this is backed by in-memory fixtures.
 
 function initialHabits(): Habit[] {
 	return habitFixturesFor(resolveFixtureScenario());
@@ -87,7 +80,7 @@ function byManualOrder(a: Habit, b: Habit): number {
 	return a.sortOrder - b.sortOrder || a.id - b.id;
 }
 
-/** Derived lists are cached per store snapshot so `useSyncExternalStore` sees stable references. */
+// Cached per snapshot so `useSyncExternalStore` sees stable references.
 let derivedFor: Habit[] | undefined;
 const loadedResult = (habits: Habit[]): HabitsResult => ({
 	habits,
@@ -156,8 +149,7 @@ export async function updateHabit(
 	if (!existing) throw new Error(`Habit ${id} not found`);
 	const category = await categoryById(input.categoryId);
 
-	// Field-by-field like the native repository: direction stays locked even if a caller passes a
-	// wider object at runtime.
+	// Field-by-field so direction stays locked even if a caller passes a wider object.
 	const habit: Habit = {
 		...existing,
 		name: input.name,
@@ -173,8 +165,7 @@ export async function updateHabit(
 }
 
 export function useHabitsList(): HabitsResult {
-	// Static web rendering has no URL-aware store on the server, so it renders
-	// the default fixtures; the client snapshot then applies `?fixtures=`.
+	// Static rendering has no URL-aware store on the server; the client snapshot applies `?fixtures=`.
 	return useSyncExternalStore(
 		subscribe,
 		() => getDerived().all,
@@ -190,9 +181,7 @@ export function useActiveHabits(): HabitsResult {
 		() => getDerived().active,
 		() => SERVER_ACTIVE,
 	);
-	// The load states are reachable on web without a dev-only route: `today-loading` never finishes
-	// and `today-load-fails` fails every read, as a live query that throws does. (There is no
-	// fail-once: React retries a throwing render itself, so "once" would never reach the boundary.)
+	// No fail-once: React retries a throwing render itself, so "once" would never reach the boundary.
 	const scenario = resolveFixtureScenario();
 	if (scenario === "today-loading") return NOT_LOADED;
 	if (scenario === "today-load-fails")
@@ -216,7 +205,6 @@ export async function getHabit(id: number): Promise<Habit | undefined> {
 	return getHabits().find((h) => h.id === id);
 }
 
-/** Web counterpart of the native repository's slot-preserving reorder. */
 export async function reorderHabits(orderedIds: number[]): Promise<void> {
 	const habits = getHabits();
 	const slots = orderedIds
@@ -252,10 +240,7 @@ export async function setHabitRestored(
 	return updateOne(id, { archivedAt: null, pauses: [...pauses] });
 }
 
-/**
- * Web-only (not in the native repository): habits embed their category here, where native
- * resolves it live, so a category rename has to be copied onto every habit in it.
- */
+// Habits embed their category here (native resolves it live), so a rename is copied onto each.
 export function applyCategoryChange(category: Category): void {
 	setHabits(
 		getHabits().map((h) =>
@@ -264,10 +249,6 @@ export function applyCategoryChange(category: Category): void {
 	);
 }
 
-/**
- * Web-only counterpart of the native category delete's reassignment: every habit in `fromId`,
- * archived ones too, moves to `to` at the end of the manual order, keeping its relative order.
- */
 export function reassignHabitsToCategory(fromId: number, to: Category): void {
 	const habits = getHabits();
 	const moving = habits
@@ -285,7 +266,6 @@ export function reassignHabitsToCategory(fromId: number, to: Category): void {
 	);
 }
 
-/** Web has no related rows to clear — the fixture entry stores just ignore an unknown habit id. */
 export async function deleteHabitAndHistory(id: number): Promise<void> {
 	assertWritesAllowed();
 	await holdWriteIfSlow();

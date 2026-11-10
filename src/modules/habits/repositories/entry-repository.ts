@@ -34,12 +34,8 @@ function rowToEntryNote(row: EntryNoteRow): EntryNote {
 	};
 }
 
-/**
- * The one live read of the whole entry log. Every hook below that shows entries reads a slice
- * of this, so Today, Habits, Detail, Progress and Retro-log share one query and one change
- * listener however many are mounted, and a write re-renders only the slices it changed. The rows
- * are ordered by date, as the unbounded read always was.
- */
+// Every entry hook reads a slice of this one query, so one change listener serves however many
+// screens are mounted and a write re-renders only the slices it changed.
 const entryLog = createSharedLiveTable({
 	table: "entries",
 	read: () => db.select().from(entries).orderBy(asc(entries.date)),
@@ -54,11 +50,8 @@ const entryLog = createSharedLiveTable({
 
 const allEntries = (rows: Entry[]): Entry[] => rows;
 
-/**
- * Live-query hook — entries with a date in `[start, end]`, inclusive: a slice of
- * the shared log, so the Progress maths built on it can be memoised (same
- * entries, same array) and a write outside the range does not re-render.
- */
+// A slice of the shared log: same entries give the same array, so Progress maths can be
+// memoised and a write outside the range doesn't re-render.
 export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	const startDate = toDayKey(start);
 	const endDate = toDayKey(end);
@@ -70,7 +63,6 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	return useSharedLiveTable(entryLog, inRange, sameElements);
 }
 
-/** Live-query hook — one habit's entries, oldest first: a slice of the shared log (Habit detail). */
 export function useHabitEntries(habitId: number): Entry[] {
 	const ofHabit = useCallback(
 		(rows: Entry[]) => rows.filter((entry) => entry.habitId === habitId),
@@ -79,10 +71,7 @@ export function useHabitEntries(habitId: number): Entry[] {
 	return useSharedLiveTable(entryLog, ofHabit, sameElements);
 }
 
-/**
- * Live-query hook — how many distinct days have a log, and the first one:
- * one aggregate row, so Progress's "7 days of logs" gate never reads the log.
- */
+// One aggregate row, so the "7 days of logs" gate never reads the log.
 export function useLoggedDays(): LoggedDays {
 	const { data, loaded } = useLiveRows<{
 		count: number | null;
@@ -102,22 +91,13 @@ export function useLoggedDays(): LoggedDays {
 	};
 }
 
-/**
- * Live-query hook: every entry, unbounded (the shared log itself). Streak calculation can need
- * history arbitrarily far back (and a week-bounded range has a real gap around Sunday/Monday for
- * a per-week habit's own week), so this fetches everything rather than trying to bound the range
- * correctly: a personal habit tracker's total entry count stays small enough that this is
- * simpler and cheaper than getting a tight range right.
- */
+// Unbounded on purpose: streaks can need arbitrarily old history and a week-bounded range has
+// a gap around Sunday/Monday for per-week habits; a personal tracker's log stays small enough.
 export function useAllEntries(): Entry[] {
 	return useSharedLiveTable(entryLog, allEntries);
 }
 
-/**
- * What a write does to the habit's freeze on the same day, in the same transaction as the
- * entry: logging a frozen day gives the freeze back to the pool (`release`), and Undoing that
- * puts it back exactly as it was (`reinstate`, keeping the original `createdAt`).
- */
+// `reinstate` keeps the original `createdAt` so Undo restores the freeze exactly.
 export type FreezeChange = { release: true } | { reinstate: Date };
 
 async function changeFreeze(
@@ -178,11 +158,7 @@ async function writeQuantity(
 		});
 }
 
-/**
- * Marks `habitId` completed/resisted (or un-completed) on `date`. Un-checking is always allowed
- * with no confirmation, so this deletes the row rather than flipping a boolean; completing twice
- * is a no-op, not an error. With `freeze`, the day's freeze changes in the same transaction.
- */
+// Un-checking deletes the row rather than flipping a boolean; completing twice is a no-op.
 export async function setHabitCompletedOn(
 	habitId: number,
 	date: Date,
@@ -197,14 +173,8 @@ export async function setHabitCompletedOn(
 	});
 }
 
-/**
- * Sets `habitId`'s logged quantity on `date`. `value <= 0` deletes the row instead of storing a
- * zero, keeping "no entry" as the one signal for "nothing logged", same as
- * `setHabitCompletedOn`, so a zeroed-out quantity habit doesn't spuriously count as a completion
- * anywhere (e.g. per-week scheduling). Otherwise upserts, since a day can be logged more than
- * once as the value is adjusted through the day. With `freeze`, the day's freeze changes in the
- * same transaction.
- */
+// `value <= 0` deletes the row: "no entry" stays the one signal for "nothing logged", so a
+// zeroed quantity never counts as a completion (e.g. per-week scheduling).
 export async function setHabitQuantityOn(
 	habitId: number,
 	date: Date,
@@ -219,25 +189,15 @@ export async function setHabitQuantityOn(
 	});
 }
 
-/**
- * Live-query hook: every habit's day notes. Same "small enough to fetch whole" reasoning as
- * `useAllEntries`.
- */
 export function useEntryNotes(): EntryNote[] {
 	const { data } = useLiveRows<EntryNoteRow>(() =>
 		db.select().from(entryNotes).orderBy(asc(entryNotes.date)),
 	);
-	// Stable until a row changes: the mapping ran on every render.
 	return useMemo(() => data.map(rowToEntryNote), [data]);
 }
 
-/**
- * Saves a retro-logged day (every changed value plus the note) in one transaction, so a
- * half-applied save can't leave the day inconsistent. Values follow the same rules as the
- * single-day writes above: `false`/`0` deletes the entry, `true` inserts a presence row, an
- * amount upserts. An empty (after trimming) note deletes the note row. Edit this day writes only
- * the note through it now (`useDayNoteActions`); a tap's freeze return is `day-log-service`.
- */
+// One transaction so a half-applied save can't leave the day inconsistent. A note that is
+// empty after trimming deletes the note row.
 export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 	const dateString = toDayKey(date);
 	const note = log.note.trim();

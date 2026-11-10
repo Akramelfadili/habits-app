@@ -12,12 +12,7 @@ type LibrarySectionHeaderProps = {
 	actionHint?: string;
 };
 
-/**
- * One section's header on the Habits tab: the caps label and, at the far edge, a 44 pt text action
- * (Reorder on Active, Show / Hide on Archived). A plain header is a heading; with an action the
- * label and action are separate stops, the action carrying the section's name so it never reads
- * "Show" alone.
- */
+// With an action, label and action are separate VoiceOver stops; the action carries the section's name so it never reads "Show" alone.
 export function LibrarySectionHeader({
 	label,
 	actionLabel,

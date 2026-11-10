@@ -49,7 +49,6 @@ describe("HabitsHeader", () => {
 		expect(screen.getAllByRole("button")).toHaveLength(2);
 	});
 
-	// The gear is the only way into Settings.
 	it("opens Settings from the gear", async () => {
 		const { onOpenSettings, onAddHabit } = await renderHeader();
 		await fireEvent.press(screen.getByRole("button", { name: "Settings" }));

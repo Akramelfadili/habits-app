@@ -1,30 +1,7 @@
 #!/usr/bin/env node
-/**
- * Renders every screen and state on the web target (in-memory fixtures, see
- * *.web.ts in the repositories/) in one run, diffs each against its approved
- * baseline, and writes one report putting mockup, current render, baseline
- * and diff side by side for every state across all features.
- *
- *   npm run visual-check                          # every state, diff + report
- *   npm run visual-check -- new-habit reminders   # just these
- *   npm run visual-check -- --update-baseline     # accept current renders
- *   npm run visual-check -- --list                # state names + mockups
- *
- * Two different comparisons, on purpose:
- * - Baseline (automated, pass/fail). docs/visual-baseline/<state>.png is
- *   the last render someone looked at and approved. Any state that drifts
- *   from it fails the run, so a shared component change surfaces on every
- *   screen it touched. Intended changes: review them in the report,
- *   then --update-baseline and commit the new PNGs with the change.
- * - Mockup (by eye, in the report). The mockups (docs/mockups/v3/, earlier ones in tag
- *   mockups-v1-v2) are design drawings (device frame, SF Symbols, SF Pro), so a pixel
- *   diff against them is meaningless. The report puts each one next to its render instead.
- *
- * Reuses a dev server already running at VISUAL_CHECK_URL (default
- * localhost:8081); otherwise starts `npx expo start --web` and stops it
- * afterwards. Output lands in .visual-checks/ (gitignored): current/, diff/,
- * report.html.
- */
+// npm run visual-check [-- <state>... | --update-baseline | --list]
+// Diffs against docs/visual-baseline/<state>.png (pass/fail); mockups are only shown beside the render, because they are drawings (device frame, SF Pro) and a pixel diff against them is meaningless.
+// Reuses a dev server at VISUAL_CHECK_URL (default localhost:8081) or starts one. Output lands in .visual-checks/.
 import fs from "node:fs";
 import path from "node:path";
 import pixelmatch from "pixelmatch";
@@ -50,29 +27,13 @@ const VIEWPORT = { width: 393, height: 852 };
 // full run fast enough and the layout settling reliable.
 const CONCURRENCY = 2;
 
-/**
- * Per-pixel colour tolerance (pixelmatch's 0–1 scale). Deliberately far below
- * pixelmatch's 0.1 default: cards are white on a #F4F3F1 background, a ~4%
- * contrast step the default treats as "same colour" — so a card's radius or
- * padding could change without a single pixel counting. Repeat renders are
- * pixel-identical, so there's no noise to absorb here.
- */
+// Deliberately far below pixelmatch's 0.1 default: cards are white on #F4F3F1, a ~4% step the default treats as "same colour", so a card's radius or padding could change unseen. Repeat renders are pixel-identical, so there is no noise to absorb.
 const PIXEL_THRESHOLD = 0.02;
-/**
- * Differing pixels a state may have and still pass. Repeat runs of an
- * unchanged app diff at exactly 0; the smallest real change seen (one card's
- * corner radius, 16 → 12, on the retro-log sheet) was 127px.
- */
+// Repeat runs of an unchanged app diff at exactly 0; the smallest real change seen (a card's corner radius, 16 to 12) was 127px.
 const MAX_DIFF_PIXELS = 10;
 
-/**
- * Dynamic Type AX3: every text element's size is mapped to the value the handoff gives
- * for that token (display 32 to 52, stat 26 to 48, title 20 to 43, body-lg 17 to 40,
- * body 16 to 38, callout 15 to 36, subhead 14 to 36, footnote 13 to 33, caption 12 to 32);
- * sizes off the ramp scale by the nearest ratio. Line height follows. A MutationObserver
- * re-applies it to text React adds later (a sheet opening, a toast), so the capture is
- * consistent.
- */
+// Sizes map to the design handoff's AX3 ramp (display 32 to 52 ... caption 12 to 32); off-ramp sizes scale by the nearest ratio.
+// A MutationObserver re-applies it to text React adds later (a sheet, a toast).
 async function emulateAx3Type(page) {
 	await page.evaluate(() => {
 		const RAMP = {
@@ -147,12 +108,7 @@ async function emulateAx3Type(page) {
 	});
 }
 
-/**
- * VC_AUDIT=1 npm run visual-check also writes .visual-checks/audit/<name>.json: every
- * pressable's rendered size and every text that is cut off or clipped by its box, read from
- * the live DOM at the state's final frame. It is the evidence behind the touch-target and
- * Dynamic Type audits; the committed guard (touch-targets.guard.test.ts) is the static twin.
- */
+// VC_AUDIT=1 also writes .visual-checks/audit/<name>.json: every pressable's size and every clipped text, read from the live DOM.
 async function auditPage(page, name) {
 	const data = await page.evaluate(() => {
 		const label = (el) =>
@@ -449,11 +405,7 @@ ${sections}
 	);
 }
 
-/**
- * A capture taken while Metro was still building (or answered 500) is the page's flat
- * rgb(242,242,242) with a toast at the bottom; accepted as a baseline it would match every
- * later blank render.
- */
+// A capture taken while Metro was still building (or answered 500) is a flat rgb(242,242,242) with a toast; as a baseline it would match every later blank render.
 function looksLikeBundlerPage(file) {
 	const png = readPng(file);
 	let flat = 0;

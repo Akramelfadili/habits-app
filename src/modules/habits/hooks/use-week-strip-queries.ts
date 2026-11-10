@@ -8,15 +8,7 @@ import {
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 
-/**
- * The week strip's data. The strip always shows the week of the selected day: there is no
- * browsing state of its own to get out of step with the selection. A swipe to another week
- * selects the same weekday there (never later than today), so "Logging for ..." says where logs
- * will go.
- *
- * Named `...Queries` for the hook-naming rule: `showPreviousWeek` / `showNextWeek` only move the
- * selection through `onSelect`.
- */
+// The strip has no browsing state of its own to get out of step with the selection: a swipe selects the same weekday in the other week (never later than today).
 export function useWeekStripQueries(
 	selectedDay: Date,
 	today: Date,

@@ -8,11 +8,9 @@ import type { TodayAtRisk } from "./use-today-queries";
 type TodayFreezeInput = {
 	habits: readonly Habit[];
 	atRiskByHabitId: ReadonlyMap<number, TodayAtRisk>;
-	/** The real today, read when the sheet opens (and pinned from then on). */
 	today: Date;
 };
 
-/** What the open sheet shows: what was true when it was opened, not what the clock says now. */
 type AtRiskSession = {
 	habitId: number;
 	habit: Habit;
@@ -20,16 +18,8 @@ type AtRiskSession = {
 	today: Date;
 };
 
-/**
- * Today's streak-at-risk flow: which habit's sheet is open, using a freeze for the missed day
- * (with an Undo for that same day) and dismissing the sheet ("Not now", or "Got it") without
- * writing anything.
- *
- * An open sheet keeps the day it was opened on, like the quantity sheet: crossing midnight
- * neither changes what the person is reading nor closes it. It can no longer spend a freeze the
- * grace window has closed on, though: the live read is checked on "Use a freeze", and a stale
- * one says so in a toast and writes nothing.
- */
+// An open sheet keeps the day it was opened on: crossing midnight neither changes what the person reads nor closes it.
+// It cannot spend a freeze the grace window has closed on: the live read is rechecked on "Use a freeze".
 export function useTodayFreezeActions({
 	habits,
 	atRiskByHabitId,

@@ -21,14 +21,6 @@ import { useManageCategoriesQueries } from "../hooks/use-manage-categories-queri
 import { categoriesCopy, messages, showMessage } from "../messages";
 import type { Category, CategoryUsage } from "../types";
 
-/**
- * Categories, pushed from Habits > Categories. Custom categories first, with Rename
- * (inline) and Delete; then the ten built-ins, locked, with a tag. Counts include archived
- * habits. Reorder swaps the lists for one set of handles that sets the group order on Today
- * and Habits (Other stays last and is not in it). Deleting a category nobody uses is one tap
- * and leaves an Undo for five seconds; deleting one in use names the habits that move to
- * Other first.
- */
 export function ManageCategoriesScreen() {
 	const { colors, scheme } = useTheme();
 	const { builtIns, customs, categories } = useManageCategoriesQueries();
@@ -63,8 +55,6 @@ export function ManageCategoriesScreen() {
 		if (!deleting) return;
 		const { category, habitNames } = deleting;
 		const result = await deleteCategory(category.id);
-		// On failure the sheet stays open (the hook has toasted it), so retrying
-		// is one tap; nothing changed.
 		if (!result.ok) return;
 		setDeletingId(null);
 		if (habitNames.length === 0) {

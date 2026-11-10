@@ -20,18 +20,12 @@ import { leaveFirstRun } from "../first-run-navigation";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
 import { firstRunCopy } from "../messages";
 
-/** The three things the app does, each with its glyph. */
 const FEATURE_SYMBOLS = {
 	today: "checkmark.circle",
 	progress: "chart.bar",
 	freezes: "snowflake",
 } as const;
 
-/**
- * The first thing a new install shows, with no tab bar. One line about the app, the three
- * things it does, and two ways in: Add your first habit (the slim form) or Browse
- * suggestions. Skip for now leads to an empty Today.
- */
 export function FirstRunScreen() {
 	const router = useRouter();
 	const { colors } = useTheme();

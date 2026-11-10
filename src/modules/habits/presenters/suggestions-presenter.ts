@@ -9,13 +9,11 @@ import { weekdaysLabel } from "./habit-schedule-label";
 export type SuggestionItem = {
 	suggestion: Suggestion;
 	subtitle: string;
-	/** A habit with this name already exists, archived included: shown as Added and not selectable. */
 	added: boolean;
 	appearance: CategoryAppearance;
 };
 
 export type SuggestionSection = {
-	/** Stable key: the category's name, or "break". */
 	key: string;
 	title: string;
 	items: SuggestionItem[];
@@ -40,12 +38,8 @@ export function suggestionSubtitle(suggestion: Suggestion): string {
 	return frequencyLabel(frequency);
 }
 
-/**
- * The bundle grouped: one section per category in the order the bundle first names it,
- * and the Break habits together at the end whatever their category. `habits` (archived
- * included) decides which are Added: the same duplicate rule the New habit form applies,
- * so a suggestion marked Added is exactly one the form would refuse.
- */
+// Archived habits count for "Added": the same duplicate rule as the form, so a suggestion
+// marked Added is exactly one the form would refuse.
 export function groupSuggestions(
 	habits: readonly Habit[],
 	suggestions: readonly Suggestion[] = SUGGESTIONS,

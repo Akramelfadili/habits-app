@@ -12,15 +12,6 @@ import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { FieldHelper } from "./field-helper";
 
-/**
- * `link` is a centered, secondary-ink text action under a primary CTA ("Start from scratch");
- * `inline` is an ink text action that sits flush-left inside a card's content (Weekly Summary's
- * "Reschedule habit →"); `destructive` is an outlined pill with red text for a permanent action,
- * never filled until armed and never the default focus; `rowAction` is a quiet ink text action
- * inside a row (a category's Rename) and `dangerLink` the same in red for a permanent one (its
- * Delete); `compact` is a 36 pt pill on the inset surface (a row's Restore) with the 44 pt hit area
- * the other compact buttons get from their hit slop.
- */
 export type ButtonVariant =
 	| "primary"
 	| "secondary"
@@ -39,18 +30,10 @@ type ButtonProps = {
 	disabled?: boolean;
 	loading?: boolean;
 	fullWidth?: boolean;
-	/** "small" is a compact pill inside a list row (Manage & Archive's "Restore"). */
 	size?: "default" | "small";
-	/**
-	 * Why the action is unavailable, shown as a helper line above the button, only while it is
-	 * actually disabled.
-	 */
 	disabledReason?: string;
-	/** When the visible label alone is ambiguous — e.g. a row's "Rename" → "Rename Music". */
 	accessibilityLabel?: string;
-	/** What the button does beyond its label; a disabled button reads its `disabledReason` here when none is given. */
 	accessibilityHint?: string;
-	/** The pressable itself, for a caller that moves the screen reader's focus onto it (`useInitialFocus`). */
 	buttonRef?: Ref<HostInstance>;
 };
 
@@ -70,8 +53,7 @@ export function Button({
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
 	const isCompact = variant === "compact";
-	// At accessibility sizes the label wraps inside the button and the button grows, on a 20 pt radius
-	// (a pill would cut a two-line label).
+	// A 20 pt radius at accessibility sizes: a pill would cut a two-line label.
 	const largeText = useAccessibilityTextSize();
 	const textColor =
 		variant === "primary"
@@ -154,7 +136,6 @@ export function Button({
 	);
 }
 
-/** A compact pill is 36 pt tall; this much on each side makes its hit area 44. */
 const COMPACT_HIT_SLOP = 4;
 
 const styles = StyleSheet.create({
@@ -187,8 +168,7 @@ const styles = StyleSheet.create({
 		paddingVertical: space[150],
 		paddingHorizontal: space[350],
 	},
-	// Text actions are 44pt tall (touch target), not padded out with a hitSlop
-	// — stacked under a CTA or beside another link, a slop would overlap them.
+	// Tall rather than padded with a hitSlop: stacked under a CTA or beside another link, a slop would overlap them.
 	link: {
 		backgroundColor: "transparent",
 		paddingVertical: space[100],

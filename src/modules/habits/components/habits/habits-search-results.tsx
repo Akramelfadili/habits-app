@@ -19,15 +19,10 @@ type HabitsSearchResultsProps = {
 	archived: readonly ArchivedEntry[];
 	onOpen: (habit: Habit) => void;
 	onRestore: (habit: Habit) => void;
-	/** Add habit, opened with the searched name filled in. */
 	onAdd: (name: string) => void;
 	restoring?: boolean;
 };
 
-/**
- * The active habits that match, then the archived ones with Restore, split by status. With nothing
- * matching it says what was searched, that archived habits were searched too, and offers to add it.
- */
 export function HabitsSearchResults({
 	query,
 	active,

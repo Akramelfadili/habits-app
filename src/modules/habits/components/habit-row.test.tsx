@@ -266,7 +266,6 @@ describe("HabitRow", () => {
 
 		function rowStyle() {
 			const circle = screen.getByLabelText("Gym, not done");
-			// hit area → controls row → the row itself
 			const row = circle.parent?.parent;
 			return StyleSheet.flatten(row?.props.style);
 		}

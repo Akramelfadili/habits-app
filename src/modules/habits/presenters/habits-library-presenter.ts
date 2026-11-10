@@ -20,21 +20,13 @@ function targetLabel(habit: Habit): string | null {
 	return `${habit.targetAmount} ${habit.targetUnit ?? ""}`.trim();
 }
 
-/**
- * The streak a row names: a daily Build habit's, once it is two days or more. A per-week
- * habit's streak counts weeks, a weekday habit's counts only its own days, and a Break
- * habit's counts nights: none of them read as an N-day streak, so none put one on the row.
- */
+// Only a daily Build habit's: per-week streaks count weeks, weekday ones only their own days
+// and Break ones nights, none of which read as an N-day streak.
 function streakDetail(habit: Habit, streak: number): string | null {
 	const plain = habit.direction === "build" && habit.frequency.type === "daily";
 	return plain && streak >= 2 ? habitsCopy.streakDays(streak) : null;
 }
 
-/**
- * The line under a library row's name. A Break habit says so first; a quantity habit
- * names its target; a daily habit with a streak of two days or more names that; otherwise
- * it is just its cadence.
- */
 export function libraryRowSubtitle(habit: Habit, streak = 0): string {
 	const detail = targetLabel(habit) ?? streakDetail(habit, streak);
 	const parts =
@@ -87,7 +79,6 @@ export function archivedRowLabel(habit: Habit): string {
 		: habit.name;
 }
 
-/** Folds case and accents so "cafe" finds "Café" and "YOGA" finds "yoga". */
 function normalise(text: string): string {
 	return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
@@ -96,10 +87,6 @@ export function searchTerm(query: string): string {
 	return query.trim();
 }
 
-/**
- * The habits whose name contains query, in the order given: active and archived are
- * searched together and split afterwards by the caller.
- */
 export function matchHabits<T extends { habit: Habit }>(
 	rows: readonly T[],
 	query: string,

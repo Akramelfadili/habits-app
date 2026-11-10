@@ -48,11 +48,7 @@ export const BUG_FLOWS = [
 	source: path.join(ROOT, "scripts/device-validation/flows", `${flow.id}.yaml`),
 }));
 
-/**
- * A web journey as an iOS flow: the launch URL's route and clock, and the body
- * with `launchApp` dropped and `id:` selectors read as text (on iOS an
- * accessibility label is matched as text).
- */
+// On iOS an accessibility label is matched as text, so web `id:` selectors become text.
 export function convertWebFlow(text, id) {
 	const [header, ...rest] = text.split(/^---\s*$/m);
 	const url = /^url:\s*\$\{APP_URL\}(\S+)/m.exec(header)?.[1];
@@ -71,7 +67,7 @@ export function convertWebFlow(text, id) {
 	return { route: `${route}${params.size ? `?${params}` : ""}`, clock, flow };
 }
 
-/** Finds `commands-*.json` anywhere under Maestro's debug output (it nests them in .maestro/tests/<time>/). */
+// Maestro nests `commands-*.json` in .maestro/tests/<time>/.
 function findCommandsFile(dir) {
 	if (!fs.existsSync(dir)) return null;
 	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -85,15 +81,10 @@ function findCommandsFile(dir) {
 }
 
 const REGEX_TOKENS = /[.*+\\[\](){}|^$]/;
-/** Hand-fixed texts whose iOS label differs from the web's (seen in run 41836677192). */
+// Hand-fixed texts whose iOS label differs from the web's.
 const TEXT_OVERRIDES = { "Thursday, 1 October": ".*Thursday,? 1 October.*" };
 
-/**
- * iOS merges a row's texts into one accessibility label ("Meditate, Daily",
- * "Reminders, None") and Maestro matches the whole label, so a web `id:` or
- * text becomes: any label containing it for asserts, the text itself or
- * "<text>, …" for taps. A literal `?` is escaped (it is a regex).
- */
+// iOS merges a row's texts into one label ("Meditate, Daily") and Maestro matches the whole label: asserts match any label containing the text, taps the text itself or "<text>, …".
 export function iosSelectors(body) {
 	let command = "";
 	return body
@@ -142,7 +133,7 @@ export function readCommands(debugDir) {
 	}
 }
 
-/** The console log's "<command>... COMPLETED|WARNED|FAILED" lines: the fallback when the JSON is unreadable. */
+// Fallback when the commands JSON is unreadable.
 export function readLogCommands(text) {
 	return [...text.matchAll(/^(.+?)\.\.\. (COMPLETED|WARNED|FAILED)\s*$/gm)].map(
 		(m) => ({

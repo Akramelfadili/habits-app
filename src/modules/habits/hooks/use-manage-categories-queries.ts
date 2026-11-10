@@ -7,14 +7,10 @@ import type { Category, CategoryUsage } from "../types";
 export type ManageCategoriesView = {
 	builtIns: CategoryUsage[];
 	customs: CategoryUsage[];
-	/** Every category in the stored order — for the duplicate check, the add sheet's rotation pick and the reorder list. */
 	categories: Category[];
 };
 
-/**
- * The Categories screen's reads: every category with its habits, counted over every habit
- * including archived ones, since a delete moves those too.
- */
+// Counted over archived habits too: a delete moves those as well.
 export function useManageCategoriesQueries(): ManageCategoriesView {
 	const categories = useCategories();
 	const { habits } = useHabitsList();

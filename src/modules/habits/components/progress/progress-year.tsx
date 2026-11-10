@@ -29,7 +29,6 @@ import { ProgressNoHabits, ProgressNothingLogged } from "./progress-states";
 
 type ProgressYearProps = {
 	filtered: Habit | null;
-	/** The one habit Progress is scoped to when only one exists; then there is nothing to filter. */
 	oneHabit: Habit | null;
 	today: Date;
 	onOpenPicker: () => void;
@@ -39,11 +38,7 @@ type ProgressYearProps = {
 	onGoToToday: () => void;
 };
 
-/**
- * The year's heat map in three 4-month bands (month labels the only taps) with the rate / streak /
- * best-month tiles, the best-month insight and a habit chip. VoiceOver and the large text sizes get
- * the month list instead of 365 small squares.
- */
+// VoiceOver and large text sizes get a month list instead of 365 small squares.
 export function ProgressYear({
 	filtered,
 	oneHabit,

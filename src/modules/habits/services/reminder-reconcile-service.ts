@@ -26,13 +26,12 @@ import {
 	syncHabitReminders,
 } from "./reminder-service";
 
-/** iOS keeps at most 64 pending notifications; warn well before a schedule can fail on it. */
+// iOS keeps at most 64 pending notifications; warn well before a schedule can fail on it.
 const PENDING_WARNING = 56;
 
 const EVENING_PREFIX = "evening-review:";
 const HABIT_ID_OF = /^habit-(\d+)-/;
 
-/** "<reminder id>:<slot>:<HHmm>" for each trigger this habit's stored reminders should have. */
 async function expectedKeys(habit: Habit): Promise<string[]> {
 	if (habit.archivedAt) return [];
 	const keys: string[] = [];
@@ -70,20 +69,10 @@ function matches(
 	return [...actual].sort().join("|") === [...expected].sort().join("|");
 }
 
-/**
- * Brings the OS's scheduled notifications back in line with the database, once per
- * launch. The database is the source of truth; the OS can drift from it: a crash between a
- * save and its scheduling, a failed cancel, an older identifier format, a delete while a
- * cancel was failing.
- *
- * Deliberately conservative:
- * - it never asks for permission, and does nothing at all unless it is already granted
- *   (when denied or undecided nothing could be delivered anyway);
- * - it schedules only what an enabled reminder (or the Evening review) says should exist,
- *   so with everything off it can only cancel;
- * - a habit already matching is not touched;
- * - it never throws: a failure is logged and the app starts normally.
- */
+// The database is the source of truth; the OS can drift (crash between save and scheduling,
+// failed cancel, older identifier format). Deliberately conservative: never asks for
+// permission, schedules only what an enabled reminder says should exist, leaves matching
+// habits alone, and never throws so the app starts normally.
 export async function reconcileScheduledReminders(): Promise<void> {
 	try {
 		const permission = await getNotificationPermission();
@@ -97,8 +86,7 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			log.warn("reminders.near_pending_limit", { pending: scheduled.length });
 		}
 
-		// Identifiers say nothing about titles, so after "Hide habit names" changed (or on the
-		// first launch with the setting) rebuild every habit once.
+		// Identifiers say nothing about titles: rebuild every habit once after "Hide habit names" changed.
 		const hide = await getHideHabitNames();
 		const titlesStale = !(await remindersTitlesAreCurrent(hide));
 		let retitleFailed = false;

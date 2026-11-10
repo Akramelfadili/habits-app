@@ -5,13 +5,7 @@ export type LaunchRequest = { route: string; clock?: string };
 
 const LAUNCH_REQUEST_FILE = "dev-state.json";
 
-/**
- * The CI driver writes `Documents/dev-state.json` into the app's data
- * container (`xcrun simctl get_app_container booted <bundle id> data`) and
- * launches the app. A file, not a URL: `simctl openurl` with a custom scheme
- * puts up iOS's "Open in …?" alert, a launch needs no tap. Returns null in any
- * build but the validation one, and when there is no (valid) file.
- */
+// A file, not a URL: `simctl openurl` with a custom scheme puts up iOS's "Open in …?" alert, which needs a tap.
 export function readLaunchRequest(): LaunchRequest | null {
 	if (!isDeviceValidationBuild()) return null;
 	try {

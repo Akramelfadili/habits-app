@@ -23,18 +23,12 @@ type FrequencyFieldsProps = {
 	onTimesPerWeek: (value: number) => void;
 };
 
-/** Three modes, in the spec's order (the mockup's fourth "Weekdays" chip is not built). */
 const MODES: { value: FrequencyType; label: string }[] = [
 	{ value: "daily", label: formCopy.frequency.daily },
 	{ value: "weekdays", label: formCopy.frequency.specificDays },
 	{ value: "per-week", label: formCopy.frequency.perWeek },
 ];
 
-/**
- * The Frequency field: Daily, Specific days with 44 pt weekday chips (and an error when none is
- * picked), or × per week with a stepper and the Monday–Sunday rule spelled out. The chips wrap at
- * accessibility sizes.
- */
 export function FrequencyFields({
 	frequencyType,
 	weekdays,

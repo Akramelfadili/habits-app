@@ -1,16 +1,7 @@
 import { fromDayKey } from "@/utils/day-key";
 
-/**
- * The "too early" gate for Week, Month and Year: rates from a few days mislead, so with fewer
- * than 7 days of logs an unlock card (with progress) replaces the stats and insights while the
- * grid still draws. One gate for all three ranges.
- *
- * "Days of logs" = distinct calendar days with at least one entry (any habit, bonus included),
- * over all history: a person who skips a day waits a day.
- *
- * The three states a Progress screen has *before* "ready" are distinct views: no habits at all,
- * habits but nothing ever logged (outlined cells, not missed), and too early.
- */
+// Rates from a few days mislead, so fewer than 7 days of logs (distinct days, any habit,
+// bonus included) shows the unlock card instead of stats.
 
 const PROGRESS_UNLOCK_DAYS = 7;
 
@@ -39,11 +30,8 @@ export function progressUnlock(logged: {
 }
 
 export type ProgressGate =
-	/** No habits exist: empty state, Export disabled. */
 	| "no-habits"
-	/** Habits exist but nothing was ever logged: outlined cells, a link to Today. */
 	| "nothing-logged"
-	/** Fewer than 7 days of logs: unlock card, the grid still renders. */
 	| "too-early"
 	| "ready";
 

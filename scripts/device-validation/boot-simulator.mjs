@@ -1,15 +1,6 @@
 #!/usr/bin/env node
-/**
- * Boots an iPhone simulator on the newest iOS runtime the runner has, installs
- * the app and fixes the status bar (9:41, full battery) so captures compare.
- *
- *   node boot-simulator.mjs --device "iPhone 16" --app dist/app.zip \
- *     --bundle-id dev.habitsapp.validation --summary "$GITHUB_STEP_SUMMARY"
- *
- * The model is `--device` when the runtime offers it (iPhone 16 is 393×852 pt,
- * the web baselines' viewport), otherwise the newest iPhone that is neither an
- * SE, a Pro Max nor an Air.
- */
+// node boot-simulator.mjs --device "iPhone 16" --app dist/app.zip --bundle-id <id> --summary "$GITHUB_STEP_SUMMARY"
+// The fallback model is the newest iPhone that is no SE, Pro Max or Air: iPhone 16's 393x852 pt matches the web baselines' viewport.
 import fs from "node:fs";
 import path from "node:path";
 import { appendSummary, parseArgs, run, simctl } from "./sh.mjs";

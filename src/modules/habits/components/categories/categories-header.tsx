@@ -9,18 +9,12 @@ type CategoriesHeaderProps = {
 	eyebrow: string;
 	accessibilityLabel: string;
 	mode: "browse" | "reorder";
-	/** Renaming in place draws neither Reorder nor Done. */
 	renaming?: boolean;
 	onReorder: () => void;
 	onDone: () => void;
 	onAdd: () => void;
 };
 
-/**
- * The counts as an eyebrow, the display title, and, browsing, a Reorder pill beside a + circle or,
- * reordering, Done. Reorder is always there: the built-ins reorder too (Other stays last), so even
- * with no custom category it is offered, unlike the mockup's empty frame.
- */
 export function CategoriesHeader({
 	eyebrow,
 	accessibilityLabel,

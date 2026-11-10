@@ -3,18 +3,8 @@ import { getAppInfo } from "@/lib/diagnostics/app-info";
 import { describeFrequency } from "./export-csv";
 import type { ExportModel, ExportSettings } from "./export-data";
 
-/**
- * The JSON layout of a data export, version 2: a lossless copy of what the person owns, nested
- * the way it belongs: each habit carries its own logs, notes, frozen days and reminders. Field by
- * field: docs/how-to/export-format.md.
- *
- * - `version` is this layout; `schemaVersion` is the database that wrote it.
- * - Ids are local to the device that wrote the file (`idsAreLocal`): they tie a habit to its
- *   category and reminders inside this file and mean nothing elsewhere.
- * - `derived` holds what the app can recompute (streaks, status). An importer ignores it.
- * - `notesIncluded: false` means the person left notes out: no `notes` key on any habit, and no
- *   note text anywhere.
- */
+// Layout reference: docs/how-to/export-format.md. Ids are local to the writing device
+// (`idsAreLocal`); `derived` is recomputable and an importer ignores it.
 
 const EXPORT_JSON_VERSION = 2;
 
@@ -165,8 +155,8 @@ export async function toJson(
 	onProgress: (logsDone: number) => Promise<void> | void = () => {},
 ): Promise<string> {
 	const document = buildExportDocument(model, getAppInfo());
-	// The document is built in one go (it is small next to the file write);
-	// progress still ticks per habit so the sheet's bar and Cancel keep working.
+	// Built in one go (small next to the file write); progress still ticks per habit so the
+	// sheet's bar and Cancel keep working.
 	let logsDone = 0;
 	for (const record of model.habits) {
 		logsDone += record.logs.length;

@@ -15,19 +15,11 @@ import { dayAfterWeekSwipe, weekDaysOf, weekStripDays } from "./week-strip";
 import { buildYearMap } from "./year-map";
 import { yearWindowFor } from "./yearly-summary";
 
-/**
- * The date maths in every zone of the matrix, on the days each zone changes its clocks (read from
- * Intl, never typed from memory) and the days either side, plus the year's first and last day.
- * America/Sao_Paulo has had no DST since 2019: it brings a negative offset without DST, and its
- * 2018 changes (at midnight, so that midnight never happened) as a history probe.
- *
- * Expected keys come from a zone-free oracle (UTC arithmetic on the strings), not from the
- * date-fns calls under test.
- */
+// DST days are read from Intl, never typed from memory. Sao_Paulo covers a negative offset
+// without DST and 2018 changes at midnight. Expected keys come from a zone-free UTC oracle.
 
 const DAY_MS = 86_400_000;
 
-/** `key` moved by `days`, by UTC arithmetic: independent of the process zone. */
 function shift(key: string, days: number): string {
 	const [y, m, d] = key.split("-").map(Number);
 	return new Date(Date.UTC(y, m - 1, d) + days * DAY_MS)
@@ -66,7 +58,6 @@ describe.each(TEST_ZONES)("dates in %s", (zone) => {
 	describe.each(probesFor(zone))("around %s", (probe) => {
 		const around = [-1, 0, 1].map((offset) => shift(probe, offset));
 
-		// Built inside each test, once the zone is set.
 		const daily = (): Habit =>
 			makeHabit({ id: 1, createdAt: fromDayKey(shift(probe, -60)) });
 

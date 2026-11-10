@@ -1,13 +1,6 @@
 #!/usr/bin/env node
-// Comment-reference guard. Fails when a code comment or a test title (the
-// string of a describe, it or test) in src/ or scripts/ carries a ticket id or
-// a spec-version word. Code says why; the specs and the backlog keep the trail.
-//
-//   node scripts/check-comment-refs.mjs        check the repo
-//
-// Known hits live in scripts/check-comment-refs.allowlist.json as
-// { "<path>": <count> }. It may only shrink: more hits than listed fail, and
-// an entry that is too high or no longer needed also fails.
+// Fails on a ticket id or spec-version word in a comment or test title.
+// The allowlist ({ path: count }) may only shrink; stale entries also fail.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -22,7 +15,6 @@ export const FORBIDDEN = /\bHAB-\d+|\bV[123]\b/;
 const SOURCE = /\.(ts|tsx|js|mjs|cjs)$/;
 const SKIPPED = [/^src\/lib\/db\/migrations\//, /^expo-env\.d\.ts$/];
 
-/** Hits in one file: every comment or test title that matches FORBIDDEN. */
 export function findHits(file, text) {
 	const { comments, titles } = scanSource(file, text);
 	const hits = [];

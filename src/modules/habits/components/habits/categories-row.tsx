@@ -8,11 +8,6 @@ type CategoriesRowProps = {
 	onPress: () => void;
 };
 
-/**
- * The Categories entry at the foot of the Habits tab: the one way to the category list now that the
- * `⋯` menu is gone, so it stays on screen even with no habits. The count sits where a value does
- * and is read with the label.
- */
 export function CategoriesRow({ count, onPress }: CategoriesRowProps) {
 	return (
 		<Container variant="flat">

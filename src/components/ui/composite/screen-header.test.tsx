@@ -58,7 +58,7 @@ describe("ScreenHeader", () => {
 	});
 });
 
-describe("ScreenHeader focus on route entry (08.4)", () => {
+describe("ScreenHeader focus on route entry", () => {
 	afterEach(() => jest.restoreAllMocks());
 
 	it("puts the screen reader on the title once the push has settled", async () => {

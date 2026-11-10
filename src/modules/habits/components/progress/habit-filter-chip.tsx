@@ -17,7 +17,6 @@ type HabitFilterChipProps = {
 	onPress: () => void;
 };
 
-/** The Year chip: the current filter, always visible, opening the habit picker. */
 export function HabitFilterChip({ habit, onPress }: HabitFilterChipProps) {
 	const { colors, opacity } = useTheme();
 	const scope = habit ? habit.name : progressCopy.year.allHabits;

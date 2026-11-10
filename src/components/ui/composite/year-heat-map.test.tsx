@@ -125,7 +125,7 @@ describe("YearHeatMap", () => {
 		expect(label).toHaveStyle({ left: 4 * 18 });
 	});
 
-	it("shows one band when asked (Year too early, P14)", async () => {
+	it("shows one band when asked (Year too early)", async () => {
 		await render(
 			<YearHeatMap bands={[band("a", 18), band("b", 18)]} onlyBand={1} />,
 		);

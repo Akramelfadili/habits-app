@@ -6,20 +6,11 @@ import { space } from "@/theme/theme";
 
 type LibraryGroupProps = {
 	name: string;
-	/**
-	 * How many habits it holds, shown at the far edge, as on Today. Left out where nothing is counted
-	 * (Browse suggestions).
-	 */
 	count?: number;
-	/** A row of this group is held mid-drag: the card lets its shadow out. */
 	lifted?: boolean;
 	children: ReactNode;
 };
 
-/**
- * One category's card on the Habits tab: its caps name and count over a flat card whose rows are
- * separated by hairlines. The count and the name are one VoiceOver heading.
- */
 export function LibraryGroup({
 	name,
 	count,

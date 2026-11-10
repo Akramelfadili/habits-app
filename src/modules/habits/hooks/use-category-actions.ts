@@ -8,10 +8,6 @@ import {
 	restoreCategory,
 } from "../repositories/category-repository";
 
-/**
- * Category writes, each a single repository call (delete's reassign-to-Other is one transaction
- * inside it), so no service in between.
- */
 export function useCategoryActions() {
 	const create = useAsyncAction(createCategory, { scope: "categories" });
 	const rename = useAsyncAction(renameCategory, { scope: "categories" });

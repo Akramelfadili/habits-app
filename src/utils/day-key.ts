@@ -1,24 +1,14 @@
 import { addDays, format, parseISO, startOfDay } from "date-fns";
 
-/**
- * A calendar day as stored and compared everywhere — "yyyy-MM-dd", local time.
- * Entries, frozen days, notes and pauses are keyed by it (`schema.ts`), so a
- * timezone can't shift which day something lands on. Not for user-facing
- * text: that goes through `format.ts`.
- */
+// Local calendar day, never UTC: a timezone can't shift which day something lands on.
 export const DAY_KEY_FORMAT = "yyyy-MM-dd";
 
-/** The day key of `date`'s local calendar day: `toDayKey(new Date(2026, 9, 24, 23, 59))` → "2026-10-24". */
 export function toDayKey(date: Date): string {
 	return format(date, DAY_KEY_FORMAT);
 }
 
-/**
- * Local midnight of a day key — the inverse of `toDayKey`. Read straight off the
- * three fields: `parseISO` is general and ~30× slower, which showed once
- * Progress parsed five years of entries (tens of thousands) per open. A string
- * that is not "yyyy-MM-dd" falls back to `parseISO`.
- */
+// Read straight off the three fields: `parseISO` is ~30× slower, which showed once Progress parsed
+// tens of thousands of entries per open. Anything not "yyyy-MM-dd" falls back to `parseISO`.
 export function fromDayKey(key: string): Date {
 	if (key.length === 10 && key[4] === "-" && key[7] === "-") {
 		const year = Number(key.slice(0, 4));
@@ -33,13 +23,9 @@ export function fromDayKey(key: string): Date {
 	return parseISO(key);
 }
 
-/**
- * The local midnight of the day after `date` — the step of every day-by-day
- * walk. Not bare `addDays`: in a zone whose DST starts at midnight (Sao Paulo
- * until 2019, Santiago, Asunción, Havana) that day's "midnight" is 01:00, and
- * `addDays` carries the 01:00 onto every later day, so a walk bounded by
- * `!isAfter(cursor, end)` with a midnight `end` drops its last day.
- */
+// Not bare `addDays`: where DST starts at midnight (Sao Paulo until 2019, Santiago, Havana) that
+// day's "midnight" is 01:00, and `addDays` carries it onto every later day, so a walk bounded by a
+// midnight `end` drops its last day.
 export function nextDay(date: Date): Date {
 	return startOfDay(addDays(date, 1));
 }

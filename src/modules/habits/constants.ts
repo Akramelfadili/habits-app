@@ -6,12 +6,7 @@ import type {
 	IsoWeekday,
 } from "./types";
 
-/**
- * The ten built-in categories, in their fixed display order. A migration seeds these
- * rows and a later one moves Health and Social off red; a test keeps the migrated rows and
- * this list in step.
- * "Other" has no hue on purpose: it is the neutral catch-all, not an identity.
- */
+// A test keeps these in step with the migrated rows. "Other" has no hue on purpose.
 export const BUILT_IN_CATEGORIES = [
 	{ name: "Health", shape: "plus", hue: 175 },
 	{ name: "Fitness", shape: "bars", hue: 150 },
@@ -27,7 +22,6 @@ export const BUILT_IN_CATEGORIES = [
 
 export type BuiltInCategoryName = (typeof BUILT_IN_CATEGORIES)[number]["name"];
 
-/** A built-in's fixed look — static, so it's known without reading the database. */
 export function builtInAppearance(
 	name: BuiltInCategoryName,
 ): CategoryAppearance {
@@ -38,12 +32,8 @@ export function builtInAppearance(
 
 export const OTHER_CATEGORY_NAME: BuiltInCategoryName = "Other";
 
-/**
- * Custom categories' icon/color, never user-chosen: each new one takes the slot with the
- * fewest custom categories already on it, ties going to the lowest slot (see
- * `nextCategoryAppearance`). Every pair is unique. The red hues 15 and 350 and the hues
- * Health (175) and Social (230) use are left out; migration 0011 moved customs on them here.
- */
+// Red hues (15, 350) and the Health (175) and Social (230) hues are left out so a custom
+// category never collides with a built-in or reads as an error.
 export const CATEGORY_ROTATION: readonly CategoryAppearance[] = [
 	{ shape: "ring", hue: 330 },
 	{ shape: "square", hue: 95 },
@@ -53,11 +43,6 @@ export const CATEGORY_ROTATION: readonly CategoryAppearance[] = [
 	{ shape: "archive", hue: 290 },
 ];
 
-/**
- * The one place a category shape becomes an icon. SF Symbols are the closest
- * system glyphs, not the mockup's hand-drawn shapes — a known, accepted
- * deviation (design-system.md draws its own).
- */
 export const CATEGORY_SHAPE_SYMBOLS: Record<CategoryShape, SFSymbol> = {
 	plus: "plus",
 	bars: "chart.bar.fill",
@@ -71,23 +56,14 @@ export const CATEGORY_SHAPE_SYMBOLS: Record<CategoryShape, SFSymbol> = {
 	ring: "circle",
 };
 
-/**
- * Habit-name field cap; the counter shows from 80% (26/32). An earlier cap was 40, so
- * older habits may still carry a longer name; it stays valid on edit only while unchanged
- * (see `makeHabitFormSchema`).
- */
+// Older habits may carry a name up to the former cap of 40; it stays valid on edit only
+// while unchanged (see `makeHabitFormSchema`).
 export const MAX_HABIT_NAME_LENGTH = 32;
 
-/** Category-name field cap; the counter shows from 80% (16/20). */
 export const MAX_CATEGORY_NAME_LENGTH = 20;
 
-/**
- * Weeks run Monday to Sunday. Defined once in `utils/week-window.ts` (with the
- * week-bound helpers) so scheduling and summaries never disagree.
- */
 export { WEEK_STARTS_ON } from "@/utils/week-window";
 
-/** Days pre-filled by the "Weekdays shortcut" chip — Mon–Fri, still editable after. */
 export const WEEKDAY_SHORTCUT: IsoWeekday[] = [1, 2, 3, 4, 5];
 
 export const WEEKDAYS: { day: IsoWeekday; letter: string; name: string }[] = [
@@ -109,22 +85,15 @@ export const MAX_TARGET_AMOUNT = 999;
 export const DEFAULT_TARGET_AMOUNT = 8;
 export const MAX_TARGET_UNIT_LENGTH = 20;
 
-/** The small +1/+2 quick-add chips shown alongside "Full {target}". */
 export const QUICK_ADD_STEPS = [1, 2, 3] as const;
 
-/** The Quantity Log stepper's ceiling: high enough that over-logging is never capped in practice. */
 export const MAX_QUANTITY_VALUE = 9999;
 
-/** Shared monthly freeze pool size: across every habit, not per habit; resets on the 1st, no rollover. */
+// One pool across every habit, not per habit; resets on the 1st with no rollover.
 export const FREEZE_POOL_SIZE = 2;
 
-/**
- * The app-settings key gating First Run. Owned by this module, but stored through the
- * generic `lib/app-settings` KV store so other modules can add their own flags the same way.
- */
 export const SEEN_FIRST_RUN_SETTING_KEY = "habits.seenFirstRun";
 
-/** A built-in's stored row, by name — built-ins are always present (seeded by migration). */
 export function findBuiltInCategory(
 	categories: readonly Category[],
 	name: BuiltInCategoryName,
@@ -134,56 +103,31 @@ export function findBuiltInCategory(
 	);
 }
 
-/**
- * A retro-log note's cap: "a short note, not a journal entry". The field stops accepting
- * input here rather than truncating on save.
- */
 export const MAX_NOTE_LENGTH = 280;
 
-/** Reminder times per habit: adding a 5th is blocked with an explanation. */
 export const REMINDER_CAP = 4;
 
 export const DEFAULT_REMINDER_TIME = { hour: 9, minute: 0 };
 
-/** The Evening review's time until the user picks one. */
 export const EVENING_REVIEW_TIME = { hour: 21, minute: 30 };
 
-/** `app_settings` key for the Evening review's time, "HH:mm" — absent means the default. */
 export const EVENING_REVIEW_TIME_SETTING_KEY = "habits.eveningReviewTime";
 
-/** `app_settings` key for the app-wide Evening review toggle — "true" when on. */
 export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
 
-/**
- * Where the hosted privacy policy lives (GitHub Pages, from `site/`). The only
- * web address in the app: the no-network guard allows it here and nowhere else.
- */
+// The only web address in the app: the no-network guard allows it here and nowhere else.
 export const PRIVACY_POLICY_URL =
 	"https://akramelfadili.github.io/habits-app/privacy.html";
 
-/**
- * `app_settings` key for "Hide habit names" in reminders: "true" or "false"; absent means
- * the default, which is hidden (habit names can be health-related, and the lock screen
- * shows a notification's title).
- */
+// Absent means hidden: habit names can be health-related and the lock screen shows titles.
 export const HIDE_HABIT_NAMES_SETTING_KEY = "habits.hideHabitNames";
 
-/**
- * `app_settings` key recording which "Hide habit names" value the scheduled
- * reminders were last built with ("true" / "false"; absent = never recorded).
- * Not user-facing. The launch reconcile compares identifiers, not titles, so
- * this is how it knows the OS still holds titles from the other mode and has
- * to rebuild them once.
- */
+// The launch reconcile compares identifiers, not titles, so this is how it knows the OS
+// still holds titles from the other mode and must rebuild them once.
 export const REMINDER_TITLES_APPLIED_SETTING_KEY =
 	"habits.reminderTitlesHidden";
 
-/** `app_settings` key for the day of the last successful data export, "yyyy-MM-dd". */
 export const LAST_EXPORT_SETTING_KEY = "habits.lastExport";
 
-/**
- * From this local hour a Break habit that is still open reads "Resist tonight" instead
- * of "Resisting". The spec gives no hour: 18:00 is our choice, and this is the only place
- * it is written.
- */
+// The spec gives no hour; 18:00 is our choice.
 export const EVENING_STARTS_AT_HOUR = 18;

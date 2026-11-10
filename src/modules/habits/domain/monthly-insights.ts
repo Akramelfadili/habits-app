@@ -2,30 +2,16 @@ import { atIndex } from "@/utils/indexed";
 import type { Habit, IsoWeekday } from "../types";
 import type { DayOutcome, MonthlyHabitRow } from "./monthly-summary";
 
-/**
- * Monthly Summary's insights. Every threshold lives in this one block so tuning them is a
- * one-place change, and the `monthly-summary` fixture's test pins that these defaults give the
- * three cards, in order.
- */
-
-/** Never more than this many ranked cards (the freeze card is not one of them). */
 export const MAX_INSIGHTS = 3;
 
-/** A week needs this many counted days to say anything about a trend. */
 const SLIPPING_MIN_DAYS_PER_WEEK = 3;
-/** …and the habit this many such weeks, so "week over week" has a shape. */
 const SLIPPING_MIN_WEEKS = 3;
-/** First eligible week → last must fall by at least this much (0–1). */
 export const SLIPPING_MIN_DROP = 0.25;
 
-/** Up this many percentage points on last month to be called improved. */
 export const IMPROVED_MIN_POINTS = 10;
 
-/** Weekends must trail weekdays by at least this much (0–1) to be a pattern… */
 export const PATTERN_MIN_GAP = 0.15;
-/** …with this many counted slots on each side, so two bad Sundays aren't one. */
 export const PATTERN_MIN_SLOTS = 8;
-/** One habit on one weekday must account for this share of the weekend's misses to earn an action. */
 export const PATTERN_CAUSE_SHARE = 0.25;
 
 export type PatternCause = {
@@ -48,7 +34,6 @@ export type MonthlyInsight =
 			type: "pattern";
 			weekdayRate: number;
 			weekendRate: number;
-			/** Null when no single habit explains it — informational only. */
 			cause: PatternCause | null;
 	  }
 	| { type: "steady" };
@@ -61,10 +46,6 @@ type InsightInput = {
 	scheduled: number;
 };
 
-/**
- * Gate order: the screen has already checked (1) too-early; here (2) perfect, only with
- * something scheduled, then (3) slipping, improved, pattern, in that priority.
- */
 export function insightsFor(input: InsightInput): MonthlyInsight[] {
 	if (input.scheduled === 0) return [];
 	if (input.completed === input.scheduled) return [{ type: "perfect" }];
@@ -83,12 +64,7 @@ export function insightsFor(input: InsightInput): MonthlyInsight[] {
 
 type WeekShare = { scheduled: number; fraction: number | null };
 
-/**
- * The month's weekly trend that makes a habit "slipping": enough weeks with
- * enough counted days, never up week over week, and a first-to-last drop of at
- * least `SLIPPING_MIN_DROP`. Shared by the insight and by Progress's per-habit
- * "slipping" tag, so they always agree.
- */
+// Shared by the insight and Progress's per-habit "slipping" tag so they always agree.
 export function slippingTrend<W extends WeekShare>(
 	allWeeks: readonly W[],
 ): { first: W; last: W; drop: number } | null {
@@ -102,7 +78,6 @@ export function slippingTrend<W extends WeekShare>(
 		(fraction, index) =>
 			index === 0 || fraction <= atIndex(fractions, index - 1),
 	);
-	// At least SLIPPING_MIN_WEEKS (3) weeks survived the filter above.
 	const lastIndex = weeks.length - 1;
 	const drop = atIndex(fractions, 0) - atIndex(fractions, lastIndex);
 	if (!neverUp || drop < SLIPPING_MIN_DROP) return null;

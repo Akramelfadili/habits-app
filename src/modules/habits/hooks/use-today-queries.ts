@@ -31,12 +31,7 @@ import {
 import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 
-/**
- * `selectedKey` is the day Today shows (`useSelectedDayQueries`): a past day's
- * key, or `null` to follow today. The week window and every per-day read are
- * keyed by that day; streak-at-risk belongs to the real today only.
- */
-/** A habit at risk, with what is left of the pool for the *missed day's* month — on the 1st that is last month's, the one `applyFreeze` checks. */
+// The pool is for the missed day's month: on the 1st that is last month's, the one `applyFreeze` checks.
 export type TodayAtRisk = StreakAtRisk & { freezesRemaining: number };
 
 export function useTodayQueries(selectedKey: string | null = null): {
@@ -44,28 +39,16 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	groups: CategoryGroup[];
 	progress: Progress;
 	completedHabitIds: ReadonlySet<number>;
-	/** The shown day's logged quantity value per habit — only set for quantity habits with an entry that day. */
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
-	/** Days completed so far in the shown day's Mon–Sun week — per-week habits' "2 of 5". */
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
-	/**
-	 * The running streak of every listed habit that has one to show (the status line): counted to
-	 * the shown day when it is done, else to the day before. Per-week habits show "3x per week - 1
-	 * done" instead and are not counted.
-	 */
 	streakByHabitId: ReadonlyMap<number, number>;
-	/** Habits whose yesterday was covered by a freeze: "Thu frozen - streak kept at 13". Real today only. */
 	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
 	today: Date;
 	selectedDay: Date;
-	/** False until the habit list has loaded: Today shows a neutral blank, not "Nothing to track yet". */
 	isLoaded: boolean;
 	viewState: TodayViewState;
-	/** Due-today habits currently showing the streak-at-risk prompt, keyed by habit id. */
 	atRiskByHabitId: ReadonlyMap<number, TodayAtRisk>;
-	/** The shared freeze pool's remaining count this month, across every habit. */
 	freezesRemainingThisMonth: number;
-	/** Freezes used this month, by missed date — the same pool, counted the other way (Settings, toast copy). */
 	freezesUsedThisMonth: number;
 } {
 	const { habits, loaded } = useActiveHabits();

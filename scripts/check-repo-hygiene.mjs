@@ -1,14 +1,6 @@
 #!/usr/bin/env node
-// Repo hygiene guard. The repo is PUBLIC, so this fails if any TRACKED file is
-// something that must never be committed: secrets, env files, signing
-// material, logs, OS/editor junk, archives, generated output, node_modules,
-// ios/ or android/. It also fails on a tracked file over 1 MB (outside the
-// explicit allowlist below) and on obvious secrets inside text files.
-//
-//   node scripts/check-repo-hygiene.mjs        check the tracked files
-//
-// Fast: `git ls-files` plus a read of each tracked text file. The checks are
-// exported as pure functions so the tests use synthetic file lists.
+// node scripts/check-repo-hygiene.mjs
+// The repo is public: fails on a tracked secret, env file, signing material, log, archive, generated output or file over 1 MB.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -17,11 +9,8 @@ import { fileURLToPath } from "node:url";
 
 export const MAX_BYTES = 1024 * 1024;
 
-// Tracked files may exceed MAX_BYTES only here. Keep this short; each entry
-// is a path regex with the reason it is allowed.
 export const SIZE_ALLOWLIST = [
 	[/^docs\/visual-baseline\//, "visual-check baselines"],
-	// Exported mockup bundles and their runtime.
 	[/^docs\/mockups\/v3\/[^/]+\.dc\.html$/, "V3 mockup design exports"],
 	[/^docs\/mockups\/v3\/support\.js$/, "V3 mockup runtime"],
 	[/^assets\//, "app assets"],

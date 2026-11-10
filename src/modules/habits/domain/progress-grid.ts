@@ -15,18 +15,11 @@ import type { CellStatus, HabitDayCell } from "./day-status";
 import { monthWindowFor } from "./monthly-summary";
 import type { RangeWindow } from "./range-summary";
 
-/**
- * The grids Progress draws: the week matrix (habits × 7 days), the month calendar and one day's
- * detail card. All three read the shared day grid, so a cell here is always the status the rates
- * counted. "One habit" variants are the same calls with `scopeHabits`.
- */
-
 type GridInput = {
 	habits: readonly Habit[];
 	entries: readonly Entry[];
 	frozenDays: readonly FrozenDay[];
 	today: Date;
-	/** Nothing has ever been logged: due past cells read `nothing-logged`. */
 	nothingLogged?: boolean;
 };
 
@@ -44,11 +37,9 @@ export type MatrixCell = HabitDayCell & { date: Date; key: string };
 
 export type MatrixRow = {
 	habit: Habit;
-	/** Break habit: a done cell reads "resisted". */
 	isBreak: boolean;
 	cells: MatrixCell[];
 	done: number;
-	/** The "n/target" under the row: days the habit is due this week, or the weekly count for × per week. */
 	target: number;
 };
 
@@ -58,10 +49,7 @@ export type WeekMatrix = {
 	rows: MatrixRow[];
 };
 
-/**
- * Days the habit is due across the whole week, future days included ("3/7"): before-start and
- * paused days are not, a frozen day still is. A × per week habit's target is its weekly count.
- */
+// Future days count ("3/7"); before-start and paused days don't, a frozen day still does.
 function weeklyTarget(habit: Habit, week: readonly Date[]): number {
 	if (habit.frequency.type === "per-week") return habit.frequency.timesPerWeek;
 	const strategy = getHabitStrategy(habit);
@@ -95,7 +83,6 @@ export function buildWeekMatrix(
 
 	const rows: MatrixRow[] = [];
 	for (const { habit, cells } of perHabit) {
-		// A finished (archived) habit with nothing in this week has no row.
 		if (
 			habit.archivedAt !== null &&
 			cells.every((cell) => QUIET.includes(cell.status))
@@ -117,17 +104,6 @@ export function buildWeekMatrix(
 	return { week, days, rows };
 }
 
-/**
- * One day of the month calendar:
- * - `before-start` — every habit is younger than this day (dashed).
- * - `future` — after today (hairline).
- * - `open` — today, nothing due is done yet.
- * - `rest` — nothing was due.
- * - `nothing-logged` — would be missed, but nothing has ever been logged.
- * - `frozen` — a freeze covers a habit that day (violet).
- * - `missed` — due, none done (level 0).
- * - `level` — 1 to 3 by done ÷ due.
- */
 export type CalendarDayStatus =
 	| "before-start"
 	| "future"
@@ -144,7 +120,6 @@ export type CalendarDay = {
 	isToday: boolean;
 	status: CalendarDayStatus;
 	level: DayLevel | null;
-	/** Level 1 or 2: the corner notch that says "partial" without relying on lightness. */
 	notch: boolean;
 	perfect: boolean;
 	done: number;
@@ -253,10 +228,7 @@ export type DayDetail = {
 	items: DayDetailItem[];
 };
 
-/**
- * Each habit's state on one date: the Month day card and the year's day detail. `entries` must
- * cover the date's Monday–Sunday week (a × per week habit's day depends on the rest of its week).
- */
+// `entries` must cover the date's Monday-Sunday week: a per-week habit's day depends on it.
 export function buildDayDetail(input: GridInput & { date: Date }): DayDetail {
 	const { date, today } = input;
 	const day = startOfDay(date);
@@ -268,7 +240,6 @@ export function buildDayDetail(input: GridInput & { date: Date }): DayDetail {
 		dates: [day],
 		nothingLogged: input.nothingLogged,
 	});
-	// One date was classified, so every habit has exactly one cell.
 	const cells = perHabit.map(({ cells: habitCells }) => atIndex(habitCells, 0));
 	const tally = tallyOf(cells);
 	const items = perHabit

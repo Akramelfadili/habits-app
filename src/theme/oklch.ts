@@ -1,9 +1,4 @@
-/**
- * OKLCH → sRGB hex conversion (CSS Color 4 reference matrices), used because
- * React Native's style engine doesn't understand oklch()/oklab() strings —
- * habit-accent colors in design-system.md are specified parametrically as
- * oklch(L C H), so they're computed here instead of hardcoded per hue.
- */
+// React Native's style engine doesn't understand oklch() strings, so colours are computed here (CSS Color 4 matrices).
 function clamp01(value: number): number {
 	return Math.min(1, Math.max(0, value));
 }

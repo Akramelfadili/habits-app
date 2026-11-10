@@ -14,7 +14,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 
 const { createHabit } = require("../repositories/habit-repository");
 
-/** A habit created at `createdAt`, so entries before today still count. */
 async function createHabitAt(
 	input: Parameters<typeof createHabit>[0],
 	createdAt: Date,
@@ -96,7 +95,7 @@ describe("useProgressYearQueries", () => {
 		const day = (k: string) => view.grid.days.find((d) => d.key === k);
 		expect(view.grid.days).toHaveLength(365);
 		expect(day(key(6, 15))).toMatchObject({ level: 3, perfect: true });
-		expect(day(key(8, 3))).toMatchObject({ level: 2, notch: true }); // A done, B missed
+		expect(day(key(8, 3))).toMatchObject({ level: 2, notch: true });
 		expect(day(key(8, 15))).toMatchObject({ level: 0, status: "missed" });
 		expect(day(key(10, 1))?.status).toBe("future");
 	});

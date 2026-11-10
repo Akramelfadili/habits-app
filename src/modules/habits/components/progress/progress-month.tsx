@@ -30,7 +30,6 @@ import { ProgressNoHabits, ProgressNothingLogged } from "./progress-states";
 
 type ProgressMonthProps = {
 	oneHabit: Habit | null;
-	/** Month's month: the one a Year label opened, or null for the current month. */
 	month: Date | null;
 	selectedKey: string | null;
 	selectedDay: Date | null;
@@ -43,11 +42,6 @@ type ProgressMonthProps = {
 	onGoToToday: () => void;
 };
 
-/**
- * The month's calendar of daily completion with a ring on today and on the tapped day, the rate /
- * perfect days / best streak tiles, an insight with a pager and the per-habit rates. Tapping a 40 pt
- * day shows its detail card with "Edit this day".
- */
 export function ProgressMonth({
 	oneHabit,
 	month,

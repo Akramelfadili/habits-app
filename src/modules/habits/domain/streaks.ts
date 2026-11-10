@@ -12,12 +12,8 @@ import { getHabitStrategy } from "../strategies/frequency-strategy";
 import { restartDays } from "../strategies/paused-schedule";
 import type { Entry, FrozenDay, Habit } from "../types";
 
-/**
- * Whether `entry` counts as an actual completion of `habit`: presence alone for a simple-check
- * habit, but `value >= targetAmount` for a quantity habit. Direction-agnostic: a Break habit's
- * "completed" entry means "resisted", the same underlying signal, so streak math never branches
- * on direction.
- */
+// Direction-agnostic: a Break habit's completed entry means "resisted", so streak math never
+// branches on direction.
 export function isEntryComplete(habit: Habit, entry: Entry): boolean {
 	if (habit.targetType !== "quantity") return true;
 	return (
@@ -27,13 +23,8 @@ export function isEntryComplete(habit: Habit, entry: Entry): boolean {
 	);
 }
 
-/**
- * Consecutive scheduled (per the habit's FrequencyStrategy's `wasScheduledOn`) days completed or
- * frozen, walking backward from `asOf`. Always computed from `entries`, never a stored counter,
- * so a retroactive edit recalculates correctly just by being read again. Unscheduled days are
- * skipped: they neither extend nor break the streak. The count stops at the habit's latest
- * restore day: the streak starts fresh from the next completed log, never across the archived gap.
- */
+// Always derived from `entries`, never a stored counter, so a retroactive edit recalculates
+// by being read again.
 export function calculateCurrentStreak(
 	habit: Habit,
 	entries: readonly Entry[],
@@ -48,7 +39,6 @@ type Completions = {
 	set: Set<string>;
 };
 
-/** `habit`'s completed days, parsed once — shared by the at-risk check and the streak it reports. */
 function completionsOf(habit: Habit, entries: readonly Entry[]): Completions {
 	const completedEntries = entries.filter((entry) =>
 		isEntryComplete(habit, entry),
@@ -66,7 +56,6 @@ function streakFrom(
 	asOf: Date,
 ): number {
 	const strategy = getHabitStrategy(habit);
-	// A restore starts the streak over: never count back past it.
 	const lastRestart = restartDays(habit.pauses).at(-1);
 	const floor = startOfDay(
 		lastRestart && lastRestart > toDayKey(habit.createdAt)
@@ -91,17 +80,12 @@ function streakFrom(
 }
 
 export type StreakAtRisk = {
-	/** The missed day a freeze would cover: always yesterday (the grace window). */
 	missedDate: Date;
 	currentStreak: number;
 };
 
-/**
- * Whether `habit` is at risk right now: yesterday was due, wasn't completed, isn't already
- * frozen, and there's a nonzero streak at stake. It does not depend on the pool: with no freeze
- * left the state still exists and the sheet explains that instead of the streak resetting
- * silently. Rest days and off-schedule days never qualify, since `isDueOn` is false for them.
- */
+// Independent of the pool: with no freeze left the state still exists, so the sheet can
+// explain it instead of the streak resetting silently.
 export function getStreakAtRisk(
 	habit: Habit,
 	entries: readonly Entry[],
@@ -109,15 +93,13 @@ export function getStreakAtRisk(
 	today: Date,
 ): StreakAtRisk | null {
 	// "× per week" habits have no scheduled day to miss, so they are never at risk by day.
-	// Streak semantics are unchanged.
 	if (habit.frequency.type === "per-week") return null;
 
 	const yesterday = subDays(startOfDay(today), 1);
 	const yesterdayString = toDayKey(yesterday);
 	if (frozenDates.has(yesterdayString)) return null;
 
-	// Today renders this for every habit after every write: parse the history
-	// once, and rule out "done yesterday" before asking the strategy anything.
+	// Hot path (every habit, after every write): rule out "done yesterday" before the strategy.
 	const completions = completionsOf(habit, entries);
 	if (completions.set.has(yesterdayString)) return null;
 	if (
@@ -138,12 +120,8 @@ export function getStreakAtRisk(
 	return { missedDate: yesterday, currentStreak };
 }
 
-/**
- * Freezes used in `monthDate`'s month, across every habit — the pool is shared,
- * not per-habit. Counted by the *missed* date of each `frozen_days` row, not
- * the day it was used, so a freeze spent on the 1st for the 31st counts
- * against the month that ended.
- */
+// Counted by each row's *missed* date, not the day it was used: a freeze spent on the 1st
+// for the 31st counts against the month that ended.
 export function freezesUsedInMonth(
 	frozenDays: readonly FrozenDay[],
 	monthDate: Date,

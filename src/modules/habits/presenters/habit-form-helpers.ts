@@ -3,14 +3,12 @@ import { isNameOverLimit } from "./habit-form-schema";
 
 export type FormIssues = {
 	count: number;
-	/** The reason Save is off, shown under it — undefined when Save can go. */
 	reason: string | undefined;
 	fields: ("name" | "weekdays" | "unit")[];
 };
 
 type FormState = {
 	name: string;
-	/** The saved name in edit mode, so an unchanged legacy name over the cap still passes. */
 	originalName?: string;
 	duplicate: boolean;
 	noWeekdays: boolean;
@@ -18,12 +16,7 @@ type FormState = {
 	unitTouched: boolean;
 };
 
-/**
- * What stands between the form and Save: an empty name has its own reason (Add a name to
- * save); otherwise every inline error is counted (Fix 2 issues to save). An empty name is
- * not an error, and neither is a unit nobody has reached yet. Pure, so the count and the
- * inline messages can never disagree.
- */
+// Pure, so the count and the inline messages can never disagree.
 export function formIssues(state: FormState): FormIssues {
 	const fields: FormIssues["fields"] = [];
 	const nameEmpty = state.name.trim() === "";
@@ -38,8 +31,7 @@ export function formIssues(state: FormState): FormIssues {
 	if (nameEmpty) {
 		return { count: fields.length, reason: formCopy.save.needsName, fields };
 	}
-	// A blank unit nobody has left yet is not an error on screen, so it is a
-	// reason, not a count: "Add a unit to save".
+	// A blank unit nobody has left yet is not an error on screen: a reason, not a count.
 	if (fields.length === 0 && state.unitBlank) {
 		return { count: 0, reason: formCopy.save.needsUnit, fields };
 	}

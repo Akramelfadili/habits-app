@@ -4,42 +4,13 @@ import { radius, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ContainerProps = PropsWithChildren<{
-	/**
-	 * "outlined" is a card with a hairline border, for a card sitting on a card-coloured surface (the
-	 * category move preview inside a sheet). "flat" is the list card: no padding, a hairline border,
-	 * radius `l`, and a full-bleed hairline between its children; the rows carry their own padding.
-	 * "summary" is the compact info card (Habit Detail's history): radius `l`, a hairline border, 14 pt
-	 * padding and an 8 pt gap between its parts.
-	 */
 	variant?: "card" | "inset" | "sheet" | "outlined" | "flat" | "summary";
-	/**
-	 * Groups direct children into one card, separating them with a full-bleed
-	 * hairline instead of the card's default gap (e.g. Category + Direction
-	 * on the habit form). Each child is its own section — group multiple
-	 * elements under one wrapper View to keep them in the same section.
-	 */
+	// Each direct child is its own section; wrap several elements in one View to keep them together.
 	dividers?: boolean;
-	/**
-	 * Tighter spacing around each divider — for a list of short, uniform rows
-	 * (Habit Detail's recent entries) rather than form sections. Only applies
-	 * with `dividers`.
-	 */
 	compact?: boolean;
-	/**
-	 * A list card whose rows carry their own padding (compact `ListItem`s on Manage & Archive): a thin
-	 * inset so a lifted row's highlight sits just inside the card edge.
-	 */
 	tight?: boolean;
-	/**
-	 * A list card with a row held mid-drag, the layout unchanged. A tight card takes an ink outline; a
-	 * flat one (the library) lets the lifted row's shadow out instead of clipping it.
-	 */
+	// A flat card lets the lifted row's shadow out instead of clipping it.
 	lifted?: boolean;
-	/**
-	 * Inner padding of a card: "default" is 16 pt (`space[400]`), "snug" 14 pt
-	 * (`space[350]`, the density pass's card padding). Cards that set `tight`,
-	 * `flat`, `summary` or `sheet` keep their own padding.
-	 */
 	padding?: "default" | "snug";
 }> &
 	Pick<ViewProps, "testID" | "accessible" | "accessibilityLabel">;

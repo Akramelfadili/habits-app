@@ -23,20 +23,8 @@ import {
 type ReorderableListProps<T> = {
 	items: readonly T[];
 	keyOf: (item: T) => string;
-	/**
-	 * Items only move within their own run of equal groups (e.g. a habit stays inside its category).
-	 * Omit for one free-for-all group.
-	 */
 	groupOf?: (item: T) => string;
-	/**
-	 * Renders one row; place `handle` where the drag grip belongs (usually
-	 * trailing). `isDragging` is true while this row is held — show it lifted.
-	 */
 	renderItem: (item: T, handle: ReactNode, isDragging: boolean) => ReactNode;
-	/**
-	 * Wraps each run of equal groups (e.g. one card per category). `isDragging` is true while a row of
-	 * that run is held. Omit to render the rows unwrapped.
-	 */
 	renderGroup?: (
 		groupKey: string,
 		rows: ReactNode,
@@ -45,18 +33,10 @@ type ReorderableListProps<T> = {
 	handleLabel: (item: T) => string;
 	moveLabels: { up: string; down: string };
 	moveButtonLabel: (item: T, direction: "up" | "down") => string;
-	/** The moved item's group, in its new order — only that group changed. */
 	onReorder: (groupKeys: string[]) => void;
 };
 
-/**
- * A vertical list whose rows move with visible Move up / Move down buttons
- * (the plain-tap way, which needs no gesture) or are dragged by their grip
- * (design-system "List item — reorder", Manage & Archive). The grip also offers
- * "Move up" / "Move down" accessibility actions, since a drag isn't reachable
- * with VoiceOver.
- * Shows the new order immediately, then waits for `items` to catch up.
- */
+// The grip also offers Move up / Move down accessibility actions: a drag isn't reachable with VoiceOver.
 export function ReorderableList<T>({
 	items,
 	keyOf,
@@ -68,8 +48,7 @@ export function ReorderableList<T>({
 	moveButtonLabel,
 	onReorder,
 }: ReorderableListProps<T>) {
-	// Optimistic order after a drop, shown only while `items` is still the
-	// list it was made from — any new `items` means the source has caught up.
+	// Optimistic order after a drop, shown only while `items` is still the list it was made from.
 	const [pending, setPending] = useState<{
 		base: readonly T[];
 		order: T[];
@@ -198,15 +177,14 @@ export function ReorderableList<T>({
 	const runs: { key: string; start: number; end: number }[] = [];
 	for (let i = 0; i < shown.length; i += 1) {
 		const last = runs[runs.length - 1];
-		const group = atIndex(groups, i); // `groups` is `shown` mapped, so same length
+		const group = atIndex(groups, i);
 		if (last && group === last.key) last.end = i;
 		else runs.push({ key: group, start: i, end: i });
 	}
 	return (
 		<View>
 			{runs.map((run, runIndex) => (
-				// Keyed by the group (plus its repeat count, should a group ever
-				// split) so a reorder or an archived first row doesn't remount the card.
+				// Keyed by group (plus repeat count) so a reorder or an archived first row doesn't remount the card.
 				<View
 					key={`${run.key}-${runs.slice(0, runIndex).filter((r) => r.key === run.key).length}`}
 				>

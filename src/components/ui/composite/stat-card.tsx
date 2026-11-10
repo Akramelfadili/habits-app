@@ -7,16 +7,10 @@ type StatCardProps = {
 	label: string;
 	value: string;
 	caption: string;
-	/** "warning" is amber for the at-risk fact only: the numeral and caption, on the card. */
 	tone?: "default" | "warning";
 	muted?: boolean;
 };
 
-/**
- * One size everywhere: padding 12 (16 at AX sizes), 2 pt between label, value and sub, no minimum
- * height, no icons. Label caption in caps, value in the stat style, sub in footnote. A tile is one
- * VoiceOver stop. At AX sizes the screen lays tiles out 1-up.
- */
 export function StatCard({
 	label,
 	value,

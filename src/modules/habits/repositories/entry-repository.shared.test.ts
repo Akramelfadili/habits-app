@@ -9,10 +9,6 @@ import { makeHabitInput } from "../test-support/habit-builder";
 import type * as EntryRepository from "./entry-repository";
 import type * as FrozenDayRepository from "./frozen-day-repository";
 
-/**
- * Every screen that shows the entry log reads one shared subscription: N consumers cost one
- * listener, and a write re-renders only the consumers whose slice it changed.
- */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -72,7 +68,6 @@ describe("the shared entry log", () => {
 		];
 		await act(async () => {});
 
-		// One for the entries table, one for frozen days.
 		expect(activeListenerCount() - before).toBe(2);
 		expect(mounted[0]?.result.current).toHaveLength(2);
 		expect(mounted[2]?.result.current.map((entry) => entry.date)).toEqual([
@@ -98,14 +93,12 @@ describe("the shared entry log", () => {
 		const [weekBefore, habitBefore] = [weekRenders, habitRenders];
 		const weekSlice = week.result.current;
 
-		// Another habit, another month: outside both slices.
 		await addEntry(habitIds[1] ?? 0, "2026-07-04");
 
 		expect(weekRenders).toBe(weekBefore);
 		expect(habitRenders).toBe(habitBefore);
 		expect(week.result.current).toBe(weekSlice);
 
-		// Inside the week, for the first habit: both slices change.
 		await addEntry(habitIds[0] ?? 0, "2026-09-16");
 		expect(week.result.current.map((entry) => entry.date)).toEqual([
 			"2026-09-15",

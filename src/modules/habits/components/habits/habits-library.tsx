@@ -15,22 +15,15 @@ import { LibrarySectionHeader } from "./library-section-header";
 
 type HabitsLibraryProps = {
 	groups: readonly CategoryGroup[];
-	/** The same habits flattened in group order — what Reorder walks. */
 	active: readonly Habit[];
 	streakByHabitId: ReadonlyMap<number, number>;
 	reordering: boolean;
 	onStartReorder: () => void;
-	/** The moved habit's category, in its new order: the ids, first to last. */
 	onReorder: (orderedIds: number[]) => void;
 	onOpen: (habit: Habit) => void;
 	onArchive: (habit: Habit) => void;
 };
 
-/**
- * The Active part of the Habits tab: one card per category in the stored order, each row a link to
- * Detail. Reorder swaps the chevrons for grips and keeps a lifted row inside its own category (a
- * cross-category move is Edit).
- */
 export function HabitsLibrary({
 	groups,
 	active,

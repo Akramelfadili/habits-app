@@ -16,16 +16,10 @@ import type * as UseExportQueries from "../hooks/use-export-queries";
 import type { ExportOptions } from "../types";
 import { loadExportV2 } from "./export-v2-reader";
 
-/**
- * The round-trip proof for export v2: seed a database with every kind of data the file
- * claims to carry, export it through the real hooks and serializer, load that file into a
- * second, clean database with the test-only reader, export again, and compare. `exportedAt`
- * and `derived` are the only things allowed to differ (the first is a clock, the second is
- * recomputed).
- */
+// `exportedAt` (a clock) and `derived` (recomputed) are the only things allowed to differ
+// between the two exports.
 
-// The hooks read `db` from the client module on every render, so swapping this
-// variable swaps the database they see.
+// The hooks read `db` on every render, so swapping this variable swaps the database they see.
 let currentDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({
 	get db() {
@@ -86,7 +80,6 @@ async function seed(db: ReturnType<typeof createTestDb>): Promise<Counts> {
 			targetType: "simple",
 			frequencyType: "daily",
 			sortOrder: 2,
-			// Paused twice and restored: the streak math depends on these.
 			pausedRanges: "2026-08-10..2026-08-14,2026-08-20..2026-08-22",
 			createdAt: made,
 			updatedAt: new Date(2026, 8, 2, 9, 1, 2),
@@ -191,8 +184,6 @@ async function seed(db: ReturnType<typeof createTestDb>): Promise<Counts> {
 		{ key: "habits.seenFirstRun", value: "true" },
 		{ key: "habits.hideHabitNames", value: "false" },
 		{ key: "app.haptics", value: "false" },
-		// Not for the file: a date the app writes after an export, the reminder
-		// bookkeeping marker, and a dev key.
 		{ key: "habits.lastExport", value: "2026-09-01" },
 		{ key: "habits.reminderTitlesHidden", value: "false" },
 		{ key: "dev.pinnedClock", value: "2026-01-01" },
@@ -221,7 +212,6 @@ async function exportNow(options: ExportOptions, expected: Counts) {
 		expect(source.frozenDays).toHaveLength(expected.frozenDays);
 		expect(source.reminders).toHaveLength(expected.reminders);
 		expect(source.categories).toHaveLength(expected.categories);
-		// Settings arrive last: undefined until each live query has resolved.
 		for (const value of Object.values(source.settings)) {
 			expect(value).not.toBeUndefined();
 		}
@@ -230,7 +220,6 @@ async function exportNow(options: ExportOptions, expected: Counts) {
 	return JSON.parse(await toJson(model));
 }
 
-/** Everything that must survive: the file minus the clock and the recomputed part. */
 function stable(file: { exportedAt: string; habits: { derived: unknown }[] }) {
 	const { exportedAt: _exportedAt, ...rest } = file;
 	return {
@@ -245,7 +234,7 @@ const ALL: ExportOptions = {
 	includeNotes: true,
 };
 
-describe("export v2 round trip", () => {
+describe("export JSON round trip", () => {
 	let counts: Counts;
 
 	beforeEach(async () => {
@@ -291,8 +280,7 @@ describe("export v2 round trip", () => {
 		const second = await exportNow(ALL, counts);
 
 		expect(stable(second)).toEqual(stable(first));
-		// Streaks are recomputed from the same inputs, so they agree as well —
-		// an importer still must not read them from the file.
+		// An importer still must not read streaks from the file.
 		expect(second.habits.map((h: { derived: unknown }) => h.derived)).toEqual(
 			first.habits.map((h: { derived: unknown }) => h.derived),
 		);
@@ -311,7 +299,6 @@ describe("export v2 round trip", () => {
 		const keys = (await currentDb.select().from(appSettings)).map(
 			(row) => row.key,
 		);
-		// The six user-facing keys came back; the export-date, marker and dev keys were never in the file.
 		expect(keys.sort()).toEqual([
 			"app.haptics",
 			"app.themePreference",

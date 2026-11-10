@@ -22,12 +22,6 @@ type CategoryNameEditorProps = {
 	isSaving?: boolean;
 };
 
-/**
- * Inline rename: the row's name becomes a field with a Done beside it. 20 characters with the
- * counter from 16, a paste trimmed to fit, and a name that clashes with any category (built-ins
- * included, case and spaces ignored) says so under the field in danger ink. The category's own name
- * in another case is allowed.
- */
 export function CategoryNameEditor({
 	category,
 	categories,
@@ -63,7 +57,6 @@ export function CategoryNameEditor({
 		try {
 			await onRename(values.name);
 		} catch {
-			// Stays in edit mode with the name kept, so retrying is one tap.
 			setError("name", {
 				type: "rename",
 				message: categoriesCopy.renameField.failed,

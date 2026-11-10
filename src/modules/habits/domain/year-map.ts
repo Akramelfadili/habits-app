@@ -18,16 +18,8 @@ import type { ClassifiedDays, RangeWindow } from "./range-summary";
 import { bestMonth, isJudgeable } from "./yearly-insights";
 import type { YearMonthCell } from "./yearly-summary";
 
-/**
- * The year heat map: a level 0–3 for every day of a year, all habits together or one habit
- * (binary, since one habit is 1 of 1 or 0), grouped by month for the three 4-month bands, plus the
- * month tiles, the best month and the month list the VoiceOver / largest-text fallback draws.
- *
- * Built in one pass on the shared day grid: each habit's context is bucketed once and every day
- * is answered in O(1), with no per-day scan of entries, so it stays fast on five years of logs
- * (`year-map.perf.test.ts`). Pass the year's Monday-aligned entries (`rangeEntrySpan` or
- * `yearEntryRange`); more is fine.
- */
+// One pass on the shared day grid with no per-day entry scan, so five years of logs stay fast
+// (`year-map.perf.test.ts`). Pass the year's Monday-aligned entries; more is fine.
 
 export type YearMapMonth = YearMonthCell & {
 	key: string;
@@ -49,7 +41,6 @@ export type YearMap = {
 	days: CalendarDay[];
 	months: YearMapMonth[];
 	bands: YearMapMonth[][];
-	/** The best finished month (needs two); null until then. */
 	bestMonth: YearMapMonth | null;
 	monthList: MonthListItem[];
 };
@@ -61,11 +52,7 @@ type YearMapInput = {
 	today: Date;
 	year: RangeWindow;
 	nothingLogged?: boolean;
-	/**
-	 * The cells for the previous year and this one, classified once by
-	 * `classifyRangeDays({ kind: "year", … })` and shared with the year's range
-	 * summary, so the days are walked once. This year's days are read out of it.
-	 */
+	// Shared with the year's range summary so the days are walked once.
 	classified?: ClassifiedDays;
 };
 

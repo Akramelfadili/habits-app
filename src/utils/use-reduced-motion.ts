@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { AccessibilityInfo } from "react-native";
 import { log } from "@/lib/logger/logger";
 
-/**
- * True while the OS "Reduce Motion" setting is on, and live as it changes.
- * The single source for every animation in the app (sheet slide, reorder
- * settle, swipe reveal): a component asks this once and drops its motion —
- * it never reads `AccessibilityInfo` itself. Starts false until the first
- * answer arrives (one frame), which is the same as the pre-setting behaviour.
- */
+// The single source for every animation: components never read `AccessibilityInfo` themselves.
 export function useReducedMotion(): boolean {
 	const [reduced, setReduced] = useState(false);
 

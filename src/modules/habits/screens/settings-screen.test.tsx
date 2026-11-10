@@ -68,7 +68,7 @@ describe("SettingsScreen — the hub (S1)", () => {
 		const row = (name: RegExp) => screen.getByRole("button", { name });
 		expect(row(/^Theme/)).toBeTruthy();
 		expect(screen.getByText("System")).toBeTruthy();
-		expect(screen.getByText("Off")).toBeTruthy(); // evening review is off
+		expect(screen.getByText("Off")).toBeTruthy();
 		expect(screen.getByText("Allowed")).toBeTruthy();
 		expect(screen.getByText("1 left")).toBeTruthy();
 		expect(screen.getByText("JSON, CSV")).toBeTruthy();

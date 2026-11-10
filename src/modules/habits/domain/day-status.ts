@@ -4,28 +4,9 @@ import type { Entry, Habit } from "../types";
 import { offScheduleChecker } from "./off-schedule";
 import { isEntryComplete } from "./streaks";
 
-/**
- * What one habit's one day *is*: the single answer behind Progress's rates, week matrix, month
- * calendar, year map and day detail, and behind Monthly, Yearly and Habit Detail's 90-day rate.
- * A cell is exactly one status:
- *
- * - `done`: completed (a Break habit's resisted day is a completed entry).
- * - `partial`: a quantity habit logged below its target (`level` 1 or 2).
- * - `missed`: due, past, nothing logged.
- * - `frozen`: covered by a freeze: excused, outside every rate.
- * - `bonus`: logged on a day that wasn't owed: shown, never counted.
- * - `not-due`: a rest day, a × per week habit's day it doesn't need, or a paused (archived) day:
- *   never missed.
- * - `before-start`: before the habit existed.
- * - `nothing-logged`: would be `missed`, but nothing has ever been logged (a fresh week isn't a
- *   failed week).
- * - `future`: after today.
- * - `today`: today, due, not logged yet: still open.
- *
- * Whether a day was owed always comes from the habit's FrequencyStrategy (`wasScheduledOn` looking
- * back, `isDueOn` for today), so × per week habits are due on open days only: exactly the answers
- * Detail's heatmap and the streaks use.
- */
+// The single answer to "what was this habit's day", shared by every Progress view, Monthly,
+// Yearly and Habit Detail so none can disagree. `nothing-logged` is a would-be `missed` on a
+// habit never logged: a fresh week isn't a failed week.
 export type CellStatus =
 	| "done"
 	| "partial"
@@ -40,7 +21,6 @@ export type CellStatus =
 
 export type HabitDayCell = {
 	status: CellStatus;
-	/** How much of the target: 3 done, 1–2 partial (under / over half), 0 otherwise. */
 	level: 0 | 1 | 2 | 3;
 	isToday: boolean;
 	value?: number;
@@ -51,15 +31,9 @@ type DayStatusInput = {
 	entries: readonly Entry[];
 	frozenDates: ReadonlySet<string>;
 	today: Date;
-	/** Nothing has ever been logged: a due past day reads `nothing-logged`, not `missed`. */
 	nothingLogged?: boolean;
 };
 
-/**
- * Builds the habit's context once — completions bucketed, entries and freezes
- * keyed by day — and returns an O(1)-per-day classifier. Callers walk days
- * with it; nothing scans entries per day.
- */
 export function habitDayClassifier({
 	habit,
 	entries,
@@ -69,7 +43,6 @@ export function habitDayClassifier({
 }: DayStatusInput): (date: Date) => HabitDayCell {
 	const strategy = getHabitStrategy(habit);
 	const entryByDay = new Map<string, Entry>();
-	// One parse per completed entry, shared by the strategy's context and the bonus check.
 	const completedDates: Date[] = [];
 	const completedDateByDay = new Map<string, Date>();
 	for (const entry of entries) {
@@ -80,8 +53,7 @@ export function habitDayClassifier({
 		completedDateByDay.set(entry.date, day);
 	}
 	const context = { completedDates };
-	// Only a half-logged day needs the full off-schedule check (the entry counts
-	// as done for its own day); built on first use.
+	// Built lazily: only a half-logged day needs the full off-schedule check.
 	let partialChecker: ((entry: Entry) => boolean) | undefined;
 	const isPartialOffSchedule = (entry: Entry) => {
 		partialChecker ??= offScheduleChecker(habit, entries);
@@ -105,9 +77,7 @@ export function habitDayClassifier({
 		if (entry) {
 			const completedOn = completedDateByDay.get(key);
 			if (completedOn) {
-				// A frozen day is never a bonus: the freeze says it was owed. A
-				// completed day is already in the context, so one strategy call says
-				// whether it was owed.
+				// A frozen day is never a bonus: the freeze says it was owed.
 				const bonus = !frozen && !strategy.wasScheduledOn(completedOn, context);
 				return makeCell(bonus ? "bonus" : "done", 3, isToday, entry.value);
 			}
@@ -142,18 +112,14 @@ function makeCell(
 		: { status, level, isToday, value };
 }
 
-/**
- * `toDayKey` without date-fns' formatter: the classifier keys every day of
- * every habit, and formatting dominated its cost on a five-year grid. Same
- * "yyyy-MM-dd" local calendar day (`day-status.test.ts` pins the equivalence).
- */
+// `toDayKey` without date-fns' formatter, which dominated the cost on a five-year grid;
+// `day-status.test.ts` pins the equivalence.
 export function fastDayKey(date: Date): string {
 	const month = date.getMonth() + 1;
 	const day = date.getDate();
 	return `${date.getFullYear()}-${month < 10 ? "0" : ""}${month}-${day < 10 ? "0" : ""}${day}`;
 }
 
-/** Under half the target is level 1, at least half (but not all) level 2 — Detail's heatmap rule. */
 function partialLevel(habit: Habit, entry: Entry): 1 | 2 {
 	if (!habit.targetAmount) return 1;
 	return (entry.value ?? 0) / habit.targetAmount >= 0.5 ? 2 : 1;

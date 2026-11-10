@@ -6,13 +6,8 @@ export type FirstRunRouter = {
 	replace: (href: "/") => void;
 };
 
-/**
- * Leaves First Run for Today: every First Run screen is popped (they sit above
- * nothing but each other) and the tabs take their place, so Back and the swipe
- * can never return to the welcome. The tabs' gate reads the "seen" flag from a
- * live query that lags the write by a moment, so it is told First Run was left
- * (`leftFirstRun`) and does not redirect back on the stale flag.
- */
+// The tabs' gate reads a live query that lags the write, so it is told First Run was left
+// (`leftFirstRun`) rather than redirecting back on the stale flag.
 export function leaveFirstRun(router: FirstRunRouter): void {
 	useFirstRunOfferStore.getState().setLeftFirstRun(true);
 	if (router.canDismiss()) router.dismissAll();

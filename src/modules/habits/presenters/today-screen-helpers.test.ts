@@ -101,8 +101,7 @@ describe("groupHabitsByCategory", () => {
 	});
 
 	it("groups by category identity, not name — and only the built-in Other goes last", () => {
-		// A custom that happens to be called "Other" can't exist (duplicate
-		// check), but grouping must still key on id, not the display name.
+		// Grouping must key on id, not the display name, even if a custom were called "Other".
 		const customOther = makeCategory({ id: 50, name: "Other" });
 		const custom = makeHabit({ id: 1, category: customOther });
 		const morning = makeHabit({ id: 2, category: categoryNamed("Morning") });

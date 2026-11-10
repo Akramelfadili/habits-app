@@ -1,7 +1,4 @@
-// Tests for scripts/check-architecture.mjs. Run with `node --test scripts/`
-// (Jest's default testMatch doesn't pick up .mjs files). Each test builds a
-// tiny throwaway repo, breaks exactly one rule, and asserts the script exits
-// non-zero and names that rule — so a rule can't silently stop working.
+// Run with `node --test scripts/`: Jest's default testMatch doesn't pick up .mjs files.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";

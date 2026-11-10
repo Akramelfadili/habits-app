@@ -2,18 +2,12 @@ import fc from "fast-check";
 import { TEST_ZONES, withTimeZone } from "@/test-support/time-zone";
 import { fromDayKey, nextDay, toDayKey } from "./day-key";
 
-/**
- * Property tests (docs/how-to/dev-tooling.md § "Testing"): the day key is the
- * identity every entry, freeze and note is stored under, so it must survive a
- * round trip for every calendar day, in every zone the date matrix uses.
- */
-
 const FIRST_DAY_MS = Date.UTC(1970, 0, 1);
 const LAST_DAY_MS = Date.UTC(2100, 11, 31);
 const DAY_MS = 86_400_000;
 const DAY_COUNT = (LAST_DAY_MS - FIRST_DAY_MS) / DAY_MS + 1;
 
-/** A valid "yyyy-MM-dd" from 1970 to 2100, built from UTC so it never depends on the zone under test. */
+// Built from UTC so it never depends on the zone under test.
 const dayKeyArb = fc
 	.integer({ min: 0, max: DAY_COUNT - 1 })
 	.map((n) => new Date(FIRST_DAY_MS + n * DAY_MS).toISOString().slice(0, 10));

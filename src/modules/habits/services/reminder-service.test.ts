@@ -80,7 +80,6 @@ function reminder(overrides: Partial<Reminder> = {}): Reminder {
 	};
 }
 
-/** The scheduled identifiers with their generation stripped: "<reminder>:<slot>:<HHmm>". */
 const scheduledKeys = () =>
 	[...fake.scheduled.keys()]
 		.map((id) => id.split(":").slice(0, 3).join(":"))
@@ -138,8 +137,6 @@ describe("reminder-service", () => {
 
 			await syncHabitReminders(weekdayHabit);
 
-			// Off and all-unscheduled reminders schedule nothing;
-			// the third keeps only Friday: Sat/Sun would fire for nothing.
 			expect(scheduledKeys()).toEqual([
 				"habit-3-reminder-1:day-1:0720",
 				"habit-3-reminder-1:day-2:0720",
@@ -412,7 +409,6 @@ describe("reminder-service", () => {
 	});
 
 	describe("restoreReminder (the Undo for Remove)", () => {
-		// A stateful stand-in for the table, so remove → restore round-trips.
 		let rows: Reminder[];
 		beforeEach(() => {
 			rows = [];
@@ -490,7 +486,6 @@ describe("reminder-service", () => {
 		});
 
 		expect(saved).toBe(nowDaily);
-		// Sat/Sun were pointless on Mon–Fri; on daily they're real.
 		expect(scheduledKeys()).toEqual([
 			"habit-3-reminder-1:day-6:0720",
 			"habit-3-reminder-1:day-7:0720",

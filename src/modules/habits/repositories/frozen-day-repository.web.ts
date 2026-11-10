@@ -5,11 +5,6 @@ import { resolveFixtureScenario } from "../dev/habit-fixtures";
 import type { FrozenDay } from "../types";
 import type * as NativeFrozenDayRepository from "./frozen-day-repository";
 
-/**
- * Web-only stand-in for `frozen-day-repository.ts` — in-memory fixtures, no
- * expo-sqlite binding, same shape as `entry-repository.web.ts`.
- */
-
 let store: FrozenDay[] | undefined;
 const listeners = new Set<() => void>();
 

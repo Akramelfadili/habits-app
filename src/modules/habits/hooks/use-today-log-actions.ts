@@ -14,19 +14,13 @@ import { useTodayActions } from "./use-today-actions";
 type TodayLogInput = {
 	/** The real today — a write to it is skipped if the clock has moved past this render's. */
 	today: Date;
-	/** A past day's key when one is selected (`useSelectedDayQueries`); `null` follows today. */
 	selectedKey: string | null;
 	completedHabitIds: ReadonlySet<number>;
 	quantityValuesByHabitId: ReadonlyMap<number, number>;
-	/** Every habit a quantity sheet can be opened for: the due ones plus the rest-day picker's. */
 	loggableHabits: readonly Habit[];
 };
 
-/**
- * Today's logging: toggling a check, saving a quantity, and a rest-day bonus
- * log — each with its Undo toast. Owns the quantity sheet's open state because
- * both the populated list and the rest-day picker open it.
- */
+// Owns the quantity sheet's open state because both the populated list and the rest-day picker open it.
 export function useTodayLogActions({
 	today,
 	selectedKey,
@@ -65,7 +59,6 @@ export function useTodayLogActions({
 				entry.date === toDayKey(sheetDay),
 		)?.value ?? 0;
 
-	// Names the date in a toast only when it isn't today.
 	const dayLabel =
 		selectedKey === null
 			? undefined
@@ -75,8 +68,6 @@ export function useTodayLogActions({
 			? format(quantitySession.day, "EEE d MMM")
 			: dayLabel;
 
-	// Every completion confirms itself with a short-lived Undo (design system,
-	// "Feedback"). The toast lives in the shell's shared slot.
 	function confirmCompletion(habit: Habit, undo: () => unknown) {
 		// A Break habit is resisted, never "complete".
 		const spec =
@@ -84,9 +75,6 @@ export function useTodayLogActions({
 		showMessage(spec, [habit.name, dayLabel], undo);
 	}
 
-	// Un-ticking is as instant as ticking, and as undoable: the toast puts the habit back as it
-	// was, on the day of the tap. A newer toast replaces this one, and once it expires there is
-	// nothing left to undo.
 	function confirmUncompletion(habit: Habit, undo: () => unknown) {
 		const spec =
 			habit.direction === "break"
@@ -95,17 +83,11 @@ export function useTodayLogActions({
 		showMessage(spec, [habit.name, dayLabel], undo);
 	}
 
-	// A bonus log confirms itself the same way; Undo removes exactly that entry
-	// (nothing was applied to streaks, so there is nothing else to reverse).
 	function confirmOffSchedule(habit: Habit, undo: () => unknown) {
 		showMessage(messages.offSchedule, [habit.name, dayLabel], undo);
 	}
 
-	/**
-	 * Confirms a write. A write that gave a frozen day's freeze back says so instead (one toast at
-	 * a time); its Undo puts the day and the freeze back exactly. `previous` is what the day held at
-	 * tap time.
-	 */
+	// A write that gave a frozen day's freeze back says so instead (one toast at a time); its Undo puts both back.
 	function confirmWrite(
 		habit: Habit,
 		day: Date,
@@ -126,15 +108,7 @@ export function useTodayLogActions({
 		}
 	}
 
-	/**
-	 * The day a write lands on. A selected past day is that date, however late
-	 * it is now — a past selection stays across midnight. Otherwise it is read
-	 * from the clock at the moment of the tap: if the app was left open across
-	 * midnight and this render still shows yesterday, the write is skipped —
-	 * the screen is about to refresh to the new day (`useToday`), and a tap
-	 * must never land on a day the person isn't looking at. An Undo keeps the
-	 * day of its own action, not this one.
-	 */
+	// Read from the clock at tap time: if the app was left open across midnight and this render still shows yesterday, the write is skipped, so a tap never lands on a day the person isn't looking at.
 	function writableDay(): Date | null {
 		if (selectedKey !== null) return fromDayKey(selectedKey);
 		const day = currentDay();
@@ -156,11 +130,7 @@ export function useTodayLogActions({
 		);
 	}
 
-	/**
-	 * A tap on a quantity habit's circle: one more than the day holds, with an Undo that writes
-	 * back what was there at tap time. There is no step log (one entry per habit per day holds the
-	 * total) and above the target it keeps counting.
-	 */
+	// No step log: one entry per habit per day holds the total.
 	async function addOne(habit: Habit) {
 		const day = writableDay();
 		if (!day) return;

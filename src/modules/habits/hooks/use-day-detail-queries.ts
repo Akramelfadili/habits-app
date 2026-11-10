@@ -18,11 +18,7 @@ export type DayDetailView =
 	| { loaded: false; detail: null }
 	| { loaded: true; detail: DayDetail };
 
-/**
- * Each habit's state on one date (the Month day card and the Year's day detail), read from that
- * date's Monday-Sunday week only (a x per week habit's day depends on its week). With no `date`
- * (nothing selected) it reads today's week and returns today. `habitId` scopes it to one habit.
- */
+// Reads only that date's Monday-Sunday week: an x-per-week habit's day depends on its week.
 export function useDayDetailQueries(
 	date: Date | null = null,
 	habitId: number | null = null,

@@ -3,27 +3,13 @@ import { IMPROVED_MIN_POINTS } from "./monthly-insights";
 import type { RangeHabitRow, RangeSummary } from "./range-summary";
 import { yearUnlock } from "./yearly-summary";
 
-/**
- * Progress's insight cards: up to three per range, ranked **slipping → improved → nothing to
- * fix**. The weekday-pattern insight is not built here, though Monthly's old `pattern` insight
- * still exists until its screen goes.
- *
- * Gate order: (1) too early (the 7-logged-days gate, decided by the caller) gives no insights;
- * (2) perfect / nothing to fix; (3) slipping. A tone and an action travel with each card: only
- * *slipping* is actionable ("Change frequency" → Edit habit scrolled to Frequency); improved and
- * nothing to fix are not tappable.
- *
- * Thresholds are the existing ones: a habit is slipping by the same rule as its row tag
- * (`slipping.ts`; Month's weekly trend lives in `monthly-insights.ts`), improved from
- * `IMPROVED_MIN_POINTS`, best month from `yearly-insights.ts`. Archived habits are never named or
- * offered as an action target.
- */
+// Too-early gating is decided by the caller. Archived habits are never named or offered as
+// an action target.
 
 const MAX_PROGRESS_INSIGHTS = 3;
 
 export type InsightTone = "warning" | "positive" | "neutral";
 
-/** Where a slipping card sends the person: Edit habit, scrolled to Frequency. */
 export type InsightAction = {
 	type: "edit-habit";
 	habitId: number;
@@ -75,12 +61,10 @@ type InsightInput = {
 	summary: RangeSummary;
 	unlocked: boolean;
 	bestMonth?: { month: Date; percent: number } | null;
-	/** Year only: the first day any habit existed; year-scale insights need 3 months of it. */
 	firstDay?: Date | null;
 	today: Date;
 };
 
-/** A range needs this many due days of a habit before "improved" is said of it. */
 const IMPROVED_MIN_DUE = { week: 3, month: 5, year: 30 } as const;
 
 function stats(row: RangeHabitRow): HabitInsightStats {

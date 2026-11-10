@@ -11,9 +11,7 @@ import { HabitPickerSheet } from "../habit-picker-sheet";
 import { TodayNotDueCard } from "./today-habit-list";
 
 type TodayRestDayProps = {
-	/** False on a past day: the copy says "was due", not "is due". */
 	isToday: boolean;
-	/** Habits that existed but aren't due: the rows, each a bonus log. */
 	notDueHabits: readonly Habit[];
 	loggedToday: readonly OffScheduleLog[];
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
@@ -22,10 +20,6 @@ type TodayRestDayProps = {
 	eligibleHabits: readonly Habit[];
 };
 
-/**
- * Not an empty list but a state. It says why nothing is due, and keeps the not-due habits one tap
- * away on dashed circles; anything logged is a bonus and never touches a streak or a rate.
- */
 export function TodayRestDay({
 	isToday,
 	notDueHabits,
