@@ -43,6 +43,7 @@ HAB-14–25: settings and JSON/CSV export, monthly and yearly summaries, off-sch
 
 HAB-01–13: create habits, frequencies, Today and completion, Break habits, day states, first run, quantity habits, streaks and freezes, Detail with heatmap, retro-log with notes, weekly summary, local reminders, reorder/archive/delete. Expo scaffold, Biome, Husky, Jest, Maestro and the Claude Code workflow date from 2026-09-24.
 - **Performance: the entry log** (branch `perf/entries-streaks`, audit 2026-11 batch 22, no PR number yet): Today's streak derivation is memoised behind a pure `streak-reader`, entries and frozen days are one shared, reference-counted subscription read as slices (54 live subscriptions across the three tabs became 40), `useLiveRows` builds queries once per deps, and a perf test guards the Today derivation. Behaviour unchanged.
+- **Comment cleanup** (branch `chore/comments`, audit 2026-11 batch 23, no PR number yet): comments that restate code, banners, file headers and history removed; spec-version words and ticket IDs gone from code comments and test titles; `check-comment-refs` keeps them out and `make comment-report` lists the most commented files. No behaviour change.
 
 ## Unreleased / next
 
