@@ -26,10 +26,7 @@ export function createPerWeekFrequency(
 	frequency: Extract<Frequency, { type: "per-week" }>,
 ): FrequencyStrategy {
 	return {
-		// Any day of the week can be one of the X — which ones is up to the user.
 		canFallOn: () => true,
-		// Completions are bucketed by week once per history (completion-index.ts),
-		// so each call reads one week instead of scanning every completion.
 		isDueOn: (date, { completedDates }) => {
 			const dayStart = startOfDay(date).getTime();
 			let completedEarlierThisWeek = 0;

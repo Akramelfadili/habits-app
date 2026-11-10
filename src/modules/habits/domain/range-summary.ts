@@ -42,14 +42,13 @@ import { calculateCurrentStreak } from "./streaks";
 import { yearWindowFor } from "./yearly-summary";
 
 /**
- * Week, Month and Year summaries for Progress (HAB-35–37, V3-3a) — one shape
- * for all three, built on the shared per-day grid (`day-grid.ts`) so every
- * number follows the one rate rule (`completion-rate.ts`): done ÷ due, whole
- * numbers, frozen and bonus left out, Break habits counting resisted days as
+ * Week, Month and Year summaries for Progress: one shape for all three, built on the shared
+ * per-day grid (`day-grid.ts`) so every number follows the one rate rule (`completion-rate.ts`):
+ * done ÷ due, whole numbers, frozen and bonus left out, Break habits counting resisted days as
  * done, × per week habits due on open days only.
  *
- * The previous range (last week / last month / last year) is summarised by the
- * same pass, so "+N pts" is the very same function on the range before.
+ * The previous range (last week / last month / last year) is summarised by the same pass, so
+ * "+N pts" is the very same function on the range before.
  */
 
 export type RangeKind = "week" | "month" | "year";
@@ -86,20 +85,16 @@ export function rangeEntrySpan(
 
 export type RangeHabitRow = {
 	habit: Habit;
-	/** Break habit: a logged day is a resisted day (D8). */
+	/** Break habit: a logged day is a resisted day. */
 	isBreak: boolean;
 	done: number;
 	due: number;
-	/** Excused days in the range — outside both counts. */
 	frozen: number;
-	/** Off-schedule logs, listed as "not counted" (D11). */
+	/** Off-schedule logs, listed as "not counted". */
 	bonus: number;
-	/** Whole points; null when nothing was due. */
 	rate: number | null;
 	previousRate: number | null;
-	/** What the previous range counted for this habit ("7 of 7 last week"). */
 	previous: { done: number; due: number };
-	/** `rate` − `previousRate`, whole points; null unless both exist. */
 	deltaPoints: number | null;
 	slipping: boolean;
 };
@@ -113,7 +108,6 @@ export type WeekdayShare = {
 	date: Date | null;
 	done: number;
 	due: number;
-	/** Whole points; null when nothing was due (a future day, a rest day). */
 	percent: number | null;
 };
 
@@ -130,23 +124,15 @@ export type RangeSummary = {
 	previousWindow: RangeWindow;
 	done: number;
 	due: number;
-	/** Whole points; null before anything is due. */
 	rate: number | null;
 	previousRate: number | null;
-	/** `rate` − `previousRate`, whole points; null unless both exist. */
 	deltaPoints: number | null;
-	/** Days where every due habit was done and none was frozen. */
 	perfectDays: number;
-	/** Days with at least one due habit — the "of N" under perfect days. */
 	countedDays: number;
 	bestStreak: BestStreak | null;
-	/** The weekday with the highest done ÷ due (earliest on a tie); null until something is done. */
 	bestDay: WeekdayShare | null;
-	/** Monday → Sunday. For Week these are the daily bars. */
 	weekdays: WeekdayShare[];
-	/** Best rate first, slipping habits after the rest, habits with no rate last. */
 	habits: RangeHabitRow[];
-	/** Logged on days that weren't owed: shown, never counted. */
 	bonus: BonusLog[];
 	freezes: FreezeLog[];
 };
@@ -154,7 +140,6 @@ export type RangeSummary = {
 type RangeSummaryInput = {
 	kind: RangeKind;
 	habits: readonly Habit[];
-	/** Covers `rangeEntrySpan(kind, window)`; any habit. */
 	entries: readonly Entry[];
 	frozenDays: readonly FrozenDay[];
 	today: Date;
@@ -180,7 +165,6 @@ type RangeSummaryInput = {
  * reads its own year.
  */
 export type ClassifiedDays = {
-	/** The previous range's first day → the range's last day, future included. */
 	dates: Date[];
 	perHabit: HabitCells[];
 };
@@ -352,7 +336,6 @@ function isSlipping(
 	return slippingTrend(weeks) !== null;
 }
 
-/** Best rate first; slipping habits after the rest; no-rate habits last. Ties keep creation order. */
 function rankRows(rows: readonly RangeHabitRow[]): RangeHabitRow[] {
 	const group = (row: RangeHabitRow) =>
 		row.rate === null ? 2 : row.slipping ? 1 : 0;
@@ -366,7 +349,6 @@ function dayShares(
 	dates: readonly Date[],
 	windowFrom: number,
 	today: Date,
-	/** Week only: the Monday, so each weekday share carries its date (the daily bars). */
 	monday: Date | null,
 ) {
 	const byWeekday = new Map<IsoWeekday, Tally>();
@@ -435,13 +417,11 @@ function bestStreakOf(
 		let days: number;
 		let endedOn: Date | null = null;
 		if (kind === "week") {
-			// The streak as it stands (as of the week's last counted day).
 			if (habit.archivedAt !== null) continue;
 			days = isBefore(upTo, todayStart)
 				? calculateCurrentStreak(habit, own, frozenDates, upTo)
 				: currentStreakAsOf({ habit, entries: own, frozenDates, today });
 		} else {
-			// The longest run inside the range, as Yearly's tile always was.
 			const inRange = (date: string) =>
 				date >= toDayKey(window.start) && date <= toDayKey(window.end);
 			({ days, endedOn } = calculateLongestStreak({

@@ -6,7 +6,6 @@ import {
 	weekKey,
 } from "./completion-index";
 
-// Wed 7 Oct 2026; weeks run Monday → Sunday (WEEK_STARTS_ON).
 const day = (date: number, hour = 0) => new Date(2026, 9, date, hour);
 
 describe("completionIndex", () => {
@@ -14,7 +13,6 @@ describe("completionIndex", () => {
 		const dates = [day(5), day(7), day(7, 9), day(11), day(12)];
 		const index = completionIndex(dates);
 
-		// 5–11 Oct is one week; 12 Oct starts the next.
 		expect(completionTimesInWeek(index, day(8))).toEqual([
 			day(5).getTime(),
 			day(7).getTime(),

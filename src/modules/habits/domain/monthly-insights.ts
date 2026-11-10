@@ -3,9 +3,9 @@ import type { Habit, IsoWeekday } from "../types";
 import type { DayOutcome, MonthlyHabitRow } from "./monthly-summary";
 
 /**
- * Monthly Summary's insights (HAB-16, frame C3). Every threshold lives in this
- * one block so tuning them is a one-place change — and the `monthly-summary`
- * fixture's test pins that these defaults give C3's three cards, in order.
+ * Monthly Summary's insights. Every threshold lives in this one block so tuning them is a
+ * one-place change, and the `monthly-summary` fixture's test pins that these defaults give the
+ * three cards, in order.
  */
 
 /** Never more than this many ranked cards (the freeze card is not one of them). */
@@ -31,9 +31,7 @@ export const PATTERN_CAUSE_SHARE = 0.25;
 export type PatternCause = {
 	habit: Habit;
 	weekday: IsoWeekday;
-	/** This habit's misses on this weekday. */
 	misses: number;
-	/** All the misses on weekend days. */
 	weekendMisses: number;
 };
 
@@ -53,7 +51,6 @@ export type MonthlyInsight =
 			/** Null when no single habit explains it — informational only. */
 			cause: PatternCause | null;
 	  }
-	/** Nothing crossed a threshold — the slot is never empty. */
 	| { type: "steady" };
 
 type InsightInput = {
@@ -65,9 +62,8 @@ type InsightInput = {
 };
 
 /**
- * Gate order (carried over from the V1 audit): the screen has already checked
- * (1) too-early; here (2) perfect — only with something scheduled — then
- * (3) slipping, improved, pattern, in that priority.
+ * Gate order: the screen has already checked (1) too-early; here (2) perfect, only with
+ * something scheduled, then (3) slipping, improved, pattern, in that priority.
  */
 export function insightsFor(input: InsightInput): MonthlyInsight[] {
 	if (input.scheduled === 0) return [];

@@ -10,14 +10,13 @@ import { forcedAccessibilityTextSize } from "@/lib/dev-text-size/forced-text-siz
 export const AX_FONT_SCALE = 1.5;
 
 /**
- * True at Dynamic Type AX1 and above, where layouts that only work at standard
- * sizes give way to their accessibility variants (08.6a) — today the floating
- * tab-bar pill, which falls back to the full-width bar A (H10).
+ * True at Dynamic Type AX1 and above, where layouts that only work at standard sizes give way to
+ * their accessibility variants: today the floating tab-bar pill, which falls back to the
+ * full-width bar.
  *
- * Reads `useWindowDimensions().fontScale`, so it follows the setting live
- * rather than only at launch. On web that value is always 1 (react-native-web
- * does not implement it), so a dev-only `?textSize=ax` stands in — see
- * `lib/dev-text-size/`.
+ * Reads `useWindowDimensions().fontScale`, so it follows the setting live rather than only at
+ * launch. On web that value is always 1 (react-native-web does not implement it), so a dev-only
+ * `?textSize=ax` stands in; see `lib/dev-text-size/`.
  */
 export function useAccessibilityTextSize(): boolean {
 	const { fontScale } = useWindowDimensions();

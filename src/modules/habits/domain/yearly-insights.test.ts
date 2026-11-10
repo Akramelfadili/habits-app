@@ -12,7 +12,6 @@ import type {
 	YearMonthKind,
 } from "./yearly-summary";
 
-/** A slot per month Jan…Dec; a number is a judged rate in %, the strings the other kinds. */
 type Spec = number | "before" | "none" | "now" | "future";
 
 function cells(specs: Spec[]): YearMonthCell[] {
@@ -67,7 +66,7 @@ function insights(
 
 const types = (list: YearlyInsight[]) => list.map((insight) => insight.type);
 
-describe("yearlyInsightsFor — gates (HAB-17)", () => {
+describe("yearlyInsightsFor — gates", () => {
 	it("says 'early' when no month has finished — never an empty list", () => {
 		expect(insights([], ["now", "future", "future"])).toEqual([
 			{ type: "early" },
@@ -225,7 +224,6 @@ describe("yearlyInsightsFor — best month & seasonal dip", () => {
 });
 
 describe("yearlyInsightsFor — ranking & the cap", () => {
-	// Best month, stuck and never-stuck all fire, and so does a dip: the dip is cut.
 	const rows = [
 		row(1, [90, 90, 90, 90, 70, 70, 70], "Read"),
 		row(2, [40, 40, 40, 40, 40, 90, 90], "Mobility"),

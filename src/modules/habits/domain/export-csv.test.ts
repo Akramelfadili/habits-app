@@ -33,7 +33,7 @@ describe("escapeCsvField", () => {
 		expect(escapeCsvField("one\r\ntwo")).toBe('"one\r\ntwo"');
 	});
 
-	describe("spreadsheet formulas (D-08)", () => {
+	describe("spreadsheet formulas", () => {
 		it.each([
 			["=1+1", "'=1+1"],
 			["+SUM(A1)", "'+SUM(A1)"],
@@ -153,7 +153,7 @@ describe("toCsv", () => {
 		);
 	});
 
-	it("neutralizes formulas in typed text and leaves numbers and dates alone (D-08)", async () => {
+	it("neutralizes formulas in typed text and leaves numbers and dates alone", async () => {
 		const base = makeExportSource();
 		const csv = await toCsv(
 			buildExportModel(

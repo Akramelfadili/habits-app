@@ -169,7 +169,7 @@ describe("toJson", () => {
 		});
 	});
 
-	describe("what the file contains (HAB-44)", () => {
+	describe("what the file contains", () => {
 		it("lists every category in the stored order, with its look and whether it is built in", async () => {
 			const parsed = JSON.parse(await toJson(modelFor(true)));
 			expect(parsed.categories).toHaveLength(11);
@@ -306,7 +306,6 @@ describe("toJson", () => {
 				expect(habit).not.toHaveProperty("notes");
 			}
 			expect(text).not.toContain("Línea uno");
-			// Everything else is still there.
 			expect(parsed.habits[0].entries).toHaveLength(2);
 			expect(parsed.habits[1].frozenDays).toHaveLength(1);
 		});

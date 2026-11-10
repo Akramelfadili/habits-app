@@ -6,7 +6,6 @@ import {
 	isHabitDueOn,
 } from "./frequency-strategy";
 
-// 2026-09-21 is a Monday.
 const monday = new Date(2026, 8, 21, 9);
 
 describe("frequency-strategy", () => {

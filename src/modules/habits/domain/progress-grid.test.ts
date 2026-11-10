@@ -11,7 +11,6 @@ import {
 } from "./progress-grid";
 import { rangeWindowFor } from "./range-summary";
 
-// Thursday 17 Sep 2026; the week is Mon 14 – Sun 20.
 const today = new Date(2026, 8, 17, 12);
 const monday = new Date(2026, 8, 14);
 const longAgo = new Date(2025, 0, 1);
@@ -65,16 +64,16 @@ const habits: Habit[] = [water, upper, cold, noSocial, newcomer];
 const week = rangeWindowFor("week", today);
 
 const entries: Entry[] = [
-	entry(1, 0, 8), // done
-	entry(1, 1, 3), // partial, level 1
-	entry(1, 2, 5), // partial, level 2
-	entry(2, 0), // bonus (Monday isn't a Tue/Thu day)
-	entry(2, 1), // done
+	entry(1, 0, 8),
+	entry(1, 1, 3),
+	entry(1, 2, 5),
+	entry(2, 0),
+	entry(2, 1),
 	entry(3, 0),
 	entry(3, 2),
 	entry(4, 0),
 	entry(4, 1),
-	entry(4, 3), // resisted today
+	entry(4, 3),
 	entry(5, 3),
 ];
 const frozenDays = [frozen(4, 2)];
@@ -163,7 +162,6 @@ describe("buildWeekMatrix", () => {
 		expect(row(1)).toMatchObject({ done: 1, target: 7 });
 		expect(row(2)).toMatchObject({ done: 1, target: 2 });
 		expect(row(4)).toMatchObject({ done: 3, target: 7 });
-		// Created Wednesday: Mon and Tue aren't part of the target.
 		expect(row(5)).toMatchObject({ done: 1, target: 5 });
 	});
 
@@ -226,7 +224,6 @@ describe("buildWeekMatrix", () => {
 });
 
 describe("buildMonthCalendar", () => {
-	// September 2026: the 1st is a Tuesday, the 30th a Wednesday.
 	const sept = rangeWindowFor("month", today);
 	const day = (n: number) => `2026-09-${String(n).padStart(2, "0")}`;
 	const log = (habitId: number, dates: number[]): Entry[] =>
@@ -275,8 +272,8 @@ describe("buildMonthCalendar", () => {
 			month: sept,
 		});
 		const level = (n: number) => result.days.find((d) => d.key === day(n));
-		expect(level(1)).toMatchObject({ level: 1, notch: true, status: "level" }); // 1 of 3
-		expect(level(2)).toMatchObject({ level: 2, notch: true }); // 2 of 3
+		expect(level(1)).toMatchObject({ level: 1, notch: true, status: "level" });
+		expect(level(2)).toMatchObject({ level: 2, notch: true });
 		expect(level(3)).toMatchObject({ level: 3, notch: false, perfect: true });
 		expect(level(5)).toMatchObject({
 			level: 0,
@@ -381,7 +378,6 @@ describe("buildDayDetail", () => {
 
 	it("lists each habit that has something to say, with its state and amounts", () => {
 		const result = detail(1);
-		// The newcomer didn't exist on Tuesday and cold shower isn't due: both stay off the card.
 		expect(result.items.map((i) => [i.habit.id, i.status])).toEqual([
 			[1, "partial"],
 			[2, "done"],
@@ -392,7 +388,6 @@ describe("buildDayDetail", () => {
 	});
 
 	it("counts done ÷ due for the card's headline", () => {
-		// Tuesday: water partial (due), upper done, cold not-due, no-social done.
 		expect(detail(1)).toMatchObject({
 			done: 2,
 			due: 3,

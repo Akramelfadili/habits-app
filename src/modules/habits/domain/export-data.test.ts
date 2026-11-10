@@ -44,7 +44,7 @@ describe("buildExportModel", () => {
 		});
 	});
 
-	it("exports a restored habit's streak as fresh while its longest run is kept (HAB-20)", () => {
+	it("exports a restored habit's streak as fresh while its longest run is kept", () => {
 		const restored = makeHabit({
 			id: 9,
 			frequency: { type: "daily" },
@@ -93,7 +93,6 @@ describe("buildExportModel", () => {
 		expect(without.habits.every((record) => record.notes.length === 0)).toBe(
 			true,
 		);
-		// Nothing else changes.
 		expect(without.logCount).toBe(withNotes.logCount);
 	});
 

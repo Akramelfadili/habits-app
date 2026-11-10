@@ -66,7 +66,6 @@ describe("habitsForDay", () => {
 			id: 3,
 			frequency: { type: "per-week", timesPerWeek: 1 },
 		});
-		// Monday's completion meets the 1x target — not due Tuesday.
 		const shown = habitsForDay(
 			[water, twice],
 			[entry(3, "2026-09-14")],
@@ -116,8 +115,7 @@ describe("diffDayLog", () => {
 	});
 });
 
-describe("streaks after a retro edit (HAB-10)", () => {
-	// Daily habit, 6 days logged before today with a gap 3 days ago.
+describe("streaks after a retro edit", () => {
 	const today = new Date(2026, 8, 23, 12);
 	const habit = makeHabit({ id: 1, createdAt: new Date(2026, 8, 1) });
 	const logged = [

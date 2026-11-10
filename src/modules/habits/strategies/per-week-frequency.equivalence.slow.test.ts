@@ -30,8 +30,6 @@ import type {
 } from "../types";
 import type { FrequencyStrategy } from "./frequency-strategy";
 
-// ── Reference: the implementations before pre-bucketing, verbatim ──────────
-
 function referenceCreatePerWeekFrequency(
 	frequency: Extract<Frequency, { type: "per-week" }>,
 ): FrequencyStrategy {
@@ -140,8 +138,8 @@ function referenceDomain() {
 		return streak;
 	}
 
-	// Verbatim, except the pool check (at-risk no longer depends on the pool, HAB-33 SR3)
-	// and the per-week gate (× per week habits are never at risk by day, HAB-33).
+	// Verbatim, except the pool check (at-risk no longer depends on the pool) and the per-week
+	// gate (× per week habits are never at risk by day).
 	function getStreakAtRisk(
 		habit: Habit,
 		entries: readonly Entry[],
@@ -197,8 +195,6 @@ function referenceDomain() {
 
 	return { calculateCurrentStreak, getStreakAtRisk, isOffScheduleEntry };
 }
-
-// ── The two module graphs: current (indexed) and reference (scanning) ──────
 
 type Graph = {
 	strategy: typeof import("./frequency-strategy");
@@ -256,8 +252,6 @@ jest.isolateModules(() => {
 	reference = loadGraph();
 });
 
-// ── Seeded random histories ────────────────────────────────────────────────
-
 function mulberry32(seed: number) {
 	let a = seed;
 	return () => {
@@ -285,7 +279,6 @@ function randomHistory(index: number): History {
 		min + Math.floor(rand() * (max - min + 1));
 	const chance = (p: number) => rand() < p;
 
-	// Today anywhere in 2025–2026, so weeks, months, years and DST all vary.
 	const today = startOfDay(addDays(new Date(2025, 0, 1), int(0, 660)));
 	// Up to ~6 months: long enough for many weeks, months and pauses, short
 	// enough that the quadratic reference keeps this suite fast.
@@ -312,7 +305,6 @@ function randomHistory(index: number): History {
 	const quantity = chance(0.3);
 	const target = int(2, 8);
 
-	// 0–2 closed pauses inside the history, and sometimes still archived (an open pause).
 	const pauses: DayRange[] = [];
 	let cursor = int(3, Math.max(4, Math.floor(length / 3)));
 	for (let p = int(0, 2); p > 0 && cursor < length - 4; p--) {
@@ -341,8 +333,6 @@ function randomHistory(index: number): History {
 		createdAt,
 	});
 
-	// Entries on any day, scheduled or not (off-schedule logs), some partial,
-	// a few before creation or on paused days; frozen days on some gaps.
 	const density = 0.15 + rand() * 0.8;
 	const entries: Entry[] = [];
 	const frozenDays: FrozenDay[] = [];
@@ -379,8 +369,6 @@ const histories = Array.from({ length: HISTORIES }, (_, i) => randomHistory(i));
 function frozenSetOf({ frozenDays }: History): Set<string> {
 	return new Set(frozenDays.map((frozen) => frozen.date));
 }
-
-// ── The comparisons ────────────────────────────────────────────────────────
 
 describe("per-week pre-bucketing is equivalent to the original scans", () => {
 	it(`covers ${HISTORIES} histories across every frequency type`, () => {

@@ -1,31 +1,25 @@
 import { fromDayKey } from "@/utils/day-key";
 
 /**
- * The "too early" gate for Week, Month and Year (HAB-35–37, P2/P9/P14): rates
- * from a few days mislead, so with fewer than 7 days of logs an unlock card
- * (with progress) replaces the stats and insights while the grid still draws.
- * One gate for all three ranges. It replaces Monthly's old 30-day unlock.
+ * The "too early" gate for Week, Month and Year: rates from a few days mislead, so with fewer
+ * than 7 days of logs an unlock card (with progress) replaces the stats and insights while the
+ * grid still draws. One gate for all three ranges.
  *
- * "Days of logs" = distinct calendar days with at least one entry (any habit,
- * bonus included), over all history — a person who skips a day waits a day.
+ * "Days of logs" = distinct calendar days with at least one entry (any habit, bonus included),
+ * over all history: a person who skips a day waits a day.
  *
- * The three states a Progress screen has *before* "ready" are distinct views:
- * no habits at all (P3), habits but nothing ever logged (P4: outlined cells,
- * not missed), and too early (P2).
+ * The three states a Progress screen has *before* "ready" are distinct views: no habits at all,
+ * habits but nothing ever logged (outlined cells, not missed), and too early.
  */
 
 const PROGRESS_UNLOCK_DAYS = 7;
 
 export type ProgressUnlock = {
-	/** Days with a log so far, capped at `neededDays`. */
 	loggedDays: number;
 	neededDays: number;
-	/** "Unlocks in N days". */
 	remainingDays: number;
-	/** 0–1, for the unlock card's bar. */
 	progress: number;
 	isUnlocked: boolean;
-	/** The first logged day ("Started Wed 21 Oct"); null when nothing is logged. */
 	firstLogDate: Date | null;
 };
 
@@ -45,11 +39,11 @@ export function progressUnlock(logged: {
 }
 
 export type ProgressGate =
-	/** No habits exist (P3): empty state, Export disabled. */
+	/** No habits exist: empty state, Export disabled. */
 	| "no-habits"
-	/** Habits exist but nothing was ever logged (P4): outlined cells, a link to Today. */
+	/** Habits exist but nothing was ever logged: outlined cells, a link to Today. */
 	| "nothing-logged"
-	/** Fewer than 7 days of logs (P2/P9/P14): unlock card, the grid still renders. */
+	/** Fewer than 7 days of logs: unlock card, the grid still renders. */
 	| "too-early"
 	| "ready";
 

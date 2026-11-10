@@ -13,16 +13,14 @@ import { addToTally, EMPTY_TALLY } from "./completion-rate";
 import { habitDayClassifier } from "./day-status";
 
 /**
- * Weekly Summary's math (HAB-11) — pure functions over this week's habits and
- * entries. The window is the same Mon–Sun week HAB-02 schedules against
- * (`WEEK_STARTS_ON`), and every "was this day owed" question goes through the
- * habit's FrequencyStrategy (`wasScheduledOn`), exactly like Habit Detail's
- * history — so a 3×/week habit done three times reads 3/3, not 3/7.
+ * Weekly Summary's math: pure functions over this week's habits and entries. The window is the
+ * same Mon–Sun week habits are scheduled against (`WEEK_STARTS_ON`), and every "was this day
+ * owed" question goes through the habit's FrequencyStrategy (`wasScheduledOn`), exactly like
+ * Habit Detail's history, so a 3×/week habit done three times reads 3/3, not 3/7.
  *
- * Counts run up to today only: future days aren't owed yet, and today joins
- * once it's logged (same rule as Habit Detail's 90-day rate). Mid-week, a
- * habit is judged on the days that have actually happened; a finished week
- * (last week) counts all seven.
+ * Counts run up to today only: future days aren't owed yet, and today joins once it's logged
+ * (same rule as Habit Detail's 90-day rate). Mid-week, a habit is judged on the days that have
+ * actually happened; a finished week (last week) counts all seven.
  */
 
 /** A habit needs this many scheduled days this week before it can be flagged as slipping. */
@@ -45,7 +43,6 @@ export function defaultSummaryWeek(today: Date): SummaryWeek {
 	return getISODay(today) < THIS_WEEK_FROM_ISO_DAY ? "last" : "this";
 }
 
-/** The Mon–Sun window `which` refers to, relative to `today`. */
 function summaryWeekWindow(today: Date, which: SummaryWeek): WeekWindow {
 	return weekWindow(which === "last" ? subWeeks(today, 1) : today);
 }
@@ -54,7 +51,6 @@ export type WeeklyHabitRow = {
 	habit: Habit;
 	completed: number;
 	scheduled: number;
-	/** 0–1; rows only exist for habits with at least one scheduled day. */
 	fraction: number;
 };
 
@@ -67,16 +63,13 @@ export type WeeklyBestDay = {
 export type WeeklyInsight =
 	| { type: "slipping"; row: WeeklyHabitRow }
 	| { type: "perfect" }
-	/** Something is under 100%, but nothing has had enough scheduled days to call. */
 	| { type: "too-early" };
 
 export type WeeklySummary = {
 	week: WeekWindow;
 	completed: number;
 	scheduled: number;
-	/** Worst → best; ties in creation order. */
 	rows: WeeklyHabitRow[];
-	/** The day with the most completions (earliest on a tie), or null when nothing's done yet. */
 	bestDay: WeeklyBestDay | null;
 	isPerfect: boolean;
 	insight: WeeklyInsight;
@@ -84,12 +77,10 @@ export type WeeklySummary = {
 
 type WeeklySummaryInput = {
 	habits: readonly Habit[];
-	/** The summarised week's entries, any habit. */
 	entries: readonly Entry[];
-	/** Freezes in the week, any habit — an excused day leaves the counts (D14). */
+	/** Freezes in the week, any habit: an excused day leaves the counts. */
 	frozenDays?: readonly FrozenDay[];
 	today: Date;
-	/** Which week to summarise — defaults to the one containing `today`. */
 	week?: SummaryWeek;
 };
 

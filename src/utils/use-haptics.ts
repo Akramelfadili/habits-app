@@ -13,9 +13,7 @@ function fire(feedback: () => Promise<void>) {
 	if (!useHapticsStore.getState().enabled) return;
 	try {
 		feedback().catch(() => {});
-	} catch {
-		// No haptic engine (simulator, web without vibrate): nothing to do.
-	}
+	} catch {}
 }
 
 const haptics = {
@@ -43,7 +41,6 @@ export function useHaptics() {
 	return useMemo(() => haptics, []);
 }
 
-/** Reads the stored choice once at launch; unset or unreadable means on. */
 export async function loadHapticsSetting(): Promise<void> {
 	try {
 		const stored = await getSetting(HAPTICS_SETTING_KEY);
@@ -53,7 +50,6 @@ export async function loadHapticsSetting(): Promise<void> {
 	}
 }
 
-/** Applies immediately, then persists. */
 export async function setHapticsEnabled(enabled: boolean): Promise<void> {
 	useHapticsStore.setState({ enabled });
 	await setSetting(HAPTICS_SETTING_KEY, String(enabled));

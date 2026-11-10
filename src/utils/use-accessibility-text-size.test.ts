@@ -17,7 +17,6 @@ async function atScale(fontScale: number) {
 describe("useAccessibilityTextSize", () => {
 	afterEach(() => jest.restoreAllMocks());
 
-	// The standard iOS ramp: xSmall 0.82 … Large 1.0 … xxxLarge 1.35.
 	it.each([0.82, 1, 1.12, 1.23, 1.35])(
 		"is false at the standard size %p",
 		async (fontScale) => {
@@ -25,7 +24,6 @@ describe("useAccessibilityTextSize", () => {
 		},
 	);
 
-	// The accessibility ramp: AX1 1.65, AX2 1.94, AX3 2.35, AX5 3.12.
 	it.each([1.65, 1.94, 2.35, 3.12])(
 		"is true at the accessibility size %p",
 		async (fontScale) => {

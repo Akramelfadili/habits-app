@@ -1,7 +1,6 @@
 import { addDays } from "date-fns";
 import { createSpecificWeekdaysFrequency } from "./specific-weekdays-frequency";
 
-// 2026-09-21 is a Monday.
 const monday = new Date(2026, 8, 21, 9);
 const noCompletions = { completedDates: [] };
 

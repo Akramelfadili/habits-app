@@ -5,32 +5,27 @@ import type { Entry, Habit } from "../types";
 import { isHabitListedOn } from "./selected-day";
 import { isEntryComplete } from "./streaks";
 
-/** One day of the week strip (V3-03). */
 export type WeekStripDay = {
 	date: Date;
 	key: string;
 	isToday: boolean;
-	/** After today: faint and inert, nothing can be logged ahead (HAB-34). */
+	/** After today: faint and inert, nothing can be logged ahead. */
 	isFuture: boolean;
 	/** Something was due and everything due was done: the accent dot. A day with nothing due has none. */
 	allDone: boolean;
-	/** How many habits are listed that day, and how many of those are done (the VoiceOver label). */
 	due: number;
 	done: number;
 };
 
-/** The seven days of `anchor`'s week, Monday first (D9). */
 export function weekDaysOf(anchor: Date): Date[] {
 	const start = weekStart(anchor);
 	return Array.from({ length: 7 }, (_, index) => addDays(start, index));
 }
 
-/** The same weekday `weeks` weeks away — the strip's swipe. */
 function shiftWeek(anchor: Date, weeks: number): Date {
 	return addWeeks(anchor, weeks);
 }
 
-/** Whether the strip may show the week after `anchor`'s: never a week that is wholly in the future. */
 export function canShowNextWeek(anchor: Date, today: Date): boolean {
 	const nextStart = addWeeks(weekStart(anchor), 1);
 	return !isAfter(nextStart, startOfDay(today));

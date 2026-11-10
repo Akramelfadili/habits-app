@@ -19,7 +19,6 @@ function entryOn(habitId: number, value: Date, id = 0): Entry {
 	return { id, habitId, date: date(value), createdAt: value };
 }
 
-/** A daily habit's entries on every day from `from` to `to` inclusive except `skip`. */
 function dailyEntries(
 	habitId: number,
 	from: Date,
@@ -48,7 +47,7 @@ function build(
 	});
 }
 
-describe("yearWindowFor / yearEntryRange (HAB-17)", () => {
+describe("yearWindowFor / yearEntryRange", () => {
 	it("is the calendar year of the given day", () => {
 		const year = yearWindowFor(day(2026, 9, 16));
 		expect(date(year.start)).toBe("2026-01-01");
@@ -61,14 +60,13 @@ describe("yearWindowFor / yearEntryRange (HAB-17)", () => {
 	});
 
 	it("reads entries from the Monday on or before 1 Jan to the Sunday on or after 31 Dec", () => {
-		// 1 Jan 2027 is a Friday → Monday 28 Dec 2026; 31 Dec 2027 is a Friday → Sunday 2 Jan 2028.
 		const range = yearEntryRange(yearWindowFor(day(2027, 6, 1)));
 		expect(date(range.start)).toBe("2026-12-28");
 		expect(date(range.end)).toBe("2028-01-02");
 	});
 });
 
-describe("yearUnlock (HAB-17, C7)", () => {
+describe("yearUnlock", () => {
 	it("unlocks three calendar months after history began: 4 Sep → 4 Dec", () => {
 		expect(YEAR_UNLOCK_MONTHS).toBe(3);
 		const first = day(2026, 9, 4);
@@ -114,7 +112,7 @@ describe("yearUnlock (HAB-17, C7)", () => {
 	});
 });
 
-describe("buildYearlySummary — the C4/C5 fixture (HAB-17)", () => {
+describe("buildYearlySummary — the fixture", () => {
 	const today = new Date(2026, 8, 16, 9);
 	const summary = build(
 		yearlyHabitFixtures().map((fixture) => makeHabit(fixture)),
@@ -195,7 +193,7 @@ describe("buildYearlySummary — the C4/C5 fixture (HAB-17)", () => {
 	});
 });
 
-describe("buildYearlySummary — month slots (HAB-17)", () => {
+describe("buildYearlySummary — month slots", () => {
 	it("shows a habit created mid-year as dashed before-start months, then counted", () => {
 		const today = day(2026, 9, 16);
 		const habit = makeHabit({ id: 1, createdAt: day(2026, 6, 10) });
@@ -260,7 +258,7 @@ describe("buildYearlySummary — month slots (HAB-17)", () => {
 		expect(summary.rows[0].cells[4].rate).toBeNull();
 	});
 
-	it("reads a restored habit's closed pause as paused, not missed (HAB-20)", () => {
+	it("reads a restored habit's closed pause as paused, not missed", () => {
 		const today = day(2026, 9, 16);
 		const habit = makeHabit({
 			id: 1,
@@ -273,10 +271,8 @@ describe("buildYearlySummary — month slots (HAB-17)", () => {
 			...dailyEntries(1, day(2026, 4, 1), day(2026, 9, 15)),
 		];
 		const summary = build([habit], entries, today);
-		// March's 31 blank days are neither owed nor missed...
 		expect(summary.scheduled).toBe(summary.logged);
 		expect(summary.rate).toBe(1);
-		// ...and no streak is joined across the gap.
 		expect(summary.longest.days).toBe(
 			dailyEntries(1, day(2026, 4, 1), day(2026, 9, 15)).length,
 		);
@@ -295,7 +291,7 @@ describe("buildYearlySummary — month slots (HAB-17)", () => {
 	});
 });
 
-describe("buildYearlySummary — leap years (G-03)", () => {
+describe("buildYearlySummary — leap years", () => {
 	it.each([
 		[2028, 366, 29],
 		[2027, 365, 28],
@@ -317,7 +313,6 @@ describe("buildYearlySummary — leap years (G-03)", () => {
 				completed: february,
 				scheduled: february,
 			});
-			// One unbroken run, 1 Jan → 31 Dec, across 29 Feb in a leap year.
 			expect(summary.longest.days).toBe(days);
 			expect(date(summary.longest.endedOn as Date)).toBe(date(today));
 		},
@@ -337,13 +332,12 @@ describe("buildYearlySummary — leap years (G-03)", () => {
 		);
 		expect(summary.months[1]).toMatchObject({ completed: 28, scheduled: 29 });
 		expect(summary.months[2]).toMatchObject({ completed: 31, scheduled: 31 });
-		// 1 Jan → 28 Feb (31 + 28 days) beats 1 → 31 March (31) and the 1 April run.
 		expect(summary.longest.days).toBe(59);
 		expect(date(summary.longest.endedOn as Date)).toBe("2028-02-28");
 	});
 });
 
-describe("buildYearlySummary — calendar edge cases (HAB-17)", () => {
+describe("buildYearlySummary — calendar edge cases", () => {
 	it("renders early January on older history without dividing by zero or going blank", () => {
 		const today = day(2027, 1, 3);
 		const habit = makeHabit({ id: 1, createdAt: day(2026, 6, 1) });
@@ -360,7 +354,6 @@ describe("buildYearlySummary — calendar edge cases (HAB-17)", () => {
 		).toBe(true);
 		expect(summary.logged).toBe(2);
 		expect(summary.rate).toBe(1);
-		// Nothing has finished this year: a plain "early" card, not an empty list.
 		expect(summary.insights).toEqual([{ type: "early" }]);
 		expect(summary.best).toBeNull();
 	});
@@ -390,7 +383,6 @@ describe("buildYearlySummary — calendar edge cases (HAB-17)", () => {
 	it("buckets days into the right months across Paris DST changes (29 Mar, 25 Oct 2026)", () => {
 		const today = day(2026, 11, 15);
 		const habit = makeHabit({ id: 1, createdAt: day(2026, 3, 1) });
-		// Missed: the spring-forward day and the fall-back day, nothing else.
 		const missed = new Set(["2026-03-29", "2026-10-25"]);
 		const summary = build(
 			[habit],
@@ -408,12 +400,11 @@ describe("buildYearlySummary — calendar edge cases (HAB-17)", () => {
 	});
 });
 
-describe("buildYearlySummary — archived habits (HAB-17)", () => {
+describe("buildYearlySummary — archived habits", () => {
 	const today = day(2026, 9, 16);
 	const FROM = day(2026, 1, 1);
 	const TO = day(2026, 9, 15);
 
-	/** An active habit that's fine (95%) and one that would trip every insight if it counted. */
 	function scenario(archiveIt: boolean) {
 		const steady = makeHabit({ id: 1, name: "Steady", createdAt: FROM });
 		const struggling = makeHabit({
@@ -423,9 +414,7 @@ describe("buildYearlySummary — archived habits (HAB-17)", () => {
 			archivedAt: archiveIt ? day(2026, 9, 1) : null,
 		});
 		const entries = [
-			// 19 of 20 days, so 95% every month.
 			...dailyEntries(1, FROM, TO, (d) => d.getDate() % 20 === 0),
-			// Mostly missed: under 50% every month.
 			...dailyEntries(2, FROM, TO, (d) => d.getDate() % 3 !== 0),
 		];
 		return build([steady, struggling], entries, today);
@@ -451,7 +440,6 @@ describe("buildYearlySummary — archived habits (HAB-17)", () => {
 	it("leaves an archived habit's days out of the best month and the seasonal dip", () => {
 		const summary = scenario(true);
 		const best = summary.insights.find((i) => i.type === "best-month");
-		// Steady alone is ~95% every month; with Struggling it'd be ~65%.
 		expect(
 			best?.type === "best-month" && Math.round((best.cell.rate ?? 0) * 100),
 		).toBeGreaterThanOrEqual(90);
@@ -473,7 +461,6 @@ describe("buildYearlySummary — archived habits (HAB-17)", () => {
 			],
 			today,
 		);
-		// The tile counts the whole history: Gone's run is the longest.
 		expect(summary.longest.habit?.name).toBe("Gone");
 		const best = summary.insights.find((i) => i.type === "best-month");
 		expect(best?.type === "best-month" && best.streak?.habit.name).not.toBe(

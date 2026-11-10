@@ -4,18 +4,16 @@ import { describeFrequency } from "./export-csv";
 import type { ExportModel, ExportSettings } from "./export-data";
 
 /**
- * The JSON layout of a data export (HAB-15), version 2: a lossless copy of what
- * the person owns, nested the way it belongs — each habit carries its own logs,
- * notes, frozen days and reminders. Field by field: docs/how-to/export-format.md.
+ * The JSON layout of a data export, version 2: a lossless copy of what the person owns, nested
+ * the way it belongs: each habit carries its own logs, notes, frozen days and reminders. Field by
+ * field: docs/how-to/export-format.md.
  *
  * - `version` is this layout; `schemaVersion` is the database that wrote it.
- * - Ids are local to the device that wrote the file (`idsAreLocal`): they tie a
- *   habit to its category and reminders inside this file and mean nothing
- *   elsewhere.
- * - `derived` holds what the app can recompute (streaks, status). An importer
- *   ignores it.
- * - `notesIncluded: false` means the person left notes out: no `notes` key on
- *   any habit, and no note text anywhere.
+ * - Ids are local to the device that wrote the file (`idsAreLocal`): they tie a habit to its
+ *   category and reminders inside this file and mean nothing elsewhere.
+ * - `derived` holds what the app can recompute (streaks, status). An importer ignores it.
+ * - `notesIncluded: false` means the person left notes out: no `notes` key on any habit, and no
+ *   note text anywhere.
  */
 
 const EXPORT_JSON_VERSION = 2;
@@ -65,7 +63,6 @@ export type ExportDocumentV2 = {
 			completed: boolean;
 			createdAt: string;
 		}[];
-		/** Absent when `notesIncluded` is false. */
 		notes?: { date: string; note: string; updatedAt: string | null }[];
 		frozenDays: { date: string; createdAt: string }[];
 		reminders: {
@@ -85,7 +82,6 @@ export type ExportDocumentV2 = {
 	}[];
 };
 
-/** The document as a plain object — what `toJson` writes, and what a reader of the file gets back. */
 function buildExportDocument(
 	model: ExportModel,
 	app: { version: string; build: string; schemaVersion: number },

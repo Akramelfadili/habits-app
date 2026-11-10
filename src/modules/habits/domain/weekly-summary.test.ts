@@ -9,11 +9,10 @@ import {
 } from "./weekly-summary";
 
 // Mid-day local, so date-only math never straddles a timezone boundary.
-const monday = new Date(2026, 8, 14, 12); // Monday 14 Sep 2026
+const monday = new Date(2026, 8, 14, 12);
 const sunday = addDays(monday, 6);
 const longAgo = new Date(2025, 0, 1);
 
-/** `dayIndex` 0 = Monday … 6 = Sunday of the 14–20 Sep week. */
 function entry(habitId: number, dayIndex: number, value?: number): Entry {
 	return {
 		id: habitId * 10 + dayIndex,
@@ -46,7 +45,6 @@ describe("buildWeeklySummary", () => {
 			today: sunday,
 		});
 		expect(summary.completed).toBe(9);
-		// Habit 2's unlogged Sunday is still today — not owed yet.
 		expect(summary.scheduled).toBe(13);
 	});
 
@@ -94,7 +92,6 @@ describe("buildWeeklySummary", () => {
 		const wednesday = addDays(monday, 2);
 		const summary = buildWeeklySummary({
 			habits: [daily(1), daily(2)],
-			// Habit 1 logged Mon + today; habit 2 logged Mon, not yet today.
 			entries: [...doneOn(1, [0, 2]), ...doneOn(2, [0])],
 			today: wednesday,
 		});
@@ -114,7 +111,7 @@ describe("buildWeeklySummary", () => {
 	});
 
 	it("doesn't count days before a habit was created", () => {
-		const created = daily(1, { createdAt: new Date(2026, 8, 18, 9) }); // Friday
+		const created = daily(1, { createdAt: new Date(2026, 8, 18, 9) });
 		const summary = buildWeeklySummary({
 			habits: [created],
 			entries: doneOn(1, [4, 5, 6]),
@@ -193,19 +190,18 @@ describe("buildWeeklySummary", () => {
 			});
 			expect(summary.insight).toMatchObject({
 				type: "slipping",
-				// Sunday is today and unlogged, so six days are owed so far.
 				row: { habit: { id: 2 }, completed: 2, scheduled: 6 },
 			});
 		});
 
 		it(`skips a worse habit with fewer than ${SLIPPING_MIN_SCHEDULED_DAYS} scheduled days`, () => {
-			const newHabit = daily(2, { createdAt: new Date(2026, 8, 19, 9) }); // Saturday
+			const newHabit = daily(2, { createdAt: new Date(2026, 8, 19, 9) });
 			const summary = buildWeeklySummary({
 				habits: [daily(1), newHabit],
 				entries: doneOn(1, [0, 1, 2, 3, 4]),
 				today: sunday,
 			});
-			expect(summary.rows[0].habit.id).toBe(2); // 0/2 is still the worst bar
+			expect(summary.rows[0].habit.id).toBe(2);
 			expect(summary.insight).toMatchObject({
 				type: "slipping",
 				row: { habit: { id: 1 } },
@@ -215,7 +211,6 @@ describe("buildWeeklySummary", () => {
 		it("is too early to call when no under-target habit has enough scheduled days", () => {
 			const summary = buildWeeklySummary({
 				habits: [daily(1)],
-				// Missed Monday, done Tuesday, Wednesday (today) still open: 1/2.
 				entries: doneOn(1, [1]),
 				today: addDays(monday, 2),
 			});
@@ -253,9 +248,7 @@ describe("buildWeeklySummary", () => {
 				entries: [...doneOn(1, [0]), ...doneOn(2, [0])],
 				today: monday,
 			});
-			// The numbers are still honest — every owed day so far was done…
 			expect(summary.isPerfect).toBe(true);
-			// …but one day isn't a week to judge, either way.
 			expect(summary.insight).toEqual({ type: "too-early" });
 		});
 
@@ -286,9 +279,8 @@ describe("buildWeeklySummary", () => {
 	});
 });
 
-describe("archive pauses (HAB-20)", () => {
+describe("archive pauses", () => {
 	it("reads a restored habit's paused days as paused — not owed, so not missed", () => {
-		// Archived Wed 16 → restored Sat 19: the pause covers Wed–Fri.
 		const habit = daily(1, {
 			pauses: [{ from: "2026-09-16", to: "2026-09-18" }],
 		});
@@ -368,7 +360,6 @@ describe("buildWeeklySummary and freezes (D14)", () => {
 			today: sunday,
 		};
 		const without = buildWeeklySummary(input);
-		// Sunday (today) is still open, so six days are counted.
 		expect(without).toMatchObject({ completed: 4, scheduled: 6 });
 
 		const withFreeze = buildWeeklySummary({

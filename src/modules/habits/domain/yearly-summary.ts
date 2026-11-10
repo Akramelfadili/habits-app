@@ -29,39 +29,34 @@ import {
 } from "./yearly-insights";
 
 /**
- * Yearly Summary's math (HAB-17) — pure functions on top of Monthly's: the
- * same `outcomesFor` decides what counted (every "was this day owed" question
- * goes through the habit's FrequencyStrategy), and the same `historyStart`
- * decides when history began, so Monthly and Yearly can never disagree.
+ * Yearly Summary's math: pure functions on top of Monthly's: the same `outcomesFor` decides
+ * what counted (every "was this day owed" question goes through the habit's FrequencyStrategy),
+ * and the same `historyStart` decides when history began, so Monthly and Yearly can never
+ * disagree.
  *
- * The year is the calendar year of "today" ("2026 so far"); all twelve month
- * slots always exist so the shape of the year is visible from day one. A slot
- * is one of: before the habit/history started, still ahead, started but with
- * nothing counted (rest days, all frozen), or counted.
+ * The year is the calendar year of "today" ("2026 so far"); all twelve month slots always exist
+ * so the shape of the year is visible from day one. A slot is one of: before the habit/history
+ * started, still ahead, started but with nothing counted (rest days, all frozen), or counted.
  */
 
-/** The Yearly screen unlocks this many calendar months after history began. */
 export const YEAR_UNLOCK_MONTHS = 3;
 
 export function yearWindowFor(date: Date): MonthWindow {
 	return { start: startOfYear(date), end: startOfDay(endOfYear(date)) };
 }
 
-/** Entries are needed from the Monday-aligned start of the year to the end of its last week (a per-week habit's week is judged whole). */
 export function yearEntryRange(year: MonthWindow): MonthWindow {
 	return weekAlignedSpan(year.start, year.end);
 }
 
 export type YearUnlock = {
-	/** Days of history before today, capped at `totalDays`. */
 	trackedDays: number;
-	/** Days from the first day to the unlock date — it varies with the calendar. */
 	totalDays: number;
 	unlockDate: Date;
 	isUnlocked: boolean;
 };
 
-/** "Under three months of history" (C7): `addMonths` from the first day, so a 31st clamps (31 Aug → 30 Nov). */
+/** "Under three months of history": `addMonths` from the first day, so a 31st clamps (31 Aug → 30 Nov). */
 export function yearUnlock(firstDay: Date, today: Date): YearUnlock {
 	const todayStart = startOfDay(today);
 	const unlockDate = addMonths(firstDay, YEAR_UNLOCK_MONTHS);
@@ -77,16 +72,12 @@ export function yearUnlock(firstDay: Date, today: Date): YearUnlock {
 
 export type YearMonthKind = "before-start" | "future" | "none" | "counted";
 
-/** One of the year's twelve slots — for all habits together or for one habit. */
 export type YearMonthCell = {
-	/** First day of the month. */
 	month: Date;
 	kind: YearMonthKind;
-	/** The month today falls in — still running, so not judged. */
 	current: boolean;
 	completed: number;
 	scheduled: number;
-	/** 0–1; null unless `kind` is "counted". */
 	rate: number | null;
 };
 
@@ -95,38 +86,29 @@ export type YearlyHabitRow = {
 	cells: YearMonthCell[];
 	completed: number;
 	scheduled: number;
-	/** 0–1; rows only exist for habits with at least one counted day. */
 	rate: number;
 };
 
 export type YearlyLongest = {
 	days: number;
-	/** The run's last day, or null when there's been no run. */
 	endedOn: Date | null;
 	habit: Habit | null;
 };
 
 export type YearlySummary = {
 	year: MonthWindow;
-	/** Completed scheduled days — "entries". */
 	logged: number;
 	scheduled: number;
-	/** null before anything is counted. */
 	rate: number | null;
 	longest: YearlyLongest;
-	/** The twelve slots, all habits together. */
 	months: YearMonthCell[];
-	/** The best finished month, for the chart's header; null until two have finished. */
 	best: YearMonthCell | null;
-	/** Creation order. */
 	rows: YearlyHabitRow[];
-	/** Ranked, never more than MAX_YEARLY_INSIGHTS; from active habits only, empty when none are active. */
 	insights: YearlyInsight[];
 };
 
 type YearlySummaryInput = {
 	habits: readonly Habit[];
-	/** Covers `yearEntryRange(year)`; any habit. */
 	entries: readonly Entry[];
 	frozenDays: readonly FrozenDay[];
 	today: Date;

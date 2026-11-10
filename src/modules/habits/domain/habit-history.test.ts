@@ -20,7 +20,7 @@ import {
 } from "./habit-history";
 
 // Mid-day local, so date-only math never straddles a timezone boundary.
-const today = new Date(2026, 8, 23, 12); // Wednesday 23 Sep 2026
+const today = new Date(2026, 8, 23, 12);
 const dayString = (daysAgo: number) =>
 	format(subDays(today, daysAgo), "yyyy-MM-dd");
 
@@ -77,7 +77,6 @@ describe("currentStreakAsOf", () => {
 
 describe("calculateLongestStreak", () => {
 	it("finds the longest past run and the day it ended", () => {
-		// Run of 4 ending 10 days ago, gap, then the current run of 2.
 		const entries = [
 			entry(13),
 			entry(12),
@@ -123,13 +122,12 @@ describe("calculateLongestStreak", () => {
 
 describe("calculateCompletionRate", () => {
 	it("counts only scheduled days in the denominator", () => {
-		// Mon/Wed/Fri habit over the last 3 full weeks' worth of creation.
 		const monWedFri = makeHabit({
 			frequency: weekdaysFrequency(1, 3, 5),
-			createdAt: subDays(today, 20), // Thu 3 Sep
+			createdAt: subDays(today, 20),
 		});
 		// 3 Sep → 23 Sep scheduled: 4,7,9,11,14,16,18,21,23 — today (23rd) unlogged so excluded → 8.
-		const entries = [entry(19), entry(16), entry(14)]; // 4th, 7th, 9th
+		const entries = [entry(19), entry(16), entry(14)];
 		const rate = calculateCompletionRate({
 			frozenDates: noFreezes,
 			habit: monWedFri,
@@ -168,7 +166,7 @@ describe("calculateCompletionRate", () => {
 				entries,
 				today,
 			}).scheduled,
-		).toBe(89); // 90-day window, today unlogged.
+		).toBe(89);
 	});
 
 	it("has no fraction for a brand-new habit with nothing scheduled yet", () => {
@@ -208,7 +206,6 @@ describe("calculateCompletionRate", () => {
 	});
 
 	it("leaves a frozen day out of both sides, not counted as missed (D14)", () => {
-		// 10 days old, logged 8; the 2 misses at 3 and 4 days ago — one of them frozen.
 		const young = makeHabit({
 			frequency: dailyFrequency(),
 			createdAt: subDays(today, 9),
@@ -311,7 +308,6 @@ describe("buildHeatmapWeeks", () => {
 			createdAt: longAgo,
 		});
 		const grid = weeks({ habit: weekdaysOnly });
-		// 20 Sep 2026 was a Sunday.
 		expect(find(grid, 3)?.status).toBe("not-scheduled");
 		expect(find(grid, 2)?.status).toBe("missed");
 	});
@@ -329,7 +325,6 @@ describe("buildHeatmapWeeks", () => {
 		const statuses = new Set(grid.flat().map((day) => day.status));
 		expect([...statuses].sort()).toEqual(["before-start", "future", "pending"]);
 		expect(find(grid, 1)?.status).toBe("before-start");
-		// Days before the habit existed aren't a way into retro logging.
 		expect(find(grid, 1)?.selectable).toBe(false);
 		expect(find(grid, 0)?.selectable).toBe(true);
 	});
@@ -362,8 +357,6 @@ describe("habitHistoryRows (D2)", () => {
 			[],
 			10_000,
 		);
-		// Every day of the window is a missed day of a started habit; the days
-		// before it are never looked at.
 		expect(rows.length).toBeLessThanOrEqual(367);
 		expect(rows.at(-1)?.date).toBe(dayString(366));
 	});
@@ -390,7 +383,6 @@ describe("habitHistoryRows (D2)", () => {
 			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
-		// Wed 23 Sep: today. 20 Sep (Sun) and 19 Sep (Sat) are not due.
 		const rows = habitHistoryRows(
 			history({ habit: weekdays, entries: [entry(4)] }),
 			[],
@@ -409,7 +401,6 @@ describe("habitHistoryRows (D2)", () => {
 			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
-		// 20 Sep 2026 was a Sunday, three days ago.
 		const rows = habitHistoryRows(
 			history({ habit: weekdays, entries: [entry(3, 5), entry(4)] }),
 			[],
@@ -451,7 +442,6 @@ describe("habitHistoryRows (D2)", () => {
 			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
-		// 20 Sep 2026 was a Sunday: not due, nothing logged — only its note speaks.
 		const rows = habitHistoryRows(
 			history({ habit: weekdays, entries: [entry(4)] }),
 			[note(3, "Rest day")],
@@ -468,7 +458,7 @@ describe("habitHistoryRows (D2)", () => {
 		expect(rows).toHaveLength(3);
 	});
 
-	it("never lists a paused day as missed (HAB-20)", () => {
+	it("never lists a paused day as missed", () => {
 		const restored = makeHabit({
 			createdAt: longAgo,
 			pauses: [{ from: dayString(6), to: dayString(2) }],
@@ -496,7 +486,6 @@ describe("completionRateDelta (D1's '+N pts')", () => {
 			.map((daysAgo) => entry(daysAgo));
 
 	it("is the 90-day rate minus the rate over the 90 days before, in whole points", () => {
-		// Days 0–89: every day. Days 90–179: every other day → 50%.
 		const entries = [
 			...logAll(89, 0),
 			...logAll(179, 90).filter((e) => Number(e.date.slice(-2)) % 2 === 0),
@@ -576,9 +565,7 @@ describe("completionRateDelta (D1's '+N pts')", () => {
 	});
 });
 
-describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
-	// Logged 10 days straight, archived 5 days ago (after that day's log),
-	// nothing logged while archived.
+describe("streaks across an archive", () => {
 	const loggedRun = Array.from({ length: 10 }, (_, index) => entry(index + 5));
 
 	it("freezes the streak at its archived value while archived", () => {
@@ -597,22 +584,18 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 		).toBe(10);
 	});
 
-	it("starts fresh once restored (HAB-20 over HAB-13): 0 until the next completed log", () => {
+	it("starts fresh once restored: 0 until the next completed log", () => {
 		const restored = makeHabit({
 			frequency: dailyFrequency(),
 			createdAt: longAgo,
-			// Archived 5 days ago, restored today (the pause ends the day before).
 			pauses: [{ from: dayString(5), to: dayString(1) }],
 		});
 		const history = { habit: restored, frozenDates: noFreezes, today };
 
-		// The 10-day run before the archive is not carried across the gap...
 		expect(currentStreakAsOf({ ...history, entries: loggedRun })).toBe(0);
-		// ...the next completed log starts a new streak at 1...
 		expect(
 			currentStreakAsOf({ ...history, entries: [entry(0), ...loggedRun] }),
 		).toBe(1);
-		// ...and the longest streak is untouched.
 		expect(
 			calculateLongestStreak({ ...history, entries: loggedRun }).days,
 		).toBe(10);
@@ -624,7 +607,6 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 			createdAt: longAgo,
 			pauses: [{ from: dayString(12), to: dayString(5) }],
 		});
-		// 3 days before the archive, 4 after the restore (days 4..1) → 4, not 7.
 		const entries = [14, 13, 12, 4, 3, 2, 1].map((n) => entry(n));
 		const result = calculateLongestStreak({
 			habit: restored,
@@ -652,12 +634,10 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 				{ from: dayString(10), to: dayString(6) },
 			],
 		});
-		// Restored 5 days ago (day after the last pause ends); logged since.
 		const entries = [5, 4, 3, 2, 1, 0].map((n) => entry(n));
 		expect(
 			currentStreakAsOf({ habit, entries, frozenDates: noFreezes, today }),
 		).toBe(6);
-		// A run that straddles the older restore is cut there too.
 		expect(
 			calculateLongestStreak({
 				habit,
@@ -697,7 +677,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 	});
 });
 
-describe("paused days (HAB-20)", () => {
+describe("paused days", () => {
 	const restored = makeHabit({
 		frequency: dailyFrequency(),
 		createdAt: longAgo,
@@ -724,7 +704,6 @@ describe("paused days (HAB-20)", () => {
 		});
 		expect(statusOn(weeks, 4)).toBe("paused");
 		expect(statusOn(weeks, 6)).toBe("missed");
-		// The restore day is an ordinary day again: yesterday unlogged is missed.
 		expect(statusOn(weeks, 1)).toBe("missed");
 	});
 
@@ -752,7 +731,6 @@ describe("paused days (HAB-20)", () => {
 	});
 
 	it("ends an archived habit's 90-day window the day before it was archived", () => {
-		// Logged every day for the 20 days before the archive.
 		const entries = Array.from({ length: 20 }, (_, index) => entry(index + 6));
 		const young = makeHabit({
 			frequency: dailyFrequency(),
@@ -787,8 +765,7 @@ describe("paused days (HAB-20)", () => {
 	});
 });
 
-describe("streakResetInfo (HAB-20 / D6)", () => {
-	// Logged days 4..2 ago, missed yesterday, logged today — pool empty.
+describe("streakResetInfo", () => {
 	const entries = [entry(4), entry(3), entry(2), entry(0)];
 	const history = { habit: daily, entries, frozenDates: noFreezes, today };
 
@@ -813,7 +790,6 @@ describe("streakResetInfo (HAB-20 / D6)", () => {
 	});
 
 	it("only speaks in the month the reset happened", () => {
-		// Missed 25 Aug, viewed 3 Sep.
 		const early = new Date(2026, 8, 3, 12);
 		const earlyEntries = [27, 26, 25].map((daysAgo) => ({
 			...entry(daysAgo),

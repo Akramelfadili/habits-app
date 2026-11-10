@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { AccessibilityInfo, Platform } from "react-native";
 import { log } from "@/lib/logger/logger";
 
-/** True while VoiceOver / TalkBack is running, and live as it changes. */
 export function useScreenReader(): boolean {
 	const [enabled, setEnabled] = useState(false);
 

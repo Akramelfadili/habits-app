@@ -16,14 +16,13 @@ import { buildYearMap } from "./year-map";
 import { yearWindowFor } from "./yearly-summary";
 
 /**
- * The date maths in every zone of the matrix (G-01), on the days each zone
- * changes its clocks (read from Intl, never typed from memory) and the days
- * either side, plus the year's first and last day. America/Sao_Paulo has had
- * no DST since 2019: it brings a negative offset without DST, and its 2018
- * changes (at midnight, so that midnight never happened) as a history probe.
+ * The date maths in every zone of the matrix, on the days each zone changes its clocks (read from
+ * Intl, never typed from memory) and the days either side, plus the year's first and last day.
+ * America/Sao_Paulo has had no DST since 2019: it brings a negative offset without DST, and its
+ * 2018 changes (at midnight, so that midnight never happened) as a history probe.
  *
- * Expected keys come from a zone-free oracle (UTC arithmetic on the strings),
- * not from the date-fns calls under test.
+ * Expected keys come from a zone-free oracle (UTC arithmetic on the strings), not from the
+ * date-fns calls under test.
  */
 
 const DAY_MS = 86_400_000;
@@ -36,7 +35,6 @@ function shift(key: string, days: number): string {
 		.slice(0, 10);
 }
 
-/** 1 = Monday … 7 = Sunday, from the string alone. */
 function isoWeekday(key: string): IsoWeekday {
 	const [y, m, d] = key.split("-").map(Number);
 	return (((new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7) +

@@ -4,13 +4,15 @@ import type { Entry, Habit } from "../types";
 import { isEntryComplete } from "./streaks";
 
 /**
- * Off-schedule logs (HAB-18). Nothing is stored to mark one: an entry is a
- * bonus when its day wasn't owed by the habit's FrequencyStrategy. Streaks,
- * rates and perfect days only ever walk *scheduled* days, so a bonus entry
- * can't reach them — it stays informational.
+ * Off-schedule logs. Nothing is stored to mark one: an entry is a bonus when its day wasn't
+ * owed by the habit's FrequencyStrategy. Streaks, rates and perfect days only ever walk
+ * *scheduled* days, so a bonus entry can't reach them; it stays informational.
  */
 
-/** Habits the rest-day picker offers: a "don't do X" habit can't be logged as a bonus, and an archived one is out of every active list (HAB-13). */
+/**
+ * Habits the rest-day picker offers: a "don't do X" habit can't be logged as a bonus, and an
+ * archived one is out of every active list.
+ */
 export function offScheduleCandidates(habits: readonly Habit[]): Habit[] {
 	return habits.filter(
 		(habit) => habit.direction !== "break" && habit.archivedAt === null,

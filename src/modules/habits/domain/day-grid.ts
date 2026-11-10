@@ -17,14 +17,12 @@ import {
 } from "./day-status";
 
 /**
- * The shared grid behind every Progress range (V3-3a): each habit's cells over
- * a run of days, classified once (`day-status.ts`), then summed per day. Rates,
- * the week matrix, the month calendar and the year map all read it, so none of
- * them can disagree about what a day was. Entries and freezes are grouped by
- * habit once; nothing scans them per day.
+ * The shared grid behind every Progress range: each habit's cells over a run of days, classified
+ * once (`day-status.ts`), then summed per day. Rates, the week matrix, the month calendar and the
+ * year map all read it, so none of them can disagree about what a day was. Entries and freezes
+ * are grouped by habit once; nothing scans them per day.
  */
 
-/** Every day from `start` to `end`, inclusive, at local midnight. */
 export function daysIn(start: Date, end: Date): Date[] {
 	const days: Date[] = [];
 	for (
@@ -49,7 +47,6 @@ export function groupByHabit<T extends { habitId: number }>(
 	return groups;
 }
 
-/** One habit's cells, index-aligned with the `dates` they were built for. */
 export type HabitCells = { habit: Habit; cells: HabitDayCell[] };
 
 type GridInput = {
@@ -100,19 +97,13 @@ const STATUSES: readonly CellStatus[] = [
 	"today",
 ];
 
-/** One calendar day across every habit. */
 export type DayAggregate = {
 	date: Date;
-	/** "yyyy-MM-dd". */
 	key: string;
 	isToday: boolean;
-	/** done / due / frozen / bonus under the shared rate rule. */
 	tally: Tally;
-	/** How many habits are in each status that day. */
 	counts: Record<CellStatus, number>;
-	/** 0–3 by done ÷ due; null when nothing was due. */
 	level: DayLevel | null;
-	/** Every due habit done, none frozen. */
 	perfect: boolean;
 };
 
@@ -146,7 +137,7 @@ export function aggregateDays(
 	});
 }
 
-/** One habit's slice of the data for the "one habit" variants (P5, P10, P15); all habits when `habitId` is null. */
+/** One habit's slice of the data for the one-habit variants; all habits when `habitId` is null. */
 export function scopeHabits(
 	habits: readonly Habit[],
 	habitId: number | null | undefined,

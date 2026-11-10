@@ -10,10 +10,9 @@ import { buildRangeSummary, rangeEntrySpan } from "./range-summary";
 import { buildYearlySummary, yearWindowFor } from "./yearly-summary";
 
 /**
- * Progress's range summary must agree with the Monthly and Yearly summaries it
- * sits beside until V3-3b replaces their screens: same pass over the same
- * logs, same numbers. A seeded log with every frequency type, quantity habits,
- * a Break habit, bonus logs and freezes.
+ * Progress's range summary must agree with the Monthly and Yearly summaries it sits beside until
+ * their screens are replaced: same pass over the same logs, same numbers. A seeded log with every
+ * frequency type, quantity habits, a Break habit, bonus logs and freezes.
  */
 const today = new Date(2026, 9, 21, 12);
 const start = new Date(2025, 5, 1);

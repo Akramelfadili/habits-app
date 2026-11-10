@@ -64,7 +64,7 @@ describe("isEntryComplete", () => {
 	});
 });
 
-describe("calculateCurrentStreak across the end of February (G-03)", () => {
+describe("calculateCurrentStreak across the end of February", () => {
 	const keysFrom = (from: Date, to: Date) => {
 		const keys: string[] = [];
 		for (let d = from; d <= to; d = addDays(d, 1)) keys.push(toDayKey(d));
@@ -72,7 +72,6 @@ describe("calculateCurrentStreak across the end of February (G-03)", () => {
 	};
 
 	it.each([
-		// year, days from 20 Feb to 1 Mar inclusive
 		[2028, 11],
 		[2027, 10],
 	])(
@@ -126,7 +125,7 @@ describe("calculateCurrentStreak", () => {
 	});
 
 	it("stops at the first due-but-missed day", () => {
-		const entries = [entry(1, "2026-09-14"), entry(1, "2026-09-12")]; // 09-13 missing
+		const entries = [entry(1, "2026-09-14"), entry(1, "2026-09-12")];
 		const streak = calculateCurrentStreak(
 			dailyHabit,
 			entries,
@@ -137,7 +136,7 @@ describe("calculateCurrentStreak", () => {
 	});
 
 	it("counts a frozen day as if it were completed", () => {
-		const entries = [entry(1, "2026-09-14"), entry(1, "2026-09-12")]; // 09-13 missing, but frozen
+		const entries = [entry(1, "2026-09-14"), entry(1, "2026-09-12")];
 		const streak = calculateCurrentStreak(
 			dailyHabit,
 			entries,
@@ -150,10 +149,9 @@ describe("calculateCurrentStreak", () => {
 	it("skips non-due days without breaking the streak", () => {
 		const weekdaysHabit = makeHabit({
 			id: 4,
-			frequency: weekdays(1, 2, 3, 4, 5), // Mon-Fri
+			frequency: weekdays(1, 2, 3, 4, 5),
 			createdAt: HABIT_CREATED,
 		});
-		// Fri 09-11, Mon 09-14 completed; Sat/Sun between aren't due, so they don't break it.
 		const entries = [entry(4, "2026-09-11"), entry(4, "2026-09-14")];
 		const streak = calculateCurrentStreak(
 			weekdaysHabit,
@@ -170,8 +168,6 @@ describe("calculateCurrentStreak", () => {
 			frequency: perWeek(3),
 			createdAt: HABIT_CREATED,
 		});
-		// Mon/Wed/Fri of two consecutive weeks (09-07 and 09-14 are Mondays) —
-		// the Tue/Thu gaps were never owed once each week's target was met.
 		const entries = [
 			"2026-09-07",
 			"2026-09-09",
@@ -206,9 +202,8 @@ describe("calculateCurrentStreak", () => {
 	});
 
 	it("recalculates forward from a retroactively-edited day, not off a stored counter", () => {
-		// Same entries as the "stops at the first missed day" case, plus 09-13
-		// added retroactively (HAB-10) — recomputing must extend the streak,
-		// since nothing is ever incremented and stored.
+		// Same entries as the "stops at the first missed day" case, plus 09-13 added retroactively:
+		// recomputing must extend the streak, since nothing is ever incremented and stored.
 		const entries = [
 			entry(1, "2026-09-12"),
 			entry(1, "2026-09-13"),
@@ -225,15 +220,11 @@ describe("calculateCurrentStreak", () => {
 });
 
 describe("getStreakAtRisk", () => {
-	const today = new Date(2026, 8, 16, 12); // Wednesday
+	const today = new Date(2026, 8, 16, 12);
 	const yesterday = "2026-09-15";
 
 	it("flags a habit due yesterday, not completed, with a streak at stake", () => {
-		const entries = [
-			entry(1, "2026-09-13"),
-			entry(1, "2026-09-14"),
-			// 09-15 (yesterday) missing.
-		];
+		const entries = [entry(1, "2026-09-13"), entry(1, "2026-09-14")];
 		const result = getStreakAtRisk(dailyHabit, entries, new Set(), today);
 		expect(result).toEqual({
 			// Local-midnight of "yesterday," same as the implementation computes
@@ -250,7 +241,6 @@ describe("getStreakAtRisk", () => {
 	});
 
 	it("does not depend on the pool: with none left the habit is still at risk (SR3)", () => {
-		// getStreakAtRisk no longer takes the pool, so an empty one cannot hide the state.
 		const entries = [entry(1, "2026-09-14")];
 		expect(
 			getStreakAtRisk(dailyHabit, entries, new Set(), today),
@@ -276,7 +266,7 @@ describe("getStreakAtRisk", () => {
 	it("returns null when yesterday wasn't due (rest day / off-schedule)", () => {
 		const wednesdayOnly = makeHabit({
 			id: 6,
-			frequency: weekdays(3), // Wednesday only — yesterday was Tuesday.
+			frequency: weekdays(3),
 			createdAt: HABIT_CREATED,
 		});
 		const entries = [entry(6, "2026-09-09")];
@@ -285,7 +275,7 @@ describe("getStreakAtRisk", () => {
 	});
 });
 
-describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-33)", () => {
+describe("getStreakAtRisk: × per week habits are never at risk by day", () => {
 	const threePerWeek = makeHabit({
 		id: 8,
 		frequency: perWeek(3),
@@ -299,7 +289,6 @@ describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-3
 		expect(
 			getStreakAtRisk(threePerWeek, entries, new Set(), FRIDAY),
 		).toBeNull();
-		// The streak itself is unchanged by the gate.
 		expect(
 			calculateCurrentStreak(threePerWeek, entries, new Set(), FRIDAY),
 		).toBe(1);
@@ -327,7 +316,6 @@ describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-3
 			frequency: weekdays(1, 3),
 			createdAt: HABIT_CREATED,
 		});
-		// Done Wed 14 Oct; missed Mon 19 Oct, viewed Tue 20 Oct.
 		const entries = [entry(9, "2026-10-12"), entry(9, "2026-10-14")];
 		expect(
 			getStreakAtRisk(
@@ -340,8 +328,7 @@ describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-3
 	});
 });
 
-describe("after a restore (HAB-20)", () => {
-	// Logged 1–10 Sep, archived 11 Sep, restored 21 Sep (pause 11–20 Sep).
+describe("after a restore", () => {
 	const restored = makeHabit({
 		id: 1,
 		frequency: daily(),
@@ -382,7 +369,6 @@ describe("after a restore (HAB-20)", () => {
 
 	it("getStreakAtRisk works normally once a new streak exists", () => {
 		const entries = [...before, entry(1, "2026-09-21")];
-		// Yesterday (22nd) missed after a one-day new streak: a freeze can save it.
 		expect(
 			getStreakAtRisk(restored, entries, noFreezes, new Date(2026, 8, 23)),
 		).toMatchObject({ currentStreak: 1 });

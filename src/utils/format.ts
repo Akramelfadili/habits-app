@@ -1,24 +1,20 @@
 import { format, isSameYear } from "date-fns";
 
 /**
- * The app's one home for user-facing counts and dates, so copy can't drift
- * (audit A5-16/17/18, A8-10). British English throughout (dates are en-GB).
+ * The app's one home for user-facing counts and dates, so copy can't drift. British English
+ * throughout (dates are en-GB).
  */
 
-/** Spaced en dash between the two ends of a date range: "3 Mar – 16 Sep". */
 const RANGE_DASH = " – ";
 
-/** 1612 → "1,612" — independent of the device's locale data. */
 export function formatCount(value: number): string {
 	return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-/** The bare noun for a count: `noun(1, "day")` → "day", `noun(2, "day")` → "days". */
 export function noun(count: number, singular: string, plural?: string): string {
 	return count === 1 ? singular : (plural ?? `${singular}s`);
 }
 
-/** "1 day", "2 days", "1,284 entries" — the count and its noun together. */
 export function pluralise(
 	count: number,
 	singular: string,
@@ -27,12 +23,10 @@ export function pluralise(
 	return `${formatCount(count)} ${noun(count, singular, plural)}`;
 }
 
-/** "3 March" — full month, for headings and sentences. */
 export function formatDayMonth(day: Date): string {
 	return format(day, "d MMMM");
 }
 
-/** "3 Mar" — short month, for subtitles and ranges. */
 export function formatDayMonthShort(day: Date): string {
 	return format(day, "d MMM");
 }

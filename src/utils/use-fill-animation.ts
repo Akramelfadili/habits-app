@@ -4,9 +4,9 @@ import { motion } from "@/theme/theme";
 import { useReducedMotion } from "./use-reduced-motion";
 
 /**
- * A 0–1 value that eases to `fraction` over F-07's "fill" token (450 ms,
- * cubic-bezier(.22, 1, .36, 1)) — the one motion for bars, rings and columns.
- * With Reduce Motion it jumps straight to the value.
+ * A 0–1 value that eases to `fraction` over the "fill" motion token (450 ms,
+ * cubic-bezier(.22, 1, .36, 1)): the one motion for bars, rings and columns. With Reduce Motion it
+ * jumps straight to the value.
  */
 export function useFillAnimation(fraction: number): Animated.Value {
 	const reduceMotion = useReducedMotion();
