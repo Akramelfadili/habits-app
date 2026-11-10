@@ -198,10 +198,11 @@ describe("app.config", () => {
 			}
 		});
 
-		it("holds no store id or credentials", () => {
+		it("holds no Apple login or signing material (ascAppId, a public id, may be added)", () => {
 			const text = JSON.stringify(eas);
-			expect(eas.submit).toBeUndefined();
-			expect(text).not.toMatch(/ascAppId|appleId|appleTeamId|\.p8|\.p12/);
+			expect(text).not.toMatch(
+				/appleId|appleTeamId|ascApiKey|keystore|\.p8|\.p12|\.mobileprovision|password|secret/i,
+			);
 		});
 	});
 
