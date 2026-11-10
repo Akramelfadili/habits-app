@@ -3,6 +3,7 @@ import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repo
 import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME_SETTING_KEY,
+	HIDE_HABIT_NAMES_SETTING_KEY,
 	SEEN_FIRST_RUN_SETTING_KEY,
 } from "../constants";
 import {
@@ -43,6 +44,7 @@ export function useExportQueries(options: ExportOptions): {
 			EVENING_REVIEW_TIME_SETTING_KEY,
 		),
 		[SEEN_FIRST_RUN_SETTING_KEY]: useAppSetting(SEEN_FIRST_RUN_SETTING_KEY),
+		[HIDE_HABIT_NAMES_SETTING_KEY]: useAppSetting(HIDE_HABIT_NAMES_SETTING_KEY),
 	};
 	const source = {
 		habits,

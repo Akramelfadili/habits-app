@@ -1,7 +1,10 @@
 import { setThemePreference } from "@/theme/theme-preference";
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
-import { setEveningReviewTime } from "../services/reminder-service";
+import {
+	setEveningReviewTime,
+	setHideHabitNames,
+} from "../services/reminder-service";
 import { toggleEveningReview } from "./use-reminder-actions";
 
 /**
@@ -26,7 +29,13 @@ export function useSettingsActions() {
 		failure: failureMessage("save", "the Evening review time"),
 	});
 
+	const hideNames = useAsyncAction(setHideHabitNames, {
+		scope: "settings",
+		failure: failureMessage("update", "your reminders"),
+	});
+
 	return {
+		setHideHabitNames: hideNames.run,
 		setThemePreference: appearance.run,
 		setEveningReview: eveningReview.run,
 		setEveningReviewTime: eveningTime.run,

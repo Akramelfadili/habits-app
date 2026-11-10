@@ -59,6 +59,7 @@ jest.mock("../repositories/reminder-repository", () => ({
 	deleteReminder: jest.fn(),
 }));
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
+	getSetting: async () => null,
 	setSetting: jest.fn(),
 }));
 

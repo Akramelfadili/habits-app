@@ -9,6 +9,7 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 }));
 
 type Queries = {
+	hideHabitNames: boolean;
 	themePreference: "light" | "dark" | "system";
 	resolvedScheme: "light" | "dark";
 	eveningReviewEnabled: boolean;
@@ -20,6 +21,7 @@ type Queries = {
 	about: { version: string; build: string; schemaVersion: number };
 };
 const base = (): Queries => ({
+	hideHabitNames: true,
 	themePreference: "system",
 	resolvedScheme: "light",
 	eveningReviewEnabled: false,
@@ -33,6 +35,10 @@ const base = (): Queries => ({
 let mockQueries: Queries = base();
 jest.mock("../hooks/use-settings-queries", () => ({
 	useSettingsQueries: () => mockQueries,
+}));
+const mockSetHideHabitNames = jest.fn();
+jest.mock("../hooks/use-settings-actions", () => ({
+	useSettingsActions: () => ({ setHideHabitNames: mockSetHideHabitNames }),
 }));
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
@@ -111,5 +117,41 @@ describe("SettingsNotificationsScreen (SY6)", () => {
 		mockQueries.notificationPermission = "undetermined";
 		await render(<SettingsNotificationsScreen />);
 		expect(screen.getByText("Not asked yet")).toBeTruthy();
+	});
+	describe("Hide habit names (E-01)", () => {
+		it.each([
+			["allowed", () => {}],
+			[
+				"off",
+				() => {
+					mockQueries.notificationsDenied = true;
+					mockQueries.notificationPermission = "denied";
+				},
+			],
+		])(
+			"shows the switch on by default, with its hint, when notifications are %s",
+			async (_, arrange) => {
+				arrange();
+				await render(<SettingsNotificationsScreen />);
+				const toggle = screen.getByRole("switch", {
+					name: /^Hide habit names/,
+				});
+				expect(toggle.props.accessibilityState.checked).toBe(true);
+				expect(
+					screen.getByText(
+						"The lock screen can also hide previews: iOS Settings › Notifications › Show Previews.",
+					),
+				).toBeTruthy();
+			},
+		);
+
+		it("reads its state aloud and flips it with one tap", async () => {
+			mockQueries.hideHabitNames = false;
+			await render(<SettingsNotificationsScreen />);
+			const toggle = screen.getByRole("switch", { name: /^Hide habit names/ });
+			expect(toggle.props.accessibilityState.checked).toBe(false);
+			await fireEvent.press(toggle);
+			expect(mockSetHideHabitNames).toHaveBeenCalledWith(true);
+		});
 	});
 });

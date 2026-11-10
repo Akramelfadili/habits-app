@@ -43,6 +43,7 @@ import {
 	addReminder,
 	cancelHabitNotifications,
 	editReminder,
+	getHideHabitNames,
 	habitNotificationPrefix,
 	ReminderCapError,
 	refreshEveningReview,
@@ -50,6 +51,7 @@ import {
 	restoreReminder,
 	setEveningReview,
 	setEveningReviewTime,
+	setHideHabitNames,
 	syncHabitReminders,
 	unscheduledReminderDays,
 	updateHabitAndSyncReminders,
@@ -647,6 +649,74 @@ describe("reminder-service", () => {
 			});
 			await refreshEveningReview();
 			expect(scheduledKeys()).toEqual(["evening-review:daily:0615"]);
+		});
+	});
+	describe("Hide habit names (E-01)", () => {
+		const store = (values: Record<string, string>) =>
+			mockGetSetting.mockImplementation(
+				async (key: string) => values[key] ?? null,
+			);
+		const titles = () => [...fake.scheduled.values()].map((s) => s.title);
+
+		beforeEach(() => {
+			mockGetHabitReminders.mockResolvedValue([reminder({ habitId: 3 })]);
+			mockGetAllHabits.mockResolvedValue([weekdayHabit]);
+		});
+
+		it("is on when the setting was never stored", async () => {
+			store({});
+			expect(await getHideHabitNames()).toBe(true);
+			await syncHabitReminders(weekdayHabit);
+			expect(new Set(titles())).toEqual(new Set(["Habit reminder"]));
+		});
+
+		it("schedules with the generic title and the usual fixed body copy when on", async () => {
+			store({ "habits.hideHabitNames": "true" });
+			await syncHabitReminders(weekdayHabit);
+			expect(titles()).not.toContain("Meditate");
+			expect(titles()).toEqual(Array(titles().length).fill("Habit reminder"));
+		});
+
+		it("keeps today's behaviour, the habit name, when off", async () => {
+			store({ "habits.hideHabitNames": "false" });
+			expect(await getHideHabitNames()).toBe(false);
+			await syncHabitReminders(weekdayHabit);
+			expect(new Set(titles())).toEqual(new Set(["Meditate"]));
+		});
+
+		it("flipping it reschedules every reminder under the new title and records it", async () => {
+			store({ "habits.hideHabitNames": "false" });
+			await syncHabitReminders(weekdayHabit);
+			expect(new Set(titles())).toEqual(new Set(["Meditate"]));
+			const before = scheduledKeys();
+
+			store({});
+			await setHideHabitNames(true);
+
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				"habits.hideHabitNames",
+				"true",
+			);
+			expect(new Set(titles())).toEqual(new Set(["Habit reminder"]));
+			expect(scheduledKeys()).toEqual(before);
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				"habits.reminderTitlesHidden",
+				"true",
+			);
+		});
+
+		it("does not record the change as applied when a habit could not be rescheduled", async () => {
+			store({});
+			fake.failScheduleOn.add(1);
+			await setHideHabitNames(false);
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				"habits.hideHabitNames",
+				"false",
+			);
+			expect(mockSetSetting).not.toHaveBeenCalledWith(
+				"habits.reminderTitlesHidden",
+				expect.anything(),
+			);
 		});
 	});
 });

@@ -1310,6 +1310,11 @@ export const settingsCopy = {
 		title: "Notifications",
 		status: "Notifications",
 		note: "Change this in iOS Settings.",
+		/** E-01: the switch under the status group, and the lock-screen hint under it. */
+		hideNames: "Hide habit names",
+		hideNamesBody: "Reminders say “Habit reminder” instead of the name",
+		hideNamesHint:
+			"The lock screen can also hide previews: iOS Settings › Notifications › Show Previews.",
 	},
 	streaks: {
 		header: "Streaks",
@@ -1338,6 +1343,10 @@ export const settingsCopy = {
 		copy: "Copy diagnostics",
 		copyBody: "Version, device and recent errors",
 		copyValue: "Copy",
+		/** E-05: said before the text is pasted anywhere public. */
+		copyNote: "Contains no habit names or notes.",
+		/** E-02: opens the hosted policy in the browser. */
+		privacy: "Privacy policy",
 	},
 } as const;
 

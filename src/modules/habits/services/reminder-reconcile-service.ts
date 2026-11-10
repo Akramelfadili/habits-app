@@ -18,8 +18,11 @@ import {
 	eveningReviewDays,
 	eveningReviewReminder,
 	getEveningReviewTime,
+	getHideHabitNames,
 	habitNotificationPrefix,
+	markReminderTitlesApplied,
 	reminderNotificationId,
+	remindersTitlesAreCurrent,
 	syncHabitReminders,
 } from "./reminder-service";
 
@@ -96,6 +99,12 @@ export async function reconcileScheduledReminders(): Promise<void> {
 			log.warn("reminders.near_pending_limit", { pending: scheduled.length });
 		}
 
+		// Identifiers say nothing about titles, so after "Hide habit names" changed
+		// (or on the first launch with the setting, E-01) rebuild every habit once.
+		const hide = await getHideHabitNames();
+		const titlesStale = !(await remindersTitlesAreCurrent(hide));
+		let retitleFailed = false;
+
 		const habits = await getAllHabits();
 		const known = new Set(habits.map((habit) => habit.id));
 		let resynced = 0;
@@ -116,7 +125,7 @@ export async function reconcileScheduledReminders(): Promise<void> {
 					identifier.startsWith(habitNotificationPrefix(habit.id)),
 				);
 				const expected = await expectedKeys(habit);
-				if (matches(owned, expected)) continue;
+				if (!titlesStale && matches(owned, expected)) continue;
 				if (expected.length === 0) {
 					// Archived, or nothing enabled: only ever cancel.
 					if (await cancelQuietly(owned, "reconcile_nothing_expected")) {
@@ -127,12 +136,15 @@ export async function reconcileScheduledReminders(): Promise<void> {
 					resynced++;
 				}
 			} catch (error) {
+				retitleFailed = true;
 				log.error("reminders.reconcile_habit_failed", {
 					habitId: habit.id,
 					error,
 				});
 			}
 		}
+
+		if (titlesStale && !retitleFailed) await markReminderTitlesApplied(hide);
 
 		const eveningOwned = scheduled.filter((identifier) =>
 			identifier.startsWith(EVENING_PREFIX),

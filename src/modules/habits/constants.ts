@@ -158,6 +158,30 @@ export const EVENING_REVIEW_TIME_SETTING_KEY = "habits.eveningReviewTime";
 /** `app_settings` key for the app-wide Evening review toggle — "true" when on. */
 export const EVENING_REVIEW_SETTING_KEY = "habits.eveningReview";
 
+/**
+ * Where the hosted privacy policy lives (GitHub Pages, from `site/`). The only
+ * web address in the app: the no-network guard allows it here and nowhere else.
+ */
+export const PRIVACY_POLICY_URL =
+	"https://akramelfadili.github.io/habits-app/privacy.html";
+
+/**
+ * `app_settings` key for "Hide habit names" in reminders (E-01) — "true" or
+ * "false"; absent means the default, which is hidden (habit names can be
+ * health-related, and the lock screen shows a notification's title).
+ */
+export const HIDE_HABIT_NAMES_SETTING_KEY = "habits.hideHabitNames";
+
+/**
+ * `app_settings` key recording which "Hide habit names" value the scheduled
+ * reminders were last built with ("true" / "false"; absent = never recorded).
+ * Not user-facing. The launch reconcile compares identifiers, not titles, so
+ * this is how it knows the OS still holds titles from the other mode and has
+ * to rebuild them once.
+ */
+export const REMINDER_TITLES_APPLIED_SETTING_KEY =
+	"habits.reminderTitlesHidden";
+
 /** `app_settings` key for the day of the last successful data export (HAB-15), "yyyy-MM-dd". */
 export const LAST_EXPORT_SETTING_KEY = "habits.lastExport";
 

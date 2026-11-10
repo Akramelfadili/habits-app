@@ -9,6 +9,7 @@ jest.mock(
 		require("../test-support/fake-expo-notifications").fakeNotifications.module,
 );
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
+	getSetting: async () => null,
 	setSetting: jest.fn(),
 }));
 

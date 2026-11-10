@@ -14,6 +14,7 @@ import type { createTestDb } from "@/lib/db/test-db";
 import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME_SETTING_KEY,
+	HIDE_HABIT_NAMES_SETTING_KEY,
 	SEEN_FIRST_RUN_SETTING_KEY,
 } from "../constants";
 import type { ExportDocumentV2 } from "../domain/export-json";
@@ -182,6 +183,10 @@ export async function loadExportV2(
 		[
 			SEEN_FIRST_RUN_SETTING_KEY,
 			settings.seenFirstRun === null ? null : String(settings.seenFirstRun),
+		],
+		[
+			HIDE_HABIT_NAMES_SETTING_KEY,
+			settings.hideHabitNames === null ? null : String(settings.hideHabitNames),
 		],
 	];
 	for (const [key, value] of settingRows) {

@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { Linking, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ListItem } from "@/components/ui/composite/list-item";
+import { ToggleRow } from "@/components/ui/composite/toggle-row";
 import { FieldHelper } from "@/components/ui/primitives/field-helper";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { LibrarySectionHeader } from "../components/habits/library-section-header";
@@ -10,6 +11,7 @@ import {
 	SettingsPage,
 	settingsGroupStyle,
 } from "../components/settings/settings-page";
+import { useSettingsActions } from "../hooks/use-settings-actions";
 import { useSettingsQueries } from "../hooks/use-settings-queries";
 import { settingsCopy } from "../messages";
 import { formatReminderTime } from "../presenters/reminders-helpers";
@@ -23,6 +25,7 @@ import { notificationValue } from "../presenters/settings-helpers";
 export function SettingsNotificationsScreen() {
 	const router = useRouter();
 	const settings = useSettingsQueries();
+	const actions = useSettingsActions();
 
 	return (
 		<SettingsPage title={settingsCopy.notificationsPage.title}>
@@ -75,6 +78,20 @@ export function SettingsNotificationsScreen() {
 					</FieldHelper>
 				</View>
 			)}
+			<View style={settingsGroupStyle}>
+				<Container variant="flat">
+					<ToggleRow
+						title={settingsCopy.notificationsPage.hideNames}
+						subtitle={settingsCopy.notificationsPage.hideNamesBody}
+						value={settings.hideHabitNames}
+						onValueChange={actions.setHideHabitNames}
+						accessibilityLabel={`${settingsCopy.notificationsPage.hideNames}, ${settingsCopy.notificationsPage.hideNamesBody}`}
+					/>
+				</Container>
+				<FieldHelper plain tone="hint">
+					{settingsCopy.notificationsPage.hideNamesHint}
+				</FieldHelper>
+			</View>
 		</SettingsPage>
 	);
 }

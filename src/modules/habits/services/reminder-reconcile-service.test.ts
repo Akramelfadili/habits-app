@@ -11,10 +11,18 @@ jest.mock(
 
 let mockEveningSetting: string | null = null;
 let mockEveningTime: string | null = null;
+let mockHideNames: string | null = null;
+let mockTitlesApplied: string | null = null;
 jest.mock("@/lib/app-settings/repositories/app-settings-repository", () => ({
-	getSetting: async (key: string) =>
-		key === "habits.eveningReviewTime" ? mockEveningTime : mockEveningSetting,
-	setSetting: jest.fn(),
+	getSetting: async (key: string) => {
+		if (key === "habits.eveningReviewTime") return mockEveningTime;
+		if (key === "habits.hideHabitNames") return mockHideNames;
+		if (key === "habits.reminderTitlesHidden") return mockTitlesApplied;
+		return mockEveningSetting;
+	},
+	setSetting: async (key: string, value: string) => {
+		if (key === "habits.reminderTitlesHidden") mockTitlesApplied = value;
+	},
 }));
 
 let mockHabits: Habit[] = [];
@@ -65,6 +73,9 @@ beforeEach(() => {
 	clearLog();
 	mockEveningSetting = null;
 	mockEveningTime = null;
+	mockHideNames = null;
+	// Reminders already carry the default (generic) titles, as after the first launch with E-01.
+	mockTitlesApplied = "true";
 	mockHabits = [daily];
 	mockReminders = [];
 	mockRemindersThrowFor = null;
@@ -310,5 +321,55 @@ describe("reconcileScheduledReminders", () => {
 		mockReminders = [reminder()];
 		await reconcileScheduledReminders();
 		expect(JSON.stringify(getLogEntries())).not.toContain("Meditate");
+	});
+	describe("titles after Hide habit names (E-01)", () => {
+		const titles = () => [...fake.scheduled.values()].map((s) => s.title);
+
+		it("on the first launch with the setting, rebuilds reminders scheduled under the habit's name", async () => {
+			mockReminders = [reminder()];
+			mockHideNames = "false";
+			await syncHabitReminders(daily);
+			expect(titles()).toEqual(["Meditate"]);
+			mockHideNames = null; // the update makes hidden the default
+			mockTitlesApplied = null; // nothing recorded before this update
+
+			await reconcileScheduledReminders();
+
+			expect(titles()).toEqual(["Habit reminder"]);
+			expect(keys()).toEqual(["habit-3-reminder-1:daily:0720"]);
+			expect(mockTitlesApplied).toBe("true");
+		});
+
+		it("does it once: the next launch leaves a matching schedule alone", async () => {
+			mockReminders = [reminder()];
+			mockTitlesApplied = null;
+			await reconcileScheduledReminders();
+			fake.events.length = 0;
+
+			await reconcileScheduledReminders();
+
+			expect(fake.events).toEqual([]);
+		});
+
+		it("rebuilds with the habit's name when the setting is off but the OS still holds hidden titles", async () => {
+			mockReminders = [reminder()];
+			await syncHabitReminders(daily);
+			mockHideNames = "false";
+
+			await reconcileScheduledReminders();
+
+			expect(titles()).toEqual(["Meditate"]);
+			expect(mockTitlesApplied).toBe("false");
+		});
+
+		it("keeps the marker stale when a habit could not be rebuilt, so the next launch retries", async () => {
+			mockReminders = [reminder()];
+			mockTitlesApplied = null;
+			mockRemindersThrowFor = 3;
+
+			await reconcileScheduledReminders();
+
+			expect(mockTitlesApplied).toBeNull();
+		});
 	});
 });

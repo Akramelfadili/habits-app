@@ -92,6 +92,14 @@ export function buildConfig(env: Env): ExpoConfig {
 		ios: {
 			icon: "./assets/expo.icon",
 			bundleIdentifier,
+			// The app collects nothing and tracks nothing (docs/how-to/app-store-privacy.md).
+			// Accessed-API (required reason) entries are deliberately absent until the
+			// first EAS build shows which categories App Store Connect reports missing.
+			privacyManifests: {
+				NSPrivacyTracking: false,
+				NSPrivacyTrackingDomains: [],
+				NSPrivacyCollectedDataTypes: [],
+			},
 		},
 		android: {
 			adaptiveIcon: {
