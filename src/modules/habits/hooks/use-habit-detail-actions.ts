@@ -8,12 +8,6 @@ import {
 	undoRestoreHabit,
 } from "../services/habit-lifecycle-service";
 
-/**
- * Habit Detail's lifecycle writes: Archive (behind its sheet), Delete (behind its own, where a
- * failure is shown in the sheet and not as a toast), and Restore, which is instant and has its
- * own Undo (`undoRestoreHabit`). Archive also backs the archive toast's Undo, after Detail has
- * closed, through Restore.
- */
 export function useHabitDetailActions() {
 	const [deleteFailed, setDeleteFailed] = useState(false);
 	const archive = useAsyncAction(archiveHabit, {
@@ -23,7 +17,6 @@ export function useHabitDetailActions() {
 	const remove = useAsyncAction(deleteHabit, {
 		scope: "habit-detail",
 		failure: failureMessage("delete", "this habit"),
-		// The sheet says it: nothing was changed, try again.
 		onFailure: () => setDeleteFailed(true),
 	});
 	const restore = useAsyncAction(restoreHabit, {
@@ -37,10 +30,9 @@ export function useHabitDetailActions() {
 
 	return {
 		archiveHabit: archive.run,
-		/** For a screen with no ToastHost (the Edit modal) that shows the failure inline itself. */
+		// For a screen with no ToastHost (the Edit modal), which shows the failure inline.
 		archiveHabitOrThrow: archive.execute,
 		isArchiving: archive.isLoading,
-		/** Clears an earlier failure first, so the banner goes while the next try runs. */
 		deleteHabit: (habitId: number) => {
 			setDeleteFailed(false);
 			return remove.run(habitId);

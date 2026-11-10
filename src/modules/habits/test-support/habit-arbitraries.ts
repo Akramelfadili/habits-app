@@ -11,16 +11,10 @@ import {
 	weekdays,
 } from "./habit-builder";
 
-/**
- * fast-check arbitraries for the pure rules (streaks, rates, strategies): a
- * random habit with a random log, built from plain numbers so a failing case
- * shrinks to a few small offsets a person can read.
- */
+// Built from plain numbers so a failing case shrinks to a few small offsets a person can read.
 
-/** Property tests run ~100-200 cases so `make check` stays fast. */
 export const PROPERTY_RUNS = 150;
 
-/** The "today" every history is measured against: local noon, Wed 23 Sep 2026. */
 export const PROPERTY_TODAY = parseISO("2026-09-23T12:00:00");
 
 export const isoWeekdayArb: fc.Arbitrary<IsoWeekday> = fc.constantFrom(
@@ -43,17 +37,12 @@ export const frequencyArb: fc.Arbitrary<Frequency> = fc.oneof(
 
 export type HistorySpec = {
 	frequency: Frequency;
-	/** Quantity habit with this target, or a simple check when null. */
 	target: number | null;
-	/** Days before today the habit was created. */
 	ageDays: number;
-	/** Days before today that carry a log, each paired with its logged amount. */
 	logs: { daysAgo: number; value: number }[];
-	/** Days before today covered by a freeze. */
 	frozenDaysAgo: number[];
 };
 
-/** A habit created up to 60 days ago with logs and freezes only on days it existed. */
 export const historyArb: fc.Arbitrary<HistorySpec> = fc
 	.record({
 		frequency: frequencyArb,
@@ -118,7 +107,6 @@ export function buildHistory(spec: HistorySpec): History {
 	};
 }
 
-/** A log that counts as a completion for `habit`: presence, or the full target. */
 export function completionOn(habit: Habit, day: Date, id: number): Entry {
 	return entryOn(habit, day, id, habit.targetAmount ?? 1);
 }

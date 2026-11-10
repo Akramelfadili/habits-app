@@ -253,7 +253,6 @@ describe("the year heat map (P12)", () => {
 	it("puts each month's label over the week column its first day falls in", () => {
 		const [jan, feb] = bands[0].months;
 		expect(jan.column).toBe(0);
-		// 1 Feb 2026 is a Sunday, in week 4 (columns 0–4 hold 29 Dec – 1 Feb).
 		expect(feb.column).toBe(4);
 	});
 

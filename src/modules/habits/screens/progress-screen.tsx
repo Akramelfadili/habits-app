@@ -41,21 +41,11 @@ import { messages, progressCopy, showMessage } from "../messages";
 import type { ProgressRange } from "../progress-view-store";
 import type { Habit } from "../types";
 
-/**
- * No bottom edge: the floating pill carries its own float over the home indicator and
- * every scroller pays `TAB_BAR_BOTTOM_PADDING`.
- */
+// No bottom edge: the floating pill carries its own float over the home indicator and every scroller pays `TAB_BAR_BOTTOM_PADDING`.
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
-/** The pinned switcher's track (48) and the breath under it (8), until it is measured. */
 const SWITCHER_HEIGHT = 56;
 
-/**
- * Progress: one tab root for Week, Month and Year. The large title collapses into the
- * inline bar, and the range switcher pins just under it. Thin: it owns the sheets and the
- * header, hands each range its props, and lets the range's own hook decide which of too
- * early / no habits / nothing logged / ready it is showing.
- */
 export function ProgressScreen() {
 	const router = useRouter();
 	const { colors, scheme } = useTheme();
@@ -156,7 +146,6 @@ export function ProgressScreen() {
 				scrollY={header.scrollY}
 				top={switcherTop}
 				onHeight={(height) => {
-					// An opened AX list grows the layer, not its slot in the content.
 					if (!switcherOpen) setSwitcherHeight(height);
 				}}
 			>

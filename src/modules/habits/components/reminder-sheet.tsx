@@ -17,15 +17,9 @@ type ReminderSheetProps = {
 	title: string;
 	onDismiss: () => void;
 	onSave: (draft: ReminderDraft) => void;
-	/** Whether the days picker shows. Off for a time that has no days of its own (the Evening review). */
 	showDays?: boolean;
 };
 
-/**
- * Bottom sheet with a 24-hour time wheel and the days the time repeats on: one place to set a
- * reminder's time and its own weekdays. The form uses it before the habit exists; the Reminders
- * screen uses it afterwards.
- */
 export function ReminderSheet({
 	draft,
 	title,
@@ -37,7 +31,6 @@ export function ReminderSheet({
 		<Sheet visible={draft !== null} onDismiss={onDismiss}>
 			{draft ? (
 				<ReminderSheetContent
-					// Re-seed the draft each time a different one is opened.
 					key={`${draft.hour}:${draft.minute}:${draft.weekdays.join("")}`}
 					initial={draft}
 					title={title}

@@ -21,7 +21,6 @@ import {
 import { buildWeeklySummary } from "./weekly-summary";
 import { buildYearlySummary, yearWindowFor } from "./yearly-summary";
 
-// Monday 14 Sep 2026 … Sunday 20 Sep, mid-day local.
 const monday = new Date(2026, 8, 14, 12);
 const sunday = addDays(monday, 6);
 const longAgo = new Date(2025, 0, 1);

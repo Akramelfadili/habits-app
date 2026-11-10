@@ -1,6 +1,4 @@
-// Tests for scripts/check-repo-hygiene.mjs, on synthetic file lists and strings
-// (no real forbidden files are created). Secret-shaped strings are assembled at
-// runtime so this file does not trip the guard itself.
+// Secret-shaped strings are assembled at runtime so this file does not trip the guard itself.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {

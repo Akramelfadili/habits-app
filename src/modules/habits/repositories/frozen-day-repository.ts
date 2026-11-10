@@ -21,10 +21,6 @@ function rowToFrozenDay(row: FrozenDayRow): FrozenDay {
 	};
 }
 
-/**
- * The one live read of every frozen day, shared by the screens that want the pool (as
- * `entry-repository.ts`'s log).
- */
 const frozenLog = createSharedLiveTable({
 	table: "frozen_days",
 	read: () => db.select().from(frozenDays).orderBy(asc(frozenDays.date)),
@@ -38,7 +34,6 @@ const frozenLog = createSharedLiveTable({
 
 const allFrozenDays = (rows: FrozenDay[]): FrozenDay[] => rows;
 
-/** Live-query hook — every frozen day, across every habit (the pool is shared, not per-habit). */
 export function useFrozenDays(): FrozenDay[] {
 	return useSharedLiveTable(frozenLog, allFrozenDays);
 }
@@ -55,18 +50,13 @@ export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
 					and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
 				)
 				.orderBy(asc(frozenDays.date)),
-		// Subscribes once per deps: without them the first range would be read forever.
+		// Without deps the first range would be read forever.
 		[startDate, endDate],
 	);
 	return useMemo(() => data.map(rowToFrozenDay), [data]);
 }
 
-/**
- * A one-off (non-reactive) count of freezes used in `[monthStart, monthEnd]`,
- * across every habit — the shared pool's write-time eligibility check
- * (`services/freeze-service.ts`'s `applyFreeze`) needs a fresh read at call time, not
- * whatever a hook last rendered, since it gates whether the write is allowed.
- */
+// A fresh read, not whatever a hook last rendered: it gates whether the write is allowed.
 export async function getFreezesUsedInMonth(
 	monthStart: Date,
 	monthEnd: Date,
@@ -83,10 +73,7 @@ export async function getFreezesUsedInMonth(
 	return rows.length;
 }
 
-/**
- * A fresh (non-reactive) read of one habit's freeze on `date`, if it has one —
- * what a log on that day decides on, so it must not trust a stale render.
- */
+// A log on that day decides on this, so it must not trust a stale render.
 export async function getFrozenDay(
 	habitId: number,
 	date: Date,
@@ -100,7 +87,6 @@ export async function getFrozenDay(
 	return row ? rowToFrozenDay(row) : undefined;
 }
 
-/** Takes a freeze back (the Undo for using one) — returns it to the shared pool. A no-op if that day isn't frozen. */
 export async function unfreezeHabitDay(
 	habitId: number,
 	date: Date,
@@ -112,7 +98,7 @@ export async function unfreezeHabitDay(
 		);
 }
 
-/** Freezes `habitId`'s missed `date` — idempotent, since a day can only be frozen once. `createdAt` is for putting a returned freeze back as it was. */
+// Idempotent: a day can only be frozen once.
 export async function freezeHabitDay(
 	habitId: number,
 	date: Date,

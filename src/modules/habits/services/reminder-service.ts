@@ -47,23 +47,14 @@ import type {
 	UpdateHabitInput,
 } from "../types";
 
-/**
- * Every write here is composite: the stored reminder changes, and the OS's scheduled
- * notifications have to be brought back in line with it, so each write ends in
- * `syncHabitReminders`, which rebuilds the habit's notifications from what is stored
- * rather than patching them. Reminders are purely a notification layer; nothing here
- * touches whether a habit is due or counts on Today.
- */
+// Every write ends in `syncHabitReminders`, which rebuilds the notifications from what is
+// stored rather than patching them.
 
 const EVERY_DAY: IsoWeekday[] = WEEKDAYS.map(({ day }) => day);
 
 const EVENING_REVIEW_NOTIFICATION_ID = "evening-review";
 
-/**
- * Prefix shared by every notification one habit owns. The trailing "-" keeps habit 1's
- * prefix from matching habit 12's. Archive and delete cancel with this so no reminder
- * outlives its habit.
- */
+// The trailing "-" keeps habit 1's prefix from matching habit 12's.
 export function habitNotificationPrefix(habitId: number): string {
 	return `habit-${habitId}-`;
 }
@@ -72,11 +63,7 @@ export function reminderNotificationId(reminder: Reminder): string {
 	return `${habitNotificationPrefix(reminder.habitId)}reminder-${reminder.id}`;
 }
 
-/**
- * The reminder's own days that the habit can never be due on: flagged on screen as
- * pointless, and never scheduled (rather than silently firing a notification for a habit
- * that is not due).
- */
+// Never scheduled, rather than silently firing a notification for a habit that is not due.
 export function unscheduledReminderDays(
 	habit: Pick<Habit, "frequency">,
 	reminder: Pick<Reminder, "weekdays">,
@@ -90,7 +77,6 @@ function notificationBody(habit: Habit): string {
 		: notificationCopy.build;
 }
 
-/** Whether habit reminders use the generic title: on unless the person turned it off. */
 export async function getHideHabitNames(): Promise<boolean> {
 	return (await getSetting(HIDE_HABIT_NAMES_SETTING_KEY)) !== "false";
 }
@@ -107,12 +93,8 @@ export async function markReminderTitlesApplied(hide: boolean): Promise<void> {
 	await setSetting(REMINDER_TITLES_APPLIED_SETTING_KEY, String(hide));
 }
 
-/**
- * Turns "Hide habit names" on or off. The choice is stored first (the source of truth),
- * then every habit's reminders are rebuilt so the titles the OS holds follow. If any rebuild
- * fails it is logged and the applied marker is left stale, so the next launch's reconcile
- * finishes the job.
- */
+// The choice is stored first (source of truth). A failed rebuild leaves the applied marker
+// stale, so the next launch's reconcile finishes the job.
 export async function setHideHabitNames(hide: boolean): Promise<void> {
 	await setSetting(HIDE_HABIT_NAMES_SETTING_KEY, String(hide));
 	let failed = false;
@@ -133,7 +115,6 @@ async function scheduledWithPrefix(prefix: string): Promise<string[]> {
 	);
 }
 
-/** Cancels these identifiers; a failure is logged, never thrown — see the callers for why. */
 export async function cancelQuietly(
 	identifiers: readonly string[],
 	why: string,
@@ -152,29 +133,16 @@ export async function cancelQuietly(
 	}
 }
 
-/**
- * Rebuilds all of `habit`'s scheduled notifications from its stored
- * reminders: each enabled reminder on the days it's set for *and* the habit
- * can fall on. Idempotent — safe to call after any change, including a
- * schedule edit on the habit itself. Schedules nothing for an archived habit.
- *
- * The order is what keeps a failure from losing reminders:
- * 1. capture the identifiers the habit owns *now* (the old set);
- * 2. schedule the new set under a fresh generation, so its identifiers can't
- *    collide with the old ones;
- * 3. only then cancel the old set — exactly the identifiers captured in (1),
- *    never a blanket cancel, which would take the new set with it.
- * If step 2 fails part-way, the new identifiers created so far are cancelled
- * and the error is rethrown, leaving the old set untouched. If step 3 fails
- * the new set is already live: it's logged and left for the next sync or the
- * launch-time reconcile to tidy.
- */
+// The order keeps a failure from losing reminders: capture the old identifiers, schedule the
+// new set under a fresh generation (no collisions), then cancel exactly the captured old ones,
+// never a blanket cancel that would take the new set too. If scheduling fails part-way the new
+// ones are cancelled and the old set is untouched; if the final cancel fails the new set is
+// already live and the next sync or launch reconcile tidies.
 export async function syncHabitReminders(habit: Habit): Promise<void> {
 	const previous = await scheduledWithPrefix(habitNotificationPrefix(habit.id));
 	const created: string[] = [];
 
-	// Paused while archived: rows are kept, but nothing is scheduled; editing an archived
-	// habit's reminders must not make it fire.
+	// Rows are kept while archived but nothing is scheduled; editing must not make it fire.
 	if (!habit.archivedAt) {
 		const generation = newGeneration();
 		const title = (await getHideHabitNames())
@@ -216,12 +184,8 @@ export async function syncHabitReminders(habit: Habit): Promise<void> {
 	});
 }
 
-/**
- * Runs `syncHabitReminders` *after* the database row has already changed. The
- * write succeeded, so a scheduling failure must not report the whole action as
- * failed (the row did change): it's logged, and the launch-time reconcile
- * brings the OS back in line.
- */
+// The row already changed, so a scheduling failure must not report the action as failed:
+// it's logged and the launch-time reconcile brings the OS back in line.
 export async function syncAfterWrite(habit: Habit): Promise<void> {
 	await refreshEveningReview();
 	try {
@@ -234,13 +198,8 @@ export async function syncAfterWrite(habit: Habit): Promise<void> {
 	}
 }
 
-/**
- * Stops everything a habit owns (archive, delete). The row change already
- * happened, so a cancel failure is logged, not thrown: the action succeeded,
- * and the reconcile cancels any leftover for an archived or missing habit.
- */
+// A cancel failure is logged, not thrown: the action succeeded and the reconcile cancels leftovers.
 export async function cancelHabitNotifications(habitId: number): Promise<void> {
-	// The days with open habits may have changed with this one gone.
 	await refreshEveningReview();
 	try {
 		await cancelRemindersWithPrefix(habitNotificationPrefix(habitId));
@@ -256,12 +215,7 @@ export class ReminderCapError extends Error {
 	}
 }
 
-/**
- * Adds a reminder at the time and on the days the person chose in the sheet. With no
- * draft it starts at the default time on the days the habit can actually fall on, so a
- * fresh reminder never starts out flagged. Blocked at the cap with an explanation, not
- * silently.
- */
+// With no draft it starts on days the habit can fall on, so a fresh reminder is never flagged.
 export async function addReminder(
 	habit: Habit,
 	draft?: ReminderDraft,
@@ -297,13 +251,8 @@ export async function removeReminder(
 	await syncAfterWrite(habit);
 }
 
-/**
- * The Undo for Remove: the same row (same id, time, days, on/off) goes back,
- * then the habit's notifications are re-synced through the normal path — so
- * exactly one is scheduled per enabled day, and nothing is scheduled by hand.
- * The habit is re-read, not trusted from the screen: if it was archived or
- * deleted since, the sync respects that (or the restore is refused).
- */
+// The habit is re-read, not trusted from the screen: if it was archived or deleted since, the
+// sync respects that (or the restore is refused).
 export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
 	const habit = await getHabit(reminder.habitId);
 	if (!habit) throw new Error(`No habit with id ${reminder.habitId}`);
@@ -314,11 +263,7 @@ export async function restoreReminder(reminder: Reminder): Promise<Reminder> {
 	return restored;
 }
 
-/**
- * Saves a habit edit and re-syncs its reminders — a schedule change can turn
- * a flagged reminder day into a real one (or the reverse), and the OS
- * schedule has to follow.
- */
+// A schedule change can turn a flagged reminder day into a real one, so the OS schedule must follow.
 export async function updateHabitAndSyncReminders(
 	id: number,
 	input: UpdateHabitInput,
@@ -328,10 +273,6 @@ export async function updateHabitAndSyncReminders(
 	return habit;
 }
 
-/**
- * The days the Evening review is worth sending on: those on which at least one active
- * habit can be due. A day nothing is due on gets no nudge.
- */
 export function eveningReviewDays(habits: readonly Habit[]): IsoWeekday[] {
 	const active = habits.filter((habit) => !habit.archivedAt);
 	return EVERY_DAY.filter((day) =>
@@ -357,11 +298,7 @@ async function scheduleEveningReview(): Promise<string[]> {
 	);
 }
 
-/**
- * Changes the Evening review's time. The time is stored first (it is the source of
- * truth) and, while the review is on, the notifications are rebuilt at the new time; a
- * failed rebuild is logged for the launch-time reconcile to finish.
- */
+// Stored first (source of truth); a failed rebuild is left for the launch-time reconcile.
 export async function setEveningReviewTime(time: {
 	hour: number;
 	minute: number;
@@ -373,12 +310,7 @@ export async function setEveningReviewTime(time: {
 	await refreshEveningReview();
 }
 
-/**
- * Re-aims the Evening review after habits changed (created, rescheduled,
- * archived, restored, deleted), so it keeps going out only on days with open
- * habits. Does nothing while the review is off. A failure is logged: the row
- * that changed already saved, and the launch-time reconcile tidies the rest.
- */
+// A failure is logged: the changed row already saved and the launch-time reconcile tidies the rest.
 export async function refreshEveningReview(): Promise<void> {
 	try {
 		if ((await getSetting(EVENING_REVIEW_SETTING_KEY)) !== "true") return;
@@ -396,18 +328,10 @@ export async function refreshEveningReview(): Promise<void> {
 	}
 }
 
-/**
- * The app-wide Evening review: one daily notification at a fixed time,
- * nudging to log anything left for the day, across every habit. It's a
- * plain scheduled notification, so it can't know at fire time what's still
- * unlogged — the copy stays general.
- *
- * Turning on schedules first and stores the setting only once that worked
- * (a failure to store cancels what was just scheduled), so the setting never
- * says "on" for a notification that doesn't exist. Turning off stores the
- * setting first — the source of truth — and a failed cancel is logged for the
- * launch-time reconcile to finish.
- */
+// A plain scheduled notification can't know at fire time what's unlogged, so the copy stays
+// general. Turning on schedules first and stores the setting only once that worked, so it never
+// says "on" for a notification that doesn't exist. Turning off stores first; a failed cancel is
+// left for the launch-time reconcile.
 export async function setEveningReview(enabled: boolean): Promise<void> {
 	const prefix = `${EVENING_REVIEW_NOTIFICATION_ID}:`;
 	if (!enabled) {

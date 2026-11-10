@@ -4,12 +4,8 @@ import { createTestDb } from "@/lib/db/test-db";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as EntryRepository from "./entry-repository";
 
-/**
- * `useEntriesInRange` must re-query when its range changes (Weekly Summary's
- * Last/This week toggle, a week rolling over while a screen is mounted). The
- * stand-in honours `useLiveQuery`'s `deps` contract, so a hook that doesn't
- * pass its range as deps keeps showing the first range — and fails here.
- */
+// The stand-in honours `useLiveQuery`'s `deps` contract, so a hook that doesn't pass its range
+// as deps keeps showing the first range and fails here.
 const mockDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({

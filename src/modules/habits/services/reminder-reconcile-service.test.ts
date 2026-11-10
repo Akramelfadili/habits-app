@@ -74,7 +74,6 @@ beforeEach(() => {
 	mockEveningSetting = null;
 	mockEveningTime = null;
 	mockHideNames = null;
-	// Reminders already carry the default (generic) titles, as after the first launch with Hide habit names.
 	mockTitlesApplied = "true";
 	mockHabits = [daily];
 	mockReminders = [];

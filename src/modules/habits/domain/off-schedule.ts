@@ -3,27 +3,17 @@ import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, Habit } from "../types";
 import { isEntryComplete } from "./streaks";
 
-/**
- * Off-schedule logs. Nothing is stored to mark one: an entry is a bonus when its day wasn't
- * owed by the habit's FrequencyStrategy. Streaks, rates and perfect days only ever walk
- * *scheduled* days, so a bonus entry can't reach them; it stays informational.
- */
+// Nothing is stored to mark a bonus: it is derived from the strategy, so streaks and rates
+// (which walk scheduled days only) can't be reached by one.
 
-/**
- * Habits the rest-day picker offers: a "don't do X" habit can't be logged as a bonus, and an
- * archived one is out of every active list.
- */
 export function offScheduleCandidates(habits: readonly Habit[]): Habit[] {
 	return habits.filter(
 		(habit) => habit.direction !== "break" && habit.archivedAt === null,
 	);
 }
 
-/**
- * Whether `entry` was a bonus: its day wasn't scheduled, judged with the
- * entry itself counted as done that day (so a per-week habit's partial first
- * log isn't mistaken for a bonus). `habitEntries` are that habit's own.
- */
+// Judged with the entry itself counted as done, so a per-week habit's first log isn't
+// mistaken for a bonus.
 export function isOffScheduleEntry(
 	habit: Habit,
 	entry: Entry,
@@ -32,11 +22,6 @@ export function isOffScheduleEntry(
 	return offScheduleChecker(habit, habitEntries)(entry);
 }
 
-/**
- * `isOffScheduleEntry` for many entries of one habit: the habit's completed
- * days are gathered once instead of once per entry (the Detail heatmap asks
- * about every logged day it shows).
- */
 export function offScheduleChecker(
 	habit: Habit,
 	habitEntries: readonly Entry[],
@@ -49,7 +34,6 @@ export function offScheduleChecker(
 	return (entry) => {
 		const day = parseISO(entry.date);
 		const time = day.getTime();
-		// The entry's own day counts as done (an invalid date never matches, as with `===`).
 		const counted = !Number.isNaN(time) && completedTimes.has(time);
 		return !strategy.wasScheduledOn(day, {
 			completedDates: counted ? completedDates : [...completedDates, day],
@@ -59,12 +43,7 @@ export function offScheduleChecker(
 
 export type OffScheduleLog = { habit: Habit; entry: Entry };
 
-/**
- * What was logged on `day` for habits that weren't due that day — the rest-day
- * screen's "Logged today · off-schedule" list. `entries` must cover the
- * week of `day` (a per-week habit's due-ness depends on earlier completions);
- * only completions *before* `day` count, exactly as Today decides what's due.
- */
+// `entries` must cover the week of `day`; only completions before `day` count, as Today decides.
 export function offScheduleLogsOn(
 	habits: readonly Habit[],
 	entries: readonly Entry[],

@@ -12,7 +12,6 @@ import { progressCopy } from "../../messages";
 import type { Habit } from "../../types";
 import { HabitBadge } from "../habit-badge";
 
-/** The picker list scrolls past this height, leaving the scrim above the sheet. */
 const SHEET_LIST_MAX_HEIGHT = 520;
 
 type HabitFilterSheetProps = {
@@ -20,12 +19,10 @@ type HabitFilterSheetProps = {
 	active: Habit[];
 	archived: Habit[];
 	selectedId: number | null;
-	/** One choice: the sheet closes on tap. */
 	onSelect: (habitId: number | null) => void;
 	onDismiss: () => void;
 };
 
-/** A check that reads in any theme: two borders of a turned square. */
 function Check() {
 	const { colors } = useTheme();
 	return (
@@ -36,10 +33,6 @@ function Check() {
 	);
 }
 
-/**
- * Habit picker: "Show habit", All habits first, then the active habits, then the archived ones.
- * One choice; filtering never leaves the tab.
- */
 export function HabitFilterSheet({
 	visible,
 	active,

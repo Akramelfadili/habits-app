@@ -1,14 +1,6 @@
 #!/usr/bin/env node
-/**
- * Runs the Maestro journeys in /e2e against the web build (in-memory
- * fixtures, see e2e/README.md for why web and what that does/doesn't cover).
- *
- *   npm run e2e                                   # every journey
- *   npm run e2e -- e2e/hab-12-reminders.yaml      # one (or several)
- *
- * Reuses a dev server at APP_URL (default http://localhost:8081) or starts
- * one. Reports and screenshots land in .e2e-output/ (gitignored).
- */
+// npm run e2e [-- e2e/<journey>.yaml ...]
+// Reuses a dev server at APP_URL (default http://localhost:8081) or starts one. Output lands in .e2e-output/.
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -24,12 +16,10 @@ import {
 
 const OUT_DIR = path.join(ROOT, ".e2e-output");
 
-// Headless Chrome won't go narrower than 500px; the height is what matters —
-// Maestro's web driver scrolls the window, not React Native Web's inner
-// ScrollViews, so a tall viewport keeps every tapped row on screen.
+// Maestro's web driver scrolls the window, not React Native Web's inner ScrollViews, so a tall viewport keeps every tapped row on screen.
 const SCREEN_SIZE = "393x1600";
 
-/** Maestro installs to ~/.maestro/bin; it needs a JDK 17+ (JAVA_HOME or ~/.local/opt/jdk-*). */
+// Maestro installs to ~/.maestro/bin and needs a JDK 17+ (JAVA_HOME or ~/.local/opt/jdk-*).
 function maestroEnv() {
 	const env = {
 		...process.env,

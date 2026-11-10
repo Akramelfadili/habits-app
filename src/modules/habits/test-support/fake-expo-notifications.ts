@@ -1,8 +1,3 @@
-/**
- * An in-memory stand-in for `expo-notifications`' scheduling surface, for
- * tests that exercise the real notifications adapter and the reminder
- * services end to end. Failures are injected per call number.
- */
 export type FakeScheduled = {
 	identifier: string;
 	title?: string;
@@ -12,7 +7,6 @@ export type FakeScheduled = {
 
 export function createFakeNotifications() {
 	const scheduled = new Map<string, FakeScheduled>();
-	/** Every schedule/cancel, in order: "schedule:<id>" / "cancel:<id>". */
 	const events: string[] = [];
 	let scheduleCalls = 0;
 	let cancelCalls = 0;
@@ -107,5 +101,4 @@ export function createFakeNotifications() {
 	};
 }
 
-/** One instance per Jest module registry (= per test file). */
 export const fakeNotifications = createFakeNotifications();

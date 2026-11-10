@@ -17,19 +17,13 @@ import { useRetroLogQueries } from "../hooks/use-retro-log-queries";
 import { messages, showMessage } from "../messages";
 import type { Habit } from "../types";
 
-/** The pushed screen has its own navigation header: no top edge, like Detail. */
 const SCREEN_EDGES = ["left", "right"] as const;
 
 type ProgressMonthScreenProps = {
-	/** Any day of the month, "yyyy-MM-dd" — a Year month label opens its first. */
 	month: string;
 };
 
-/**
- * Month for one named month: a Year month label pushes this inside the Progress stack, so
- * Back and the iOS swipe-back both return to Year exactly as it was (filter, scroll). Month
- * from the range switcher stays in place on the Progress screen and is always the current month.
- */
+// Pushed inside the Progress stack so Back and the iOS swipe-back return to Year exactly as it was (filter, scroll).
 export function ProgressMonthScreen({ month }: ProgressMonthScreenProps) {
 	const router = useRouter();
 	const { colors, scheme } = useTheme();

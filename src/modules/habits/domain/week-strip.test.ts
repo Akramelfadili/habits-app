@@ -3,7 +3,6 @@ import { makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
 import { canShowNextWeek, weekDaysOf, weekStripDays } from "./week-strip";
 
-// Friday 23 Oct 2026 (the mockup's week: Mon 19 … Sun 25).
 const TODAY = new Date(2026, 9, 23, 10);
 
 function entry(habitId: number, date: string, value?: number): Entry {

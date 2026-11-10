@@ -1,11 +1,4 @@
-/**
- * Route-level guard for the navigation shell: the three tabs are groups of one shared
- * stack, so Detail, pushed from any of them, opens inside the tab it came from, that tab
- * stays selected, and Back returns to that tab's root.
- * It renders the real `src/app` tree (layouts, anchors, group syntax) with only the module
- * screens stubbed. It lives here, not under `src/app/`, because every `.tsx` in the app
- * directory is picked up as a route.
- */
+// Lives here, not under `src/app/`, because every `.tsx` in the app directory is picked up as a route.
 import { act, fireEvent, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { renderRouter, screen, testRouter } from "expo-router/testing-library";
@@ -19,7 +12,6 @@ jest.mock("expo-blur", () => {
 	return { BlurView: View };
 });
 
-/** Each screen becomes its own marker, so the rendered route is readable. */
 function mockStub(name: string) {
 	return function Stub() {
 		const { Text } = require("react-native");
@@ -75,14 +67,11 @@ jest.mock("@/modules/habits/screens/suggestions-screen", () => ({
 jest.mock("@/modules/habits/screens/habit-form-screen", () => ({
 	HabitFormScreen: mockStub("habit-form"),
 }));
-// The root layout holds the database, splash and notification wiring; the
-// shell under test is the tabs layout and the shared stack below it. SQLite
-// has no native runtime under Jest, and nothing here reads data anyway.
+// SQLite has no native runtime under Jest, and the shell under test reads no data.
 jest.mock("@/lib/db/client", () => ({ db: {}, expoDb: {} }));
 jest.mock("@/lib/db/database-provider", () => ({
 	DatabaseProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
-// Where the app opens: the tabs, or First Run with no tab bar.
 let mockGate: "loading" | "first-run" | "done" = "done";
 let mockNeedsSeenMark = false;
 let mockHabitCount: number | undefined = 1;
@@ -109,8 +98,6 @@ jest.mock("@/lib/notifications/notifications", () => ({
 	configureNotificationHandler: () => {},
 }));
 
-// ThemeGate holds the splash — and renders nothing — until the stored
-// Appearance choice has been read.
 beforeEach(() => {
 	useThemePreferenceStore.setState({ isLoaded: true });
 	mockGate = "done";
@@ -124,7 +111,6 @@ async function renderApp(initialUrl: string) {
 	return renderRouter("src/app", { initialUrl });
 }
 
-/** The group segment the shell is currently inside, e.g. "(today)". */
 function tabGroup(app: { getSegments(): string[] }) {
 	return app
 		.getSegments()
@@ -183,7 +169,7 @@ describe("First Run opens instead of the tabs", () => {
 	});
 });
 
-describe("only First Run hides the tab bar (UI fix batch)", () => {
+describe("only First Run hides the tab bar", () => {
 	it("the empty Today shows the bar, and Progress and Habits open with no habits", async () => {
 		mockHabitCount = 0;
 		const app = await renderApp("/");
@@ -301,7 +287,7 @@ describe("Detail opens inside the tab it came from (D4)", () => {
 	});
 });
 
-describe("a Year month is a pushed route inside Progress (P13)", () => {
+describe("a Year month is a pushed route inside Progress", () => {
 	it("opens in the Progress tab and Back returns to Progress's root", async () => {
 		const app = await renderApp("/(progress)/progress");
 		await testRouter.push("/month/2026-07-01");
@@ -330,15 +316,9 @@ describe("malformed route params go to Today, never crash", () => {
 		);
 	}
 
-	/**
-	 * `habitsapp://<path>` opens `/<path>` (app.config.ts `scheme`); the testing
-	 * router takes paths, so each link is opened as its path over Today, as
-	 * a link does while the app is running.
-	 */
 	async function openLink(link: string) {
 		const app = await renderApp("/");
-		// Plain router.push: testRouter.push asserts the pushed path is where it
-		// ends, and a refused link must end on Today instead.
+		// Plain router.push: testRouter.push asserts the pushed path is where it ends, and a refused link ends on Today.
 		await act(async () =>
 			router.push(link.replace(/^habitsapp:\//, "") as "/"),
 		);
@@ -407,8 +387,7 @@ describe("Add and Edit habit are root modals, outside the tabs", () => {
 		["/new-habit", "habit-form"],
 		["/edit-habit/1", "habit-form"],
 	])("%s", async (url, marker) => {
-		// Opened cold from a URL there is no screen under the modal, so the
-		// native stack says it draws a card; in the app it is pushed from a tab.
+		// Opened cold from a URL there is no screen under the modal, so the native stack draws a card.
 		const warn = expectConsole("warn", /uses presentation "fullScreenModal"/);
 		const app = await renderApp(url);
 		await app.findByText(marker);
@@ -417,7 +396,7 @@ describe("Add and Edit habit are root modals, outside the tabs", () => {
 	});
 });
 
-describe("every pushed screen can be left (UI fix batch)", () => {
+describe("every pushed screen can be left", () => {
 	it.each([
 		["Detail from Today", "/", "/habit/1", "Back to Today"],
 		[
@@ -473,7 +452,6 @@ describe("every pushed screen can be left (UI fix batch)", () => {
 		expect(screen.getByLabelText(label)).toBeTruthy();
 	});
 
-	// Root modals have no Back: each has an explicit Cancel / Close.
 	it.each([
 		["New habit", "/new-habit", /Cancel|Close/],
 		["Browse suggestions", "/suggestions", /Cancel|Close/],

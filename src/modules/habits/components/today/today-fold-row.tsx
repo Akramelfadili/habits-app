@@ -10,10 +10,6 @@ type TodayFoldRowProps = {
 	onToggle: () => void;
 };
 
-/**
- * The one quiet dashed row the not-due habits fold into: "1 not due today · Upper body" with Show on
- * the right. Tapping it reveals them with dashed circles, so a bonus log is still one tap away.
- */
 export function TodayFoldRow({
 	summary,
 	expanded,

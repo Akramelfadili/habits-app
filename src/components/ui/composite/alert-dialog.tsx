@@ -17,7 +17,6 @@ import { Button } from "../primitives/button";
 type AlertAction = {
 	label: string;
 	onPress: () => void;
-	/** "primary" is the safe choice: bold, and where VoiceOver starts. "destructive" is the red one. */
 	tone: "primary" | "destructive";
 };
 
@@ -25,26 +24,14 @@ type AlertDialogProps = {
 	visible: boolean;
 	title: string;
 	message: string;
-	/** Stacked top to bottom; the primary one first. */
 	actions: AlertAction[];
-	/** Android back / the system dismiss gesture: it chooses the safe action. */
 	onRequestClose: () => void;
-	/**
-	 * "list" (default): text actions under hairlines. "offer": the first action is a full-width
-	 * primary button, the rest are quiet links under it: a question with a yes to lean towards.
-	 */
 	layout?: "list" | "offer";
 };
 
-/** 270 pt wide, like the system alert it follows. */
 const WIDTH = 270;
 
-/**
- * A centred card over the scrim: title, one line of explanation, stacked text actions under hairlines.
- * Drawn here, not with the system alert, so it looks and behaves the same on web and in the flows.
- * Focus starts on the primary action; a scrim tap does nothing, a decision has to be made.
- * At accessibility sizes the card takes the screen width less 16 pt insets so buttons can stack and wrap.
- */
+// Drawn here, not with the system alert, so it looks and behaves the same on web and in the flows.
 export function AlertDialog({
 	visible,
 	title,

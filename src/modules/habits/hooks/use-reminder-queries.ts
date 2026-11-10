@@ -6,7 +6,6 @@ import { unscheduledReminderDays } from "../services/reminder-service";
 import type { Habit, IsoWeekday, Reminder } from "../types";
 
 export type ReminderWithConflicts = Reminder & {
-	/** This reminder's days the habit can never be due on — flagged, never fired. */
 	unscheduledDays: IsoWeekday[];
 };
 
@@ -15,14 +14,9 @@ export type ReminderScreenData = {
 	reminders: ReminderWithConflicts[];
 	cap: number;
 	atCap: boolean;
-	/** The OS permission is denied — show the persistent notice, keep everything editable. */
 	notificationsDenied: boolean;
 };
 
-/**
- * Everything the Reminders screen shows for one habit, or null when the id doesn't resolve, or
- * undefined while the habit list is still loading.
- */
 export function useReminderQueries(
 	habitId: number,
 ): ReminderScreenData | null | undefined {

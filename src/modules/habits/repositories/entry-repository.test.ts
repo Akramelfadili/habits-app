@@ -3,7 +3,6 @@ import { createTestDb } from "@/lib/db/test-db";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as EntryRepository from "./entry-repository";
 
-// Same jest.doMock + same-order require() sequencing as habit-repository.test.ts.
 const mockDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 
@@ -24,11 +23,8 @@ async function seedHabit(): Promise<number> {
 	return row.id;
 }
 
-// `useEntriesInRange` (useLiveQuery) isn't exercised here for the same reason
-// habit-repository.test.ts never calls `useHabitsList`: the change-listener
-// reactivity behind useLiveQuery needs real expo-sqlite, which the node:sqlite
-// test db doesn't provide. Assertions read the table directly instead —
-// exactly the pattern habit-repository.test.ts already uses for a write's effect.
+// useLiveQuery hooks aren't exercised: their change listener needs real expo-sqlite, which the
+// node:sqlite test db doesn't provide, so assertions read the table directly.
 describe("entry-repository", () => {
 	beforeEach(async () => {
 		await mockDb.delete(entries);
@@ -107,7 +103,7 @@ describe("entry-repository", () => {
 			await setHabitQuantityOn(habitId, DAY_1, 10);
 			await seedNote(habitId);
 
-			await setHabitQuantityOn(habitId, DAY_1, 3); // dropped under target
+			await setHabitQuantityOn(habitId, DAY_1, 3);
 			await setHabitQuantityOn(habitId, DAY_1, 10);
 
 			expect(await mockDb.select().from(entries)).toEqual([

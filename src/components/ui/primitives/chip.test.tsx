@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 import { Chip } from "./chip";
 
 describe("Chip", () => {
-	it("draws a check when selected, so selection is not colour alone (08.7)", async () => {
+	it("draws a check when selected, so selection is not colour alone", async () => {
 		await render(<Chip label="Mon" selected onPress={() => {}} />);
 		expect(screen.getByTestId("chip-check")).toBeTruthy();
 	});

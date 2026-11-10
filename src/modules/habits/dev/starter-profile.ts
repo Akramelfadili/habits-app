@@ -10,14 +10,6 @@ import {
 } from "../constants";
 import type { IsoWeekday } from "../types";
 
-/**
- * Starter profile (development builds only, see docs/how-to/starter-habits.md):
- * the habits a dev build should contain, read from the gitignored
- * `.env.local`. The shape is deliberately small — a name, a built-in category
- * (which supplies icon and color), how often, an optional quantity target and
- * optional reminders. Nothing here is personal; the values are.
- */
-
 export const STARTER_PROFILE_SETTING_KEY = "dev.starterProfile";
 
 const BUILT_IN_NAMES = BUILT_IN_CATEGORIES.map((category) => category.name) as [
@@ -30,21 +22,18 @@ const isoWeekday = z.number().int().min(1).max(7);
 const reminderSchema = z.object({
 	hour: z.number().int().min(0).max(23),
 	minute: z.number().int().min(0).max(59),
-	/** Omitted = every day. */
 	weekdays: z.array(isoWeekday).min(1).max(7).optional(),
 });
 
 const habitSchema = z.object({
 	name: z.string().trim().min(1).max(MAX_HABIT_NAME_LENGTH),
 	category: z.enum(BUILT_IN_NAMES),
-	/** Omitted = daily. */
 	perWeek: z
 		.number()
 		.int()
 		.min(MIN_TIMES_PER_WEEK)
 		.max(MAX_TIMES_PER_WEEK)
 		.optional(),
-	/** Omitted = a simple check. */
 	target: z
 		.object({
 			amount: z.number().int().min(MIN_TARGET_AMOUNT).max(MAX_TARGET_AMOUNT),
@@ -57,10 +46,7 @@ const habitSchema = z.object({
 const starterProfileSchema = z
 	.object({
 		version: z.number().int().min(1),
-		/**
-		 * Opt in to replacing a database that already holds check-ins, notes or
-		 * frozen days when no version marker exists (a first apply on real data).
-		 */
+		// Opt-in guard against wiping real check-ins, notes or frozen days on a first apply.
 		replace: z.boolean().optional(),
 		habits: z.array(habitSchema).min(1).max(100),
 	})
@@ -79,10 +65,7 @@ export type ParsedStarterProfile =
 	| { status: "invalid"; reason: "invalid_json" | "invalid_shape" }
 	| { status: "ok"; profile: StarterProfile };
 
-/**
- * Reads the raw variable. Never throws and never echoes the content: the
- * reason is a code, because the content holds the personal habit names.
- */
+// Never echoes the content: the reason is a code, because it holds personal habit names.
 export function parseStarterProfile(
 	raw: string | undefined,
 ): ParsedStarterProfile {
@@ -98,7 +81,6 @@ export function parseStarterProfile(
 	return { status: "ok", profile: result.data };
 }
 
-/** The weekdays a reminder rings on: all seven unless the profile narrows it. */
 export function reminderWeekdays(
 	weekdays: readonly number[] | undefined,
 ): IsoWeekday[] {

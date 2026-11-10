@@ -11,11 +11,7 @@ type TodayRolloverBannerProps = {
 	onDismiss: () => void;
 };
 
-/**
- * The app stayed open across midnight. Today has moved to the new day by itself; this info banner
- * says so and sums up the day that closed. It is a state that lasts, so it stays until dismissed,
- * and it is spoken when it appears: a screen reader is not looking at the date.
- */
+// Spoken when it appears: a screen reader is not looking at the date.
 export function TodayRolloverBanner({
 	notice,
 	today,

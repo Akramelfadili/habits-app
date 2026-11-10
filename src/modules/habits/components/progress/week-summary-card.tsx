@@ -43,7 +43,6 @@ export function weekBarColumns(
 	});
 }
 
-/** Daily bars of due habits done, then perfect days, freezes used and bonus logs. */
 export function WeekSummaryCard({ summary, today }: WeekSummaryCardProps) {
 	const columns = weekBarColumns(summary, today);
 	const best = columns

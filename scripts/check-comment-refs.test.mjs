@@ -1,5 +1,4 @@
-// Tests for scripts/check-comment-refs.mjs, on synthetic sources. The ticket
-// ids and version words are assembled at runtime so this file stays clean.
+// Ticket ids and version words are assembled at runtime so this file stays clean.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { checkAgainstAllowlist, findHits } from "./check-comment-refs.mjs";

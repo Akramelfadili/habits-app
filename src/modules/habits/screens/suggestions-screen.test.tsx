@@ -143,7 +143,6 @@ describe("SuggestionsScreen (BS1)", () => {
 		await fireEvent.press(screen.getByText("Meditate"));
 		await fireEvent.press(screen.getByText("Read 20 min"));
 		expect(mockPush).not.toHaveBeenCalled();
-		// The rest are still pickable.
 		await fireEvent.press(screen.getByLabelText(/^Cold shower/));
 		expect(mockPush).toHaveBeenCalledTimes(1);
 	});

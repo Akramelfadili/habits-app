@@ -100,9 +100,9 @@ describe("useOffScheduleQueries", () => {
 
 	it("lists today's bonus logs only for habits not due today", async () => {
 		mockEntries = [
-			entry(1, 1, "2026-10-04"), // Gym on a Sunday: off-schedule
-			entry(2, 2, "2026-10-04"), // Walk is daily: a normal log
-			entry(3, 1, "2026-10-02"), // Gym on Friday: not today
+			entry(1, 1, "2026-10-04"),
+			entry(2, 2, "2026-10-04"),
+			entry(3, 1, "2026-10-02"),
 		];
 		const { result } = await renderHook(() => useOffScheduleQueries(SUNDAY));
 

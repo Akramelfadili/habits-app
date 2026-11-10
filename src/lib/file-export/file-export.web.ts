@@ -1,11 +1,6 @@
 import type * as NativeFileExport from "./file-export";
 import type { WrittenFile } from "./file-export";
 
-/**
- * Web-only stand-in for `file-export.ts` — web exists only for visual checks,
- * and expo-file-system has no web backing. Nothing is written anywhere; sizes
- * are the UTF-8 length so the ready card shows a plausible number.
- */
 const scratch = new Map<string, string>();
 
 export function clearExports(): void {

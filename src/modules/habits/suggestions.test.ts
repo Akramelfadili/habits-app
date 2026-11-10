@@ -6,7 +6,7 @@ import {
 } from "./suggestions";
 
 describe("SUGGESTIONS (D10)", () => {
-	it("bundles nine, within the spec's 8 to 10", () => {
+	it("bundles nine, within the 8 to 10 range", () => {
 		expect(SUGGESTIONS).toHaveLength(9);
 	});
 

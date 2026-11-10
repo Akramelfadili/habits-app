@@ -3,12 +3,6 @@ import type { Entry } from "../types";
 import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
-/**
- * The Today frames' data (docs/mockups/v3/renders/today): one habit per row the mockup
- * draws, pinned to Friday 23 Oct 2026 by the visual checks. `today-v3` is the main frame;
- * `today-v3-at-risk` the streak-at-risk sheets; `today-v3-all-done` the all-done state;
- * `today-v3-rest` a Saturday with nothing due.
- */
 export type TodayV3Scenario =
 	| "today-v3"
 	| "today-v3-at-risk"
@@ -77,7 +71,6 @@ const UPPER_BODY: FixtureHabit = {
 	frequency: { type: "weekdays", days: [2, 4] },
 };
 
-/** The six habits the Today and Progress frames draw, by name (Progress fixtures re-date them). */
 export const V3_FRAME_HABITS = {
 	water: DRINK_WATER,
 	cold: COLD_SHOWER,
@@ -98,7 +91,6 @@ export function todayV3Habits(scenario: TodayV3Scenario): FixtureHabit[] {
 	return [DRINK_WATER, COLD_SHOWER, MEDITATE, READ, NO_SOCIAL, UPPER_BODY];
 }
 
-/** Entries on the `daysAgo`..`daysAgo + count - 1` days before now. */
 function run(habitId: number, from: number, count: number, startId: number) {
 	return Array.from(
 		{ length: count },
@@ -128,7 +120,6 @@ export function todayV3Entries(scenario: TodayV3Scenario): Entry[] {
 	});
 
 	if (scenario === "today-v3-rest") {
-		// Cold shower met its 3× this week: it says "back Monday".
 		return [
 			entry(1, 2, format(subDays(new Date(), 5), "yyyy-MM-dd")),
 			entry(2, 2, format(subDays(new Date(), 3), "yyyy-MM-dd")),
@@ -146,7 +137,6 @@ export function todayV3Entries(scenario: TodayV3Scenario): Entry[] {
 		];
 	}
 	if (scenario === "today-v3-at-risk") {
-		// Meditate: 13 days ending the day before yesterday; yesterday missed.
 		return [
 			entry(1, 1, today, 5),
 			entry(2, 2, monday),

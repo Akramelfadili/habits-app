@@ -9,11 +9,9 @@ import { OTHER_CATEGORY_NAME } from "../constants";
 import type { Category, CreateCategoryInput, DeletedCategory } from "../types";
 import { allCategoriesQuery, rowToCategory } from "./category-rows";
 
-/** Live-query hook: every category in the stored group order. */
 export function useCategories(): Category[] {
 	const { data } =
 		useLiveRows<typeof categories.$inferSelect>(allCategoriesQuery);
-	// Stable until a row changes, so what Today and Habits group by it can be memoised.
 	return useMemo(() => data.map(rowToCategory), [data]);
 }
 
@@ -22,13 +20,8 @@ export async function getCategories(): Promise<Category[]> {
 	return rows.map(rowToCategory);
 }
 
-/**
- * Creates a custom category. Its icon/color come from the caller — the same
- * rotation pick the add-category sheet previewed — so what was shown is
- * exactly what's created. Name validation (length, duplicates) happens before
- * this, in the form schema. It goes last in the stored order (max + 1, read in
- * the same statement).
- */
+// Icon/color come from the caller so what the sheet previewed is exactly what's created.
+// Name validation happens before this, in the form schema.
 export async function createCategory(
 	input: CreateCategoryInput,
 ): Promise<Category> {
@@ -46,7 +39,6 @@ export async function createCategory(
 	return rowToCategory(present(row, "the category row"));
 }
 
-/** The custom category `id`; built-ins are locked, so they never get past this. */
 async function customCategoryRow(id: number, action: string) {
 	const [row] = await db.select().from(categories).where(eq(categories.id, id));
 	if (!row) throw new Error(`Category ${id} not found`);
@@ -54,10 +46,6 @@ async function customCategoryRow(id: number, action: string) {
 	return row;
 }
 
-/**
- * Renames a custom category. Name validation (length, duplicates including built-ins) happens
- * before this, in the same form schema as creating one.
- */
 export async function renameCategory(
 	id: number,
 	name: string,
@@ -71,12 +59,8 @@ export async function renameCategory(
 	return rowToCategory(present(row, "the category row"));
 }
 
-/**
- * Deletes a custom category, moving every habit in it (archived ones too) to the built-in
- * Other, in one transaction: either all of them move and the category goes, or nothing changes.
- * Moved habits go to the end of the manual order, keeping their relative order, so they land
- * last in Other's group without colliding with anyone's sort slot.
- */
+// Moved habits go to the end of the manual order, keeping their relative order, so they land
+// last in Other without colliding with anyone's sort slot.
 export async function deleteCategory(id: number): Promise<DeletedCategory> {
 	const deleted = await customCategoryRow(id, "delete");
 	const [other] = await db
@@ -90,7 +74,6 @@ export async function deleteCategory(id: number): Promise<DeletedCategory> {
 		);
 	if (!other) throw new Error("The built-in Other category is missing");
 
-	// Same raw begin/commit as the habit repository's multi-row writes.
 	await db.run(sql`begin`);
 	try {
 		const moving = await db
@@ -117,10 +100,6 @@ export async function deleteCategory(id: number): Promise<DeletedCategory> {
 	}
 }
 
-/**
- * The Undo for deleting a category nobody used: the same row (id, look, place in the order)
- * goes back. Habits are untouched, none were in it.
- */
 export async function restoreCategory(
 	deleted: DeletedCategory,
 ): Promise<Category> {
@@ -140,12 +119,8 @@ export async function restoreCategory(
 	return rowToCategory(present(row, "the category row"));
 }
 
-/**
- * Stores a new group order: `orderedIds` are every movable category (all but the built-in
- * Other) in the order the person left them, numbered 1...n in one transaction. Other is then set
- * to n + 1, so it stays last and a later new category (max + 1) can only land after it, where
- * the groups still force Other to the end.
- */
+// Other is set to n + 1 so it stays last; a later new category (max + 1) can only land after
+// it, where the groups still force Other to the end.
 export async function reorderCategories(orderedIds: number[]): Promise<void> {
 	await db.run(sql`begin`);
 	try {

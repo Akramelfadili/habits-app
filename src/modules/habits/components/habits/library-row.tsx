@@ -10,23 +10,14 @@ type VoiceOverAction = { label: string; onAction: () => void };
 type LibraryRowProps = {
 	habit: Habit;
 	subtitle: string;
-	/** "Drink water, Health, daily, 8 glasses": what VoiceOver reads as the row. */
 	accessibilityLabel: string;
 	onPress: () => void;
-	/**
-	 * Reorder mode: the drag grip, which replaces the chevron. The row stops being a link while it is on
-	 * screen, since a tap on it would only open Detail mid-drag.
-	 */
+	// The row stops being a link in reorder mode: a tap would only open Detail mid-drag.
 	handle?: ReactNode;
 	lifted?: boolean;
-	/** VoiceOver's Reorder and Archive: the gestures a screen reader cannot make. */
 	accessibilityActions?: VoiceOverAction[];
 };
 
-/**
- * One active habit in the library: its category's icon square, name, a line saying how it repeats,
- * a chevron to Detail. In reorder mode the grip takes the chevron's place.
- */
 export function LibraryRow({
 	habit,
 	subtitle,
@@ -61,10 +52,7 @@ type ArchivedLibraryRowProps = {
 	disabled?: boolean;
 };
 
-/**
- * One archived habit: dimmed, with the date it left Today and an instant Restore. The row still
- * opens Detail; Restore is its own 44 pt target beside it, never nested inside the row's button.
- */
+// Restore is a sibling of the row's button, never nested inside it.
 export function ArchivedLibraryRow({
 	habit,
 	subtitle,

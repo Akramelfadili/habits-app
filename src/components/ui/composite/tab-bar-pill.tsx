@@ -21,66 +21,37 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { useReducedTransparency } from "@/utils/use-reduced-transparency";
 
-/**
- * The floating pill tab bar. It overlays the content, which scrolls under it; every scrolling
- * screen pays `TAB_BAR_BOTTOM_PADDING` for that.
- *
- * Geometry is the mockup's: 56 pt tall, 16 pt side insets, floating 22 pt above the bottom
- * safe-area inset, 4 pt of padding around items that are therefore 48 pt tall. The hit area reaches
- * the pill's edge.
- */
-
 export const PILL_HEIGHT = 56;
 
-/**
- * How far the pill floats above the *screen* edge, not above the safe-area inset. The mockup draws
- * the home indicator at 8 with a 5 pt bar and the pill at 22, so a floating bar deliberately sits
- * over the home-indicator strip. It is also the only reading under which the bottom padding of
- * 112 = 56 + 22 + 22 + 12 and the toast bottom of 90 come out right.
- */
+// Measured from the *screen* edge, not the safe-area inset: the pill deliberately sits over the
+// home-indicator strip, which is the only reading where the 112 bottom padding and 90 toast offset work.
 export const PILL_BOTTOM_INSET = 22;
 
 export const PILL_SIDE_INSET = space[400];
 
-/** The padding inside the pill — also how far a hit area reaches past its item. */
 const PILL_PADDING = space[100];
 
 const PILL_CLEARANCE = 22;
 
-/** The strip under that gap which nothing may occupy. */
 const PILL_SAFE_ZONE = 12;
 
-/**
- * What every scrolling screen inside the tabs pays as bottom padding, so the last row's circle is
- * never under the bar: 56 + 22 + 22 + 12 = 112.
- */
 export const TAB_BAR_BOTTOM_PADDING =
 	PILL_HEIGHT + PILL_BOTTOM_INSET + PILL_CLEARANCE + PILL_SAFE_ZONE;
 
 export const BAR_A_HEIGHT = 56;
 
-/**
- * Where a toast's bottom edge sits: 12 pt above the pill, 16 pt above bar A. `accessibilityTextSize`
- * is `useAccessibilityTextSize()`, the same switch the bar itself reads.
- */
 export function tabBarToastOffset(
 	bottomInset: number,
 	accessibilityTextSize: boolean,
 ): number {
-	// Bar A sits on the screen edge and carries the inset itself, so its toast
-	// clears both. The pill already floats clear of the inset (see
-	// PILL_BOTTOM_INSET), so its toast is a flat 90 from the edge.
+	// Bar A carries the inset itself, so its toast clears both; the pill already floats clear of it.
 	return accessibilityTextSize
 		? bottomInset + BAR_A_HEIGHT + space[400]
 		: PILL_BOTTOM_INSET + PILL_HEIGHT + space[300];
 }
 
-/**
- * expo-blur's 1–100 `intensity` is not a blur radius, so the mockup's "20 pt
- * blur" has no exact equivalent; this is its default, and the fill above it
- * (`pillBg`, 88 % light / 94 % dark) is what actually carries the look. Worth
- * an eye on a device — see the phone checklist.
- */
+// expo-blur's 1–100 `intensity` is not a blur radius, so the mockup's 20 pt blur has no exact
+// equivalent; the `pillBg` fill is what carries the look.
 const PILL_BLUR_INTENSITY = 50;
 
 export type TabBarIconName = "today" | "progress" | "habits";
@@ -95,16 +66,7 @@ export type TabBarPillItem = {
 
 type TabBarPillProps = {
 	items: readonly TabBarPillItem[];
-	/**
-	 * The device's bottom safe-area inset. Only bar A uses it — it sits on the
-	 * screen edge and carries the inset as its own padding; the pill floats at
-	 * a flat 22 pt over the home indicator (see `PILL_BOTTOM_INSET`).
-	 */
 	bottomInset: number;
-	/**
-	 * Inert: no tab can be tapped. True while a sheet or alert is open (no tab switching mid-decision).
-	 * The pill stays visible and reads as disabled rather than disappearing.
-	 */
 	disabled?: boolean;
 };
 
@@ -150,7 +112,6 @@ export function TabBarPill({
 		<View
 			testID="tab-bar-pill"
 			accessibilityRole="tablist"
-			// Inert, not hidden: the bar is still part of the layout under a sheet.
 			pointerEvents={disabled ? "none" : "box-none"}
 			style={[
 				styles.pill,
@@ -164,7 +125,6 @@ export function TabBarPill({
 			]}
 		>
 			{reducedTransparency ? (
-				// A solid card, no blur: the same geometry and hairline.
 				<View
 					testID="tab-bar-pill-solid"
 					style={[styles.material, { backgroundColor: colors.card }]}
@@ -218,8 +178,6 @@ function TabBarPillTab({
 		}).start();
 	}
 
-	// Press: a large target scales to 98 %; Reduce Motion flashes to 70 % opacity instead and never
-	// scales.
 	const scale = reducedMotion
 		? 1
 		: press.interpolate({
@@ -233,8 +191,6 @@ function TabBarPillTab({
 			})
 		: 1;
 
-	// The selected item's filled capsule, and the pressed fill under an unselected one: the two swap
-	// tone between schemes.
 	const selectedFill = scheme === "dark" ? colors.track : colors.inner;
 	const pressedFill = scheme === "dark" ? colors.inner : colors.track;
 
@@ -259,7 +215,6 @@ function TabBarPillTab({
 			accessibilityLabel={item.label}
 			accessibilityState={{ selected: item.focused, disabled }}
 			disabled={disabled}
-			// Reaches the pill's edge, so there is no dead strip around an item.
 			hitSlop={PILL_PADDING}
 			onPressIn={() => animatePress(1)}
 			onPressOut={() => animatePress(0)}
@@ -310,7 +265,6 @@ function TabBarPillTab({
 	);
 }
 
-/** The selected capsule, crossfading between items. */
 function TabCapsule({
 	visible,
 	color,
@@ -343,11 +297,7 @@ function TabCapsule({
 	);
 }
 
-/**
- * The three tab glyphs: Today is a ring with a check, Progress three rising bars, Habits a list.
- * Drawn from the mockup's geometry rather than SF Symbols, which are the one icon set that renders
- * as nothing on web, and the tab bar is in every visual baseline.
- */
+// Drawn rather than SF Symbols, which render as nothing on web, and the tab bar is in every visual baseline.
 function TabGlyph({ name, color }: { name: TabBarIconName; color: string }) {
 	if (name === "today") {
 		return (
@@ -386,7 +336,6 @@ function TabGlyph({ name, color }: { name: TabBarIconName; color: string }) {
 	);
 }
 
-/** Icon box: 18 pt wide, so the three glyphs sit on one baseline. */
 const GLYPH_BOX = 18;
 const STROKE = 2;
 
@@ -417,10 +366,6 @@ const styles = StyleSheet.create({
 		...StyleSheet.absoluteFill,
 		borderRadius: radius.pill,
 	},
-	/**
-	 * The AX fallback: a full-width card with a top hairline, 56 pt over the bottom inset. Absolute like
-	 * the pill, so the 112 pt bottom padding and the scroll-under behaviour are the same in both modes.
-	 */
 	barA: {
 		position: "absolute",
 		left: 0,
@@ -455,7 +400,6 @@ const styles = StyleSheet.create({
 	label: {
 		textAlign: "center",
 	},
-	/** The selected tab's label: ink plus the one 600 in the type scale. */
 	labelSelected: {
 		fontWeight: "600",
 	},

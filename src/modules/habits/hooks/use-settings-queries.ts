@@ -17,10 +17,7 @@ import { useFrozenDays } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
 import { useAllReminders } from "../repositories/reminder-repository";
 
-/**
- * Everything the Settings screen shows. The Evening review reads the very setting the
- * per-habit Reminders screen reads, so the two can't drift.
- */
+// The Evening review reads the same setting as the per-habit Reminders screen, so the two can't drift.
 export function useSettingsQueries() {
 	const preference = useThemePreferenceStore((state) => state.preference);
 	const hapticsEnabled = useHapticsStore((state) => state.enabled);
@@ -38,15 +35,11 @@ export function useSettingsQueries() {
 		hapticsEnabled,
 		resolvedScheme: scheme,
 		eveningReviewEnabled: eveningReview === "true",
-		/** The Evening review's time: the stored choice, else 21:30. */
 		eveningReviewTime: parseEveningReviewTime(eveningTime),
-		/** Reminders use a generic title: on unless the person turned it off. */
 		hideHabitNames: hideNames !== "false",
 		notificationsDenied: permission === "denied",
 		notificationPermission: permission,
-		/** What a denied permission holds back. */
 		notificationImpact: notificationImpact(reminders, habits),
-		/** The shared monthly pool, counted by missed date: for the "used this month" row. */
 		freezePool: {
 			size: FREEZE_POOL_SIZE,
 			usedThisMonth: freezesUsedInMonth(frozenDays, new Date()),

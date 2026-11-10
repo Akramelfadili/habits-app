@@ -81,22 +81,12 @@ import {
 import type { FrequencyType, Habit, IsoWeekday, ReminderDraft } from "../types";
 
 type HabitFormScreenProps = {
-	/** Present in edit mode; absent when creating a new habit. */
 	habitId?: number;
-	/** Opens scrolled to this section: "frequency", from an insight's "Change frequency" action. */
 	focus?: "frequency";
-	/** Opens New habit with this name already in the field: "Add Yoga as a habit" from a search with no results. */
 	name?: string;
-	/** Opens New habit filled in from a suggestion, with the banner saying so. */
 	prefill?: HabitFormPrefill;
-	/** The same suggestion as the `prefill` route param (a JSON string); `prefill` wins when both are given. */
 	prefillParam?: string;
-	/**
-	 * Part of First Run: a saved habit marks First Run as seen, offers the reminder question
-	 * (unless reminders were queued here) and hands over to Today, with no way back to the welcome.
-	 */
 	firstRun?: boolean;
-	/** The slim first-habit form: name, quick picks, type and frequency; nothing else. */
 	slim?: boolean;
 };
 
@@ -110,12 +100,6 @@ const ALL_DAYS: IsoWeekday[] = WEEKDAYS.map(({ day }) => day);
 const byTime = (a: ReminderDraft, b: ReminderDraft) =>
 	a.hour - b.hour || a.minute - b.minute;
 
-/**
- * Add / Edit habit: one modal form in the order people decide things (Type, Name,
- * Category, Goal, Frequency) with Save pinned at the bottom and, while it is off, the reason
- * under it. Only the name is required; no category means Other. The category supplies the
- * icon and colour. Errors sit next to their fields; closing with edits asks first.
- */
 export function HabitFormScreen({
 	habitId,
 	focus,
@@ -165,12 +149,8 @@ export function HabitFormScreen({
 	const [queued, setQueued] = useState<QueuedReminder[]>([]);
 	const nextKey = useRef(1);
 	const [sheet, setSheet] = useState<SheetState>(null);
-	// A hairline above Save once content scrolls under the pinned header.
 	const [isScrolled, setIsScrolled] = useState(false);
-	// The Save bar is in the column under the scroller, so the scroller ends where
-	// it starts. When errors (or a reason) make the bar taller the scroller gets
-	// shorter, and a form resting at its end would keep its offset and leave the
-	// last field under the bar: it follows the end instead.
+	// When errors make the Save bar taller the scroller gets shorter; a form resting at its end would leave the last field under the bar, so it follows the end.
 	const atEnd = useRef(false);
 	const footerHeight = useRef(0);
 
@@ -234,7 +214,6 @@ export function HabitFormScreen({
 	});
 	const isSubmitting = isCreating || isUpdating;
 	const isSaveDisabled = issues.reason !== undefined || isSubmitting;
-	// A failed save moves the screen reader onto the error above Save.
 	const errorRef = useRef<HostInstance>(null);
 	useInitialFocus(errorRef, submitError !== null, 100);
 	const nameError = !issues.fields.includes("name")
@@ -243,14 +222,12 @@ export function HabitFormScreen({
 			? formCopy.name.duplicate(duplicate.name)
 			: formCopy.name.tooLong(MAX_HABIT_NAME_LENGTH);
 
-	// Break habits are yes or no: Quantity switches off and resets to Check.
 	useEffect(() => {
 		if (isBreak && targetTypeValue === "quantity") {
 			setValue("targetType", "simple", { shouldDirty: true });
 		}
 	}, [isBreak, targetTypeValue, setValue]);
 
-	// The days a fresh reminder starts on: the ones the habit can fall on.
 	const reminderDays = (): IsoWeekday[] =>
 		frequencyTypeValue === "weekdays" && weekdaysValue.length > 0
 			? [...weekdaysValue].sort((a, b) => a - b)
@@ -258,7 +235,6 @@ export function HabitFormScreen({
 
 	const guard = useLeaveGuard(formState.isDirty || queued.length > 0);
 
-	// A successful save or archive leaves without asking: stop guarding, then go.
 	function close() {
 		guard.leaveWith(() => (firstRun ? leaveFirstRun(router) : router.back()));
 	}
@@ -272,16 +248,13 @@ export function HabitFormScreen({
 		const other = findBuiltInCategory(categories, OTHER_CATEGORY_NAME);
 		const categoryId = values.categoryId ?? other?.id;
 		const frequency = toFrequency(values);
-		// Stale Amount/Unit input never leaks in if Quantity was picked, then
-		// switched back to Check — a simple-check habit always has null.
+		// Stale Amount/Unit input never leaks in if Quantity was picked, then switched back to Check.
 		const targetAmount =
 			values.targetType === "quantity" ? values.targetAmount : null;
 		const targetUnit =
 			values.targetType === "quantity" ? values.targetUnit.trim() : null;
 
-		// This modal has no ToastHost (it sits above the Habits stack), so a
-		// failed save is shown inline, above Save — the form stays as it was,
-		// and a retry is one tap. `runSafely` also logs it and never rejects.
+		// This modal has no ToastHost (it sits above the Habits stack), so a failed save is shown inline above Save.
 		setSubmitError(null);
 		let remindersFailed = false;
 		let savedHabit: Habit | undefined;
@@ -338,9 +311,7 @@ export function HabitFormScreen({
 		close();
 	}
 
-	// Archiving is reversible, so it's one tap with an Undo toast, the same as Detail's. This
-	// modal has no ToastHost, so a failure is shown inline; the toast is raised for the screen
-	// underneath, as the form closes.
+	// The modal has no ToastHost, so a failure is shown inline; the Undo toast is raised for the screen underneath as the form closes.
 	async function handleArchive() {
 		if (habitId === undefined || !habit) return;
 		const { name: archivedName } = habit;
@@ -418,8 +389,7 @@ export function HabitFormScreen({
 			maxLength={MAX_HABIT_NAME_LENGTH}
 			limitMessage={formCopy.name.limit}
 			autoFocus={mode === "create"}
-			// Return goes on to Unit when a quantity habit has one; otherwise
-			// it just puts the keyboard away — never saves a half-filled form.
+			// Never saves a half-filled form: without a Unit field, Return only puts the keyboard away.
 			returnKeyType={targetTypeValue === "quantity" ? "next" : "done"}
 			onSubmitEditing={() =>
 				targetTypeValue === "quantity"
@@ -443,7 +413,6 @@ export function HabitFormScreen({
 				testID="habit-form-scroll"
 				// A chip tap with the keyboard up acts on the first tap, not just dismisses.
 				keyboardShouldPersistTaps="handled"
-				// Scrolling the form away from a field puts the keyboard away too.
 				keyboardDismissMode="on-drag"
 				contentContainerStyle={styles.scrollContent}
 				scrollEventThrottle={16}
@@ -502,7 +471,6 @@ export function HabitFormScreen({
 						}
 						onUnitBlur={() => setUnitTouched(true)}
 						unitRef={unitRef}
-						// The Unit field is low on the form — bring it clear of the keyboard.
 						onUnitFocus={() =>
 							scrollRef.current?.scrollToEnd({ animated: true })
 						}
@@ -607,7 +575,6 @@ export function HabitFormScreen({
 					label={mode === "create" ? formCopy.save.new : formCopy.save.edit}
 					onPress={handleSubmit(onSubmit)}
 					disabled={isSaveDisabled}
-					// A dimmed Save reads its reason as the hint ("Add a name to save").
 					accessibilityHint={isSaveDisabled ? issues.reason : undefined}
 					loading={isSubmitting}
 				/>
@@ -624,7 +591,6 @@ export function HabitFormScreen({
 				onDismiss={() => setIsAddCategoryOpen(false)}
 				onCreate={createCategory}
 				onCreated={(category) => {
-					// Back to the chips with the new one already selected.
 					setValue("categoryId", category.id, { shouldDirty: true });
 					setIsAddCategoryOpen(false);
 				}}
@@ -666,7 +632,6 @@ export function HabitFormScreen({
 	);
 }
 
-/** How close (pt) to the end of the form still counts as resting at it. */
 const AT_END_SLACK = 8;
 
 const styles = StyleSheet.create({

@@ -1,31 +1,14 @@
-/**
- * Every screen and state scripts/visual-check.mjs renders: one entry per state across all
- * features, so a single run covers the whole app and a shared-component change shows up on
- * every screen it touches, not just the feature that made it.
- *
- * Each entry: `feature` (groups the report), `route` (with the `?fixtures=` scenario, see
- * src/modules/habits/dev/habit-fixtures.ts), `mockup` (the render under
- * docs/mockups/v3/renders/ it is judged against, or null; earlier mockups live in the tag
- * mockups-v1-v2), optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
- * in CSS px, overrides the default 393x852, e.g. a small phone with the keyboard up),
- * `note`, `touch` (render in a touch-enabled page, for swipe gestures), `colorScheme`
- * ("light" default, or "dark": the emulated OS scheme, which the Appearance setting's
- * default "System" follows), and `interact(page, ctx)` for states only reachable by a tap
- * or gesture.
- */
+// Entry fields: `feature`, `route` (with `?fixtures=`), `mockup` (render it is judged against, or null), optional `clock`, `viewport` (CSS px, default 393x852),
+// `note`, `touch` (touch-enabled page, for swipes), `colorScheme` ("light" default, or "dark": the emulated OS scheme the "System" appearance follows)
+// and `interact(page, ctx)` for states only reachable by a tap or gesture.
 
-/**
- * "Now" for every screen unless it sets its own: a Thursday late in a month,
- * after every fixture's creation date. Pinned so a screenshot never depends
- * on the day the check runs — the baseline diff would drift daily otherwise.
- */
+// Pinned so a screenshot never depends on the day the check runs; the baseline diff would drift daily otherwise.
 export const DEFAULT_CLOCK = "2026-09-24T09:00:00";
 
-/** The Today frames dates: Friday 23 and Saturday 24 October 2026. */
 const V3_FRIDAY = "2026-10-23T09:00:00";
 const V3_SATURDAY = "2026-10-24T09:00:00";
 
-/** The Progress tab's range switcher — a tab per range; at AX sizes a collapsed button first. */
+// At AX sizes the switcher is a collapsed button first.
 async function showRange(page, range) {
 	await page.getByRole("tab", { name: range }).click();
 	await page.waitForTimeout(500);
@@ -46,7 +29,6 @@ async function openJuly14(page) {
 	await scrollProgress(page, 360);
 }
 
-/** Scrolls Habit Detail back to its top, so a sheet opened from its last rows is drawn over the title, as the frames are. */
 async function detailToTop(page) {
 	await page.evaluate(() => {
 		document
@@ -58,10 +40,7 @@ async function detailToTop(page) {
 
 const PROGRESS = "/(progress)/progress?fixtures=";
 
-/**
- * A real pointer drag in small steps — gesture-handler's pans only activate
- * after a few pixels of movement, so a single jump never registers.
- */
+// Small steps: gesture-handler's pans only activate after a few pixels of movement, so a single jump never registers.
 async function drag(page, locator, { dx = 0, dy = 0, release = true }) {
 	const box = await locator.boundingBox();
 	const x = box.x + box.width / 2;
@@ -72,11 +51,6 @@ async function drag(page, locator, { dx = 0, dy = 0, release = true }) {
 	if (release) await page.mouse.up();
 }
 
-/**
- * Scrolls the Add habit form to its end and fails the capture if the pinned
- * footer (Save and its reason) sits over the last field: the end of the form
- * must clear it with room to spare.
- */
 async function scrollFormToEndClearOfSave(page) {
 	const box = await page.getByTestId("habit-form-scroll").boundingBox();
 	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -101,10 +75,7 @@ async function scrollFormToEndClearOfSave(page) {
 	}
 }
 
-/**
- * Fails the capture if any insight card's text runs past its card's right edge
- * (the Year insight once ran off the screen on one line instead of wrapping).
- */
+// The Year insight once ran off the screen on one line instead of wrapping.
 async function assertInsightsWrap(page) {
 	const bad = await page.evaluate(() => {
 		const out = [];
@@ -137,12 +108,6 @@ async function assertInsightsWrap(page) {
 	}
 }
 
-/**
- * With Progress scrolled so the range switcher is pinned, fails the capture
- * unless: the inline bar has no hairline of its own, the pinned block starts
- * exactly where the bar ends and draws the only hairline, the control has air
- * above it, and Export has margin above and below inside the bar.
- */
 async function assertStickyHeaderClear(page) {
 	await page.getByTestId("progress-range-bar").waitFor();
 	await page.getByTestId("header-pill").first().waitFor({ state: "attached" });
@@ -196,7 +161,6 @@ async function assertStickyHeaderClear(page) {
 	if (problems.length) throw new Error(`sticky header: ${problems.join("; ")}`);
 }
 
-/** A lazily bundled route can take a while the first time: wait for its title before capturing. */
 async function untilTitled(page, title) {
 	await page
 		.getByRole("heading", { name: title, exact: true })
@@ -205,12 +169,7 @@ async function untilTitled(page, title) {
 	await page.waitForTimeout(300);
 }
 
-/**
- * The Today week strip after browsing: it must be on screen at full opacity
- * with a real height (it once stayed blank, its space kept, after a day was
- * chosen in another week), and every day must be its own labelled button
- * ("Wednesday 14 October, 3 of 5 done").
- */
+// The strip once stayed blank, its space kept, after a day was chosen in another week.
 async function assertStripShown(page) {
 	const m = await page.evaluate(() => {
 		const strip = document.querySelector('[data-testid="week-strip"]');
@@ -811,7 +770,6 @@ export const SCREENS = {
 			await page.getByText("Meditate").click();
 		},
 	},
-	// Clock = the mockup's Friday 23 October.
 	"habit-detail": {
 		feature: "HAB-40",
 		route: "/(today)/habit/3?fixtures=habits-v3",
@@ -969,7 +927,6 @@ export const SCREENS = {
 		note: "Four times: no +, the cap note under the card; a time stored as off says Off; the habit is daily so no warning.",
 	},
 
-	// Clock = the mockup's Friday 23 October.
 	"habits-tab": {
 		feature: "HAB-39",
 		route: "/(habits)/manage?fixtures=habits-v3",
@@ -1311,8 +1268,7 @@ export const SCREENS = {
 		},
 	},
 
-	// Failure states. Reached only through the web fixtures
-	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in the app.
+	// Reached only through the web fixtures (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in the app.
 	"error-screen-migration-failed": {
 		feature: "HAB-47",
 		route: "/?fixtures=migration-fails",
@@ -1450,8 +1406,6 @@ export const SCREENS = {
 			await page.getByText("Couldn't save this habit. Try again.").waitFor();
 		},
 	},
-	// The navigation shell: the floating pill and the layout rules that come with it.
-	// The pill is in every other baseline too; these are the frames the spec draws it in.
 	"tab-bar-today": {
 		feature: "HAB-27",
 		route: "/",
@@ -1808,7 +1762,6 @@ export const SCREENS = {
 		},
 	},
 
-	// Today UI. Clock = the mockup's Friday 23 October.
 	"today-v3": {
 		feature: "HAB-30",
 		route: "/?fixtures=today-v3",
@@ -2169,11 +2122,7 @@ for (const name of DARK_TWINS) {
 	};
 }
 
-/**
- * Every screen that renders a habit name, re-run with `longNames=1`
- * (src/modules/habits/dev/habit-fixtures.ts): the first two habits get a 40-character name
- * (over today's 32 cap) and one at exactly 32, to catch bad truncation or wrapping.
- */
+// `longNames=1` gives the first two habits a 40-character name (over the 32 cap) and one exactly 32, to catch bad truncation or wrapping.
 const LONG_NAME_TWINS = [
 	"today",
 	"retro-log",
@@ -2199,10 +2148,7 @@ for (const name of LONG_NAME_TWINS) {
 	};
 }
 
-/**
- * Detail and its delete sheet with a long name. The Habits frames' habits
- * are not the fixture's first two, so these point at one that is: Drink water.
- */
+// The Habits frames' habits are not the fixture's first two, so these point at one that is: Drink water.
 const LONG_DETAIL = "/(today)/habit/1?fixtures=habits-v3&longNames=1";
 SCREENS["habit-detail-long-names"] = {
 	...SCREENS["habit-detail"],
@@ -2219,12 +2165,7 @@ SCREENS["delete-confirm-long-names"] = {
 	note: "delete-confirm with a 40-char V1 name (HAB-22): the title and the consequence wrap inside the sheet.",
 };
 
-/**
- * Dynamic Type. Every screen and sheet that had no accessibility-size state, re-run with
- * `?textSize=ax` (src/lib/dev-text-size) in light and dark. The screens that already had
- * one (`*-ax`) are above. Each takes the base state's route and its interaction unchanged,
- * so a sheet or toast is opened the same way.
- */
+// Each takes the base state's route and interaction unchanged, so a sheet or toast is opened the same way.
 const AX_VARIANTS = [
 	[
 		"quantity-sheet-stepper",
@@ -2302,9 +2243,7 @@ for (const [name, note] of AX_VARIANTS) {
 	}
 }
 
-// The Progress range control collapses to a list at AX sizes, and the week matrix
-// becomes one block of day buttons per habit, so these two states are opened through
-// those controls rather than the standard ones.
+// At AX sizes the range control is a list and the week matrix is a block of day buttons per habit, so these states are opened through those controls.
 for (const dark of [false, true]) {
 	const suffix = dark ? "-dark" : "";
 	SCREENS[`progress-habit-picker-ax${suffix}`] = {

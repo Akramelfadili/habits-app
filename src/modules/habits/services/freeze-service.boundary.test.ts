@@ -4,11 +4,8 @@ import { FREEZE_POOL_SIZE } from "../constants";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as FreezeService from "./freeze-service";
 
-/**
- * The shared freeze pool at a month's edge (resets on the 1st), through the service and
- * the real repository on a test database: the unit test (`freeze-service.test.ts`) mocks
- * the count and never sees a date.
- */
+// The unit test (`freeze-service.test.ts`) mocks the count and never sees a date, so the
+// month edge goes through the real repository here.
 const mockDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 

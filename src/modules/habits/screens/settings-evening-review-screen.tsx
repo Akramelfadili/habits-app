@@ -16,14 +16,8 @@ import { useSettingsQueries } from "../hooks/use-settings-queries";
 import { reminderSheetCopy, settingsCopy } from "../messages";
 import { formatReminderTime } from "../presenters/reminders-helpers";
 
-/** The sheet needs days; the Evening review ignores them (it hides the picker). */
 const ALL_DAYS = WEEKDAYS.map(({ day }) => day);
 
-/**
- * Settings > Evening review: the notifications-off notice first when iOS has them off,
- * then the switch and its time (the shared time wheel in a sheet without days), and the
- * rule for when it is sent.
- */
 export function SettingsEveningReviewScreen() {
 	const settings = useSettingsQueries();
 	const actions = useSettingsActions();

@@ -127,7 +127,6 @@ describe("useTodayLogActions", () => {
 			await act(() => result.current.openQuantitySheet(2));
 			expect(result.current.quantitySheet?.dayLabel).toBeUndefined();
 
-			// Today moves on; the new day has its own, different amount.
 			mockEntries = [
 				{ habitId: 2, date: "2026-10-14", value: 5 },
 				{ habitId: 2, date: "2026-10-15", value: 1 },

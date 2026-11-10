@@ -27,19 +27,12 @@ type EditDaySheetProps = {
 	onDismiss: () => void;
 };
 
-/**
- * One sheet for any past day. Every habit due that day sits in a row with its circle; a tap saves
- * at once and a toast above Done names the date and offers Undo. Quantity rows open the quantity
- * sheet for that date. A frozen day shows the violet circle, and logging it returns the freeze.
- * Future days are not editable.
- */
 export function EditDaySheet({ day, onDismiss }: EditDaySheetProps) {
 	const { colors } = useTheme();
 	const { toggleCompletion, restoreDay } = useTodayActions();
 	const { saveNote } = useDayNoteActions();
 	const [quantityHabit, setQuantityHabit] = useState<Habit | null>(null);
-	// The origin habit's note for the day, saved when the sheet closes (a note is
-	// text, not a tap: it has no Undo toast of its own).
+	// The origin habit's note, saved when the sheet closes: a note has no Undo toast of its own.
 	const [note, setNote] = useState<{ key: number; text: string } | null>(null);
 
 	if (!day) return <Sheet visible={false} onDismiss={onDismiss} />;
@@ -49,7 +42,6 @@ export function EditDaySheet({ day, onDismiss }: EditDaySheetProps) {
 		const habitId = day?.originHabitId;
 		if (day && habitId !== undefined && noteText !== day.note) {
 			const result = await saveNote(day.date, habitId, noteText);
-			// A failed save keeps the sheet open, with its error toast, for a retry.
 			if (!result.ok) return;
 		}
 		onDismiss();
@@ -121,7 +113,6 @@ export function EditDaySheet({ day, onDismiss }: EditDaySheetProps) {
 										quantityValue={typeof value === "number" ? value : 0}
 										status={editDayRowStatus(habit, value, frozen)}
 										onToggle={() => tap(habit)}
-										// Quantity rows open the sheet for that date: no +1 here.
 										onIncrement={() => setQuantityHabit(habit)}
 										onOpenQuantitySheet={
 											isQuantity ? () => setQuantityHabit(habit) : undefined

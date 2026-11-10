@@ -12,11 +12,7 @@ import { useSettingsQueries } from "../hooks/use-settings-queries";
 import { settingsCopy } from "../messages";
 import { versionLabel } from "../presenters/settings-helpers";
 
-/**
- * Settings > About: the version, Copy diagnostics (a toast confirms, no Undo) with a line
- * saying what it holds, and the Privacy policy, which opens the hosted page. Send feedback
- * is drawn in the frame but has no mailbox, so it is not built.
- */
+// Send feedback is not built: there is no mailbox.
 export function SettingsAboutScreen() {
 	const settings = useSettingsQueries();
 	const diagnostics = useDiagnosticsActions();

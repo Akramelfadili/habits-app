@@ -16,14 +16,7 @@ import { useLoggedDays } from "../repositories/entry-repository";
 import { useFrozenDaysInRange } from "../repositories/frozen-day-repository";
 import { useHabitsList } from "../repositories/habit-repository";
 
-/**
- * What a Progress screen shows, one shape for Week, Month and Year. Before "ready" the states
- * are distinct views: no habits at all, habits but nothing ever logged (the grid draws outlined
- * "nothing logged yet" cells), and too early (< 7 days of logs: an unlock card instead of stats
- * and insights, the grid still renders).
- */
 export type ProgressView<Grid> =
-	/** The habit list or the logged-day count hasn't loaded: a blank, not an empty state. */
 	| { state: "loading" }
 	| { state: "no-habits" }
 	| { state: "nothing-logged"; unlock: ProgressUnlock; grid: Grid }
@@ -33,22 +26,14 @@ export type ProgressView<Grid> =
 			unlock: ProgressUnlock;
 			grid: Grid;
 			summary: RangeSummary;
-			/** Ranked, never more than three; year-scale ones need 3 months of history. */
 			insights: ProgressInsight[];
-			/** The shared pool's freezes left this calendar month. */
 			freezesLeft: number;
 	  };
 
 export type ProgressOptions = {
-	/** One habit's variant; all habits when null or left out. */
 	habitId?: number | null;
 };
 
-/**
- * The reads every Progress range shares: the habit list, how much has been
- * logged (one aggregate row), the gate, and this month's freezes. The ranges'
- * own entry reads are bounded to their span in their own hooks.
- */
 export function useProgressBaseQueries(habitId: number | null | undefined) {
 	const today = useToday();
 	const { habits, loaded } = useHabitsList();
@@ -87,7 +72,6 @@ export function useProgressBaseQueries(habitId: number | null | undefined) {
 			loaded: isLoaded,
 			habits,
 			scoped,
-			/** `scoped`, with the days before the first log marked before-start while too early. */
 			gridHabits,
 			unlock,
 			gate,

@@ -15,7 +15,6 @@ type QuickPicksProps = {
 	onPick: (suggestion: Suggestion) => void;
 };
 
-/** Five of the bundled habits, one tap each, under the name field. */
 export function QuickPicks({ selectedName, onPick }: QuickPicksProps) {
 	return (
 		<View style={styles.field}>
@@ -38,7 +37,6 @@ export function QuickPicks({ selectedName, onPick }: QuickPicksProps) {
 	);
 }
 
-/** Under the slim first-run form: what can wait until later. */
 export function SlimFormNote() {
 	return (
 		<FieldHelper plain tone="hint">

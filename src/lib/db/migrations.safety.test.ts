@@ -1,6 +1,5 @@
 /** @jest-environment node */
 /// <reference types="node" />
-// Node ambient types are scoped to this file — it only ever runs under Jest.
 import fs from "node:fs";
 import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
@@ -13,15 +12,8 @@ import { SQLiteTable } from "drizzle-orm/sqlite-core";
 import * as schema from "./schema";
 import { createPartiallyMigratedTestDb } from "./test-db";
 
-/**
- * Migration safety. The device migrator applies every pending migration in one BEGIN...COMMIT
- * and only compares the last applied `created_at` with each journal `when`, so a mistake here
- * ships silently. Three layers:
- *
- * 1. static journal / snapshot / file-parity checks,
- * 2. every migration step upgraded from a seeded DB with foreign keys ON and OFF,
- * 3. a committed old-schema (0008) database upgraded to HEAD, and drift vs schema.ts.
- */
+// The device migrator applies every pending migration in one BEGIN...COMMIT and only compares the
+// last applied `created_at` with each journal `when`, so a mistake here ships silently.
 
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
 const META_DIR = path.join(MIGRATIONS_DIR, "meta");
@@ -33,7 +25,7 @@ const journal: { entries: JournalEntry[] } = JSON.parse(
 const tags = journal.entries.map((entry) => entry.tag);
 const prefixOf = (tag: string) => tag.slice(0, 4);
 
-/** SQL with `--` line comments removed, so prose about a PRAGMA isn't mistaken for one. */
+// So prose about a PRAGMA isn't mistaken for one.
 function sqlOf(tag: string): string {
 	return fs
 		.readFileSync(path.join(MIGRATIONS_DIR, `${tag}.sql`), "utf8")
@@ -150,7 +142,6 @@ function foreignKeysOf(sqlite: DatabaseSync, table: string): ForeignKey[] {
 		.all() as ForeignKey[];
 }
 
-/** Parents before children, so every FK has a row to point at. */
 function insertionOrder(sqlite: DatabaseSync): string[] {
 	const remaining = new Set(tablesOf(sqlite));
 	const ordered: string[] = [];
@@ -169,11 +160,7 @@ function insertionOrder(sqlite: DatabaseSync): string[] {
 	return ordered;
 }
 
-/**
- * Three rows per table, then the middle one deleted (an id gap, as a real
- * install has), every FK pointing at a parent row that exists. Values are
- * derived from the column name so unique indexes never collide.
- */
+// The middle row is deleted to leave an id gap, as a real install has; values derive from the column name so unique indexes never collide.
 function seedEveryTable(sqlite: DatabaseSync) {
 	for (const table of insertionOrder(sqlite)) {
 		const columns = sqlite

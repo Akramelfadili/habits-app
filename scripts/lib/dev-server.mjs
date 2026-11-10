@@ -8,8 +8,7 @@ export const BASE_URL =
 	process.env.APP_URL ??
 	"http://localhost:8081";
 
-// Chromium's system deps unpacked without root (no sudo in WSL here) — see
-// the visual-check notes in .claude/skills/implement-feature/SKILL.md.
+// Chromium's system deps unpacked without root (no sudo in WSL).
 export const EXTRA_LIBS = [
 	path.join(
 		os.homedir(),
@@ -65,7 +64,7 @@ export function stopServer(child) {
 	} catch {}
 }
 
-/** Warms Metro's web bundle so the first flow/screenshot doesn't time out on it. */
+// Warms Metro's web bundle so the first flow/screenshot doesn't time out on it.
 export async function warmBundle(route = "/") {
 	await fetch(`${BASE_URL}${route}`, { signal: AbortSignal.timeout(180_000) });
 }

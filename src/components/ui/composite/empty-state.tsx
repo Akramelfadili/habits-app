@@ -9,18 +9,12 @@ type EmptyStateProps = PropsWithChildren<{
 	icon: SFSymbol;
 	headline: string;
 	subtitle: string;
-	/** Vertically centered on the screen by default; `false` flows from the top (inside a card on Habit Detail). */
 	centered?: boolean;
 }>;
 
-/** The 56 pt icon square (radius round(56 × 0.31) = 17). */
 const SQUARE = 56;
 const GLYPH = 24;
 
-/**
- * An icon square, a title, one line of why, then whatever the caller adds (the primary action, a
- * link). Shared by Today's empty and rest-day states and the other screens' empty panels.
- */
 export function EmptyState({
 	icon,
 	headline,

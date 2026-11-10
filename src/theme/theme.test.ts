@@ -44,7 +44,7 @@ describe("habit accent colors", () => {
 });
 
 describe("type scale", () => {
-	it("has the nine styles at the spec's size / line height / weight", () => {
+	it("has the nine styles at their size / line height / weight", () => {
 		const spec = Object.fromEntries(
 			Object.entries(textStyles).map(([name, style]) => [
 				name,
@@ -93,7 +93,7 @@ describe("spacing scale", () => {
 		}
 	});
 
-	it("has exactly the spec's steps", () => {
+	it("has exactly the expected steps", () => {
 		expect(Object.values(space)).toEqual([
 			2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32,
 		]);
@@ -141,7 +141,7 @@ describe("elevation and focus", () => {
 });
 
 describe("motion", () => {
-	it("keeps the spec's durations", () => {
+	it("keeps the agreed durations", () => {
 		expect({
 			press: motion.press.duration,
 			state: motion.state.duration,

@@ -11,10 +11,8 @@ import { builtInCategory, makeHabitInput } from "../test-support/habit-builder";
 import type { Frequency } from "../types";
 import type * as HabitRepository from "./habit-repository";
 
-// jest.mock(...) is hoisted above imports, which would run this before mockDb
-// exists — jest.doMock + a same-order require() keeps this file's own
-// sequencing (create the test db, register the mock, then load the module
-// under test) instead of relying on Jest/Babel's hoisting to get it right.
+// jest.mock is hoisted above imports, before mockDb exists: jest.doMock + a same-order
+// require() keeps the sequence (create db, register mock, load module).
 const mockDb = createTestDb();
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 
@@ -28,7 +26,6 @@ const {
 	deleteHabitAndHistory,
 }: typeof HabitRepository = require("./habit-repository");
 
-// Fresh-database ids: built-ins are seeded 1–10 in BUILT_IN_CATEGORIES order.
 const LEARNING = builtInCategory("Learning");
 const FITNESS = builtInCategory("Fitness");
 const baseInput = makeHabitInput({ categoryId: LEARNING.id });
@@ -163,8 +160,6 @@ describe("habit-repository", () => {
 
 			expect((await getHabit(b.id))?.sortOrder).toBe(a.sortOrder);
 			expect((await getHabit(a.id))?.sortOrder).toBe(b.sortOrder);
-			// A habit outside the reordered set keeps its slot, so category
-			// groups never shift relative to each other.
 			expect((await getHabit(other.id))?.sortOrder).toBe(other.sortOrder);
 		});
 

@@ -17,26 +17,9 @@ import { isPerfectDay } from "./completion-rate";
 import { type CellStatus, habitDayClassifier } from "./day-status";
 import { insightsFor, type MonthlyInsight } from "./monthly-insights";
 
-/**
- * Monthly Summary's math: pure functions, same shape as `weekly-summary.ts`: every "was this day
- * owed" question goes through the habit's FrequencyStrategy (`wasScheduledOn`), which already
- * honours archive pauses; a habit's own creation day bounds the start.
- *
- * What counts, per habit per day (up to today; today only once it's done):
- * - **done**: completed, whatever else.
- * - **frozen**: scheduled, not done, covered by a freeze. An excused day: it is neither done nor
- *   missed, so it leaves both sides of the rate.
- * - **missed**: scheduled, not done, not frozen.
- *
- * The month is a calendar month; its weeks are Monday-based (`WEEK_STARTS_ON`) and **clipped** to
- * it: a month starting on a Saturday opens with a two-day week. A per-week habit's week is still
- * judged whole (the caller passes entries for the full Monday-aligned span, `monthEntryRange`).
- *
- * **Perfect day** = a day with at least one counted habit where every counted habit was done and
- * none was frozen (`isPerfectDay`). The "of N" under it is the number of days that had at least
- * one counted habit (`countedDays`), not the calendar length, so a month of rest days or a
- * part-month history doesn't read as failure.
- */
+// Weeks are clipped to the month, but a per-week habit's week is still judged whole, so the
+// caller passes entries for the full Monday-aligned span (`monthEntryRange`). `countedDays`
+// (not the calendar length) is the "of N" under perfect days, so rest days don't read as failure.
 
 export type MonthWindow = { start: Date; end: Date };
 
@@ -56,7 +39,6 @@ export function historyStart(habits: readonly Habit[]): Date | null {
 	return min(habits.map((habit) => startOfDay(habit.createdAt)));
 }
 
-/** Entries are needed from the Monday-aligned start of the previous month to the end of this month's last week. */
 export function monthEntryRange(month: MonthWindow): MonthWindow {
 	return weekAlignedSpan(previousMonthWindow(month).start, month.end);
 }
@@ -81,7 +63,6 @@ export type DayOutcome = {
 	outcome: Outcome;
 };
 
-/** One cell of the month calendar. */
 export type CalendarDayStatus =
 	| { kind: "before-start" }
 	| { kind: "future" }
@@ -97,7 +78,6 @@ export type MonthlyWeekBar = {
 	end: Date;
 	completed: number;
 	scheduled: number;
-	/** null when nothing was scheduled that week — drawn as an empty column. */
 	fraction: number | null;
 };
 
@@ -117,11 +97,8 @@ export type MonthlySummary = {
 	scheduled: number;
 	rate: number | null;
 	perfectDays: number;
-	/** Days with at least one counted habit — the "of N" under perfect days. */
 	countedDays: number;
-	/** Freezes used in the month, shared pool across habits. */
 	freezeDates: Date[];
-	/** Rows of seven (Mon→Sun); null pads the days outside the month. */
 	calendar: (CalendarDay | null)[][];
 	rows: MonthlyHabitRow[];
 	insights: MonthlyInsight[];
@@ -139,12 +116,6 @@ function byCreationOrder(a: Habit, b: Habit): number {
 	return a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id;
 }
 
-/**
- * Every counted (habit, day) in `window` — see the file header for what counts.
- * Built on the shared classifier (`day-status.ts`): done → done, a partial
- * quantity day counts as missed (due, not done), a freeze is frozen; bonus,
- * not-due, before-start, future and an open today leave no outcome.
- */
 export function outcomesFor({
 	habits,
 	entries,
@@ -249,7 +220,6 @@ function buildCalendar(
 		}
 		const { completed, scheduled } = counts(day);
 		if (scheduled === 0) {
-			// Today with nothing logged yet isn't a rest day — it's still open.
 			return isSameDay(date, today) ? { kind: "future" } : { kind: "none" };
 		}
 		if (completed === 0) return { kind: "missed" };
@@ -325,7 +295,6 @@ export function buildMonthlySummary(
 					: Math.round(rate * 100) - Math.round(previousRate * 100),
 		});
 	}
-	// Stable sort keeps creation order among ties.
 	rows.sort((a, b) => b.rate - a.rate);
 
 	const { completed, scheduled } = counts(outcomes);
@@ -339,7 +308,6 @@ export function buildMonthlySummary(
 		const dayCounts = counts(day);
 		if (dayCounts.scheduled === 0) continue;
 		countedDays += 1;
-		// A frozen day is excused, not perfect: the shared rule decides.
 		const frozen = day.filter(({ outcome }) => outcome === "frozen").length;
 		const tally = {
 			done: dayCounts.completed,
@@ -368,8 +336,7 @@ export function buildMonthlySummary(
 		freezeDates,
 		calendar: buildCalendar(month, outcomes, historyStart(habits), today),
 		rows,
-		// Insights read active habits only: an archived habit keeps its history in the tiles, calendar
-		// and rows, but is never named by an insight or offered as an action target.
+		// Insights read active habits only; an archived habit is never named or offered as a target.
 		insights: insightsFor({
 			rows: rows.filter((row) => row.habit.archivedAt === null),
 			outcomes: activeOutcomes,

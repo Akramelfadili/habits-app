@@ -244,7 +244,7 @@ describe("Button — compact", () => {
 		});
 	});
 
-	it("a disabled button reads its reason as the hint, and an enabled one reads none (08.3)", async () => {
+	it("a disabled button reads its reason as the hint, and an enabled one reads none", async () => {
 		const { rerender } = await render(
 			<Button
 				label="Save habit"

@@ -5,11 +5,7 @@ import { isEntryComplete } from "./streaks";
 
 export type DaySummary = { completed: number; total: number };
 
-/**
- * A day's tally ("4 of 5 done") from the same rules Today uses to list and
- * complete habits. `entries` must cover the whole Monday–Sunday week of `day`,
- * since a per-week habit's due-ness depends on the week's completions.
- */
+// `entries` must cover the Monday-Sunday week of `day`: a per-week habit's due-ness depends on it.
 export function daySummary(
 	habits: readonly Habit[],
 	entries: readonly Entry[],

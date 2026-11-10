@@ -9,9 +9,7 @@ export type WeekStripDay = {
 	date: Date;
 	key: string;
 	isToday: boolean;
-	/** After today: faint and inert, nothing can be logged ahead. */
 	isFuture: boolean;
-	/** Something was due and everything due was done: the accent dot. A day with nothing due has none. */
 	allDone: boolean;
 	due: number;
 	done: number;
@@ -31,11 +29,7 @@ export function canShowNextWeek(anchor: Date, today: Date): boolean {
 	return !isAfter(nextStart, startOfDay(today));
 }
 
-/**
- * The strip's days for the week of `anchor`. `entries` must cover that whole
- * week (a per-week habit's due-ness depends on the week's completions, as in
- * `useTodayQueries`).
- */
+// `entries` must cover the whole week: a per-week habit's due-ness depends on it.
 export function weekStripDays(
 	habits: readonly Habit[],
 	entries: readonly Entry[],
@@ -82,11 +76,6 @@ export function weekStripDays(
 	});
 }
 
-/**
- * The day to select after a swipe: the same weekday one week away, so the strip
- * always shows the week of the selected day. Never later than today; null when
- * there is no such week (a wholly future one).
- */
 export function dayAfterWeekSwipe(
 	selected: Date,
 	today: Date,

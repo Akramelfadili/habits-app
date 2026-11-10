@@ -4,16 +4,8 @@ import type { Entry, FrozenDay, Reminder } from "../types";
 import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
-/**
- * The Habits tab and Habit Detail frames' data (docs/mockups/v3/renders/habits and
- * sheets), pinned to Friday 23 Oct 2026 by the visual checks. `habits-v3` is the library
- * and every Detail but two: `habits-v3-new` is Drink water created today with nothing
- * logged, and `habits-v3-reset` spends the month's second freeze, so Meditate's missed
- * Wednesday 14 Oct reads as a streak reset.
- * Ids: 1 Drink water · 2 Cold shower · 3 Upper body · 4 Meditate · 5 Read 20 min · 6 No
- * social media · 7 No phone in bed · 8 Morning run (archived 12 Oct) · 9 Journal 5 min
- * (archived 2 Oct). Read 20 min has exactly 214 logs, as the mockup says.
- */
+// Pinned to Friday 23 Oct 2026 by the visual checks. `habits-v3-reset` spends the month's
+// second freeze so Meditate's missed Wednesday 14 Oct reads as a streak reset.
 export type HabitsV3Scenario =
 	| "habits-v3"
 	| "habits-v3-new"
@@ -110,7 +102,6 @@ const JOURNAL: FixtureHabit = {
 
 export function habitsV3Habits(scenario: HabitsV3Scenario): FixtureHabit[] {
 	if (scenario === "habits-v3-new") {
-		// Created today, nothing logged.
 		return [{ ...DRINK_WATER, createdAt: new Date(), updatedAt: new Date() }];
 	}
 	return [
@@ -128,7 +119,6 @@ export function habitsV3Habits(scenario: HabitsV3Scenario): FixtureHabit[] {
 
 const key = (date: Date) => format(date, "yyyy-MM-dd");
 
-/** Every weekday of `days` (ISO 1–7) from `from` to `to`, inclusive, as day keys. */
 function scheduledDays(from: string, to: string, days: number[]): string[] {
 	const out: string[] = [];
 	for (
@@ -155,11 +145,9 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 			add(habitId, ago(daysAgo));
 	};
 
-	// Drink water: 8 of 8 for months, 5 of 8 today.
 	add(1, ago(0), 5);
 	for (let daysAgo = 1; daysAgo <= 200; daysAgo++) add(1, ago(daysAgo), 8);
 
-	// Cold shower (3× a week): Monday and Wednesday so far this week, and most weeks before.
 	const monday = key(startOfWeek(now, { weekStartsOn: WEEK_STARTS_ON }));
 	for (const date of [
 		monday,
@@ -171,9 +159,7 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 		add(2, date);
 	}
 
-	// Upper body (Tue/Thu, since 2 Mar): every day logged but four old misses (the
-	// older half of the 180-day window, so the 90-day rate has a "+N pts" to show),
-	// Tue 6 Oct missed, Thu 15 Oct frozen, and Mon 19 Oct a bonus.
+	// Four old misses sit in the older half of the window so the 90-day rate has a "+N pts" to show.
 	const missed = new Set([
 		"2026-04-14",
 		"2026-05-05",
@@ -187,7 +173,6 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 	}
 	add(3, "2026-10-19");
 
-	// Meditate: 13 days in a row up to yesterday; Wed 14 Oct is missed in the reset scenario only.
 	if (scenario === "habits-v3-reset") {
 		addRun(4, 1, 8);
 		addRun(4, 10, 80);
@@ -195,19 +180,14 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 		addRun(4, 1, 13);
 	}
 
-	// Read 20 min: 12 days in a row, a gap, then 202 more: 214 logs in all.
 	addRun(5, 1, 12);
 	addRun(5, 14, 215);
 
-	// No social media: resisted every day for 21 days, today included.
 	addRun(6, 0, 20);
 
-	// No phone in bed: 9 nights in a row ending today; Tue 13 and Wed 14 Oct slipped.
 	addRun(7, 0, 8);
 	addRun(7, 11, 60);
 
-	// Morning run (Mon/Wed/Fri, archived 12 Oct): a 41-day run ending Mon 28 Sep, Wed 30 Sep
-	// missed, and the last week done; sparse before 26 Jun.
 	const runDays = scheduledDays("2026-03-02", "2026-10-09", [1, 3, 5]);
 	const runStart = "2026-06-26";
 	for (const date of runDays) {
@@ -216,13 +196,11 @@ export function habitsV3Entries(scenario: HabitsV3Scenario): Entry[] {
 			add(8, date);
 	}
 
-	// Journal 5 min: a few weeks, ending the day before it was archived.
 	for (let daysAgo = 22; daysAgo <= 51; daysAgo++) add(9, ago(daysAgo));
 
 	return entries;
 }
 
-/** Thu 15 Oct (Upper body) uses one of the month's two freezes; the reset scenario spends the other. */
 export function habitsV3FrozenDays(scenario: HabitsV3Scenario): FrozenDay[] {
 	if (scenario === "habits-v3-new") return [];
 	const now = new Date();

@@ -10,7 +10,6 @@ import {
 } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/** `locked` is Manage Categories' built-ins: tinted with the category's own color, never interactive. */
 export type CategoryChipState =
 	| "unselected"
 	| "selected"
@@ -21,25 +20,13 @@ export type CategoryChipState =
 type CategoryChipProps = {
 	label: string;
 	state: CategoryChipState;
-	/** The category's own icon + colors; the add chip ignores both. */
 	symbol?: SFSymbol;
 	accent?: { tint: string; ink: string };
-	/**
-	 * Omit for a chip that only labels something (Manage Categories' custom
-	 * rows): it then hugs its text and isn't announced as a button. `preview`
-	 * and `locked` ignore it — they're never interactive.
-	 */
 	onPress?: () => void;
-	/** "compact" is a list row's chip (Manage Categories), smaller than the picker grid's. */
 	size?: "default" | "compact";
 };
 
-/**
- * Icon + label in the category's *own* color, unlike `Chip`, which fills with the app accent (kept
- * separate on purpose, per design-system). Selected fills with the accent and gains a check; long
- * labels truncate rather than wrap, so a 2-up grid stays aligned. Locked fills with the category's
- * tint instead of an outline.
- */
+// Kept separate from `Chip` on purpose: it uses the category's own color. Long labels truncate so a 2-up grid stays aligned.
 export function CategoryChip({
 	label,
 	state,
@@ -92,8 +79,7 @@ export function CategoryChip({
 				style={[
 					styles.label,
 					isCompact && styles.compactLabel,
-					// A static chip hugs its text; grid chips stretch the label so
-					// the selected check sits at the far edge.
+					// Grid chips stretch the label so the selected check sits at the far edge.
 					isStatic ? styles.labelHug : styles.labelFill,
 					{ color: labelColor },
 				]}
@@ -114,7 +100,6 @@ export function CategoryChip({
 		styles.chip,
 		isCompact && styles.compactChip,
 		{ backgroundColor: colors.card, borderColor: colors.border },
-		// Selected is the one accent, not the category's own colour.
 		isSelected && {
 			backgroundColor: colors.accent,
 			borderColor: colors.accent,

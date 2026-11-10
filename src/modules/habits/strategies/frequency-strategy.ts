@@ -15,21 +15,12 @@ export type FrequencyContext = {
 	completedDates: readonly Date[];
 };
 
-/** One scheduling rule per frequency type; see ARCHITECTURE.md. */
 export interface FrequencyStrategy {
-	/** Whether the habit asks for attention on `date`; drives Today. */
 	isDueOn(date: Date, context: FrequencyContext): boolean;
-	/**
-	 * Looking back, whether `date` owed a completion; drives history (streaks, the 90-day rate, the
-	 * heatmap). Differs from `isDueOn` only where a rule's forward-looking "due" isn't the same as a
-	 * day that can actually be missed (e.g. X-per-week).
-	 */
+	// Differs from `isDueOn` only where forward-looking "due" isn't a day that can actually be
+	// missed (e.g. X-per-week).
 	wasScheduledOn(date: Date, context: FrequencyContext): boolean;
-	/**
-	 * Whether the habit can ever be due on this weekday, independent of any completion history: a
-	 * reminder set for a weekday where this is false would fire for nothing, so it's flagged and
-	 * never scheduled.
-	 */
+	// A reminder on a weekday where this is false would fire for nothing, so it's flagged and never scheduled.
 	canFallOn(weekday: IsoWeekday): boolean;
 }
 
@@ -39,7 +30,6 @@ type StrategyFactories = {
 	) => FrequencyStrategy;
 };
 
-/** Adding a frequency type = one new strategy file + one entry here, no branching. */
 const STRATEGY_FACTORIES: StrategyFactories = {
 	daily: createDailyFrequency,
 	weekdays: createSpecificWeekdaysFrequency,
@@ -58,11 +48,7 @@ export type SchedulableHabit = Pick<
 	"frequency" | "pauses" | "archivedAt"
 >;
 
-/**
- * The strategy for a real habit: its frequency rule, decorated with its archive periods: the
- * past ones plus, while archived, an open one from the archive day on. History, streaks and Today
- * all go through this, so none of them count archived days as missed.
- */
+// History, streaks and Today all go through this, so none of them count archived days as missed.
 export function getHabitStrategy(habit: SchedulableHabit): FrequencyStrategy {
 	return withPauses(getFrequencyStrategy(habit.frequency), habitPauses(habit));
 }

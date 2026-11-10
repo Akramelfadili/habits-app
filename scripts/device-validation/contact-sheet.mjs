@@ -1,16 +1,6 @@
 #!/usr/bin/env node
-/**
- * One HTML contact sheet per run: each web baseline (docs/visual-baseline)
- * next to its simulator screenshot, and a list of what is missing and why.
- *
- *   node contact-sheet.mjs --shots shots [--logs logs] --out contact-sheet \
- *     [--summary "$GITHUB_STEP_SUMMARY"] [--width 300]
- *
- * Not a pixel diff: fonts, SF Symbols and rendering differ on purpose, so the
- * sheet is for a person to look at. Images are shrunk to thumbnails (JPEG,
- * `sharp` when installed, else copied as they are) to keep the artifact small;
- * the full-size PNGs are in the shots-* artifacts.
- */
+// node contact-sheet.mjs --shots shots [--logs logs] --out contact-sheet [--summary "$GITHUB_STEP_SUMMARY"] [--width 300]
+// Not a pixel diff: fonts, SF Symbols and rendering differ on purpose. Thumbnails (sharp when installed) keep the artifact small.
 import fs from "node:fs";
 import path from "node:path";
 import { buildPlan, coverage } from "./plan.mjs";
@@ -54,10 +44,7 @@ function readResults(logsDir) {
 	return results;
 }
 
-/**
- * `baselines` is the folder of web baselines (`docs/visual-baseline`); a test
- * passes a small fixture folder so it does not resize all ~400 of them.
- */
+// `baselines` is injectable so a test can pass a small fixture folder instead of resizing all ~400.
 export async function buildSheet({
 	shots,
 	logs,

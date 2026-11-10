@@ -18,11 +18,7 @@ type ReminderDraftsProps = {
 	onRemove: (reminder: QueuedReminder) => void;
 };
 
-/**
- * Reminders queued before the habit exists: each time with its own days, a red minus on the left
- * that removes it at once, a tap that edits it, and "Add time" under them (up to the cap of four).
- * Nothing is written until the form's Save.
- */
+// Nothing is written until the form's Save: the habit does not exist yet.
 export function ReminderDrafts({
 	reminders,
 	onAdd,

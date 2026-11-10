@@ -12,13 +12,8 @@ import {
 	toFrequencyFormValues,
 } from "./habit-form-schema";
 
-/**
- * What a suggestion hands the New habit form: every field the suggestion knows. The form
- * fills them in and says where they came from; nothing is saved until Save is tapped.
- */
 export type HabitFormPrefill = {
 	name: string;
-	/** A built-in's name; null leaves the category empty (the habit goes to Other). */
 	category: BuiltInCategoryName | null;
 	direction: HabitDirection;
 	target: { amount: number; unit: string } | null;
@@ -37,7 +32,6 @@ export function blankFormValues(name = ""): HabitFormInput {
 	};
 }
 
-/** The form's starting values for a suggestion (a Break habit is always a check). */
 export function prefillToFormValues(
 	prefill: HabitFormPrefill,
 	categories: readonly Category[],
@@ -86,11 +80,8 @@ const prefillSchema = z.object({
 	]),
 });
 
-/**
- * Reads a suggestion handed over as the prefill route param (a JSON string), so Browse
- * suggestions can push the new-habit route with it. Anything that is not a complete, valid
- * suggestion is ignored: the form then opens blank rather than half filled.
- */
+// The param is untrusted JSON: anything not a complete, valid suggestion is ignored so the form
+// opens blank rather than half filled.
 export function parseHabitPrefill(
 	param: string | undefined,
 ): HabitFormPrefill | undefined {

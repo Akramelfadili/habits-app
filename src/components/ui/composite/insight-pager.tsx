@@ -14,18 +14,12 @@ import { useReducedMotion } from "@/utils/use-reduced-motion";
 import { InsightCard, type InsightCardProps } from "./insight-card";
 
 type InsightPagerProps = {
-	/** Up to three, ranked: slipping → improved → nothing to fix. */
 	insights: Omit<InsightCardProps, "position">[];
 	positionLabel: (index: number, count: number) => string;
 };
 
 const DOT = space[150];
 
-/**
- * One insight on screen, the rest a swipe away, dots under it. Cards are 20 pt-radius surfaces side
- * by side; a single insight shows no dots. For VoiceOver each card reads "Insight 1 of 3" and is
- * adjustable.
- */
 export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 	const { colors } = useTheme();
 	const reduceMotion = useReducedMotion();
@@ -34,7 +28,6 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 	const [index, setIndex] = useState(0);
 	const count = insights.length;
 	const signature = insights.map((insight) => insight.title).join("|");
-	// A different set of insights starts again at the first page.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `signature` is the trigger
 	useEffect(() => {
 		setIndex(0);
@@ -85,10 +78,8 @@ export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 					))}
 				</ScrollView>
 			) : (
-				// Before the pager is measured the pages have no width to take, and a
-				// page sized "100%" inside a horizontal scroller has none either: its
-				// text ran off the edge on one line. Until then the first card sits in
-				// the pager's own column, which wraps it at the real width.
+				// A "100%" page inside a horizontal scroller has no width before the pager is measured (its text
+				// ran off the edge), so until then the first card sits in the pager's own column.
 				<InsightCard
 					{...first}
 					position={{

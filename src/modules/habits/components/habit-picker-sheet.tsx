@@ -10,17 +10,12 @@ import { HabitPickerRow } from "./habit-picker-row";
 
 type HabitPickerSheetProps = {
 	visible: boolean;
-	/** Habits that can be logged off-schedule — Break and archived habits are already out. */
 	habits: Habit[];
 	loggedHabitIds: ReadonlySet<number>;
 	onSelect: (habit: Habit) => void;
 	onDismiss: () => void;
 };
 
-/**
- * "Log off-schedule": the rest-day picker. Lists existing habits only; with none eligible it says
- * why instead of showing nothing.
- */
 export function HabitPickerSheet({
 	visible,
 	habits,

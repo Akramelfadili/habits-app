@@ -1,8 +1,4 @@
-/**
- * The query string a fixture scenario reads its flags from. On web that is the
- * page's own (`?longNames=1`); on the device-validation build (the simulator)
- * there is no page URL, so `dev-state` hands it over with `setFixtureSearch`.
- */
+// The device-validation build has no page URL, so `dev-state` hands the query over here.
 let override = "";
 
 export function setFixtureSearch(search: string): void {

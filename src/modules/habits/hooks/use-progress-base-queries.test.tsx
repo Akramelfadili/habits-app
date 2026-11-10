@@ -6,7 +6,6 @@ import { inAct } from "@/test-support/in-act";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as BaseHook from "./use-progress-base-queries";
 
-/** The reads every Progress range shares, on a real, migrated in-memory database. */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -15,7 +14,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 
 const { createHabit } = require("../repositories/habit-repository");
 
-/** A habit created at `createdAt`, so entries before today still count. */
 async function createHabitAt(
 	input: Parameters<typeof createHabit>[0],
 	createdAt: Date,

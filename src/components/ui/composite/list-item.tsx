@@ -17,59 +17,31 @@ import {
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
-/**
- * Long names wrap to this many lines, then end in "…". The full text stays in the accessibility
- * label, so nothing is lost to a screen reader and no control is pushed out of the row. At
- * accessibility text sizes nothing truncates at all.
- */
+// The full text stays in the accessibility label, so truncation loses nothing for a screen reader.
 const TITLE_LINES = 2;
 const SUBTITLE_LINES = 2;
 
-/** A flat 60 pt row: 44 pt control plus `space[200]` above and below. */
 const ROW_MIN_HEIGHT = minTouchTarget + 2 * space[200];
 
 type ListItemProps = {
 	title: string;
 	subtitle?: string;
-	/** Sits right after the title on the same line, e.g. a scope chip ("All habits"). */
 	titleAccessory?: React.ReactNode;
 	onPress?: () => void;
 	navigable?: boolean;
 	leading?: React.ReactNode;
 	value?: string;
 	trailing?: React.ReactNode;
-	/**
-	 * The row sits inside a Container card that already provides padding and
-	 * background (form rows) — drop the row's own so content aligns with the card.
-	 */
 	embedded?: boolean;
-	/** Fades the row's content (not its trailing control), e.g. Retro log's not-yet-done habits. */
 	dimmed?: boolean;
-	/**
-	 * A choice among several (Settings' Light / Dark / System): the row becomes a
-	 * radio, announced as selected or not, and draws a check when picked — the
-	 * check, not colour, says which one.
-	 */
 	selected?: boolean;
-	/**
-	 * With `dimmed`: keep `leading` at full opacity and fade only the text.
-	 * An archived habit's muted icon square would otherwise vanish on a white card.
-	 */
+	// With `dimmed`: an archived habit's muted icon square would otherwise vanish on a white card.
 	keepLeading?: boolean;
-	/**
-	 * Held mid-drag in a reorderable list: the lift shadow, and in dark a lighter surface, since height
-	 * reads as lightness there.
-	 */
 	lifted?: boolean;
 	accessibilityLabel?: string;
 	destructive?: boolean;
 	accessibilityHint?: string;
-	/** The row's button, for a sheet that starts the screen reader's focus on it (`useInitialFocus`). */
 	buttonRef?: Ref<HostInstance>;
-	/**
-	 * Extra VoiceOver actions on the row: the accessible route to anything a gesture does (e.g.
-	 * swipe-to-archive).
-	 */
 	accessibilityActions?: { label: string; onAction: () => void }[];
 };
 
@@ -104,16 +76,13 @@ export function ListItem({
 			tintColor={colors.faint}
 		/>
 	) : selected ? (
-		// Drawn, like the segmented control's check, so the pick shows on web too.
 		<View
 			testID="list-item-check"
 			style={[styles.check, { borderColor: colors.ink }]}
 		/>
 	) : null;
 
-	// `trailing` sits beside the pressable area, not inside it — a trailing
-	// control (Restore, a drag grip, a toggle) is its own touch target, and
-	// nesting it in the row's button is invalid on web.
+	// `trailing` sits beside the pressable area: it is its own touch target, and nesting it in the row's button is invalid on web.
 	return (
 		<View
 			testID="list-item"
@@ -149,7 +118,6 @@ export function ListItem({
 					styles.pressable,
 					!embedded && (largeText ? styles.paddedLarge : styles.padded),
 					trailing ? styles.paddedBeforeTrailing : null,
-					// Pressed: the inset surface, not a fade.
 					pressed && onPress && { backgroundColor: colors.inner },
 				]}
 			>
@@ -238,12 +206,10 @@ const styles = StyleSheet.create({
 		borderRadius: radius.m,
 	},
 	lifted: {
-		// Held mid-drag: nothing else on the row changes size.
 		zIndex: 1,
 	},
 	pressable: {
-		// An embedded row has no padding of its own; its card's padding is
-		// outside the hit area, so the row guarantees the 44 pt itself.
+		// The card's padding is outside the hit area, so an embedded row guarantees the 44 pt itself.
 		minHeight: minTouchTarget,
 		flex: 1,
 		flexDirection: "row",

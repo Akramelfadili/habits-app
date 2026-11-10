@@ -41,16 +41,6 @@ import { isSlippingVsPrevious } from "./slipping";
 import { calculateCurrentStreak } from "./streaks";
 import { yearWindowFor } from "./yearly-summary";
 
-/**
- * Week, Month and Year summaries for Progress: one shape for all three, built on the shared
- * per-day grid (`day-grid.ts`) so every number follows the one rate rule (`completion-rate.ts`):
- * done ÷ due, whole numbers, frozen and bonus left out, Break habits counting resisted days as
- * done, × per week habits due on open days only.
- *
- * The previous range (last week / last month / last year) is summarised by the same pass, so
- * "+N pts" is the very same function on the range before.
- */
-
 export type RangeKind = "week" | "month" | "year";
 export type RangeWindow = { start: Date; end: Date };
 
@@ -69,11 +59,7 @@ export function previousRangeWindow(
 	return yearWindowFor(subYears(window.start, 1));
 }
 
-/**
- * The entries a range's maths may look at: from the previous range's first
- * Monday to the range's last Sunday (a × per week habit's week is judged
- * whole, so both ends are Monday-aligned).
- */
+// Both ends are Monday-aligned because a per-week habit's week is judged whole.
 export function rangeEntrySpan(
 	kind: RangeKind,
 	window: RangeWindow,
@@ -85,12 +71,10 @@ export function rangeEntrySpan(
 
 export type RangeHabitRow = {
 	habit: Habit;
-	/** Break habit: a logged day is a resisted day. */
 	isBreak: boolean;
 	done: number;
 	due: number;
 	frozen: number;
-	/** Off-schedule logs, listed as "not counted". */
 	bonus: number;
 	rate: number | null;
 	previousRate: number | null;
@@ -104,7 +88,6 @@ export type FreezeLog = { habit: Habit; date: string };
 
 export type WeekdayShare = {
 	weekday: IsoWeekday;
-	/** The day itself for Week (these are the daily bars); null for Month and Year. */
 	date: Date | null;
 	done: number;
 	due: number;
@@ -114,7 +97,6 @@ export type WeekdayShare = {
 export type BestStreak = {
 	days: number;
 	habit: Habit;
-	/** Month and Year: the run's last day. Week: null (it is the streak as it stands). */
 	endedOn: Date | null;
 };
 
@@ -145,25 +127,16 @@ type RangeSummaryInput = {
 	today: Date;
 	window: RangeWindow;
 	nothingLogged?: boolean;
-	/** Cells already classified over these days (`classifyRangeDays`): skips classifying again. */
 	classified?: ClassifiedDays;
-	/**
-	 * Week's streak tile is the streak as it stands, which reaches back past the
-	 * week: pass every entry and freeze for it. Defaults to the range's own.
-	 */
+	// Week's streak reaches back past the week, so callers pass every entry and freeze here.
 	streakHistory?: {
 		entries: readonly Entry[];
 		frozenDays: readonly FrozenDay[];
 	};
 };
 
-/**
- * Every habit's cell for every day from the previous range's first day to the
- * range's last — classified once, so a screen that needs both the summary and
- * a grid over the same days (Year: the summary and the heat map) does not walk
- * them twice. `buildRangeSummary` reads the prefix up to today; `buildYearMap`
- * reads its own year.
- */
+// Classified once so a screen needing both the summary and a grid over the same days
+// (Year) doesn't walk them twice.
 export type ClassifiedDays = {
 	dates: Date[];
 	perHabit: HabitCells[];
@@ -217,7 +190,6 @@ export function buildRangeSummary(input: RangeSummaryInput): RangeSummary {
 	const todayStart = startOfDay(today);
 	const previousWindow = previousRangeWindow(kind, window);
 	const ordered = [...input.habits].sort(byCreationOrder);
-	// Days after today can't be due; the grid stops there.
 	const dates = daysIn(previousWindow.start, min([window.end, todayStart]));
 	const windowFrom = Math.min(
 		differenceInCalendarDays(window.start, previousWindow.start),
@@ -313,12 +285,10 @@ function isSlipping(
 	dates: readonly Date[],
 	windowFrom: number,
 ): boolean {
-	// An archived habit is finished, not slipping (insights read active habits only).
 	if (row.habit.archivedAt !== null) return false;
 	if (kind !== "month") return isSlippingVsPrevious(kind, row);
 	const weeks = monthWeeks(window).flatMap((week) => {
 		const first = dates.findIndex((date) => !isBefore(date, week.start));
-		// A week that hasn't started (or lies before the range) says nothing.
 		if (first === -1) return [];
 		const after = dates.findIndex((date) => isAfter(date, week.end));
 		const tally = tallyCells(

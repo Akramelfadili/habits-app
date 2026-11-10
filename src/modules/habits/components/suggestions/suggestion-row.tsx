@@ -5,15 +5,9 @@ import { HabitBadge } from "../habit-badge";
 
 type SuggestionRowProps = {
 	item: SuggestionItem;
-	/** Opens Add habit with this suggestion filled in. Not called for an Added one. */
 	onPick: () => void;
 };
 
-/**
- * One suggestion: its category's icon square, the name and a line saying how it repeats. A
- * suggestion the person already has says "Added" in the value slot and is not a control: nothing to
- * open, no chevron; the word, not a faded colour, carries the state.
- */
 export function SuggestionRow({ item, onPick }: SuggestionRowProps) {
 	const { suggestion, subtitle, added, appearance } = item;
 	return (

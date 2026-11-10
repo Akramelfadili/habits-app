@@ -11,15 +11,11 @@ type TodayAllDoneCardProps = {
 };
 
 const SQUARE = 40;
-/** The check is drawn from two bars (SF Symbols render nothing on web): 12 × 7 pt, 2 pt stroke. */
+// The check is two bars because SF Symbols render nothing on web.
 const CHECK_WIDTH = 14;
 const CHECK_HEIGHT = 8;
 const CHECK_STROKE = 2;
 
-/**
- * A quiet card at the top once everything due is done: an accent square whose check draws left to
- * right over 600 ms, once. Static with Reduce Motion. No confetti, no banner.
- */
 export function TodayAllDoneCard({ title, body }: TodayAllDoneCardProps) {
 	const { colors } = useTheme();
 	const reduceMotion = useReducedMotion();

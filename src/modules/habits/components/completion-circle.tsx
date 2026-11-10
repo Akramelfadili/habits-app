@@ -6,7 +6,6 @@ import { useHaptics } from "@/utils/use-haptics";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import type { HabitDirection } from "../types";
 
-/** The drawn circle is 28 pt inside a 44 pt hit area. */
 const SIZE = 28;
 const HALF = SIZE / 2;
 const RING = 2;
@@ -16,29 +15,19 @@ const DOT = 8;
 type CompletionCircleProps = {
 	completed: boolean;
 	onPress: () => void;
-	/** A quantity habit's way to the sheet while a tap adds one. */
 	onLongPress?: () => void;
 	accessibilityLabel: string;
 	accessibilityHint?: string;
-	/** Build = filled accent when done. Break = amber outline, an amber check on `warnTint` once resisted. */
 	direction?: HabitDirection;
-	/** Streak at risk: an amber dot on the circle. The circle still logs. */
 	atRisk?: boolean;
 	progress?: number;
-	/** A frozen day: violet and dashed. Logging it returns the freeze. */
 	frozen?: boolean;
-	/** Not due (rest day, Edit this day): a dashed outline; whatever is logged is a bonus. */
 	notDue?: boolean;
-	/** "checkbox" toggles; a quantity habit's circle adds one per tap, so it is a "button". */
 	role?: "checkbox" | "button";
 	disabled?: boolean;
 };
 
-/**
- * A two-half rotating-wedge pie fill, clipped to the circle by the parent.
- * Each half is a plain rect rotated around the midpoint of its flat (inner)
- * edge — the circle's center — so it sweeps a wedge into view; no SVG needed.
- */
+// Two rotated rects sweep a wedge into view (no SVG), clipped to the circle by the parent.
 function PieFill({ progress, color }: { progress: number; color: string }) {
 	const angle = Math.min(1, Math.max(0, progress)) * 360;
 	const rightRotation = Math.min(angle, 180) - 180;
@@ -74,12 +63,7 @@ function PieFill({ progress, color }: { progress: number; color: string }) {
 	);
 }
 
-/**
- * The habit completion control. Build: outline → partial pie → accent-filled check. Break: amber
- * outline → amber check on `warnTint` (resisted is a tick). At risk adds an amber dot; frozen is
- * violet and dashed; not-due is a dashed outline. Every state differs in shape as well as colour.
- * The 44 pt hit area is this Pressable; the 28 pt circle sits inside it.
- */
+// Every state differs in shape as well as colour. The 44 pt hit area is the Pressable; the 28 pt circle sits inside it.
 export function CompletionCircle({
 	completed,
 	onPress,

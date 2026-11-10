@@ -18,8 +18,7 @@ import {
 	isEntryComplete,
 } from "./streaks";
 
-// Local dates throughout: the app's days are local calendar days, and jest
-// runs in America/Los_Angeles, where a UTC midnight is the evening before.
+// Local dates throughout: jest runs in America/Los_Angeles, where a UTC midnight is the evening before.
 const HABIT_CREATED = new Date(2026, 0, 1);
 const dailyHabit = makeHabit({
 	id: 1,
@@ -202,8 +201,6 @@ describe("calculateCurrentStreak", () => {
 	});
 
 	it("recalculates forward from a retroactively-edited day, not off a stored counter", () => {
-		// Same entries as the "stops at the first missed day" case, plus 09-13 added retroactively:
-		// recomputing must extend the streak, since nothing is ever incremented and stored.
 		const entries = [
 			entry(1, "2026-09-12"),
 			entry(1, "2026-09-13"),
@@ -227,8 +224,7 @@ describe("getStreakAtRisk", () => {
 		const entries = [entry(1, "2026-09-13"), entry(1, "2026-09-14")];
 		const result = getStreakAtRisk(dailyHabit, entries, new Set(), today);
 		expect(result).toEqual({
-			// Local-midnight of "yesterday," same as the implementation computes
-			// it — not a hardcoded UTC string, which would drift with the runner's timezone.
+			// Not a hardcoded UTC string, which would drift with the runner's timezone.
 			missedDate: subDays(startOfDay(today), 1),
 			currentStreak: 2,
 		});
@@ -353,8 +349,7 @@ describe("after a restore", () => {
 		).toBe(2);
 	});
 
-	// Today's at-risk prompt is the one live caller besides Detail and Export:
-	// a restored habit has no streak at stake, so it must stay silent.
+	// A restored habit has no streak at stake, so the at-risk prompt must stay silent.
 	it("getStreakAtRisk raises no prompt for a restored habit with no new streak", () => {
 		expect(
 			getStreakAtRisk(restored, before, noFreezes, new Date(2026, 8, 22)),
@@ -420,7 +415,6 @@ describe("the freeze pool by calendar month (D13)", () => {
 	});
 
 	it("counts a freeze against the month of the day it covers, not the day it was used", () => {
-		// Used on 1 October for Wednesday 30 September: September's pool pays for it.
 		const days = [frozen(1, "2026-09-30", new Date("2026-10-01T08:00:00"))];
 		expect(freezesUsedInMonth(days, new Date(2026, 8, 16))).toBe(1);
 		expect(freezesRemainingInMonth(days, new Date(2026, 9, 2))).toBe(2);

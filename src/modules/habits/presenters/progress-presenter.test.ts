@@ -65,7 +65,6 @@ describe("cellStateOf", () => {
 		[{ status: "not-due", level: 0 }, { kind: "not-due" }],
 		[{ status: "before-start", level: 0 }, { kind: "before-start" }],
 		[{ status: "future", level: 0 }, { kind: "future" }],
-		// Nothing logged is an outline, never "missed"; today, still open, reads the same.
 		[{ status: "nothing-logged", level: 0 }, { kind: "nothing-logged" }],
 		[{ status: "today", level: 0 }, { kind: "nothing-logged" }],
 	] as const)("%j is drawn as %j", (cell, state) => {

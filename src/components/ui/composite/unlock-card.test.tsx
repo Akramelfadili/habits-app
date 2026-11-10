@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react-native";
 import { UnlockCard } from "./unlock-card";
 
 describe("UnlockCard", () => {
-	it("says when it unlocks, why, and how far along it is (P2)", async () => {
+	it("says when it unlocks, why, and how far along it is", async () => {
 		await render(
 			<UnlockCard
 				title="Insights unlock in 4 days"

@@ -22,17 +22,8 @@ import {
 } from "../constants";
 import type { ExportDocumentV2 } from "../domain/export-json";
 
-/**
- * TEST-ONLY. Loads a version 2 export file into a clean, migrated test database: the
- * proof that the file holds enough to rebuild the app's data (the round trip is in
- * `export-v2-reader.test.ts`). It is not the importer: a real importer will start from this
- * file's field handling, and must also remap ids, ask what to do with data that is already
- * there, and read older versions. Nothing under `test-support/` is imported by app code
- * (scripts/check-architecture.mjs, rule `test-support-site`).
- * Differences from a real importer, on purpose: it keeps the file's local ids (so a
- * re-export can be compared field for field), and it writes rows directly, because the
- * repositories always stamp "now" on creation times.
- */
+// TEST-ONLY, not an importer: it keeps the file's local ids (so a re-export compares field for
+// field) and writes rows directly because the repositories always stamp "now" on creation times.
 
 type TestDb = ReturnType<typeof createTestDb>;
 
@@ -52,7 +43,6 @@ type FrequencyColumns = {
 	frequencyTimesPerWeek: number | null;
 };
 
-/** The inverse of `describeFrequency`: "daily", "weekdays:Mon|Wed", "per-week:3". */
 function parseFrequency(text: string): FrequencyColumns {
 	if (text === "daily") {
 		return {
@@ -95,8 +85,6 @@ export async function loadExportV2(
 	}
 	const now = new Date();
 
-	// Built-ins are seeded by migration: only their group order moves. A custom
-	// category is created with the id the file gave it.
 	for (const category of document.categories) {
 		if (category.builtIn) {
 			await db
@@ -143,7 +131,6 @@ export async function loadExportV2(
 				createdAt: at(entry.createdAt),
 			});
 		}
-		// No `notes` key when the file was written with notes left out.
 		for (const note of habit.notes ?? []) {
 			await db.insert(entryNotes).values({
 				habitId: habit.id,

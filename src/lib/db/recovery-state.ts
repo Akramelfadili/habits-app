@@ -1,14 +1,3 @@
-/**
- * The recovery flow around a database that will not open or migrate. Pure, so the rules are
- * tested without a screen:
- *
- * - The first failure offers Try again only.
- * - After the second consecutive failure (one retry already failed) a second action, "Set aside
- *   old data and start fresh", appears.
- * - It opens a confirm; Cancel closes it, Confirm runs the set-aside.
- * - A failed set-aside keeps the confirm open with an error and changes nothing; a successful one
- *   starts over from a clean count.
- */
 export type RecoveryState = {
 	retries: number;
 	sheet: "closed" | "confirm" | "working" | "error";
@@ -24,7 +13,7 @@ export type RecoveryEvent =
 
 export const INITIAL_RECOVERY: RecoveryState = { retries: 0, sheet: "closed" };
 
-/** Failures so far are `retries + 1`: the second one is the first retry that failed. */
+// Failures so far are `retries + 1`: the second one is the first retry that failed.
 export function canSetAside(state: RecoveryState): boolean {
 	return state.retries >= 1;
 }

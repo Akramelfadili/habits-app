@@ -5,23 +5,13 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 type HabitHistoryRowProps = {
 	date: string;
-	/** "Done", "Missed", "Frozen · streak kept", "Done · off-schedule, not counted"; never a time. */
 	status: string;
-	/** A frozen day reads in the freeze's violet; everything else is secondary ink. */
 	tone?: "default" | "frozen";
-	/** "Bonus": the small tag on an off-schedule day, which a rate never counts. */
 	tag?: string;
-	/** The day's own note, under the status. */
 	note?: string;
 	accessibilityLabel: string;
 };
 
-/**
- * One line of Habit Detail's history: the date over what the day was, and a Bonus tag when it was
- * off-schedule. A read-only row: no times, no chevron. The words carry the state, so the violet on a
- * frozen day is never the only signal. The row is one VoiceOver stop; at accessibility sizes the tag
- * drops under the text.
- */
 export function HabitHistoryRow({
 	date,
 	status,

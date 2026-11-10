@@ -29,16 +29,10 @@ type AddCategorySheetProps = {
 	categories: Category[];
 	onDismiss: () => void;
 	onCreate: (input: CreateCategoryInput) => Promise<Category>;
-	/** After a successful add; the picker auto-selects it (no toast). */
 	onCreated: (category: Category) => void;
 	isCreating?: boolean;
 };
 
-/**
- * Stacks over the habit form and asks for a name only. Icon and color come from the rotation and are
- * previewed live, so the preview is exactly what's created; a duplicate name hides the preview and
- * explains which existing chip to pick instead.
- */
 export function AddCategorySheet(props: AddCategorySheetProps) {
 	return (
 		<Sheet visible={props.visible} onDismiss={props.onDismiss}>
@@ -84,7 +78,6 @@ function AddCategoryForm({
 		try {
 			created = await onCreate({ name: values.name, ...appearance });
 		} catch {
-			// The sheet stays open with the name kept, so retrying is one tap.
 			setError("name", {
 				type: "create",
 				message: categoriesCopy.addSheet.failed,
@@ -123,7 +116,6 @@ function AddCategoryForm({
 									: errors.name?.message
 							}
 							autoFocus
-							// Return adds the category when it can; if not, it just puts the keyboard away.
 							onSubmitEditing={
 								duplicate || trimmed === "" ? Keyboard.dismiss : submit
 							}

@@ -7,10 +7,6 @@ import { inAct } from "@/test-support/in-act";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as WeekHook from "./use-progress-week-queries";
 
-/**
- * Progress · Week through the real hooks and a real, migrated in-memory
- * database: what lands in the tables is what the matrix and the stats show.
- */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -19,7 +15,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 
 const { createHabit } = require("../repositories/habit-repository");
 
-/** A habit created at `createdAt`, so entries before today still count. */
 async function createHabitAt(
 	input: Parameters<typeof createHabit>[0],
 	createdAt: Date,
@@ -72,7 +67,7 @@ async function seedWeek() {
 	const noSocial = await habit({ name: "No social media", direction: "break" });
 	const read = await habit({ name: "Read" });
 	await done(water, [-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4]);
-	await done(upper, [0, 1, 3]); // Monday is a bonus
+	await done(upper, [0, 1, 3]);
 	await done(cold, [0, 2]);
 	await done(noSocial, [-7, -6, -5, -4, -3, -2, -1, 0, 1, 3]);
 	await done(read, [-7, -6, -5, -4, -3, -2, -1, 0, 1]);
@@ -142,7 +137,7 @@ describe("useProgressWeekQueries", () => {
 			"done",
 			"not-due",
 			"done",
-			"not-due", // Friday isn't a Tuesday or a Thursday
+			"not-due",
 			"future",
 			"future",
 		]);

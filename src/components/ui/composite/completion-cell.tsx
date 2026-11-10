@@ -11,63 +11,38 @@ import {
 } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/**
- * Every state a completion cell can be in. Each differs from the others by shape or text as well as
- * colour: a notch for partial, a dot for bonus, dashed for frozen and before-start, an outline for
- * nothing logged, a hairline for the future, no box at all for not due.
- */
+// Each state differs from the others by shape or text, not colour alone.
 export type CompletionCellState =
-	/** 0 missed (the filled track) · 1–2 partial (a corner notch) · 3 complete. */
 	| { kind: "level"; level: IntensityLevel }
-	/** A freeze covers the day: violet, always dashed. */
 	| { kind: "frozen" }
-	/** Logged on a day that wasn't due: a dot on the track, never counted. */
 	| { kind: "bonus" }
-	/** Not due that day: no box, only a quiet dot (or the bare day number). */
 	| { kind: "not-due" }
-	/** Before the habit existed or the first log: dashed outline. */
 	| { kind: "before-start" }
-	/** Due, but nothing has been logged yet: an outline — deliberately not "missed". */
 	| { kind: "nothing-logged" }
-	/** Still ahead: a hairline. */
 	| { kind: "future" }
-	/** Inside an archive period: hatched and empty — skipped, never missed. */
 	| { kind: "paused" }
-	/** The missed day that reset a streak with no freezes left: the track with an amber outline. */
 	| { kind: "reset" };
 
 type CompletionCellProps = {
 	state: CompletionCellState;
-	/** Edge length: 12 legend, 16 year, 24 matrix, 40 calendar. */
 	size: number;
-	/** The cell is today: ringed whatever its state. */
 	today?: boolean;
-	/** The cell is the selected day (Month): ringed like today. */
 	selected?: boolean;
-	/** A number or letter drawn inside (the calendar's day number). */
 	text?: string;
-	/** Read aloud ("Wed, done"); without one the cell is not a VoiceOver stop. */
 	accessibilityLabel?: string;
-	/** What a press does, read after the label. */
 	accessibilityHint?: string;
-	/** Hide the cell from VoiceOver entirely (the year map's day cells). */
 	hidden?: boolean;
-	/** The colour of the surface under the cell, for the notch and the ring's gap. Defaults to the card. */
 	surface?: string;
 	onPress?: () => void;
 	testID?: string;
 };
 
-/** The notch's legs, in pt: 22 % of the edge, never below 3 so it survives at 12 pt. */
+// Never below 3 pt so the notch survives at 12 pt.
 export function notchSize(size: number): number {
 	return Math.max(3, Math.round(size * notchShare));
 }
 
-/**
- * One read-only square, radius floor(size ÷ 3), filled by accent tints at 0 / 28 / 58 / 100 %. Only a
- * cell given `onPress` is a button (the month calendar's 40 pt days); every other cell is below 44 pt
- * by design and not tappable.
- */
+// Only a cell given `onPress` is a button; every other cell is below 44 pt by design and not tappable.
 export function CompletionCell({
 	state,
 	size,
@@ -228,10 +203,7 @@ export function CompletionCell({
 	);
 }
 
-/**
- * Diagonal hairlines across a paused day: skipped, not missed, and a shape a colour-blind eye can tell
- * from an empty box. The cell clips them to its rounded square.
- */
+// A shape a colour-blind eye can tell from an empty box.
 function Hatch({ size, color }: { size: number; color: string }) {
 	const step = Math.max(3, Math.round(size / 4));
 	const count = Math.ceil((size * 2) / step) + 1;
@@ -267,7 +239,6 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		overflow: "hidden",
 	},
-	/** A right triangle with its right angle in the top-right corner, painted in the surface colour. */
 	notch: {
 		position: "absolute",
 		top: 0,

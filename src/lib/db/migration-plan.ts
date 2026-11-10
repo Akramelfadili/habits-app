@@ -1,24 +1,9 @@
 import { log } from "@/lib/logger/logger";
 import { errorMessageOf, errorNameOf } from "./error-name";
 
-/**
- * What this launch has to do with the stored database. Read before the migrator runs; nothing
- * here writes.
- *
- * - "fresh": a genuinely empty database (no tables, or only an empty migrations table).
- *   Nothing to move, nothing to lose.
- * - "current": every migration this build ships is applied.
- * - "upgrade": an older migration is the last applied one. The update screen shows, and a backup
- *   is taken first.
- * - "newer": the last applied migration is newer than any this build ships, so the data was
- *   written by a newer version of the app. This build must not touch it.
- * - "unreadable": the migrations table could not be read for a reason other than not existing
- *   (a corrupt file, an I/O error), or the database holds tables but no migration record. The
- *   migrator must not run on it.
- *
- * The upgrade test is the migrator's own: `created_at` of the last applied row against each
- * journal entry's `when`.
- */
+// "newer": the data was written by a newer build, which this one must not touch. "unreadable": a
+// corrupt file or I/O error, or tables without a migration record; the migrator must not run on it.
+// The upgrade test is the migrator's own: last applied `created_at` against each journal `when`.
 export type MigrationPlan =
 	| "fresh"
 	| "current"
@@ -30,11 +15,7 @@ type SyncReader = {
 	getFirstSync: <Row>(source: string) => Row | null;
 };
 
-/**
- * Long enough for the update screen to be painted before the migrator takes the
- * JavaScript thread (it runs every statement in one synchronous loop), short
- * enough that nobody notices. Only waited for on an upgrade.
- */
+// Long enough for the update screen to paint before the migrator takes the JS thread (one synchronous loop).
 export const MIGRATION_SCREEN_PAINT_MS = 100;
 
 const NO_MIGRATIONS_TABLE = /no such table/i;
@@ -49,8 +30,7 @@ export function planMigrations(
 			"SELECT created_at FROM __drizzle_migrations ORDER BY created_at DESC LIMIT 1",
 		);
 	} catch (error) {
-		// Only a missing table means "never migrated". A corrupt file or an I/O
-		// error must not be mistaken for a first install.
+		// Only a missing table means "never migrated"; a corrupt file or I/O error is not a first install.
 		if (!NO_MIGRATIONS_TABLE.test(errorMessageOf(error))) {
 			return unreadable(error);
 		}

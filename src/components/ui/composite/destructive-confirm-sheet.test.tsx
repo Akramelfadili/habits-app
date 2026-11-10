@@ -136,7 +136,7 @@ describe("DestructiveConfirmSheet", () => {
 			expect(onPress).toHaveBeenCalledTimes(1);
 		});
 
-		it("takes the screen reader's focus once the sheet has settled (08.3)", async () => {
+		it("takes the screen reader's focus once the sheet has settled", async () => {
 			jest
 				.spyOn(AccessibilityInfo, "sendAccessibilityEvent")
 				.mockImplementation();

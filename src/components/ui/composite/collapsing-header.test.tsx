@@ -225,7 +225,7 @@ describe("useCollapsingHeader", () => {
 	});
 });
 
-describe("PinnedBelowBar (Progress's range switcher, P1 → P8)", () => {
+describe("PinnedBelowBar (Progress's range switcher)", () => {
 	let heights: number[] = [];
 
 	function PinnedHarness() {

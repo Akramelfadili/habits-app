@@ -6,7 +6,6 @@ import { ProgressBar } from "./progress-bar";
 export type MonthListItemData = {
 	key: string;
 	label: string;
-	/** Whole points; null when nothing was counted that month. */
 	percent: number | null;
 	bar: number;
 	accessibilityLabel: string;
@@ -18,11 +17,6 @@ type MonthListProps = {
 	emptyLabel: string;
 };
 
-/**
- * List fallback for the year: a month per row with a bar and a whole-number %, one VoiceOver stop
- * and one 44 pt target each. It is what VoiceOver and the accessibility text sizes get instead of a
- * wall of 16 pt squares.
- */
 export function MonthList({ items, emptyLabel }: MonthListProps) {
 	const { colors, opacity } = useTheme();
 

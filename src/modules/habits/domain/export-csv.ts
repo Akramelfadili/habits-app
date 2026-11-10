@@ -3,20 +3,9 @@ import type { Frequency, IsoWeekday } from "../types";
 import type { ExportModel } from "./export-data";
 
 /**
- * The CSV layout of a data export: one file, one row per fact, told apart by `record_type`:
- *
- *   habit       one per habit, including habits with no logs; carries the
- *               habit's settings, category name and both streaks
- *   entry       one per logged day: `date`, `value` (quantity habits),
- *               `completed`
- *   note        one per day note: `date`, `note`
- *   frozen_day  one per streak freeze: `date`
- *
- * Child rows repeat `habit_id` and `habit_name` so a row is readable on its own; columns that
- * don't apply are left empty. Quoting follows RFC 4180 (commas, quotes and line breaks inside a
- * field), rows end CRLF, and the file starts with a UTF-8 byte-order mark so Numbers and Excel
- * read accents right. Typed text that a spreadsheet would run as a formula is written with a
- * leading apostrophe (see `escapeCsvField`).
+ * One file, one row per fact, told apart by `record_type` (habit, entry, note, frozen_day).
+ * Child rows repeat `habit_id` and `habit_name` so a row reads on its own.
+ * RFC 4180 quoting, CRLF rows, and a UTF-8 BOM so Numbers and Excel read accents right.
  */
 
 export const CSV_COLUMNS = [

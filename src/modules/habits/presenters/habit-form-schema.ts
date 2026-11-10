@@ -11,24 +11,15 @@ import {
 import { formCopy } from "../messages";
 import type { Frequency, IsoWeekday } from "../types";
 
-/**
- * Whether name breaks the 32-character cap. A legacy habit saved with a longer name (up
- * to 40) keeps it while it is left unchanged, so its other fields can still be edited; any
- * change to the name brings it under the cap.
- */
+// A legacy name (up to 40) stays valid while unchanged so the habit's other fields remain editable.
 export function isNameOverLimit(name: string, originalName?: string): boolean {
 	const trimmed = name.trim();
 	if (trimmed.length <= MAX_HABIT_NAME_LENGTH) return false;
 	return originalName === undefined || trimmed !== originalName.trim();
 }
 
-/**
- * Frequency is kept as three flat fields rather than the `Frequency` union so
- * switching modes doesn't throw away what was picked in the other modes; only
- * the active mode's field is saved (see `toFrequency`).
- *
- * `originalName` is the habit's saved name in edit mode — omit it to create.
- */
+// Frequency is three flat fields, not the union, so switching modes doesn't discard what was
+// picked in the others; only the active mode is saved (see `toFrequency`).
 export function makeHabitFormSchema(originalName?: string) {
 	return habitFormObject(originalName).superRefine((values, ctx) => {
 		if (values.frequencyType === "weekdays" && values.weekdays.length === 0) {
@@ -60,7 +51,6 @@ function habitFormObject(originalName: string | undefined) {
 				(name) => !isNameOverLimit(name, originalName),
 				formCopy.name.tooLong(MAX_HABIT_NAME_LENGTH),
 			),
-		/** Null until picked: the category is optional, and a habit without one goes to Other. */
 		categoryId: z.number().int().nullable(),
 		direction: z.enum(["build", "break"]),
 		targetType: z.enum(["simple", "quantity"]),

@@ -7,12 +7,8 @@ import {
 	requestNotificationPermission,
 } from "./notifications";
 
-/**
- * One shared, observable copy of the OS notification permission, so the
- * screen showing the "notifications are off" notice updates the moment an
- * action asks for permission — and again when the user comes back from
- * Settings, since that change happens outside the app.
- */
+// Shared, so the "notifications are off" notice updates when an action asks for permission and
+// again when the user returns from Settings, which changes it outside the app.
 let current: NotificationPermission | undefined;
 const listeners = new Set<() => void>();
 
@@ -31,18 +27,14 @@ async function refresh(): Promise<void> {
 	set(await getNotificationPermission());
 }
 
-/** For effects, which can't await: a failed permission read is logged, not an unhandled rejection. */
+// Effects can't await: a failed permission read is logged, not an unhandled rejection.
 function refreshInBackground(): void {
 	refresh().catch((error) =>
 		log.warn("notifications.permission_read_failed", { error }),
 	);
 }
 
-/**
- * Asks for permission only if it has never been answered, then reports the
- * result. Never re-prompts after a denial — iOS wouldn't show the prompt
- * again anyway; the persistent notice points to Settings instead.
- */
+// Never re-prompts after a denial: iOS wouldn't show it again; the notice points to Settings instead.
 export async function ensureNotificationPermission(): Promise<NotificationPermission> {
 	let permission = await getNotificationPermission();
 	if (permission === "undetermined") {

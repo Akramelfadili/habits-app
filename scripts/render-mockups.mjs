@@ -1,20 +1,6 @@
 #!/usr/bin/env node
-/**
- * Renders the Claude Design mockups (docs/mockups/v3/*.dc.html) to PNG slices + plain text,
- * so they can be read without opening a browser, by a person skimming or by an agent that
- * can view images but not run the design runtime.
- *
- *   npm run mockups:render                 # every section
- *   npm run mockups:render -- today sheets # just these
- *
- * For each section: a full-page screenshot cut into ~1800 px slices
- * (renders/<section>/slice_00.png, ...) and document.body.innerText
- * (renders/<section>/text.txt). Then renders/INDEX.md maps every frame ID
- * (T1, P7, DC1, ...) to the slice it sits in.
- *
- * The .dc.html files load themselves and React from unpkg, so they are served over a
- * throwaway local server (file:// breaks the runtime's loading) and need network access.
- */
+// npm run mockups:render [-- today sheets]
+// The .dc.html files load themselves and React from unpkg, so they are served over a throwaway local server (file:// breaks the runtime's loading) and need network access.
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
@@ -39,10 +25,6 @@ const VIEWPORT = { width: 1700, height: 1000 };
 const SLICE_HEIGHT = 1800;
 const RENDER_TIMEOUT_MS = 60_000;
 
-/**
- * Element ids the design runtime gives each frame/block — the anchors the
- * index maps to slices. Anything else (dc-root, layout ids) is skipped.
- */
 const ANCHOR_ID =
 	/^(?:[A-Z]{1,2}\d{1,2}[a-z]?|V3-\d{2}[a-z]?|PR-\d{2}|ax3|nav|components|today|progress|habits|handoff|messages|proposals(?:-\w+)?|data-[\w-]+|hand-notes|a11y-[\w-]+|cl-[\w-]+|open-decisions|self-critique)$/;
 
@@ -82,10 +64,6 @@ function serve(dir) {
 	);
 }
 
-/**
- * Rendered = the runtime has filled #dc-root, fonts are in, the network is
- * idle and the text has stopped changing across three polls. No fixed sleep.
- */
 async function waitUntilRendered(page) {
 	await page.waitForLoadState("networkidle", { timeout: RENDER_TIMEOUT_MS });
 	await page.waitForFunction(
@@ -293,7 +271,6 @@ async function main() {
 		server.close();
 	}
 
-	// INDEX covers every section on disk, so a partial run keeps the others.
 	if (selected.length > 0) {
 		console.log(
 			"Partial run: INDEX.md left as is (run without arguments to rebuild it).",

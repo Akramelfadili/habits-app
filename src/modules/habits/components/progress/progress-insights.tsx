@@ -7,7 +7,6 @@ type ProgressInsightsProps = {
 	onChangeFrequency: (habitId: number) => void;
 };
 
-/** The ranked insights: one card on screen, a pager for up to three. */
 export function ProgressInsights({
 	insights,
 	onChangeFrequency,

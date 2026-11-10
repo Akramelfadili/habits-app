@@ -1,8 +1,4 @@
-/**
- * "Slipping" and "improved" thresholds shared by the per-habit rows and the insights, so a habit
- * tagged "slipping" in the list is the one the insight card names. Month's slipping is its weekly
- * trend (`monthly-insights.ts`); Week and Year compare with the previous range.
- */
+// Shared by the rows and the insights so a habit tagged "slipping" is the one the card names.
 
 export const SLIPPING_MIN_DROP_POINTS = 25;
 

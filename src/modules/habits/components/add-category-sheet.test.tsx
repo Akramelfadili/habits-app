@@ -26,7 +26,6 @@ const CREATE_FAILED_MESSAGE = categoriesCopy.addSheet.failed;
 const music = makeCategory({ id: 11, name: "Music", ...CATEGORY_ROTATION[0] });
 const categories = [...TEST_BUILT_IN_CATEGORIES, music];
 
-/** Wires `onCreate` through the real useAsyncAction, as the form screen does. */
 function Harness({
 	create,
 	onCreated = jest.fn(),
@@ -50,7 +49,7 @@ function Harness({
 }
 
 const nameField = () => screen.getByPlaceholderText("e.g. Journaling");
-/** Last button in the sheet — found by position, since it shows a spinner (no label) while busy. */
+// Found by position: it shows a spinner, no label, while busy.
 const addButton = () => {
 	const button = screen.getAllByRole("button").at(-1);
 	if (!button) throw new Error("No Add button");
@@ -125,9 +124,7 @@ describe("AddCategorySheet", () => {
 		);
 
 		await fireEvent.changeText(nameField(), "Journaling");
-		// Not awaited: the press's handler only settles once the write rejects.
-		// Started inside act() so the busy state it sets is flushed there rather
-		// than reported as an update outside act.
+		// Not awaited (the handler settles only when the write rejects); inside act() so the busy state is flushed.
 		let pressing: Promise<unknown> = Promise.resolve();
 		await act(async () => {
 			pressing = fireEvent.press(addButton());
@@ -150,7 +147,6 @@ describe("AddCategorySheet", () => {
 		expect(isAddDisabled()).toBe(false);
 		expect(onCreated).not.toHaveBeenCalled();
 		expect(onDismiss).not.toHaveBeenCalled();
-		// The error slot, the same one a duplicate uses, so the preview stays (the name itself is fine).
 		expect(screen.getByRole("alert")).toBeTruthy();
 		expect(screen.getByTestId("category-preview")).toBeTruthy();
 

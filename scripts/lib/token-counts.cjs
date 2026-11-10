@@ -1,8 +1,4 @@
-// Counts design-token escapes in production source: raw colours, shadows,
-// font sizes/line heights, non-token font weights, spacing and radius
-// literals, and the retired off-scale font sizes, outside src/theme.
-// Shared by the Jest guard (src/theme/token-ratchet.guard.test.ts) and
-// `npm run ratchet:update`, so both always count the same way.
+// Shared by the Jest guard and `npm run ratchet:update`, so both count the same way.
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -18,14 +14,10 @@ const PATTERNS = {
 			return !!match && !/^["']?(?:500|600)["']?$/.test(match[1]);
 		},
 	},
-	// Non-zero padding/margin/gap numbers: use space[...]. 0 is a reset, not a step.
 	"spacing-literals":
 		/\b(?:padding|margin)(?:Top|Bottom|Left|Right|Horizontal|Vertical|Start|End)?\s*:\s*-?(?:[1-9]|0\.\d)|\b(?:gap|rowGap|columnGap)\s*:\s*(?:[1-9]|0\.\d)/,
-	// Non-zero border radii: use radius.*, cellRadius() or squareRadius().
 	"radius-literals": /\bborder\w*Radius\s*:\s*(?:[1-9]|0\.\d)/,
-	// Non-zero tracking: use `letterSpacing.*` (eyebrow and label text).
 	"letter-spacing-literals": /\bletterSpacing:\s*-?(?:[1-9]|0?\.\d)/,
-	// Sizes the design system retires: literals and the old typeScale keys that hold them.
 	"off-scale-font-sizes":
 		/\bfontSize:\s*(?:10|10\.5|11|11\.5|12\.5)\b(?!\.)|\btypeScale\.(?:micro|caption|subtitle)\b/,
 };

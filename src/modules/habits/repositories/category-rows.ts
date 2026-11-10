@@ -4,11 +4,7 @@ import { categories } from "@/lib/db/schema";
 import { builtInAppearance, OTHER_CATEGORY_NAME } from "../constants";
 import type { Category } from "../types";
 
-/**
- * Native-only internals shared by the category and habit repositories — kept
- * out of `category-repository.ts`'s exports so its `.web.ts` counterpart
- * doesn't have to mirror Drizzle details.
- */
+// Kept out of `category-repository.ts`'s exports so its `.web.ts` twin needn't mirror Drizzle details.
 
 type CategoryRow = typeof categories.$inferSelect;
 
@@ -22,22 +18,14 @@ export function rowToCategory(row: CategoryRow): Category {
 	};
 }
 
-/**
- * Every category in the stored group order (`sort_order`; ties by id). Callers that need
- * creation order (the picker) re-sort by id.
- */
 export const allCategoriesQuery = () =>
 	db
 		.select()
 		.from(categories)
 		.orderBy(asc(categories.sortOrder), asc(categories.id));
 
-/**
- * A habit's category from the loaded set — or, if its `category_id` matches
- * nothing (a dangling id; SQLite isn't enforcing foreign keys on device),
- * the built-in Other, so the habit still shows rather than vanishing. Other
- * is seeded by migration and can't be deleted; the constant is only a guard.
- */
+// A dangling `category_id` (SQLite isn't enforcing foreign keys on device) falls back to Other
+// so the habit still shows rather than vanishing.
 export function resolveHabitCategory(
 	categoryId: number,
 	loaded: ReadonlyMap<number, Category>,

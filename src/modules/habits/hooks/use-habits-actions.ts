@@ -9,12 +9,7 @@ import {
 } from "../services/habit-lifecycle-service";
 import type { Habit } from "../types";
 
-/**
- * The Habits tab's writes. Reorder is a single repository write; archive and restore also move
- * the habit's notifications, so they go through the lifecycle service, and say so in one toast
- * with an Undo: the restore toast re-archives with the archive date and pauses it had before,
- * not a fresh archive dated today.
- */
+// The restore toast's Undo re-archives with the archive date and pauses it had before, not a fresh archive dated today.
 export function useHabitsActions() {
 	const reorder = useAsyncAction(reorderHabits, {
 		scope: "habits",
@@ -35,7 +30,6 @@ export function useHabitsActions() {
 
 	return {
 		reorderHabits: reorder.run,
-		/** The row's VoiceOver Archive action: instant, with an Undo toast. */
 		async archive(habit: Habit) {
 			const result = await archive.run(habit.id);
 			if (!result.ok) return;
@@ -43,7 +37,6 @@ export function useHabitsActions() {
 				restore.run(habit.id),
 			);
 		},
-		/** Instant, no confirmation: Undo covers a mistake. */
 		async restore(habit: Habit) {
 			const { archivedAt, pauses } = habit;
 			const result = await restore.run(habit.id);

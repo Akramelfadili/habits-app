@@ -75,7 +75,6 @@ describe("useHabitDetailQueries", () => {
 			["2026-09-22", "done"],
 			["2026-09-21", "done"],
 			["2026-09-20", "frozen"],
-			// 19 Sep and before: nothing was logged, so missed.
 			["2026-09-19", "missed"],
 			["2026-09-18", "missed"],
 			["2026-09-17", "missed"],
@@ -169,7 +168,6 @@ describe("useHabitDetailQueries", () => {
 		const before = result.current?.completionRate;
 		expect(cellFor("2026-09-21")?.status).toBe("missed");
 
-		// What saveDayLog's write looks like to the live query.
 		mockEntries = [...mockEntries, entry(1, "2026-09-21")];
 		await rerender({});
 

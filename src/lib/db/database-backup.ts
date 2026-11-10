@@ -1,17 +1,9 @@
 import { log } from "@/lib/logger/logger";
 import { errorNameOf } from "./error-name";
 
-/**
- * A copy of `habits.db` taken just before the migrator runs on an upgrade
- * (docs/how-to/backups-and-recovery.md). A migration that succeeds with wrong data cannot be
- * undone; this is the way back.
- *
- * `VACUUM INTO` writes a consistent snapshot of the open database (committed rows, WAL included)
- * to a new file, which a plain file copy of a live WAL database does not guarantee. The copy goes
- * to a `.partial` name and is renamed only when complete, so a half-written file is never taken
- * for a backup. Any failure is logged and swallowed: the migrator is one atomic transaction, so
- * an upgrade without a backup is as safe as it was before.
- */
+// `VACUUM INTO` gives a consistent snapshot (WAL included), which a plain copy of a live WAL
+// database does not. It writes a `.partial` name renamed only when complete, so a half-written
+// file is never taken for a backup. Failures are swallowed: the migrator is one atomic transaction.
 
 export const BACKUPS_TO_KEEP = 3;
 
@@ -35,7 +27,7 @@ export type BackupResult =
 	| { status: "done"; name: string; bytes: number }
 	| { status: "failed" };
 
-/** `20261108T101500Z`: UTC, so file order does not depend on the phone's time zone. */
+// UTC, so file order does not depend on the phone's time zone.
 export function utcStamp(now: number): string {
 	const instant = new Date();
 	instant.setTime(now);
@@ -71,11 +63,7 @@ function prune(files: BackupFiles): void {
 	for (const name of finished.slice(BACKUPS_TO_KEEP)) files.remove(name);
 }
 
-/**
- * Takes the backup. Never throws. Logs `migration.backup_done` (size only) or
- * `migration.backup_failed` (the error's name only: a path or message could
- * carry the user's folder names).
- */
+// Logs the error's name only: a path or message could carry the user's folder names.
 export function backupBeforeMigrating(
 	database: BackupSource,
 	openFiles: () => BackupFiles,

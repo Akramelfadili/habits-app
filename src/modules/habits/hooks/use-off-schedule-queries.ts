@@ -9,13 +9,8 @@ import { useEntriesInRange } from "../repositories/entry-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 import type { Habit } from "../types";
 
-/**
- * What the rest-day picker and the rest-day list read, for the day Today shows (`day`): on a past
- * day, a habit that hadn't started or was paused isn't offered.
- */
 export function useOffScheduleQueries(day: Date): {
 	eligibleHabits: Habit[];
-	/** The day's bonus logs, for the rest-day list and the picker's "logged" rows. */
 	loggedToday: OffScheduleLog[];
 } {
 	const { habits } = useActiveHabits();

@@ -9,11 +9,6 @@ import {
 const NO_ENTRIES: readonly Entry[] = [];
 const NO_DATES: ReadonlySet<string> = new Set();
 
-/**
- * The log split per habit, in the order it came in (`useAllEntries` is sorted by date, so each
- * habit's list is too). One pass; callers keep the result in a memo keyed on the log, so a
- * re-render that did not change the log never regroups it.
- */
 export function groupEntriesByHabit(
 	entries: readonly Entry[],
 ): ReadonlyMap<number, readonly Entry[]> {
@@ -38,14 +33,8 @@ export function groupFrozenDatesByHabit(
 	return byHabit;
 }
 
-/**
- * Answers "what is this habit's streak as of that day" and "is it at risk"
- * from the grouped log, and remembers each answer, so asking again — a re-render,
- * a flip back to a day already shown — costs a lookup instead of another walk
- * over the habit's history. Pure: build one per log (grouped entries + frozen
- * dates); answers are keyed by the habit object, so an edited habit is never
- * answered from its old self. The streak rules are `streaks.ts`'s, untouched.
- */
+// Memoised so a re-render costs a lookup, not another history walk. Answers are keyed by the
+// habit object, so an edited habit is never answered from its old self.
 export type StreakReader = {
 	streakAsOf(habit: Habit, asOf: Date): number;
 	atRisk(habit: Habit, today: Date): StreakAtRisk | null;

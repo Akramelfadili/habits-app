@@ -10,11 +10,7 @@ import {
 import { useSettingsQueries } from "../hooks/use-settings-queries";
 import { settingsCopy } from "../messages";
 
-/**
- * Settings > Freezes: what is left and what is used this month, and the rule in plain
- * words. "Saved" (streaks kept this year) needs a freeze-log query that does not exist yet
- * and Auto-use is Later: neither is drawn.
- */
+// "Saved" and Auto-use are not drawn: no freeze-log query exists yet.
 export function SettingsFreezesScreen() {
 	const settings = useSettingsQueries();
 	const stacked = useAccessibilityTextSize();

@@ -5,12 +5,7 @@ import { reconcileScheduledReminders } from "../services/reminder-reconcile-serv
 
 let started = false;
 
-/**
- * Work that runs once per launch, after the database is ready: bringing the OS's scheduled
- * reminders back in line with it, and deleting any export or diagnostics file an earlier run
- * left in the cache. Mounted once by the root layout; a remount (or a return to the foreground)
- * does not run it again: the module-level flag lives as long as the JS runtime does.
- */
+// Once per launch: the module-level flag outlives remounts and foreground returns.
 export function useStartupActions(): void {
 	useEffect(() => {
 		if (started) return;

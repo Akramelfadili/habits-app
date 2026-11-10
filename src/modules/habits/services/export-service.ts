@@ -12,17 +12,8 @@ import { buildExportModel, type ExportSource } from "../domain/export-data";
 import { EXPORT_FORMATS } from "../domain/export-formats";
 import type { ExportFailureReason, ExportOptions } from "../types";
 
-/**
- * Runs a data export: build, serialize (with progress), write to a scratch path, rename
- * into place, record the date. A composite operation with real ordering rules, hence a
- * service:
- *
- * - Cancel (an aborted `signal`) and failure both delete the scratch file, so no partial
- *   export is ever left on disk.
- * - "Last export" is written only after the file is in place: a cancelled or failed run
- *   leaves it untouched.
- * - Earlier exports are cleared first, so the cache never accumulates them.
- */
+// Cancel and failure both delete the scratch file, so no partial export is left on disk.
+// "Last export" is written only after the file is in place. Earlier exports are cleared first.
 
 export type ExportProgress = { done: number; total: number };
 
@@ -43,7 +34,7 @@ export class ExportCancelledError extends Error {
 }
 
 export class ExportFailedError extends Error {
-	/** `options.cause` is the real error — kept for the log and diagnostics, never shown as text. */
+	// `options.cause` is the real error: kept for the log, never shown as text.
 	constructor(
 		readonly reason: ExportFailureReason,
 		options?: { cause?: unknown },
@@ -58,7 +49,7 @@ export class ExportFailedError extends Error {
 
 const STORAGE_ERROR = /no space|enospc|out of (storage|space)|disk full/i;
 
-/** Lets the UI repaint (and a cancel tap land) between serializer chunks. */
+// Lets the UI repaint (and a cancel tap land) between serializer chunks.
 const yieldToUi = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 export function exportFileName(today: Date, extension: string): string {

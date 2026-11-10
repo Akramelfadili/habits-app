@@ -16,13 +16,6 @@ import {
 	reassignHabitsToCategory,
 } from "./habit-repository.web";
 
-/**
- * Web-only stand-in for `category-repository.ts` (see `habit-repository.web.ts` for why web runs
- * on in-memory fixtures). `?fixtures=many-categories` gives eight customs. The store is kept in
- * the stored group order: fixtures start in the order migration 0011 would give them, and a new
- * category is appended (max + 1, as on device).
- */
-
 let store: Category[] | undefined;
 const listeners = new Set<() => void>();
 
@@ -70,7 +63,6 @@ export async function createCategory(
 		hue: input.hue,
 		builtIn: false,
 	};
-	// Appended: the array position is the stored order, so this is max + 1.
 	setCategories([...existing, category]);
 	return category;
 }
@@ -104,7 +96,6 @@ export async function deleteCategory(id: number): Promise<DeletedCategory> {
 	return { category, sortOrder };
 }
 
-/** Puts a deleted category back where it stood (the Undo of a delete). */
 export async function restoreCategory(
 	deleted: DeletedCategory,
 ): Promise<Category> {
@@ -118,10 +109,6 @@ export async function restoreCategory(
 	return deleted.category;
 }
 
-/**
- * The stored order is the array order here: the movable categories in the new order, then Other
- * last. Unknown ids are ignored.
- */
 export async function reorderCategories(orderedIds: number[]): Promise<void> {
 	const existing = getCategoriesNow();
 	const byId = new Map(existing.map((c) => [c.id, c]));

@@ -22,12 +22,6 @@ import { rangeWindowFor } from "./range-summary";
 import { calculateCurrentStreak, isEntryComplete } from "./streaks";
 import { buildYearMap } from "./year-map";
 
-/**
- * Property tests (docs/how-to/dev-tooling.md § "Testing") over random habits
- * and logs: the invariants the streak and rate screens rely on, whatever the
- * history looks like. Failures print a shrunk counterexample and a seed.
- */
-
 describe("completion rate", () => {
 	it("stays within 0 to 1, with completed never above scheduled", () => {
 		fc.assert(

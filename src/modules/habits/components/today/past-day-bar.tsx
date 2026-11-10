@@ -8,7 +8,6 @@ type PastDayBarProps = {
 	onShowToday: () => void;
 };
 
-/** While a past day is selected, a bar says where logs land and the way back. */
 export function PastDayBar({ dayLabel, onShowToday }: PastDayBarProps) {
 	const { colors, opacity } = useTheme();
 

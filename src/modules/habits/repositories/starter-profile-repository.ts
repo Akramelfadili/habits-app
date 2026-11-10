@@ -27,14 +27,12 @@ export type UserDataCounts = {
 	frozenDays: number;
 };
 
-/** How much history the database holds — the starter profile's guard. */
 export async function countUserData(): Promise<UserDataCounts> {
 	const [[e], [n], [f]] = await Promise.all([
 		db.select({ n: count() }).from(entries),
 		db.select({ n: count() }).from(entryNotes),
 		db.select({ n: count() }).from(frozenDays),
 	]);
-	// An aggregate select without GROUP BY always returns one row.
 	return {
 		entries: present(e, "an entries count").n,
 		notes: present(n, "a notes count").n,
@@ -47,18 +45,9 @@ export type AppliedStarterHabit = {
 	hasReminders: boolean;
 };
 
-/**
- * Development builds only (`services/starter-profile-service`): replaces every
- * habit and everything hanging off one — check-ins, notes, freezes, reminders —
- * with the profile's habits, marks First Run as seen and stores the profile
- * version, all in ONE transaction. A failure anywhere leaves the old data and
- * the old marker untouched. App settings (theme, evening review…) and
- * categories are kept.
- *
- * Habits are created through `createHabit` and `createReminder`, not raw SQL,
- * so ordering, frequency columns and the category lookup are the app's own.
- * The caller checks the dev flag; this only writes.
- */
+// One transaction: a failure leaves the old data and marker untouched. Habits go through
+// `createHabit`/`createReminder`, not raw SQL, so ordering and frequency columns are the app's own.
+// The caller checks the dev flag; this only writes.
 export async function replaceHabitsWithStarterProfile(
 	profile: StarterProfile,
 ): Promise<AppliedStarterHabit[]> {

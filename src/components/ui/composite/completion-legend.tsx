@@ -11,20 +11,11 @@ export type LegendEntry = {
 };
 
 type CompletionLegendProps = {
-	/** Week's list: one swatch and word per state the matrix can show. */
 	entries: LegendEntry[];
-	/**
-	 * Month and Year's scale: "Less ▢▢▢▢ More" (0 / 28 / 58 / 100 %, the partial
-	 * levels notched) and the violet frozen swatch, whose label carries the live
-	 * freeze count ("2 freezes left").
-	 */
 	scale?: { less: string; more: string; frozenLabel: string };
 };
 
-/**
- * A frozen cell is never guessed at: it is always named, and words sit beside every swatch so colour
- * is never the only signal.
- */
+// Words sit beside every swatch so colour is never the only signal.
 export function CompletionLegend({ entries, scale }: CompletionLegendProps) {
 	const { colors } = useTheme();
 	const label = [styles.label, { color: colors.sub }];

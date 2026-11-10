@@ -161,7 +161,6 @@ describe("RemindersScreen", () => {
 				hour: 9,
 				minute: 0,
 			});
-			// Mon–Fri habit: its five days are on, the weekend is not offered by default.
 			expect(
 				screen.getByLabelText("Monday").props.accessibilityState.checked,
 			).toBe(true);

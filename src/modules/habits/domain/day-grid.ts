@@ -16,12 +16,7 @@ import {
 	habitDayClassifier,
 } from "./day-status";
 
-/**
- * The shared grid behind every Progress range: each habit's cells over a run of days, classified
- * once (`day-status.ts`), then summed per day. Rates, the week matrix, the month calendar and the
- * year map all read it, so none of them can disagree about what a day was. Entries and freezes
- * are grouped by habit once; nothing scans them per day.
- */
+/** Every Progress range reads this one grid so none can disagree about what a day was. */
 
 export function daysIn(start: Date, end: Date): Date[] {
 	const days: Date[] = [];

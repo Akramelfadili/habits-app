@@ -14,24 +14,15 @@ import { habitsCopy } from "../../messages";
 type HabitsHeaderProps = {
 	eyebrow: string;
 	accessibilityLabel: string;
-	/** Reorder mode: Done replaces the gear and the plus. */
 	reordering: boolean;
 	onOpenSettings: () => void;
 	onAddHabit: () => void;
 	onDone: () => void;
-	/** Scroll-linked shrink and fade of the whole row, from `useCollapsingHeader`. */
 	animatedStyle?: object;
-	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
 	collapsed?: boolean;
-	/** The title block, so a re-tap of the tab can put the screen reader on it. */
 	titleRef?: RefObject<HostInstance | null>;
 };
 
-/**
- * For the Habits tab: the counts as an eyebrow, the display title, and two 44 pt circles (the gear
- * to Settings and the plus to Add habit) or, while reordering, Done. At accessibility text sizes the
- * buttons move above the title. Eyebrow and title are one VoiceOver stop.
- */
 export function HabitsHeader({
 	eyebrow,
 	accessibilityLabel,

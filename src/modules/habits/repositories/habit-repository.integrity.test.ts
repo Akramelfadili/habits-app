@@ -12,13 +12,8 @@ import { makeHabitInput } from "../test-support/habit-builder";
 import type * as CategoryRepository from "./category-repository";
 import type * as HabitRepository from "./habit-repository";
 
-/**
- * Foreign keys are OFF on the device (expo-sqlite's default) and every key is
- * `ON DELETE NO ACTION`, so nothing but our own code keeps child rows from
- * pointing at a parent that's gone. These run the real repositories on a
- * database that behaves like the device and ask SQLite itself
- * (`PRAGMA foreign_key_check`) whether a write left an orphan.
- */
+// Foreign keys are OFF on the device (expo-sqlite's default) and every key is NO ACTION, so only
+// our own code prevents orphans; `PRAGMA foreign_key_check` asks SQLite whether a write left one.
 const mockDb = createTestDb({ foreignKeys: false });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 

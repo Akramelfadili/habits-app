@@ -16,11 +16,6 @@ type DetailHeaderProps = {
 	onEdit: () => void;
 };
 
-/**
- * The category and cadence as an eyebrow, the habit's name as the display title (two lines, then it
- * truncates; at accessibility sizes it wraps freely), and Edit as a 44 pt pill. At accessibility
- * sizes Edit moves above the title. Eyebrow and title are one VoiceOver stop.
- */
 export function DetailHeader({
 	eyebrow,
 	title,

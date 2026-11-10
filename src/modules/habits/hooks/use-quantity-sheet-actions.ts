@@ -8,22 +8,15 @@ import { useTodayActions } from "./use-today-actions";
 
 type QuantitySheetInput = {
 	habit: Habit;
-	/** The day every change lands on — fixed when the sheet opens, so a sheet left open across midnight keeps its date. */
+	// Fixed when the sheet opens, so a sheet left open across midnight keeps its date.
 	day: Date;
-	/** What the day held when the sheet opened: the amount Undo restores. */
 	initial: number;
-	/** "Wed 21 Oct" for a day that isn't today, so the toast names it. */
 	dayLabel?: string;
-	/** Opened for a habit that isn't due that day: the toast says bonus. */
 	offSchedule?: boolean;
 	onClosed: () => void;
 };
 
-/**
- * The quantity sheet's session: every change saves at once, writes run one after the other so
- * the last one wins, and closing shows ONE toast whose Undo restores the amount from before the
- * sheet opened, or, when a write gave a frozen day's freeze back, says so and puts both back.
- */
+// Writes run one after the other so the last one wins; closing shows one toast whose Undo restores the amount from before the sheet opened.
 export function useQuantitySheetActions({
 	habit,
 	day,
@@ -44,7 +37,6 @@ export function useQuantitySheetActions({
 	const queue = useRef<Promise<void>>(Promise.resolve());
 	const target = habit.targetAmount ?? 0;
 
-	/** Saves `next` straight away; on a failed write the sheet shows what is really saved. */
 	function setAmount(next: number) {
 		const clamped = Math.min(MAX_QUANTITY_VALUE, Math.max(0, Math.round(next)));
 		setAmountState(clamped);

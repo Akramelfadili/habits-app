@@ -195,7 +195,6 @@ function scheduleLabelFor(habit: Habit): string {
 export type DayDetailCardData = {
 	title: string;
 	summary: string;
-	/** Future days cannot be edited ("Can't log ahead"): no Edit this day link. */
 	editable: boolean;
 	rows: { key: string; name: string; dot: string; state: string }[];
 	accessibilityLabel: string;
@@ -257,11 +256,6 @@ function monthPercentLabel(percent: number | null): string {
 		: cell.percent(percent);
 }
 
-/**
- * The year heat map's three bands. A band is a run of week columns (Monday on
- * top) across its four months; a month's label stands over the column its first
- * day falls in.
- */
 export function yearBandsProps(
 	grid: YearMap,
 	openMonth: (month: Date) => void,
@@ -303,7 +297,6 @@ export function yearBandsProps(
 	});
 }
 
-/** Which band holds the month today is in: the only one Year shows while too early. */
 export function currentBandIndex(grid: YearMap, today: Date): number {
 	const index = grid.bands.findIndex((band) =>
 		band.some(
@@ -315,7 +308,6 @@ export function currentBandIndex(grid: YearMap, today: Date): number {
 	return Math.max(0, index);
 }
 
-/** The month list: the view of the year for VoiceOver and the largest text sizes. */
 export function yearMonthListProps(
 	grid: YearMap,
 	openMonth: (month: Date) => void,

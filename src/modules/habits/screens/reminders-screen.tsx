@@ -43,13 +43,6 @@ type SheetState =
 	| { kind: "edit"; id: number; draft: ReminderDraft }
 	| null;
 
-/**
- * Reminders: one habit's list of 24-hour times, each with its own days. The red minus on
- * the left removes a time at once with an Undo toast; a tap opens the sheet to change its
- * time and days; + (or the empty state's button) opens it on 09:00. With iOS notifications
- * off a banner says why nothing will arrive and the times stay editable. The app-wide
- * Evening review lives in Settings, not here.
- */
 export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const router = useRouter();
 	const { colors } = useTheme();
@@ -57,7 +50,6 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 	const actions = useReminderActions();
 	const [sheet, setSheet] = useState<SheetState>(null);
 
-	// Still loading: a neutral blank, never a "not found" flash.
 	if (data === undefined) {
 		return (
 			<View
@@ -94,8 +86,7 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 		});
 	}
 
-	// No confirmation: the row goes at once and the toast offers Undo, which puts
-	// the same row (id, time, days) back and re-syncs its notifications.
+	// Undo puts the same row (id, time, days) back and re-syncs its notifications.
 	async function handleRemove(reminder: Reminder) {
 		const result = await actions.removeReminder(habit, reminder.id);
 		if (!result.ok) return;
@@ -114,8 +105,6 @@ export function RemindersScreen({ habitId }: RemindersScreenProps) {
 						...draft,
 						enabled: true,
 					});
-		// A failed save leaves the sheet open (with its error toast) rather than
-		// silently losing the edit.
 		if (result.ok) setSheet(null);
 	}
 

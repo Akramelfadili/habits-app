@@ -19,11 +19,6 @@ import {
 
 export type ProgressYearView = ProgressView<YearMap>;
 
-/**
- * Progress Year: a level 0-3 for every day of the calendar year `year` (default the current
- * one), all habits or one, in three 4-month bands, with the month tiles, best month and the month
- * list for the VoiceOver / AX fallback. Reads the year and the year before it (for "+N pts").
- */
 export function useProgressYearQueries({
 	habitId = null,
 	year = null,

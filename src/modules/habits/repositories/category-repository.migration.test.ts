@@ -2,12 +2,6 @@ import { createPartiallyMigratedTestDb } from "@/lib/db/test-db";
 import { BUILT_IN_CATEGORIES, CATEGORY_ROTATION } from "../constants";
 import { categoryFixturesFor } from "../dev/category-fixtures";
 
-/**
- * The data migration (0009 + 0010): free-text `category` strings become the managed category
- * set, with every habit backfilled to a `category_id`. Rows are written in the old shape
- * (migrated up to 0008), then the rest runs.
- */
-
 type CategoryRow = {
 	id: number;
 	name: string;
@@ -70,7 +64,6 @@ describe("category migration", () => {
 
 	it("maps every old string to a built-in, a deduped custom, or Other", () => {
 		const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0009");
-		// [habit name, old category string], in creation order.
 		const v1: [string, string | null][] = [
 			["h-health-lower", "health"],
 			["h-health-padded", " Health "],
@@ -101,7 +94,7 @@ describe("category migration", () => {
 			"h-whitespace": "Other",
 			"h-anytime": "Other",
 			"h-anytime-lower": "Other",
-			// Both share the 20-char prefix "Weekend projects at " → trimmed, one category.
+			// Both share the 20-char prefix "Weekend projects at ": trimmed, one category.
 			"h-long-1": "Weekend projects at",
 			"h-long-2": "Weekend projects at",
 			"h-evening": "Evening",
@@ -125,14 +118,11 @@ describe("category migration", () => {
 			"Weekend projects at",
 			"Evening",
 		]);
-		// 0009 hands out its ten original slots in order (diamond/175, ring/330, square/95); 0011 then
-		// moves "morning" off 175 (now Health's) to the emptiest slot, bars/220.
 		expect(customs.map(({ shape, hue }) => ({ shape, hue }))).toEqual([
 			CATEGORY_ROTATION[2],
 			CATEGORY_ROTATION[0],
 			CATEGORY_ROTATION[1],
 		]);
-		// Customs come after every built-in — the picker's order is id order.
 		const ids = categoriesOf(sqlite).map((c) => c.id);
 		expect(Math.min(...customs.map((c) => c.id))).toBeGreaterThan(
 			ids[BUILT_IN_CATEGORIES.length - 1],
@@ -166,12 +156,8 @@ describe("category migration", () => {
 	});
 });
 
-/**
- * Every table with a foreign key to `habits` — 0010 rebuilds `habits`, and none
- * of these cascade, so each row must come through untouched and still point at
- * the same habit. Runs through the migrator's single BEGIN…COMMIT (see
- * `test-db.ts`), where `PRAGMA foreign_keys` can't be switched off.
- */
+// None of the FKs to `habits` cascade, so each row must survive the rebuild. The migrator's
+// single BEGIN...COMMIT (see `test-db.ts`) means `PRAGMA foreign_keys` can't be switched off.
 const HABIT_CHILD_TABLES = [
 	"entries",
 	"entry_notes",
@@ -192,7 +178,6 @@ describe.each([
 				.foreign_keys,
 		).toBe(foreignKeys ? 1 : 0);
 
-		// Ids with a gap (2 was deleted before the upgrade): copied ids must stay exact.
 		for (const [id, name, category] of [
 			[1, "Water", "Health"],
 			[3, "Journal", "Evening"],
@@ -245,7 +230,6 @@ describe.each([
 
 		migrateRest();
 
-		// Same rows, same columns, same habit (joined by id → same name).
 		expect(snapshot()).toEqual(before);
 		expect(
 			sqlite.prepare("SELECT id, name FROM habits ORDER BY id").all(),
@@ -255,7 +239,6 @@ describe.each([
 			{ id: 4, name: "Lights out" },
 		]);
 		expect(sqlite.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
-		// The rebuild's scratch table is gone.
 		expect(
 			sqlite
 				.prepare(
@@ -269,9 +252,7 @@ describe.each([
 		const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0009", {
 			foreignKeys,
 		});
-		// Everything sqlite_master holds *about* `habits` other than the table
-		// itself (whose CREATE TABLE the rebuild changes on purpose), plus
-		// index_list, which also reports UNIQUE constraints' auto-indexes.
+		// The table's own CREATE TABLE changes on purpose; index_list also reports UNIQUE auto-indexes.
 		const schemaObjects = () => ({
 			master: sqlite
 				.prepare(
@@ -320,11 +301,6 @@ describe.each([
 	});
 });
 
-/**
- * The data migration (0011): Health/Social off red, customs on dropped rotation hues moved to
- * a current slot, and the stored group order backfilled. Rows are written in the 0010 shape
- * (managed categories, no sort_order).
- */
 describe.each([true, false])(
 	"sort-order category migration (foreign keys %s)",
 	(foreignKeys) => {
@@ -414,11 +390,9 @@ describe.each([true, false])(
 			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
 				foreignKeys,
 			});
-			// Already on current slots: ring/330 x2, square/95 x1, so they stay put.
 			insertCustom(sqlite, "Music", "ring", 330);
 			insertCustom(sqlite, "Language", "square", 95);
 			insertCustom(sqlite, "Garden", "ring", 330);
-			// On dropped hues, in id order.
 			insertCustom(sqlite, "Morning", "diamond", 175);
 			insertCustom(sqlite, "Side project", "dot", 15);
 			insertCustom(sqlite, "Pets", "lines", 350);
@@ -433,7 +407,6 @@ describe.each([true, false])(
 					.filter((c) => c.built_in === 0)
 					.map((c) => [c.name, { shape: c.shape, hue: c.hue }]),
 			);
-			// Counts before: [ring 2, square 1, bars 0, plus 0, half 0, archive 0].
 			expect(byName).toEqual({
 				Music: { shape: "ring", hue: 330 },
 				Language: { shape: "square", hue: 95 },
@@ -442,12 +415,9 @@ describe.each([true, false])(
 				"Side project": { shape: "plus", hue: 265 },
 				Pets: { shape: "half", hue: 130 },
 				Kids: { shape: "archive", hue: 290 },
-				// All four empty slots now hold one; square (1) is the lowest of the fewest.
 				Cooking: { shape: "square", hue: 95 },
-				// Then bars, the lowest slot with one.
 				Choir: { shape: "bars", hue: 220 },
 			});
-			// The moved category keeps its id, so its habit is untouched.
 			expect(habitCategoryNames(sqlite)).toEqual({ Practice: "Morning" });
 		});
 
@@ -462,13 +432,10 @@ describe.each([true, false])(
 			insertHabit(sqlite, "Piano", "Music", { sortOrder: 3 });
 			insertHabit(sqlite, "Run", "Fitness", { sortOrder: 2 });
 			insertHabit(sqlite, "Lift", "Fitness", { sortOrder: 4 });
-			// A tie on sort_order falls back to id: Read (id 5) before Budget (id 6).
 			insertHabit(sqlite, "Read", "Learning", { sortOrder: 5 });
 			insertHabit(sqlite, "Budget", "Finance", { sortOrder: 5 });
-			// Only archived habits use Garden and Health: they follow every active group.
 			insertHabit(sqlite, "Weed", "Garden", { sortOrder: 0, archived: true });
 			insertHabit(sqlite, "Floss", "Health", { sortOrder: 7, archived: true });
-			// Archived Music doesn't move Music: its active habit already placed it.
 			insertHabit(sqlite, "Old piano", "Music", {
 				sortOrder: 0,
 				archived: true,
@@ -482,7 +449,6 @@ describe.each([true, false])(
 				"Finance",
 				"Garden",
 				"Health",
-				// Unused, by id: the built-ins, then the unused custom.
 				"Mindfulness",
 				"Productivity",
 				"Social",

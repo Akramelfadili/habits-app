@@ -2,13 +2,6 @@ import type { Reminder } from "../types";
 import type { FixtureScenario } from "./habit-fixtures";
 import { HABITS_V3_SCENARIOS, habitsV3Reminders } from "./habits-v3-fixtures";
 
-/**
- * Static fake reminders backing the web-only repository (`reminder-repository.web.ts`),
- * all on habit #1 ("Meditate", see `remindersHabitFixtures` in `habit-fixtures.ts`):
- * - `reminders` matches the reminders mockup: 07:20 weekdays, 13:00 Mon/Wed/Fri turned off,
- *   and 21:00 Sat/Sun, which conflicts with the habit's schedule and shows the warning banner.
- * - `reminders-at-cap` matches the reminders-at-cap mockup: 4 of 4, the 18:00 one turned off.
- */
 export function makeReminderFixtures(
 	scenario: FixtureScenario = "default",
 ): Reminder[] {
@@ -23,7 +16,6 @@ export function makeReminderFixtures(
 	for (const name of HABITS_V3_SCENARIOS) {
 		if (scenario === name) return habitsV3Reminders(name);
 	}
-	// Archived/restored Detail: the schedule Restore brings back.
 	if (scenario === "habit-detail-archived") {
 		return [reminder(1, 7, 0, [1, 2, 3, 4, 5, 6, 7])];
 	}
@@ -37,7 +29,6 @@ export function makeReminderFixtures(
 	if (scenario === "reminders-times" || scenario === "reminders-times-denied") {
 		return [reminder(1, 7, 0, [2, 4]), reminder(2, 18, 30, [4])];
 	}
-	// Four times on three habits, held back by the denied permission.
 	if (scenario === "settings-notifications-off") {
 		const on = (
 			id: number,

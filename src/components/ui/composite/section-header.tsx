@@ -5,23 +5,13 @@ import { useTheme } from "@/theme/use-theme";
 type SectionHeaderProps = {
 	title: string;
 	count?: string;
-	/**
-	 * "small" is a card's own semibold title (Weekly Summary's "Per habit") rather than a group header;
-	 * "group" is the compact label-and-count above a list card (Manage Categories' "Built-in 10"), count
-	 * beside it; "eyebrow" is the caps label over a card with its "0 of 2" at the far edge (Today's
-	 * category groups).
-	 */
 	size?: "default" | "small" | "group" | "eyebrow";
-	/**
-	 * Trailing note on a "group" header, pushed to the far edge: Manage's "Reordering within Training"
-	 * while a row of that group is lifted.
-	 */
 	tag?: string;
 };
 
 function spokenLabel(title: string, count?: string, tag?: string): string {
 	const fraction = count?.match(/^(\d+)\/(\d+)$/);
-	// "0 of 2" is a done-count (Today's groups): VoiceOver says "0 of 2 done".
+	// VoiceOver says "0 of 2 done" for the done-count.
 	const spokenCount = fraction
 		? `${fraction[1]} of ${fraction[2]}`
 		: count?.match(/^\d+ of \d+$/)
@@ -30,11 +20,6 @@ function spokenLabel(title: string, count?: string, tag?: string): string {
 	return [title, spokenCount, tag].filter(Boolean).join(", ");
 }
 
-/**
- * Group header used above a card's rows (Today's "Morning 2/3", Weekly Summary's "Per habit"): the
- * `section` type-scale token, normal case. Distinct from `SectionLabel`, which is the all-caps form
- * eyebrow style.
- */
 export function SectionHeader({
 	title,
 	count,

@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/primitives/skeleton";
 import { minTouchTarget, space } from "@/theme/theme";
 import { todayCopy } from "../../messages";
 
-/** How many rows each card holds: two, one, two. */
 const CARDS = [2, 1, 2] as const;
 
 function SkeletonRow() {
@@ -21,11 +20,7 @@ function SkeletonRow() {
 	);
 }
 
-/**
- * The loading skeleton: the progress card and a few group cards as grey shapes, standing in for what
- * Today is about to draw. It is only mounted after the wait has lasted 300 ms, and is one "Loading
- * your habits" stop for a screen reader; the shapes themselves say nothing.
- */
+// Mounted only after a 300 ms wait, so a fast load never flashes it.
 export function TodaySkeleton() {
 	// Said once when it appears: a screen reader is not looking at the rows.
 	useEffect(() => {

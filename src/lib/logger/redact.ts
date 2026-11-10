@@ -1,22 +1,9 @@
 import type { LogEntry, LogFields, SerializedError } from "./types";
 
-/**
- * Redaction, done in the core before any sink sees an entry, so a new sink cannot leak what an
- * old one would not.
- *
- * - A field survives only if its NAME is in an allowlist. Anything else (`name`, `note`,
- *   `label`, `title`...) is dropped, whatever its value.
- * - Allowlisted numeric names keep numbers, booleans and null only (ids and counts). A string
- *   there is dropped.
- * - Allowlisted TOKEN names may carry a short lowercase code (`reason: "storage"`); a string with
- *   spaces, capitals or more than 40 characters looks like free text and is replaced by
- *   `[redacted]`.
- * - An error's message is capped and loses its quoted segments (`Category "Glass of water" is
- *   missing` becomes `Category "..." is missing`). Unquoted interpolation can't be detected, so:
- *   never put user text into an Error message; use the id.
- *
- * To log a new field, add its name here. That is a deliberate, reviewable step.
- */
+// Done in the core before any sink sees an entry, so a new sink cannot leak what an old one would not.
+// A field survives only if its NAME is allowlisted; adding one is a deliberate, reviewable step.
+// Quoted segments of an error message are stripped, but unquoted interpolation can't be detected:
+// never put user text into an Error message; use the id.
 const NUMERIC_FIELDS: ReadonlySet<string> = new Set([
 	"habitId",
 	"categoryId",
@@ -59,9 +46,8 @@ export const REDACTED = "[redacted]";
 const QUOTED_SEGMENT = /(["'`‘“])[^"'`’”]*(["'`’”])/g;
 
 function scrubMessage(raw: string): string {
-	// Drizzle's "Failed query: <sql>\nparams: <values>" carries the written
-	// values unquoted (a habit or category name) — keep the SQL, drop the params.
-	// split() always yields at least one piece; `?? raw` only satisfies the type.
+	// Drizzle's "Failed query: <sql>\nparams: <values>" carries written values unquoted (a habit
+	// name): keep the SQL, drop the params. `?? raw` only satisfies the type.
 	const withoutParams = raw.split(/\r?\nparams:/i)[0] ?? raw;
 	const scrubbed = withoutParams.replace(QUOTED_SEGMENT, "$1…$2");
 	return scrubbed.length > MAX_MESSAGE_LENGTH
@@ -69,7 +55,7 @@ function scrubMessage(raw: string): string {
 		: scrubbed;
 }
 
-/** Only the `at …` frames — the stack's first line repeats the unscrubbed message. */
+// The stack's first line repeats the unscrubbed message, so only the `at …` frames are kept.
 function framesOf(stack: string | undefined): string | undefined {
 	if (!stack) return undefined;
 	const frames = stack
@@ -85,7 +71,7 @@ export function serializeError(
 ): SerializedError | undefined {
 	if (error === undefined || error === null) return undefined;
 	if (!(error instanceof Error)) {
-		// A thrown string/object can carry anything — keep only that it happened.
+		// A thrown string/object can carry anything: keep only that it happened.
 		return { name: "NonError", message: `thrown ${typeof error}` };
 	}
 	const code = (error as { code?: unknown }).code;

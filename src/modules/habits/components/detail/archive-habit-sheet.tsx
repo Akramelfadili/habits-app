@@ -10,17 +10,11 @@ import { detailCopy } from "../../messages";
 type ArchiveHabitSheetProps = {
 	visible: boolean;
 	habitName: string;
-	/** The archive is running: both buttons wait and the sheet cannot be swiped away. */
 	isArchiving?: boolean;
 	onArchive: () => void;
 	onCancel: () => void;
 };
 
-/**
- * Reversible, so one tap: Archive habit as the primary and Cancel under it. It says what archiving
- * keeps, so people choose it over deleting. Afterwards Detail pops and a toast offers Undo; this
- * sheet only asks.
- */
 export function ArchiveHabitSheet({
 	visible,
 	habitName,

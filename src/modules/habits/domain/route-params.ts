@@ -1,11 +1,8 @@
 import { isValid } from "date-fns";
 import { fromDayKey, toDayKey } from "@/utils/day-key";
 
-/**
- * Route params arrive from deep links (`habitsapp://…`) that any app or web page can open, so
- * they are untrusted text. Each parser returns the value the screen needs, or why it was
- * refused: a short code for the log, never the param itself.
- */
+// Params come from deep links any app or web page can open, so they are untrusted. A refusal
+// returns a short code for the log, never the param itself.
 export type ParamResult<T> =
 	| { ok: true; value: T }
 	| {
@@ -17,7 +14,7 @@ export type ParamResult<T> =
 				| "invalid_date";
 	  };
 
-/** expo-router hands a repeated segment as an array; only one value is meaningful. */
+// expo-router hands a repeated segment as an array.
 function single(raw: string | string[] | undefined): string | undefined {
 	return Array.isArray(raw) ? undefined : raw;
 }

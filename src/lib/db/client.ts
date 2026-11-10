@@ -31,9 +31,7 @@ function open(): { expoDb: SQLiteDatabase; db: Db } {
 		openError = null;
 		return { expoDb: sqlite, db: drizzle(sqlite, { schema }) };
 	} catch (error) {
-		// Opening runs at import, before any screen exists. Throwing here would
-		// crash before any UI, so keep the failure: `DatabaseProvider` shows the
-		// recovery screen (with Copy diagnostics) and never reads these two.
+		// Opening runs at import: throwing would crash before any UI, so keep the failure for `DatabaseProvider`'s recovery screen.
 		openError = error;
 		log.error("database.open_failed", { error });
 		return { expoDb: unusable<SQLiteDatabase>(), db: unusable<Db>() };
@@ -42,8 +40,7 @@ function open(): { expoDb: SQLiteDatabase; db: Db } {
 
 const first = open();
 
-// `let` exports are live bindings: a successful `retryOpenDatabase` swaps them
-// for every importer.
+// `let` exports are live bindings: a successful `retryOpenDatabase` swaps them for every importer.
 export let expoDb: SQLiteDatabase = first.expoDb;
 export let db: Db = first.db;
 
@@ -58,12 +55,8 @@ export function retryOpenDatabase(): void {
 	db = next.db;
 }
 
-/**
- * Recovery from a database that will not open or migrate: closes it, renames `habits.db` (and its
- * companions) to `habits.corrupt-<timestamp>.db` in the same folder, and opens a new empty one.
- * The old file is never deleted, so a later build or support can still read it. If the rename
- * fails the original is opened again and the error is thrown: nothing changed.
- */
+// The old file is never deleted, so a later build or support can still read it; if the rename
+// fails the original is reopened and the error thrown, so nothing changed.
 export function setAsideDatabase(now: number): void {
 	const wasOpen = openError === null;
 	try {

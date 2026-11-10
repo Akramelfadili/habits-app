@@ -7,7 +7,6 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 type SegmentedControlOption<T extends string> = {
 	value: T;
 	label: string;
-	/** Just this segment is unavailable (e.g. a period with no data yet) — the others stay live. */
 	disabled?: boolean;
 };
 
@@ -22,21 +21,14 @@ type SegmentedControlProps<T extends string> = {
 	value: T;
 	onChange: (value: T) => void;
 	disabled?: boolean;
-	/** "compact" hugs its labels so it can sit trailing in a row (Direction); default fills the width. */
 	size?: "full" | "compact";
 	label?: string;
-	/**
-	 * What the control does at accessibility text sizes: "stack" lists the options one under another
-	 * (forms); "collapse" shows only the selected one with a chevron, and a tap opens the stacked list
-	 * (Progress's range) so the pinned bar stays one line tall.
-	 */
+	// "collapse" keeps a pinned bar one line tall at accessibility sizes.
 	axLayout?: "stack" | "collapse";
 	collapsedHint?: string;
-	/** The collapsed list opened or closed — a pinned bar keeps its slot the same height either way. */
 	onOpenChange?: (open: boolean) => void;
 };
 
-/** The selected pill and its track: 40 pt tall to the eye inside a 48 pt hit area (4 pt inset). */
 const HIT_HEIGHT = 48;
 
 function Check({ color }: { color: string }) {
@@ -57,11 +49,6 @@ function Chevron({ color }: { color: string }) {
 	);
 }
 
-/**
- * A 40 pt selected pill in a 48 pt hit area on the `inner` track, pill radius, subhead labels.
- * Selection is state, not colour alone: the selected segment is filled and announced ("selected,
- * 1 of 3").
- */
 export function SegmentedControl<T extends string>({
 	options,
 	value,
@@ -206,8 +193,7 @@ const styles = StyleSheet.create({
 	trackCompact: {
 		alignSelf: "flex-start",
 	},
-	// Each segment is a 48 pt-tall touch column filling the track edge to edge,
-	// so segments abut and never overlap; the pill inside keeps the 4 pt inset.
+	// Segments fill the track edge to edge so they abut and never overlap; the pill inside keeps the inset.
 	segment: {
 		minHeight: HIT_HEIGHT,
 		justifyContent: "center",

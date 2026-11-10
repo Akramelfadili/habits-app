@@ -1,16 +1,6 @@
 #!/usr/bin/env node
-// Mechanical enforcement of the CLAUDE.md architecture rules that a script can
-// check. Dependency-free (plain Node), so it runs in a Claude Code Stop hook, a
-// git hook and `make check` in well under a second.
-//
-//   node scripts/check-architecture.mjs                 check the repo
-//   node scripts/check-architecture.mjs --print-allowlist   print today's violations as allowlist JSON
-//   node scripts/check-architecture.mjs --root <dir> --allowlist <file|none>   (used by the tests)
-//
-// Known violations live in scripts/check-architecture.allowlist.json. Entries
-// may only be REMOVED: a violation not in the list fails the check, and an
-// entry that no longer matches a violation also fails ("remove it"), so the
-// list can only shrink.
+// node scripts/check-architecture.mjs [--print-allowlist] [--root <dir> --allowlist <file|none>]
+// Allowlist entries may only be removed: a stale entry fails too, so the list can only shrink.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -55,7 +45,7 @@ const isTest = (file) => /\.test\.(ts|tsx)$/.test(file);
 const files = walk(SRC).filter(isSource);
 const productionFiles = files.filter((file) => !isTest(file));
 
-// Strip comments but keep line numbers, so a mention in a comment isn't a hit.
+// Keeps line numbers so a mention in a comment isn't a hit.
 function stripComments(text) {
 	return text
 		.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
@@ -99,14 +89,11 @@ const DRIZZLE_HOMES = [
 	/^src\/modules\/[^/]+\/repositories\//,
 	/^src\/lib\/[^/]+\/repositories\//,
 	/^src\/lib\/db\//,
-	// Jest-only helpers that load a test database. The "test-support-site"
-	// rule below keeps every file in them out of the app bundle.
+	// Jest-only helpers; the "test-support-site" rule keeps them out of the app bundle.
 	/^src\/(modules\/[^/]+\/)?test-support\//,
 ];
 const inDrizzleHome = (file) => DRIZZLE_HOMES.some((re) => re.test(rel(file)));
 
-// 1. Drizzle and the db client/schema only in repositories/ and lib/db.
-//    2. useLiveQuery only in repositories/ and lib/db.
 for (const file of productionFiles) {
 	if (inDrizzleHome(file)) continue;
 	for (const { spec, line } of importsOf(file)) {
@@ -139,9 +126,7 @@ for (const file of productionFiles) {
 	}
 }
 
-// 2b. Test-only code (test-support/ folders, the test database and its live-query
-//     stand-in) is never imported by app code: only by tests and by other
-//     test-only files. Nothing in it may reach the production bundle.
+// Nothing test-only may reach the production bundle.
 const isTestOnly = (relPath) =>
 	/(^|\/)test-support(\/|$)/.test(relPath) ||
 	/^src\/lib\/db\/(test-db|test-live-query)(\.ts)?$/.test(relPath);
@@ -160,7 +145,6 @@ for (const file of productionFiles) {
 	}
 }
 
-// 3. Modules never import each other; shared code never imports a module.
 const moduleOf = (relPath) => relPath.match(/^src\/modules\/([^/]+)\//)?.[1];
 for (const file of productionFiles) {
 	const own = moduleOf(rel(file));
@@ -189,13 +173,8 @@ for (const file of productionFiles) {
 	}
 }
 
-// 4. Layer order inside a module:
-//    repositories/strategies/dev < domain < services < presenters < hooks < components < screens.
-//    dev/ (fixtures + dev seeds) sits with repositories: the .web.ts twins read its fixtures.
-//    domain/ is pure rules (streaks, summaries, insights, export formats): it may use
-//    strategies but never repositories/ or dev/ (checked below), so it stays testable without a db.
-//    services/ orchestrates repositories + domain + lib adapters.
-//    presenters/ (view-model helpers, form schemas) is pure: hooks, components and screens use it.
+// dev/ sits with repositories because the .web.ts twins read its fixtures; domain/ may use
+// strategies but never repositories/ or dev/ (checked below), so it stays testable without a db.
 const LAYER_RANK = {
 	repositories: 0,
 	strategies: 0,
@@ -238,7 +217,6 @@ for (const file of productionFiles) {
 	}
 }
 
-// 5. Hook naming: use<X>Queries / use<X>Actions, one concern per file.
 for (const file of productionFiles) {
 	if (!inDir(file, "hooks") || !rel(file).includes("src/modules/")) continue;
 	const name = path.basename(file);
@@ -263,7 +241,6 @@ for (const file of productionFiles) {
 	}
 }
 
-// 6. Routes stay thin: a route imports and renders a screen; no logic.
 const ROUTE_IMPORTS = [
 	/^@\/modules\//,
 	/^@\/components\//,
@@ -294,7 +271,6 @@ for (const file of productionFiles) {
 	}
 }
 
-// 7. Tests are colocated: every unit gets a sibling <name>.test.ts(x).
 const NO_TEST_NEEDED = [
 	/^src\/app\//,
 	/\/migrations\//,
@@ -321,7 +297,6 @@ for (const file of productionFiles) {
 		);
 }
 
-// 8. Every repository has a .web.ts twin (web renders through in-memory fixtures).
 for (const file of productionFiles) {
 	const r = rel(file);
 	if (!/\/repositories\/[^/]+-repository\.ts$/.test(r)) continue;
@@ -334,9 +309,7 @@ for (const file of productionFiles) {
 		);
 }
 
-// 9. No colour literals outside the theme (tokens only).
 const COLOUR_LITERAL = /["'`]#[0-9a-fA-F]{3,8}["'`]|\brgba?\(|\boklch\(/g;
-// 10. new Date(args) outside the theme/utils (date math goes through date-fns).
 const DATE_WITH_ARGS = /\bnew Date\(\s*[^)\s]/g;
 for (const file of productionFiles) {
 	const r = rel(file);
@@ -361,8 +334,6 @@ for (const file of productionFiles) {
 	}
 }
 
-// 12. No raw console.* in src/ outside the logger's console sink (tests and
-//     scripts are excluded): everything goes through `log` (ADR 008).
 const CONSOLE_CALL = /\bconsole\s*\.\s*(log|info|warn|error|debug|trace)\s*\(/g;
 const CONSOLE_SINK = "src/lib/logger/sinks/console-sink.ts";
 for (const file of productionFiles) {
@@ -378,8 +349,6 @@ for (const file of productionFiles) {
 		);
 }
 
-// 11. No dev-only controls in the app: UI never imports dev/ (fixtures, device state),
-//     and the removed seed / clear / reset helpers and "(dev)" button labels stay gone.
 const UI_DIRS = ["hooks", "components", "screens", "presenters"];
 const DEV_ONLY_NAMES =
 	/\b(seedStreakAtRiskHabit|seedHabitWithHistory|clearAllHabits|deleteAllHabits|resetFirstRun|createHabitAt)\b|\(dev\)["'`]/g;
@@ -413,11 +382,7 @@ for (const file of productionFiles) {
 		);
 }
 
-// 12. The development-only starter profile (docs/how-to/starter-habits.md) is
-//     reachable from exactly one place, and only through a `__DEV__` branch, so
-//     the production bundle never contains it. Each file may be imported only
-//     by its one owner, the gate only by the root layout, and the env variable
-//     (inlined by Expo at build time) is read only inside the gate.
+// The dev-only starter profile is reachable only through a `__DEV__` branch, so the production bundle never contains it.
 const STARTER_SITE = {
 	"src/modules/habits/screens/starter-profile-gate": ["src/app/_layout.tsx"],
 	"src/modules/habits/services/starter-profile-service": [

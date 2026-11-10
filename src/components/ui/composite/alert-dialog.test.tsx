@@ -118,7 +118,7 @@ describe("AlertDialog", () => {
 });
 
 describe("AlertDialog — the offer layout (FR3)", () => {
-	it("moves the screen reader onto the primary action when it opens (08.3)", async () => {
+	it("moves the screen reader onto the primary action when it opens", async () => {
 		jest.useFakeTimers();
 		const send = jest
 			.spyOn(AccessibilityInfo, "sendAccessibilityEvent")

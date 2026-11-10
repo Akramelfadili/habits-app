@@ -1,13 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/**
- * Keeps the device-validation hook (`habitsapp://dev-state`, docs/decisions/
- * 007-device-validation.md) out of production. The hook is switched on only by
- * `EXPO_PUBLIC_DEVICE_VALIDATION=1` at bundle time; this test fails if that
- * variable can reach any build config but the manual simulator workflow, or if
- * the code behind the switch can be reached without asking it.
- */
+// Fails if EXPO_PUBLIC_DEVICE_VALIDATION can reach any build config but the simulator workflow, or
+// if the code behind the switch can be reached without asking it.
 const ROOT = path.resolve(__dirname, "../../..");
 const FLAG = "EXPO_PUBLIC_DEVICE_VALIDATION";
 
@@ -61,7 +56,6 @@ describe("device validation stays out of production", () => {
 				.map((file) => `.github/workflows/${file}`),
 		].filter((file) => fs.existsSync(path.join(ROOT, file)));
 
-		// app.config.ts only reads the flag, to refuse it in a production build.
 		const setters = configs
 			.filter((file) => file !== "app.config.ts")
 			.filter((file) => read(file).includes(FLAG));
@@ -110,8 +104,7 @@ describe("device validation stays out of production", () => {
 
 	it("the screen reaches the loader only through a require inside the inline flag check", () => {
 		const screen = read("src/modules/habits/screens/dev-state-screen.tsx");
-		// No static import of the loader or the launch-file reader: a static
-		// import keeps them (and the fixtures behind them) in a release bundle.
+		// A static import would keep the loader and its fixtures in a release bundle.
 		for (const module of [
 			"load-device-state",
 			"dev-state-repository",
@@ -125,7 +118,6 @@ describe("device validation stays out of production", () => {
 				new RegExp(`^\\s*import\\s+["'][^"']*${module}["']`, "m"),
 			);
 		}
-		// Every require of them sits in `FLAG === "1" ? require("…") : null`.
 		const required = [
 			...screen.matchAll(
 				/require\(\s*["']([^"']*(?:load-device-state|dev-state-repository|device-state|launch-request))["']\s*\)/g,
@@ -144,8 +136,7 @@ describe("device validation stays out of production", () => {
 			),
 		].map((match) => match[1]);
 		expect(gated.sort()).toEqual(required.sort());
-		// No dynamic import() either: it would be a second, ungated way in
-		// (`typeof import(…)` in a type is erased and fine).
+		// No dynamic import() either: a second, ungated way in (`typeof import(…)` in a type is erased and fine).
 		expect(screen).not.toMatch(
 			/(?<!typeof\s)\bimport\(\s*["'][^"']*(?:load-device-state|launch-request)/,
 		);
@@ -184,7 +175,6 @@ describe("device validation stays out of production", () => {
 			"src/lib/device-validation/enabled.ts",
 			"src/modules/habits/screens/dev-state-screen.tsx",
 		]);
-		// In the screen every read is the `=== "1" ? require(…)` gate.
 		const screen = read("src/modules/habits/screens/dev-state-screen.tsx");
 		const reads = screen.match(new RegExp(`process\\.env\\.${FLAG}`, "g"));
 		const gates = screen.match(

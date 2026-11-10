@@ -10,16 +10,10 @@ import { habitPickerSubtitle } from "./habit-picker-helpers";
 
 type HabitPickerRowProps = {
 	habit: Habit;
-	/** Already logged off-schedule today — shown checked, and tapping does nothing (undo lives in the toast / Detail). */
 	logged: boolean;
-	/** Check habits log straight away; quantity habits hand off to the Quantity log sheet. */
 	onSelect: () => void;
 };
 
-/**
- * One habit in the off-schedule picker: icon, name, schedule line, and a round check, or "Amount ›"
- * for a quantity habit, which opens the Quantity log instead of toggling. States: default, logged.
- */
 export function HabitPickerRow({
 	habit,
 	logged,

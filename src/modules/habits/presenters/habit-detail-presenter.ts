@@ -74,26 +74,16 @@ type TileInput = {
 	currentStreak: number;
 	longest: LongestStreak;
 	rate: CompletionRate;
-	/** The 90-day rate against the 90 days before, in whole points; null when there is nothing to compare. */
 	rateDelta: number | null;
 	freezesRemaining: number;
-	/** Set only in the month a streak reset with the pool empty. */
 	streakReset: StreakReset | null;
 	hasEntries: boolean;
-	/** Restored and not yet logged since: a 0 is a fresh start, not a lost streak. */
+	// A 0 after a restore is a fresh start, not a lost streak.
 	freshStart: boolean;
 };
 
-/** Below this many due days the 90-day rate says when it starts instead. */
 const RATE_MIN_DUE_DAYS = 7;
 
-/**
- * The three tiles under the title. Build habits say streak and days; Break habits say
- * resisting and nights, and the rate says "resisted". New habits say when each tile starts,
- * an archived one that its streak is paused, a restored one that it starts fresh, and in the
- * month a streak reset with no freezes left the third tile is the amber freeze count.
- * Never "failed".
- */
 export function detailTiles(input: TileInput): StatTileData[] {
 	const { habit } = input;
 	const isBreak = habit.direction === "break";
@@ -191,7 +181,7 @@ export function detailRemindersValue(
 			on.map(formatReminderTime).join(", "),
 		);
 	}
-	const only = atIndex(on, 0); // exactly one is on: the two returns above cover 0 and 2+
+	const only = atIndex(on, 0);
 	const days = reminderDaysLabel(only.weekdays);
 	return detailCopy.reminders.timeDays(
 		formatReminderTime(only),
@@ -199,11 +189,6 @@ export function detailRemindersValue(
 	);
 }
 
-/**
- * What VoiceOver says for the Reminders row (08.3): "Reminders, 07:00, Tuesday
- * and Thursday." With none, several, all off or while archived it says the value
- * the row shows.
- */
 export function detailRemindersLabel(
 	habit: Habit,
 	reminders: readonly Reminder[],
@@ -286,7 +271,6 @@ export type WeekRow = {
 	key: string;
 	cells: CompletionRowsCell[];
 	label: string;
-	/** The day Edit this day opens for: the latest day this week that is due and unlogged, else the latest that can be edited. Null when none can. */
 	targetDate: Date | null;
 };
 
@@ -299,11 +283,6 @@ function isUnlogged(day: HeatmapDay) {
 	);
 }
 
-/**
- * The five week rows of the grid: each one tap target with one VoiceOver label for the
- * whole week, its cells decorative. A week with nothing to edit (before the habit started,
- * or still to come) has no target.
- */
 export function weekRows(habit: Habit, weeks: HeatmapDay[][]): WeekRow[] {
 	return weeks.map((week) => {
 		const monday = atIndex(week, 0).date;
@@ -337,7 +316,6 @@ export function weekRows(habit: Habit, weeks: HeatmapDay[][]): WeekRow[] {
 	});
 }
 
-/** The legend: one swatch and word for each state the grid actually shows (never a guess), in the habit's own words. */
 export function gridLegend(habit: Habit, weeks: HeatmapDay[][]): LegendEntry[] {
 	const present = new Set(weeks.flat().map((day) => day.status));
 	const legend = detailCopy.grid.legend;
@@ -389,7 +367,6 @@ export type HistoryRowView = {
 	accessibilityLabel: string;
 };
 
-/** One line of history: the date and what the day was. A quantity day says how much. No time. */
 export function historyRowView(habit: Habit, row: HistoryRow): HistoryRowView {
 	const copy = detailCopy.history;
 	const isBreak = habit.direction === "break";

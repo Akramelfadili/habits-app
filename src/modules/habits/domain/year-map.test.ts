@@ -105,7 +105,6 @@ describe("buildYearMap", () => {
 	it("picks the best finished month, with March to September all full", () => {
 		const best = map().bestMonth;
 		expect(best?.percent).toBe(100);
-		// The earliest of equally good months wins; October is still running and never judged.
 		expect(best?.key).toBe("2026-03");
 	});
 

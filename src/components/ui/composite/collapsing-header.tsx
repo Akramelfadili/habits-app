@@ -25,30 +25,17 @@ import { useReducedMotion } from "@/utils/use-reduced-motion";
 
 export const COLLAPSED_BAR_HEIGHT = minTouchTarget;
 
-/** Where tab roots start and how far the header sits from what follows it: the screen's own paddingTop and header gap. */
 export const HEADER_CONTENT_PADDING_TOP = space[300];
 export const HEADER_BLOCK_GAP = space[200];
 
-/** A bar this close to the end of its range counts as showing: it takes over the taps and VoiceOver. */
 const BAR_TAKES_OVER_AT = 0.5;
 
 export function collapseRange(contentTop: number) {
 	return Math.max(1, contentTop - COLLAPSED_BAR_HEIGHT);
 }
 
-/**
- * A large title collapsing into a solid inline bar, scroll-linked: everything is a function of the
- * scroll offset on the UI thread, with no React state per frame (`collapsed` flips once, when the bar
- * takes over). The title shrinks and fades over the first 60 % of the range, the bar's name fades in
- * from the middle, and its background and hairline arrive in the last 30 %. Scrolling that stops
- * inside the range settles on the nearer end.
- *
- * Reduce Motion: no interpolation and no settling scroll, only a 150 ms crossfade when the offset
- * passes the middle of the range.
- *
- * The range is where the content below the header meets the bar's bottom edge; the screen reports it
- * with `setRange(collapseRange(top))` once the header is measured, so the bar never covers content.
- */
+// Everything is a function of the scroll offset on the UI thread, with no React state per frame
+// (`collapsed` flips once, when the bar takes over).
 export function useCollapsingHeader() {
 	const reduced = useReducedMotion();
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -65,7 +52,6 @@ export function useCollapsingHeader() {
 		const y = scrollY.value;
 		const end = range.value;
 		if (reduced || y <= 0 || y >= end) return;
-		// Content too short to scroll the whole range can only rest at the top.
 		const target = y < end / 2 || maxOffset.value < end ? 0 : end;
 		scrollTo(scrollRef, 0, target, true);
 	};
@@ -79,7 +65,6 @@ export function useCollapsingHeader() {
 			);
 		},
 		onEndDrag: (event) => {
-			// With velocity a momentum phase follows and settles itself.
 			if (Math.abs(event.velocity?.y ?? 0) < 0.1) settle();
 		},
 		onMomentumEnd: () => settle(),
@@ -111,9 +96,8 @@ export function useCollapsingHeader() {
 	useAnimatedReaction(
 		() => progress.value >= BAR_TAKES_OVER_AT,
 		(next, previous) => {
-			// `previous` is null on the first run, when `collapsed` still holds its
-			// start value (false): setting it again would be a stray render after
-			// mount, but a first run that is already past the threshold must count.
+			// `previous` is null on the first run: setting `collapsed` again would be a stray render
+			// after mount, but a first run already past the threshold must count.
 			if (next !== (previous ?? false)) {
 				scheduleOnRN(setCollapsed, next);
 			}
@@ -149,7 +133,6 @@ export function useCollapsingHeader() {
 		opacity: interpolate(progress.value, [0.5, 1], [0, 1], Extrapolation.CLAMP),
 	}));
 
-	/** Back to the large title: re-tapping the selected tab. */
 	const scrollToTop = useCallback(() => {
 		scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
 	}, [scrollRef, reduced]);
@@ -174,20 +157,12 @@ type CollapsedHeaderBarProps = {
 	contentStyle: object;
 	testID?: string;
 	trailing?: ReactNode;
-	/**
-	 * The bar's bottom hairline. Off when a pinned control sits right under the
-	 * bar (Progress's range switcher): that block draws the one hairline below
-	 * itself, so the control is not boxed between two.
-	 */
+	// Off when a pinned control sits under the bar: that block draws the one hairline, so the control isn't boxed between two.
 	hairline?: boolean;
 };
 
-/**
- * The solid inline bar. A zero-height wrapper hangs it from the safe-area line, so it sits exactly one
- * bar-height below the status bar whatever the parent's padding does to absolute children. Render it
- * before the scroller (the scroller fills the rest of the column, so a zero-height sibling after it
- * would land at the bottom); `zIndex` keeps it on top.
- */
+// A zero-height wrapper hangs the bar from the safe-area line whatever the parent's padding does to
+// absolute children. Render it before the scroller, or the zero-height sibling lands at the bottom.
 export function CollapsedHeaderBar({
 	title,
 	collapsed,
@@ -220,7 +195,6 @@ export function CollapsedHeaderBar({
 				>
 					<Text
 						accessibilityRole="header"
-						// A navigation bar holds its type size, like iOS's own.
 						maxFontSizeMultiplier={barMaxFontMultiplier}
 						style={[styles.title, { color: colors.ink }]}
 					>
@@ -236,26 +210,14 @@ export function CollapsedHeaderBar({
 type PinnedBelowBarProps = {
 	children: ReactNode;
 	scrollY: SharedValue<number>;
-	/**
-	 * Where the content's own slot for this control starts, in scroll-content
-	 * coordinates. The control follows the content up to just under the bar,
-	 * then stays there.
-	 */
 	top: SharedValue<number>;
-	/** The control's own height, reported so the screen can keep its slot in the content. */
 	onHeight: (height: number) => void;
 	testID?: string;
 };
 
-/** Air between the bar and a pinned control; the control's own slot starts this far below the layer's top. */
 export const PINNED_PADDING_TOP = space[200];
 
-/**
- * A control that scrolls with the content until it meets the inline bar, then pins just under it
- * (Progress's range switcher). One element, moved on the UI thread (a translation of the scroll
- * offset clamped at the bar's bottom edge), so it is never drawn twice. Render it right after the bar
- * and before the scroller, like the bar itself, and leave an empty slot of its height in the content.
- */
+// One element moved on the UI thread, so it is never drawn twice; the content keeps an empty slot of its height.
 export function PinnedBelowBar({
 	children,
 	scrollY,
@@ -274,8 +236,6 @@ export function PinnedBelowBar({
 			},
 		],
 	}));
-	// A hairline arrives as the control settles under the bar, so content can
-	// be seen to pass beneath it.
 	const hairline = useAnimatedStyle(() => ({
 		opacity: interpolate(
 			top.value - PINNED_PADDING_TOP - scrollY.value - COLLAPSED_BAR_HEIGHT,

@@ -29,11 +29,6 @@ type QuantityLogSheetProps = {
 
 const MAX_DIGITS = String(MAX_QUANTITY_VALUE).length;
 
-/**
- * The stepper with 44 pt buttons, quick +1/+2/+3 and Fill to target, and Set exact value on the
- * number pad. Every change saves at once; closing shows one toast with Undo (see
- * `useQuantitySheetActions`). At the target Fill is disabled and extra amounts still count.
- */
 export function QuantityLogSheet({
 	habit,
 	value,

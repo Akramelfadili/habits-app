@@ -1,9 +1,3 @@
-// Console guard for Jest. `installConsoleGuard()` (called once from
-// jest.setup-after-env.js) swaps console.error / console.warn for a recorder
-// around every test and fails the test when something unexpected was logged.
-// A test that expects a message says so with `expectConsole`, which also
-// returns a mock to assert on.
-
 import { cleanup } from "@testing-library/react-native";
 
 type Method = "error" | "warn";
@@ -31,12 +25,6 @@ function matches(match: Matcher | undefined, message: string): boolean {
 		: match.test(message);
 }
 
-/**
- * Allow a console.error / console.warn in the current test (optionally only
- * messages containing a string or matching a RegExp). Allowed calls are
- * swallowed; assert on the returned mock when the message matters:
- * `expect(expectConsole("error", "boom")).toHaveBeenCalledTimes(1)`.
- */
 export function expectConsole(method: Method, match?: Matcher): jest.Mock {
 	const mock = jest.fn();
 	allowed.push({ method, match, mock });
@@ -64,9 +52,8 @@ export function installConsoleGuard(): void {
 	});
 
 	afterEach(async () => {
-		// Testing Library unmounts in its own afterEach, which runs after this one
-		// and awaits an act(): animation frames fire there, outside any test's
-		// console. Unmount first so that output is still caught.
+		// Testing Library's own afterEach unmounts after this one and awaits an act(), where animation
+		// frames fire outside any test's console. Unmount first so that output is still caught.
 		await cleanup();
 		for (const method of METHODS) console[method] = originals[method];
 		const found = unexpected;

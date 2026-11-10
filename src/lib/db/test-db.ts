@@ -1,6 +1,5 @@
 /// <reference types="node" />
-// Node ambient types are scoped to this file (tsconfig's `types: ["jest"]` keeps
-// them out of app code) — this file only ever runs under Jest, never bundled.
+// Node ambient types are scoped to this file; tsconfig's `types: ["jest"]` keeps them out of app code.
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -8,23 +7,14 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./schema";
 
-/**
- * A real, migrated, in-memory SQLite database for repository tests — expo-sqlite's
- * native binding doesn't run under Jest, so tests swap `lib/db/client`'s `db`
- * for one built here (Node's built-in `node:sqlite`, no native compile step)
- * instead of mocking query behavior away.
- */
+// expo-sqlite's native binding doesn't run under Jest, so tests swap `lib/db/client`'s `db` for
+// one built on `node:sqlite` instead of mocking query behaviour away.
 export function createTestDb({
 	foreignKeys = true,
 	onWrite,
 }: {
-	/** Off reproduces the device: expo-sqlite leaves foreign keys unenforced. */
+	// Off reproduces the device: expo-sqlite leaves foreign keys unenforced.
 	foreignKeys?: boolean;
-	/**
-	 * Called with the table name after every insert/update/delete — what expo-sqlite's
-	 * change listener does for live queries. A screen test passes
-	 * `notifyTableChanged` (test-live-query.ts) so its hooks re-read after a write.
-	 */
 	onWrite?: (table: string) => void;
 } = {}) {
 	const sqlite = new DatabaseSync(":memory:", {
@@ -34,11 +24,6 @@ export function createTestDb({
 	return wrap(sqlite, onWrite);
 }
 
-/**
- * A raw in-memory database migrated only up to (not including) `stopBefore` —
- * for testing a data migration against rows written in the old shape.
- * `migrateRest()` then applies every remaining migration.
- */
 export function createPartiallyMigratedTestDb(
 	stopBefore: string,
 	{ foreignKeys = true }: { foreignKeys?: boolean } = {},
@@ -65,13 +50,8 @@ function migrationTags(): string[] {
 	return journal.entries.map((entry: { tag: string }) => entry.tag);
 }
 
-/**
- * Applies migrations the way drizzle's expo migrator does on device: every
- * pending one inside a single BEGIN…COMMIT, statement by statement. That
- * matters — inside a transaction `PRAGMA foreign_keys` is a no-op, so a
- * migration relying on it would only pass here if run outside one.
- * (node:sqlite enforces foreign keys by default; expo-sqlite doesn't.)
- */
+// Mirrors the device: all pending migrations in one BEGIN…COMMIT. Inside a transaction
+// `PRAGMA foreign_keys` is a no-op, so a migration relying on it would only pass outside one.
 function applyMigrations(sqlite: DatabaseSync, tags: string[]) {
 	sqlite.exec("BEGIN");
 	try {
@@ -100,7 +80,6 @@ function wrap(sqlite: DatabaseSync, onWrite?: (table: string) => void) {
 			const statement = sqlite.prepare(sqlText);
 			const written = WRITE_STATEMENT.exec(sqlText)?.[1];
 			if (written && onWrite) {
-				// After the statement ran, even when it returned rows (`… returning`).
 				queueMicrotask(() => onWrite(written));
 			}
 
@@ -109,8 +88,7 @@ function wrap(sqlite: DatabaseSync, onWrite?: (table: string) => void) {
 				return { rows: [] };
 			}
 
-			// Positional rows, as the sqlite-proxy driver expects — keyed objects
-			// would collapse a join's same-named columns (both tables' `id`).
+			// Positional rows: keyed objects would collapse a join's same-named columns.
 			statement.setReturnArrays(true);
 
 			if (method === "get") {
@@ -125,7 +103,7 @@ function wrap(sqlite: DatabaseSync, onWrite?: (table: string) => void) {
 	);
 }
 
-/** Stamps a habit as created at `createdAt` — a normal create always uses "now", which would put a backdated entry before the habit existed. */
+// A normal create always uses "now", which would put a backdated entry before the habit existed.
 export async function backdateHabit(
 	db: { update: ReturnType<typeof createTestDb>["update"] },
 	habitId: number,

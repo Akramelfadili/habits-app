@@ -9,19 +9,10 @@ import {
 } from "./completion-index";
 import type { FrequencyStrategy } from "./frequency-strategy";
 
-/**
- * Due every day until the weekly target is met, then hidden for the rest of the
- * (Mon–Sun) week. Only completions *before* `date` count, so the day the target
- * is hit still shows the habit (and it can still be un-checked); from the next
- * day it's gone until Monday.
- *
- * Looking back, though, "due" overstates what was owed: a 3x/week habit done
- * Mon/Wed/Fri was never really scheduled on Tuesday. So for history, a
- * completed day was scheduled, and an uncompleted one only counts as missed
- * once the week's remaining open days can no longer cover what's still
- * needed — e.g. a finished week with 1 of 3 logged has exactly 2 missed days
- * (its last two open ones), not 6.
- */
+// Only completions before `date` count, so the day the target is hit still shows the habit
+// (and it can be un-checked). Looking back, "due" overstates what was owed: a completed day was
+// scheduled, and an uncompleted one is missed only once the week's remaining open days can no
+// longer cover what's needed (1 of 3 logged in a finished week = 2 missed, not 6).
 export function createPerWeekFrequency(
 	frequency: Extract<Frequency, { type: "per-week" }>,
 ): FrequencyStrategy {

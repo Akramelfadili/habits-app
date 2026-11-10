@@ -17,19 +17,9 @@ export type InsightCardProps = {
 	symbol: SFSymbol;
 	title: string;
 	body: string;
-	/**
-	 * "warning" (amber icon square: a slipping habit), "success" (an improved
-	 * range: ink glyph on the quiet square), "neutral" (nothing to fix, an
-	 * informational note: faint glyph). Colour is never the only signal: each
-	 * has its own glyph and its own words.
-	 */
+	// Colour is never the only signal: each tone has its own glyph and words.
 	tone?: "warning" | "success" | "neutral";
-	/** An inline text action under the body ("Change frequency ›"); only the link is tappable, never the body. */
 	action?: { label: string; onPress: () => void };
-	/**
-	 * Set by the pager: this card is "Insight 1 of 3". VoiceOver reads the label
-	 * first and swiping up or down steps to the next or previous card.
-	 */
 	position?: {
 		label: string;
 		onStep: (direction: 1 | -1) => void;

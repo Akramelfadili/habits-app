@@ -14,22 +14,15 @@ type RowStatusInput = {
 	streak: number | undefined;
 	atRisk: { missedDate: Date; freezesRemaining: number } | undefined;
 	frozenYesterday: { date: Date; streak: number } | undefined;
-	/** False when a past day is shown ("Resisted", not "Resisted today"). */
 	isToday: boolean;
-	/** The real today after `EVENING_STARTS_AT_HOUR`: an open Break habit reads "Resist tonight". */
 	isEvening?: boolean;
 };
 
-/**
- * The line under a Today row's name: the streak or the amount, never a completion time.
- * At risk and frozen win over everything else, since they are what the row needs from you.
- * `undefined` = a plain habit with no streak yet, whose row shows just its name.
- */
+// At risk and frozen win over everything else: they are what the row needs from you.
 export function todayRowStatus(input: RowStatusInput): RowStatus | undefined {
 	const { habit, completed, atRisk, frozenYesterday } = input;
 	const streak = input.streak ?? 0;
 
-	// A habit done today is no longer waiting on a decision: its row reads like any other.
 	if (atRisk && !completed) {
 		return {
 			text: todayCopy.rowAtRisk(

@@ -21,7 +21,6 @@ function joinList(items: string[]): string {
 	return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
-/** 24-hour "07:20" — the time's own display, and its screen-reader name. */
 export function formatReminderTime({
 	hour,
 	minute,

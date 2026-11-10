@@ -16,21 +16,16 @@ const MAX_RADIUS = 6;
 
 export type ChartColumnState =
 	| "complete"
-	/** The period still running: a lighter bar, its label in ink. */
 	| "current"
-	/** Before the history began: a dashed stub, never hidden. */
 	| "before-start"
-	/** Still ahead: an outlined stub. */
 	| "future";
 
 export type ChartColumn = {
 	key: string;
-	/** 0–1; ignored for before-start and future. */
 	value: number;
 	state?: ChartColumnState;
 	label: string;
 	valueLabel?: string;
-	/** What the rotor reads for this bar: "September, 100 percent". */
 	accessibilityLabel: string;
 };
 
@@ -93,11 +88,6 @@ function Bar({
 	);
 }
 
-/**
- * One column per period, scaled to the tallest possible (1), radius min(width ÷ 2, 6). Bars rise over
- * the "fill" token and jump with Reduce Motion. For VoiceOver it is one adjustable element: the
- * summary, and swipe up or down steps from bar to bar.
- */
 export function ColumnChart({
 	columns,
 	height = CHART_HEIGHT,

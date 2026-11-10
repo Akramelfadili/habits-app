@@ -9,11 +9,6 @@ import type {
 } from "../types";
 import type * as NativeReminderRepository from "./reminder-repository";
 
-/**
- * Web-only stand-in for `reminder-repository.ts` — in-memory fixtures, no
- * expo-sqlite binding, same shape as `frozen-day-repository.web.ts`.
- */
-
 let store: Reminder[] | undefined;
 const listeners = new Set<() => void>();
 

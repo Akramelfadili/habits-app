@@ -8,13 +8,8 @@ export type CategoryGroup = {
 	habits: Habit[];
 };
 
-/**
- * Groups habits by category, in the stored category order (`categories` as
- * `useCategories()` returns them). A category missing from `categories` (not loaded yet)
- * follows the known ones, in first appearance. The built-in "Other" is always forced last:
- * a new custom category is stored after it (max + 1), and only an explicit reorder may
- * say otherwise. Within a group, input order (the manual order) is preserved.
- */
+// "Other" is always forced last: a new custom category is stored after it (max + 1). A category
+// not loaded yet follows the known ones in first appearance.
 export function groupHabitsByCategory(
 	habits: Habit[],
 	categories: readonly Category[],
@@ -38,7 +33,6 @@ export function groupHabitsByCategory(
 	);
 	const rank = (group: CategoryGroup) =>
 		position.get(group.category.id) ?? categories.length;
-	// Array sort is stable, so unknown categories keep their first appearance.
 	const ordered = Array.from(groups.values()).sort((a, b) => rank(a) - rank(b));
 	const isOther = (group: CategoryGroup) =>
 		group.category.builtIn && group.category.name === OTHER_CATEGORY_NAME;
@@ -51,7 +45,7 @@ export function groupHabitsByCategory(
 export type Progress = {
 	completed: number;
 	total: number;
-	/** 0–1, and 0 when there's nothing due (never NaN from a 0/0 division). */
+	// 0 when nothing is due, never NaN from 0/0.
 	fraction: number;
 };
 
@@ -66,13 +60,9 @@ export function computeProgress(
 	return { completed, total, fraction: total === 0 ? 0 : completed / total };
 }
 
-/** Today's three mutually exclusive display states. Everything done is still populated: there is no extra "day closed" screen. */
 export type TodayViewState = "no-habits" | "rest-day" | "populated";
 
-/**
- * "No habits yet" always wins over "rest day" when both could apply (a brand new user,
- * zero habits, on a day nothing would be scheduled anyway): check habit count first.
- */
+// "No habits yet" wins over "rest day" for a brand new user: check habit count first.
 export function resolveTodayViewState(input: {
 	totalHabitCount: number;
 	progress: Progress;
@@ -82,10 +72,6 @@ export function resolveTodayViewState(input: {
 	return "populated";
 }
 
-/**
- * The fold row summary: "1 not due today · Upper body". Two names, then "+N".
- * On a past day it reads "not due" without "today".
- */
 export function foldSummary(
 	notDue: readonly Habit[],
 	isToday: boolean,
@@ -98,11 +84,6 @@ export function foldSummary(
 		: todayCopy.foldSummaryOnDay(notDue.length, joined);
 }
 
-/**
- * The line under a not-due habit's name (the fold row): a per-week habit that has met its
- * target says it is back next week; anything else says how it is scheduled and that a log
- * is a bonus. A logged bonus says it changes no streak.
- */
 export function bonusRowStatus(
 	habit: Habit,
 	completedThisWeek: number,

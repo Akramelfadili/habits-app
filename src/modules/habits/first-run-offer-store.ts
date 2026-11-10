@@ -2,15 +2,10 @@ import { create } from "zustand";
 import type { Habit } from "./types";
 
 type FirstRunOfferState = {
-	/** The first habit, waiting for the answer to "Remind you each day?"; null when nothing is offered. */
 	habit: Habit | null;
-	/**
-	 * Set the moment First Run is left, before the "seen" flag's live query has
-	 * caught up: until the gate reads "done", the tabs must not bounce back to
-	 * First Run on the stale flag (the skip flake). Cleared once the gate agrees.
-	 */
+	// Set before the "seen" flag's live query catches up, so the tabs don't bounce back to
+	// First Run on the stale flag.
 	leftFirstRun: boolean;
-	/** The welcome's Close (a skip) could not write the "seen" flag: the screen says so inline. */
 	skipFailed: boolean;
 	setSkipFailed: (failed: boolean) => void;
 	offer: (habit: Habit) => void;
@@ -18,11 +13,6 @@ type FirstRunOfferState = {
 	setLeftFirstRun: (left: boolean) => void;
 };
 
-/**
- * The reminder pre-prompt outlives the screen that raised it: the first habit
- * is saved on a First Run screen, which then hands over to Today, and Today
- * asks. A store, like the progress view's, so the hand-over is one call.
- */
 export const useFirstRunOfferStore = create<FirstRunOfferState>((set) => ({
 	habit: null,
 	leftFirstRun: false,

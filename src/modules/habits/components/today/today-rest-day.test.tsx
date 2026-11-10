@@ -82,7 +82,6 @@ describe("TodayRestDay", () => {
 		const { view, onLogBonus } = setup();
 		await view;
 		await fireEvent.press(screen.getByText("Log a different habit"));
-		// The picker lists it after the row already on screen.
 		await fireEvent.press(screen.getAllByText("Walk").at(-1) as never);
 		expect(onLogBonus).toHaveBeenCalledWith(walk);
 	});

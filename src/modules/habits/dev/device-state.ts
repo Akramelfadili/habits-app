@@ -11,12 +11,7 @@ import {
 } from "./habit-fixtures";
 import { makeReminderFixtures } from "./reminder-fixtures";
 
-/**
- * Everything a visual-check state shows, as plain data: what the web build
- * builds in memory from `?fixtures=`, laid out for the device-validation
- * build to write into SQLite (the dev-state repository). One source for both, so
- * a state means the same thing on the phone as in the baseline.
- */
+// One source for web and device builds, so a state means the same thing on the phone as in the baseline.
 export type DeviceState = {
 	scenario: FixtureScenario;
 	categories: Category[];
@@ -52,7 +47,6 @@ function settingsFor(
 	return settings;
 }
 
-/** `search` is the query string of the state's web route (`?fixtures=…&longNames=1`). */
 export function buildDeviceState(search: string): DeviceState {
 	setFixtureSearch(search);
 	const params = new URLSearchParams(search);
