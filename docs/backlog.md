@@ -207,6 +207,8 @@ _Resolved items of this group: `docs/archive/backlog-done.md`._
 
 ## Parked (decided or Later, no date)
 
+- **Two TypeScript flags parked** (audit A-04, batch 21): `noPropertyAccessFromIndexSignature` (400 errors today; style only, no safety gain) and `exactOptionalPropertyTypes` (88 errors today, about two thirds outside tests; it would force `| undefined` into optional props and touches React Native prop types). Turn either on in `tsconfig.json` only when a batch is willing to fix its count. Count with `npx tsc --noEmit --<flag>`.
+
 - Week-level freeze for × per week habits (own ADR); auto-use freezes; the Settings hub with a page per row; the Send feedback row (the Privacy row is built); the per-reminder on/off toggle; iCloud backup row.
 - `SlimHabitForm` split behind a shared `useHabitForm` hook; the per-habit streak read model shared by `useHabitsQueries` and the Detail hook; one V3-02 `Header` component for Today / Habits / Progress.
 - Skeleton shimmer (it pulses); week-start-follows-iOS (D9, own ADR).
