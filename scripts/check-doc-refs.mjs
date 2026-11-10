@@ -60,7 +60,7 @@ export const ALLOWLIST = [
 	// Files that live outside the repo, in node_modules or in a CI artifact.
 	/^(expo\/bundledNativeModules\.json|react-navigation\/.*|google-services\.json|eas\.json|coverage\.json)$/,
 	/^(index\.html|summary\.md|results\.json|log\.txt|diagnostics\.txt|Documents\/dev-state\.json)$/,
-	// V1/V2 mockup sources: outside the repo (kept at git tag mockups-v1-v2).
+	// Early mockup sources: outside the repo (kept at git tag mockups-v1-v2).
 	/^(HabitFlowV2\.dc\.html|habit-components\.js|hab-25-f3a\.png)$/,
 	// Described as gone, in an ADR and in the migration notes.
 	"src/app/index.tsx",
@@ -83,7 +83,6 @@ export const STRICT = /^(CLAUDE\.md|AGENTS\.md|\.claude\/)/;
 
 const EXT_RE = new RegExp(`\\.(${KNOWN_EXTENSIONS.join("|")})$`);
 
-/** True when the span looks like a repo path worth checking. */
 export function normalizeRef(raw) {
 	let s = raw.trim();
 	if (!s || /\s/.test(s)) return null;
@@ -101,10 +100,6 @@ export function normalizeRef(raw) {
 	return s;
 }
 
-/**
- * Every candidate reference in a Markdown text.
- * @returns {{ref: string, kind: "link"|"code"|"fence", line: number, end: number}[]}
- */
 export function extractRefs(text) {
 	const out = [];
 	const lineAt = (i) => text.slice(0, i).split("\n").length;
@@ -160,7 +155,6 @@ export function extractRefs(text) {
 	return out;
 }
 
-/** The quoted heading after `path` § or `path` → , if any. */
 export function sectionAfter(text, end) {
 	const m = /^\)?\s*(?:§|→)\s*["“]([^"”\n]+)["”]/.exec(
 		text.slice(end, end + 200),
@@ -176,7 +170,6 @@ function headingText(line) {
 		.toLowerCase();
 }
 
-/** True when `text` has a heading starting with `wanted`. */
 export function hasHeading(text, wanted) {
 	const w = wanted.replace(/[`*_]/g, "").trim().toLowerCase();
 	return text
@@ -191,12 +184,6 @@ function allowed(rel) {
 	);
 }
 
-/**
- * Check one file's text.
- * @param {string} file repo-relative path of the Markdown file
- * @param {string} text its content
- * @param {{exists: (rel: string) => boolean, read: (rel: string) => string|null, topLevel: Set<string>, baseNames: Set<string>, endsWith: (ref: string) => boolean}} fsApi
- */
 export function checkFile(file, text, fsApi) {
 	const problems = [];
 	const dir = path.posix.dirname(file);
@@ -212,7 +199,7 @@ export function checkFile(file, text, fsApi) {
 				// to exist somewhere in the repo.
 				if (ref.startsWith(".") || fsApi.baseNames.has(ref)) continue;
 			} else if (!EXT_RE.test(ref) && !fsApi.topLevel.has(ref.split("/")[0])) {
-				// "week/day", "V1/V2", "chore/docs-set": prose, not a repo path.
+				// "week/day", "chore/docs-set": prose, not a repo path.
 				continue;
 			}
 		}
@@ -242,7 +229,6 @@ export function checkFile(file, text, fsApi) {
 	return problems;
 }
 
-/** The files to scan: tracked Markdown plus the Claude skill/agent folders. */
 export function filesToScan(root) {
 	const tracked = execFileSync("git", ["ls-files", "-z"], {
 		cwd: root,
@@ -282,7 +268,7 @@ export function run(root) {
 			try {
 				return fs.readFileSync(path.join(root, rel), "utf8");
 			} catch {
-				return null; // a folder
+				return null;
 			}
 		},
 	};

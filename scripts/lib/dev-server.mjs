@@ -1,7 +1,3 @@
-/**
- * Shared by scripts/visual-check.mjs and scripts/e2e.mjs: reuse an Expo web
- * dev server already running at BASE_URL, or start one and stop it after.
- */
 import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
@@ -25,7 +21,6 @@ export const EXTRA_LIBS = [
 	),
 ];
 
-/** LD_LIBRARY_PATH with the unpacked Chromium deps prepended. */
 export function libraryPath() {
 	return [...EXTRA_LIBS, process.env.LD_LIBRARY_PATH].filter(Boolean).join(":");
 }
@@ -39,7 +34,6 @@ async function isServerUp() {
 	}
 }
 
-/** Returns the spawned server (to pass to `stopServer`), or null if one was already up. */
 export async function ensureServer() {
 	if (await isServerUp()) {
 		console.log(`Using dev server already running at ${BASE_URL}`);
@@ -68,9 +62,7 @@ export function stopServer(child) {
 	if (!child) return;
 	try {
 		process.kill(-child.pid);
-	} catch {
-		// already exited
-	}
+	} catch {}
 }
 
 /** Warms Metro's web bundle so the first flow/screenshot doesn't time out on it. */

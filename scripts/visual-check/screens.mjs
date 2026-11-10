@@ -1,19 +1,17 @@
 /**
- * Every screen and state scripts/visual-check.mjs renders — one entry per
- * state across all features, so a single run covers the whole app and a
- * shared-component change shows up on every screen it touches, not just the
- * feature that made it.
+ * Every screen and state scripts/visual-check.mjs renders: one entry per state across all
+ * features, so a single run covers the whole app and a shared-component change shows up on
+ * every screen it touches, not just the feature that made it.
  *
- * Each entry: `feature` (spec ID, groups the report), `route` (with the
- * `?fixtures=` scenario, see src/modules/habits/dev/habit-fixtures.ts), `mockup` (the V3
- * render under docs/mockups/v3/renders/ it is judged against, or null: V1/V2
- * mockups were deleted in V3-6 and live on in the tag mockups-v1-v2),
- * optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
- * in CSS px, overrides the default 393×852 — e.g. a small phone with the
- * keyboard up), `note`, `touch` (render in a
- * touch-enabled page, for swipe gestures), `colorScheme` ("light" default, or
- * "dark" — the emulated OS scheme, which the Appearance setting's default
- * "System" follows, HAB-15), and `interact(page, ctx)` for states only reachable by a tap or gesture.
+ * Each entry: `feature` (groups the report), `route` (with the `?fixtures=` scenario, see
+ * src/modules/habits/dev/habit-fixtures.ts), `mockup` (the render under
+ * docs/mockups/v3/renders/ it is judged against, or null; earlier mockups live in the tag
+ * mockups-v1-v2), optional `clock` (overrides DEFAULT_CLOCK), `viewport` ({ width, height }
+ * in CSS px, overrides the default 393x852, e.g. a small phone with the keyboard up),
+ * `note`, `touch` (render in a touch-enabled page, for swipe gestures), `colorScheme`
+ * ("light" default, or "dark": the emulated OS scheme, which the Appearance setting's
+ * default "System" follows), and `interact(page, ctx)` for states only reachable by a tap
+ * or gesture.
  */
 
 /**
@@ -33,14 +31,12 @@ async function showRange(page, range) {
 	await page.waitForTimeout(500);
 }
 
-/** Scrolls the Progress tab by `top` pt (or to the end) with the wheel, and waits out the bar's crossfade. */
 async function scrollProgress(page, top) {
 	await page.mouse.move(200, 400);
 	await page.mouse.wheel(0, top === "end" ? 6000 : top);
 	await page.waitForTimeout(600);
 }
 
-/** Year → the year's July label → that month, with 14 July ringed (P13). */
 async function openJuly14(page) {
 	await showRange(page, "Year");
 	await page.getByRole("button", { name: /^July,/ }).click();
@@ -76,7 +72,6 @@ async function drag(page, locator, { dx = 0, dy = 0, release = true }) {
 	if (release) await page.mouse.up();
 }
 
-/** The New habit form's own Name field (the add-category sheet has its own). */
 /**
  * Scrolls the Add habit form to its end and fails the capture if the pinned
  * footer (Save and its reason) sits over the last field: the end of the form
@@ -249,13 +244,11 @@ async function typeHabitName(page, name) {
 	await page.getByLabel("Name", { exact: true }).first().fill(name);
 }
 
-/** A category picker chip by its label (HAB-24). */
 function categoryChip(page, name) {
 	return page.getByRole("button", { name, exact: true }).first();
 }
 
 export const SCREENS = {
-	// HAB-46 — First run (FR1–FR4): no tab bar until Today
 	"first-run": {
 		feature: "HAB-46",
 		route: "/?fixtures=first-run",
@@ -298,7 +291,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-46 — Browse suggestions (BS1)
 	suggestions: {
 		feature: "HAB-46",
 		route: "/suggestions?fixtures=empty",
@@ -319,7 +311,6 @@ export const SCREENS = {
 		async interact(page) {
 			await page.getByRole("button", { name: "Browse suggestions" }).click();
 			await page.getByText("Tap one to open Add habit").waitFor();
-			// Down to the Break habits and the Skip for now link under them.
 			await page.mouse.move(200, 400);
 			await page.mouse.wheel(0, 6000);
 			await page.waitForTimeout(500);
@@ -337,7 +328,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-46 / HAB-49 — First run and suggestions at accessibility text sizes
 	"first-run-ax": {
 		feature: "HAB-49",
 		route: "/?fixtures=first-run&textSize=ax",
@@ -366,7 +356,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-03 / HAB-04 / HAB-05 — Today
 	today: {
 		feature: "HAB-03",
 		route: "/",
@@ -395,7 +384,6 @@ export const SCREENS = {
 		mockup: "docs/mockups/v3/renders/today/slice_01.png",
 	},
 
-	// HAB-18 — off-schedule log (D1, D2) and retro-log pinning (D4)
 	"rest-day-picker": {
 		feature: "HAB-18",
 		route: "/?fixtures=rest-day-picker",
@@ -431,7 +419,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-41 — Add / Edit habit (F1–F10, BS2)
 	"form-new-empty": {
 		feature: "HAB-41",
 		route: "/new-habit?fixtures=empty",
@@ -603,7 +590,6 @@ export const SCREENS = {
 		note: "BS2 — prefilled from a suggestion: banner says where from; nothing saves until Save.",
 	},
 
-	// HAB-22 — New habit: polish
 	"new-habit-near-limit": {
 		feature: "HAB-22",
 		route: "/new-habit?fixtures=empty",
@@ -653,7 +639,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-24 — Categories: pick & add (the New habit form's category card + add sheet)
 	"category-picker-many": {
 		feature: "HAB-24",
 		route: "/new-habit?fixtures=many-categories",
@@ -713,7 +698,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-42 — Categories (C1–C6, DC6)
 	"categories-list": {
 		feature: "HAB-42",
 		route: "/(habits)/categories?from=habits&fixtures=categories-in-use",
@@ -800,7 +784,6 @@ export const SCREENS = {
 		note: "C6 — no custom categories: 'Add a category · Group habits your own way', no Reorder.",
 	},
 
-	// HAB-07 / HAB-08 — Sheets over Today
 	"quantity-log": {
 		feature: "HAB-07",
 		route: "/?fixtures=quantity-log",
@@ -828,7 +811,7 @@ export const SCREENS = {
 			await page.getByText("Meditate").click();
 		},
 	},
-	// HAB-40 — Habit Detail (V3-4a): D1–D8, H8. Clock = the mockup's Friday 23 October.
+	// Clock = the mockup's Friday 23 October.
 	"habit-detail": {
 		feature: "HAB-40",
 		route: "/(today)/habit/3?fixtures=habits-v3",
@@ -919,7 +902,6 @@ export const SCREENS = {
 		note: "D8 — AX3: Edit above the title, the title and eyebrow wrap, the stat tiles one under another, bar A.",
 	},
 
-	// HAB-10 — retro log from Habit Detail
 	"retro-log": {
 		feature: "HAB-10",
 		route: "/(today)/habit/1?fixtures=retro-log",
@@ -940,7 +922,6 @@ export const SCREENS = {
 		note: "Opened from an insight's 'Reschedule habit →': scrolled so Frequency is at the top.",
 	},
 
-	// HAB-43 — Reminders (R1–R3, R5)
 	"reminders-empty": {
 		feature: "HAB-43",
 		route: "/(today)/reminders/1",
@@ -988,7 +969,7 @@ export const SCREENS = {
 		note: "Four times: no +, the cap note under the card; a time stored as off says Off; the habit is daily so no warning.",
 	},
 
-	// HAB-39 — the Habits tab (V3-4a): H1–H6, H9, H10. Clock = the mockup's Friday 23 October.
+	// Clock = the mockup's Friday 23 October.
 	"habits-tab": {
 		feature: "HAB-39",
 		route: "/(habits)/manage?fixtures=habits-v3",
@@ -1095,7 +1076,6 @@ export const SCREENS = {
 			await page.getByText("Journal 5 min is back on Today").waitFor();
 		},
 	},
-	// HAB-45 — Destructive confirms (V3-4a): DC1, DC3, DC4, DC5, DC7 and H8.
 	"archive-confirm": {
 		feature: "HAB-45",
 		route: "/(today)/habit/3?fixtures=habits-v3",
@@ -1167,7 +1147,6 @@ export const SCREENS = {
 		},
 	},
 
-	// HAB-44 — Settings (S1–S7, SY6) and Export (EX1–EX4)
 	settings: {
 		feature: "HAB-44",
 		route: "/(habits)/settings?fixtures=settings",
@@ -1332,9 +1311,8 @@ export const SCREENS = {
 		},
 	},
 
-	// Audit B6 — failure states. Reached only through the web fixtures
-	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in
-	// the app.
+	// Failure states. Reached only through the web fixtures
+	// (`?fixtures=migration-fails`, `?failWrites=1`), never a route or button in the app.
 	"error-screen-migration-failed": {
 		feature: "HAB-47",
 		route: "/?fixtures=migration-fails",
@@ -1472,9 +1450,8 @@ export const SCREENS = {
 			await page.getByText("Couldn't save this habit. Try again.").waitFor();
 		},
 	},
-	// HAB-27 — the navigation shell: the floating pill (V3-01 B) and the
-	// layout rules that come with it. The pill is in every other baseline
-	// too; these are the frames the spec draws it in.
+	// The navigation shell: the floating pill and the layout rules that come with it.
+	// The pill is in every other baseline too; these are the frames the spec draws it in.
 	"tab-bar-today": {
 		feature: "HAB-27",
 		route: "/",
@@ -1529,7 +1506,6 @@ export const SCREENS = {
 		note: "P1 — the Progress tab root with the pill, Progress active.",
 	},
 
-	// HAB-35–38 — Progress (V3-3b): P1–P17, the habit picker HP1/HP2, Edit this day RL1/RL2
 	"progress-week": {
 		feature: "HAB-35",
 		route: `${PROGRESS}progress-v3`,
@@ -1832,7 +1808,7 @@ export const SCREENS = {
 		},
 	},
 
-	// V3-2b — Today UI (HAB-30–34). Clock = the mockup's Friday 23 October.
+	// Today UI. Clock = the mockup's Friday 23 October.
 	"today-v3": {
 		feature: "HAB-30",
 		route: "/?fixtures=today-v3",
@@ -2194,9 +2170,9 @@ for (const name of DARK_TWINS) {
 }
 
 /**
- * HAB-22: every screen that renders a habit name, re-run with `longNames=1`
- * (src/modules/habits/dev/habit-fixtures.ts) — the first two habits get a 40-character V1 name (over
- * today's 32 cap) and one at exactly 32, to catch bad truncation or wrapping.
+ * Every screen that renders a habit name, re-run with `longNames=1`
+ * (src/modules/habits/dev/habit-fixtures.ts): the first two habits get a 40-character name
+ * (over today's 32 cap) and one at exactly 32, to catch bad truncation or wrapping.
  */
 const LONG_NAME_TWINS = [
 	"today",
@@ -2224,7 +2200,7 @@ for (const name of LONG_NAME_TWINS) {
 }
 
 /**
- * Detail and its delete sheet with a long name (HAB-22). The Habits frames' habits
+ * Detail and its delete sheet with a long name. The Habits frames' habits
  * are not the fixture's first two, so these point at one that is: Drink water.
  */
 const LONG_DETAIL = "/(today)/habit/1?fixtures=habits-v3&longNames=1";
@@ -2244,11 +2220,10 @@ SCREENS["delete-confirm-long-names"] = {
 };
 
 /**
- * HAB-49 / V3-6: Dynamic Type. Every screen and sheet that had no
- * accessibility-size state, re-run with `?textSize=ax` (src/lib/dev-text-size)
- * in light and dark. The screens that already had one (`*-ax`) are above.
- * Each takes the base state's route and its interaction unchanged, so a sheet
- * or toast is opened the same way.
+ * Dynamic Type. Every screen and sheet that had no accessibility-size state, re-run with
+ * `?textSize=ax` (src/lib/dev-text-size) in light and dark. The screens that already had
+ * one (`*-ax`) are above. Each takes the base state's route and its interaction unchanged,
+ * so a sheet or toast is opened the same way.
  */
 const AX_VARIANTS = [
 	[
@@ -2327,9 +2302,9 @@ for (const [name, note] of AX_VARIANTS) {
 	}
 }
 
-// The Progress range control collapses to a list at AX sizes (P11), and the
-// week matrix becomes one block of day buttons per habit (P6), so these two
-// states are opened through those controls rather than the standard ones.
+// The Progress range control collapses to a list at AX sizes, and the week matrix
+// becomes one block of day buttons per habit, so these two states are opened through
+// those controls rather than the standard ones.
 for (const dark of [false, true]) {
 	const suffix = dark ? "-dark" : "";
 	SCREENS[`progress-habit-picker-ax${suffix}`] = {

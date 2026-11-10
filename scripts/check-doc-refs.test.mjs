@@ -1,4 +1,3 @@
-// Tests for scripts/check-doc-refs.mjs, on synthetic texts and a fake file tree.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
@@ -106,7 +105,7 @@ describe("checkFile", () => {
 	});
 
 	it("fails a missing link target, resolved from the file's folder", () => {
-		assert.equal(check("[x](CLAUDE.md)").length, 1); // docs/CLAUDE.md
+		assert.equal(check("[x](CLAUDE.md)").length, 1);
 		assert.deepEqual(check("[x](../CLAUDE.md)"), []);
 	});
 

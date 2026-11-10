@@ -1,7 +1,5 @@
 # Journey: Habits tab → Settings → Export data → export JSON → the ready card
 # offers Share file → Done closes the sheet.
-# Covers HAB-44 (the Export data sheet, its writing and ready states), HAB-15
-# (the user's data-out path), HAB-27 (Settings behind the Habits gear).
 # UNVERIFIED: written without a run (no Maestro session in the authoring
 # environment); selectors are taken from the source strings. Confirm and drop this
 # line at the next simulator pass (docs/how-to/e2e.md § "Status and coverage").
@@ -20,7 +18,7 @@ tags:
 - launchApp
 - assertVisible: "Thursday, 1 October"
 
-# HAB-27 / D3: Settings is behind the gear in the Habits header. The collapsed
+# Settings is behind the gear in the Habits header. The collapsed
 # inline bar carries a second, inert gear: take the header's.
 - tapOn:
     id: "Habits"
@@ -28,13 +26,11 @@ tags:
     id: "Settings"
     index: 1
 
-# EX1: Export data opens the sheet with JSON picked and the line on what each format is for.
 - tapOn: "Export data"
 - assertVisible: "JSON has everything, for backup or another app.*"
 - assertVisible: "Export JSON"
 - takeScreenshot: hab-15-44-choose
 
-# EX2/EX3: it writes, then the ready card offers the file.
 - tapOn: "Export JSON"
 - extendedWaitUntil:
     visible: "Share file"
@@ -42,7 +38,6 @@ tags:
 - assertVisible: "Share opens the iOS share sheet.*"
 - takeScreenshot: hab-15-44-ready
 
-# Done closes the sheet; Settings is still there.
 - tapOn: "Done"
 - assertNotVisible: "Share file"
 - assertVisible: "Export data"

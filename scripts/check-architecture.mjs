@@ -38,8 +38,6 @@ const ALLOWLIST_FILE =
 					),
 			);
 
-// --- file discovery -------------------------------------------------------
-
 function walk(dir) {
 	if (!fs.existsSync(dir)) return [];
 	return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -80,7 +78,6 @@ function importsOf(file) {
 	return found;
 }
 
-/** Resolves an import specifier to a repo-relative path (or undefined for packages). */
 function resolveImport(file, spec) {
 	let target;
 	if (spec.startsWith("@/")) target = path.join(SRC, spec.slice(2));
@@ -90,8 +87,6 @@ function resolveImport(file, spec) {
 	return rel(target);
 }
 
-// --- violations -----------------------------------------------------------
-
 const violations = [];
 function report(rule, file, line, message, spec) {
 	violations.push({ rule, file: rel(file), line, message, import: spec });
@@ -100,7 +95,6 @@ function report(rule, file, line, message, spec) {
 const inDir = (file, ...segments) =>
 	rel(file).includes(`/${segments.join("/")}/`);
 
-// Folders allowed to touch Drizzle / the live database.
 const DRIZZLE_HOMES = [
 	/^src\/modules\/[^/]+\/repositories\//,
 	/^src\/lib\/[^/]+\/repositories\//,
@@ -279,7 +273,7 @@ const ROUTE_IMPORTS = [
 const ROUTE_MAX_LINES = 20;
 for (const file of productionFiles) {
 	if (!rel(file).startsWith("src/app/")) continue;
-	if (path.basename(file) === "_layout.tsx") continue; // navigators/bootstrap — tracked separately (audit A1-12)
+	if (path.basename(file) === "_layout.tsx") continue;
 	const lines = fs.readFileSync(file, "utf8").split("\n").length;
 	if (lines > ROUTE_MAX_LINES)
 		report(
@@ -480,9 +474,6 @@ for (const file of productionFiles) {
 	}
 }
 
-// --- allowlist ------------------------------------------------------------
-
-/** Allowlist entries are file-level (+ the import, for import rules). */
 const keyOf = (v) => [v.rule, v.file, v.import ?? ""].join("|");
 
 if (args.includes("--print-allowlist")) {

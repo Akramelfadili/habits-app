@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Renders every screen and state on the web target (in-memory fixtures, see
- * `*.web.ts` in the repositories/) in one run, diffs each against its approved
+ * *.web.ts in the repositories/) in one run, diffs each against its approved
  * baseline, and writes one report putting mockup, current render, baseline
  * and diff side by side for every state across all features.
  *
@@ -11,18 +11,17 @@
  *   npm run visual-check -- --list                # state names + mockups
  *
  * Two different comparisons, on purpose:
- * - **Baseline (automated, pass/fail).** docs/visual-baseline/<state>.png is
+ * - Baseline (automated, pass/fail). docs/visual-baseline/<state>.png is
  *   the last render someone looked at and approved. Any state that drifts
- *   from it fails the run — so a shared component change (the Container fix
- *   in HAB-12, say) surfaces on every screen it touched, not only on the one
- *   feature it was made for. Intended changes: review them in the report,
- *   then `--update-baseline` and commit the new PNGs with the change.
- * - **Mockup (by eye, in the report).** The mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2) are design drawings —
- *   device frame, SF Symbols, SF Pro — so a pixel diff against them is
- *   meaningless. The report puts each one next to its render instead.
+ *   from it fails the run, so a shared component change surfaces on every
+ *   screen it touched. Intended changes: review them in the report,
+ *   then --update-baseline and commit the new PNGs with the change.
+ * - Mockup (by eye, in the report). The mockups (docs/mockups/v3/, earlier ones in tag
+ *   mockups-v1-v2) are design drawings (device frame, SF Symbols, SF Pro), so a pixel
+ *   diff against them is meaningless. The report puts each one next to its render instead.
  *
  * Reuses a dev server already running at VISUAL_CHECK_URL (default
- * http://localhost:8081); otherwise starts `npx expo start --web` and stops it
+ * localhost:8081); otherwise starts `npx expo start --web` and stops it
  * afterwards. Output lands in .visual-checks/ (gitignored): current/, diff/,
  * report.html.
  */
@@ -46,10 +45,9 @@ const DIFF_DIR = path.join(OUT_DIR, "diff");
 const BASELINE_DIR = path.join(ROOT, "docs/visual-baseline");
 const REPORT = path.join(OUT_DIR, "report.html");
 
-// iPhone 15/16 logical size — the mockups are drawn on this frame.
 const VIEWPORT = { width: 393, height: 852 };
-// Four Chromium pages at once starved the popover's measurement chain (audit
-// A10-10); two keeps the full run fast enough and the layout settling reliable.
+// Four Chromium pages at once starved the popover's measurement chain; two keeps the
+// full run fast enough and the layout settling reliable.
 const CONCURRENCY = 2;
 
 /**
@@ -68,12 +66,12 @@ const PIXEL_THRESHOLD = 0.02;
 const MAX_DIFF_PIXELS = 10;
 
 /**
- * Dynamic Type AX3 (08.6a): every text element's size is mapped to the value the
- * handoff gives for that token (display 32 → 52, stat 26 → 48, title 20 → 43,
- * body-lg 17 → 40, body 16 → 38, callout 15 → 36, subhead 14 → 36, footnote
- * 13 → 33, caption 12 → 32); sizes off the ramp scale by the nearest ratio.
- * Line height follows. A MutationObserver re-applies it to text React adds
- * later (a sheet opening, a toast), so the capture is consistent.
+ * Dynamic Type AX3: every text element's size is mapped to the value the handoff gives
+ * for that token (display 32 to 52, stat 26 to 48, title 20 to 43, body-lg 17 to 40,
+ * body 16 to 38, callout 15 to 36, subhead 14 to 36, footnote 13 to 33, caption 12 to 32);
+ * sizes off the ramp scale by the nearest ratio. Line height follows. A MutationObserver
+ * re-applies it to text React adds later (a sheet opening, a toast), so the capture is
+ * consistent.
  */
 async function emulateAx3Type(page) {
 	await page.evaluate(() => {
@@ -101,7 +99,7 @@ async function emulateAx3Type(page) {
 			for (const el of document.querySelectorAll(
 				"div,span,input,textarea,h1,h2,h3,h4,h5,h6,p,a,label,li,button",
 			)) {
-				// iOS keeps the tab bar's labels at 12 pt whatever the setting (08.6).
+				// iOS keeps the tab bar's labels at 12 pt whatever the setting.
 				// The week matrix's day letters and the cells' numbers are drawn with
 				// allowFontScaling={false}; react-native-web cannot say so, so skip them.
 				if (
@@ -150,11 +148,10 @@ async function emulateAx3Type(page) {
 }
 
 /**
- * `VC_AUDIT=1 npm run visual-check` also writes `.visual-checks/audit/<name>.json`
- * (HAB-49): every pressable's rendered size and every text that is cut off or
- * clipped by its box, read from the live DOM at the state's final frame. It is
- * the evidence behind the V3-6 touch-target and Dynamic Type audits; the
- * committed guard (`touch-targets.guard.test.ts`) is the static twin.
+ * VC_AUDIT=1 npm run visual-check also writes .visual-checks/audit/<name>.json: every
+ * pressable's rendered size and every text that is cut off or clipped by its box, read from
+ * the live DOM at the state's final frame. It is the evidence behind the touch-target and
+ * Dynamic Type audits; the committed guard (touch-targets.guard.test.ts) is the static twin.
  */
 async function auditPage(page, name) {
 	const data = await page.evaluate(() => {
@@ -287,11 +284,8 @@ async function capture(browser, name, screen) {
 			undefined,
 			{ timeout: 180_000 },
 		);
-		// Let hydration + fixture-driven re-renders and screen transitions settle.
 		await page.waitForTimeout(800);
 
-		// A state only reachable by a tap or gesture (a sheet, a toast, a
-		// mid-drag row) — a static route load can't show it, so simulate it.
 		if (screen.interact) {
 			await screen.interact(page, { clock });
 			await page.waitForTimeout(500);
@@ -322,7 +316,6 @@ function readPng(file) {
 	return PNG.sync.read(fs.readFileSync(file));
 }
 
-/** Compares a state's current render with its baseline; writes a diff image when they differ. */
 function compare(name) {
 	const current = path.join(CURRENT_DIR, `${name}.png`);
 	const baseline = path.join(BASELINE_DIR, `${name}.png`);
@@ -368,7 +361,6 @@ function escapeHtml(text) {
 		.replaceAll('"', "&quot;");
 }
 
-/** Relative URL from the report to a repo file. */
 function fromReport(file) {
 	return path
 		.relative(OUT_DIR, file)
@@ -458,9 +450,9 @@ ${sections}
 }
 
 /**
- * A capture taken while Metro was still building (or answered 500) is the
- * page's flat rgb(242,242,242) with a toast at the bottom; accepted as a
- * baseline it would match every later blank render (V3-6 committed three).
+ * A capture taken while Metro was still building (or answered 500) is the page's flat
+ * rgb(242,242,242) with a toast at the bottom; accepted as a baseline it would match every
+ * later blank render.
  */
 function looksLikeBundlerPage(file) {
 	const png = readPng(file);

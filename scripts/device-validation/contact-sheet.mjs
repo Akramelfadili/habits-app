@@ -40,7 +40,6 @@ function dirSize(dir) {
 	return walk(dir).reduce((sum, file) => sum + fs.statSync(file).size, 0);
 }
 
-/** What each state's capture did, from the shards' results.json files. */
 function readResults(logsDir) {
 	const results = new Map();
 	for (const file of walk(logsDir).filter((f) => f.endsWith("results.json"))) {

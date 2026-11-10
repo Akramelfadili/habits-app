@@ -12,21 +12,20 @@ const PATTERNS = {
 	"shadow-elevation": /\b(?:shadow[A-Z]\w*|elevation)\s*:/,
 	"font-size-literals": /\bfontSize:\s*\d/,
 	"line-height-literals": /\blineHeight:\s*\d/,
-	// Anything but the two weights the design system uses (500 / 600).
 	"font-weight-not-500-600": {
 		test(line) {
 			const match = /\bfontWeight:\s*([^,}\s]+)/.exec(line);
 			return !!match && !/^["']?(?:500|600)["']?$/.test(match[1]);
 		},
 	},
-	// Non-zero padding/margin/gap numbers: use `space[…]` (F-04). 0 is a reset, not a step.
+	// Non-zero padding/margin/gap numbers: use space[...]. 0 is a reset, not a step.
 	"spacing-literals":
 		/\b(?:padding|margin)(?:Top|Bottom|Left|Right|Horizontal|Vertical|Start|End)?\s*:\s*-?(?:[1-9]|0\.\d)|\b(?:gap|rowGap|columnGap)\s*:\s*(?:[1-9]|0\.\d)/,
-	// Non-zero border radii: use `radius.*`, `cellRadius()` or `squareRadius()` (F-05).
+	// Non-zero border radii: use radius.*, cellRadius() or squareRadius().
 	"radius-literals": /\bborder\w*Radius\s*:\s*(?:[1-9]|0\.\d)/,
 	// Non-zero tracking: use `letterSpacing.*` (eyebrow and label text).
 	"letter-spacing-literals": /\bletterSpacing:\s*-?(?:[1-9]|0?\.\d)/,
-	// Sizes V3 retires (F-03): literals and the old typeScale keys that hold them.
+	// Sizes the design system retires: literals and the old typeScale keys that hold them.
 	"off-scale-font-sizes":
 		/\bfontSize:\s*(?:10|10\.5|11|11\.5|12\.5)\b(?!\.)|\btypeScale\.(?:micro|caption|subtitle)\b/,
 };
@@ -53,7 +52,6 @@ function stripComments(text) {
 		.replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1");
 }
 
-/** @returns {{ counts: Record<string, number>, hits: Record<string, string[]> }} */
 function countTokens(srcDir) {
 	const counts = Object.fromEntries(Object.keys(PATTERNS).map((k) => [k, 0]));
 	const hits = Object.fromEntries(Object.keys(PATTERNS).map((k) => [k, []]));

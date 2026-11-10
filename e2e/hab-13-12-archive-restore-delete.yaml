@@ -3,9 +3,6 @@
 # Archived, its history and reminder survive → Restore it (instant, with an
 # Undo toast) → delete a different habit through Detail's confirm sheet →
 # Today reflects all of it.
-# Covers HAB-13 (archive, restore, delete), HAB-12 (reminders kept across
-# archive), HAB-09 (Detail as the only place delete lives), HAB-03,
-# HAB-27 (the Habits tab root, and Settings behind its gear), HAB-39/40/45.
 #
 # Seed (`manage-archive` fixtures, clock pinned to Thu 1 Oct): active Glass of
 # water + Meditate + Read (Morning), Easy run + Mobility + Upper body (Training);
@@ -16,7 +13,7 @@
 # Playwright does), so the reorder is not driven here. Its persistence is
 # covered by reorderable-list / habit-repository unit tests and its lifted
 # mid-drag state by the visual-check state `habits-reorder`. Archive goes
-# through Detail's Archive habit sheet (DC5), the same on every platform.
+# through Detail's Archive habit sheet, the same on every platform.
 url: ${APP_URL}/?fixtures=manage-archive&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
@@ -25,7 +22,6 @@ tags:
 ---
 - launchApp
 
-# Give Meditate an active reminder first.
 - tapOn: "Meditate"
 # The row's value: "Reminders" would match the section label above it.
 - tapOn: "None"
@@ -37,31 +33,28 @@ tags:
 - assertVisible: "09:00 · daily"
 - back
 
-# HAB-27: the Habits tab's root is the library; counts are its eyebrow.
 - tapOn:
     id: "Habits"
 - assertVisible: "6 active · 2 archived"
 - assertVisible: "Meditate"
-# Archived is collapsed until opened (H1); no destructive action in the list.
+# Archived is collapsed until opened; no destructive action in the list.
 - assertNotVisible: "Cold shower"
 - assertNotVisible: "Delete habit"
 
-# HAB-27 / D3: the gear in the Habits header is the only way into Settings.
+# The gear in the Habits header is the only way into Settings.
 # The collapsed inline bar carries a second, inert gear: take the header's.
 - tapOn:
     id: "Settings"
     index: 1
-# Settings is a hub (S1): one row per page. Appearance carries the Monday note.
 - assertVisible: "Evening review"
 - takeScreenshot: hab-13-settings
 - tapOn: "Theme.*"
 - assertVisible: "Weeks start on Monday.*"
 - back
-# Settings was pushed inside the Habits tab, so Back returns to the library.
 - back
 - assertVisible: "6 active · 2 archived"
 
-# Archive Meditate from its Detail (DC5): one confirm, then it pops back with
+# Archive Meditate from its Detail: one confirm, then it pops back with
 # an Undo toast. Web's single-jump tap lands one library row low (it opened
 # Read), so the Detail opens from Today's plain row instead.
 - tapOn:
@@ -78,7 +71,6 @@ tags:
 - assertVisible: "5 active · 3 archived"
 - takeScreenshot: hab-13-archived
 
-# Open the Archived section; the row carries the date it left Today.
 - tapOn: "Show"
 - assertVisible: "Cold shower"
 - assertVisible: "Meditate"
@@ -91,7 +83,6 @@ tags:
 - assertNotVisible: "Archive habit"
 - back
 
-# Restore it (instant, toast with Undo).
 # Archived rows are newest first, so Meditate's Restore is the first.
 - tapOn:
     text: "Restore"
@@ -99,7 +90,6 @@ tags:
 - assertVisible: "Meditate is back on Today"
 - assertVisible: "6 active · 2 archived"
 
-# The reminder came back with it, unpaused and unchanged.
 - tapOn:
     id: "Today"
 - tapOn: "Meditate"

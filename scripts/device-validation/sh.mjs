@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 
-/** Runs a command, returns { ok, stdout, stderr }; throws on failure unless `allowFail`. */
 export function run(command, args, { allowFail = false, input, timeout } = {}) {
 	const result = spawnSync(command, args, {
 		encoding: "utf8",
@@ -25,7 +24,6 @@ export function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** `--name value` pairs and bare `--flag`s. */
 export function parseArgs(argv) {
 	const args = {};
 	for (let i = 0; i < argv.length; i += 1) {
