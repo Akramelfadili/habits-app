@@ -5,6 +5,10 @@ import {
 	currentStreakAsOf,
 } from "../domain/habit-history";
 import {
+	groupEntriesByHabit,
+	groupFrozenDatesByHabit,
+} from "../domain/streak-reader";
+import {
 	type CategoryGroup,
 	groupHabitsByCategory,
 } from "../presenters/today-screen-helpers";
@@ -15,7 +19,7 @@ import {
 	useActiveHabits,
 	useArchivedHabits,
 } from "../repositories/habit-repository";
-import type { Entry, Habit } from "../types";
+import type { Habit } from "../types";
 
 export type HabitsLibrary = {
 	/** False until both lists have loaded — the tab shows a blank, not "No habits yet" (audit A5-04). */
@@ -49,18 +53,8 @@ export function useHabitsQueries(): HabitsLibrary {
 	const today = useToday();
 
 	return useMemo(() => {
-		const entriesByHabit = new Map<number, Entry[]>();
-		for (const entry of entries) {
-			const own = entriesByHabit.get(entry.habitId);
-			if (own) own.push(entry);
-			else entriesByHabit.set(entry.habitId, [entry]);
-		}
-		const frozenByHabit = new Map<number, Set<string>>();
-		for (const { habitId, date } of frozenDays) {
-			const own = frozenByHabit.get(habitId);
-			if (own) own.add(date);
-			else frozenByHabit.set(habitId, new Set([date]));
-		}
+		const entriesByHabit = groupEntriesByHabit(entries);
+		const frozenByHabit = groupFrozenDatesByHabit(frozenDays);
 		const historyOf = (habit: Habit) => ({
 			habit,
 			entries: entriesByHabit.get(habit.id) ?? [],
