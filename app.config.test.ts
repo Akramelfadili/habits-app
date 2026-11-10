@@ -1,4 +1,12 @@
-import { buildConfig, resolveVariant } from "./app.config";
+import fs from "node:fs";
+import path from "node:path";
+import {
+	buildConfig,
+	DARK_SPLASH_BACKGROUND,
+	resolveVariant,
+} from "./app.config";
+import { version } from "./package.json";
+import { surfaceColors } from "./src/theme/theme";
 
 describe("app.config", () => {
 	it("defaults to the development variant", () => {
@@ -91,6 +99,109 @@ describe("app.config", () => {
 				BUNDLE_ID: "x.y.z",
 			});
 			expect(config.ios?.bundleIdentifier).toBe("com.akramelfadili.habits");
+		});
+	});
+
+	describe("release identity", () => {
+		it.each(["development", "preview", "production"] as const)(
+			"%s: version comes from package.json, no build number, phone only, no export prompt",
+			(variant) => {
+				const config = buildConfig({ APP_VARIANT: variant });
+				expect(config.version).toBe(version);
+				expect(config.ios).not.toHaveProperty("buildNumber");
+				expect(config.ios?.supportsTablet).toBe(false);
+				expect(config.ios?.infoPlist).toEqual({
+					ITSAppUsesNonExemptEncryption: false,
+				});
+			},
+		);
+
+		it("has no runtimeVersion, updates block or expo-updates plugin (no OTA)", () => {
+			const config = buildConfig({ APP_VARIANT: "production" });
+			expect(config).not.toHaveProperty("runtimeVersion");
+			expect(config).not.toHaveProperty("updates");
+			expect(JSON.stringify(config.plugins)).not.toContain("expo-updates");
+		});
+
+		it("copies the dark background token exactly (Expo's loader cannot import it)", () => {
+			expect(DARK_SPLASH_BACKGROUND).toBe(surfaceColors.dark.bg);
+		});
+
+		it("gives the splash a dark block on the theme's dark background", () => {
+			const splash = buildConfig({ APP_VARIANT: "production" }).plugins?.find(
+				(plugin) => Array.isArray(plugin) && plugin[0] === "expo-splash-screen",
+			);
+			expect(splash).toBeDefined();
+			const options = (splash as [string, Record<string, unknown>])[1];
+			expect(options.dark).toEqual({
+				backgroundColor: DARK_SPLASH_BACKGROUND,
+				image: options.image,
+			});
+		});
+	});
+
+	describe("EAS preview and development profiles", () => {
+		it.each(["preview", "development"] as const)(
+			"%s builds with its own variant and may carry no production-only guard",
+			(profile) => {
+				expect(() =>
+					buildConfig({ EAS_BUILD_PROFILE: profile, APP_VARIANT: profile }),
+				).not.toThrow();
+			},
+		);
+	});
+
+	describe("eas.json", () => {
+		type Profile = { env?: Record<string, string>; [key: string]: unknown };
+		const eas = JSON.parse(
+			fs.readFileSync(path.join(__dirname, "eas.json"), "utf8"),
+		) as {
+			cli?: { appVersionSource?: string };
+			build: Record<string, Profile>;
+			submit?: unknown;
+		};
+
+		it("has exactly the development, preview and production profiles", () => {
+			expect(Object.keys(eas.build).sort()).toEqual([
+				"development",
+				"preview",
+				"production",
+			]);
+		});
+
+		it("takes the build number from EAS (remote) and auto-increments in production", () => {
+			expect(eas.cli?.appVersionSource).toBe("remote");
+			expect(eas.build.production.autoIncrement).toBe(true);
+			expect(eas.build.production.distribution).toBe("store");
+			expect(eas.build.preview.distribution).toBe("internal");
+			expect(eas.build.development.developmentClient).toBe(true);
+			expect(eas.build.development.distribution).toBe("internal");
+		});
+
+		it("never sets a dev-only switch in any profile", () => {
+			for (const [name, profile] of Object.entries(eas.build)) {
+				const env = profile.env ?? {};
+				expect({ name, has: "EXPO_PUBLIC_DEVICE_VALIDATION" in env }).toEqual({
+					name,
+					has: false,
+				});
+				expect({ name, has: "EXPO_PUBLIC_STARTER_PROFILE" in env }).toEqual({
+					name,
+					has: false,
+				});
+			}
+		});
+
+		it("sets the matching APP_VARIANT in every profile", () => {
+			for (const name of ["development", "preview", "production"]) {
+				expect(eas.build[name].env?.APP_VARIANT).toBe(name);
+			}
+		});
+
+		it("holds no store id or credentials", () => {
+			const text = JSON.stringify(eas);
+			expect(eas.submit).toBeUndefined();
+			expect(text).not.toMatch(/ascAppId|appleId|appleTeamId|\.p8|\.p12/);
 		});
 	});
 

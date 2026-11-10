@@ -1,4 +1,10 @@
 import type { ExpoConfig } from "expo/config";
+import { version } from "./package.json";
+
+// Expo loads this file on its own, and its loader cannot import TypeScript from
+// src/, so the theme token is copied here. app.config.test.ts fails if it drifts
+// from `surfaceColors.dark.bg` in src/theme/theme.ts.
+export const DARK_SPLASH_BACKGROUND = "#1A1A1C";
 
 /**
  * The one app config (replaces app.json). `APP_VARIANT` picks the identity:
@@ -84,7 +90,9 @@ export function buildConfig(env: Env): ExpoConfig {
 	return {
 		name: identity.name,
 		slug: "habits-app",
-		version: "1.0.0",
+		// One source: package.json (docs/how-to/release.md). The build number is
+		// EAS remote (eas.json), so `ios.buildNumber` is deliberately absent.
+		version,
 		orientation: "portrait",
 		icon: "./assets/images/icon.png",
 		scheme: identity.scheme,
@@ -92,6 +100,12 @@ export function buildConfig(env: Env): ExpoConfig {
 		ios: {
 			icon: "./assets/expo.icon",
 			bundleIdentifier,
+			// Phone-only design: no iPad screenshots or layouts to maintain.
+			supportsTablet: false,
+			infoPlist: {
+				// No custom cryptography, so TestFlight skips the export-compliance prompt.
+				ITSAppUsesNonExemptEncryption: false,
+			},
 			// The app collects nothing and tracks nothing (docs/how-to/app-store-privacy.md).
 			// Accessed-API (required reason) entries are deliberately absent until the
 			// first EAS build shows which categories App Store Connect reports missing.
@@ -122,6 +136,11 @@ export function buildConfig(env: Env): ExpoConfig {
 					backgroundColor: "#208AEF",
 					image: "./assets/images/splash-icon.png",
 					imageWidth: 76,
+					// Same artwork on the theme's dark background (no new artwork yet).
+					dark: {
+						backgroundColor: DARK_SPLASH_BACKGROUND,
+						image: "./assets/images/splash-icon.png",
+					},
 				},
 			],
 			"expo-sqlite",
