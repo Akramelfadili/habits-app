@@ -67,6 +67,40 @@ describe("Container", () => {
 		expect(screen.getByText("Preview").parent).toHaveStyle({ borderWidth: 1 });
 	});
 
+	it("card and sheet take their radii from the tokens (20 card, 28 sheet top)", async () => {
+		await render(
+			<>
+				<Container variant="outlined">
+					<Text>Card</Text>
+				</Container>
+				<Container variant="sheet">
+					<Text>Sheet</Text>
+				</Container>
+			</>,
+		);
+		expect(screen.getByText("Card").parent).toHaveStyle({ borderRadius: 20 });
+		expect(screen.getByText("Sheet").parent).toHaveStyle({
+			borderTopLeftRadius: 28,
+			borderTopRightRadius: 28,
+		});
+	});
+
+	it("snug padding is 14 pt and passes testID and accessibility through", async () => {
+		await render(
+			<Container
+				variant="outlined"
+				padding="snug"
+				testID="card"
+				accessible
+				accessibilityLabel="A card"
+			>
+				<Text>Body</Text>
+			</Container>,
+		);
+		expect(screen.getByTestId("card")).toHaveStyle({ padding: 14 });
+		expect(screen.getByLabelText("A card")).toBe(screen.getByTestId("card"));
+	});
+
 	it("lifted: an outline appears without shifting the content (HAB-19)", async () => {
 		const view = await render(
 			<Container tight>

@@ -1,5 +1,6 @@
-import { type Ref, useState } from "react";
+import { type Ref, useEffect, useRef, useState } from "react";
 import {
+	AccessibilityInfo,
 	type KeyboardTypeOptions,
 	type ReturnKeyTypeOptions,
 	StyleSheet,
@@ -86,6 +87,19 @@ export function TextField({
 	const atLimit = maxLength !== undefined && value.length >= maxLength;
 	const showLimit =
 		atLimit && limitMessage !== undefined && !error && !disabled;
+	// The helper line is a separate element; tying it to the input means a
+	// VoiceOver user who lands on the field hears why it is invalid (I-05).
+	const hint = error ?? (showLimit ? limitMessage?.(maxLength ?? 0) : helper);
+
+	// Say the error once when it appears, not on every render or keystroke.
+	const hadError = useRef(false);
+	useEffect(() => {
+		const hasError = !!error;
+		if (hasError && !hadError.current) {
+			AccessibilityInfo.announceForAccessibility(error);
+		}
+		hadError.current = hasError;
+	}, [error]);
 
 	return (
 		<View style={styles.root}>
@@ -108,6 +122,7 @@ export function TextField({
 					// The visible label is a sibling Text, not associated with the input —
 					// without this, VoiceOver announces an unnamed text field.
 					accessibilityLabel={label}
+					accessibilityHint={hint}
 					accessibilityState={{ disabled }}
 					editable={!disabled}
 					// The on-screen keyboard follows the app's Appearance choice, not just iOS's.

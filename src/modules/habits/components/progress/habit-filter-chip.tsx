@@ -1,6 +1,12 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	minTouchTarget,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { progressCopy } from "../../messages";
 import type { Habit } from "../../types";
@@ -34,7 +40,11 @@ export function HabitFilterChip({ habit, onPress }: HabitFilterChipProps) {
 				<Text numberOfLines={1} style={[styles.label, { color: colors.ink }]}>
 					{scope}
 				</Text>
-				<SymbolView name="chevron.down" size={12} tintColor={colors.sub} />
+				<SymbolView
+					name="chevron.down"
+					size={iconSize.xs}
+					tintColor={colors.sub}
+				/>
 			</Pressable>
 		</View>
 	);

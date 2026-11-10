@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Container } from "@/components/ui/composite/container";
 import { ProgressBar } from "@/components/ui/composite/progress-bar";
 import { SectionHeader } from "@/components/ui/composite/section-header";
 import { space } from "@/theme/theme";
+import { useHaptics } from "@/utils/use-haptics";
 import { todayCopy } from "../../messages";
 import { todayRowStatus } from "../../presenters/today-row-status";
 import {
@@ -80,6 +81,16 @@ export function TodayHabitList({
 	const [foldOpen, setFoldOpen] = useState(false);
 	const allDone = progress.total > 0 && progress.completed === progress.total;
 	const dueHabits = groups.flatMap((group) => group.habits);
+
+	// One success tick when the last habit is completed — not on opening a day
+	// that is already done, and not when the day or the habit count changes.
+	const haptics = useHaptics();
+	const previous = useRef({ allDone, total: progress.total });
+	useEffect(() => {
+		const { allDone: wasDone, total } = previous.current;
+		if (allDone && !wasDone && total === progress.total) haptics.success();
+		previous.current = { allDone, total: progress.total };
+	}, [allDone, progress.total, haptics]);
 
 	return (
 		<>

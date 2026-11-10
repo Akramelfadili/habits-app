@@ -1,7 +1,15 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import * as Haptics from "expo-haptics";
 import { AccessibilityInfo, StyleSheet } from "react-native";
+import { useHapticsStore } from "@/store/haptics-store";
 import { semanticColors } from "@/theme/theme";
 import { AlertDialog } from "./alert-dialog";
+
+jest.mock("expo-haptics", () => ({
+	selectionAsync: jest.fn(async () => undefined),
+	notificationAsync: jest.fn(async () => undefined),
+	NotificationFeedbackType: { Success: "success", Warning: "warning" },
+}));
 
 const actions = (keep = jest.fn(), discard = jest.fn()) => [
 	{ label: "Keep editing", onPress: keep, tone: "primary" as const },
@@ -41,6 +49,30 @@ describe("AlertDialog", () => {
 		await fireEvent.press(screen.getByText("Discard"));
 		expect(discard).toHaveBeenCalledTimes(1);
 		expect(keep).not.toHaveBeenCalled();
+	});
+
+	it("gives a warning haptic for the destructive action only", async () => {
+		useHapticsStore.setState({ enabled: true });
+		(Haptics.notificationAsync as jest.Mock).mockClear();
+		await render(
+			<AlertDialog
+				visible
+				title="t"
+				message="m"
+				actions={actions()}
+				onRequestClose={jest.fn()}
+			/>,
+		);
+		await fireEvent.press(screen.getByText("Keep editing"));
+		expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+		await fireEvent.press(screen.getByText("Discard"));
+		expect(Haptics.notificationAsync).toHaveBeenCalledWith("warning");
+
+		useHapticsStore.setState({ enabled: false });
+		(Haptics.notificationAsync as jest.Mock).mockClear();
+		await fireEvent.press(screen.getByText("Discard"));
+		expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+		useHapticsStore.setState({ enabled: true });
 	});
 
 	it("draws Discard in danger ink and Keep editing bold in body ink", async () => {

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
+import { semanticColors } from "@/theme/theme";
 import { ProgressStatTiles } from "./progress-stat-tiles";
 
 let mockAccessibilityText = false;
@@ -55,6 +56,8 @@ describe("ProgressStatTiles (V3-10)", () => {
 				]}
 			/>,
 		);
-		expect(screen.getByText("0")).toHaveStyle({ color: "#966408" });
+		expect(screen.getByText("0")).toHaveStyle({
+			color: semanticColors.light.warnInk,
+		});
 	});
 });

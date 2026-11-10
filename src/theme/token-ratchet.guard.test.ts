@@ -72,6 +72,15 @@ describe("design-token ratchet", () => {
 		expect(PATTERNS["radius-literals"].test("borderRadius: radius.l,")).toBe(
 			false,
 		);
+		for (const line of ["letterSpacing: 1.2,", "letterSpacing: 0.6,"]) {
+			expect(PATTERNS["letter-spacing-literals"].test(line)).toBe(true);
+		}
+		for (const line of [
+			"letterSpacing: 0,",
+			"letterSpacing: letterSpacing.eyebrow,",
+		]) {
+			expect(PATTERNS["letter-spacing-literals"].test(line)).toBe(false);
+		}
 		for (const line of [
 			"fontSize: 11,",
 			"fontSize: 12.5,",

@@ -46,15 +46,15 @@ export const surfaceColors = {
 export const semanticColors = {
 	light: {
 		warnTint: "#FDF0D5",
-		warnInk: "#966408",
-		dangerBg: "#C9372F",
+		warnInk: "#946208",
+		dangerBg: "#C7362F",
 		frozenBg: "#EDE8F8",
-		frozenInk: "#7A5AC4",
+		frozenInk: "#7858C3",
 	},
 	dark: {
 		warnTint: "#3A2A0E",
 		warnInk: "#E8A93A",
-		dangerBg: "#E56059",
+		dangerBg: "#E8716B",
 		frozenBg: "#262036",
 		frozenInk: "#A98FE0",
 	},
@@ -64,20 +64,30 @@ export const typeScale = {
 	stat: 30,
 	/** VAR-14's single stat-card numeral (V2 consolidated V1's 28/30 sizes). */
 	statCompact: 26,
-	/** The 10px eyebrow label on a stat card. */
-	micro: 10,
 	screenTitle: 24,
 	section: 17,
 	rowLabel: 15,
-	subtitle: 12.5,
-	caption: 11,
+} as const;
+
+/** Tracking (pt) for uppercase eyebrow text: `label` on stat cards, `eyebrow` on section labels and headers. */
+export const letterSpacing = {
+	label: 0.6,
+	eyebrow: 1.2,
+} as const;
+
+/** SF Symbol sizes (pt): 12 badge and chip glyphs, 14 chevrons and small actions, 16 bar and field glyphs, 18 large header glyphs. */
+export const iconSize = {
+	xs: 12,
+	s: 14,
+	m: 16,
+	l: 18,
 } as const;
 
 /**
  * The V3 type scale (F-03): nine styles, two weights (600 only for the
  * selected tab and today's weekday letter, applied at the call site). Lives
  * alongside the V1/V2 `typeScale` until each screen moves to it in its V3
- * batch; `typeScale.micro/caption/subtitle` (10 / 11 / 12.5) are retired.
+ * batch. Nothing renders below 12 pt.
  * Numbers use tabular figures at the call site.
  */
 export const textStyles = {
@@ -247,7 +257,7 @@ export const motion = {
 	/** Runs once; Reduce Motion shows a static check. */
 	celebrate: { duration: 600 },
 	/** Loops, and only appears after `delay`; Reduce Motion is static. */
-	skeleton: { loop: 1200, delay: 300 },
+	skeleton: { loop: 1200, delay: 300, easing: [0.42, 0, 0.58, 1] as Bezier },
 } as const;
 
 /**

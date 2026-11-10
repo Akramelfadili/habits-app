@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type CaptionProps = {
@@ -27,6 +27,6 @@ export function Caption({ children, tone = "default" }: CaptionProps) {
 
 const styles = StyleSheet.create({
 	caption: {
-		fontSize: typeScale.caption,
+		...textStyles.caption,
 	},
 });

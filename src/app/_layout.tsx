@@ -25,6 +25,7 @@ import { DeviceValidationLaunch } from "@/modules/habits/screens/dev-state-scree
 import { loadThemePreference } from "@/theme/theme-preference";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
+import { loadHapticsSetting } from "@/utils/use-haptics";
 
 // First, before anything can throw: unhandled errors and promise rejections
 // are logged (and still reach React Native's own handler — red box, fatal).
@@ -65,6 +66,7 @@ function ThemeGate({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		void loadThemePreference();
+		void loadHapticsSetting();
 	}, []);
 
 	useEffect(() => {

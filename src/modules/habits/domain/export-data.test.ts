@@ -107,6 +107,7 @@ describe("buildExportModel", () => {
 					"habits.eveningReviewTime": "21:00",
 					"habits.seenFirstRun": "true",
 					"habits.hideHabitNames": "false",
+					"app.haptics": "false",
 					"habits.reminderTitlesHidden": "false",
 					"habits.lastExport": "2026-09-01",
 				},
@@ -120,6 +121,7 @@ describe("buildExportModel", () => {
 			eveningReviewTime: "21:00",
 			seenFirstRun: true,
 			hideHabitNames: false,
+			haptics: false,
 		});
 	});
 

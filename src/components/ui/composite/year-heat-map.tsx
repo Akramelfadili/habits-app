@@ -55,7 +55,7 @@ export function bandRows(columns: YearBand["columns"]) {
  * hidden from VoiceOver — the month list is the screen-reader view (P16).
  */
 export function YearHeatMap({ bands, onlyBand }: YearHeatMapProps) {
-	const { colors } = useTheme();
+	const { colors, opacity } = useTheme();
 	const [width, setWidth] = useState(0);
 	const visible =
 		onlyBand === undefined ? bands : bands.filter((_, i) => i === onlyBand);
@@ -94,7 +94,11 @@ export function YearHeatMap({ bands, onlyBand }: YearHeatMapProps) {
 										left: space[100],
 										right: space[100],
 									}}
-									style={[styles.label, { left: month.column * pitch }]}
+									style={({ pressed }) => [
+										styles.label,
+										{ left: month.column * pitch },
+										pressed && { opacity: opacity.pressed },
+									]}
 								>
 									<Text style={[styles.labelText, { color: colors.ink }]}>
 										{month.label}

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
+import { Container } from "@/components/ui/composite/container";
 import { Button } from "@/components/ui/primitives/button";
-import { radius, space, textStyles } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { progressCopy } from "../../messages";
 import type { DayDetailCardData } from "../../presenters/progress-calendar-presenter";
@@ -19,71 +20,66 @@ export function DayDetailCard({ detail, onClose, onEdit }: DayDetailCardProps) {
 	const { colors } = useTheme();
 
 	return (
-		<View
-			testID="day-detail-card"
-			style={[
-				styles.card,
-				{ backgroundColor: colors.card, borderColor: colors.border },
-			]}
-		>
-			<View style={styles.header}>
-				<View
-					accessible
-					accessibilityRole="header"
-					accessibilityLabel={detail.accessibilityLabel}
-					style={styles.titles}
-				>
-					<Text style={[styles.title, { color: colors.ink }]}>
-						{detail.title}
-					</Text>
-					<Text style={[styles.summary, { color: colors.sub }]}>
-						{detail.summary}
-					</Text>
-				</View>
-				<Button
-					label={progressCopy.day.close}
-					variant="link"
-					fullWidth={false}
-					onPress={onClose}
-				/>
-			</View>
-			{detail.rows.map((row) => (
-				<View
-					key={row.key}
-					accessible
-					accessibilityLabel={`${row.name}, ${row.state}`}
-					style={styles.row}
-				>
-					<View style={styles.name}>
-						<View style={[styles.dot, { backgroundColor: row.dot }]} />
-						<Text
-							style={[styles.rowName, { color: colors.ink }]}
-							numberOfLines={2}
-						>
-							{row.name}
+		<Container variant="outlined" testID="day-detail-card">
+			<View style={styles.content}>
+				<View style={styles.header}>
+					<View
+						accessible
+						accessibilityRole="header"
+						accessibilityLabel={detail.accessibilityLabel}
+						style={styles.titles}
+					>
+						<Text style={[styles.title, { color: colors.ink }]}>
+							{detail.title}
+						</Text>
+						<Text style={[styles.summary, { color: colors.sub }]}>
+							{detail.summary}
 						</Text>
 					</View>
-					<Text style={[styles.state, { color: colors.sub }]}>{row.state}</Text>
+					<Button
+						label={progressCopy.day.close}
+						variant="link"
+						fullWidth={false}
+						onPress={onClose}
+					/>
 				</View>
-			))}
-			{detail.editable ? (
-				<Button
-					label={progressCopy.day.editThisDay}
-					accessibilityLabel={progressCopy.day.editThisDayLabel}
-					variant="inline"
-					fullWidth={false}
-					onPress={onEdit}
-				/>
-			) : null}
-		</View>
+				{detail.rows.map((row) => (
+					<View
+						key={row.key}
+						accessible
+						accessibilityLabel={`${row.name}, ${row.state}`}
+						style={styles.row}
+					>
+						<View style={styles.name}>
+							<View style={[styles.dot, { backgroundColor: row.dot }]} />
+							<Text
+								style={[styles.rowName, { color: colors.ink }]}
+								numberOfLines={2}
+							>
+								{row.name}
+							</Text>
+						</View>
+						<Text style={[styles.state, { color: colors.sub }]}>
+							{row.state}
+						</Text>
+					</View>
+				))}
+				{detail.editable ? (
+					<Button
+						label={progressCopy.day.editThisDay}
+						accessibilityLabel={progressCopy.day.editThisDayLabel}
+						variant="inline"
+						fullWidth={false}
+						onPress={onEdit}
+					/>
+				) : null}
+			</View>
+		</Container>
 	);
 }
 
 const styles = StyleSheet.create({
-	card: {
-		borderRadius: radius.l,
-		borderWidth: StyleSheet.hairlineWidth,
-		padding: space[400],
+	content: {
 		gap: space[200],
 	},
 	header: {

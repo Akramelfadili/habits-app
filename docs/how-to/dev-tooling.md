@@ -42,8 +42,9 @@ Since V3-0b it also counts (lines, like the others):
 | Key | What | Use instead | Baseline now (`token-ratchet.baseline.json`) |
 |---|---|---|---|
 | `spacing-literals` | non-zero numeric `padding*`, `margin*` (negative too), `gap`/`rowGap`/`columnGap` | `space[…]` (F-04) | 2 |
-| `radius-literals` | non-zero numeric `border*Radius` | `radius.*`, `cellRadius()`, `squareRadius()` (F-05) | 8 |
-| `off-scale-font-sizes` | `fontSize` 10 / 10.5 / 11 / 11.5 / 12.5, and `typeScale.micro` / `.caption` / `.subtitle` (10 / 11 / 12.5) | a `textStyles` style (F-03) | 9 |
+| `radius-literals` | non-zero numeric `border*Radius` | `radius.*`, `cellRadius()`, `squareRadius()` (F-05) | 4 |
+| `letter-spacing-literals` | non-zero numeric `letterSpacing` | `letterSpacing.label` / `.eyebrow` (F-03) | 0 |
+| `off-scale-font-sizes` | `fontSize` 10 / 10.5 / 11 / 11.5 / 12.5, and `typeScale.micro` / `.caption` / `.subtitle` (deleted in batch 20; the pattern stays as a guard) | a `textStyles` style (F-03) | 0 |
 
 An off-scale literal (`fontSize: 11`) counts under both `font-size-literals` and `off-scale-font-sizes`. Two literals on one line count once. `0` is not counted (a reset, not a step); sizes (`width`/`height`) are not counted (no size scale). The V3 assessment's "~394" figure (`docs/archive/assessment-v3.md`) counted spacing *and* sizes, and the baseline was 274 + 55 + 56 when the keys were added in V3-0b; the screens have since moved onto the tokens, and each batch lowers these numbers with `npm run ratchet:update`. That script refuses a key the baseline does not have yet: a new key is added to the baseline by hand, in the commit that introduces it.
 

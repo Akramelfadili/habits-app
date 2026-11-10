@@ -1,5 +1,5 @@
 import { Children, type PropsWithChildren } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ViewProps } from "react-native";
 import { radius, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
@@ -39,7 +39,14 @@ type ContainerProps = PropsWithChildren<{
 	 * shadow out instead of clipping it.
 	 */
 	lifted?: boolean;
-}>;
+	/**
+	 * Inner padding of a card: "default" is 16 pt (`space[400]`), "snug" 14 pt
+	 * (`space[350]`, the density pass's card padding). Cards that set `tight`,
+	 * `flat`, `summary` or `sheet` keep their own padding.
+	 */
+	padding?: "default" | "snug";
+}> &
+	Pick<ViewProps, "testID" | "accessible" | "accessibilityLabel">;
 
 export function Container({
 	variant = "card",
@@ -47,6 +54,10 @@ export function Container({
 	compact = false,
 	tight = false,
 	lifted = false,
+	padding = "default",
+	testID,
+	accessible,
+	accessibilityLabel,
 	children,
 }: ContainerProps) {
 	const { colors } = useTheme();
@@ -55,8 +66,12 @@ export function Container({
 
 	return (
 		<View
+			testID={testID}
+			accessible={accessible}
+			accessibilityLabel={accessibilityLabel}
 			style={[
 				styles.base,
+				padding === "snug" && styles.snug,
 				variant === "sheet" && styles.sheet,
 				variant === "summary" && styles.summary,
 				(dividers || flat) && styles.dividedBase,
@@ -116,9 +131,12 @@ export function Container({
 
 const styles = StyleSheet.create({
 	base: {
-		borderRadius: 16,
+		borderRadius: radius.l,
 		padding: space[400],
 		gap: space[400],
+	},
+	snug: {
+		padding: space[350],
 	},
 	dividedBase: {
 		gap: 0,
@@ -162,8 +180,8 @@ const styles = StyleSheet.create({
 		marginVertical: space[250],
 	},
 	sheet: {
-		borderTopLeftRadius: 24,
-		borderTopRightRadius: 24,
+		borderTopLeftRadius: radius.xl,
+		borderTopRightRadius: radius.xl,
 		borderBottomLeftRadius: 0,
 		borderBottomRightRadius: 0,
 		paddingTop: space[250],

@@ -1,6 +1,7 @@
 import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import { getAppInfo } from "@/lib/diagnostics/app-info";
 import { useNotificationPermission } from "@/lib/notifications/use-notification-permission";
+import { useHapticsStore } from "@/store/haptics-store";
 import { useThemePreferenceStore } from "@/theme/theme-preference-store";
 import { useTheme } from "@/theme/use-theme";
 import {
@@ -22,6 +23,7 @@ import { useAllReminders } from "../repositories/reminder-repository";
  */
 export function useSettingsQueries() {
 	const preference = useThemePreferenceStore((state) => state.preference);
+	const hapticsEnabled = useHapticsStore((state) => state.enabled);
 	const { scheme } = useTheme();
 	const eveningReview = useAppSetting(EVENING_REVIEW_SETTING_KEY);
 	const eveningTime = useAppSetting(EVENING_REVIEW_TIME_SETTING_KEY);
@@ -33,6 +35,8 @@ export function useSettingsQueries() {
 
 	return {
 		themePreference: preference,
+		/** The Haptics switch; on unless the person turned it off. */
+		hapticsEnabled,
 		/** What "System" currently resolves to — the Appearance caption reports it. */
 		resolvedScheme: scheme,
 		eveningReviewEnabled: eveningReview === "true",

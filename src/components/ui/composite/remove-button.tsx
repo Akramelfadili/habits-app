@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
-import { minTouchTarget, radius, space } from "@/theme/theme";
+import { iconSize, minTouchTarget, radius, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type RemoveButtonProps = {
@@ -37,7 +37,11 @@ export function RemoveButton({
 			]}
 		>
 			<View style={[styles.disc, { backgroundColor: colors.dangerBg }]}>
-				<SymbolView name="minus" size={12} tintColor={colors.onAccent} />
+				<SymbolView
+					name="minus"
+					size={iconSize.xs}
+					tintColor={colors.onAccent}
+				/>
 			</View>
 		</Pressable>
 	);

@@ -1,6 +1,7 @@
 import { setThemePreference } from "@/theme/theme-preference";
 import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
+import { setHapticsEnabled } from "@/utils/use-haptics";
 import {
 	setEveningReviewTime,
 	setHideHabitNames,
@@ -18,6 +19,10 @@ export function useSettingsActions() {
 	const appearance = useAsyncAction(setThemePreference, {
 		scope: "settings",
 		failure: failureMessage("save", "your Appearance choice"),
+	});
+	const haptics = useAsyncAction(setHapticsEnabled, {
+		scope: "settings",
+		failure: failureMessage("save", "your Haptics choice"),
 	});
 	const eveningReview = useAsyncAction(toggleEveningReview, {
 		scope: "settings",
@@ -37,6 +42,7 @@ export function useSettingsActions() {
 	return {
 		setHideHabitNames: hideNames.run,
 		setThemePreference: appearance.run,
+		setHaptics: haptics.run,
 		setEveningReview: eveningReview.run,
 		setEveningReviewTime: eveningTime.run,
 	};

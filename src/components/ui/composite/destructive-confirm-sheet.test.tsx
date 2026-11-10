@@ -1,10 +1,19 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import * as Haptics from "expo-haptics";
 import { AccessibilityInfo, Text } from "react-native";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
+import { useHapticsStore } from "@/store/haptics-store";
 import { useToastStore } from "@/store/toast-store";
+import { semanticColors } from "@/theme/theme";
 import { failureMessage } from "@/utils/failure-message";
 import { runSafely } from "@/utils/run-safely";
 import { DestructiveConfirmSheet } from "./destructive-confirm-sheet";
+
+jest.mock("expo-haptics", () => ({
+	selectionAsync: jest.fn(async () => undefined),
+	notificationAsync: jest.fn(async () => undefined),
+	NotificationFeedbackType: { Success: "success", Warning: "warning" },
+}));
 
 let mockAccessibilityText = false;
 jest.mock("@/utils/use-accessibility-text-size", () => ({
@@ -55,6 +64,25 @@ describe("DestructiveConfirmSheet", () => {
 		expect(props.onConfirm).toHaveBeenCalled();
 	});
 
+	it("confirming gives a warning haptic; cancelling gives none; off gives none", async () => {
+		useHapticsStore.setState({ enabled: true });
+		(Haptics.notificationAsync as jest.Mock).mockClear();
+		await renderSheet();
+		await fireEvent.press(screen.getByText("Cancel"));
+		expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+		await fireEvent.press(screen.getByText("Delete category"));
+		expect(Haptics.notificationAsync).toHaveBeenCalledWith("warning");
+
+		useHapticsStore.setState({ enabled: false });
+		(Haptics.notificationAsync as jest.Mock).mockClear();
+		await renderSheet();
+		await fireEvent.press(
+			screen.getAllByText("Delete category").at(-1) as never,
+		);
+		expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+		useHapticsStore.setState({ enabled: true });
+	});
+
 	it("has no Close: Cancel is the one way out", async () => {
 		await renderSheet();
 		expect(screen.queryByText("Close")).toBeNull();
@@ -64,9 +92,11 @@ describe("DestructiveConfirmSheet", () => {
 	it("the destructive action is an outlined pill with red text, never filled", async () => {
 		await renderSheet();
 		const button = screen.getByRole("button", { name: "Delete category" });
-		expect(button).not.toHaveStyle({ backgroundColor: "#C9372F" });
+		expect(button).not.toHaveStyle({
+			backgroundColor: semanticColors.light.dangerBg,
+		});
 		expect(screen.getByText("Delete category")).toHaveStyle({
-			color: "#C9372F",
+			color: semanticColors.light.dangerBg,
 		});
 	});
 

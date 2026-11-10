@@ -13,7 +13,7 @@ From the V3 design system and spec (`docs/design/design-system-v3.md` "Principle
 
 ## Tokens
 
-Colour, spacing, radius, type size and weight, elevation and motion come from `src/theme/theme.ts` (`surfaceColors`, `semanticColors`, `textStyles`, `space`, `radius`, `elevation`, `motion`), read in components through `useTheme()` (`src/theme/use-theme.ts`).
+Colour, spacing, radius, type size and weight, elevation and motion come from `src/theme/theme.ts` (`surfaceColors`, `semanticColors`, `textStyles`, `letterSpacing`, `space`, `radius`, `iconSize`, `elevation`, `motion`), read in components through `useTheme()` (`src/theme/use-theme.ts`).
 
 | Rule | Enforced by |
 |---|---|
@@ -27,6 +27,19 @@ Colour, spacing, radius, type size and weight, elevation and motion come from `s
 - **Reuse before create:** search both folders first, then extend, then create in `components/ui/` with every documented state. No raw styled `Pressable`/`View`/`Text` for an element the design system documents. This is a review rule (`CLAUDE.md` rule 10); only the token part is mechanical (above).
 - Header buttons only from `src/components/ui/composite/header-buttons.tsx`: `src/components/ui/composite/header-buttons.guard.test.ts` fails if any other file sets a `header*` button option (iOS 26 Liquid Glass).
 - Every scrolling screen inside the tabs ends with `TAB_BAR_BOTTOM_PADDING` (the bar overlays content). Convention, no guard; `tab-bar-pill.test.tsx` pins the constant.
+
+## Prop naming (new components only)
+
+One convention so a caller can guess a new component's API. It applies to components written from now on; the existing props are not renamed (batch 20, I-08), so older components still have `tone` sets such as `"warning" | "neutral"` and boolean `compact` or `destructive`.
+
+- **`tone` is a meaning, not a look.** Values name what the thing says (`"warning"`, `"success"`, `"error"`, `"notice"`), and the neutral value is `"default"` (not `"neutral"`, `"none"` or `"primary"`). Omit it for the neutral case.
+- **`size` is a string union**, `"default"` first (`"default" | "compact"`, `"default" | "large"`). Never a number and never a boolean `compact`.
+- **Destructive is a tone**, `tone="destructive"` (or the Button `variant`), never a `destructive` boolean.
+- **One change callback per component:** `onValueChange` for a controlled value (switch, stepper, segmented, selection), `onChange` only for a raw event, `onPress` for a tap. A component never has two of them for the same change.
+
+## Haptics
+
+Light and restrained, from `useHaptics()` (`src/utils/use-haptics.ts`) only; no screen imports `expo-haptics`. Policy and the switch: `docs/design/design-system-v3.md` § "F-07a Haptics".
 
 ## Theme and dark mode
 

@@ -2,6 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
 import { minTouchTarget, motion, radius } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { useHaptics } from "@/utils/use-haptics";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import type { HabitDirection } from "../types";
 
@@ -99,6 +100,7 @@ export function CompletionCircle({
 }: CompletionCircleProps) {
 	const { colors, opacity } = useTheme();
 	const reduceMotion = useReducedMotion();
+	const haptics = useHaptics();
 	const isBreak = direction === "break";
 	const showPartial = !completed && !isBreak && !!progress && progress > 0;
 
@@ -135,7 +137,10 @@ export function CompletionCircle({
 				disabled,
 			}}
 			disabled={disabled}
-			onPress={onPress}
+			onPress={() => {
+				haptics.selection();
+				onPress();
+			}}
 			onLongPress={onLongPress}
 			style={({ pressed }) => [
 				styles.hit,

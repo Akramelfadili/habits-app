@@ -1,6 +1,9 @@
 import { parseISO } from "date-fns";
 import { eq } from "drizzle-orm";
-import { THEME_PREFERENCE_SETTING_KEY } from "@/lib/app-settings/keys";
+import {
+	HAPTICS_SETTING_KEY,
+	THEME_PREFERENCE_SETTING_KEY,
+} from "@/lib/app-settings/keys";
 import {
 	appSettings,
 	categories,
@@ -187,6 +190,10 @@ export async function loadExportV2(
 		[
 			HIDE_HABIT_NAMES_SETTING_KEY,
 			settings.hideHabitNames === null ? null : String(settings.hideHabitNames),
+		],
+		[
+			HAPTICS_SETTING_KEY,
+			settings.haptics === null ? null : String(settings.haptics),
 		],
 	];
 	for (const [key, value] of settingRows) {

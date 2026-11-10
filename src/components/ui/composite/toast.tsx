@@ -2,7 +2,13 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
 import type { ToastTone } from "@/store/toast-store";
-import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	minTouchTarget,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
@@ -53,7 +59,7 @@ export function Toast({
 		>
 			{glyph ? (
 				<View testID={`toast-${tone}-marker`}>
-					<SymbolView name={glyph} size={16} tintColor={glyphColor} />
+					<SymbolView name={glyph} size={iconSize.m} tintColor={glyphColor} />
 				</View>
 			) : null}
 			<Text

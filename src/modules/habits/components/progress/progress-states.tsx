@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
+import { Container } from "@/components/ui/composite/container";
 import { EmptyState } from "@/components/ui/composite/empty-state";
 import { Button } from "@/components/ui/primitives/button";
-import { radius, space, textStyles } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { progressCopy } from "../../messages";
 
@@ -35,39 +36,36 @@ export function ProgressNothingLogged({
 }) {
 	const { colors } = useTheme();
 	return (
-		<View
+		<Container
+			variant="outlined"
+			padding="snug"
 			testID="progress-nothing-logged"
-			style={[
-				styles.card,
-				{ backgroundColor: colors.card, borderColor: colors.border },
-			]}
 		>
-			<View style={styles.text}>
-				<Text
-					accessibilityRole="header"
-					style={[styles.title, { color: colors.ink }]}
-				>
-					{progressCopy.empty.nothingLoggedTitle}
-				</Text>
-				<Text style={[styles.body, { color: colors.sub }]}>
-					{progressCopy.empty.nothingLoggedBody(range)}
-				</Text>
+			<View style={styles.content}>
+				<View style={styles.text}>
+					<Text
+						accessibilityRole="header"
+						style={[styles.title, { color: colors.ink }]}
+					>
+						{progressCopy.empty.nothingLoggedTitle}
+					</Text>
+					<Text style={[styles.body, { color: colors.sub }]}>
+						{progressCopy.empty.nothingLoggedBody(range)}
+					</Text>
+				</View>
+				<Button
+					label={progressCopy.empty.goToToday}
+					variant="secondary"
+					fullWidth={false}
+					onPress={onGoToToday}
+				/>
 			</View>
-			<Button
-				label={progressCopy.empty.goToToday}
-				variant="secondary"
-				fullWidth={false}
-				onPress={onGoToToday}
-			/>
-		</View>
+		</Container>
 	);
 }
 
 const styles = StyleSheet.create({
-	card: {
-		borderRadius: radius.l,
-		borderWidth: StyleSheet.hairlineWidth,
-		padding: space[350],
+	content: {
 		gap: space[300],
 		alignItems: "flex-start",
 	},

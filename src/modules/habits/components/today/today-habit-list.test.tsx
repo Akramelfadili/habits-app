@@ -1,10 +1,18 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import * as Haptics from "expo-haptics";
+import { useHapticsStore } from "@/store/haptics-store";
 import { builtInCategory, makeHabit } from "../../test-support/habit-builder";
 
 jest.mock("expo-symbols", () => {
 	const { View } = require("react-native");
 	return { SymbolView: View };
 });
+
+jest.mock("expo-haptics", () => ({
+	selectionAsync: jest.fn(async () => undefined),
+	notificationAsync: jest.fn(async () => undefined),
+	NotificationFeedbackType: { Success: "success", Warning: "warning" },
+}));
 
 import { TodayHabitList } from "./today-habit-list";
 
@@ -50,6 +58,47 @@ describe("TodayHabitList", () => {
 	// tree outside act.
 	beforeEach(() => jest.useFakeTimers());
 	afterEach(() => jest.useRealTimers());
+
+	describe("success haptic", () => {
+		const allDone = {
+			progress: { completed: 2, total: 2, fraction: 1 },
+			completedHabitIds: new Set([1, 2]),
+		};
+		beforeEach(() => {
+			(Haptics.notificationAsync as jest.Mock).mockClear();
+			useHapticsStore.setState({ enabled: true });
+		});
+
+		it("fires once when the last habit is completed", async () => {
+			const { view, ...handlers } = await renderList();
+			expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+			await view.rerender(
+				<TodayHabitList
+					progress={allDone.progress}
+					groups={groups}
+					completedHabitIds={allDone.completedHabitIds}
+					quantityValuesByHabitId={new Map()}
+					completedThisWeekByHabitId={new Map()}
+					atRiskByHabitId={new Map()}
+					streakByHabitId={new Map()}
+					frozenYesterdayByHabitId={new Map()}
+					isToday
+					dayLabel="Fri 23 Oct"
+					notDueHabits={[]}
+					loggedBonusIds={new Set()}
+					{...handlers}
+				/>,
+			);
+			expect(Haptics.notificationAsync).toHaveBeenCalledTimes(1);
+			expect(Haptics.notificationAsync).toHaveBeenCalledWith("success");
+		});
+
+		it("stays quiet when a day that is already all done opens", async () => {
+			await renderList(allDone);
+			expect(screen.getByTestId("today-all-done")).toBeTruthy();
+			expect(Haptics.notificationAsync).not.toHaveBeenCalled();
+		});
+	});
 
 	it("shows one progress bar: '1 of 2 done' and 50%", async () => {
 		await renderList();

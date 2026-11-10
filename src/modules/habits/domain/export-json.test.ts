@@ -1,4 +1,7 @@
-import { THEME_PREFERENCE_SETTING_KEY } from "@/lib/app-settings/keys";
+import {
+	HAPTICS_SETTING_KEY,
+	THEME_PREFERENCE_SETTING_KEY,
+} from "@/lib/app-settings/keys";
 import {
 	EVENING_REVIEW_SETTING_KEY,
 	EVENING_REVIEW_TIME_SETTING_KEY,
@@ -162,6 +165,7 @@ describe("toJson", () => {
 			eveningReviewTime: null,
 			seenFirstRun: null,
 			hideHabitNames: null,
+			haptics: null,
 		});
 	});
 
@@ -236,7 +240,7 @@ describe("toJson", () => {
 	});
 
 	describe("settings", () => {
-		it("carries the four user-facing settings, typed", async () => {
+		it("carries the six user-facing settings, typed", async () => {
 			const source: ExportSource = {
 				...makeExportSource(),
 				settings: {
@@ -245,6 +249,7 @@ describe("toJson", () => {
 					[EVENING_REVIEW_TIME_SETTING_KEY]: "20:45",
 					[SEEN_FIRST_RUN_SETTING_KEY]: "true",
 					[HIDE_HABIT_NAMES_SETTING_KEY]: "false",
+					[HAPTICS_SETTING_KEY]: "false",
 				},
 			};
 			const parsed = JSON.parse(await toJson(modelFor(true, true, source)));
@@ -254,6 +259,7 @@ describe("toJson", () => {
 				eveningReviewTime: "20:45",
 				seenFirstRun: true,
 				hideHabitNames: false,
+				haptics: false,
 			});
 		});
 
@@ -275,6 +281,7 @@ describe("toJson", () => {
 				eveningReviewTime: null,
 				seenFirstRun: null,
 				hideHabitNames: null,
+				haptics: null,
 			});
 		});
 

@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
-import { cellRadius, minTouchTarget, space } from "@/theme/theme";
+import { cellRadius, iconSize, minTouchTarget, space } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type CheckboxProps = {
@@ -45,7 +45,11 @@ export function Checkbox({
 				]}
 			>
 				{checked ? (
-					<SymbolView name="checkmark" size={14} tintColor={colors.onAccent} />
+					<SymbolView
+						name="checkmark"
+						size={iconSize.s}
+						tintColor={colors.onAccent}
+					/>
 				) : null}
 			</View>
 		</Pressable>

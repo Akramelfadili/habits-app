@@ -1,6 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { minTouchTarget, textStyles } from "@/theme/theme";
+import { iconSize, minTouchTarget, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type MoveButtonProps = {
@@ -40,7 +40,7 @@ export function MoveButton({
 		>
 			<SymbolView
 				name={direction === "up" ? "chevron.up" : "chevron.down"}
-				size={16}
+				size={iconSize.m}
 				tintColor={tint}
 				fallback={
 					<Text style={[textStyles.subhead, { color: tint }]}>

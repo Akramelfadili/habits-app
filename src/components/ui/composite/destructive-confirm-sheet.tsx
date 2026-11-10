@@ -15,6 +15,7 @@ import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { GENERIC_FAILURE_MESSAGE } from "@/utils/failure-message";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
+import { useHaptics } from "@/utils/use-haptics";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 import { Banner } from "./banner";
 import { Container } from "./container";
@@ -82,6 +83,7 @@ export function DestructiveConfirmSheet({
 	isWorking = false,
 }: DestructiveConfirmSheetProps) {
 	const { colors } = useTheme();
+	const haptics = useHaptics();
 	const { height } = useWindowDimensions();
 	const largeText = useAccessibilityTextSize();
 	const pendingRef = useRef(false);
@@ -174,7 +176,10 @@ export function DestructiveConfirmSheet({
 				<Button
 					label={isWorking && busy ? busy.label : confirmLabel}
 					variant="destructive"
-					onPress={once(onConfirm)}
+					onPress={once(() => {
+						haptics.warning();
+						return onConfirm();
+					})}
 					disabled={isInert}
 				/>
 				{hint && !largeText ? (

@@ -29,7 +29,7 @@ type MonthListProps = {
  * squares.
  */
 export function MonthList({ items, emptyLabel }: MonthListProps) {
-	const { colors } = useTheme();
+	const { colors, opacity } = useTheme();
 
 	return (
 		<View testID="month-list" style={styles.list}>
@@ -40,7 +40,10 @@ export function MonthList({ items, emptyLabel }: MonthListProps) {
 					accessibilityRole="button"
 					accessibilityLabel={item.accessibilityLabel}
 					onPress={item.onPress}
-					style={styles.row}
+					style={({ pressed }) => [
+						styles.row,
+						pressed && { opacity: opacity.pressed },
+					]}
 				>
 					<View style={styles.line}>
 						<Text style={[styles.label, { color: colors.ink }]}>

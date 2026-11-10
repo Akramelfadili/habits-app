@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
+import { interactionOpacity } from "@/theme/theme";
 import { MonthList } from "./month-list";
 
 describe("MonthList", () => {
@@ -53,5 +55,34 @@ describe("MonthList", () => {
 			}),
 		);
 		expect(onPress).toHaveBeenCalledTimes(1);
+	});
+
+	it("dims a row while it is pressed (I-06)", async () => {
+		await render(
+			<MonthList
+				emptyLabel="–"
+				items={[
+					{
+						key: "sep",
+						label: "September",
+						percent: 100,
+						bar: 1,
+						accessibilityLabel: "September",
+						onPress: jest.fn(),
+					},
+				]}
+			/>,
+		);
+		const row = () => screen.getByTestId("month-list-sep");
+		expect(StyleSheet.flatten(row().props.style).opacity).toBeUndefined();
+		await fireEvent(row(), "responderGrant", {
+			nativeEvent: { touches: [], changedTouches: [] },
+			touchHistory: { touchBank: [] },
+			persist: jest.fn(),
+			timeStamp: 0,
+		});
+		expect(StyleSheet.flatten(row().props.style).opacity).toBe(
+			interactionOpacity.pressed,
+		);
 	});
 });

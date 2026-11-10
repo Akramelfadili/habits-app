@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react-native";
+import { semanticColors } from "@/theme/theme";
 import { MonthRatesCard } from "./month-rates-card";
 
 const rows = [
@@ -52,8 +53,9 @@ describe("MonthRatesCard (P8)", () => {
 
 	it("colours the slipping habit's rate and bar amber, and only that one", async () => {
 		await render(<MonthRatesCard rows={rows} meta="October" />);
-		expect(screen.getByText("74%")).toHaveStyle({ color: "#966408" });
-		expect(screen.getByText("95%")).not.toHaveStyle({ color: "#966408" });
+		const { warnInk } = semanticColors.light;
+		expect(screen.getByText("74%")).toHaveStyle({ color: warnInk });
+		expect(screen.getByText("95%")).not.toHaveStyle({ color: warnInk });
 		const bars = screen.getAllByTestId("progress-bar");
 		expect(bars).toHaveLength(3);
 	});

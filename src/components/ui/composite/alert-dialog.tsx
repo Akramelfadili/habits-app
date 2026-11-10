@@ -10,6 +10,7 @@ import {
 import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
+import { useHaptics } from "@/utils/use-haptics";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 import { Button } from "../primitives/button";
 
@@ -57,6 +58,7 @@ export function AlertDialog({
 	layout = "list",
 }: AlertDialogProps) {
 	const { colors } = useTheme();
+	const haptics = useHaptics();
 	const wide = useAccessibilityTextSize();
 	const primaryRef = useRef<HostInstance>(null);
 	useInitialFocus(primaryRef, visible);
@@ -112,7 +114,10 @@ export function AlertDialog({
 							key={action.label}
 							ref={action.tone === "primary" ? primaryRef : undefined}
 							accessibilityRole="button"
-							onPress={action.onPress}
+							onPress={() => {
+								if (action.tone === "destructive") haptics.warning();
+								action.onPress();
+							}}
 							style={({ pressed }) => [
 								styles.action,
 								{ borderTopColor: colors.border },
