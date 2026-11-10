@@ -13,23 +13,20 @@ export function isPausedOn(date: Date, pauses: readonly DayRange[]): boolean {
 }
 
 /**
- * The days a streak starts over (HAB-20): the day after each closed pause —
- * i.e. each restore day. A streak never counts back past one, and the longest
- * streak's run resets there, so no streak is invented across an archived gap.
- * Sorted ascending, "yyyy-MM-dd".
+ * The days a streak starts over: the day after each closed pause, i.e. each restore day. A
+ * streak never counts back past one, and the longest streak's run resets there, so no streak is
+ * invented across an archived gap. Sorted ascending, "yyyy-MM-dd".
  */
 export function restartDays(pauses: readonly DayRange[]): string[] {
 	return pauses.map((pause) => toDayKey(addDays(parseISO(pause.to), 1))).sort();
 }
 
 /**
- * Decorates any frequency strategy with a habit's archive periods (HAB-13):
- * a paused day is never due, and looking back it only "was scheduled" if it
- * was actually completed. So a day logged before archiving still extends the
- * streak, while the blank days in between are never read as missed. The
- * streak itself does *not* bridge the gap (HAB-20, which supersedes HAB-13's
- * "resume") — see `restartDays`. Outside a pause, the wrapped strategy
- * decides everything.
+ * Decorates any frequency strategy with a habit's archive periods: a paused day is never due,
+ * and looking back it only "was scheduled" if it was actually completed. So a day logged before
+ * archiving still extends the streak, while the blank days in between are never read as missed.
+ * The streak itself does *not* bridge the gap (see `restartDays`). Outside a pause, the wrapped
+ * strategy decides everything.
  */
 export function withPauses(
 	strategy: FrequencyStrategy,

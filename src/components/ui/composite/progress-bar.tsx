@@ -15,17 +15,15 @@ import { useReducedMotion } from "@/utils/use-reduced-motion";
 type ProgressBarProps = {
 	/** 0–1. Values outside that range are clamped. */
 	value: number;
-	/** "warning" is the flagged/slipping treatment. */
 	tone?: "default" | "warning";
 	/**
-	 * V3-07: the count on the left ("1 of 5 done"). When given, a whole-number
-	 * percentage sits on the right and both read as one stop for VoiceOver.
+	 * The count on the left ("1 of 5 done"). When given, a whole-number percentage sits on the right
+	 * and both read as one stop for VoiceOver.
 	 */
 	label?: string;
 	/**
-	 * Work with no measurable progress (SY3, a migration): a segment sweeps along
-	 * the track instead of a fill, `value` is ignored and no percentage is said.
-	 * With Reduce Motion the segment sits still.
+	 * Work with no measurable progress (a migration): a segment sweeps along the track instead of a
+	 * fill, `value` is ignored and no percentage is said. With Reduce Motion the segment sits still.
 	 */
 	indeterminate?: boolean;
 };
@@ -34,7 +32,7 @@ const PERCENT = 100;
 const TRACK_HEIGHT = 6;
 /** The sweeping segment's share of the track, and how long one pass takes. */
 const SEGMENT_SHARE = 0.35;
-/** V3-07: 6 pt track, count left, whole-number % right. Fills over 450 ms (F-07); Reduce Motion jumps. */
+/** 6 pt track, count left, whole-number % right. Fills over 450 ms; Reduce Motion jumps. */
 export function ProgressBar({
 	value,
 	tone = "default",
@@ -122,7 +120,6 @@ const styles = StyleSheet.create({
 	},
 });
 
-/** The indeterminate form: a sweeping segment, announced as busy rather than as a percentage. */
 function IndeterminateBar({ label }: { label?: string }) {
 	const { colors } = useTheme();
 	const reduceMotion = useReducedMotion();
@@ -132,7 +129,6 @@ function IndeterminateBar({ label }: { label?: string }) {
 	useEffect(() => {
 		if (width === 0) return;
 		if (reduceMotion) {
-			// Still: the segment rests at the track's left end instead of sweeping.
 			progress.setValue(
 				(width * SEGMENT_SHARE) / (width * (1 + SEGMENT_SHARE)),
 			);

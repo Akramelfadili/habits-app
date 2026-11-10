@@ -30,8 +30,8 @@ import {
 import { yearlyHabitFixtures } from "./yearly-fixtures";
 
 /**
- * A fixture habit before its HAB-13 lifecycle fields — `habitFixturesFor`
- * fills those in (active, sorted by id) unless a scenario sets them itself.
+ * A fixture habit before its lifecycle fields; `habitFixturesFor` fills those in (active,
+ * sorted by id) unless a scenario sets them itself.
  */
 export type FixtureHabit = Omit<Habit, "sortOrder" | "archivedAt" | "pauses"> &
 	Partial<Pick<Habit, "sortOrder" | "archivedAt" | "pauses">>;
@@ -46,11 +46,12 @@ function withLifecycle(habit: FixtureHabit): Habit {
 }
 
 /**
- * Static fake habits backing the web-only repository (`habit-repository.web.ts`).
- * Web exists purely for visual checks against the mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2), so this covers the
- * variety a screen needs to render: build + break, custom categories and
- * Other (V1's no-category habits, as the HAB-24 migration maps them), and every frequency type (#1 matches the mockup's
- * Mon–Fri specific-weekdays selection). Ids are stable so `/edit-habit/1` always resolves.
+ * Static fake habits backing the web-only repository (`habit-repository.web.ts`). Web
+ * exists purely for visual checks against the mockups (docs/mockups/v3/, older ones in tag
+ * mockups-v1-v2), so this covers the variety a screen needs to render: build + break,
+ * custom categories and Other (the first version's no-category habits, as the migration
+ * maps them), and every frequency type (#1 matches the mockup's Mon-Fri specific-weekdays
+ * selection). Ids are stable so `/edit-habit/1` always resolves.
  */
 const FIXTURE_DATE = new Date("2026-09-16T08:00:00Z");
 
@@ -207,9 +208,8 @@ export const HABIT_FIXTURES: FixtureHabit[] = [
 ];
 
 /**
- * Due every day except today (HAB-05's Rest day) — computed from the real
- * weekday at render time so the scenario holds regardless of which day the
- * visual check happens to run on.
+ * Due every day except today (the Rest day state), computed from the real weekday at
+ * render time so the scenario holds regardless of which day the visual check runs on.
  */
 const REST_DAY_HABIT_FIXTURES: FixtureHabit[] = [
 	{
@@ -232,10 +232,9 @@ const REST_DAY_HABIT_FIXTURES: FixtureHabit[] = [
 ];
 
 /**
- * HAB-18's picker scenarios (D1/D2): every habit is due every day except
- * today, so Today is on a rest day. `Read` (id 3) is the one the logged
- * scenario logs off-schedule; "No phone after 23:00" is a Break habit the
- * picker must leave out. `ineligible` keeps only that Break habit.
+ * The picker scenarios: every habit is due every day except today, so Today is on a rest
+ * day. `Read` (id 3) is the one the logged scenario logs off-schedule; "No phone after
+ * 23:00" is a Break habit the picker must leave out. `ineligible` keeps only that Break habit.
  */
 function restDayPickerFixtures(onlyBreak: boolean): FixtureHabit[] {
 	const notToday = ([1, 2, 3, 4, 5, 6, 7] as IsoWeekday[]).filter(
@@ -275,9 +274,9 @@ function restDayPickerFixtures(onlyBreak: boolean): FixtureHabit[] {
 }
 
 /**
- * A single quantity habit matching the V1/V2 mockup quantity-log (tag mockups-v1-v2) exactly
- * (name, target, unit, current value) so the Quantity Log sheet screenshot
- * (scripts/visual-check.mjs) can be compared to it directly.
+ * A single quantity habit matching the quantity-log mockup exactly (name, target, unit,
+ * current value) so the Quantity Log sheet screenshot (scripts/visual-check.mjs) can be
+ * compared to it directly.
  */
 const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
 	{
@@ -303,10 +302,10 @@ const QUANTITY_LOG_HABIT_FIXTURES: FixtureHabit[] = [
 const STREAK_AT_RISK_HABIT_CREATED = new Date("2025-01-01T00:00:00Z");
 
 /**
- * One daily Build habit matching the V1/V2 mockup streak-at-risk (tag mockups-v1-v2) — its
- * matching entries (`entry-fixtures.ts`) complete every day except yesterday,
- * so opening it shows the streak-at-risk sheet with the full freeze pool
- * available (`frozen-day-fixtures.ts` adds none for this scenario).
+ * One daily Build habit matching the streak-at-risk mockup: its matching entries
+ * (`entry-fixtures.ts`) complete every day except yesterday, so opening it shows the
+ * streak-at-risk sheet with the full freeze pool available (`frozen-day-fixtures.ts` adds
+ * none for this scenario).
  */
 const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
 	{
@@ -324,11 +323,10 @@ const STREAK_AT_RISK_HABIT_FIXTURES: FixtureHabit[] = [
 ];
 
 /**
- * the V1/V2 mockup streak-reset-no-freezes (tag mockups-v1-v2)'s "Meditate · Morning · 10 min ·
- * daily" — a 24-day run that ended two days ago, yesterday missed, today
- * done (current 1). "Glass of water" is only there to own the two frozen
- * days (`frozen-day-fixtures.ts`) that empty this month's shared pool, so
- * the miss resets the streak with no prompt (HAB-08).
+ * The streak-reset-no-freezes mockup's "Meditate · Morning · 10 min · daily": a 24-day
+ * run that ended two days ago, yesterday missed, today done (current 1). "Glass of water"
+ * is only there to own the two frozen days (`frozen-day-fixtures.ts`) that empty this
+ * month's shared pool, so the miss resets the streak with no prompt.
  */
 const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
 	{
@@ -361,10 +359,10 @@ const NO_FREEZES_HABIT_FIXTURES: FixtureHabit[] = [
 export const HABIT_DETAIL_HISTORY_DAYS = 150;
 
 /**
- * One daily quantity habit matching the V1/V2 mockup habit-detail (tag mockups-v1-v2)'s "Glass of
- * water · Morning · 8 glasses · daily" — its ~5 months of varied history
- * (`entry-fixtures.ts`, `frozen-day-fixtures.ts`) fill every heatmap state.
- * Created relative to now so the history lands the same way on any run.
+ * One daily quantity habit matching the habit-detail mockup's "Glass of water · Morning ·
+ * 8 glasses · daily"; its ~5 months of varied history (`entry-fixtures.ts`,
+ * `frozen-day-fixtures.ts`) fill every heatmap state. Created relative to now so the
+ * history lands the same way on any run.
  */
 function habitDetailFixtures(): FixtureHabit[] {
 	const created = subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS);
@@ -384,14 +382,16 @@ function habitDetailFixtures(): FixtureHabit[] {
 	];
 }
 
-/** Days before "now" the `habit-detail-archived` habit was archived (HAB-20 D5/E1) — a few weeks in, so the heatmap shows a paused stretch. */
+/**
+ * Days before "now" the `habit-detail-archived` habit was archived: a few weeks in, so
+ * the heatmap shows a paused stretch.
+ */
 export const HABIT_DETAIL_ARCHIVED_DAYS_AGO = 17;
 
 /**
- * the V1/V2 mockup hab-20-d5 (tag mockups-v1-v2)'s "Cold shower · Morning · daily · archived":
- * `habit-detail`'s history (`entry-fixtures.ts` drops everything after the
- * archive day), a simple check, and a 07:00 daily reminder
- * (`reminder-fixtures.ts`) so Restore shows E1's "07:00 · daily" row.
+ * The archived-habit mockup's "Cold shower · Morning · daily · archived": `habit-detail`'s
+ * history (`entry-fixtures.ts` drops everything after the archive day), a simple check,
+ * and a 07:00 daily reminder (`reminder-fixtures.ts`) so Restore shows its "07:00 · daily" row.
  */
 function habitDetailArchivedFixtures(): FixtureHabit[] {
 	return habitDetailFixtures().map((habit) => ({
@@ -405,8 +405,8 @@ function habitDetailArchivedFixtures(): FixtureHabit[] {
 }
 
 /**
- * A just-created habit with no history, matching
- * the V1/V2 mockup habit-detail-new (tag mockups-v1-v2) ("Evening walk · Mon–Fri · added today").
+ * A just-created habit with no history, matching the habit-detail-new mockup ("Evening
+ * walk · Mon-Fri · added today").
  */
 function habitDetailNewFixtures(): FixtureHabit[] {
 	const now = new Date();
@@ -427,10 +427,9 @@ function habitDetailNewFixtures(): FixtureHabit[] {
 }
 
 /**
- * `habit-detail`'s "Glass of water" plus the three other habits
- * the V1/V2 mockup retro-log (tag mockups-v1-v2) lists for the tapped day — Meditate and Read are
- * quantity habits, Mobility a simple check — so the Retro log sheet (HAB-10)
- * renders the mockup's four rows.
+ * `habit-detail`'s "Glass of water" plus the three other habits the retro-log mockup
+ * lists for the tapped day (Meditate and Read are quantity habits, Mobility a simple
+ * check), so the Retro log sheet renders the mockup's four rows.
  */
 function retroLogFixtures(): FixtureHabit[] {
 	const created = subDays(new Date(), HABIT_DETAIL_HISTORY_DAYS);
@@ -478,11 +477,11 @@ function retroLogFixtures(): FixtureHabit[] {
 const WEEKLY_SUMMARY_CREATED = new Date("2025-01-01T00:00:00Z");
 
 /**
- * the V1/V2 mockup weekly-summary (tag mockups-v1-v2) / perfect-week.png's six habits, ids in the
- * creation order perfect-week.png lists them (its all-100% bars fall back to
- * creation order). `weekly-summary` makes every habit daily, as that mockup's
- * x/7 bars show; `perfect-week` gives Read Mon–Fri and Easy run 3×/week, as
- * its 5/5 and 3/3 bars show. Matching entries live in `entry-fixtures.ts`.
+ * The weekly-summary / perfect-week mockups' six habits, ids in the creation order
+ * perfect-week lists them (its all-100% bars fall back to creation order).
+ * `weekly-summary` makes every habit daily, as that mockup's x/7 bars show; `perfect-week`
+ * gives Read Mon-Fri and Easy run 3x/week, as its 5/5 and 3/3 bars show. Matching entries
+ * live in `entry-fixtures.ts`.
  */
 function weeklySummaryFixtures(perfectWeek: boolean): FixtureHabit[] {
 	const base = {
@@ -525,10 +524,9 @@ function weeklySummaryFixtures(perfectWeek: boolean): FixtureHabit[] {
 }
 
 /**
- * the V1/V2 mockup reminders (tag mockups-v1-v2) / reminders-at-cap.png's "Meditate" — Mon–Fri
- * for `reminders`, so its Sat/Sun reminder shows the unscheduled-day warning;
- * daily for `reminders-at-cap`, which shows no warning on any of its four.
- * Matching reminders live in `reminder-fixtures.ts`.
+ * The reminders / reminders-at-cap mockups' "Meditate": Mon-Fri for `reminders`, so its
+ * Sat/Sun reminder shows the unscheduled-day warning; daily for `reminders-at-cap`, which
+ * shows no warning on any of its four. Matching reminders live in `reminder-fixtures.ts`.
  */
 function remindersHabitFixtures(frequency: Habit["frequency"]): FixtureHabit[] {
 	return [
@@ -547,16 +545,15 @@ function remindersHabitFixtures(frequency: Habit["frequency"]): FixtureHabit[] {
 	];
 }
 
-/** Archive dates for the V1/V2 mockup manage-archive (tag mockups-v1-v2)'s two archived rows. */
+/** Archive dates for the manage-archive mockup's two archived rows. */
 export const MANAGE_ARCHIVE_ARCHIVED_AT = {
 	coldShower: new Date("2026-09-02T09:00:00"),
 	noPhoneInBed: new Date("2026-08-18T09:00:00"),
 };
 
 /**
- * the V1/V2 mockup manage-archive (tag mockups-v1-v2): five active habits across Morning,
- * Evening and Training, plus two archived ones — their "N logs kept" come
- * from `entry-fixtures.ts` (41 and 96).
+ * The manage-archive mockup: five active habits across Morning, Evening and Training,
+ * plus two archived ones; their "N logs kept" come from `entry-fixtures.ts` (41 and 96).
  */
 function manageArchiveFixtures(): FixtureHabit[] {
 	const base = {
@@ -631,11 +628,9 @@ function manageArchiveFixtures(): FixtureHabit[] {
 }
 
 /**
- * Manage Categories (HAB-25, the V1/V2 mockups hab-25-f3a–f3c (tag mockups-v1-v2)): the built-in
- * counts every frame shows (Health 1, Fitness 2, Mindfulness 1, Productivity
- * 1, Learning 1), plus — with customs in use — Music's three habits (one
- * archived, so the count proves archived habits are included) and
- * Language's one.
+ * Manage Categories mockups: the built-in counts every frame shows (Health 1, Fitness 2,
+ * Mindfulness 1, Productivity 1, Learning 1), plus, with customs in use, Music's three
+ * habits (one archived, so the count proves archived habits are included) and Language's one.
  */
 function manageCategoriesFixtures(withCustomsInUse: boolean): FixtureHabit[] {
 	const base = {
@@ -740,7 +735,7 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 		case "habit-detail-new":
 			return habitDetailNewFixtures();
 		case "habit-detail-bonus":
-			// Same history, but Mon–Fri only: the weekend logs become bonus dots (HAB-18).
+			// Same history, but Mon-Fri only: the weekend logs become bonus dots.
 			return habitDetailFixtures().map((habit) =>
 				habit.id === 1
 					? { ...habit, frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] } }
@@ -768,7 +763,7 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 			});
 		case "reminders-at-cap":
 			return remindersHabitFixtures({ type: "daily" });
-		// R2, R3, R5: a Tue/Thu habit with two times (07:00 Tue, Thu and 18:30 Thu).
+		// A Tue/Thu habit with two times (07:00 Tue, Thu and 18:30 Thu).
 		case "reminders-times":
 		case "reminders-times-denied":
 			return remindersHabitFixtures({ type: "weekdays", days: [2, 4] });
@@ -787,9 +782,9 @@ function rawFixturesFor(scenario: FixtureScenario): FixtureHabit[] {
 }
 
 /**
- * HAB-22 name-length check: `?longNames=1` on top of any scenario renames the
- * first two habits to a V1-length name (40, over today's 32 cap) and one at
- * exactly the cap, so every screen can be checked with the longest names.
+ * Name-length check: `?longNames=1` on top of any scenario renames the first two habits
+ * to a 40-character name (the former cap, over today's 32) and one at exactly the cap, so
+ * every screen can be checked with the longest names.
  */
 const LONG_FIXTURE_NAMES = [
 	"Read twenty pages before my morning tea!",

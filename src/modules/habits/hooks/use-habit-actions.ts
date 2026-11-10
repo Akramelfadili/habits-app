@@ -6,8 +6,8 @@ export function useHabitActions() {
 	const create = useAsyncAction(createHabitWithReminders, {
 		scope: "habit-form",
 	});
-	// A schedule change moves which reminder days are real (HAB-12), so an
-	// edit re-syncs the habit's notifications along with the write.
+	// A schedule change moves which reminder days are real, so an edit re-syncs the habit's
+	// notifications along with the write.
 	const update = useAsyncAction(updateHabitAndSyncReminders, {
 		scope: "habit-form",
 	});

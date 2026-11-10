@@ -20,10 +20,9 @@ import {
 } from "../presenters/settings-helpers";
 
 /**
- * Settings (HAB-44, S1), pushed from the Habits gear: a hub of five groups, one
- * row per page — Theme, Evening review and Notifications, Freezes, Export data
- * (the export sheet) and About. Each row shows its current value and a chevron;
- * the pages are `settings-*-screen.tsx`.
+ * Settings, pushed from the Habits gear: a hub of five groups, one row per page: Theme,
+ * Evening review and Notifications, Freezes, Export data (the export sheet) and About. Each
+ * row shows its current value and a chevron; the pages are `settings-*-screen.tsx`.
  */
 export function SettingsScreen() {
 	const router = useRouter();

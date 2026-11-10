@@ -36,7 +36,6 @@ function entryOn(habitId: number, day: Date): Entry {
 	};
 }
 
-/** Every day of `[from, to]` done for `habitId`. */
 function doneBetween(habitId: number, from: Date, to: Date): Entry[] {
 	const entries: Entry[] = [];
 	for (let day = from; day <= to; day = addDays(day, 1)) {
@@ -57,7 +56,6 @@ function summarise(
 
 describe("month windows", () => {
 	it("splits a month into Monday-based weeks clipped to the month", () => {
-		// 1 Aug 2026 is a Saturday; 31 Aug a Monday.
 		const weeks = monthWeeks(AUGUST).map(
 			({ start, end }) => `${getDate(start)}-${getDate(end)}`,
 		);
@@ -89,7 +87,6 @@ describe("totals", () => {
 	const today = new Date(2026, 8, 2, 9);
 
 	it("counts perfect days against the days that had something counted", () => {
-		// Habit 1 daily all month; habit 2 only done for the first 10 days.
 		const habits = [daily(1), daily(2)];
 		const entries = [
 			...doneBetween(1, AUGUST.start, AUGUST.end),
@@ -149,8 +146,7 @@ describe("totals", () => {
 		expect(summary.rate).toBe(1);
 	});
 
-	it("reads a restored habit's closed pause as paused, not missed (HAB-20)", () => {
-		// Paused 11–20 Aug, restored the 21st: those ten blank days aren't owed.
+	it("reads a restored habit's closed pause as paused, not missed", () => {
 		const habits = [
 			daily(1, { pauses: [{ from: "2026-08-11", to: "2026-08-20" }] }),
 		];
@@ -177,7 +173,6 @@ describe("totals", () => {
 		);
 		expect(withToday.scheduled).toBe(10);
 		expect(summary.calendar[1][0]?.status).toMatchObject({ kind: "level" });
-		// 10 Aug (today, not done) and 11 Aug (future) are both still open.
 		expect(summary.calendar[2][0]?.status).toEqual({ kind: "future" });
 		expect(summary.calendar[2][1]?.status).toEqual({ kind: "future" });
 	});
@@ -218,8 +213,8 @@ describe("per-habit rows and delta", () => {
 	it("gives a delta in percentage points against the previous month", () => {
 		const habits = [daily(1)];
 		const entries = [
-			...doneBetween(1, july.start, new Date(2026, 6, 15)), // 15 of 31 July
-			...doneBetween(1, AUGUST.start, new Date(2026, 7, 31)), // 31 of 31 Aug
+			...doneBetween(1, july.start, new Date(2026, 6, 15)),
+			...doneBetween(1, AUGUST.start, new Date(2026, 7, 31)),
 		];
 		const { rows } = summarise(habits, entries, today);
 		expect(rows[0].deltaPoints).toBe(100 - 48);
@@ -251,7 +246,6 @@ describe("per-habit rows and delta", () => {
 	});
 
 	it("judges a per-week habit's week whole across the month edge", () => {
-		// Per-week ×2; week 28 Dec – 3 Jan has its two completions on 29 Dec and 2 Jan.
 		const january = monthWindowFor(new Date(2027, 0, 1));
 		const habits = [
 			daily(1, { frequency: { type: "per-week", timesPerWeek: 2 } }),
@@ -266,16 +260,14 @@ describe("per-habit rows and delta", () => {
 			new Date(2027, 1, 3, 9),
 			january,
 		);
-		// 1–3 Jan is the clipped first week: 2 Jan done, 1 Jan owed (needs a day
-		// to fit the second completion), 3 Jan not owed.
 		expect(rows[0].weeks[0]).toMatchObject({ completed: 1 });
 		expect(rows[0].weeks[0].scheduled).toBeLessThanOrEqual(2);
 	});
 });
 
 describe("Paris daylight-saving", () => {
-	// Assigning process.env.TZ here used to be a no-op (Jest's env copy), so
-	// this ran in the machine's zone; the environment hook really switches it.
+	// Jest copies process.env, so assigning process.env.TZ is a no-op; the environment hook really
+	// switches the zone.
 	inTimeZoneEachTest("Europe/Paris");
 
 	it("runs in Paris", () => {
@@ -283,8 +275,8 @@ describe("Paris daylight-saving", () => {
 	});
 
 	it.each([
-		["spring forward", 2026, 2], // 29 Mar 2026
-		["fall back", 2026, 9], // 25 Oct 2026
+		["spring forward", 2026, 2],
+		["fall back", 2026, 9],
 	])("counts every day once across %s", (_label, year, monthIndex) => {
 		const month = monthWindowFor(new Date(year, monthIndex, 10));
 		const days = new Date(year, monthIndex + 1, 0).getDate();
@@ -306,7 +298,7 @@ describe("Paris daylight-saving", () => {
 	});
 });
 
-describe("insights on the HAB-16 fixture (C3)", () => {
+describe("insights on the monthly-summary fixture", () => {
 	const habits = habitFixturesFor("monthly-summary");
 	const summary = summarise(
 		habits,
@@ -357,7 +349,6 @@ describe("insights on the HAB-16 fixture (C3)", () => {
 	});
 
 	it("says nothing stands out rather than leaving the slot empty", () => {
-		// The same scattered misses in July and August: no trend, no climb, no weekend gap.
 		const entries = doneBetween(1, new Date(2026, 6, 1), AUGUST.end).filter(
 			(entry) => Number(entry.date.slice(8)) % 9 !== 0,
 		);
@@ -370,7 +361,6 @@ describe("insights on the HAB-16 fixture (C3)", () => {
 	});
 
 	it("gives a pattern no action when no single habit explains it", () => {
-		// Four habits, each missing one different weekend slot.
 		const four = [daily(1), daily(2), daily(3), daily(4), daily(5)];
 		const missed = new Map([
 			[1, [1, 8]],
@@ -389,8 +379,7 @@ describe("insights on the HAB-16 fixture (C3)", () => {
 		expect(pattern).toMatchObject({ type: "pattern", cause: null });
 	});
 
-	describe("archived habits (HAB-17's rule, Monthly)", () => {
-		// "Gym" skips every weekend day of August; "Read" is done every day.
+	describe("archived habits on Monthly", () => {
 		const weekendSkipper = (overrides: Partial<Habit> = {}) =>
 			daily(1, { name: "Gym", ...overrides });
 		const august = (habit: Habit) =>
@@ -428,7 +417,6 @@ describe("insights on the HAB-16 fixture (C3)", () => {
 					(insight) => insight.type !== "pattern" || insight.cause === null,
 				),
 			).toBe(true);
-			// History is kept: the rows and the completion rate still include Gym.
 			expect(withGym.rows.map((row) => row.habit.id)).toContain(1);
 			const activeOnly = summarise([read], everyDay, today);
 			expect(withGym.rate).toBeLessThan(activeOnly.rate ?? 1);

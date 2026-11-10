@@ -2,7 +2,6 @@ import { StyleSheet, Text } from "react-native";
 import { letterSpacing, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
-/** Uppercase eyebrow heading a card's content ("NAME", "ICON & COLOR", "FREQUENCY"). */
 export function SectionLabel({ children }: { children: string }) {
 	const { colors } = useTheme();
 

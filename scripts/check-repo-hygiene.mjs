@@ -20,18 +20,14 @@ export const MAX_BYTES = 1024 * 1024;
 // Tracked files may exceed MAX_BYTES only here. Keep this short; each entry
 // is a path regex with the reason it is allowed.
 export const SIZE_ALLOWLIST = [
-	// Accepted visual-check baselines (npm run visual-check -- --update-baseline).
 	[/^docs\/visual-baseline\//, "visual-check baselines"],
-	// Exported V3 mockup bundles and their runtime.
+	// Exported mockup bundles and their runtime.
 	[/^docs\/mockups\/v3\/[^/]+\.dc\.html$/, "V3 mockup design exports"],
 	[/^docs\/mockups\/v3\/support\.js$/, "V3 mockup runtime"],
-	// App icons and splash art.
 	[/^assets\//, "app assets"],
-	// Lockfile.
 	[/^package-lock\.json$/, "npm lockfile"],
 ];
 
-// A tracked path matching any of these is a failure.
 export const FORBIDDEN_PATHS = [
 	[/(^|\/)node_modules\//, "node_modules"],
 	[/^(ios|android)\//, "generated native folder (ios/, android/)"],
@@ -80,7 +76,6 @@ export const SECRET_PATTERNS = [
 const BINARY_EXT =
 	/\.(png|jpe?g|webp|gif|icns|ico|ttf|otf|woff2?|mp4|mov|pdf|sqlite|db)$/i;
 
-/** @param {string[]} files tracked paths */
 export function checkPaths(files) {
 	const problems = [];
 	for (const f of files) {
@@ -94,7 +89,6 @@ export function checkPaths(files) {
 	return problems;
 }
 
-/** @param {{path: string, size: number}[]} entries */
 export function checkSizes(entries) {
 	const problems = [];
 	for (const { path: f, size } of entries) {
@@ -107,7 +101,6 @@ export function checkSizes(entries) {
 	return problems;
 }
 
-/** @param {string} file @param {string} text */
 export function checkContent(file, text) {
 	if (BINARY_EXT.test(file) || text.includes("\0")) return [];
 	const problems = [];

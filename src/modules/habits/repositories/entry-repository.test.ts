@@ -13,7 +13,7 @@ const {
 	setHabitQuantityOn,
 }: typeof EntryRepository = require("./entry-repository");
 
-const DAY_1 = new Date(2026, 8, 14); // Monday, local midnight
+const DAY_1 = new Date(2026, 8, 14);
 
 async function seedHabit(): Promise<number> {
 	const now = new Date();
@@ -76,7 +76,7 @@ describe("entry-repository", () => {
 		expect(rows).toEqual([]);
 	});
 
-	describe("un-tick then Undo (A5-06)", () => {
+	describe("un-tick then Undo", () => {
 		async function seedNote(habitId: number) {
 			await saveDayLog(DAY_1, {
 				values: [],
@@ -90,10 +90,10 @@ describe("entry-repository", () => {
 			await setHabitCompletedOn(habitId, DAY_1, true);
 			await seedNote(habitId);
 
-			await setHabitCompletedOn(habitId, DAY_1, false); // un-tick
+			await setHabitCompletedOn(habitId, DAY_1, false);
 			expect(await mockDb.select().from(entries)).toEqual([]);
 
-			await setHabitCompletedOn(habitId, DAY_1, true); // Undo
+			await setHabitCompletedOn(habitId, DAY_1, true);
 			expect(await mockDb.select().from(entries)).toEqual([
 				expect.objectContaining({ habitId, date: "2026-09-14", value: null }),
 			]);
@@ -108,7 +108,7 @@ describe("entry-repository", () => {
 			await seedNote(habitId);
 
 			await setHabitQuantityOn(habitId, DAY_1, 3); // dropped under target
-			await setHabitQuantityOn(habitId, DAY_1, 10); // Undo → the prior amount
+			await setHabitQuantityOn(habitId, DAY_1, 10);
 
 			expect(await mockDb.select().from(entries)).toEqual([
 				expect.objectContaining({ habitId, date: "2026-09-14", value: 10 }),
@@ -203,7 +203,7 @@ describe("entry-repository", () => {
 		});
 	});
 
-	describe("saveDayLog (HAB-10)", () => {
+	describe("saveDayLog", () => {
 		it("applies every value change for the day together", async () => {
 			const checkId = await seedHabit();
 			const quantityId = await seedHabit();

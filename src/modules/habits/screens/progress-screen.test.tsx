@@ -124,7 +124,7 @@ beforeEach(() => {
 
 afterEach(() => jest.useRealTimers());
 
-describe("ProgressScreen — the shell (HAB-35)", () => {
+describe("ProgressScreen — the shell", () => {
 	it("is blank until habits and logs have loaded", async () => {
 		mockShell = { ...mockShell, loaded: false };
 		await render(<ProgressScreen />);
@@ -178,7 +178,7 @@ describe("ProgressScreen — the shell (HAB-35)", () => {
 	});
 });
 
-describe("ProgressScreen — under the tab bar (HAB-27, P17)", () => {
+describe("ProgressScreen — under the tab bar", () => {
 	it("scrolls with the shared 112 pt bottom padding, so the last card clears the pill", async () => {
 		await render(<ProgressScreen />);
 		expect(TAB_BAR_BOTTOM_PADDING).toBe(112);
@@ -229,7 +229,7 @@ describe("ProgressScreen — Export (P1, P3)", () => {
 	});
 });
 
-describe("ProgressScreen — navigation inside Progress (HAB-34)", () => {
+describe("ProgressScreen — navigation inside Progress", () => {
 	it("opens Edit this day from a Week day header", async () => {
 		await render(<ProgressScreen />);
 		await fireEvent.press(

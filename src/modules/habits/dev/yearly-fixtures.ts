@@ -5,21 +5,19 @@ import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
 /**
- * Fixture data for Yearly Summary (HAB-17): the V1/V2 mockup hab-17-c4 (tag mockups-v1-v2) and
- * c5.png's six habits from 3 March to 15 September 2026 (the visual check
- * pins "now" to 16 Sep, so the title reads "3 March — 16 September"). C7's
- * under-three-months history reuses Monthly's "too early" fixture (same
- * "since 4 September", same clock).
- *
- * Every habit is daily; each is described by how many days it missed per
- * month, so the misses are what the insight thresholds are tuned against
- * (`yearly-insights.ts`, pinned by `yearly-summary.test.ts`):
- * - June is the best month (91% across everything), and Glass of water's
- *   41-day streak (21 May → 30 Jun) is the year's longest → best month.
- * - Read holds 85%+ from March to June, exactly four months → stuck.
- * - Mobility is under 50% in five of the six finished months → never stuck.
- * - July and August trail June by 17 points → a seasonal dip, which is the
- *   fourth card and so is cut by the three-card cap.
+ * Fixture data for Yearly Summary: the yearly mockup's six habits from 3 March to 15
+ * September 2026 (the visual check pins "now" to 16 Sep, so the title reads "3 March —
+ * 16 September"). The under-three-months history reuses Monthly's "too early" fixture
+ * (same "since 4 September", same clock).
+ * Every habit is daily; each is described by how many days it missed per month, so the
+ * misses are what the insight thresholds are tuned against (`yearly-insights.ts`, pinned by
+ * `yearly-summary.test.ts`):
+ * - June is the best month (91% across everything), and Glass of water's 41-day streak
+ *   (21 May to 30 Jun) is the year's longest: best month.
+ * - Read holds 85%+ from March to June, exactly four months: stuck.
+ * - Mobility is under 50% in five of the six finished months: never stuck.
+ * - July and August trail June by 17 points: a seasonal dip, which is the fourth card and
+ *   so is cut by the three-card cap.
  */
 
 const CREATED = new Date(2026, 2, 3, 8);

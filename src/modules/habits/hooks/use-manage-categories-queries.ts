@@ -5,17 +5,15 @@ import { useHabitsList } from "../repositories/habit-repository";
 import type { Category, CategoryUsage } from "../types";
 
 export type ManageCategoriesView = {
-	/** The ten built-ins, locked, in the stored order. */
 	builtIns: CategoryUsage[];
-	/** The user's own, in the stored order. */
 	customs: CategoryUsage[];
 	/** Every category in the stored order — for the duplicate check, the add sheet's rotation pick and the reorder list. */
 	categories: Category[];
 };
 
 /**
- * The Categories screen's reads (HAB-42): every category with its habits,
- * counted over every habit including archived ones — a delete moves those too.
+ * The Categories screen's reads: every category with its habits, counted over every habit
+ * including archived ones, since a delete moves those too.
  */
 export function useManageCategoriesQueries(): ManageCategoriesView {
 	const categories = useCategories();

@@ -23,14 +23,13 @@ type HabitsLibraryProps = {
 	/** The moved habit's category, in its new order: the ids, first to last. */
 	onReorder: (orderedIds: number[]) => void;
 	onOpen: (habit: Habit) => void;
-	/** VoiceOver's Archive action on a row. */
 	onArchive: (habit: Habit) => void;
 };
 
 /**
- * The Active part of the Habits tab (H1, H4): one card per category in the
- * stored order, each row a link to Detail. Reorder swaps the chevrons for grips
- * and keeps a lifted row inside its own category (a cross-category move is Edit).
+ * The Active part of the Habits tab: one card per category in the stored order, each row a link to
+ * Detail. Reorder swaps the chevrons for grips and keeps a lifted row inside its own category (a
+ * cross-category move is Edit).
  */
 export function HabitsLibrary({
 	groups,

@@ -4,24 +4,19 @@ import { minTouchTarget, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type LibrarySectionHeaderProps = {
-	/** "Active · 7", "Archived · 2" — shown in caps. */
 	label: string;
-	/** The word at the far edge: "Reorder", "Show", "Hide". Omit for a plain header. */
 	actionLabel?: string;
-	/** What VoiceOver says for the action when the visible word alone is not enough. */
 	actionAccessibilityLabel?: string;
 	onAction?: () => void;
-	/** The disclosure's state, for VoiceOver ("collapsed"/"expanded"). */
 	expanded?: boolean;
-	/** What the action does, read after its label ("Shows the archived habits."). */
 	actionHint?: string;
 };
 
 /**
- * One section's header on the Habits tab (H1, H5): the caps label and, at the
- * far edge, a 44 pt text action — Reorder on Active, Show / Hide on Archived. A
- * plain header is a heading; with an action the label and action are separate
- * stops, the action carrying the section's name so it never reads "Show" alone.
+ * One section's header on the Habits tab: the caps label and, at the far edge, a 44 pt text action
+ * (Reorder on Active, Show / Hide on Archived). A plain header is a heading; with an action the
+ * label and action are separate stops, the action carrying the section's name so it never reads
+ * "Show" alone.
  */
 export function LibrarySectionHeader({
 	label,

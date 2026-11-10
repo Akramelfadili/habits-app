@@ -95,7 +95,7 @@ describe("useReminderActions", () => {
 		expect(mockRemoveReminder).toHaveBeenCalledWith(habit, 2);
 	});
 
-	it("no longer exposes the evening review (HAB-21)", async () => {
+	it("does not expose the evening review", async () => {
 		const { result } = await renderHook(() => useReminderActions());
 		expect(result.current).not.toHaveProperty("setEveningReview");
 	});

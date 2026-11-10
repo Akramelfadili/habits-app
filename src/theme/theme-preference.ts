@@ -12,7 +12,6 @@ import {
 	useThemePreferenceStore,
 } from "./theme-preference-store";
 
-/** Reads the stored choice once at startup and applies it before the first frame is drawn. */
 export async function loadThemePreference(): Promise<void> {
 	let preference = DEFAULT_THEME_PREFERENCE;
 	try {

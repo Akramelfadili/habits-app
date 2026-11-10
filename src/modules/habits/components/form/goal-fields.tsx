@@ -18,7 +18,6 @@ type GoalFieldsProps = {
 	targetType: HabitTargetType;
 	targetAmount: number;
 	targetUnit: string;
-	/** The unit needs a value and has none yet (shown once the person has left it). */
 	unitError?: string;
 	onTargetType: (value: HabitTargetType) => void;
 	onTargetAmount: (value: number) => void;
@@ -29,9 +28,9 @@ type GoalFieldsProps = {
 };
 
 /**
- * The Goal field (F1, F3, F5): Check, or Quantity with a daily target, a unit
- * and the live example of how Today will read. A Break habit is yes or no, so
- * Quantity is switched off and the reason is written under the control.
+ * The Goal field: Check, or Quantity with a daily target, a unit and the live example of how Today
+ * will read. A Break habit is yes or no, so Quantity is switched off and the reason is written under
+ * the control.
  */
 export function GoalFields({
 	direction,

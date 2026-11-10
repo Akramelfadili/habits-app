@@ -140,7 +140,7 @@ describe("ToastHost", () => {
 		expect(screen.getByText("Second")).toBeTruthy();
 	});
 
-	describe("placement above the tab bar (T-21)", () => {
+	describe("placement above the tab bar", () => {
 		async function hostBottom(props: Record<string, unknown> = {}) {
 			await render(<ToastHost {...props} />);
 			await act(() => showToast({ message: "Archived 'Read'" }));
@@ -198,7 +198,7 @@ describe("ToastHost", () => {
 		},
 	);
 
-	describe("screen reader (A6-02)", () => {
+	describe("screen reader", () => {
 		let announce: jest.SpyInstance;
 
 		beforeEach(() => {
@@ -247,7 +247,7 @@ describe("ToastHost", () => {
 		});
 	});
 
-	describe("hold times (HAB-48)", () => {
+	describe("hold times", () => {
 		it("is 5 s for an Undo, 3 s for info and success, 6 s for a warning, never for an error", () => {
 			expect(toastHoldMs({ message: "m", actionLabel: "Undo" })).toBe(5000);
 			expect(toastHoldMs({ message: "m" })).toBe(3000);

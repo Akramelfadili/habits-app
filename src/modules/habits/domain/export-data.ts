@@ -22,10 +22,9 @@ import { calculateLongestStreak, currentStreakAsOf } from "./habit-history";
 import { isEntryComplete } from "./streaks";
 
 /**
- * What an export (HAB-15) is built from, and the format-independent shape it's
- * turned into before either serializer sees it. Pure — no I/O — so the confirm
- * sheet's counts and the written file can never disagree: both come from
- * `buildExportModel`.
+ * What an export is built from, and the format-independent shape it's turned into before either
+ * serializer sees it. Pure (no I/O), so the confirm sheet's counts and the written file can never
+ * disagree: both come from `buildExportModel`.
  */
 
 export type ExportSource = {
@@ -33,7 +32,7 @@ export type ExportSource = {
 	entries: readonly Entry[];
 	notes: readonly EntryNote[];
 	frozenDays: readonly FrozenDay[];
-	/** Every reminder row — the file carries each habit's own (HAB-44). */
+	/** Every reminder row: the file carries each habit's own. */
 	reminders: readonly Reminder[];
 	/** Every category in the stored order, so the file keeps the group order too. */
 	categories: readonly Category[];
@@ -43,11 +42,9 @@ export type ExportSource = {
 
 type ExportLog = {
 	date: string;
-	/** The logged amount for a quantity habit; null for a simple check. */
 	value: number | null;
 	/** Whether the day counted — a quantity log below target is logged but not complete. */
 	completed: boolean;
-	/** When the log was first written. */
 	createdAt: Date;
 };
 
@@ -65,7 +62,6 @@ type ExportHabitRecord = {
 	currentStreak: number;
 	longestStreak: number;
 	logs: ExportLog[];
-	/** Empty when the export leaves notes out. */
 	notes: ExportNote[];
 	frozenDays: ExportFrozenDay[];
 	reminders: Reminder[];
@@ -77,21 +73,18 @@ export type ExportSettings = {
 	eveningReview: boolean | null;
 	eveningReviewTime: string | null;
 	seenFirstRun: boolean | null;
-	/** Whether reminders hide the habit name (E-01); null = never set, which the app treats as hidden. */
+	/** Whether reminders hide the habit name; null = never set, which the app treats as hidden. */
 	hideHabitNames: boolean | null;
 	/** The Haptics switch; null = never set, which the app treats as on. */
 	haptics: boolean | null;
 };
 
 export type ExportModel = {
-	/** The day the export was made, "yyyy-MM-dd". */
 	exportedOn: string;
-	/** The moment the export was made. */
 	exportedAt: Date;
 	/** False when the person left notes out: no note text is in the model, or in either file. */
 	notesIncluded: boolean;
 	settings: ExportSettings;
-	/** Every category, in the stored order (built-in or yours), whether or not a habit uses it. */
 	categories: Category[];
 	habits: ExportHabitRecord[];
 	logCount: number;
@@ -118,17 +111,14 @@ function readSettings(source: ExportSource["settings"]): ExportSettings {
 export type ExportSummary = {
 	activeHabits: number;
 	archivedHabits: number;
-	/** Completed/logged days — the number the Export button quotes. */
 	logs: number;
 	notes: number;
-	/** First and last day anything was recorded, "yyyy-MM-dd"; null when nothing has been. */
 	range: { from: string; to: string } | null;
 };
 
 const byDate = (a: { date: string }, b: { date: string }) =>
 	a.date.localeCompare(b.date);
 
-/** Archived habits are left out unless asked for; everything belonging to a left-out habit goes with it. */
 export function buildExportModel(
 	source: ExportSource,
 	options: ExportOptions,
@@ -194,7 +184,6 @@ export function buildExportModel(
 	};
 }
 
-/** The confirm sheet's counts and range for the current options. */
 export function summarizeExport(
 	source: ExportSource,
 	options: ExportOptions,

@@ -24,8 +24,8 @@ type ReorderableListProps<T> = {
 	items: readonly T[];
 	keyOf: (item: T) => string;
 	/**
-	 * Items only move within their own run of equal groups (e.g. a habit
-	 * stays inside its category, HAB-13). Omit for one free-for-all group.
+	 * Items only move within their own run of equal groups (e.g. a habit stays inside its category).
+	 * Omit for one free-for-all group.
 	 */
 	groupOf?: (item: T) => string;
 	/**
@@ -34,20 +34,16 @@ type ReorderableListProps<T> = {
 	 */
 	renderItem: (item: T, handle: ReactNode, isDragging: boolean) => ReactNode;
 	/**
-	 * Wraps each run of equal groups (e.g. one card per category, HAB-19).
-	 * `isDragging` is true while a row of that run is held. Omit to render the
-	 * rows unwrapped.
+	 * Wraps each run of equal groups (e.g. one card per category). `isDragging` is true while a row of
+	 * that run is held. Omit to render the rows unwrapped.
 	 */
 	renderGroup?: (
 		groupKey: string,
 		rows: ReactNode,
 		state: { isDragging: boolean },
 	) => ReactNode;
-	/** Accessibility label for a row's grip, e.g. "Reorder Meditate". */
 	handleLabel: (item: T) => string;
-	/** The grip's VoiceOver actions ("Move up", "Move down"): the caller's own words. */
 	moveLabels: { up: string; down: string };
-	/** The visible Move up / Move down buttons' labels, naming the row ("Move Meditate up"). */
 	moveButtonLabel: (item: T, direction: "up" | "down") => string;
 	/** The moved item's group, in its new order — only that group changed. */
 	onReorder: (groupKeys: string[]) => void;
@@ -199,7 +195,6 @@ export function ReorderableList<T>({
 
 	if (!renderGroup) return <View>{rows}</View>;
 
-	// Runs of equal groups, each wrapped by the caller (a card per category).
 	const runs: { key: string; start: number; end: number }[] = [];
 	for (let i = 0; i < shown.length; i += 1) {
 		const last = runs[runs.length - 1];
@@ -239,7 +234,6 @@ type ReorderableRowProps = {
 	children: ReactNode;
 };
 
-/** One row's position: follows the finger while dragged, or steps aside for the dragged row. */
 function ReorderableRow({
 	index,
 	activeIndex,
@@ -279,7 +273,6 @@ function ReorderableRow({
 }
 
 const styles = StyleSheet.create({
-	/** Up, down, then the drag grip. */
 	controls: {
 		flexDirection: "row",
 		alignItems: "center",

@@ -16,16 +16,15 @@ import { InsightCard, type InsightCardProps } from "./insight-card";
 type InsightPagerProps = {
 	/** Up to three, ranked: slipping → improved → nothing to fix. */
 	insights: Omit<InsightCardProps, "position">[];
-	/** "Insight 1 of 3" — read before the card by VoiceOver. */
 	positionLabel: (index: number, count: number) => string;
 };
 
 const DOT = space[150];
 
 /**
- * V3-12's pager: one insight on screen, the rest a swipe away, dots under it.
- * Cards are 20 pt-radius surfaces side by side; a single insight shows no dots.
- * For VoiceOver each card reads "Insight 1 of 3" and is adjustable.
+ * One insight on screen, the rest a swipe away, dots under it. Cards are 20 pt-radius surfaces side
+ * by side; a single insight shows no dots. For VoiceOver each card reads "Insight 1 of 3" and is
+ * adjustable.
  */
 export function InsightPager({ insights, positionLabel }: InsightPagerProps) {
 	const { colors } = useTheme();

@@ -43,7 +43,6 @@ test("pairs a baseline with its screenshot and lists what is missing", async () 
 		/data-name="today-loading" data-status="not reproducible"/,
 	);
 
-	// Both thumbnails are real JPEGs, shrunk to the requested width.
 	for (const kind of ["web", "ios"]) {
 		const meta = await sharp(
 			path.join(out, "img", kind, "first-run.jpg"),

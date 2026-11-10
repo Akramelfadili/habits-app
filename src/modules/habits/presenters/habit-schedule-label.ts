@@ -11,7 +11,6 @@ const DAY_NAMES: Record<IsoWeekday, string> = {
 	7: "Sun",
 };
 
-/** "Mon–Fri", "Tue, Thu", "Mon, Wed, Fri": a run of three or more days reads as a range. */
 export function weekdaysLabel(weekdays: readonly IsoWeekday[]): string {
 	const days = [...weekdays].sort((a, b) => a - b);
 	const isRun =
@@ -22,7 +21,6 @@ export function weekdaysLabel(weekdays: readonly IsoWeekday[]): string {
 		: days.map((day) => DAY_NAMES[day]).join(", ");
 }
 
-/** "Mon–Fri", "Tue, Thu", "Every day" — a picker row's schedule, as in the D1 mockup. */
 export function scheduleLabel(habit: Habit): string {
 	const { frequency } = habit;
 	if (frequency.type === "daily") return "Every day";

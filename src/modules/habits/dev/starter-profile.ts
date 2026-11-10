@@ -18,7 +18,6 @@ import type { IsoWeekday } from "../types";
  * optional reminders. Nothing here is personal; the values are.
  */
 
-/** `app_settings` key holding the version of the profile last applied. */
 export const STARTER_PROFILE_SETTING_KEY = "dev.starterProfile";
 
 const BUILT_IN_NAMES = BUILT_IN_CATEGORIES.map((category) => category.name) as [

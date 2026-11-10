@@ -60,7 +60,6 @@ async function renderPill(
 	const result = await render(
 		<TabBarPill items={items("today")} bottomInset={34} {...props} />,
 	);
-	// Let the two accessibility hooks settle before anything is asserted.
 	await act(async () => {});
 	return result;
 }
@@ -75,7 +74,7 @@ function styleOf(testID: string) {
 	return StyleSheet.flatten(screen.getByTestId(testID).props.style);
 }
 
-describe("TabBarPill (V3-01 B)", () => {
+describe("TabBarPill", () => {
 	beforeEach(() => {
 		onToday.mockClear();
 		onProgress.mockClear();
@@ -99,9 +98,8 @@ describe("TabBarPill (V3-01 B)", () => {
 			height: PILL_HEIGHT,
 			left: PILL_SIDE_INSET,
 			right: PILL_SIDE_INSET,
-			// A flat 22 from the screen edge: the pill floats over the home
-			// indicator rather than above the safe-area inset (V3-01 "9 above
-			// home indicator").
+			// A flat 22 from the screen edge: the pill floats over the home indicator rather than above the
+			// safe-area inset.
 			bottom: PILL_BOTTOM_INSET,
 		});
 		expect(PILL_SIDE_INSET).toBe(16);
@@ -139,7 +137,7 @@ describe("TabBarPill (V3-01 B)", () => {
 		});
 	});
 
-	// T-23: faint measured 3.9–4.1:1 over the translucent pill; sub passes.
+	// Faint measured 3.9–4.1:1 over the translucent pill; sub passes.
 	it("reads inactive labels in sub ink at weight 500", async () => {
 		await renderPill();
 
@@ -180,17 +178,15 @@ describe("TabBarPill (V3-01 B)", () => {
 		expect(onProgress).toHaveBeenCalledTimes(1);
 	});
 
-	// T-25: 56 pill + 22 float + 22 clearance + 12 safe zone. It only
-	// decomposes because the float is measured from the screen edge, so the
-	// clearance under the pill is a real 34 on every device.
+	// 56 pill + 22 float + 22 clearance + 12 safe zone. It only decomposes because the float is
+	// measured from the screen edge, so the clearance under the pill is a real 34 on every device.
 	it("asks every scrolling screen for 112 pt of bottom padding", () => {
 		expect(TAB_BAR_BOTTOM_PADDING).toBe(112);
 		expect(TAB_BAR_BOTTOM_PADDING - (PILL_BOTTOM_INSET + PILL_HEIGHT)).toBe(34);
 	});
 
-	// T-21: 12 pt over the pill's top edge, 16 pt over bar A's.
 	it("puts a toast 12 pt above the pill and 16 pt above bar A", () => {
-		// T14 gives the pill's toast an absolute bottom of 90, inset or not.
+		// The pill's toast has an absolute bottom of 90, inset or not.
 		expect(tabBarToastOffset(0, false)).toBe(90);
 		expect(tabBarToastOffset(34, false)).toBe(90);
 		expect(tabBarToastOffset(34, true)).toBe(34 + BAR_A_HEIGHT + 16);
@@ -257,7 +253,6 @@ describe("TabBarPill (V3-01 B)", () => {
 				paddingTop: 4,
 				paddingBottom: 4 + 34,
 			});
-			// 4 + a 48 pt row + 4 = BAR_A_HEIGHT, then the home indicator.
 			expect(
 				StyleSheet.flatten(screen.getByTestId("tab-today").props.style)
 					.minHeight,
@@ -265,7 +260,7 @@ describe("TabBarPill (V3-01 B)", () => {
 			expect(4 + 48 + 4).toBe(BAR_A_HEIGHT);
 		});
 
-		// Bar A is an opaque card: faint passes there, so V1's inactive ink stays.
+		// Bar A is an opaque card: faint passes there, so its inactive ink stays.
 		it("reads inactive labels in faint, and keeps the labels unscaled", async () => {
 			setFontScale(2.35);
 			await renderPill();

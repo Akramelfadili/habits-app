@@ -9,7 +9,6 @@ import type { Category } from "../../types";
 import { categorySymbol } from "../category-symbol";
 
 type CategoryChipsProps = {
-	/** In the stored group order (HAB-42). */
 	categories: Category[];
 	/** Null when none is picked: the habit then goes to Other. */
 	selectedId: number | null;
@@ -19,10 +18,9 @@ type CategoryChipsProps = {
 };
 
 /**
- * The form's category field (F1, V3-14): every category as a chip that wraps,
- * the picked one filled with the accent and checked, then "New category".
- * Optional — the note under it says where a habit without one goes. The
- * category supplies the habit's icon and colour; there is no picker for them.
+ * The form's category field: every category as a chip that wraps, the picked one filled with the
+ * accent and checked, then "New category". Optional; the note under it says where a habit without
+ * one goes. The category supplies the habit's icon and colour; there is no picker for them.
  */
 export function CategoryChips({
 	categories,

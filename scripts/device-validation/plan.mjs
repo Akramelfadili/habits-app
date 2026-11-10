@@ -55,7 +55,6 @@ function escapeRegex(text) {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** A Playwright text matcher (string, exact or not, or RegExp) as the regex Maestro takes. */
 function textMatcher(value, exact) {
 	if (value instanceof RegExp) {
 		return value.flags.includes("i") ? `(?i)${value.source}` : value.source;
@@ -63,7 +62,6 @@ function textMatcher(value, exact) {
 	return exact ? escapeRegex(value) : `(?i).*${escapeRegex(value)}.*`;
 }
 
-/** Playwright's `page`, as a recorder of Maestro commands. */
 export function recorder() {
 	const commands = [];
 	const notes = [];
@@ -203,7 +201,6 @@ export function recorder() {
 	return { page, commands, notes };
 }
 
-/** `shard` is where a state runs: its appearance, and `ax-` for Dynamic Type. */
 function shardOf(screen) {
 	const ax = /[?&]textSize=ax\b/.test(screen.route);
 	return `${ax ? "ax-" : ""}${screen.colorScheme ?? "light"}`;
@@ -276,7 +273,6 @@ export async function buildPlan() {
 	return plan;
 }
 
-/** The numbers every run reports: how many states, how each is reproduced, and which cannot be. */
 export function coverage(plan) {
 	const by = (status) => plan.filter((item) => item.status === status);
 	return {

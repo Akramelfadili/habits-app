@@ -35,7 +35,7 @@ beforeEach(() => {
 	useThemePreferenceStore.setState({ preference: "system", isLoaded: true });
 });
 
-describe("useSettingsQueries (HAB-15)", () => {
+describe("useSettingsQueries", () => {
 	it("reads the Evening review from the setting Reminders reads", async () => {
 		mockSettings.set("habits.eveningReview", "true");
 		const { result } = await renderHook(() => useSettingsQueries());

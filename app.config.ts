@@ -56,7 +56,6 @@ export function resolveVariant(env: Env): AppVariant {
 	);
 }
 
-/** Throws when a production EAS build could carry a dev-only switch. */
 function assertProductionBuildIsClean(env: Env, variant: AppVariant): void {
 	if (env.EAS_BUILD_PROFILE !== "production") return;
 	if (variant !== "production") {
@@ -100,7 +99,6 @@ export function buildConfig(env: Env): ExpoConfig {
 		ios: {
 			icon: "./assets/expo.icon",
 			bundleIdentifier,
-			// Phone-only design: no iPad screenshots or layouts to maintain.
 			supportsTablet: false,
 			infoPlist: {
 				// No custom cryptography, so TestFlight skips the export-compliance prompt.
@@ -136,7 +134,6 @@ export function buildConfig(env: Env): ExpoConfig {
 					backgroundColor: "#208AEF",
 					image: "./assets/images/splash-icon.png",
 					imageWidth: 76,
-					// Same artwork on the theme's dark background (no new artwork yet).
 					dark: {
 						backgroundColor: DARK_SPLASH_BACKGROUND,
 						image: "./assets/images/splash-icon.png",

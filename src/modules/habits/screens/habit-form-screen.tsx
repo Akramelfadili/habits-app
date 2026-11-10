@@ -83,25 +83,23 @@ import type { FrequencyType, Habit, IsoWeekday, ReminderDraft } from "../types";
 type HabitFormScreenProps = {
 	/** Present in edit mode; absent when creating a new habit. */
 	habitId?: number;
-	/** Opens scrolled to this section — "frequency", from an insight's "Change frequency" action (HAB-16). */
+	/** Opens scrolled to this section: "frequency", from an insight's "Change frequency" action. */
 	focus?: "frequency";
-	/** Opens New habit with this name already in the field — "Add “Yoga” as a habit" from a search with no results (H3). */
+	/** Opens New habit with this name already in the field: "Add Yoga as a habit" from a search with no results. */
 	name?: string;
-	/** Opens New habit filled in from a suggestion, with the banner saying so (BS2, HAB-46). */
+	/** Opens New habit filled in from a suggestion, with the banner saying so. */
 	prefill?: HabitFormPrefill;
 	/** The same suggestion as the `prefill` route param (a JSON string); `prefill` wins when both are given. */
 	prefillParam?: string;
 	/**
-	 * Part of First Run (HAB-46): a saved habit marks First Run as seen, offers
-	 * FR3's reminder question (unless reminders were queued here) and hands over
-	 * to Today, with no way back to the welcome.
+	 * Part of First Run: a saved habit marks First Run as seen, offers the reminder question
+	 * (unless reminders were queued here) and hands over to Today, with no way back to the welcome.
 	 */
 	firstRun?: boolean;
-	/** FR2: the slim first-habit form — name, quick picks, type and frequency; nothing else. */
+	/** The slim first-habit form: name, quick picks, type and frequency; nothing else. */
 	slim?: boolean;
 };
 
-/** The reminder sheet is open on a new time, or on one already queued. */
 type SheetState =
 	| { kind: "add"; draft: ReminderDraft }
 	| { kind: "edit"; key: number; draft: ReminderDraft }
@@ -113,11 +111,10 @@ const byTime = (a: ReminderDraft, b: ReminderDraft) =>
 	a.hour - b.hour || a.minute - b.minute;
 
 /**
- * Add / Edit habit (HAB-41, F1–F10): one modal form in the order people
- * decide things — Type, Name, Category, Goal, Frequency — with Save pinned at
- * the bottom and, while it is off, the reason under it. Only the name is
- * required; no category means Other. The category supplies the icon and
- * colour. Errors sit next to their fields; closing with edits asks first.
+ * Add / Edit habit: one modal form in the order people decide things (Type, Name,
+ * Category, Goal, Frequency) with Save pinned at the bottom and, while it is off, the reason
+ * under it. Only the name is required; no category means Other. The category supplies the
+ * icon and colour. Errors sit next to their fields; closing with edits asks first.
  */
 export function HabitFormScreen({
 	habitId,
@@ -151,7 +148,7 @@ export function HabitFormScreen({
 
 	const mode = habitId === undefined ? "create" : "edit";
 	const habit = habitId === undefined ? undefined : getHabitById(habitId);
-	// A V1 name over the 32 cap stays valid while unchanged (HAB-22).
+	// A name over the 32 cap, saved under the older 40 cap, stays valid while unchanged.
 	const originalName = habit?.name;
 	const schema = useMemo(
 		() => makeHabitFormSchema(originalName),
@@ -168,7 +165,7 @@ export function HabitFormScreen({
 	const [queued, setQueued] = useState<QueuedReminder[]>([]);
 	const nextKey = useRef(1);
 	const [sheet, setSheet] = useState<SheetState>(null);
-	// F1c: a hairline above Save once content scrolls under the pinned header.
+	// A hairline above Save once content scrolls under the pinned header.
 	const [isScrolled, setIsScrolled] = useState(false);
 	// The Save bar is in the column under the scroller, so the scroller ends where
 	// it starts. When errors (or a reason) make the bar taller the scroller gets
@@ -237,7 +234,7 @@ export function HabitFormScreen({
 	});
 	const isSubmitting = isCreating || isUpdating;
 	const isSaveDisabled = issues.reason !== undefined || isSubmitting;
-	// A failed save moves the screen reader onto the error above Save (08.4).
+	// A failed save moves the screen reader onto the error above Save.
 	const errorRef = useRef<HostInstance>(null);
 	useInitialFocus(errorRef, submitError !== null, 100);
 	const nameError = !issues.fields.includes("name")
@@ -259,7 +256,6 @@ export function HabitFormScreen({
 			? [...weekdaysValue].sort((a, b) => a - b)
 			: ALL_DAYS;
 
-	// Closing with edits asks first (F9).
 	const guard = useLeaveGuard(formState.isDirty || queued.length > 0);
 
 	// A successful save or archive leaves without asking: stop guarding, then go.
@@ -274,7 +270,6 @@ export function HabitFormScreen({
 
 	async function onSubmit(values: HabitFormValues) {
 		const other = findBuiltInCategory(categories, OTHER_CATEGORY_NAME);
-		// No category picked means Other (HAB-41).
 		const categoryId = values.categoryId ?? other?.id;
 		const frequency = toFrequency(values);
 		// Stale Amount/Unit input never leaks in if Quantity was picked, then
@@ -343,9 +338,9 @@ export function HabitFormScreen({
 		close();
 	}
 
-	// Archiving is reversible, so it's one tap with an Undo toast — the same as
-	// Detail's (HAB-13/20). This modal has no ToastHost, so a failure is shown
-	// inline; the toast is raised for the screen underneath, as the form closes.
+	// Archiving is reversible, so it's one tap with an Undo toast, the same as Detail's. This
+	// modal has no ToastHost, so a failure is shown inline; the toast is raised for the screen
+	// underneath, as the form closes.
 	async function handleArchive() {
 		if (habitId === undefined || !habit) return;
 		const { name: archivedName } = habit;
@@ -435,9 +430,9 @@ export function HabitFormScreen({
 	);
 
 	return (
-		// The name field autofocuses on create (HAB-22), so the keyboard is up
-		// from the first frame: lift the pinned Save and its reason above it.
-		// The offset is the stack header — this view's frame starts below it.
+		// The name field autofocuses on create, so the keyboard is up from the first frame: lift
+		// the pinned Save and its reason above it. The offset is the stack header; this view's
+		// frame starts below it.
 		<KeyboardAvoidingView
 			behavior={Platform.OS === "ios" ? "padding" : undefined}
 			keyboardVerticalOffset={headerHeight}
@@ -612,7 +607,7 @@ export function HabitFormScreen({
 					label={mode === "create" ? formCopy.save.new : formCopy.save.edit}
 					onPress={handleSubmit(onSubmit)}
 					disabled={isSaveDisabled}
-					// 08.3: a dimmed Save reads its reason as the hint ("Add a name to save").
+					// A dimmed Save reads its reason as the hint ("Add a name to save").
 					accessibilityHint={isSaveDisabled ? issues.reason : undefined}
 					loading={isSubmitting}
 				/>
@@ -629,7 +624,7 @@ export function HabitFormScreen({
 				onDismiss={() => setIsAddCategoryOpen(false)}
 				onCreate={createCategory}
 				onCreated={(category) => {
-					// F2d: back to the chips with the new one already selected.
+					// Back to the chips with the new one already selected.
 					setValue("categoryId", category.id, { shouldDirty: true });
 					setIsAddCategoryOpen(false);
 				}}

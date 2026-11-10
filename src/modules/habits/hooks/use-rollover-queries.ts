@@ -6,15 +6,14 @@ import { type DaySummary, daySummary } from "../domain/day-summary";
 import { useEntriesInRange } from "../repositories/entry-repository";
 import { useActiveHabits } from "../repositories/habit-repository";
 
-/** The day that just closed and how it ended (SY5). */
+/** The day that just closed and how it ended. */
 export type RolloverNotice = { day: Date; summary: DaySummary };
 
 /**
- * SY5: when `today` moves on while Today stays mounted — midnight passing with
- * the app open, or a return to the foreground on a later day — the day that
- * closed and its tally, until the person dismisses it. The first `today` is the
- * starting point, never a rollover. `dismiss` only hides the notice (as
- * `showToday` only moves the selection), it writes nothing.
+ * When `today` moves on while Today stays mounted (midnight passing with the app open, or a
+ * return to the foreground on a later day): the day that closed and its tally, until the person
+ * dismisses it. The first `today` is the starting point, never a rollover. `dismiss` only hides
+ * the notice (as `showToday` only moves the selection), it writes nothing.
  */
 export function useRolloverQueries(today: Date): {
 	notice: RolloverNotice | null;

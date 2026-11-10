@@ -9,15 +9,14 @@ type StepperProps = {
 	max: number;
 	/** What the number counts, for screen readers ("times per week"). */
 	accessibilityLabel: string;
-	/** "large" is design-system.md's "large stepper" (Quantity Log, HAB-07). */
+	/** "large" is the large stepper (Quantity Log). */
 	size?: "default" | "large";
-	/** The unit or the target under the value ("glasses a day", "of 8 glasses", V3-18). */
+	/** The unit or the target under the value ("glasses a day", "of 8 glasses"). */
 	caption?: string;
-	/** "field" is the full-width card a form draws (F3, F4): the buttons at the ends, the value between. */
+	/** "field" is the full-width card a form draws: the buttons at the ends, the value between. */
 	layout?: "inline" | "field";
 };
 
-/** −/+ control around a center numeral; each side disables at its bound. */
 export function Stepper({
 	value,
 	onChange,
@@ -112,7 +111,7 @@ const styles = StyleSheet.create({
 	rowLarge: {
 		gap: space[500],
 	},
-	// T-11: the inline stepper's buttons are 44 pt like every other target.
+	// The inline stepper's buttons are 44 pt like every other target.
 	button: {
 		width: minTouchTarget,
 		height: minTouchTarget,

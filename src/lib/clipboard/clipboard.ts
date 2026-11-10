@@ -17,10 +17,6 @@ function loadClipboard(): ClipboardModule | null {
 	}
 }
 
-/**
- * Puts `text` on the clipboard. Without the native module, hands it to the
- * share sheet as `fallbackFileName` and reports `shared`.
- */
 export async function copyText(
 	text: string,
 	fallbackFileName: string,

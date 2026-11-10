@@ -6,7 +6,6 @@ import { notifyTableChanged } from "@/lib/db/test-live-query";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as DayDetailHook from "./use-day-detail-queries";
 
-/** The Month day card through the real hooks and a real, migrated in-memory database. */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -15,7 +14,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 
 const { createHabit } = require("../repositories/habit-repository");
 
-/** A habit created at `createdAt`, so entries before today still count. */
 async function createHabitAt(
 	input: Parameters<typeof createHabit>[0],
 	createdAt: Date,
@@ -33,7 +31,6 @@ const {
 	useDayDetailQueries,
 }: typeof DayDetailHook = require("./use-day-detail-queries");
 
-// Thursday 17 Sep 2026.
 const NOW = new Date(2026, 8, 17, 12);
 const TUESDAY = new Date(2026, 8, 15);
 

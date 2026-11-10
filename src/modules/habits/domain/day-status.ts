@@ -5,27 +5,26 @@ import { offScheduleChecker } from "./off-schedule";
 import { isEntryComplete } from "./streaks";
 
 /**
- * What one habit's one day *is* — the single answer behind Progress's rates,
- * week matrix, month calendar, year map and day detail (V3-3a), and behind
- * Monthly, Yearly and Habit Detail's 90-day rate. A cell is exactly one status:
+ * What one habit's one day *is*: the single answer behind Progress's rates, week matrix, month
+ * calendar, year map and day detail, and behind Monthly, Yearly and Habit Detail's 90-day rate.
+ * A cell is exactly one status:
  *
- * - `done` — completed (a Break habit's resisted day is a completed entry, D8).
- * - `partial` — a quantity habit logged below its target (`level` 1 or 2).
- * - `missed` — due, past, nothing logged.
- * - `frozen` — covered by a freeze (D13): excused, outside every rate.
- * - `bonus` — logged on a day that wasn't owed (D11): shown, never counted.
- * - `not-due` — a rest day, a × per week habit's day it doesn't need, or a
- *   paused (archived) day: never missed.
- * - `before-start` — before the habit existed.
- * - `nothing-logged` — would be `missed`, but nothing has ever been logged
- *   (the "fresh week isn't a failed week" state, P4).
- * - `future` — after today.
- * - `today` — today, due, not logged yet: still open.
+ * - `done`: completed (a Break habit's resisted day is a completed entry).
+ * - `partial`: a quantity habit logged below its target (`level` 1 or 2).
+ * - `missed`: due, past, nothing logged.
+ * - `frozen`: covered by a freeze: excused, outside every rate.
+ * - `bonus`: logged on a day that wasn't owed: shown, never counted.
+ * - `not-due`: a rest day, a × per week habit's day it doesn't need, or a paused (archived) day:
+ *   never missed.
+ * - `before-start`: before the habit existed.
+ * - `nothing-logged`: would be `missed`, but nothing has ever been logged (a fresh week isn't a
+ *   failed week).
+ * - `future`: after today.
+ * - `today`: today, due, not logged yet: still open.
  *
- * Whether a day was owed always comes from the habit's FrequencyStrategy
- * (`wasScheduledOn` looking back, `isDueOn` for today), so × per week habits
- * are due on open days only — exactly the answers Detail's heatmap and the
- * streaks use.
+ * Whether a day was owed always comes from the habit's FrequencyStrategy (`wasScheduledOn` looking
+ * back, `isDueOn` for today), so × per week habits are due on open days only: exactly the answers
+ * Detail's heatmap and the streaks use.
  */
 export type CellStatus =
 	| "done"
@@ -43,17 +42,13 @@ export type HabitDayCell = {
 	status: CellStatus;
 	/** How much of the target: 3 done, 1–2 partial (under / over half), 0 otherwise. */
 	level: 0 | 1 | 2 | 3;
-	/** The cell is today — it is ringed whatever its status. */
 	isToday: boolean;
-	/** The logged amount, when there is an entry (bonus and partial included). */
 	value?: number;
 };
 
 type DayStatusInput = {
 	habit: Habit;
-	/** This habit's entries only. */
 	entries: readonly Entry[];
-	/** This habit's frozen days, "yyyy-MM-dd". */
 	frozenDates: ReadonlySet<string>;
 	today: Date;
 	/** Nothing has ever been logged: a due past day reads `nothing-logged`, not `missed`. */

@@ -18,8 +18,8 @@ import { useHabitsList } from "../repositories/habit-repository";
 import { useAllReminders } from "../repositories/reminder-repository";
 
 /**
- * Everything the Settings screen (HAB-15) shows. The Evening review reads the
- * very setting the per-habit Reminders screen reads, so the two can't drift.
+ * Everything the Settings screen shows. The Evening review reads the very setting the
+ * per-habit Reminders screen reads, so the two can't drift.
  */
 export function useSettingsQueries() {
 	const preference = useThemePreferenceStore((state) => state.preference);
@@ -35,26 +35,22 @@ export function useSettingsQueries() {
 
 	return {
 		themePreference: preference,
-		/** The Haptics switch; on unless the person turned it off. */
 		hapticsEnabled,
-		/** What "System" currently resolves to — the Appearance caption reports it. */
 		resolvedScheme: scheme,
 		eveningReviewEnabled: eveningReview === "true",
 		/** The Evening review's time: the stored choice, else 21:30. */
 		eveningReviewTime: parseEveningReviewTime(eveningTime),
-		/** Reminders use a generic title: on unless the person turned it off (E-01). */
+		/** Reminders use a generic title: on unless the person turned it off. */
 		hideHabitNames: hideNames !== "false",
 		notificationsDenied: permission === "denied",
-		/** "granted", "denied" or "undetermined": the Notifications row says which. */
 		notificationPermission: permission,
-		/** What a denied permission holds back, for the SY6 summary. */
+		/** What a denied permission holds back. */
 		notificationImpact: notificationImpact(reminders, habits),
-		/** The shared monthly pool, counted by missed date (HAB-33, S4) — for the "used this month" row. */
+		/** The shared monthly pool, counted by missed date: for the "used this month" row. */
 		freezePool: {
 			size: FREEZE_POOL_SIZE,
 			usedThisMonth: freezesUsedInMonth(frozenDays, new Date()),
 		},
-		/** Version, build and database schema — the About group. */
 		about: getAppInfo(),
 	};
 }

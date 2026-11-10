@@ -1,6 +1,5 @@
 # Journey: first run → skip to an empty Today → Browse suggestions → pick one → it opens
 # Add habit filled in → save → the suggestion reads Added → Today has the habit.
-# Covers HAB-46 (first run skip path, suggestions, prefill), HAB-32 (empty Today).
 url: ${APP_URL}/?fixtures=first-run&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
@@ -9,17 +8,15 @@ tags:
 ---
 - launchApp
 
-# FR1: no tab bar. Skip for now is the way out to an empty Today (FR4), which has the bar.
+# No tab bar. Skip for now is the way out to an empty Today, which has the bar.
 - assertVisible: "Small habits,.*"
 - assertNotVisible:
     id: "Habits"
 - tapOn: "Skip for now"
-# The empty Today is an ordinary tab root: the bar is there at once.
 - assertVisible: "Nothing to track yet"
 - assertVisible:
     id: "Habits"
 
-# BS1 from Today's empty state; BS2 fills Add habit and says where from.
 - tapOn: "Browse suggestions"
 - assertVisible: "Tap one to open Add habit with it filled in. Change anything before saving."
 - tapOn: "Meditate"
@@ -27,11 +24,9 @@ tags:
 - assertVisible: "Meditate is filled in. Change anything before saving."
 - tapOn: "Save habit"
 
-# Back on the list: what is saved reads Added and can no longer be picked.
 - assertVisible: "Added"
 - tapOn: "Close"
 
-# Today has it, under the category the suggestion named.
 - assertVisible: "Meditate"
 - assertVisible: "Mindfulness"
 - assertNotVisible: "Nothing to track yet"

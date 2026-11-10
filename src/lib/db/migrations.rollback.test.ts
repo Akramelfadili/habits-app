@@ -7,13 +7,12 @@ import type { DatabaseSync } from "node:sqlite";
 import { createPartiallyMigratedTestDb } from "./test-db";
 
 /**
- * "Nothing was changed" (SY4) is only a promise the app may make if a failed
- * update really leaves the database as it was. The device migrator runs every
- * pending migration between one BEGIN and one COMMIT and ROLLBACKs on any
- * error (`SQLiteSyncDialect.migrate`). This runs the real pending migrations
- * of a V1-era database the way it does, forces a failure after the very last
- * statement — the worst moment, with every table already rebuilt — and checks
- * the schema and every row are exactly what they were.
+ * "Nothing was changed" is only a promise the app may make if a failed update really leaves the
+ * database as it was. The device migrator runs every pending migration between one BEGIN and one
+ * COMMIT and ROLLBACKs on any error (`SQLiteSyncDialect.migrate`). This runs the real pending
+ * migrations of an old-schema database the way it does, forces a failure after the very last
+ * statement (the worst moment, with every table already rebuilt), and checks the schema and every
+ * row are exactly what they were.
  */
 
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
@@ -29,7 +28,6 @@ const pendingTags = journal.entries
 	.map((entry) => entry.tag)
 	.filter((tag) => Number(tag.slice(0, 4)) >= 9);
 
-/** Every table's definition and every row, in a stable order: what "as it was" means. */
 function snapshot(sqlite: DatabaseSync): string {
 	const tables = sqlite
 		.prepare(
@@ -47,7 +45,6 @@ function snapshot(sqlite: DatabaseSync): string {
 	);
 }
 
-/** What drizzle's synchronous migrator does: BEGIN, each statement, COMMIT — ROLLBACK on any throw. */
 function migrateLikeTheDevice(sqlite: DatabaseSync, failAtTheEnd: boolean) {
 	sqlite.exec("BEGIN");
 	try {
@@ -108,7 +105,6 @@ describe.each([true, false])(
 );
 
 describe("'No habits or history are deleted' (SY3) stays true", () => {
-	/** SQL with `--` comments removed. */
 	const sqlOf = (tag: string) =>
 		fs
 			.readFileSync(path.join(MIGRATIONS_DIR, `${tag}.sql`), "utf8")
@@ -126,7 +122,6 @@ describe("'No habits or history are deleted' (SY3) stays true", () => {
 			const sql = sqlOf(tag);
 			for (const match of sql.matchAll(DESTRUCTIVE)) {
 				const statement = match[0];
-				// A TEMP table the migration created itself.
 				if (
 					/temp/i.test(sql) &&
 					/drop\s+table/i.test(statement) &&

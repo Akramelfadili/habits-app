@@ -53,15 +53,15 @@ import { useWeekStripQueries } from "../hooks/use-week-strip-queries";
 import { todayCopy } from "../messages";
 
 /**
- * No bottom edge: the floating pill carries its own 22 pt float over the home
- * indicator and every scroller pays `TAB_BAR_BOTTOM_PADDING`, so a bottom
- * safe-area inset here would stack a third gap on top of both (HAB-27).
+ * No bottom edge: the floating pill carries its own 22 pt float over the home indicator
+ * and every scroller pays `TAB_BAR_BOTTOM_PADDING`, so a bottom safe-area inset here would
+ * stack a third gap on top of both.
  */
 const SCREEN_EDGES = ["top", "left", "right"] as const;
 
 /**
- * The Today tab: Today itself, inside a boundary that keeps a failed read in
- * this tab (SY2) — the header and the tab bar stay and Try again re-runs it.
+ * The Today tab: Today itself, inside a boundary that keeps a failed read in this tab: the
+ * header and the tab bar stay and Try again re-runs it.
  */
 export function TodayScreen() {
 	const router = useRouter();
@@ -96,9 +96,9 @@ function TodayContent() {
 	const titleRef = useRef<HostInstance>(null);
 	useTabRetapToTop("(today)", header.scrollToTop, titleRef);
 	const reduceMotion = useReducedMotion();
-	// The "Logging for …" bar and the list under it move together over the
-	// state timing (F-07); Reduce Motion crossfades the bar and lets the list
-	// land at once. Without this the list jumped 64 pt when the bar mounted.
+	// The "Logging for ..." bar and the list under it move together over the state timing;
+	// Reduce Motion crossfades the bar and lets the list land at once. Without this the list
+	// jumped 64 pt when the bar mounted.
 	const barEntering = FadeIn.duration(
 		reduceMotion ? motion.state.reduced.crossfade : motion.state.duration,
 	).reduceMotion(ReduceMotion.Never);
@@ -111,9 +111,9 @@ function TodayContent() {
 				ReduceMotion.Never,
 			);
 
-	// Habits haven't loaded yet: the header is real at once, the body is blank,
-	// never a flash of "Nothing to track yet" (audit A5-04) — and only if the wait
-	// lasts 300 ms do the skeleton rows appear (SY1), so a fast load shows none.
+	// Habits haven't loaded yet: the header is real at once, the body is blank, never a flash
+	// of "Nothing to track yet", and only if the wait lasts 300 ms do the skeleton rows appear,
+	// so a fast load shows none.
 	const loading = !today.isLoaded;
 	const showSkeleton = useDelayedFlag(loading, motion.skeleton.delay);
 
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
 	body: {
 		gap: space[500],
 	},
-	/** Title and week strip read as one block (T1). */
+	/** Title and week strip read as one block. */
 	top: {
 		gap: HEADER_BLOCK_GAP,
 	},

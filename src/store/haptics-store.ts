@@ -1,7 +1,6 @@
 import { create } from "zustand";
 
 type HapticsState = {
-	/** The Haptics switch (Settings › Appearance). On until the person turns it off. */
 	enabled: boolean;
 };
 

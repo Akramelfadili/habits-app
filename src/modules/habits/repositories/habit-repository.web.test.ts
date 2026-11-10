@@ -51,7 +51,7 @@ describe("habit-repository.web", () => {
 		expect(updated.direction).toBe("break");
 	});
 
-	describe("HAB-13 lifecycle", () => {
+	describe("lifecycle", () => {
 		it("splits active and archived habits, and moves one across on archive/restore", async () => {
 			const {
 				setHabitArchived,

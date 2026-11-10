@@ -10,9 +10,9 @@ type CheckboxProps = {
 };
 
 /**
- * V3-21: a 24 pt square (radius rule) — checked is the accent fill with a
- * checkmark, unchecked the 3:1 outline. A square is a settings choice and a
- * circle is a habit done, so this is for multi-select only (suggestions, export).
+ * A 24 pt square (radius rule): checked is the accent fill with a checkmark, unchecked the 3:1
+ * outline. A square is a settings choice and a circle is a habit done, so this is for multi-select
+ * only (suggestions, export).
  */
 export function Checkbox({
 	checked,

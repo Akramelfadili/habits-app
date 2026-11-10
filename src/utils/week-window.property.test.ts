@@ -11,7 +11,6 @@ import { weekWindow } from "./week-window";
 
 const DAY_MS = 86_400_000;
 
-/** Weekday of a "yyyy-MM-dd" key, 0 = Sunday, read in UTC so the zone cannot move it. */
 const weekdayOf = (key: string) => new Date(`${key}T00:00:00Z`).getUTCDay();
 const daysBetween = (from: string, to: string) =>
 	(Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS;

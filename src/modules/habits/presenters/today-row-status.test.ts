@@ -145,7 +145,6 @@ describe("todayRowStatus", () => {
 		expect(todayRowStatus({ ...base, habit, isEvening: true })?.text).toBe(
 			"Resist tonight",
 		);
-		// Resisted already, a past day, or the daytime: unchanged.
 		expect(
 			todayRowStatus({
 				...base,

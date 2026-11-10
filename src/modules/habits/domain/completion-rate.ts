@@ -1,16 +1,16 @@
 import type { HabitDayCell } from "./day-status";
 
 /**
- * The one completion-rate rule (D11, D14), used by Progress, Monthly, Yearly,
- * Weekly and Habit Detail's 90-day rate: **done ÷ due**, per day, summed.
+ * The one completion-rate rule, used by Progress, Monthly, Yearly, Weekly and Habit Detail's
+ * 90-day rate: **done ÷ due**, per day, summed.
  *
  * - Due = done + partial + missed. A partial quantity day is due and not done.
  * - Frozen days leave both sides; bonus (off-schedule) logs are never counted.
- * - Paused, before-start, future and not-due days are not due; `nothing-logged`
- *   (nothing has ever been logged) isn't either — there is no rate yet.
- * - Today joins only once it is done: it can't have been missed, and a half-
- *   logged quantity day isn't a verdict yet.
- * - Break habits: a logged day is a resisted day, i.e. done (D8).
+ * - Paused, before-start, future and not-due days are not due; `nothing-logged` (nothing has ever
+ *   been logged) isn't either: there is no rate yet.
+ * - Today joins only once it is done: it can't have been missed, and a half-logged quantity day
+ *   isn't a verdict yet.
+ * - Break habits: a logged day is a resisted day, i.e. done.
  * - Rates are whole numbers.
  */
 export type Tally = {
@@ -59,7 +59,6 @@ export function mergeTallies(into: Tally, from: Tally): Tally {
 	return into;
 }
 
-/** done ÷ due as a whole number of points; null when nothing was due. */
 export function completionPercent(done: number, due: number): number | null {
 	return due > 0 ? Math.round((done / due) * 100) : null;
 }

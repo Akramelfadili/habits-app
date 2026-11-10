@@ -16,12 +16,12 @@ type StreakAtRiskSheetProps = {
 	habitName: string;
 	/** The streak standing before yesterday's miss — what a freeze would preserve. */
 	currentStreak: number;
-	/** Remaining in the shared monthly pool (HAB-33). At 0 the sheet is the one-button SR3 explanation. */
+	/** Remaining in the shared monthly pool. At 0 the sheet is the one-button explanation. */
 	freezesRemaining: number;
 	/** Any date within the current month — only its month is used, for the "Resets on" caption. */
 	today: Date;
 	onUseFreeze: () => void;
-	/** "Not now" (SR1) and SR3's "Got it": closes the sheet, writes nothing. */
+	/** "Not now" and the "Got it" of the no-freezes case: closes the sheet, writes nothing. */
 	onNotNow: () => void;
 	isApplyingFreeze?: boolean;
 };
@@ -31,12 +31,11 @@ function freezeCountLabel(count: number): string {
 }
 
 /**
- * Bottom sheet for the streak-at-risk decision (HAB-33, SR1/SR3): the pool row,
- * then — while a freeze is left — a primary "Use a freeze" and "Not now"; with
- * none left, one "Got it" and copy saying the streak restarts but the longest
- * streak is kept. Non-dismissible (per Sheet's own doc comment): this is a
- * decision, not a form, so a button is the only way out. Neither "Not now" nor
- * "Got it" writes anything.
+ * Bottom sheet for the streak-at-risk decision: the pool row, then, while a freeze is left, a
+ * primary "Use a freeze" and "Not now"; with none left, one "Got it" and copy saying the streak
+ * restarts but the longest streak is kept. Non-dismissible (per Sheet's own doc comment): this is a
+ * decision, not a form, so a button is the only way out. Neither "Not now" nor "Got it" writes
+ * anything.
  */
 export function StreakAtRiskSheet({
 	visible,
@@ -51,7 +50,7 @@ export function StreakAtRiskSheet({
 	const { colors } = useTheme();
 	const resetsOn = format(addMonths(startOfMonth(today), 1), "d MMMM");
 	const hasFreeze = freezesRemaining > 0;
-	// 08.3: focus starts on the action the sheet leans towards.
+	// Focus starts on the action the sheet leans towards.
 	const primaryRef = useRef<HostInstance>(null);
 	useInitialFocus(primaryRef, visible);
 	const title = hasFreeze
@@ -129,7 +128,7 @@ export function StreakAtRiskSheet({
 	);
 }
 
-/** The pool's pips are 28 pt squares, the violet freeze token (D5). */
+/** The pool's pips are 28 pt squares, the violet freeze token. */
 const PIP = 28;
 
 const styles = StyleSheet.create({

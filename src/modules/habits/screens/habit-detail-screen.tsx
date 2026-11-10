@@ -50,11 +50,10 @@ type HabitDetailScreenProps = {
 const TITLE_SCROLLED_AT = 96;
 
 /**
- * Habit Detail (HAB-40, V3-4a): the header with Edit, the archived or restored
- * banner, three stat tiles, the last five weeks (each week one tap into Edit
- * this day), Reminders, History by date, and Archive and Delete last, each
- * behind its own confirm sheet. Pushed from any tab, so Back names the tab it
- * came from; the habit's name joins the bar once the title scrolls away.
+ * Habit Detail: the header with Edit, the archived or restored banner, three stat tiles,
+ * the last five weeks (each week one tap into Edit this day), Reminders, History by date,
+ * and Archive and Delete last, each behind its own confirm sheet. Pushed from any tab, so
+ * Back names the tab it came from; the habit's name joins the bar once the title scrolls away.
  */
 export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const { colors } = useTheme();
@@ -73,7 +72,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) =>
 		setTitleScrolled(nativeEvent.contentOffset.y > TITLE_SCROLLED_AT);
 
-	// Still loading: a neutral blank, never a "not found" flash (audit A5-04).
+	// Still loading: a neutral blank, never a "not found" flash.
 	if (detail === undefined) {
 		return (
 			<View
@@ -107,9 +106,9 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 	const { habit, today } = detail;
 	const archived = habit.archivedAt !== null;
 
-	// Archive pops Detail to where it was opened from and the toast offers Undo
-	// (DC5). A failed write leaves everything as it was: the sheet stays, the hook
-	// has already shown the error toast, and trying again is one tap.
+	// Archive pops Detail to where it was opened from and the toast offers Undo. A failed
+	// write leaves everything as it was: the sheet stays, the hook has already shown the error
+	// toast, and trying again is one tap.
 	async function handleArchive() {
 		const result = await actions.archiveHabit(habitId);
 		if (!result.ok) return;
@@ -121,7 +120,7 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 		router.back();
 	}
 
-	// Permanent, so the toast has no Undo (DC3). A failure stays in the sheet (DC4).
+	// Permanent, so the toast has no Undo. A failure stays in the sheet.
 	async function handleDelete() {
 		deleting.current = true;
 		const result = await actions.deleteHabit(habitId);
@@ -134,8 +133,8 @@ export function HabitDetailScreen({ habitId }: HabitDetailScreenProps) {
 		router.back();
 	}
 
-	// Instant, no confirmation: it is fully reversible (D5). Undo puts back the
-	// archive date and pauses captured here, not a new archive dated today.
+	// Instant, no confirmation: it is fully reversible. Undo puts back the archive date and
+	// pauses captured here, not a new archive dated today.
 	async function handleRestore() {
 		const { archivedAt, pauses } = habit;
 		const result = await actions.restoreHabit(habitId);

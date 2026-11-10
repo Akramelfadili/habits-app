@@ -52,7 +52,6 @@ export async function ensureNotificationPermission(): Promise<NotificationPermis
 	return permission;
 }
 
-/** The current permission — `undefined` until the first check resolves. */
 export function useNotificationPermission():
 	| NotificationPermission
 	| undefined {

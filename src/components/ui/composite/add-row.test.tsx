@@ -28,7 +28,7 @@ describe("AddRow", () => {
 		expect(onPress).not.toHaveBeenCalled();
 	});
 
-	it("embedded: no dashed outline of its own inside a card (HAB-25)", async () => {
+	it("embedded: no dashed outline of its own inside a card", async () => {
 		await render(<AddRow label="Add category" embedded onPress={jest.fn()} />);
 		expect(screen.getByRole("button", { name: "Add category" })).toHaveStyle({
 			borderWidth: 0,

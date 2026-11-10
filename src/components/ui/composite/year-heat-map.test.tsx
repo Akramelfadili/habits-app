@@ -99,7 +99,7 @@ describe("YearHeatMap", () => {
 		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
-	it("dims a month label while it is pressed (I-06)", async () => {
+	it("dims a month label while it is pressed", async () => {
 		await render(<YearHeatMap bands={[band("a", 18, jest.fn())]} />);
 		const label = () =>
 			screen.getByRole("button", {
@@ -122,7 +122,6 @@ describe("YearHeatMap", () => {
 		const label = screen.getByTestId("year-month-a-b");
 		const slop = label.props.hitSlop;
 		expect(16 + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
-		// Column 4, at a 16 + 2 pt pitch.
 		expect(label).toHaveStyle({ left: 4 * 18 });
 	});
 

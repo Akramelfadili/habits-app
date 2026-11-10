@@ -43,7 +43,7 @@ describe("habit accent colors", () => {
 	});
 });
 
-describe("V3 type scale (F-03)", () => {
+describe("type scale", () => {
 	it("has the nine styles at the spec's size / line height / weight", () => {
 		const spec = Object.fromEntries(
 			Object.entries(textStyles).map(([name, style]) => [
@@ -71,7 +71,7 @@ describe("V3 type scale (F-03)", () => {
 		}
 	});
 
-	it("gives every style its AX3 size (subhead and footnote on the iOS ramp, T-30)", () => {
+	it("gives every style its AX3 size (subhead and footnote on the iOS ramp)", () => {
 		expect(textStylesAx3).toEqual({
 			display: 52,
 			stat: 48,
@@ -86,7 +86,7 @@ describe("V3 type scale (F-03)", () => {
 	});
 });
 
-describe("spacing scale (F-04)", () => {
+describe("spacing scale", () => {
 	it("names every step value × 25", () => {
 		for (const [name, value] of Object.entries(space)) {
 			expect(value * 25).toBe(Number(name));
@@ -100,7 +100,7 @@ describe("spacing scale (F-04)", () => {
 	});
 });
 
-describe("radius scale (F-05)", () => {
+describe("radius scale", () => {
 	it("has the six named radii", () => {
 		expect(radius).toEqual({ xs: 4, s: 8, m: 14, l: 20, xl: 28, pill: 999 });
 	});
@@ -114,7 +114,7 @@ describe("radius scale (F-05)", () => {
 	});
 });
 
-describe("elevation and focus (F-06)", () => {
+describe("elevation and focus", () => {
 	it("gives the master file's three floating shadows per scheme", () => {
 		expect(elevation).toEqual({
 			light: {
@@ -140,7 +140,7 @@ describe("elevation and focus (F-06)", () => {
 	});
 });
 
-describe("motion (F-07)", () => {
+describe("motion", () => {
 	it("keeps the spec's durations", () => {
 		expect({
 			press: motion.press.duration,
@@ -175,7 +175,7 @@ describe("motion (F-07)", () => {
 	});
 });
 
-describe("accent (F-01)", () => {
+describe("accent", () => {
 	it("is ink on paper in both schemes", () => {
 		expect(surfaceColors.light.accent).toBe(surfaceColors.light.ink);
 		expect(surfaceColors.dark.accent).toBe(surfaceColors.dark.ink);

@@ -13,9 +13,8 @@ type RemoveButtonProps = {
 const DISC = space[600];
 
 /**
- * V3-23 "remove": the red minus disc on the left of a list row — a 44 pt
- * target around a 24 pt disc. The minus is the second signal beside the
- * colour. Removal is instant and reversible, so it asks nothing.
+ * The red minus disc on the left of a list row: a 44 pt target around a 24 pt disc. The minus is the
+ * second signal beside the colour. Removal is instant and reversible, so it asks nothing.
  */
 export function RemoveButton({
 	accessibilityLabel,

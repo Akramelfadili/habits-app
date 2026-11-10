@@ -26,20 +26,18 @@ import { categorySymbol } from "./category-symbol";
 
 type AddCategorySheetProps = {
 	visible: boolean;
-	/** Every existing category — for the duplicate check and the rotation pick. */
 	categories: Category[];
 	onDismiss: () => void;
 	onCreate: (input: CreateCategoryInput) => Promise<Category>;
-	/** After a successful add — the picker auto-selects it (no toast, HAB-24). */
+	/** After a successful add; the picker auto-selects it (no toast). */
 	onCreated: (category: Category) => void;
 	isCreating?: boolean;
 };
 
 /**
- * Add category (HAB-24, frames F2a–F2c): stacks over the habit form and asks
- * for a name only. Icon and color come from the rotation and are previewed
- * live, so the preview is exactly what's created; a duplicate name hides the
- * preview and explains which existing chip to pick instead.
+ * Stacks over the habit form and asks for a name only. Icon and color come from the rotation and are
+ * previewed live, so the preview is exactly what's created; a duplicate name hides the preview and
+ * explains which existing chip to pick instead.
  */
 export function AddCategorySheet(props: AddCategorySheetProps) {
 	return (

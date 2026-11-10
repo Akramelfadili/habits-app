@@ -9,7 +9,7 @@ import { OTHER_CATEGORY_NAME } from "../constants";
 import type { Category, CreateCategoryInput, DeletedCategory } from "../types";
 import { allCategoriesQuery, rowToCategory } from "./category-rows";
 
-/** Live-query hook — every category in the stored group order (HAB-42). */
+/** Live-query hook: every category in the stored group order. */
 export function useCategories(): Category[] {
 	const { data } =
 		useLiveRows<typeof categories.$inferSelect>(allCategoriesQuery);
@@ -17,7 +17,6 @@ export function useCategories(): Category[] {
 	return useMemo(() => data.map(rowToCategory), [data]);
 }
 
-/** One-off read — e.g. resolving built-ins by name outside a component. */
 export async function getCategories(): Promise<Category[]> {
 	const rows = await allCategoriesQuery();
 	return rows.map(rowToCategory);
@@ -47,7 +46,7 @@ export async function createCategory(
 	return rowToCategory(present(row, "the category row"));
 }
 
-/** The custom category `id` — built-ins are locked (HAB-25), so they never get past this. */
+/** The custom category `id`; built-ins are locked, so they never get past this. */
 async function customCategoryRow(id: number, action: string) {
 	const [row] = await db.select().from(categories).where(eq(categories.id, id));
 	if (!row) throw new Error(`Category ${id} not found`);
@@ -56,9 +55,8 @@ async function customCategoryRow(id: number, action: string) {
 }
 
 /**
- * Renames a custom category (HAB-25). Name validation (length, duplicates
- * including built-ins) happens before this, in the same form schema as
- * creating one.
+ * Renames a custom category. Name validation (length, duplicates including built-ins) happens
+ * before this, in the same form schema as creating one.
  */
 export async function renameCategory(
 	id: number,
@@ -74,11 +72,10 @@ export async function renameCategory(
 }
 
 /**
- * Deletes a custom category (HAB-25), moving every habit in it — archived
- * ones too — to the built-in Other, in one transaction: either all of them
- * move and the category goes, or nothing changes. Moved habits go to the end
- * of the manual order, keeping their relative order, so they land last in
- * Other's group without colliding with anyone's sort slot.
+ * Deletes a custom category, moving every habit in it (archived ones too) to the built-in
+ * Other, in one transaction: either all of them move and the category goes, or nothing changes.
+ * Moved habits go to the end of the manual order, keeping their relative order, so they land
+ * last in Other's group without colliding with anyone's sort slot.
  */
 export async function deleteCategory(id: number): Promise<DeletedCategory> {
 	const deleted = await customCategoryRow(id, "delete");
@@ -121,8 +118,8 @@ export async function deleteCategory(id: number): Promise<DeletedCategory> {
 }
 
 /**
- * The Undo for deleting a category nobody used (DC6): the same row (id, look,
- * place in the order) goes back. Habits are untouched — none were in it.
+ * The Undo for deleting a category nobody used: the same row (id, look, place in the order)
+ * goes back. Habits are untouched, none were in it.
  */
 export async function restoreCategory(
 	deleted: DeletedCategory,
@@ -144,11 +141,10 @@ export async function restoreCategory(
 }
 
 /**
- * Stores a new group order (C2): `orderedIds` are every movable category — all
- * but the built-in Other — in the order the person left them, numbered 1…n in
- * one transaction. Other is then set to n + 1, so it stays last and a later
- * new category (max + 1) can only land after it, where the groups still force
- * Other to the end.
+ * Stores a new group order: `orderedIds` are every movable category (all but the built-in
+ * Other) in the order the person left them, numbered 1...n in one transaction. Other is then set
+ * to n + 1, so it stays last and a later new category (max + 1) can only land after it, where
+ * the groups still force Other to the end.
  */
 export async function reorderCategories(orderedIds: number[]): Promise<void> {
 	await db.run(sql`begin`);

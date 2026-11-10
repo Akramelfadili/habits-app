@@ -17,9 +17,8 @@ type HabitPickerRowProps = {
 };
 
 /**
- * One habit in the off-schedule picker (HAB-18, NEW-19): icon, name, schedule
- * line, and a round check — or "Amount ›" for a quantity habit, which opens
- * the Quantity log instead of toggling. States: default, logged.
+ * One habit in the off-schedule picker: icon, name, schedule line, and a round check, or "Amount ›"
+ * for a quantity habit, which opens the Quantity log instead of toggling. States: default, logged.
  */
 export function HabitPickerRow({
 	habit,

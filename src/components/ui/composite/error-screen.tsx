@@ -21,13 +21,13 @@ type ErrorScreenProps = {
 	/** Omitted when trying again cannot help (data from a newer version). */
 	onRetry?: () => void;
 	/**
-	 * A last-resort way out under Copy diagnostics (audit C-03): a quieter
-	 * button, never the default. The caller owns the confirm it opens.
+	 * A last-resort way out under Copy diagnostics: a quieter button, never the default. The caller
+	 * owns the confirm it opens.
 	 */
 	recovery?: { label: string; hint?: string; onPress: () => void };
 	/**
-	 * Why it stopped, as an error banner under the message (SY4): a title and
-	 * what that means for the person's data. Never raw error text.
+	 * Why it stopped, as an error banner under the message: a title and what that means for the
+	 * person's data. Never raw error text.
 	 */
 	reason?: { title: string; message: string };
 };
@@ -39,12 +39,11 @@ const COPY_RESULT_MESSAGE = {
 } as const;
 
 /**
- * Full-screen recovery (SY4, design-system.md Error screen): what the root
- * error boundary and a failed database migration show instead of a blank or
- * stuck app. A hero title, one line of reassurance, optionally the reason in
- * an error banner, then Try again and Copy diagnostics. It never reads the app
- * database, so it can render when the database is what failed, and it has no
- * toast host to lean on, so the copy result is said inline.
+ * Full-screen recovery: what the root error boundary and a failed database migration show instead
+ * of a blank or stuck app. A hero title, one line of reassurance, optionally the reason in an error
+ * banner, then Try again and Copy diagnostics. It never reads the app database, so it can render
+ * when the database is what failed, and it has no toast host to lean on, so the copy result is said
+ * inline.
  */
 export function ErrorScreen({
 	title,
@@ -58,7 +57,7 @@ export function ErrorScreen({
 		keyof typeof COPY_RESULT_MESSAGE | null
 	>(null);
 	const titleRef = useRef<HostInstance>(null);
-	// 08.4: the screen reader starts on the heading.
+	// The screen reader starts on the heading.
 	useInitialFocus(titleRef, true, 100);
 
 	async function handleCopy() {

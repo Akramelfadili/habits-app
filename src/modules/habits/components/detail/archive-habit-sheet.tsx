@@ -17,9 +17,9 @@ type ArchiveHabitSheetProps = {
 };
 
 /**
- * Archive habit (DC5, H8): reversible, so one tap — Archive habit as the primary
- * and Cancel under it. It says what archiving keeps, so people choose it over
- * deleting. Afterwards Detail pops and a toast offers Undo; this sheet only asks.
+ * Reversible, so one tap: Archive habit as the primary and Cancel under it. It says what archiving
+ * keeps, so people choose it over deleting. Afterwards Detail pops and a toast offers Undo; this
+ * sheet only asks.
  */
 export function ArchiveHabitSheet({
 	visible,
@@ -29,8 +29,8 @@ export function ArchiveHabitSheet({
 	onCancel,
 }: ArchiveHabitSheetProps) {
 	const { colors } = useTheme();
-	// 08.4: a sheet starts the screen reader on its title. Archiving is
-	// reversible, so unlike Delete there is no safer action to lean towards.
+	// A sheet starts the screen reader on its title. Archiving is reversible, so unlike Delete there is
+	// no safer action to lean towards.
 	const titleRef = useRef<HostInstance>(null);
 	useInitialFocus(titleRef, visible);
 

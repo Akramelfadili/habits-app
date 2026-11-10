@@ -15,7 +15,6 @@ type Store = {
 };
 
 export type RingBufferSink = LogSink & {
-	/** Everything stored plus what has not been written yet, oldest first. Never rejects. */
 	recent(): Promise<LogEntry[]>;
 };
 

@@ -11,16 +11,16 @@ import type { ReminderDraft } from "../types";
 
 type ReminderRowProps = {
 	reminder: ReminderDraft;
-	/** A reminder stored as off (a V3-era leftover): its row says so; editing it turns it on. */
+	/** A reminder stored as off (a leftover from an earlier version): its row says so; editing it turns it on. */
 	off?: boolean;
 	onEdit: () => void;
 	onRemove: () => void;
 };
 
 /**
- * One reminder time (R2, F7): the red minus on the left removes it at once, the
- * time and its own days open the sheet on tap. Read by VoiceOver as one line,
- * "07:00, Tue, Thu", with the remove button as its own stop.
+ * One reminder time: the red minus on the left removes it at once, the time and its own days open
+ * the sheet on tap. Read by VoiceOver as one line, "07:00, Tue, Thu", with the remove button as its
+ * own stop.
  */
 export function ReminderRow({
 	reminder,

@@ -8,7 +8,6 @@ import type { CalendarDay } from "../domain/progress-grid";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as MonthHook from "./use-progress-month-queries";
 
-/** Progress · Month through the real hooks and a real, migrated in-memory database. */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -32,7 +31,6 @@ const {
 	useProgressMonthQueries,
 }: typeof MonthHook = require("./use-progress-month-queries");
 
-// Friday 18 Sep 2026.
 const NOW = new Date(2026, 8, 18, 12);
 const sept = (day: number) => new Date(2026, 8, day);
 

@@ -7,21 +7,18 @@ import { AccessibilityInfo, type HostInstance, Platform } from "react-native";
  */
 const SHEET_SETTLE_MS = 400;
 
-/** What the ref can be: a host element, which on web also has `focus()`. */
 type Focusable = HostInstance & { focus?: () => void };
 
-/** Moves the screen reader's focus (and, on the web, keyboard focus) onto `element`. */
 export function moveFocusTo(element: Focusable): void {
 	if (Platform.OS === "web") element.focus?.();
 	else AccessibilityInfo.sendAccessibilityEvent(element, "focus");
 }
 
 /**
- * Puts the screen reader's focus (and, on the web, keyboard focus) on `ref`
- * when `active` turns true — a confirm sheet starts on its safe action (08.3:
- * "Focus starts on Archive instead"), not on the first thing in the tree.
- * Nothing moves while `active` is false, and a sheet that closes before the
- * delay ends never gets the late event.
+ * Puts the screen reader's focus (and, on the web, keyboard focus) on `ref` when `active` turns
+ * true: a confirm sheet starts on its safe action ("Focus starts on Archive instead"), not on the
+ * first thing in the tree. Nothing moves while `active` is false, and a sheet that closes before
+ * the delay ends never gets the late event.
  */
 export function useInitialFocus(
 	ref: RefObject<Focusable | null>,

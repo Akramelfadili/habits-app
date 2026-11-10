@@ -75,7 +75,7 @@ describe("message catalogue", () => {
 		);
 	});
 
-	describe("defaultDurationMs (HAB-48 timings)", () => {
+	describe("defaultDurationMs", () => {
 		it("gives each tone its default", () => {
 			expect(defaultDurationMs({ tone: "info" })).toBe(3000);
 			expect(defaultDurationMs({ tone: "success" })).toBe(3000);
@@ -137,7 +137,7 @@ describe("todayCopy (inline Today copy)", () => {
 	});
 });
 
-describe("Progress copy (HAB-35–38)", () => {
+describe("Progress copy", () => {
 	it("explains why Export cannot run, as an info toast that holds 3 s", () => {
 		expect(messageText(messages.exportNothing)).toBe(
 			"Nothing to export yet. Log a habit on Today first, then come back.",

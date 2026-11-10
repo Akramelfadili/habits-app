@@ -37,7 +37,6 @@ const SELECTOR_COMMANDS = new Set([
 const WEEKDAYS_AND_MONTHS =
 	/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|January|February|March|April|May|June|July|August|September|October|November|December)$/;
 
-/** Reads a flow into its commands, throwing on any line that is not YAML of the expected shape. */
 function parseFlow(text, file) {
 	const parts = text.split(/^---\s*$/m);
 	assert.equal(
@@ -74,7 +73,6 @@ const unquote = (value) => {
 	return quoted ? quoted[1] : value;
 };
 
-/** The words (4+ letters) of a selector that must exist somewhere in the app's strings. */
 function wordsToFind(selector) {
 	return selector
 		.replace(/\[\?\]/g, "?")

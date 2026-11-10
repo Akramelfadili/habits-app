@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 /**
- * Renders the V3 Claude Design mockups (docs/mockups/v3/*.dc.html) to PNG
- * slices + plain text, so they can be read without opening a browser — by a
- * person skimming, or by an agent that can view images but not run the
- * design runtime.
+ * Renders the Claude Design mockups (docs/mockups/v3/*.dc.html) to PNG slices + plain text,
+ * so they can be read without opening a browser, by a person skimming or by an agent that
+ * can view images but not run the design runtime.
  *
  *   npm run mockups:render                 # every section
  *   npm run mockups:render -- today sheets # just these
  *
  * For each section: a full-page screenshot cut into ~1800 px slices
- * (renders/<section>/slice_00.png, …) and document.body.innerText
+ * (renders/<section>/slice_00.png, ...) and document.body.innerText
  * (renders/<section>/text.txt). Then renders/INDEX.md maps every frame ID
- * (T1, P7, DC1, …) to the slice it sits in.
+ * (T1, P7, DC1, ...) to the slice it sits in.
  *
- * The .dc.html files fetch themselves and load React from unpkg, so they are
- * served over a throwaway local HTTP server (file:// breaks the runtime's
- * fetch) and need network access.
+ * The .dc.html files load themselves and React from unpkg, so they are served over a
+ * throwaway local server (file:// breaks the runtime's loading) and need network access.
  */
 import fs from "node:fs";
 import http from "node:http";
@@ -25,7 +23,6 @@ import { libraryPath, ROOT } from "./lib/dev-server.mjs";
 const MOCKUP_DIR = path.join(ROOT, "docs/mockups/v3");
 const RENDER_DIR = path.join(MOCKUP_DIR, "renders");
 
-/** Section name → file. "foundations" is the master file's default view. */
 const SECTIONS = {
 	foundations: "Habits V3.dc.html",
 	today: "Habits V3 - Today.dc.html",
@@ -49,7 +46,6 @@ const RENDER_TIMEOUT_MS = 60_000;
 const ANCHOR_ID =
 	/^(?:[A-Z]{1,2}\d{1,2}[a-z]?|V3-\d{2}[a-z]?|PR-\d{2}|ax3|nav|components|today|progress|habits|handoff|messages|proposals(?:-\w+)?|data-[\w-]+|hand-notes|a11y-[\w-]+|cl-[\w-]+|open-decisions|self-critique)$/;
 
-/** IDs that are only mentioned in text (tokens, components, change-log rows). */
 const TEXT_ID =
 	/\b(?:V3-\d{2}[a-z]?|[FT]-\d{2}|PR-\d{2}|CL\.\d|0\d\.\d{1,2}[a-z]?|(?:DC|QS|RL|HP|SR|TC|EX|BS|FR|SY|[TPHDFCRS])\d{1,2})\b/g;
 
@@ -112,7 +108,6 @@ async function waitUntilRendered(page) {
 	);
 }
 
-/** Frame anchors and text-only IDs, each with its page y (first occurrence). */
 async function collectIds(page, anchorSource, textSource) {
 	return page.evaluate(
 		([anchorSrc, textSrc]) => {

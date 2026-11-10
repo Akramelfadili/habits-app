@@ -11,14 +11,12 @@ import type { DayRange, Habit, Reminder } from "../types";
  */
 
 let mockStored: Habit;
-// The real notifications adapter runs on an in-memory expo-notifications.
 jest.mock(
 	"expo-notifications",
 	() =>
 		require("../test-support/fake-expo-notifications").fakeNotifications.module,
 );
 
-/** One entry per reminder trigger, without the scheduling generation. */
 const mockScheduled = () =>
 	[...fake.scheduled.keys()].map((id) => id.split(":").slice(0, 2).join(":"));
 
@@ -112,7 +110,7 @@ describe("archive → restore → undo → restore", () => {
 		expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
 	});
 
-	it("five archive and restore cycles in a row never stack: one notification when active, none when archived, always the latest generation (HAB-40)", async () => {
+	it("five archive and restore cycles in a row never stack: one notification when active, none when archived, always the latest generation", async () => {
 		const seen = new Set<string>();
 		for (let cycle = 1; cycle <= 5; cycle++) {
 			await archiveHabit(3);
@@ -121,7 +119,6 @@ describe("archive → restore → undo → restore", () => {
 			await restoreHabit(3);
 			expect(fake.scheduled.size).toBe(1);
 			const [identifier] = [...fake.scheduled.keys()];
-			// Every restore rebuilds under a fresh identifier: nothing from a past cycle survives.
 			expect(seen.has(identifier)).toBe(false);
 			seen.add(identifier);
 			expect(mockScheduled()).toEqual(["habit-3-reminder-1:daily"]);
@@ -151,7 +148,6 @@ describe("archive → restore → undo → restore", () => {
 		const [only] = [...fake.scheduled.values()];
 		expect(only).toMatchObject({ hour: 7, minute: 0 });
 		expect(only.identifier).toMatch(/^habit-3-reminder-1:daily:0700:/);
-		// A recurring trigger only — no one-off "now" notification.
 		expect(fake.events.filter((e) => e.startsWith("schedule:"))).toHaveLength(
 			1,
 		);
@@ -175,7 +171,6 @@ describe("archive → restore → undo → restore", () => {
 
 		expect(mockStored.archivedAt).toEqual(archiveDate);
 		expect(mockStored.pauses).toEqual(archived.pauses);
-		// Same status on every heatmap day as before the restore.
 		const today = addDays(DAY_ONE, 8);
 		const before = buildHeatmapWeeks({
 			habit: archived,
@@ -214,7 +209,6 @@ describe("archive → restore → undo → restore", () => {
 			{ from: "2026-09-20", to: "2026-09-20" },
 		]);
 
-		// Restored on 21 Sep, nothing logged since: streak is 0; one log makes it 1.
 		const today = addDays(DAY_ONE, 20);
 		const history = {
 			habit: mockStored,
@@ -239,7 +233,6 @@ describe("archive → restore → undo → restore", () => {
 			}),
 		).toBe(1);
 
-		// Each paused day still reads paused.
 		const weeks = buildHeatmapWeeks({ ...history, entries: [] });
 		const status = (day: number) =>
 			weeks

@@ -37,7 +37,6 @@ function entry(habitId: number, dayIndex: number, value?: number): Entry {
 	};
 }
 
-// Scheduled Mon–Fri only: Saturday and Sunday are the rest days.
 const weekdays = makeHabit({
 	id: 1,
 	name: "Meditate",
@@ -87,7 +86,6 @@ describe("isOffScheduleEntry", () => {
 		for (const logged of all) {
 			expect(isOffScheduleEntry(threePerWeek, logged, all)).toBe(false);
 		}
-		// A lone partial quantity log isn't mistaken for a bonus.
 		const partial = makeHabit({
 			id: 3,
 			frequency: { type: "per-week", timesPerWeek: 3 },
@@ -118,7 +116,7 @@ describe("offScheduleLogsOn", () => {
 });
 
 describe("off-schedule entries never count toward scheduled completion", () => {
-	const weekendLog = [entry(1, 5), entry(1, 6)]; // Sat + Sun bonus logs
+	const weekendLog = [entry(1, 5), entry(1, 6)];
 	const weekdayDone = [0, 1, 2, 3, 4].map((day) => entry(1, day));
 
 	it("Weekly: a bonus log neither adds to done nor scheduled, so the rate stays ≤ 100%", () => {

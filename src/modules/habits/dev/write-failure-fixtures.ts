@@ -15,8 +15,8 @@ export function assertWritesAllowed(): void {
 }
 
 /**
- * `?slowWrites=1`: a write that never finishes, so the in-flight state of a
- * sheet (Delete habit's "Deleting…", DC3) can be captured without a timer.
+ * `?slowWrites=1`: a write that never finishes, so the in-flight state of a sheet (Delete
+ * habit's "Deleting…") can be captured without a timer.
  */
 export function holdWriteIfSlow(): Promise<void> {
 	const search = globalThis.location?.search ?? "";

@@ -70,7 +70,6 @@ jest.doMock("drizzle-orm/expo-sqlite", () => ({
 const { createHabit, getHabit, useActiveHabits }: typeof HabitRepository =
 	require("./habit-repository");
 
-/** Lets every resolved query promise settle (they're async, not timers). */
 async function flush() {
 	await act(async () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
@@ -93,7 +92,7 @@ describe("habit live hooks", () => {
 			expect(result.current[0]?.category.name).toBe("Health"),
 		);
 
-		// A rename (HAB-25) writes `categories` only — `habits` never changes.
+		// A rename writes `categories` only; `habits` never changes.
 		await mockDb
 			.update(categories)
 			.set({ name: "Wellbeing" })
@@ -163,7 +162,6 @@ describe("habit live hooks", () => {
 			name: "Orphan",
 			category: other,
 		});
-		// One-off reads fall back the same way.
 		expect((await getHabit(dangling[0].id))?.category).toEqual(other);
 	});
 });

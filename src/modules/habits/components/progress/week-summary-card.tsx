@@ -13,7 +13,6 @@ type WeekSummaryCardProps = {
 	today: Date;
 };
 
-/** The week's seven columns: done ÷ due per day, today the running one, days ahead outlined. */
 export function weekBarColumns(
 	summary: RangeSummary,
 	today: Date,
@@ -44,7 +43,7 @@ export function weekBarColumns(
 	});
 }
 
-/** Week summary (P1): daily bars of due habits done, then perfect days, freezes used and bonus logs. */
+/** Daily bars of due habits done, then perfect days, freezes used and bonus logs. */
 export function WeekSummaryCard({ summary, today }: WeekSummaryCardProps) {
 	const columns = weekBarColumns(summary, today);
 	const best = columns

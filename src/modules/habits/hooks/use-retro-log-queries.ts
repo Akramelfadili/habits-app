@@ -11,22 +11,19 @@ export type RetroLogDay = {
 	habits: Habit[];
 	/** Each shown habit's saved value, keyed by habit id — the form's starting draft. */
 	values: Record<string, DayLogValue>;
-	/** Habits whose day is a frozen one: their circle is violet, and logging it gives the freeze back (PR-11). */
+	/** Habits whose day is a frozen one: their circle is violet, and logging it gives the freeze back. */
 	frozenHabitIds: ReadonlySet<number>;
 	/**
-	 * The habit the sheet was opened from: it owns the day's note. Absent when
-	 * the sheet opens from Progress, which has no habit of its own — and then
-	 * there is no note field (spec: "Spec wins over the mockup").
+	 * The habit the sheet was opened from: it owns the day's note. Absent when the sheet opens from
+	 * Progress, which has no habit of its own, so there is no note field.
 	 */
 	originHabitId?: number;
-	/** The opening habit's saved note for the day — "" when there isn't one. */
 	note: string;
 };
 
 /**
- * What the Edit this day sheet (HAB-10) edits for `date`, opened from `habitId`'s
- * heatmap — or from Progress with `habitId` null — or null while no day is
- * selected.
+ * What the Edit this day sheet edits for `date`, opened from `habitId`'s heatmap, or from
+ * Progress with `habitId` null, or null while no day is selected.
  */
 export function useRetroLogQueries(
 	habitId: number | null,
@@ -41,8 +38,8 @@ export function useRetroLogQueries(
 
 	const day = startOfDay(date);
 	const dateString = format(day, "yyyy-MM-dd");
-	// Archived habits are out of every active list (HAB-13) — except the one
-	// the sheet was opened from, whose own history stays editable.
+	// Archived habits are out of every active list, except the one the sheet was opened from,
+	// whose own history stays editable.
 	const candidates = allHabits.filter(
 		(habit) => habit.id === habitId || habit.archivedAt === null,
 	);

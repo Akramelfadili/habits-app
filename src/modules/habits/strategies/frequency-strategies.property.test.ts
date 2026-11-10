@@ -20,7 +20,6 @@ const isoWeekday = (d: Date): IsoWeekday =>
 const shift = (d: Date, days: number) =>
 	new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 
-/** The seven day keys of d's Monday-to-Sunday week, in order. */
 function weekKeys(d: Date): string[] {
 	const monday = shift(d, -((d.getDay() + 6) % 7));
 	return Array.from({ length: 7 }, (_, i) => keyOf(shift(monday, i)));
@@ -50,12 +49,9 @@ function referenceFor(frequency: Frequency): Reference {
 	}
 	const target = frequency.timesPerWeek;
 	return {
-		// Due until `target` days of this week were completed on earlier days.
 		isDueOn: (date, completed) =>
 			weekKeys(date).filter((k) => k < keyOf(date) && completed.has(k)).length <
 			target,
-		// A completed day was scheduled. Of the week's open days, the last
-		// (target − completed) are the ones that were owed.
 		wasScheduledOn: (date, completed) => {
 			if (completed.has(keyOf(date))) return true;
 			const week = weekKeys(date);

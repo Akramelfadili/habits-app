@@ -9,11 +9,10 @@ import {
 } from "../services/habit-lifecycle-service";
 
 /**
- * Habit Detail's lifecycle writes (HAB-40, HAB-45): Archive (behind its sheet),
- * Delete (behind its own, where a failure is shown in the sheet — DC4 — and not
- * as a toast), and Restore, which is instant and has its own Undo
- * (`undoRestoreHabit`, HAB-20). Archive also backs the archive toast's Undo,
- * after Detail has closed, through Restore.
+ * Habit Detail's lifecycle writes: Archive (behind its sheet), Delete (behind its own, where a
+ * failure is shown in the sheet and not as a toast), and Restore, which is instant and has its
+ * own Undo (`undoRestoreHabit`). Archive also backs the archive toast's Undo, after Detail has
+ * closed, through Restore.
  */
 export function useHabitDetailActions() {
 	const [deleteFailed, setDeleteFailed] = useState(false);
@@ -24,7 +23,7 @@ export function useHabitDetailActions() {
 	const remove = useAsyncAction(deleteHabit, {
 		scope: "habit-detail",
 		failure: failureMessage("delete", "this habit"),
-		// The sheet says it (DC4): nothing was changed, try again.
+		// The sheet says it: nothing was changed, try again.
 		onFailure: () => setDeleteFailed(true),
 	});
 	const restore = useAsyncAction(restoreHabit, {

@@ -17,11 +17,10 @@ import {
 } from "./habit-repository.web";
 
 /**
- * Web-only stand-in for `category-repository.ts` (see `habit-repository.web.ts`
- * for why web runs on in-memory fixtures). `?fixtures=many-categories` gives
- * the V1/V2 mockup hab-24-f1c (tag mockups-v1-v2)'s eight customs. The store is kept in the
- * stored group order (HAB-42): fixtures start in the order migration 0011
- * would give them, and a new category is appended (max + 1, as on device).
+ * Web-only stand-in for `category-repository.ts` (see `habit-repository.web.ts` for why web runs
+ * on in-memory fixtures). `?fixtures=many-categories` gives eight customs. The store is kept in
+ * the stored group order: fixtures start in the order migration 0011 would give them, and a new
+ * category is appended (max + 1, as on device).
  */
 
 let store: Category[] | undefined;
@@ -105,7 +104,7 @@ export async function deleteCategory(id: number): Promise<DeletedCategory> {
 	return { category, sortOrder };
 }
 
-/** Puts a deleted category back where it stood (DC6's Undo). */
+/** Puts a deleted category back where it stood (the Undo of a delete). */
 export async function restoreCategory(
 	deleted: DeletedCategory,
 ): Promise<Category> {
@@ -120,8 +119,8 @@ export async function restoreCategory(
 }
 
 /**
- * The stored order is the array order here: the movable categories in the new
- * order, then Other last (C2). Unknown ids are ignored.
+ * The stored order is the array order here: the movable categories in the new order, then Other
+ * last. Unknown ids are ignored.
  */
 export async function reorderCategories(orderedIds: number[]): Promise<void> {
 	const existing = getCategoriesNow();

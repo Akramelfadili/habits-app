@@ -12,8 +12,8 @@ import {
 } from "./theme-preference-store";
 
 /**
- * The active tokens. The scheme is the Appearance setting (HAB-15) resolved
- * against the OS: an explicit Light/Dark wins, "system" follows iOS.
+ * The active tokens. The scheme is the Appearance setting resolved against the OS: an
+ * explicit Light/Dark wins, "system" follows iOS.
  */
 export function useTheme() {
 	const preference = useThemePreferenceStore((state) => state.preference);

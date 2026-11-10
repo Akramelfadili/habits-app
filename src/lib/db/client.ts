@@ -13,7 +13,6 @@ const DATABASE_NAME = "habits.db";
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
-/** Stands in for a database that could not be opened: any use fails loudly. */
 function unusable<T extends object>(): T {
 	return new Proxy({} as T, {
 		get() {
@@ -48,12 +47,10 @@ const first = open();
 export let expoDb: SQLiteDatabase = first.expoDb;
 export let db: Db = first.db;
 
-/** The error from the last open attempt, or null when the database is open. */
 export function getDatabaseOpenError(): unknown {
 	return openError;
 }
 
-/** Tries to open again (the recovery screen's Try again). */
 export function retryOpenDatabase(): void {
 	if (openError === null) return;
 	const next = open();
@@ -62,11 +59,10 @@ export function retryOpenDatabase(): void {
 }
 
 /**
- * Recovery from a database that will not open or migrate (audit C-03): closes
- * it, renames `habits.db` (and its companions) to `habits.corrupt-<timestamp>.db`
- * in the same folder, and opens a new empty one. The old file is never deleted,
- * so a later build or support can still read it. If the rename fails the
- * original is opened again and the error is thrown: nothing changed.
+ * Recovery from a database that will not open or migrate: closes it, renames `habits.db` (and its
+ * companions) to `habits.corrupt-<timestamp>.db` in the same folder, and opens a new empty one.
+ * The old file is never deleted, so a later build or support can still read it. If the rename
+ * fails the original is opened again and the error is thrown: nothing changed.
  */
 export function setAsideDatabase(now: number): void {
 	const wasOpen = openError === null;

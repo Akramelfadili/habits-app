@@ -13,14 +13,13 @@ type EmptyStateProps = PropsWithChildren<{
 	centered?: boolean;
 }>;
 
-/** The 56 pt icon square of V3-28 (radius round(56 × 0.31) = 17). */
+/** The 56 pt icon square (radius round(56 × 0.31) = 17). */
 const SQUARE = 56;
 const GLYPH = 24;
 
 /**
- * V3-28, the empty state: an icon square, a title, one line of why, then
- * whatever the caller adds (the primary action, a link). Shared by Today's
- * empty and rest-day states and the other screens' empty panels.
+ * An icon square, a title, one line of why, then whatever the caller adds (the primary action, a
+ * link). Shared by Today's empty and rest-day states and the other screens' empty panels.
  */
 export function EmptyState({
 	icon,

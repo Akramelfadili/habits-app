@@ -44,7 +44,7 @@ describe("formIssues", () => {
 		expect(result.fields).toEqual(["weekdays"]);
 	});
 
-	it("blocks an edited V1 name still over 32, and lets an unchanged one through", () => {
+	it("blocks an edited legacy name still over 32, and lets an unchanged one through", () => {
 		const legacy = "a".repeat(38);
 		expect(formIssues({ ...ok, name: `${legacy}b` }).fields).toEqual(["name"]);
 		expect(

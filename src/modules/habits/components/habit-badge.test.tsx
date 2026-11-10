@@ -29,7 +29,7 @@ describe("HabitBadge", () => {
 		);
 	});
 
-	it("the default size is the 32 pt row square (V3-32)", async () => {
+	it("the default size is the 32 pt row square", async () => {
 		await render(<HabitBadge habit={makeHabit()} size="default" />);
 		expect(screen.toJSON()).toHaveStyle({ width: 32, height: 32 });
 	});

@@ -5,17 +5,11 @@ import { useTheme } from "@/theme/use-theme";
 
 type MoveButtonProps = {
 	direction: "up" | "down";
-	/** What a screen reader says: "Move Meditate up". */
 	accessibilityLabel: string;
-	/** At the first or last place of its group there is nowhere to go. */
 	disabled?: boolean;
 	onPress: () => void;
 };
 
-/**
- * One step up or down in a reorder list: the plain-tap way to move a row, next
- * to the drag grip. 44 × 44 pt; dimmed and inert at the end of its group.
- */
 export function MoveButton({
 	direction,
 	accessibilityLabel,

@@ -10,10 +10,9 @@ const NO_ENTRIES: readonly Entry[] = [];
 const NO_DATES: ReadonlySet<string> = new Set();
 
 /**
- * The log split per habit, in the order it came in (`useAllEntries` is sorted by
- * date, so each habit's list is too). One pass; callers keep the result in a
- * memo keyed on the log, so a re-render that did not change the log never
- * regroups it (audit B-04).
+ * The log split per habit, in the order it came in (`useAllEntries` is sorted by date, so each
+ * habit's list is too). One pass; callers keep the result in a memo keyed on the log, so a
+ * re-render that did not change the log never regroups it.
  */
 export function groupEntriesByHabit(
 	entries: readonly Entry[],
@@ -27,7 +26,6 @@ export function groupEntriesByHabit(
 	return byHabit;
 }
 
-/** The frozen days as one set of day keys per habit. */
 export function groupFrozenDatesByHabit(
 	frozenDays: readonly Pick<FrozenDay, "habitId" | "date">[],
 ): ReadonlyMap<number, ReadonlySet<string>> {

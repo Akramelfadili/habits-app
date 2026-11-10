@@ -7,9 +7,9 @@ import {
 } from "drizzle-orm/sqlite-core";
 
 /**
- * Generic app-level key-value store (`lib/app-settings`) — not scoped to any
- * one module. HAB-06's "seen first run" flag is the first consumer; future
- * app-level preferences reuse this same table instead of inventing their own.
+ * Generic app-level key-value store (`lib/app-settings`), not scoped to any one module. The
+ * "seen first run" flag is the first consumer; future app-level preferences reuse this table
+ * instead of inventing their own.
  */
 export const appSettings = sqliteTable("app_settings", {
 	key: text("key").primaryKey(),
@@ -17,10 +17,9 @@ export const appSettings = sqliteTable("app_settings", {
 });
 
 /**
- * The managed category set (HAB-24): the ten built-ins, seeded by migration
- * in their fixed order, then the user's custom ones. Autoincrement ids give
- * that order for free — built-ins first, customs in creation order. A
- * category supplies its habits' icon (`shape`) and color (`hue`).
+ * The managed category set: the ten built-ins, seeded by migration in their fixed order, then
+ * the user's custom ones. Autoincrement ids give that order for free (built-ins first, customs in
+ * creation order). A category supplies its habits' icon (`shape`) and color (`hue`).
  */
 export const categories = sqliteTable("categories", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
@@ -43,8 +42,8 @@ export const categories = sqliteTable("categories", {
 	hue: integer("hue"),
 	builtIn: integer("built_in", { mode: "boolean" }).notNull().default(false),
 	/**
-	 * Group order on Today and Manage (HAB-42). Backfilled by 0011; a new
-	 * category takes max + 1. The picker keeps creation (id) order.
+	 * Group order on Today and Manage. Backfilled by 0011; a new category takes max + 1. The picker
+	 * keeps creation (id) order.
 	 */
 	sortOrder: integer("sort_order").notNull().default(0),
 	createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
@@ -54,14 +53,14 @@ export const habits = sqliteTable("habits", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull(),
 	/**
-	 * Legacy (V1, pre-HAB-24) — no longer read or written. A habit's icon and
-	 * color now come from its category; kept nullable for one release so the
-	 * HAB-24 migration stays reversible, dropped by a later cleanup migration.
+	 * Legacy: no longer read or written. A habit's icon and color come from its category; kept
+	 * nullable for one release so the category migration stays reversible, dropped by a later
+	 * cleanup migration.
 	 */
 	icon: text("icon"),
-	/** Legacy (V1) — see `icon`. */
+	/** Legacy, see `icon`. */
 	color: text("color"),
-	/** Legacy (V1) free-text category — see `icon`; replaced by `categoryId`. */
+	/** Legacy free-text category, see `icon`; replaced by `categoryId`. */
 	category: text("category"),
 	categoryId: integer("category_id")
 		.notNull()
@@ -72,7 +71,7 @@ export const habits = sqliteTable("habits", {
 	targetType: text("target_type", { enum: ["simple", "quantity"] })
 		.notNull()
 		.default("simple"),
-	/** Set only when targetType is "quantity" (HAB-07) — null for simple-check habits. */
+	/** Set only when targetType is "quantity"; null for simple-check habits. */
 	targetAmount: integer("target_amount"),
 	targetUnit: text("target_unit"),
 	frequencyType: text("frequency_type", {
@@ -82,15 +81,14 @@ export const habits = sqliteTable("habits", {
 		.default("daily"),
 	/** Comma-separated ISO weekdays ("1,3,5"); set only for "weekdays". */
 	frequencyWeekdays: text("frequency_weekdays"),
-	/** 1–7; set only for "per-week". */
 	frequencyTimesPerWeek: integer("frequency_times_per_week"),
 	/**
-	 * Manual order on Manage (HAB-13) — Today respects it within each category
-	 * group. Reordering permutes a category's existing values among its habits,
-	 * so a category's first-appearance position never shifts.
+	 * Manual order on Manage; Today respects it within each category group. Reordering permutes a
+	 * category's existing values among its habits, so a category's first-appearance position never
+	 * shifts.
 	 */
 	sortOrder: integer("sort_order").notNull().default(0),
-	/** Set while archived (HAB-13) — null for an active habit. */
+	/** Set while archived; null for an active habit. */
 	archivedAt: integer("archived_at", { mode: "timestamp" }),
 	/**
 	 * Past archive periods, "from..to" calendar-day ranges joined by commas
@@ -103,9 +101,8 @@ export const habits = sqliteTable("habits", {
 });
 
 /**
- * One row = that habit was completed/resisted on that calendar day (HAB-03).
- * Presence is the signal — un-checking (always allowed, no confirmation)
- * deletes the row rather than flipping a boolean.
+ * One row = that habit was completed/resisted on that calendar day. Presence is the signal:
+ * un-checking (always allowed, no confirmation) deletes the row rather than flipping a boolean.
  */
 export const entries = sqliteTable(
 	"entries",
@@ -116,7 +113,7 @@ export const entries = sqliteTable(
 			.references(() => habits.id),
 		/** Calendar day, "yyyy-MM-dd" — not a timestamp, so timezone can't shift which day a completion lands on. */
 		date: text("date").notNull(),
-		/** Logged amount for a quantity habit (HAB-07) — null for simple-check entries. */
+		/** Logged amount for a quantity habit; null for simple-check entries. */
 		value: integer("value"),
 		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 	},
@@ -127,9 +124,9 @@ export const entries = sqliteTable(
 );
 
 /**
- * One row = that habit's missed day was covered by a freeze (HAB-08). The
- * shared monthly pool is derived by counting rows here whose `date` falls in
- * a given calendar month — across every habit, since the pool isn't per-habit.
+ * One row = that habit's missed day was covered by a freeze. The shared monthly pool is derived
+ * by counting rows here whose `date` falls in a given calendar month, across every habit, since
+ * the pool isn't per-habit.
  */
 export const frozenDays = sqliteTable(
 	"frozen_days",
@@ -138,7 +135,6 @@ export const frozenDays = sqliteTable(
 		habitId: integer("habit_id")
 			.notNull()
 			.references(() => habits.id),
-		/** The missed calendar day this freeze covers, "yyyy-MM-dd". */
 		date: text("date").notNull(),
 		createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 	},
@@ -149,9 +145,9 @@ export const frozenDays = sqliteTable(
 );
 
 /**
- * A free-text note on one habit's day (HAB-10). Separate from `entries` on
- * purpose: an entry's presence *is* the completion signal, so a note on a day
- * that wasn't completed can't live there without faking a completion.
+ * A free-text note on one habit's day. Separate from `entries` on purpose: an entry's presence
+ * *is* the completion signal, so a note on a day that wasn't completed can't live there without
+ * faking a completion.
  */
 export const entryNotes = sqliteTable(
 	"entry_notes",
@@ -160,7 +156,6 @@ export const entryNotes = sqliteTable(
 		habitId: integer("habit_id")
 			.notNull()
 			.references(() => habits.id),
-		/** Calendar day, "yyyy-MM-dd" — same keying as `entries`. */
 		date: text("date").notNull(),
 		note: text("note").notNull(),
 		updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
@@ -171,9 +166,9 @@ export const entryNotes = sqliteTable(
 );
 
 /**
- * One reminder time on a habit (HAB-12) — up to 4 per habit, each with its
- * own weekday set and on/off toggle. Purely a notification layer: nothing
- * here affects whether a habit is due or counts on Today.
+ * One reminder time on a habit, up to 4 per habit, each with its own weekday set and on/off
+ * toggle. Purely a notification layer: nothing here affects whether a habit is due or counts on
+ * Today.
  */
 export const reminders = sqliteTable(
 	"reminders",
@@ -182,9 +177,7 @@ export const reminders = sqliteTable(
 		habitId: integer("habit_id")
 			.notNull()
 			.references(() => habits.id),
-		/** 0–23, local time. */
 		hour: integer("hour").notNull(),
-		/** 0–59. */
 		minute: integer("minute").notNull(),
 		/** Comma-separated ISO weekdays ("1,2,3,4,5") — this reminder's own days, never shared. */
 		weekdays: text("weekdays").notNull(),

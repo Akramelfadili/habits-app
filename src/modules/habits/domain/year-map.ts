@@ -19,23 +19,19 @@ import { bestMonth, isJudgeable } from "./yearly-insights";
 import type { YearMonthCell } from "./yearly-summary";
 
 /**
- * The year heat map (HAB-37, P12–P16, V3-3a): a level 0–3 for every day of a
- * year, all habits together or one habit (binary, since one habit is 1 of 1 or
- * 0), grouped by month for the three 4-month bands, plus the month tiles, the
- * best month and the month list the VoiceOver / AX3 fallback draws (P16).
+ * The year heat map: a level 0–3 for every day of a year, all habits together or one habit
+ * (binary, since one habit is 1 of 1 or 0), grouped by month for the three 4-month bands, plus the
+ * month tiles, the best month and the month list the VoiceOver / largest-text fallback draws.
  *
- * Built in one pass on the shared day grid: each habit's context is bucketed
- * once and every day is answered in O(1) — no per-day scan of entries — so it
- * stays fast on five years of logs (`year-map.perf.test.ts`). Pass the year's
- * Monday-aligned entries (`rangeEntrySpan` or `yearEntryRange`); more is fine.
+ * Built in one pass on the shared day grid: each habit's context is bucketed once and every day
+ * is answered in O(1), with no per-day scan of entries, so it stays fast on five years of logs
+ * (`year-map.perf.test.ts`). Pass the year's Monday-aligned entries (`rangeEntrySpan` or
+ * `yearEntryRange`); more is fine.
  */
 
 export type YearMapMonth = YearMonthCell & {
-	/** "yyyy-MM". */
 	key: string;
-	/** Whole points; null unless the month was counted. */
 	percent: number | null;
-	/** The month's days in date order (one cell each; Mon → Sun rows are the screen's job). */
 	days: CalendarDay[];
 };
 
@@ -44,23 +40,17 @@ export type MonthListItem = {
 	key: string;
 	kind: YearMonthCell["kind"];
 	current: boolean;
-	/** Whole points; null for a month with nothing counted. */
 	percent: number | null;
-	/** 0–1 bar length (0 when there is no rate). */
 	bar: number;
 };
 
 export type YearMap = {
 	year: RangeWindow;
-	/** Every day of the year, in date order. */
 	days: CalendarDay[];
-	/** The twelve months, January first. */
 	months: YearMapMonth[];
-	/** Three bands of four months (Jan–Apr, May–Aug, Sep–Dec). */
 	bands: YearMapMonth[][];
 	/** The best finished month (needs two); null until then. */
 	bestMonth: YearMapMonth | null;
-	/** Months that have started, for the month-list fallback with bars and whole-number %. */
 	monthList: MonthListItem[];
 };
 
@@ -70,7 +60,6 @@ type YearMapInput = {
 	frozenDays: readonly FrozenDay[];
 	today: Date;
 	year: RangeWindow;
-	/** Nothing has ever been logged: due past days read `nothing-logged`. */
 	nothingLogged?: boolean;
 	/**
 	 * The cells for the previous year and this one, classified once by

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { PastDayBar } from "./past-day-bar";
 
-describe("PastDayBar (T10)", () => {
+describe("PastDayBar", () => {
 	it("says where logs go and offers the way back", async () => {
 		const onShowToday = jest.fn();
 		await render(

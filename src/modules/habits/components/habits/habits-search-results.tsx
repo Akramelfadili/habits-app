@@ -15,21 +15,18 @@ import { LibrarySectionHeader } from "./library-section-header";
 
 type HabitsSearchResultsProps = {
 	query: string;
-	/** Active habits whose name matched. */
 	active: readonly Habit[];
-	/** Archived habits whose name matched — restorable in place. */
 	archived: readonly ArchivedEntry[];
 	onOpen: (habit: Habit) => void;
 	onRestore: (habit: Habit) => void;
-	/** Add habit, opened with the searched name filled in (H3). */
+	/** Add habit, opened with the searched name filled in. */
 	onAdd: (name: string) => void;
 	restoring?: boolean;
 };
 
 /**
- * Search results (H2, H3): the active habits that match, then the archived ones
- * with Restore, split by status. With nothing matching it says what was
- * searched, that archived habits were searched too, and offers to add it.
+ * The active habits that match, then the archived ones with Restore, split by status. With nothing
+ * matching it says what was searched, that archived habits were searched too, and offers to add it.
  */
 export function HabitsSearchResults({
 	query,

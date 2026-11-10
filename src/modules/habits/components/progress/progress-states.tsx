@@ -6,7 +6,7 @@ import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { progressCopy } from "../../messages";
 
-/** No habits (P3): one clear next step instead of an empty chart. The switcher stays above, so the layout doesn't jump. */
+/** No habits: one clear next step instead of an empty chart. The switcher stays above, so the layout doesn't jump. */
 export function ProgressNoHabits({ onAddHabit }: { onAddHabit: () => void }) {
 	return (
 		<View testID="progress-no-habits">
@@ -26,7 +26,7 @@ export function ProgressNoHabits({ onAddHabit }: { onAddHabit: () => void }) {
 	);
 }
 
-/** Habits but nothing logged (P4): a note and a link to Today above the outlined grid. */
+/** Habits but nothing logged: a note and a link to Today above the outlined grid. */
 export function ProgressNothingLogged({
 	range,
 	onGoToToday,

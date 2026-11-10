@@ -2,15 +2,15 @@ import { startOfDay, startOfWeek } from "date-fns";
 import { WEEK_STARTS_ON } from "../constants";
 
 /**
- * A habit's completed dates, bucketed once so a strategy can answer "what was
- * done this week / on this day" in O(1) instead of scanning every completion
- * for every day it is asked about. History walks call a strategy once per day
- * over years, so the scan made per-week habits quadratic (assessment A.1.6).
+ * A habit's completed dates, bucketed once so a strategy can answer "what was done this week /
+ * on this day" in O(1) instead of scanning every completion for every day it is asked about.
+ * History walks call a strategy once per day over years, so the scan made per-week habits
+ * quadratic.
  *
  * Keys are the same instants date-fns compares: `isSameWeek(a, b)` is
- * `startOfWeek(a) === startOfWeek(b)` and `isSameDay(a, b)` is
- * `startOfDay(a) === startOfDay(b)`, so answers are identical to the scans
- * they replace (`per-week-frequency.equivalence.slow.test.ts`).
+ * `startOfWeek(a) === startOfWeek(b)` and `isSameDay(a, b)` is `startOfDay(a) === startOfDay(b)`,
+ * so answers are identical to the scans they replace
+ * (`per-week-frequency.equivalence.slow.test.ts`).
  */
 export type CompletionIndex = {
 	/** startOfWeek(…).getTime() → each completion's own instant, duplicates kept. */
@@ -70,7 +70,6 @@ export function completionIndex(dates: readonly Date[]): CompletionIndex {
 	return index;
 }
 
-/** Each completion's instant in `date`'s week (duplicates kept). */
 export function completionTimesInWeek(
 	index: CompletionIndex,
 	date: Date,
@@ -78,7 +77,6 @@ export function completionTimesInWeek(
 	return index.timesByWeek.get(weekKey(date)) ?? EMPTY_TIMES;
 }
 
-/** The distinct days completed in `date`'s week, as startOfDay instants. */
 export function completedDaysInWeek(
 	index: CompletionIndex,
 	date: Date,

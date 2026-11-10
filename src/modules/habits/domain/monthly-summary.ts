@@ -18,26 +18,24 @@ import { type CellStatus, habitDayClassifier } from "./day-status";
 import { insightsFor, type MonthlyInsight } from "./monthly-insights";
 
 /**
- * Monthly Summary's math (HAB-16) — pure functions, same shape as
- * `weekly-summary.ts`: every "was this day owed" question goes through the
- * habit's FrequencyStrategy (`wasScheduledOn`), which already honours archive
- * pauses; a habit's own creation day bounds the start.
+ * Monthly Summary's math: pure functions, same shape as `weekly-summary.ts`: every "was this day
+ * owed" question goes through the habit's FrequencyStrategy (`wasScheduledOn`), which already
+ * honours archive pauses; a habit's own creation day bounds the start.
  *
- * What counts, per habit per day (up to today — today only once it's done):
- * - **done** — completed, whatever else.
- * - **frozen** — scheduled, not done, covered by a freeze (HAB-08). An excused
- *   day: it is neither done nor missed, so it leaves both sides of the rate.
- * - **missed** — scheduled, not done, not frozen.
+ * What counts, per habit per day (up to today; today only once it's done):
+ * - **done**: completed, whatever else.
+ * - **frozen**: scheduled, not done, covered by a freeze. An excused day: it is neither done nor
+ *   missed, so it leaves both sides of the rate.
+ * - **missed**: scheduled, not done, not frozen.
  *
- * The month is a calendar month; its weeks are Monday-based (`WEEK_STARTS_ON`)
- * and **clipped** to it — a month starting on a Saturday opens with a
- * two-day week. A per-week habit's week is still judged whole (the caller
- * passes entries for the full Monday-aligned span, `monthEntryRange`).
+ * The month is a calendar month; its weeks are Monday-based (`WEEK_STARTS_ON`) and **clipped** to
+ * it: a month starting on a Saturday opens with a two-day week. A per-week habit's week is still
+ * judged whole (the caller passes entries for the full Monday-aligned span, `monthEntryRange`).
  *
- * **Perfect day** = a day with at least one counted habit where every counted
- * habit was done and none was frozen (D14, `isPerfectDay`). The "of N" under it is the number of days that had at least
- * one counted habit (`countedDays`) — not the calendar length, so a month of
- * rest days or a part-month history doesn't read as failure.
+ * **Perfect day** = a day with at least one counted habit where every counted habit was done and
+ * none was frozen (`isPerfectDay`). The "of N" under it is the number of days that had at least
+ * one counted habit (`countedDays`), not the calendar length, so a month of rest days or a
+ * part-month history doesn't read as failure.
  */
 
 export type MonthWindow = { start: Date; end: Date };
@@ -53,7 +51,6 @@ export function previousMonthWindow({ start }: MonthWindow): MonthWindow {
 	return monthWindowFor(subMonths(start, 1));
 }
 
-/** The first day any habit existed — null with no habits. */
 export function historyStart(habits: readonly Habit[]): Date | null {
 	if (habits.length === 0) return null;
 	return min(habits.map((habit) => startOfDay(habit.createdAt)));
@@ -64,7 +61,6 @@ export function monthEntryRange(month: MonthWindow): MonthWindow {
 	return weekAlignedSpan(previousMonthWindow(month).start, month.end);
 }
 
-/** The month's Monday-based weeks, the first and last clipped to the month. */
 export function monthWeeks(month: MonthWindow): MonthWindow[] {
 	const weeks: MonthWindow[] = [];
 	let start = month.start;
@@ -80,13 +76,12 @@ export type Outcome = "done" | "missed" | "frozen";
 
 export type DayOutcome = {
 	habitId: number;
-	/** yyyy-MM-dd */
 	date: string;
 	weekday: IsoWeekday;
 	outcome: Outcome;
 };
 
-/** One cell of the month calendar (NEW-16 states). */
+/** One cell of the month calendar. */
 export type CalendarDayStatus =
 	| { kind: "before-start" }
 	| { kind: "future" }
@@ -110,10 +105,8 @@ export type MonthlyHabitRow = {
 	habit: Habit;
 	completed: number;
 	scheduled: number;
-	/** 0–1; rows only exist for habits with at least one counted day. */
 	rate: number;
 	weeks: MonthlyWeekBar[];
-	/** Percentage points vs the previous month; null when that month had no data for this habit. */
 	deltaPoints: number | null;
 };
 
@@ -122,24 +115,20 @@ export type MonthlySummary = {
 	previousMonth: MonthWindow;
 	completed: number;
 	scheduled: number;
-	/** null before anything is counted. */
 	rate: number | null;
 	perfectDays: number;
 	/** Days with at least one counted habit — the "of N" under perfect days. */
 	countedDays: number;
-	/** Freezes used in the month, shared pool across habits (HAB-08). */
+	/** Freezes used in the month, shared pool across habits. */
 	freezeDates: Date[];
 	/** Rows of seven (Mon→Sun); null pads the days outside the month. */
 	calendar: (CalendarDay | null)[][];
-	/** Best rate first; ties in creation order. */
 	rows: MonthlyHabitRow[];
-	/** Ranked, never more than MAX_INSIGHTS — the freeze card is separate. */
 	insights: MonthlyInsight[];
 };
 
 type MonthlySummaryInput = {
 	habits: readonly Habit[];
-	/** Covers `monthEntryRange(month)`; any habit. */
 	entries: readonly Entry[];
 	frozenDays: readonly FrozenDay[];
 	today: Date;
@@ -350,7 +339,7 @@ export function buildMonthlySummary(
 		const dayCounts = counts(day);
 		if (dayCounts.scheduled === 0) continue;
 		countedDays += 1;
-		// A frozen day is excused, not perfect (D14): the shared rule decides.
+		// A frozen day is excused, not perfect: the shared rule decides.
 		const frozen = day.filter(({ outcome }) => outcome === "frozen").length;
 		const tally = {
 			done: dayCounts.completed,
@@ -379,9 +368,8 @@ export function buildMonthlySummary(
 		freezeDates,
 		calendar: buildCalendar(month, outcomes, historyStart(habits), today),
 		rows,
-		// Insights read active habits only (HAB-17's rule, now Monthly's too): an
-		// archived habit keeps its history in the tiles, calendar and rows, but is
-		// never named by an insight or offered as an action target.
+		// Insights read active habits only: an archived habit keeps its history in the tiles, calendar
+		// and rows, but is never named by an insight or offered as an action target.
 		insights: insightsFor({
 			rows: rows.filter((row) => row.habit.archivedAt === null),
 			outcomes: activeOutcomes,

@@ -3,11 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * E-02 / E-05: the "Data Not Collected" promise, kept by a test. Nothing in
- * `src/` talks to a network, and `package.json` carries no analytics or
- * crash-reporting package. Adding either means changing the privacy policy,
- * the App Privacy label (docs/how-to/app-store-privacy.md) and ADR 008 first;
- * then, and only then, this test.
+ * The "Data Not Collected" promise, kept by a test. Nothing in `src/` talks to a network,
+ * and `package.json` carries no analytics or crash-reporting package. Adding either means
+ * changing the privacy policy, the App Privacy label (docs/how-to/app-store-privacy.md) and
+ * ADR 008 first; then, and only then, this test.
  */
 
 const ROOT = path.resolve(__dirname, "..");
@@ -42,7 +41,7 @@ function sourceFiles(dir: string): string[] {
 	});
 }
 
-describe("no network in src (E-02)", () => {
+describe("no network in src", () => {
 	const files = sourceFiles(SRC).filter((file) => file !== __filename);
 
 	it("finds the source it is guarding", () => {
@@ -81,7 +80,7 @@ describe("no network in src (E-02)", () => {
 	});
 });
 
-describe("no analytics or crash reporting in package.json (E-02)", () => {
+describe("no analytics or crash reporting in package.json", () => {
 	const manifest = JSON.parse(
 		fs.readFileSync(path.join(ROOT, "package.json"), "utf8"),
 	) as Record<string, Record<string, string> | undefined>;

@@ -90,7 +90,7 @@ describe("orphan check with foreign keys off (the device)", () => {
 		expect((await mockDb.select().from(entries))[0].habitId).toBe(keeper.id);
 	});
 
-	it("a failed delete changes nothing: it is one transaction, so every child row is still there (HAB-45, DC4)", async () => {
+	it("a failed delete changes nothing: it is one transaction, so every child row is still there", async () => {
 		const habit = await seedHabitWithEveryKindOfChild();
 		const children = async () => [
 			(await mockDb.select().from(entries)).length,
@@ -101,7 +101,6 @@ describe("orphan check with foreign keys off (the device)", () => {
 		const before = await children();
 		expect(before.every((count) => count > 0)).toBe(true);
 
-		// The last statement of the delete — the habit row itself — fails.
 		await mockDb.run(
 			sql`CREATE TRIGGER block_habit_delete BEFORE DELETE ON habits BEGIN SELECT RAISE(ABORT, 'blocked'); END`,
 		);
@@ -115,7 +114,6 @@ describe("orphan check with foreign keys off (the device)", () => {
 			await mockDb.run(sql`DROP TRIGGER block_habit_delete`);
 		}
 
-		// And once the failure is gone, the same delete goes through whole.
 		await deleteHabitAndHistory(habit.id);
 		expect(await children()).toEqual([0, 0, 0, 0]);
 		expect(await orphans()).toEqual([]);

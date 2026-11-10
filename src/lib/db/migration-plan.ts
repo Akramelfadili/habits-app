@@ -2,23 +2,22 @@ import { log } from "@/lib/logger/logger";
 import { errorMessageOf, errorNameOf } from "./error-name";
 
 /**
- * What this launch has to do with the stored database (SY3, audit C-03, C-07).
- * Read before the migrator runs — nothing here writes.
+ * What this launch has to do with the stored database. Read before the migrator runs; nothing
+ * here writes.
  *
- * - "fresh": a genuinely empty database (no tables, or only an empty
- *   migrations table). Nothing to move, nothing to lose.
+ * - "fresh": a genuinely empty database (no tables, or only an empty migrations table).
+ *   Nothing to move, nothing to lose.
  * - "current": every migration this build ships is applied.
- * - "upgrade": an older migration is the last applied one. The update screen
- *   shows, and a backup is taken first.
- * - "newer": the last applied migration is newer than any this build ships —
- *   the data was written by a newer version of the app. This build must not
- *   touch it.
- * - "unreadable": the migrations table could not be read for a reason other
- *   than not existing (a corrupt file, an I/O error), or the database holds
- *   tables but no migration record. The migrator must not run on it.
+ * - "upgrade": an older migration is the last applied one. The update screen shows, and a backup
+ *   is taken first.
+ * - "newer": the last applied migration is newer than any this build ships, so the data was
+ *   written by a newer version of the app. This build must not touch it.
+ * - "unreadable": the migrations table could not be read for a reason other than not existing
+ *   (a corrupt file, an I/O error), or the database holds tables but no migration record. The
+ *   migrator must not run on it.
  *
- * The upgrade test is the migrator's own: `created_at` of the last applied row
- * against each journal entry's `when`.
+ * The upgrade test is the migrator's own: `created_at` of the last applied row against each
+ * journal entry's `when`.
  */
 export type MigrationPlan =
 	| "fresh"
@@ -27,7 +26,6 @@ export type MigrationPlan =
 	| "newer"
 	| "unreadable";
 
-/** The slice of expo-sqlite's database the check reads. */
 type SyncReader = {
 	getFirstSync: <Row>(source: string) => Row | null;
 };
@@ -66,7 +64,6 @@ export function planMigrations(
 			: "current";
 }
 
-/** Tables the app owns, with no record of how they got there: not a first install. */
 function hasOtherTables(database: SyncReader): boolean {
 	try {
 		const row = database.getFirstSync<{ n: number }>(

@@ -4,25 +4,22 @@ import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
 type HabitHistoryRowProps = {
-	/** "Thu 22 Oct". */
 	date: string;
-	/** "Done", "Missed", "Frozen · streak kept", "Done · off-schedule, not counted" — never a time (HAB-40). */
+	/** "Done", "Missed", "Frozen · streak kept", "Done · off-schedule, not counted"; never a time. */
 	status: string;
-	/** A frozen day reads in the freeze's violet (D5); everything else is secondary ink. */
+	/** A frozen day reads in the freeze's violet; everything else is secondary ink. */
 	tone?: "default" | "frozen";
-	/** "Bonus" — the small tag on an off-schedule day, which a rate never counts (D11). */
+	/** "Bonus": the small tag on an off-schedule day, which a rate never counts. */
 	tag?: string;
-	/** The day's own note (HAB-10), under the status. */
+	/** The day's own note, under the status. */
 	note?: string;
-	/** What VoiceOver says for the whole row: the weekday and month spelled out. */
 	accessibilityLabel: string;
 };
 
 /**
- * One line of Habit Detail's history (D2, V3-23): the date over what the day
- * was, and a Bonus tag when it was off-schedule. A read-only row — no times, no
- * chevron. The words carry the state, so the violet on a frozen day is never the
- * only signal. The row is one VoiceOver stop; at accessibility sizes the tag
+ * One line of Habit Detail's history: the date over what the day was, and a Bonus tag when it was
+ * off-schedule. A read-only row: no times, no chevron. The words carry the state, so the violet on a
+ * frozen day is never the only signal. The row is one VoiceOver stop; at accessibility sizes the tag
  * drops under the text.
  */
 export function HabitHistoryRow({

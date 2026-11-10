@@ -24,7 +24,7 @@ jest.mock("../repositories/habit-repository", () => ({
 
 import { useManageCategoriesQueries } from "./use-manage-categories-queries";
 
-describe("useManageCategoriesQueries (HAB-25)", () => {
+describe("useManageCategoriesQueries", () => {
 	it("splits built-ins from customs and counts archived habits too", async () => {
 		mockHabits = [
 			makeHabit({ id: 1, name: "Piano", category: mockMusic }),

@@ -28,7 +28,6 @@ import { ProgressStatTiles } from "./progress-stat-tiles";
 import { ProgressNoHabits, ProgressNothingLogged } from "./progress-states";
 
 type ProgressYearProps = {
-	/** The chip's habit, or null for all habits. */
 	filtered: Habit | null;
 	/** The one habit Progress is scoped to when only one exists; then there is nothing to filter. */
 	oneHabit: Habit | null;
@@ -41,10 +40,9 @@ type ProgressYearProps = {
 };
 
 /**
- * Progress · Year (HAB-37, P12, P14–P16): the year's heat map in three 4-month
- * bands — month labels the only taps — with the rate / streak / best-month
- * tiles, the best-month insight and a habit chip. VoiceOver and the large text
- * sizes get the month list instead of 365 small squares (P16).
+ * The year's heat map in three 4-month bands (month labels the only taps) with the rate / streak /
+ * best-month tiles, the best-month insight and a habit chip. VoiceOver and the large text sizes get
+ * the month list instead of 365 small squares.
  */
 export function ProgressYear({
 	filtered,

@@ -38,7 +38,7 @@ describe("Banner", () => {
 		});
 	});
 
-	it("shows an action link under the message and fires it (HAB-15)", async () => {
+	it("shows an action link under the message and fires it", async () => {
 		const onPress = jest.fn();
 		await render(
 			<Banner tone="neutral" action={{ label: "Open iOS Settings →", onPress }}>

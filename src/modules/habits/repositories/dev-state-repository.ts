@@ -112,7 +112,6 @@ export async function replaceAllData(state: DeviceState): Promise<void> {
 	});
 }
 
-/** Habit ids currently stored — lets a screen wait until a state has landed. */
 export async function storedHabitIds(): Promise<number[]> {
 	const rows = await db.select({ id: habits.id }).from(habits);
 	return rows.map((row) => row.id);

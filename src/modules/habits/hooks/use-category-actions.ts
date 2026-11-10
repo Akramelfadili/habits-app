@@ -9,8 +9,8 @@ import {
 } from "../repositories/category-repository";
 
 /**
- * Category writes (HAB-24, HAB-25) — each a single repository call (delete's
- * reassign-to-Other is one transaction inside it), so no service in between.
+ * Category writes, each a single repository call (delete's reassign-to-Other is one transaction
+ * inside it), so no service in between.
  */
 export function useCategoryActions() {
 	const create = useAsyncAction(createCategory, { scope: "categories" });

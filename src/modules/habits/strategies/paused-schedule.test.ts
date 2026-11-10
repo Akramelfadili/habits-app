@@ -60,7 +60,7 @@ describe("withPauses", () => {
 	});
 });
 
-describe("restartDays (HAB-20)", () => {
+describe("restartDays", () => {
 	it("is the day after each pause ends — the restore day — in order", () => {
 		expect(
 			restartDays([

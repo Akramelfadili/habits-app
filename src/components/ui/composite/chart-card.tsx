@@ -4,21 +4,15 @@ import { radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ChartCardProps = {
-	/** Omitted when the body names itself (the one-habit week card, P5). */
+	/** Omitted when the body names itself (the one-habit week card). */
 	title?: string;
-	/** Right of the title: "19 – 25 Oct", "Since 3 Mar". */
 	meta?: string;
 	children: ReactNode;
-	/** Under the body: a legend, or one line of explanation. */
 	footer?: ReactNode;
 	testID?: string;
 };
 
-/**
- * V3-11 · chart card: the container for every grid, chart and per-habit list.
- * A surface step and a hairline, never a shadow (F-06); header title (subhead)
- * and meta (caption), the body, then an optional legend or caption.
- */
+/** The container for every grid, chart and per-habit list. A surface step and a hairline, never a shadow. */
 export function ChartCard({
 	title,
 	meta,

@@ -33,15 +33,13 @@ type TodayHabitListProps = {
 	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
 	/** False on a past day: copy drops "today". */
 	isToday: boolean;
-	/** After the evening hour on the real today (T5: "Resist tonight"). */
+	/** After the evening hour on the real today ("Resist tonight"). */
 	isEvening?: boolean;
-	/** "Wed 21" — the past day, named in the progress line (T10). */
+	/** "Wed 21": the past day, named in the progress line. */
 	dayLabel: string;
-	/** Habits that existed but are not due on the shown day: the fold row (T1). */
+	/** Habits that existed but are not due on the shown day: the fold row. */
 	notDueHabits: readonly Habit[];
-	/** Not-due habits logged as a bonus on the shown day. */
 	loggedBonusIds: ReadonlySet<number>;
-	/** A bonus quantity habit's logged amount on the shown day. */
 	bonusValues?: ReadonlyMap<number, number>;
 	onToggle: (habit: Habit) => void;
 	onAddOne: (habit: Habit) => void;
@@ -52,9 +50,8 @@ type TodayHabitListProps = {
 };
 
 /**
- * The day's body (HAB-30/31): the all-done card when everything is done, one
- * progress bar, a flat card per category with its "0 of 2" count, and the one
- * dashed row the not-due habits fold into.
+ * The day's body: the all-done card when everything is done, one progress bar, a flat card per
+ * category with its "0 of 2" count, and the one dashed row the not-due habits fold into.
  */
 export function TodayHabitList({
 	progress,
@@ -207,7 +204,10 @@ type TodayNotDueCardProps = {
 	onOpenHabit: (habitId: number) => void;
 };
 
-/** The not-due habits as dashed-circle rows: a tap logs a bonus, which never touches a streak (D11). Shared by the fold row and the rest day. */
+/**
+ * The not-due habits as dashed-circle rows: a tap logs a bonus, which never touches a streak. Shared
+ * by the fold row and the rest day.
+ */
 export function TodayNotDueCard({
 	habits,
 	loggedBonusIds,

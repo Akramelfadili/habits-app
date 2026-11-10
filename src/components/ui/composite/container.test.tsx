@@ -58,7 +58,7 @@ describe("Container", () => {
 		expect(screen.getByText("Row").parent).toHaveStyle({ padding: 6 });
 	});
 
-	it("outlined: a card with a hairline border (HAB-25's move preview)", async () => {
+	it("outlined: a card with a hairline border", async () => {
 		await render(
 			<Container variant="outlined">
 				<Text>Preview</Text>
@@ -101,7 +101,7 @@ describe("Container", () => {
 		expect(screen.getByLabelText("A card")).toBe(screen.getByTestId("card"));
 	});
 
-	it("lifted: an outline appears without shifting the content (HAB-19)", async () => {
+	it("lifted: an outline appears without shifting the content", async () => {
 		const view = await render(
 			<Container tight>
 				<Text>Row</Text>

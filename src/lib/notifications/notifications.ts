@@ -20,11 +20,8 @@ export type ReminderNotification = {
 	id: string;
 	title: string;
 	body: string;
-	/** 0–23, local time. */
 	hour: number;
-	/** 0–59. */
 	minute: number;
-	/** ISO weekdays (1 = Monday … 7 = Sunday) to repeat on, every week. */
 	weekdays: readonly number[];
 };
 
@@ -68,12 +65,10 @@ export async function getNotificationPermission(): Promise<NotificationPermissio
 	return toPermission(await Notifications.getPermissionsAsync());
 }
 
-/** Shows the OS prompt if it hasn't been answered yet; otherwise just reports the answer. */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
 	return toPermission(await Notifications.requestPermissionsAsync());
 }
 
-/** ISO weekday (1 = Monday) → iOS calendar weekday (1 = Sunday). */
 function toCalendarWeekday(isoWeekday: number): number {
 	return (isoWeekday % 7) + 1;
 }
@@ -97,7 +92,6 @@ export function notificationIdentifier(
 
 let generationCounter = 0;
 
-/** A short token that names one scheduling run — unique even for two runs in the same millisecond. */
 export function newGeneration(): string {
 	generationCounter = (generationCounter + 1) % 1296;
 	return `${Date.now().toString(36)}${generationCounter.toString(36)}`;
@@ -105,7 +99,6 @@ export function newGeneration(): string {
 
 export type NotificationSlot = "daily" | `day-${number}`;
 
-/** The triggers a reminder's days need: one daily trigger for all seven, else one weekly per day. */
 export function reminderSlots(weekdays: readonly number[]): NotificationSlot[] {
 	const days = [...new Set(weekdays)];
 	return days.length === 7
@@ -120,11 +113,9 @@ export type ParsedIdentifier = {
 	generation: string;
 };
 
-/** Reads an identifier made by `notificationIdentifier`; null for anything else (an older format, or not ours). */
 export function parseIdentifier(identifier: string): ParsedIdentifier | null {
 	const match = identifier.match(/^(.+):(daily|day-\d):(\d{4}):([0-9a-z]+)$/);
 	const [, reminderId, slot, time, generation] = match ?? [];
-	// All four groups are mandatory in the pattern, so one missing means no match.
 	if (!reminderId || !slot || !time || !generation) return null;
 	return { reminderId, slot, time, generation };
 }
@@ -181,7 +172,6 @@ export async function scheduleReminder(
 	}
 }
 
-/** Every pending notification's identifier — a snapshot to diff against before scheduling. */
 export async function listScheduledIdentifiers(): Promise<string[]> {
 	const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 	return scheduled.map((request) => request.identifier);

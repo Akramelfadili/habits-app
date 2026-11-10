@@ -116,10 +116,9 @@ async function toHabit(row: HabitRow): Promise<Habit> {
 }
 
 /**
- * Habit rows + every category, mapped together. Two live subscriptions rather
- * than one joined query: Drizzle's `useLiveQuery` only re-runs when its `from`
- * table changes, so a join would leave habits showing a renamed or deleted
- * category's stale name/icon/color (HAB-25).
+ * Habit rows + every category, mapped together. Two live subscriptions rather than one joined
+ * query: Drizzle's `useLiveQuery` only re-runs when its `from` table changes, so a join would
+ * leave habits showing a renamed or deleted category's stale name/icon/color.
  */
 function useHabitsWithCategories(
 	query: Parameters<typeof useLiveRows>[0],
@@ -151,7 +150,7 @@ function useHabitsWithCategories(
 /** Stable empty result while loading, so consumers' memo deps don't churn. */
 const NOT_LOADED: HabitsResult = { habits: [], loaded: false };
 
-/** New habits go last in their category (HAB-13's manual order). */
+/** New habits go last in their category (manual order). */
 async function nextSortOrder(): Promise<number> {
 	const [row] = await db.select({ value: max(habits.sortOrder) }).from(habits);
 	return (row?.value ?? 0) + 1;
@@ -207,9 +206,9 @@ export async function updateHabit(
 }
 
 /**
- * Live-query hook over every habit, archived ones included — for screens
- * that look one habit up by id (Habit Detail, Reminders), which must keep
- * working for an archived habit's history. Manual order (HAB-13).
+ * Live-query hook over every habit, archived ones included, for screens that look one habit up
+ * by id (Habit Detail, Reminders), which must keep working for an archived habit's history.
+ * Manual order.
  */
 export function useHabitsList(): HabitsResult {
 	return useHabitsWithCategories(() =>
@@ -217,7 +216,6 @@ export function useHabitsList(): HabitsResult {
 	);
 }
 
-/** Live-query hook — habits not archived (Today, Weekly Summary, Manage), in manual order. */
 export function useActiveHabits(): HabitsResult {
 	return useHabitsWithCategories(() =>
 		db
@@ -228,7 +226,6 @@ export function useActiveHabits(): HabitsResult {
 	);
 }
 
-/** Live-query hook — archived habits, most recently archived first (HAB-13). */
 export function useArchivedHabits(): HabitsResult {
 	return useHabitsWithCategories(() =>
 		db
@@ -255,16 +252,14 @@ export async function getHabit(id: number): Promise<Habit | undefined> {
 }
 
 /**
- * Saves a new manual order for some habits (HAB-13): the habits' *existing*
- * sort values are redistributed in the given order, so reordering within a
- * category never moves that category relative to the others. One
- * transaction, with BEGIN/COMMIT/ROLLBACK issued as raw SQL rather than
- * through Drizzle's `db.transaction()`: that helper's expo-sqlite
- * implementation issues COMMIT as soon as the callback *returns*, without
- * awaiting it — correct for a synchronous callback, a real bug for an async
- * one (the pending promise returns at its first `await`, so COMMIT fires before
- * the rest has run). Driving the statements through this file's awaited calls,
- * in order, sidesteps that.
+ * Saves a new manual order for some habits: the habits' *existing* sort values are
+ * redistributed in the given order, so reordering within a category never moves that category
+ * relative to the others. One transaction, with BEGIN/COMMIT/ROLLBACK issued as raw SQL rather
+ * than through Drizzle's `db.transaction()`: that helper's expo-sqlite implementation issues
+ * COMMIT as soon as the callback *returns*, without awaiting it, which is correct for a
+ * synchronous callback but a real bug for an async one (the pending promise returns at its first
+ * `await`, so COMMIT fires before the rest has run). Driving the statements through this file's
+ * awaited calls, in order, sidesteps that.
  */
 export async function reorderHabits(orderedIds: number[]): Promise<void> {
 	const rows = await db
@@ -294,11 +289,10 @@ export async function reorderHabits(orderedIds: number[]): Promise<void> {
 	}
 }
 
-/** Marks a habit archived — nothing else about it changes (HAB-13). */
 export async function setHabitArchived(
 	id: number,
 	archivedAt: Date,
-	/** Also rewrites the past pauses — only for undoing a restore (HAB-20), which puts them back as they were. */
+	/** Also rewrites the past pauses, only for undoing a restore, which puts them back as they were. */
 	pauses?: readonly DayRange[],
 ): Promise<Habit> {
 	const [row] = await db
@@ -313,7 +307,6 @@ export async function setHabitArchived(
 	return toHabit(present(row, "the habit row"));
 }
 
-/** Clears the archive flag and stores the habit's full list of past pauses. */
 export async function setHabitRestored(
 	id: number,
 	pauses: readonly DayRange[],
@@ -327,14 +320,13 @@ export async function setHabitRestored(
 }
 
 /**
- * Permanently deletes a habit and everything that references it (HAB-13) —
- * entries, notes, frozen days, reminders — in one transaction. None of those
- * foreign keys cascade, so leaving any out would orphan rows (or fail with
- * foreign-key enforcement on).
+ * Permanently deletes a habit and everything that references it (entries, notes, frozen days,
+ * reminders) in one transaction. None of those foreign keys cascade, so leaving any out would
+ * orphan rows (or fail with foreign-key enforcement on).
  */
 export async function deleteHabitAndHistory(id: number): Promise<void> {
-	// One serialised transaction (HAB-45): a failure anywhere leaves every row as
-	// it was, so Delete's "Nothing was changed. Try again." is true.
+	// One serialised transaction: a failure anywhere leaves every row as it was, so Delete's
+	// "Nothing was changed. Try again." is true.
 	await runInTransaction(async () => {
 		await db.delete(entries).where(eq(entries.habitId, id));
 		await db.delete(entryNotes).where(eq(entryNotes.habitId, id));

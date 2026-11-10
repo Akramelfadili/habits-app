@@ -497,7 +497,6 @@ describe("HabitFormScreen — create", () => {
 			await fireEvent.press(screen.getByLabelText("Thursday"));
 
 			await fireEvent.press(screen.getByLabelText("Add time"));
-			// The sheet opens on 09:00, on the days the habit is set for.
 			expect(mockTimeWheel.mock.calls.at(-1)?.[0]).toMatchObject({
 				hour: 9,
 				minute: 0,
@@ -835,8 +834,8 @@ describe("HabitFormScreen — edit", () => {
 		});
 	});
 
-	describe("a legacy name over 32 (HAB-22)", () => {
-		const legacyName = "Read twenty pages before a morning tea"; // 38
+	describe("a legacy name over 32", () => {
+		const legacyName = "Read twenty pages before a morning tea";
 		beforeEach(() => {
 			mockHabits = [makeHabit({ id: 3, name: legacyName, category: MORNING })];
 			mockUpdateHabit.mockResolvedValue(mockHabits[0]);
@@ -868,7 +867,7 @@ describe("HabitFormScreen — edit", () => {
 	});
 });
 
-describe("HabitFormScreen — focus=frequency (HAB-16)", () => {
+describe("HabitFormScreen — focus=frequency", () => {
 	function scrollSpy() {
 		const spy = jest.fn();
 		const { ScrollView } = require("react-native");

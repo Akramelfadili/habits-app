@@ -3,8 +3,7 @@ import type { Frequency, IsoWeekday } from "../types";
 import type { ExportModel } from "./export-data";
 
 /**
- * The CSV layout of a data export (HAB-15) — one file, one row per fact,
- * told apart by `record_type`:
+ * The CSV layout of a data export: one file, one row per fact, told apart by `record_type`:
  *
  *   habit       one per habit, including habits with no logs; carries the
  *               habit's settings, category name and both streaks
@@ -13,11 +12,10 @@ import type { ExportModel } from "./export-data";
  *   note        one per day note: `date`, `note`
  *   frozen_day  one per streak freeze: `date`
  *
- * Child rows repeat `habit_id` and `habit_name` so a row is readable on its
- * own; columns that don't apply are left empty. Quoting follows RFC 4180
- * (commas, quotes and line breaks inside a field), rows end CRLF, and the file
- * starts with a UTF-8 byte-order mark so Numbers and Excel read accents right.
- * Typed text that a spreadsheet would run as a formula is written with a
+ * Child rows repeat `habit_id` and `habit_name` so a row is readable on its own; columns that
+ * don't apply are left empty. Quoting follows RFC 4180 (commas, quotes and line breaks inside a
+ * field), rows end CRLF, and the file starts with a UTF-8 byte-order mark so Numbers and Excel
+ * read accents right. Typed text that a spreadsheet would run as a formula is written with a
  * leading apostrophe (see `escapeCsvField`).
  */
 
@@ -70,7 +68,7 @@ export function describeFrequency(frequency: Frequency): string {
 	}
 }
 
-/** A spreadsheet reads a cell that starts with one of these as a formula (D-08). */
+/** A spreadsheet reads a cell that starts with one of these as a formula. */
 const FORMULA_START = /^[=+\-@\t\r]/;
 
 /**

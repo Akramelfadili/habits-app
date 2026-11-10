@@ -29,12 +29,12 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - Specs: `docs/specs/feature-spec-v3.md`, `docs/specs/feature-spec-v2.md`, `docs/specs/feature-spec.md`.
 - UI: `DESIGN.md`, `docs/design/design-system-v3.md`, `docs/design/design-system.md` (its **Deltas** are intentional), `docs/mockups/v3/renders/INDEX.md`.
 - Layers, folders, stack: `ARCHITECTURE.md`.
-- Navigation, tab bar, pushed screens, First Run: `docs/decisions/006-navigation.md`, test `src/navigation.test.tsx`.
+- Navigation, First Run: `docs/decisions/006-navigation.md`, test `src/navigation.test.tsx`.
 - Commands, hooks, visual-check, allowlists, token ratchet: `docs/how-to/dev-tooling.md`.
 - iOS Simulator and device validation: `docs/decisions/007-device-validation.md`, `docs/how-to/device-validation.md`.
 - App variants, backups, recovery screens, set-aside: `docs/decisions/010-app-variants-and-recovery.md`, `docs/how-to/backups-and-recovery.md`.
 - Builds, versions, TestFlight, rollback, device checklist, `make release-check`: `docs/how-to/release.md`.
-- Next fixes: `docs/backlog.md` (open work only; shipped entries are in `docs/archive/backlog-done.md`, the old audit plan in `docs/archive/audit.md`; both never read by default). Status: `docs/README.md`, `CHANGELOG.md`.
+- Next fixes: `docs/backlog.md` (open work only; `docs/archive/` is never read by default). Status: `docs/README.md`, `CHANGELOG.md`.
 - Deviations: append to `docs/backlog.md`, never drop silently. Reviewers must not re-flag `docs/backlog.md` § "Decided" or § "Deliberate V3 deviations".
 
 ## Rules that no tool catches
@@ -43,6 +43,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - New frequency type or streak rule = new Strategy file, not an `if`. Do not change existing Strategy semantics.
 - Forms: React Hook Form + Zod. Dates: `date-fns`, never native `Date` math for streaks or weeks.
 - Reuse before create: search `components/ui/primitives|composite` and the module's components first. Colours, shadows, font sizes come from `src/theme` tokens.
+- Comments: write only the why. None that restate code; no banners or file headers; no history; no spec versions or ticket IDs in code (`make check-comment-refs`).
 - Header buttons only via `src/components/ui/composite/header-buttons.tsx` (iOS 26 Liquid Glass bug).
 - Categories: `habits.categoryId` supplies icon and color. Never read or write the legacy `habits.icon/color/category` columns; no free-text categories.
 - Allowlists (`scripts/check-architecture.allowlist.json`) and the token baseline only shrink.

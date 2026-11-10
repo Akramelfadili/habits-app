@@ -9,17 +9,14 @@ type IconBadgeProps = {
 	symbol?: SFSymbol;
 	/** Draws a minus bar in this colour instead of a symbol: no SF Symbol is a bare minus (Delete habit). */
 	minusColor?: string;
-	/** Accent tint + ink for a habit's icon; omit for the neutral grey badge (form rows). */
 	accent?: { tint: string; ink: string };
 	/**
-	 * "large" is a sheet header's own icon (e.g. Quantity Log, HAB-07);
-	 * "small" is the 22px inline badge (VAR-02) — the category picker's header;
-	 * "compact" the 28px habit badge on a summary's per-habit rows (NEW-21).
+	 * "large" is a sheet header's own icon (e.g. Quantity Log); "small" is the 22px inline badge (the
+	 * category picker's header); "compact" the 28px habit badge on a summary's per-habit rows.
 	 */
 	size?: "small" | "compact" | "default" | "large";
 };
 
-/** Non-interactive leading icon square for list rows (design-system "List row"). */
 export function IconBadge({
 	symbol,
 	minusColor,
@@ -57,7 +54,6 @@ const SYMBOL_SIZES = {
 	large: 24,
 } as const;
 
-/** Square sizes in pt; "default" is V3-32's 32 pt row square (T-18, was 38). */
 const SQUARE_SIZES = {
 	small: 22,
 	compact: 28,
@@ -65,7 +61,7 @@ const SQUARE_SIZES = {
 	large: 48,
 } as const;
 
-/** V3-32: the radius follows round(size × 0.31) (F-05), so every size is one rule. */
+/** The radius follows round(size × 0.31), so every size is one rule. */
 const styles = StyleSheet.create(
 	Object.fromEntries(
 		Object.entries(SQUARE_SIZES).map(([size, side]) => [

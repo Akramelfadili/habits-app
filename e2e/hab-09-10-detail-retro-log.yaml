@@ -1,6 +1,5 @@
 # Journey: Today → Habit Detail → tap a missed past day on the heatmap →
 # retro-log it with a note → the heatmap cell, streak and entries update.
-# Covers HAB-03 (entry point), HAB-09 (detail + heatmap), HAB-10 (retro-log + notes), HAB-08 (streak recalculation), HAB-27 (Detail inside the Today tab).
 #
 # Seed (`retro-log` fixtures, clock pinned to Thu 1 Oct): "Glass of water"
 # (daily, 8 glasses) has a 24-day current streak, bounded by a miss 25 days
@@ -15,16 +14,12 @@ tags:
 - launchApp
 - assertVisible: "Thursday, 1 October"
 
-# HAB-09: tapping the habit's name opens its detail.
 - tapOn: "Glass of water"
-# The streak tile reads "Streak, 24, days" (V3-4a).
 - assertVisible:
     text: "24"
 - takeScreenshot: hab-09-10-before
 
-# HAB-10: each of the last five weeks is one target; the oldest week holds the
-# miss on Sun 6 Sep, and the row opens Edit this day on its latest unlogged
-# due day.
+# Each of the last five weeks is one target; the oldest week holds the miss on Sun 6 Sep, and the row opens Edit this day on its latest unlogged due day.
 - tapOn:
     id: "Week of 31 August.*"
 - assertVisible: "Tap a circle to set that day. Streaks and rates update when you close."
@@ -37,23 +32,20 @@ tags:
 # The amount sheet is stacked on the day sheet: its Done has its own label.
 - tapOn:
     id: "Done with amount"
-# The note is saved when the day sheet closes.
 - tapOn:
     id: "Note"
 - inputText: "Forgot to log — was on the trail all day."
 - tapOn: "Done"
 
-# The week row and the streak tile reflect the backfilled day.
 - assertVisible:
     text: "27"
 - takeScreenshot: hab-09-10-after
 
-# Reopening the week's day shows the saved note.
 - tapOn:
     id: "Week of 31 August.*"
 - assertVisible: "Forgot to log — was on the trail all day."
 - tapOn: "Close"
 
-# HAB-27: Detail was pushed inside the Today tab, so Back lands on Today.
+# Detail was pushed inside the Today tab, so Back lands on Today.
 - back
 - assertVisible: "Today"

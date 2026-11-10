@@ -23,8 +23,8 @@ export function rowToCategory(row: CategoryRow): Category {
 }
 
 /**
- * Every category in the stored group order (HAB-42, `sort_order`; ties by
- * id). Callers that need creation order (the picker) re-sort by id.
+ * Every category in the stored group order (`sort_order`; ties by id). Callers that need
+ * creation order (the picker) re-sort by id.
  */
 export const allCategoriesQuery = () =>
 	db

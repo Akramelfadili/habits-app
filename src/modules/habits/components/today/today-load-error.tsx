@@ -10,7 +10,6 @@ import { todayCopy } from "../../messages";
 import { TodayHeader } from "../today-header";
 
 type TodayLoadErrorProps = {
-	/** Mounts Today afresh, so its queries run again. */
 	onRetry: () => void;
 	/** The `+` still works: the data is only unreadable, not gone. */
 	onAddHabit: () => void;
@@ -19,10 +18,9 @@ type TodayLoadErrorProps = {
 };
 
 /**
- * SY2: Today could not read its habits. The header and the tab bar stay, so the
- * app is still usable; under them one calm line — the data is safe — then Try
- * again, and Copy diagnostics for anyone who needs to report it. Everything the
- * person is told is true: a failed read changes nothing.
+ * Today could not read its habits. The header and the tab bar stay, so the app is still usable;
+ * under them one calm line (the data is safe), then Try again, and Copy diagnostics for anyone who
+ * needs to report it. Everything the person is told is true: a failed read changes nothing.
  */
 export function TodayLoadError({
 	onRetry,

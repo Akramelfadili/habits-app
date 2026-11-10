@@ -6,11 +6,11 @@ export type CompletionRowsCell = {
 	key: string;
 	state: CompletionCellState;
 	today?: boolean;
-	/** The ringed day the detail card is about (Month, P13). */
+	/** The ringed day the detail card is about (Month). */
 	selected?: boolean;
 	/** A number drawn inside (the calendar's day). */
 	text?: string;
-	/** VoiceOver ignores the cell (the year map's days, 08.3). */
+	/** VoiceOver ignores the cell (the year map's days). */
 	hidden?: boolean;
 	accessibilityLabel?: string;
 	/** Set on a tappable cell (Habit Detail's entry into Edit this day); read-only otherwise. */
@@ -28,9 +28,8 @@ type CompletionRowsProps = {
 };
 
 /**
- * The plain cell grid under V3-06's layouts and Habit Detail's history: rows of
- * equal squares. It knows nothing about weeks or months — the layouts around it
- * decide what a row is.
+ * The plain cell grid under the week, month and year layouts and Habit Detail's history: rows of
+ * equal squares. It knows nothing about weeks or months; the layouts around it decide what a row is.
  */
 export function CompletionRows({
 	rows,

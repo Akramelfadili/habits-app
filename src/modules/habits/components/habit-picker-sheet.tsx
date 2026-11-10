@@ -12,15 +12,14 @@ type HabitPickerSheetProps = {
 	visible: boolean;
 	/** Habits that can be logged off-schedule — Break and archived habits are already out. */
 	habits: Habit[];
-	/** Ids already logged off-schedule today. */
 	loggedHabitIds: ReadonlySet<number>;
 	onSelect: (habit: Habit) => void;
 	onDismiss: () => void;
 };
 
 /**
- * "Log off-schedule" (HAB-18, D1 / NEW-12): the rest-day picker. Lists existing
- * habits only; with none eligible it says why instead of showing nothing.
+ * "Log off-schedule": the rest-day picker. Lists existing habits only; with none eligible it says
+ * why instead of showing nothing.
  */
 export function HabitPickerSheet({
 	visible,

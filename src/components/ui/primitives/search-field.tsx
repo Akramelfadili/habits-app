@@ -22,11 +22,8 @@ type SearchFieldProps = {
 	onChangeText: (text: string) => void;
 	/** "Search habits" — also what VoiceOver calls the field. */
 	label: string;
-	/** The word on the button that ends a search ("Cancel"); it shows while the field is focused or has text. */
 	cancelLabel: string;
-	/** Ends the search: the screen clears the text and drops focus. */
 	onCancel: () => void;
-	/** "Clear text" — the button inside the field, shown with text. */
 	clearLabel: string;
 	onFocus?: () => void;
 	onBlur?: () => void;
@@ -34,10 +31,9 @@ type SearchFieldProps = {
 };
 
 /**
- * The V3-16 text field's search variant (H1–H3): the inset fill, radius `l`, a
- * magnifier, and a Cancel that appears once the field is in use. Idle it is a
- * 44 pt fill; focused it takes the ink outline every field takes (F-06). The
- * field is a search field to VoiceOver ("Search habits, search field") and the
+ * The text field's search variant: the inset fill, radius `l`, a magnifier, and a Cancel that
+ * appears once the field is in use. Idle it is a 44 pt fill; focused it takes the ink outline every
+ * field takes. The field is a search field to VoiceOver ("Search habits, search field") and the
  * clear and Cancel buttons are their own 44 pt stops.
  */
 export function SearchField({

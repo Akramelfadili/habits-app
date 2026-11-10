@@ -7,8 +7,8 @@ type CheckMarkProps = {
 };
 
 /**
- * A drawn check: two borders of a turned square, so it needs no icon font and
- * shows on web. The shape that says "selected" without colour (08.7).
+ * A drawn check: two borders of a turned square, so it needs no icon font and shows on web. The
+ * shape that says "selected" without colour.
  */
 export function CheckMark({ color, testID = "check-mark" }: CheckMarkProps) {
 	return (

@@ -8,13 +8,11 @@ type GuardedNavigation = {
 };
 
 /**
- * Asks before a screen goes away while it holds edits (F9). Every way out —
- * the header's Close, a swipe down, the Android back — reaches the navigator
- * as "remove this screen"; the guard stops that and raises `prompting`.
- * `leave` (Discard) then lets that very action through, `keep` drops it, and
- * `leaveWith` is for the screen's own exits (a successful save): it stops
- * guarding first, and only then runs the exit, so the exit is not itself
- * stopped.
+ * Asks before a screen goes away while it holds edits. Every way out (the header's Close, a
+ * swipe down, the Android back) reaches the navigator as "remove this screen"; the guard stops
+ * that and raises `prompting`. `leave` (Discard) then lets that very action through, `keep` drops
+ * it, and `leaveWith` is for the screen's own exits (a successful save): it stops guarding first,
+ * and only then runs the exit, so the exit is not itself stopped.
  */
 export function useLeaveGuard(hasEdits: boolean) {
 	const navigation = useNavigation() as unknown as GuardedNavigation;
@@ -28,7 +26,6 @@ export function useLeaveGuard(hasEdits: boolean) {
 		setPrompting(true);
 	});
 
-	// The guard is off by the time this runs, so the exit goes through.
 	useEffect(() => {
 		if (!allowed) return;
 		exit.current?.();

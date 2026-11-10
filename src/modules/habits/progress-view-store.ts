@@ -4,11 +4,11 @@ import { toDayKey } from "@/utils/day-key";
 export type ProgressRange = "week" | "month" | "year";
 
 type ProgressViewState = {
-	/** Which range the Progress tab shows; it survives switching tabs (HAB-35). */
+	/** Which range the Progress tab shows; it survives switching tabs. */
 	range: ProgressRange;
-	/** The Year chip's habit; null is "All habits" (HP1/HP2). */
+	/** The Year chip's habit; null is "All habits". */
 	habitId: number | null;
-	/** The day ringed in Month, "yyyy-MM-dd", whose detail card is showing (P13). */
+	/** The day ringed in Month, "yyyy-MM-dd", whose detail card is showing. */
 	selectedDay: string | null;
 	setRange: (range: ProgressRange) => void;
 	setHabit: (habitId: number | null) => void;
@@ -22,10 +22,10 @@ const INITIAL = {
 };
 
 /**
- * The Progress tab's view state: which range, which habit filter, which day is
- * ringed. A store, not screen state, so Week / Month / Year survives a trip to
- * another tab. Month from the switcher is always the current month (D15); any
- * other month is its own pushed route, opened from a Year label (`/month/…`).
+ * The Progress tab's view state: which range, which habit filter, which day is ringed. A
+ * store, not screen state, so Week / Month / Year survives a trip to another tab. Month from
+ * the switcher is always the current month; any other month is its own pushed route, opened
+ * from a Year label (`/month/...`).
  */
 export const useProgressViewStore = create<ProgressViewState>((set) => ({
 	...INITIAL,

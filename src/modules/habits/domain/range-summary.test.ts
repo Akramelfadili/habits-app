@@ -11,12 +11,10 @@ import {
 } from "./range-summary";
 import { yearWindowFor } from "./yearly-summary";
 
-// Friday 18 Sep 2026 — the week is Mon 14 – Sun 20, the one before Mon 7 – Sun 13.
 const today = new Date(2026, 8, 18, 12);
 const monday = new Date(2026, 8, 14);
 const longAgo = new Date(2025, 0, 1);
 const key = (date: Date) => format(date, "yyyy-MM-dd");
-/** 0 = Monday of the current week; negatives reach into the week before. */
 const at = (offset: number) => addDays(monday, offset);
 
 let nextId = 1;
@@ -61,13 +59,12 @@ const noSocial = makeHabit({
 const read = makeHabit({ id: 5, name: "Read", createdAt: longAgo });
 const habits: Habit[] = [water, upper, cold, noSocial, read];
 
-// This week up to Friday (today): see the per-habit comments below.
 const entries: Entry[] = [
-	...done(1, [0, 1, 2, 3, 4]), // 5 of 5
-	...done(2, [0, 1, 3]), // Tue + Thu done; Monday is a bonus
-	...done(3, [0, 2]), // 2 of 3 — every open day can still cover the third
-	...done(4, [0, 1, 3]), // resisted Mon, Tue, Thu; Wed slipped
-	...done(5, [0, 1]), // Wed missed, Thu frozen
+	...done(1, [0, 1, 2, 3, 4]),
+	...done(2, [0, 1, 3]),
+	...done(3, [0, 2]),
+	...done(4, [0, 1, 3]),
+	...done(5, [0, 1]),
 ];
 const frozenDays = [freeze(5, 3)];
 
@@ -119,7 +116,6 @@ describe("range windows", () => {
 
 describe("buildRangeSummary — week", () => {
 	it("rates done ÷ due with frozen, bonus and the open today left out", () => {
-		// water 5/5, upper 2/2, cold 2/2, no-social 3/4 (Fri open), read 2/3 (Thu frozen, Fri open).
 		const result = summary();
 		expect(result).toMatchObject({ done: 14, due: 16, rate: 88 });
 		expect(result.freezes.map(({ date }) => date)).toEqual(["2026-09-17"]);
@@ -158,7 +154,6 @@ describe("buildRangeSummary — week", () => {
 	it("counts perfect days: Mon, Tue, and not a frozen Thursday or a Friday still open", () => {
 		const result = summary();
 		expect(result.perfectDays).toBe(2);
-		// Mon–Thu have something due; Friday has water done only so far.
 		expect(result.countedDays).toBe(5);
 	});
 
@@ -190,7 +185,6 @@ describe("buildRangeSummary — week", () => {
 			today,
 			window: week,
 		});
-		// this week: water 5/5 + read 2/3 = 7/8 (88); last week 14/14 (100)
 		expect(result).toMatchObject({
 			rate: 88,
 			previousRate: 100,
@@ -206,7 +200,6 @@ describe("buildRangeSummary — week", () => {
 		const result = buildRangeSummary({
 			kind: "week",
 			habits: [water, read],
-			// Read: 1 of 4 due this week (Mon done; Tue, Wed, Thu missed) after 7 of 7.
 			entries: [...lastWeek, ...done(1, [0, 1, 2, 3, 4]), ...done(5, [0])],
 			frozenDays: [],
 			today,
@@ -254,7 +247,6 @@ describe("buildRangeSummary — month", () => {
 	it("tags a habit whose weeks only fall as slipping and ranks it last", () => {
 		const fading = makeHabit({ id: 1, name: "Fading", createdAt: longAgo });
 		const steady = makeHabit({ id: 2, name: "Steady", createdAt: longAgo });
-		// Mon 3 Aug → Sun 30 Aug: 7, 5, 3, 1 of 7 against a habit done every day.
 		const result = buildRangeSummary({
 			kind: "month",
 			habits: [fading, steady],
@@ -280,7 +272,6 @@ describe("buildRangeSummary — month", () => {
 		const result = buildRangeSummary({
 			kind: "month",
 			habits: [meditate],
-			// 1–13 Aug, a two-day gap, then 16–20 Aug; a July run before the month is not counted.
 			entries: [...log(1, 1, 13), ...log(1, 16, 5)],
 			frozenDays: [],
 			today: sept,

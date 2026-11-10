@@ -9,14 +9,12 @@ type WeekdayOption<T extends number> = {
 };
 
 type WeekdayPickerProps<T extends number> = {
-	/** Days in display order (Mon → Sun). */
 	days: WeekdayOption<T>[];
 	selected: readonly T[];
 	onChange: (selected: T[]) => void;
 	disabled?: boolean;
 };
 
-/** Row of day circles — multi-select, each tap toggles one day. */
 export function WeekdayPicker<T extends number>({
 	days,
 	selected,
@@ -48,7 +46,7 @@ export function WeekdayPicker<T extends number>({
 }
 
 const styles = StyleSheet.create({
-	// 44 pt circles that wrap at accessibility sizes (F10) instead of squeezing.
+	// 44 pt circles that wrap at accessibility sizes instead of squeezing.
 	row: {
 		flexDirection: "row",
 		flexWrap: "wrap",

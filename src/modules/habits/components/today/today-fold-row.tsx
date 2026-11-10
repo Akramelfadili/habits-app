@@ -5,16 +5,14 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { todayCopy } from "../../messages";
 
 type TodayFoldRowProps = {
-	/** "1 not due today · Upper body". */
 	summary: string;
 	expanded: boolean;
 	onToggle: () => void;
 };
 
 /**
- * The one quiet dashed row the not-due habits fold into (T1): "1 not due today
- * · Upper body" with Show on the right. Tapping it reveals them with dashed
- * circles, so a bonus log is still one tap away.
+ * The one quiet dashed row the not-due habits fold into: "1 not due today · Upper body" with Show on
+ * the right. Tapping it reveals them with dashed circles, so a bonus log is still one tap away.
  */
 export function TodayFoldRow({
 	summary,

@@ -26,10 +26,9 @@ type ProgressMonthScreenProps = {
 };
 
 /**
- * Month for one named month (P13): a Year month label pushes this inside the
- * Progress stack, so Back and the iOS swipe-back both return to Year exactly as
- * it was (filter, scroll). Month from the range switcher stays in place on the
- * Progress screen and is always the current month (D15).
+ * Month for one named month: a Year month label pushes this inside the Progress stack, so
+ * Back and the iOS swipe-back both return to Year exactly as it was (filter, scroll). Month
+ * from the range switcher stays in place on the Progress screen and is always the current month.
  */
 export function ProgressMonthScreen({ month }: ProgressMonthScreenProps) {
 	const router = useRouter();

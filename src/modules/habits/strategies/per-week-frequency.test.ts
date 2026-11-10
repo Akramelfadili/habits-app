@@ -1,7 +1,6 @@
 import { addDays } from "date-fns";
 import { createPerWeekFrequency } from "./per-week-frequency";
 
-// 2026-09-21 is a Monday; the week runs to Sunday 2026-09-27.
 const monday = new Date(2026, 8, 21, 9);
 const day = (offset: number) => addDays(monday, offset);
 const threePerWeek = createPerWeekFrequency({
@@ -69,7 +68,6 @@ describe("X-per-week frequency, looking back (wasScheduledOn)", () => {
 	});
 
 	it("marks only the week's last open days missed when it falls short", () => {
-		// 1 of 3 logged (Monday): Saturday and Sunday are the 2 that couldn't be covered.
 		expect(scheduledDays([day(0)])).toEqual([
 			true,
 			false,
@@ -82,7 +80,6 @@ describe("X-per-week frequency, looking back (wasScheduledOn)", () => {
 	});
 
 	it("doesn't count a later completion as open capacity", () => {
-		// Mon + Sun logged, 1 still needed: only Saturday — the last open day — is missed.
 		expect(scheduledDays([day(0), day(6)])).toEqual([
 			true,
 			false,
@@ -96,7 +93,6 @@ describe("X-per-week frequency, looking back (wasScheduledOn)", () => {
 
 	it("owes nothing early in the week while the target is still reachable", () => {
 		expect(scheduledDays([]).slice(0, 4)).toEqual([false, false, false, false]);
-		// Fri onward: 3 needed, fewer than 3 open days left after each.
 		expect(scheduledDays([]).slice(4)).toEqual([true, true, true]);
 	});
 

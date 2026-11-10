@@ -79,7 +79,6 @@ export function makeHabit(overrides: Partial<Habit> = {}): Habit {
 	};
 }
 
-/** A logged day. Override `habitId`, `date` and `value` as the test needs. */
 export function makeEntry(overrides: Partial<Entry> = {}): Entry {
 	return {
 		id: 1,
@@ -90,7 +89,6 @@ export function makeEntry(overrides: Partial<Entry> = {}): Entry {
 	};
 }
 
-/** A freeze on one missed day (HAB-08). */
 export function makeFreeze(overrides: Partial<FrozenDay> = {}): FrozenDay {
 	return {
 		id: 1,

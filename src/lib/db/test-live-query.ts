@@ -16,7 +16,6 @@ export function notifyTableChanged(table: string) {
 	for (const listener of listeners) listener(table);
 }
 
-/** Stand-in for `table-change.ts`: `listener` runs after each reported write to `table`. */
 export function onTableChange(table: string, listener: () => void) {
 	const own = (changed: string) => {
 		if (changed === table) listener();
@@ -27,7 +26,6 @@ export function onTableChange(table: string, listener: () => void) {
 	};
 }
 
-/** How many live subscriptions are open right now — hooks and shared tables alike. */
 export function activeListenerCount(): number {
 	return listeners.size;
 }

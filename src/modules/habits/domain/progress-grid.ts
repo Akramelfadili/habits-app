@@ -16,19 +16,17 @@ import { monthWindowFor } from "./monthly-summary";
 import type { RangeWindow } from "./range-summary";
 
 /**
- * The grids Progress draws (HAB-35/36, V3-3a): the week matrix (habits × 7
- * days), the month calendar and one day's detail card. All three read the
- * shared day grid, so a cell here is always the status the rates counted.
- * "One habit" variants (P5, P10) are the same calls with `scopeHabits`.
+ * The grids Progress draws: the week matrix (habits × 7 days), the month calendar and one day's
+ * detail card. All three read the shared day grid, so a cell here is always the status the rates
+ * counted. "One habit" variants are the same calls with `scopeHabits`.
  */
 
 type GridInput = {
 	habits: readonly Habit[];
-	/** Any habit's entries covering the grid's Monday-aligned span. */
 	entries: readonly Entry[];
 	frozenDays: readonly FrozenDay[];
 	today: Date;
-	/** Nothing has ever been logged: due past cells read `nothing-logged` (P4). */
+	/** Nothing has ever been logged: due past cells read `nothing-logged`. */
 	nothingLogged?: boolean;
 };
 
@@ -36,11 +34,8 @@ function byCreationOrder(a: Habit, b: Habit): number {
 	return a.createdAt.getTime() - b.createdAt.getTime() || a.id - b.id;
 }
 
-// ─── Week matrix ──────────────────────────────────────────────────────────────
-
 export type MatrixDay = {
 	date: Date;
-	/** "yyyy-MM-dd". */
 	key: string;
 	isToday: boolean;
 };
@@ -49,11 +44,9 @@ export type MatrixCell = HabitDayCell & { date: Date; key: string };
 
 export type MatrixRow = {
 	habit: Habit;
-	/** Break habit: a done cell reads "resisted" (D8). */
+	/** Break habit: a done cell reads "resisted". */
 	isBreak: boolean;
-	/** Seven cells, Monday → Sunday. */
 	cells: MatrixCell[];
-	/** Days done this week (a × per week habit can pass its target). */
 	done: number;
 	/** The "n/target" under the row: days the habit is due this week, or the weekly count for × per week. */
 	target: number;
@@ -66,9 +59,8 @@ export type WeekMatrix = {
 };
 
 /**
- * Days the habit is due across the whole week, future days included
- * (P1's "3/7"): before-start and paused days are not, a frozen day still is.
- * A × per week habit's target is its weekly count.
+ * Days the habit is due across the whole week, future days included ("3/7"): before-start and
+ * paused days are not, a frozen day still is. A × per week habit's target is its weekly count.
  */
 function weeklyTarget(habit: Habit, week: readonly Date[]): number {
 	if (habit.frequency.type === "per-week") return habit.frequency.timesPerWeek;
@@ -125,8 +117,6 @@ export function buildWeekMatrix(
 	return { week, days, rows };
 }
 
-// ─── Month calendar ───────────────────────────────────────────────────────────
-
 /**
  * One day of the month calendar:
  * - `before-start` — every habit is younger than this day (dashed).
@@ -153,7 +143,6 @@ export type CalendarDay = {
 	key: string;
 	isToday: boolean;
 	status: CalendarDayStatus;
-	/** 0–3 by done ÷ due (L1 1–49 %, L2 50–99 %, L3 100 %); null when nothing was due. */
 	level: DayLevel | null;
 	/** Level 1 or 2: the corner notch that says "partial" without relying on lightness. */
 	notch: boolean;
@@ -200,9 +189,7 @@ export function calendarDayOf(
 
 export type MonthCalendar = {
 	month: RangeWindow;
-	/** Rows of seven (Mon → Sun); null pads the days outside the month. */
 	weeks: (CalendarDay | null)[][];
-	/** Flat, in date order. */
 	days: CalendarDay[];
 };
 
@@ -241,22 +228,17 @@ export function buildMonthCalendar(
 	return { month, weeks, days };
 }
 
-/** The Mon–Sun weeks a calendar month's cells need entries for (× per week judges a whole week). */
 export function calendarEntrySpan(month: Date): RangeWindow {
 	const window = monthWindowFor(month);
 	return weekAlignedSpan(window.start, window.end);
 }
-
-// ─── Day detail ───────────────────────────────────────────────────────────────
 
 export type DayDetailItem = {
 	habit: Habit;
 	isBreak: boolean;
 	status: CellStatus;
 	level: 0 | 1 | 2 | 3;
-	/** The logged amount (a quantity habit's "8 of 8"), when there is one. */
 	value?: number;
-	/** The target for a quantity habit; null for a simple check. */
 	target: number | null;
 };
 
@@ -264,20 +246,16 @@ export type DayDetail = {
 	date: Date;
 	key: string;
 	isToday: boolean;
-	/** Future days can't be edited ("Can't log ahead"). */
 	editable: boolean;
 	done: number;
 	due: number;
-	/** Whole points; null when nothing was due. */
 	percent: number | null;
-	/** The habits with something to say that day: due, logged, frozen or still open. */
 	items: DayDetailItem[];
 };
 
 /**
- * Each habit's state on one date — the Month day card and the year's day
- * detail (P13). `entries` must cover the date's Monday–Sunday week (a × per
- * week habit's day depends on the rest of its week).
+ * Each habit's state on one date: the Month day card and the year's day detail. `entries` must
+ * cover the date's Monday–Sunday week (a × per week habit's day depends on the rest of its week).
  */
 export function buildDayDetail(input: GridInput & { date: Date }): DayDetail {
 	const { date, today } = input;
@@ -323,7 +301,6 @@ export function buildDayDetail(input: GridInput & { date: Date }): DayDetail {
 	};
 }
 
-/** The Monday–Sunday span to read entries for when showing one day's detail. */
 export function dayEntrySpan(date: Date): RangeWindow {
 	return weekWindow(date);
 }

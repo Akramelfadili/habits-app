@@ -36,8 +36,8 @@ export function useTodayLogActions({
 }: TodayLogInput) {
 	const { toggleCompletion, restoreDay } = useTodayActions();
 	const { logQuantity } = useQuantityLogActions();
-	// The open quantity sheet: its day is fixed when it opens, so a sheet left
-	// open across midnight keeps its date (HAB-30).
+	// The open quantity sheet: its day is fixed when it opens, so a sheet left open across
+	// midnight keeps its date.
 	const [quantitySession, setQuantitySession] = useState<{
 		habitId: number;
 		day: Date;
@@ -54,8 +54,8 @@ export function useTodayLogActions({
 	const quantityHabit = loggableHabits.find(
 		(habit) => habit.id === quantitySession?.habitId,
 	);
-	// The open sheet reads its own day's entry, not the shown day's: across
-	// midnight the screen moves on, the sheet does not (SY5).
+	// The open sheet reads its own day's entry, not the shown day's: across midnight the screen
+	// moves on, the sheet does not.
 	const sheetDay = quantitySession?.day ?? today;
 	const sheetEntries = useEntriesInRange(sheetDay, sheetDay);
 	const sheetValue =
@@ -65,12 +65,11 @@ export function useTodayLogActions({
 				entry.date === toDayKey(sheetDay),
 		)?.value ?? 0;
 
-	// Names the date in a toast only when it isn't today (T10).
+	// Names the date in a toast only when it isn't today.
 	const dayLabel =
 		selectedKey === null
 			? undefined
 			: format(fromDayKey(selectedKey), "EEE d MMM");
-	// A sheet whose day is no longer today says so in its title.
 	const sheetDayLabel =
 		quantitySession && !isSameDay(quantitySession.day, today)
 			? format(quantitySession.day, "EEE d MMM")
@@ -79,15 +78,15 @@ export function useTodayLogActions({
 	// Every completion confirms itself with a short-lived Undo (design system,
 	// "Feedback"). The toast lives in the shell's shared slot.
 	function confirmCompletion(habit: Habit, undo: () => unknown) {
-		// A Break habit is resisted, never "complete" (HAB-04).
+		// A Break habit is resisted, never "complete".
 		const spec =
 			habit.direction === "break" ? messages.resisted : messages.completed;
 		showMessage(spec, [habit.name, dayLabel], undo);
 	}
 
-	// Un-ticking is as instant as ticking (HAB-03), and as undoable: the toast
-	// puts the habit back as it was, on the day of the tap. A newer toast
-	// replaces this one, and once it expires there is nothing left to undo.
+	// Un-ticking is as instant as ticking, and as undoable: the toast puts the habit back as it
+	// was, on the day of the tap. A newer toast replaces this one, and once it expires there is
+	// nothing left to undo.
 	function confirmUncompletion(habit: Habit, undo: () => unknown) {
 		const spec =
 			habit.direction === "break"
@@ -103,9 +102,9 @@ export function useTodayLogActions({
 	}
 
 	/**
-	 * Confirms a write. A write that gave a frozen day's freeze back says so
-	 * instead (PR-11, one toast at a time); its Undo puts the day and the freeze
-	 * back exactly. `previous` is what the day held at tap time.
+	 * Confirms a write. A write that gave a frozen day's freeze back says so instead (one toast at
+	 * a time); its Undo puts the day and the freeze back exactly. `previous` is what the day held at
+	 * tap time.
 	 */
 	function confirmWrite(
 		habit: Habit,
@@ -158,10 +157,9 @@ export function useTodayLogActions({
 	}
 
 	/**
-	 * A tap on a quantity habit's circle (D6): one more than the day holds, with
-	 * an Undo that writes back what was there at tap time. There is no step log —
-	 * one entry per habit per day holds the total — and above the target it keeps
-	 * counting.
+	 * A tap on a quantity habit's circle: one more than the day holds, with an Undo that writes
+	 * back what was there at tap time. There is no step log (one entry per habit per day holds the
+	 * total) and above the target it keeps counting.
 	 */
 	async function addOne(habit: Habit) {
 		const day = writableDay();
@@ -197,7 +195,6 @@ export function useTodayLogActions({
 		setQuantitySession(null);
 	}
 
-	/** The rest-day picker's pick: a quantity habit opens its sheet, anything else logs at once. */
 	async function logOffSchedule(habit: Habit) {
 		if (habit.targetType === "quantity") {
 			const quantityDay = writableDay();
@@ -222,7 +219,6 @@ export function useTodayLogActions({
 	return {
 		toggle,
 		addOne,
-		/** The open quantity sheet's inputs, or `null` while it is closed. */
 		quantitySheet:
 			quantityHabit && quantitySession
 				? {

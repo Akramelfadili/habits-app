@@ -15,10 +15,8 @@ export type SafeFieldValue = number | boolean | string | null;
 
 /** What a sink receives: already redacted, so a sink never has to be careful. */
 export type LogEntry = {
-	/** ISO 8601. */
 	timestamp: string;
 	level: LogLevel;
-	/** Short dot-separated name, e.g. `migration.start`. */
 	event: string;
 	fields?: Record<string, SafeFieldValue>;
 	error?: SerializedError;

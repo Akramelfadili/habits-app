@@ -65,7 +65,6 @@ export function useEntriesInRange(start: Date, end: Date): Entry[] {
 	);
 }
 
-/** Web counterpart of the native per-habit slice of the shared log. */
 export function useHabitEntries(habitId: number): Entry[] {
 	const entries = useSyncExternalStore(
 		subscribe,
@@ -78,7 +77,6 @@ export function useHabitEntries(habitId: number): Entry[] {
 	);
 }
 
-/** Web counterpart of the native aggregate: distinct logged days and the first. */
 export function useLoggedDays(): LoggedDays {
 	const entries = useSyncExternalStore(
 		subscribe,
@@ -93,12 +91,11 @@ export function useLoggedDays(): LoggedDays {
 	};
 }
 
-/** Web counterpart of the native repository's unbounded live query. */
 export function useAllEntries(): Entry[] {
 	return useSyncExternalStore(subscribe, getEntries, () => [] as Entry[]);
 }
 
-/** Web counterpart of the native freeze change (PR-11): no real transaction, one store. */
+/** Web counterpart of the native freeze change: no real transaction, one store. */
 async function changeFreeze(
 	habitId: number,
 	date: Date,
@@ -137,7 +134,6 @@ export async function setHabitCompletedOn(
 	setEntries(entries.filter((entry) => entry.id !== existing.id));
 }
 
-/** Web counterpart of the native repository's quantity upsert (HAB-07). */
 export async function setHabitQuantityOn(
 	habitId: number,
 	date: Date,
@@ -174,12 +170,10 @@ export async function setHabitQuantityOn(
 	]);
 }
 
-/** Web counterpart of the native repository's notes live query (HAB-10). */
 export function useEntryNotes(): EntryNote[] {
 	return useSyncExternalStore(subscribe, getNotes, () => [] as EntryNote[]);
 }
 
-/** Web counterpart of the native transactional day save (HAB-10). */
 export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 	assertWritesAllowed();
 	for (const { habitId, value } of log.values) {

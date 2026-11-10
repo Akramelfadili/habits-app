@@ -8,15 +8,13 @@ import {
 import { useHabitsList } from "../repositories/habit-repository";
 
 /**
- * Where the app opens (HAB-46): First Run, or the tabs. Reads the "seen"
- * flag and the habit list (archived included) and lets the pure gate decide;
- * `needsSeenMark` is true for an install that has habits but never wrote the
- * flag, which the tabs shell writes once.
+ * Where the app opens: First Run, or the tabs. Reads the "seen" flag and the habit list
+ * (archived included) and lets the pure gate decide; `needsSeenMark` is true for an install that
+ * has habits but never wrote the flag, which the tabs shell writes once.
  */
 export function useFirstRunQueries(): {
 	gate: FirstRunGate;
 	needsSeenMark: boolean;
-	/** Undefined while the list loads. */
 	habitCount: number | undefined;
 } {
 	const seenFlag = useAppSetting(SEEN_FIRST_RUN_SETTING_KEY);

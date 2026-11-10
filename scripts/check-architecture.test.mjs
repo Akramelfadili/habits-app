@@ -16,7 +16,6 @@ const SCRIPT = path.join(
 );
 const roots = [];
 
-/** Builds a throwaway repo from { "src/...": "contents" } and runs the check on it. */
 function run(tree, extraArgs = []) {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), "arch-check-"));
 	roots.push(root);
@@ -470,7 +469,6 @@ describe("check-architecture", () => {
 		);
 		assert.equal(ok.status, 0, ok.stdout + ok.stderr);
 
-		// Fix the violation: the entry is now stale and must be removed.
 		write("src/components/ui/box.tsx", `export const c = 1;\n`);
 		const stale = spawnSync(
 			process.execPath,

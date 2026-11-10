@@ -12,31 +12,27 @@ import {
 import { useTheme } from "@/theme/use-theme";
 
 /**
- * The ONE place header buttons are defined — the navigation-bar ones (back,
- * Cancel, Edit, any future Done/Save) and the circle buttons a screen draws in
- * its own large-title header (V3-02: ≤ 2 trailing 44 pt buttons — the `+` on
- * Today and Habits, the gear on Habits). A guard test
- * (`header-buttons.guard.test.ts`) fails if any other file sets a header
- * button option directly.
+ * The ONE place header buttons are defined: the navigation-bar ones (back, Cancel, Edit, any future
+ * Done/Save) and the circle buttons a screen draws in its own large-title header (at most two
+ * trailing 44 pt buttons: the `+` on Today and Habits, the gear on Habits). A guard test
+ * (`header-buttons.guard.test.ts`) fails if any other file sets a header button option directly.
  *
- * Why: on iOS 26 every native nav-bar item is wrapped in a shared Liquid Glass
- * capsule unless the item sets `hidesSharedBackground`. A plain `headerRight`
- * element can't carry that flag, and the system back button can't be opted
- * out at all — so header buttons here are custom items with
- * `hidesSharedBackground: true` (`unstable_header*Items`, iOS-only), plus the
- * same element via `headerLeft`/`headerRight` for web/Android, which the
- * items override on iOS. Liquid Glass stays on everywhere else (tab bar etc.).
+ * Why: on iOS 26 every native nav-bar item is wrapped in a shared Liquid Glass capsule unless the
+ * item sets `hidesSharedBackground`. A plain `headerRight` element can't carry that flag, and the
+ * system back button can't be opted out at all, so header buttons here are custom items with
+ * `hidesSharedBackground: true` (`unstable_header*Items`, iOS-only), plus the same element via
+ * `headerLeft`/`headerRight` for web/Android, which the items override on iOS. Liquid Glass stays on
+ * everywhere else (tab bar etc.).
  *
- * The back button is ours too (the system one is hidden), at the cost of the
- * system long-press back menu. Swipe-back is unaffected: react-native-screens
- * owns that gesture, independent of which button is showing.
+ * The back button is ours too (the system one is hidden), at the cost of the system long-press back
+ * menu. Swipe-back is unaffected: react-native-screens owns that gesture, independent of which
+ * button is showing.
  */
 
-/** The drawn `+`: 16 pt across, 2 pt stroke (F-08). */
+/** The drawn `+`: 16 pt across, 2 pt stroke. */
 const PLUS_SIZE = 16;
 const PLUS_STROKE = 2;
 
-/** Minimum tap target, per the HIG. */
 export const HEADER_BUTTON_MIN_SIZE = 44;
 
 /** The compact pill: 36 pt drawn, 4 pt of hit slop above and below make 44. */
@@ -51,7 +47,6 @@ type HeaderButtonProps = {
 	accessibilityLabel?: string;
 };
 
-/** A plain text header button — no capsule, no shadow, at least 44×44. */
 function HeaderButton({
 	label,
 	onPress,
@@ -132,7 +127,6 @@ export function headerBackOptions({
 	};
 }
 
-/** A trailing text action — Cancel, Edit, Done, Save. */
 export function headerActionOptions({
 	label,
 	onPress,
@@ -166,9 +160,9 @@ type HeaderCircleButtonProps = {
 };
 
 /**
- * A trailing button in a screen's own large-title header (V3-02): a 44 pt
- * card-coloured circle with a hairline, so a pair of them reads as one group.
- * Not a navigation-bar item — those are the `*Options` helpers above.
+ * A trailing button in a screen's own large-title header: a 44 pt card-coloured circle with a
+ * hairline, so a pair of them reads as one group. Not a navigation-bar item; those are the
+ * `*Options` helpers above.
  */
 export function HeaderCircleButton({
 	symbol,
@@ -200,13 +194,12 @@ export function HeaderCircleButton({
 
 type HeaderPillButtonProps = {
 	label: string;
-	/** A glyph before the label (Progress's Export arrow). */
 	symbol?: SFSymbol;
 	/** What it does, when the visible label alone is ambiguous — "Export data". */
 	accessibilityLabel?: string;
 	/**
-	 * Looks and reads as disabled, but still takes the tap: Progress's Export
-	 * explains why it can't run in a toast (P3) instead of going silent.
+	 * Looks and reads as disabled, but still takes the tap: Progress's Export explains why it can't run
+	 * in a toast instead of going silent.
 	 */
 	unavailable?: boolean;
 	/**
@@ -218,9 +211,8 @@ type HeaderPillButtonProps = {
 };
 
 /**
- * A labelled trailing button in a screen's own large-title header (Progress's
- * Export, P1): the same 44 pt-high card pill with a hairline as the circles,
- * with its words beside the glyph.
+ * A labelled trailing button in a screen's own large-title header (Progress's Export): the same
+ * 44 pt-high card pill with a hairline as the circles, with its words beside the glyph.
  */
 export function HeaderPillButton({
 	label,
@@ -305,7 +297,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 		gap: space[100],
-		// Same inset as the ghost Button these actions used before.
 		paddingHorizontal: space[500],
 	},
 	back: {
@@ -354,11 +345,9 @@ const styles = StyleSheet.create({
 		width: PLUS_STROKE,
 		height: PLUS_SIZE,
 	},
-	/** Matches the system back title it replaces. */
 	backLabel: {
 		fontSize: 17,
 	},
-	/** Same text as the ghost Button these actions used before. */
 	actionLabel: {
 		fontSize: 15,
 		fontWeight: "500",

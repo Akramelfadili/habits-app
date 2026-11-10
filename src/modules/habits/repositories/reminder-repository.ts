@@ -31,7 +31,6 @@ function weekdaysToColumn(weekdays: readonly IsoWeekday[]): string {
 	return [...new Set(weekdays)].sort((a, b) => a - b).join(",");
 }
 
-/** Earliest time first — the order the Reminders screen lists them in. */
 function habitRemindersQuery(habitId: number) {
 	return db
 		.select()
@@ -40,7 +39,6 @@ function habitRemindersQuery(habitId: number) {
 		.orderBy(asc(reminders.hour), asc(reminders.minute), asc(reminders.id));
 }
 
-/** Live-query hook — one habit's reminder times, earliest first. */
 export function useHabitReminders(habitId: number): Reminder[] {
 	const { data } = useLiveRows<ReminderRow>(
 		() => habitRemindersQuery(habitId),
@@ -50,7 +48,7 @@ export function useHabitReminders(habitId: number): Reminder[] {
 	return data.map(rowToReminder);
 }
 
-/** Live-query hook — every habit's reminders (Today's tomorrow preview, HAB-14). */
+/** Live-query hook: every habit's reminders (Today's tomorrow preview). */
 export function useAllReminders(): Reminder[] {
 	const { data } = useLiveRows<ReminderRow>(() =>
 		db

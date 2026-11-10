@@ -64,16 +64,9 @@ export const MARKERS = [
 	["drizzle studio", "expo-drizzle-studio-plugin"],
 ];
 
-/** Growth over the baseline that still passes. */
 export const MAX_GROWTH = 0.1;
 
-/**
- * The markers found in a bundle. Hermes stores a string as one byte per
- * character when it is ASCII and as UTF-16 otherwise; both are searched.
- * @param {Buffer} bundle
- * @param {[string, string][]} markers
- * @returns {{ group: string, needle: string }[]}
- */
+/** Hermes stores a string as one byte per character when it is ASCII and as UTF-16 otherwise; both are searched. */
 export function findLeaks(bundle, markers = MARKERS) {
 	return markers
 		.filter(
@@ -84,12 +77,6 @@ export function findLeaks(bundle, markers = MARKERS) {
 		.map(([group, needle]) => ({ group, needle }));
 }
 
-/**
- * Compares the bundle size with the baseline.
- * @param {number} bytes
- * @param {{ bytes: number } | undefined} baseline
- * @returns {{ ok: boolean, message: string }}
- */
 export function checkSize(bytes, baseline) {
 	if (baseline === undefined) {
 		return {
@@ -111,12 +98,7 @@ export function checkSize(bytes, baseline) {
 	};
 }
 
-/**
- * What --update-baseline may write: a first value, or a lower one.
- * @param {number} bytes
- * @param {{ bytes: number } | undefined} baseline
- * @returns {{ ok: boolean, message: string }}
- */
+/** What --update-baseline may write: a first value, or a lower one. */
 export function checkBaselineUpdate(bytes, baseline) {
 	if (baseline !== undefined && bytes > baseline.bytes) {
 		return {
@@ -127,7 +109,6 @@ export function checkBaselineUpdate(bytes, baseline) {
 	return { ok: true, message: `baseline set to ${bytes} bytes` };
 }
 
-/** Every JS bundle (.hbc, or .js when Hermes is off) the export wrote for iOS. */
 export function collectBundles(outDir) {
 	const dir = path.join(outDir, "_expo", "static", "js", "ios");
 	if (!fs.existsSync(dir)) return [];

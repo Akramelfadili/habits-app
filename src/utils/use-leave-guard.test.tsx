@@ -15,7 +15,6 @@ jest.mock("expo-router", () => ({
 
 import { useLeaveGuard } from "./use-leave-guard";
 
-/** The navigator removing the screen: it only calls the guard while preventing. */
 const leaving = async (action: unknown = { type: "POP" }) => {
 	await act(async () => {
 		if (mockPrevent) mockOnRemove?.({ data: { action } });
@@ -58,7 +57,6 @@ describe("useLeaveGuard", () => {
 	it("leaveWith runs the screen's own exit only once the guard is off", async () => {
 		const { result } = await renderHook(() => useLeaveGuard(true));
 		const exit = jest.fn(() => {
-			// By now removal is no longer prevented, so the exit is not stopped.
 			expect(mockPrevent).toBe(false);
 		});
 		await act(async () => result.current.leaveWith(exit));

@@ -22,13 +22,12 @@ import { categoriesCopy, messages, showMessage } from "../messages";
 import type { Category, CategoryUsage } from "../types";
 
 /**
- * Categories (HAB-42, C1–C6, DC6), pushed from Habits › Categories. Custom
- * categories first, with Rename (inline) and Delete; then the ten built-ins,
- * locked, with a tag. Counts include archived habits. Reorder swaps the lists
- * for one set of handles that sets the group order on Today and Habits (Other
- * stays last and is not in it). Deleting a category nobody uses is one tap and
- * leaves an Undo for five seconds; deleting one in use names the habits that
- * move to Other first.
+ * Categories, pushed from Habits > Categories. Custom categories first, with Rename
+ * (inline) and Delete; then the ten built-ins, locked, with a tag. Counts include archived
+ * habits. Reorder swaps the lists for one set of handles that sets the group order on Today
+ * and Habits (Other stays last and is not in it). Deleting a category nobody uses is one tap
+ * and leaves an Undo for five seconds; deleting one in use names the habits that move to
+ * Other first.
  */
 export function ManageCategoriesScreen() {
 	const { colors, scheme } = useTheme();

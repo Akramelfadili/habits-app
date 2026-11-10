@@ -17,7 +17,6 @@ type FrequencyFieldsProps = {
 	frequencyType: FrequencyType;
 	weekdays: IsoWeekday[];
 	timesPerWeek: number;
-	/** Specific days is picked and no day is: shown in red under the chips. */
 	noDaysError: boolean;
 	onFrequencyType: (value: FrequencyType) => void;
 	onWeekdays: (days: IsoWeekday[]) => void;
@@ -32,9 +31,9 @@ const MODES: { value: FrequencyType; label: string }[] = [
 ];
 
 /**
- * The Frequency field (F1, F4, F7): Daily, Specific days with 44 pt weekday
- * chips (and an error when none is picked), or × per week with a stepper and
- * the Monday–Sunday rule spelled out. The chips wrap at accessibility sizes.
+ * The Frequency field: Daily, Specific days with 44 pt weekday chips (and an error when none is
+ * picked), or × per week with a stepper and the Monday–Sunday rule spelled out. The chips wrap at
+ * accessibility sizes.
  */
 export function FrequencyFields({
 	frequencyType,

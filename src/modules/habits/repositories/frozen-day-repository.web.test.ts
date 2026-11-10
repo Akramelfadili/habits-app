@@ -11,7 +11,7 @@ function loadRepository(): typeof WebFrozenDayRepository {
 	return repository;
 }
 
-// Local dates, as the repository keys by the local calendar day (G-02).
+// Local dates, as the repository keys by the local calendar day.
 const MONTH_START = new Date(2026, 8, 1);
 const MONTH_END = new Date(2026, 8, 30);
 

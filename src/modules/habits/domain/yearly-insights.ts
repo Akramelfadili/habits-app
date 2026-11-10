@@ -2,22 +2,20 @@ import type { Habit } from "../types";
 import type { YearlyHabitRow, YearMonthCell } from "./yearly-summary";
 
 /**
- * Yearly Summary's insights (HAB-17, frame C5). Every threshold lives in this
- * one block, like `monthly-insights.ts` — and the `yearly-summary` fixture's
- * test pins that these defaults give C5's cards, in order.
+ * Yearly Summary's insights. Every threshold lives in this one block, like
+ * `monthly-insights.ts`, and the `yearly-summary` fixture's test pins that these defaults give
+ * the expected cards, in order.
  *
- * Insights are about habits you still have: the caller passes **active
- * habits only** (months, rows and the longest streak alike), so an archived
- * habit is never named, counted toward a month's rate, or linked to.
+ * Insights are about habits you still have: the caller passes **active habits only** (months,
+ * rows and the longest streak alike), so an archived habit is never named, counted toward a
+ * month's rate, or linked to.
  *
- * Only **judgeable** months are looked at: a month with scheduled days that
- * has finished. Months before a habit started, months that were all frozen or
- * rest days, and the month still in progress never count — toward a streak of
- * good months or toward "under half" — and a month that doesn't count also
- * breaks a run of good ones (it can't be one of the four).
+ * Only **judgeable** months are looked at: a month with scheduled days that has finished. Months
+ * before a habit started, months that were all frozen or rest days, and the month still in
+ * progress never count, toward a streak of good months or toward "under half", and a month that
+ * doesn't count also breaks a run of good ones (it can't be one of the four).
  */
 
-/** Never more than this many ranked cards. */
 export const MAX_YEARLY_INSIGHTS = 3;
 
 /** "Stuck": at or above this rate (0–1)… */
@@ -58,10 +56,8 @@ export type YearlyInsight =
 			type: "seasonal";
 			best: YearMonthCell;
 			run: YearMonthCell[];
-			/** The smallest gap across the run — "at least N points". */
 			points: number;
 	  }
-	/** Nothing crossed a threshold — the slot is never empty. */
 	| { type: "steady" };
 
 type InsightInput = {
@@ -77,10 +73,10 @@ export function isJudgeable(cell: YearMonthCell): boolean {
 const points = (rate: number) => Math.round(rate * 100);
 
 /**
- * Gate order: (1) the screen has already checked too-early (< 3 months of
- * history); here (2) no finished month yet, (3) perfect — only with something
- * scheduled — then the rest in card order. Of those, only the first
- * `MAX_YEARLY_INSIGHTS` show — a fourth (the seasonal dip) is the first to go.
+ * Gate order: (1) the screen has already checked too-early (< 3 months of history); here
+ * (2) no finished month yet, (3) perfect, only with something scheduled, then the rest in card
+ * order. Of those, only the first `MAX_YEARLY_INSIGHTS` show; a fourth (the seasonal dip) is the
+ * first to go.
  */
 export function yearlyInsightsFor(input: InsightInput): YearlyInsight[] {
 	const judged = input.months.filter(isJudgeable);
@@ -119,7 +115,6 @@ export function yearlyInsightsFor(input: InsightInput): YearlyInsight[] {
 		: [{ type: "steady" }];
 }
 
-/** The judgeable month with the highest rate; the earliest wins a tie. */
 export function bestMonth(
 	judged: readonly YearMonthCell[],
 ): YearMonthCell | null {

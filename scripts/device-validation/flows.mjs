@@ -4,7 +4,6 @@ import path from "node:path";
 export const ROOT = path.resolve(import.meta.dirname, "../..");
 export const FRIDAY = "2026-10-23T09:00:00";
 
-/** The known-bug flows in scripts/device-validation/flows. */
 export const BUG_FLOWS = [
 	{ id: "day-strip", bug: "a", route: "/?fixtures=today-v3", clock: FRIDAY },
 	{ id: "toast", bug: "b", route: "/?fixtures=today-v3", clock: FRIDAY },
@@ -123,7 +122,6 @@ export function iosSelectors(body) {
 		.join("\n");
 }
 
-/** Reads Maestro's `commands-*.json` into [{ kind, detail, status, ms }]. */
 export function readCommands(debugDir) {
 	const file = findCommandsFile(debugDir);
 	if (!file) return [];

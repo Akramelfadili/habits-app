@@ -23,17 +23,15 @@ import {
 import type { ExportDocumentV2 } from "../domain/export-json";
 
 /**
- * TEST-ONLY. Loads a version 2 export file into a clean, migrated test
- * database — the proof that the file holds enough to rebuild the app's data
- * (the round trip is in `export-v2-reader.test.ts`). It is not the importer:
- * HAB-15's import will start from this file's field handling, and must also
- * remap ids, ask what to do with data that is already there, and read older
- * versions. Nothing under `test-support/` is imported by app code
+ * TEST-ONLY. Loads a version 2 export file into a clean, migrated test database: the
+ * proof that the file holds enough to rebuild the app's data (the round trip is in
+ * `export-v2-reader.test.ts`). It is not the importer: a real importer will start from this
+ * file's field handling, and must also remap ids, ask what to do with data that is already
+ * there, and read older versions. Nothing under `test-support/` is imported by app code
  * (scripts/check-architecture.mjs, rule `test-support-site`).
- *
- * Differences from a real importer, on purpose: it keeps the file's local ids
- * (so a re-export can be compared field for field), and it writes rows
- * directly, because the repositories always stamp "now" on creation times.
+ * Differences from a real importer, on purpose: it keeps the file's local ids (so a
+ * re-export can be compared field for field), and it writes rows directly, because the
+ * repositories always stamp "now" on creation times.
  */
 
 type TestDb = ReturnType<typeof createTestDb>;

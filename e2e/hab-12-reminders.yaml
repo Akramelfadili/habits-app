@@ -1,9 +1,6 @@
 # Journey: Today → Habit Detail → Reminders (empty state) → Add time → change
 # its days (triggering the unscheduled-day warning) → remove it with Undo →
 # back on Detail the summary reflects it, and Today is unaffected.
-# Covers HAB-09 (entry point), HAB-43 (reminders: R1 empty, R2 times, R3
-# remove with Undo), HAB-27 (Reminders is a shared route, pushed inside the
-# tab it was opened from).
 #
 # MANUAL-ONLY: whether the OS notification actually fires at 09:00 on the
 # right days can't be checked here — web stubs expo-notifications, and even
@@ -26,7 +23,6 @@ tags:
 # The row's value: "Reminders" would match the section label above it.
 - tapOn: "None"
 
-# R1: nothing yet, one clear action.
 - assertVisible: "No reminders yet"
 - tapOn: "Add time"
 # The sheet opens on 09:00 on the habit's own days. (Web's time wheel is a
@@ -36,8 +32,7 @@ tags:
 - assertVisible:
     id: "09:00, Weekdays"
 
-# R2: tap the time to change its days. A day the habit isn't scheduled on is
-# flagged; the reminder is never fired for it.
+# A day the habit isn't scheduled on is flagged; the reminder is never fired for it.
 - tapOn:
     id: "09:00, Weekdays"
 - tapOn:
@@ -48,7 +43,7 @@ tags:
 - assertVisible: "09:00: Saturday is not a scheduled day for this habit — this reminder would fire for nothing."
 - takeScreenshot: hab-12-unscheduled-warning
 
-# R3: remove is instant, with an Undo that brings back the same time.
+# Remove is instant, with an Undo that brings back the same time.
 - tapOn:
     id: "Remove reminder at 09:00"
 - assertVisible: "Reminder at 09:00 removed"
@@ -58,12 +53,11 @@ tags:
     id: "09:00, Mon, Tue, Wed, Thu, Fri, Sat"
 - takeScreenshot: hab-12-after-undo
 
-# Detail summarises the reminder.
 - back
 - assertVisible: "09:00 · Mon, Tue, Wed, Thu, Fri, Sat"
 
 # Reminders never gate Today. Both screens were pushed inside the Today tab,
-# so Back walks straight back out to it (HAB-27).
+# so Back walks straight back out to it.
 - back
 - assertVisible: "Today"
 - assertVisible: "Evening walk"

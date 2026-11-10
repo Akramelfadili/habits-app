@@ -4,22 +4,16 @@ import { useTheme } from "@/theme/use-theme";
 import { ProgressBar } from "./progress-bar";
 
 type UnlockCardProps = {
-	/** "Insights unlock in 4 days". */
 	title: string;
-	/** Why it waits: "They need 7 days of logs. Your first 3 days are below." */
 	body: string;
-	/** 0–1 toward the 7 days of logs. */
 	progress: number;
-	/** Over the bar: "3 of 7 days". */
 	progressLabel: string;
-	/** Right of the progress label, when there is one ("18 to go"). */
 	remainingLabel?: string;
 };
 
 /**
- * V3-29 · unlock card: progress toward 7 days of logs. Left-aligned title,
- * body, then "3 of 7 days" over a 6 pt bar (which fills over the "fill"
- * token). The same card on Week, Month and Year, so it is learned once.
+ * Progress toward 7 days of logs. Left-aligned title, body, then "3 of 7 days" over a 6 pt bar
+ * (which fills over the "fill" token). The same card on Week, Month and Year, so it is learned once.
  */
 export function UnlockCard({
 	title,

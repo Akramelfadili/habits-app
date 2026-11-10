@@ -12,21 +12,19 @@ import {
 import type { FrozenDay } from "../types";
 
 /**
- * Logging that gives a freeze back (PR-11): a day that was frozen and is now
- * logged as done no longer needs its freeze, so the `frozen_days` row goes in
- * the same transaction as the entry — the pool never counts a freeze for a day
- * that is done. Each function reads the freeze fresh at call time (a stale
- * render must not decide it) and leaves the transaction to the repository.
+ * Logging that gives a freeze back: a day that was frozen and is now logged as done no
+ * longer needs its freeze, so the `frozen_days` row goes in the same transaction as the
+ * entry, and the pool never counts a freeze for a day that is done. Each function reads the
+ * freeze fresh at call time (a stale render must not decide it) and leaves the transaction
+ * to the repository.
  */
 
 export type DayWrite = {
 	/** The freeze this write gave back, if the day had one — pass it to `restoreDay` to Undo exactly. */
 	returnedFreeze: FrozenDay | null;
-	/** The shared pool's remaining count for that day's month once the write is done. */
 	freezesLeft: number;
 };
 
-/** The pool's remaining count for `date`'s month — a fresh read. */
 export async function freezesLeftIn(date: Date): Promise<number> {
 	const used = await getFreezesUsedInMonth(
 		startOfMonth(date),
@@ -42,7 +40,6 @@ async function finish(
 	return { returnedFreeze, freezesLeft: await freezesLeftIn(date) };
 }
 
-/** Ticks or un-ticks a check habit on `date`; ticking a frozen day returns its freeze. */
 export async function setCheckOnDay(
 	habitId: number,
 	date: Date,

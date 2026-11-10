@@ -20,7 +20,6 @@ function folderOf(databasePath: string): Directory {
 	return new File(toFileUri(databasePath)).parentDirectory;
 }
 
-/** The backups folder next to the database file, created on first use. */
 export function createBackupFiles(databasePath: string): BackupFiles {
 	const directory = new Directory(folderOf(databasePath), BACKUPS_FOLDER);
 	if (!directory.exists) directory.create({ intermediates: true });

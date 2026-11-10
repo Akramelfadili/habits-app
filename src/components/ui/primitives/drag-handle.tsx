@@ -4,9 +4,8 @@ import { iconSize } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
- * The three-line grip on a reorderable list row (design-system "List item —
- * reorder"). Visual only: `ReorderableList` wraps it in the drag gesture and
- * owns its accessibility actions.
+ * The three-line grip on a reorderable list row. Visual only: `ReorderableList` wraps it in the drag
+ * gesture and owns its accessibility actions.
  */
 export function DragHandle() {
 	const { colors } = useTheme();

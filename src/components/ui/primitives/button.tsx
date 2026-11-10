@@ -13,15 +13,13 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { FieldHelper } from "./field-helper";
 
 /**
- * `link` is a centered, secondary-ink text action under a primary CTA ("Start
- * from scratch"); `inline` is an ink text action that sits flush-left inside a
- * card's content (Weekly Summary's "Reschedule habit →"); `destructive` is
- * V3-22's outlined pill with red text for a permanent action — never filled
- * until armed, and never the default focus (Delete confirmation, DC1);
- * `rowAction` is a quiet ink text action inside a row (a category's Rename, C1)
- * and `dangerLink` the same in red for a permanent one (its Delete);
- * `compact` is V3-22's 36 pt pill on the inset surface — a row's Restore (H5) —
- * with the 44 pt hit area the other compact buttons get from their hit slop.
+ * `link` is a centered, secondary-ink text action under a primary CTA ("Start from scratch");
+ * `inline` is an ink text action that sits flush-left inside a card's content (Weekly Summary's
+ * "Reschedule habit →"); `destructive` is an outlined pill with red text for a permanent action,
+ * never filled until armed and never the default focus; `rowAction` is a quiet ink text action
+ * inside a row (a category's Rename) and `dangerLink` the same in red for a permanent one (its
+ * Delete); `compact` is a 36 pt pill on the inset surface (a row's Restore) with the 44 pt hit area
+ * the other compact buttons get from their hit slop.
  */
 export type ButtonVariant =
 	| "primary"
@@ -41,11 +39,11 @@ type ButtonProps = {
 	disabled?: boolean;
 	loading?: boolean;
 	fullWidth?: boolean;
-	/** "small" is a compact pill inside a list row (Manage & Archive's "Restore", HAB-13). */
+	/** "small" is a compact pill inside a list row (Manage & Archive's "Restore"). */
 	size?: "default" | "small";
 	/**
-	 * VAR-13 "disabled with reason": why the action is unavailable, shown as a
-	 * NEW-24 helper line above the button — only while it's actually disabled.
+	 * Why the action is unavailable, shown as a helper line above the button, only while it is
+	 * actually disabled.
 	 */
 	disabledReason?: string;
 	/** When the visible label alone is ambiguous — e.g. a row's "Rename" → "Rename Music". */
@@ -72,8 +70,8 @@ export function Button({
 	const { colors, opacity } = useTheme();
 	const isDisabled = disabled || loading;
 	const isCompact = variant === "compact";
-	// 08.6: at accessibility sizes the label wraps inside the button and the
-	// button grows, on a 20 pt radius (a pill would cut a two-line label).
+	// At accessibility sizes the label wraps inside the button and the button grows, on a 20 pt radius
+	// (a pill would cut a two-line label).
 	const largeText = useAccessibilityTextSize();
 	const textColor =
 		variant === "primary"

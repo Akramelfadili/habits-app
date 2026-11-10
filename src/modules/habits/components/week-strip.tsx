@@ -28,7 +28,6 @@ import { todayCopy } from "../messages";
 
 type WeekStripProps = {
 	days: readonly WeekStripDay[];
-	/** Day key of the selected day (it may be in another week than the one shown). */
 	selectedKey: string;
 	onSelect: (date: Date) => void;
 	onPreviousWeek: () => void;
@@ -37,19 +36,17 @@ type WeekStripProps = {
 	canShowNext: boolean;
 };
 
-/** A swipe must travel this far (pt) to change the week. */
 const SWIPE_DISTANCE = space[800] + space[300];
-/** The number circle (V3-03), a fixed 40 pt (08.6). */
+/** The number circle, a fixed 40 pt. */
 const DAY_SIZE = 40;
 const DOT = 6;
 const RING = 2;
 
 /**
- * V3-03: seven days, Monday first. Today is ringed, the selected day is filled
- * with the accent, a dot appears only when everything due that day was done,
- * and future days are faint and inert. Swipe for other weeks (160 ms crossfade
- * + 12 pt slide; Reduce Motion crossfades only). VoiceOver sees one adjustable
- * element, not seven.
+ * Seven days, Monday first. Today is ringed, the selected day is filled with the accent, a dot
+ * appears only when everything due that day was done, and future days are faint and inert. Swipe for
+ * other weeks (160 ms crossfade + 12 pt slide; Reduce Motion crossfades only). VoiceOver sees one
+ * adjustable element, not seven.
  */
 export function WeekStrip({
 	days,
@@ -218,7 +215,7 @@ const styles = StyleSheet.create({
 	change: {
 		minHeight: minTouchTarget,
 		paddingVertical: space[200],
-		// Only drawn at accessibility sizes, where the label wraps: 20 pt, not a pill (08.6).
+		// Only drawn at accessibility sizes, where the label wraps: 20 pt, not a pill.
 		borderRadius: radius.l,
 		borderWidth: 1,
 		paddingHorizontal: space[400],
@@ -274,9 +271,8 @@ type ChangeDayButtonProps = Pick<
 >;
 
 /**
- * At accessibility text sizes (AX1+) seven fixed 40 pt days no longer fit, so
- * the strip becomes one button, "Friday 23 · Change day" (08.6), that opens the
- * week as a list.
+ * At accessibility text sizes (AX1+) seven fixed 40 pt days no longer fit, so the strip becomes one
+ * button, "Friday 23 · Change day", that opens the week as a list.
  */
 function ChangeDayButton({
 	days,

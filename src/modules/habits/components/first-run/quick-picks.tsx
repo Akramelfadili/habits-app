@@ -11,12 +11,11 @@ import {
 } from "../../suggestions";
 
 type QuickPicksProps = {
-	/** What the name field holds now: the chip with that name reads as picked. */
 	selectedName: string;
 	onPick: (suggestion: Suggestion) => void;
 };
 
-/** FR2: five of the bundled habits, one tap each, under the name field. */
+/** Five of the bundled habits, one tap each, under the name field. */
 export function QuickPicks({ selectedName, onPick }: QuickPicksProps) {
 	return (
 		<View style={styles.field}>
@@ -39,7 +38,7 @@ export function QuickPicks({ selectedName, onPick }: QuickPicksProps) {
 	);
 }
 
-/** Under the form on FR2: what can wait until later. */
+/** Under the slim first-run form: what can wait until later. */
 export function SlimFormNote() {
 	return (
 		<FieldHelper plain tone="hint">

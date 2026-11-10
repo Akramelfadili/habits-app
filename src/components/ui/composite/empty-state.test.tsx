@@ -32,7 +32,7 @@ describe("EmptyState", () => {
 	});
 });
 
-describe("EmptyState — V3-28", () => {
+describe("EmptyState", () => {
 	it("announces its title as a heading", async () => {
 		await render(
 			<EmptyState icon="circle" headline="Nothing to track yet" subtitle="…" />,

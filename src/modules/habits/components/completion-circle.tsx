@@ -6,7 +6,7 @@ import { useHaptics } from "@/utils/use-haptics";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 import type { HabitDirection } from "../types";
 
-/** V3-04: the drawn circle is 28 pt inside a 44 pt hit area (T-11). */
+/** The drawn circle is 28 pt inside a 44 pt hit area. */
 const SIZE = 28;
 const HALF = SIZE / 2;
 const RING = 2;
@@ -16,18 +16,16 @@ const DOT = 8;
 type CompletionCircleProps = {
 	completed: boolean;
 	onPress: () => void;
-	/** A quantity habit's way to the sheet while a tap adds one (D6). */
+	/** A quantity habit's way to the sheet while a tap adds one. */
 	onLongPress?: () => void;
 	accessibilityLabel: string;
-	/** What the double-tap does, read after the label ("Double-tap to log one more"). */
 	accessibilityHint?: string;
-	/** Build = filled accent when done. Break = amber outline, an amber check on `warnTint` once resisted (V3-04). */
+	/** Build = filled accent when done. Break = amber outline, an amber check on `warnTint` once resisted. */
 	direction?: HabitDirection;
-	/** Streak at risk (HAB-33): an amber dot on the circle. The circle still logs. */
+	/** Streak at risk: an amber dot on the circle. The circle still logs. */
 	atRisk?: boolean;
-	/** 0–1 pie fill for a quantity habit below its target; ignored once `completed`. */
 	progress?: number;
-	/** A frozen day (RL3): violet and dashed. Logging it returns the freeze. */
+	/** A frozen day: violet and dashed. Logging it returns the freeze. */
 	frozen?: boolean;
 	/** Not due (rest day, Edit this day): a dashed outline; whatever is logged is a bonus. */
 	notDue?: boolean;
@@ -77,12 +75,10 @@ function PieFill({ progress, color }: { progress: number; color: string }) {
 }
 
 /**
- * V3-04, the habit completion control. Build: outline → partial pie →
- * accent-filled check. Break: amber outline → amber check on `warnTint`
- * (resisted is a tick, D8). At risk adds an amber dot; frozen is violet and
- * dashed; not-due is a dashed outline. Every state differs in shape as well as
- * colour (08.7). The 44 pt hit area is this Pressable; the 28 pt circle sits
- * inside it.
+ * The habit completion control. Build: outline → partial pie → accent-filled check. Break: amber
+ * outline → amber check on `warnTint` (resisted is a tick). At risk adds an amber dot; frozen is
+ * violet and dashed; not-due is a dashed outline. Every state differs in shape as well as colour.
+ * The 44 pt hit area is this Pressable; the 28 pt circle sits inside it.
  */
 export function CompletionCircle({
 	completed,

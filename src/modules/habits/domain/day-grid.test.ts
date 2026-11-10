@@ -8,7 +8,6 @@ import {
 	groupByHabit,
 } from "./day-grid";
 
-// Wednesday 16 Sep 2026.
 const today = new Date(2026, 8, 16, 12);
 const monday = new Date(2026, 8, 14);
 const key = (offset: number) => format(addDays(monday, offset), "yyyy-MM-dd");
@@ -52,7 +51,7 @@ describe("groupByHabit", () => {
 });
 
 describe("aggregateDays", () => {
-	const dates = daysIn(monday, addDays(monday, 3)); // Mon … Thu (Thu is future)
+	const dates = daysIn(monday, addDays(monday, 3));
 	const perHabit = classifyHabits({
 		habits: [a, b],
 		entries: [entry(1, 0), entry(2, 0), entry(1, 1), entry(1, 2)],
@@ -72,7 +71,7 @@ describe("aggregateDays", () => {
 		expect(days[1]).toMatchObject({
 			tally: { done: 1, due: 1, frozen: 1 },
 			level: 3,
-			perfect: false, // a frozen day is not perfect
+			perfect: false,
 		});
 	});
 

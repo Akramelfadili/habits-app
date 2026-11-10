@@ -4,7 +4,6 @@
  */
 export type Clock = {
 	now: () => Date;
-	/** Runs `run` once after `ms`; returns the cancel. */
 	after: (ms: number, run: () => void) => () => void;
 };
 

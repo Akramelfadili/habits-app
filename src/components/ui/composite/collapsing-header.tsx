@@ -23,35 +23,31 @@ import {
 import { useTheme } from "@/theme/use-theme";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 
-/** The solid inline bar's height under the status bar (T5). */
 export const COLLAPSED_BAR_HEIGHT = minTouchTarget;
 
-/** Where Today-style tab roots start and how far the header sits from what follows it (T1): the screen's own paddingTop and header gap. */
+/** Where tab roots start and how far the header sits from what follows it: the screen's own paddingTop and header gap. */
 export const HEADER_CONTENT_PADDING_TOP = space[300];
 export const HEADER_BLOCK_GAP = space[200];
 
 /** A bar this close to the end of its range counts as showing: it takes over the taps and VoiceOver. */
 const BAR_TAKES_OVER_AT = 0.5;
 
-/** Scroll distance (pt) over which the title collapses, given where the content below the header starts. */
 export function collapseRange(contentTop: number) {
 	return Math.max(1, contentTop - COLLAPSED_BAR_HEIGHT);
 }
 
 /**
- * V3-02's large title collapsing into a solid inline bar (T5), scroll-linked:
- * everything is a function of the scroll offset on the UI thread, with no React
- * state per frame (`collapsed` flips once, when the bar takes over). The title
- * shrinks and fades over the first 60 % of the range, the bar's name fades in
- * from the middle, and its background and hairline arrive in the last 30 %.
- * Scrolling that stops inside the range settles on the nearer end.
+ * A large title collapsing into a solid inline bar, scroll-linked: everything is a function of the
+ * scroll offset on the UI thread, with no React state per frame (`collapsed` flips once, when the bar
+ * takes over). The title shrinks and fades over the first 60 % of the range, the bar's name fades in
+ * from the middle, and its background and hairline arrive in the last 30 %. Scrolling that stops
+ * inside the range settles on the nearer end.
  *
- * Reduce Motion (F-07): no interpolation and no settling scroll, only a
- * 150 ms crossfade when the offset passes the middle of the range.
+ * Reduce Motion: no interpolation and no settling scroll, only a 150 ms crossfade when the offset
+ * passes the middle of the range.
  *
- * The range is where the content below the header meets the bar's bottom
- * edge — the screen reports it with `setRange(collapseRange(top))` once the
- * header is measured, so the bar never covers what is still on screen.
+ * The range is where the content below the header meets the bar's bottom edge; the screen reports it
+ * with `setRange(collapseRange(top))` once the header is measured, so the bar never covers content.
  */
 export function useCollapsingHeader() {
 	const reduced = useReducedMotion();
@@ -131,7 +127,6 @@ export function useCollapsingHeader() {
 		[range],
 	);
 
-	/** The large title block: shrinks from its leading edge and fades out. */
 	const titleStyle = useAnimatedStyle(() => {
 		const out = interpolate(
 			progress.value,
@@ -146,17 +141,15 @@ export function useCollapsingHeader() {
 		};
 	});
 
-	/** The bar's solid background and hairline: last to arrive. */
 	const barBackgroundStyle = useAnimatedStyle(() => ({
 		opacity: interpolate(progress.value, [0.7, 1], [0, 1], Extrapolation.CLAMP),
 	}));
 
-	/** The bar's name and buttons. */
 	const barContentStyle = useAnimatedStyle(() => ({
 		opacity: interpolate(progress.value, [0.5, 1], [0, 1], Extrapolation.CLAMP),
 	}));
 
-	/** Back to the large title: re-tapping the selected tab (08.4). */
+	/** Back to the large title: re-tapping the selected tab. */
 	const scrollToTop = useCallback(() => {
 		scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
 	}, [scrollRef, reduced]);
@@ -175,14 +168,11 @@ export function useCollapsingHeader() {
 }
 
 type CollapsedHeaderBarProps = {
-	/** The screen's name, centred (T5). */
 	title: string;
-	/** True once the bar has taken over from the large title. */
 	collapsed: boolean;
 	backgroundStyle: object;
 	contentStyle: object;
 	testID?: string;
-	/** Trailing header buttons (`HeaderCircleButton`), shown with the bar. */
 	trailing?: ReactNode;
 	/**
 	 * The bar's bottom hairline. Off when a pinned control sits right under the
@@ -193,9 +183,10 @@ type CollapsedHeaderBarProps = {
 };
 
 /**
- * The solid inline bar (T5). A zero-height wrapper hangs it from the safe-area
- * line, so it sits exactly one bar-height below the status bar whatever the
- * parent's padding does to absolute children. Render it before the scroller (the scroller fills the rest of the column, so a zero-height sibling after it would land at the bottom); `zIndex` keeps it on top.
+ * The solid inline bar. A zero-height wrapper hangs it from the safe-area line, so it sits exactly one
+ * bar-height below the status bar whatever the parent's padding does to absolute children. Render it
+ * before the scroller (the scroller fills the rest of the column, so a zero-height sibling after it
+ * would land at the bottom); `zIndex` keeps it on top.
  */
 export function CollapsedHeaderBar({
 	title,
@@ -229,7 +220,7 @@ export function CollapsedHeaderBar({
 				>
 					<Text
 						accessibilityRole="header"
-						// A navigation bar holds its type size, like iOS's own (08.6).
+						// A navigation bar holds its type size, like iOS's own.
 						maxFontSizeMultiplier={barMaxFontMultiplier}
 						style={[styles.title, { color: colors.ink }]}
 					>
@@ -244,7 +235,6 @@ export function CollapsedHeaderBar({
 
 type PinnedBelowBarProps = {
 	children: ReactNode;
-	/** The scroll offset from `useCollapsingHeader`. */
 	scrollY: SharedValue<number>;
 	/**
 	 * Where the content's own slot for this control starts, in scroll-content
@@ -261,12 +251,10 @@ type PinnedBelowBarProps = {
 export const PINNED_PADDING_TOP = space[200];
 
 /**
- * A control that scrolls with the content until it meets the inline bar, then
- * pins just under it (Progress's range switcher, P1 → P8). One element, moved
- * on the UI thread — a translation of the scroll offset clamped at the bar's
- * bottom edge — so it is never drawn twice. Render it right after the bar and
- * before the scroller, like the bar itself, and leave an empty slot of its
- * height in the content.
+ * A control that scrolls with the content until it meets the inline bar, then pins just under it
+ * (Progress's range switcher). One element, moved on the UI thread (a translation of the scroll
+ * offset clamped at the bar's bottom edge), so it is never drawn twice. Render it right after the bar
+ * and before the scroller, like the bar itself, and leave an empty slot of its height in the content.
  */
 export function PinnedBelowBar({
 	children,

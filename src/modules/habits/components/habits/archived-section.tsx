@@ -15,7 +15,7 @@ export type ArchivedEntry = {
 
 type ArchivedSectionProps = {
 	entries: readonly ArchivedEntry[];
-	/** Collapsed by default (H1); opens in place (H5). */
+	/** Collapsed by default; opens in place. */
 	expanded: boolean;
 	onToggle: () => void;
 	onOpen: (habit: Habit) => void;
@@ -25,9 +25,8 @@ type ArchivedSectionProps = {
 };
 
 /**
- * The Archived section (H1, H5): a header with Show / Hide, and — open — the
- * archived habits dimmed, each with an instant Restore, under one line saying
- * what a restore does (a fresh streak; paused days stay paused). Nothing
+ * A header with Show / Hide, and, open, the archived habits dimmed, each with an instant Restore,
+ * under one line saying what a restore does (a fresh streak; paused days stay paused). Nothing
  * archived means no section at all.
  */
 export function ArchivedSection({

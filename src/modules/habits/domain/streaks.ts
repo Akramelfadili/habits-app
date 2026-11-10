@@ -13,11 +13,10 @@ import { restartDays } from "../strategies/paused-schedule";
 import type { Entry, FrozenDay, Habit } from "../types";
 
 /**
- * Whether `entry` counts as an actual completion of `habit` — presence alone
- * for a simple-check habit, but `value >= targetAmount` for a quantity habit
- * (HAB-07). Direction-agnostic: a Break habit's "completed" entry means
- * "resisted," same underlying signal (HAB-04's "same mechanism, just
- * relabeled" rule) — so streak math never branches on direction.
+ * Whether `entry` counts as an actual completion of `habit`: presence alone for a simple-check
+ * habit, but `value >= targetAmount` for a quantity habit. Direction-agnostic: a Break habit's
+ * "completed" entry means "resisted", the same underlying signal, so streak math never branches
+ * on direction.
  */
 export function isEntryComplete(habit: Habit, entry: Entry): boolean {
 	if (habit.targetType !== "quantity") return true;
@@ -29,14 +28,11 @@ export function isEntryComplete(habit: Habit, entry: Entry): boolean {
 }
 
 /**
- * Consecutive scheduled (per the habit's FrequencyStrategy's
- * `wasScheduledOn`) days completed or frozen, walking backward from `asOf`.
- * Always computed from `entries`, never a stored counter — so a retroactive
- * edit (HAB-10) recalculates correctly just by being read again, rather than
- * needing special-case "fix the counter" logic (per HAB-08's edge case).
- * Unscheduled days are skipped — they neither extend nor break the streak.
- * The count stops at the habit's latest restore day (HAB-20): the streak
- * starts fresh from the next completed log, never across the archived gap.
+ * Consecutive scheduled (per the habit's FrequencyStrategy's `wasScheduledOn`) days completed or
+ * frozen, walking backward from `asOf`. Always computed from `entries`, never a stored counter,
+ * so a retroactive edit recalculates correctly just by being read again. Unscheduled days are
+ * skipped: they neither extend nor break the streak. The count stops at the habit's latest
+ * restore day: the streak starts fresh from the next completed log, never across the archived gap.
  */
 export function calculateCurrentStreak(
 	habit: Habit,
@@ -49,7 +45,6 @@ export function calculateCurrentStreak(
 
 type Completions = {
 	dates: Date[];
-	/** The same days as day keys. */
 	set: Set<string>;
 };
 
@@ -71,7 +66,7 @@ function streakFrom(
 	asOf: Date,
 ): number {
 	const strategy = getHabitStrategy(habit);
-	// A restore starts the streak over (HAB-20): never count back past it.
+	// A restore starts the streak over: never count back past it.
 	const lastRestart = restartDays(habit.pauses).at(-1);
 	const floor = startOfDay(
 		lastRestart && lastRestart > toDayKey(habit.createdAt)
@@ -96,18 +91,16 @@ function streakFrom(
 }
 
 export type StreakAtRisk = {
-	/** The missed day a freeze would cover — always yesterday (HAB-08's grace window). */
+	/** The missed day a freeze would cover: always yesterday (the grace window). */
 	missedDate: Date;
-	/** The streak that was standing before the miss — what a freeze would preserve. */
 	currentStreak: number;
 };
 
 /**
- * Whether `habit` is at risk right now (HAB-33): yesterday was due, wasn't
- * completed, isn't already frozen, and there's a nonzero streak at stake. It
- * does not depend on the pool: with no freeze left the state still exists and
- * the sheet explains that (SR3) instead of the streak resetting silently. Rest
- * days and off-schedule days never qualify, since `isDueOn` is false for them.
+ * Whether `habit` is at risk right now: yesterday was due, wasn't completed, isn't already
+ * frozen, and there's a nonzero streak at stake. It does not depend on the pool: with no freeze
+ * left the state still exists and the sheet explains that instead of the streak resetting
+ * silently. Rest days and off-schedule days never qualify, since `isDueOn` is false for them.
  */
 export function getStreakAtRisk(
 	habit: Habit,
@@ -115,8 +108,8 @@ export function getStreakAtRisk(
 	frozenDates: ReadonlySet<string>,
 	today: Date,
 ): StreakAtRisk | null {
-	// "× per week" habits have no scheduled day to miss, so they are never at
-	// risk by day (a week-level freeze is Later). Streak semantics are unchanged.
+	// "× per week" habits have no scheduled day to miss, so they are never at risk by day.
+	// Streak semantics are unchanged.
 	if (habit.frequency.type === "per-week") return null;
 
 	const yesterday = subDays(startOfDay(today), 1);
@@ -162,7 +155,6 @@ export function freezesUsedInMonth(
 	).length;
 }
 
-/** What is left of the month's pool (`FREEZE_POOL_SIZE` minus what was used). */
 export function freezesRemainingInMonth(
 	frozenDays: readonly FrozenDay[],
 	monthDate: Date,

@@ -5,10 +5,9 @@ import { Skeleton } from "@/components/ui/primitives/skeleton";
 import { minTouchTarget, space } from "@/theme/theme";
 import { todayCopy } from "../../messages";
 
-/** How many rows each card holds — SY1 draws two, one, two. */
+/** How many rows each card holds: two, one, two. */
 const CARDS = [2, 1, 2] as const;
 
-/** One placeholder row: icon square, two lines of text, the circle (V3-13's shape). */
 function SkeletonRow() {
 	return (
 		<View style={styles.row}>
@@ -23,10 +22,9 @@ function SkeletonRow() {
 }
 
 /**
- * SY1, the loading skeleton: the progress card and a few group cards as grey
- * shapes, standing in for what Today is about to draw. It is only mounted after
- * the wait has lasted 300 ms, and is one "Loading your habits" stop for a screen
- * reader — the shapes themselves say nothing.
+ * The loading skeleton: the progress card and a few group cards as grey shapes, standing in for what
+ * Today is about to draw. It is only mounted after the wait has lasted 300 ms, and is one "Loading
+ * your habits" stop for a screen reader; the shapes themselves say nothing.
  */
 export function TodaySkeleton() {
 	// Said once when it appears: a screen reader is not looking at the rows.

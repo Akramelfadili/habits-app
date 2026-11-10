@@ -30,9 +30,8 @@ import { ProgressNoHabits, ProgressNothingLogged } from "./progress-states";
 
 type ProgressMonthProps = {
 	oneHabit: Habit | null;
-	/** Month's month: the one a Year label opened, or null for the current month (D15). */
+	/** Month's month: the one a Year label opened, or null for the current month. */
 	month: Date | null;
-	/** The ringed day "yyyy-MM-dd" and its date. */
 	selectedKey: string | null;
 	selectedDay: Date | null;
 	dot: DotColor;
@@ -45,10 +44,9 @@ type ProgressMonthProps = {
 };
 
 /**
- * Progress · Month (HAB-36, P7–P11, P13): the month's calendar of daily
- * completion with a ring on today and on the tapped day, the rate / perfect
- * days / best streak tiles, an insight with a pager and the per-habit rates.
- * Tapping a 40 pt day shows its detail card with "Edit this day".
+ * The month's calendar of daily completion with a ring on today and on the tapped day, the rate /
+ * perfect days / best streak tiles, an insight with a pager and the per-habit rates. Tapping a 40 pt
+ * day shows its detail card with "Edit this day".
  */
 export function ProgressMonth({
 	oneHabit,

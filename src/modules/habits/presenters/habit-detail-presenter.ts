@@ -22,21 +22,18 @@ const fullDay = (day: IsoWeekday) => detailCopy.words.weekdays[day - 1];
 const lowerFirst = (text: string) =>
 	text.charAt(0).toLowerCase() + text.slice(1);
 
-/** "8 glasses" — a quantity habit's target, or null for a simple check. */
 function targetLabel(habit: Habit): string | null {
 	if (habit.targetType !== "quantity" || habit.targetAmount === null)
 		return null;
 	return `${habit.targetAmount} ${habit.targetUnit ?? ""}`.trim();
 }
 
-/** "Daily", "Tue, Thu", "3× per week". */
 function cadenceLabel(habit: Habit): string {
 	return habit.frequency.type === "daily"
 		? detailCopy.words.daily
 		: scheduleLabel(habit);
 }
 
-/** "Tuesday and Thursday", "daily", "3 times per week" — the cadence as VoiceOver says it. */
 function spokenCadence(habit: Habit): string {
 	const { frequency } = habit;
 	if (frequency.type === "daily") return detailCopy.words.dailySpoken;
@@ -51,10 +48,6 @@ function spokenCadence(habit: Habit): string {
 	return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
-/**
- * The caps line over a Detail title (D1–D7): "Fitness · Tue, Thu", "Health ·
- * Daily · 8 glasses", "Home · Break · Daily", "Fitness · Mon, Wed, Fri · Archived".
- */
 export function detailEyebrow(habit: Habit): string {
 	const parts = [habit.category.name];
 	if (habit.direction === "break") parts.push(detailCopy.words.break);
@@ -65,7 +58,6 @@ export function detailEyebrow(habit: Habit): string {
 	return parts.join(" · ");
 }
 
-/** "Upper body. Fitness, Tuesday and Thursday." (the role adds "heading") — the title block as one VoiceOver stop (08.3). */
 export function detailHeaderLabel(habit: Habit): string {
 	const parts = [
 		habit.category.name,
@@ -85,24 +77,22 @@ type TileInput = {
 	/** The 90-day rate against the 90 days before, in whole points; null when there is nothing to compare. */
 	rateDelta: number | null;
 	freezesRemaining: number;
-	/** Set only in the month a streak reset with the pool empty (D6). */
+	/** Set only in the month a streak reset with the pool empty. */
 	streakReset: StreakReset | null;
-	/** Anything has ever been logged. */
 	hasEntries: boolean;
-	/** Restored and not yet logged since: a 0 is a fresh start, not a lost streak (D5). */
+	/** Restored and not yet logged since: a 0 is a fresh start, not a lost streak. */
 	freshStart: boolean;
 };
 
-/** Below this many due days the 90-day rate says when it starts instead (D3). */
+/** Below this many due days the 90-day rate says when it starts instead. */
 const RATE_MIN_DUE_DAYS = 7;
 
 /**
- * The three tiles under the title (D1–D7). Build habits say streak and days;
- * Break habits say resisting and nights, and the rate says "resisted". New
- * habits say when each tile starts (D3), an archived one that its streak is
- * paused (D4), a restored one that it starts fresh (D5), and in the month a
- * streak reset with no freezes left the third tile is the amber freeze count
- * (D6). Never "failed".
+ * The three tiles under the title. Build habits say streak and days; Break habits say
+ * resisting and nights, and the rate says "resisted". New habits say when each tile starts,
+ * an archived one that its streak is paused, a restored one that it starts fresh, and in the
+ * month a streak reset with no freezes left the third tile is the amber freeze count.
+ * Never "failed".
  */
 export function detailTiles(input: TileInput): StatTileData[] {
 	const { habit } = input;
@@ -187,10 +177,6 @@ function rateTile(input: TileInput): StatTileData {
 	return result;
 }
 
-/**
- * The Reminders row's value (D1): "07:00 · Tue, Thu", "None", "All off", "2 on ·
- * 07:00, 21:00", or "Paused" while archived (D4).
- */
 export function detailRemindersValue(
 	habit: Habit,
 	reminders: readonly Reminder[],
@@ -226,7 +212,7 @@ export function detailRemindersLabel(
 	if (habit.archivedAt || on.length !== 1) {
 		return `${detailCopy.reminders.label}, ${detailRemindersValue(habit, reminders)}`;
 	}
-	const only = atIndex(on, 0); // on.length === 1 here
+	const only = atIndex(on, 0);
 	const days = [...new Set(only.weekdays)].sort((a, b) => a - b);
 	const spoken =
 		days.length === 7
@@ -238,7 +224,6 @@ export function detailRemindersLabel(
 	return detailCopy.reminders.spoken(formatReminderTime(only), spoken);
 }
 
-/** "Created today" or the cadence — the right of the grid card's title (D1, D3). */
 export function gridRangeLabel(habit: Habit, today: Date): string {
 	return startOfDay(habit.createdAt).getTime() === startOfDay(today).getTime()
 		? detailCopy.grid.createdToday
@@ -270,7 +255,6 @@ function cellState(day: HeatmapDay): CompletionCellState {
 	}
 }
 
-/** A day's status as a word, in the habit's own language (resisted / slipped for Break). */
 function statusWord(habit: Habit, day: HeatmapDay): string | null {
 	const words = detailCopy.grid.status;
 	const isBreak = habit.direction === "break";
@@ -299,10 +283,8 @@ function statusWord(habit: Habit, day: HeatmapDay): string | null {
 }
 
 export type WeekRow = {
-	/** "2026-10-19" — the week's Monday. */
 	key: string;
 	cells: CompletionRowsCell[];
-	/** "Week of 19 October: Monday bonus, Tuesday done, Thursday not logged yet" (08.3). */
 	label: string;
 	/** The day Edit this day opens for: the latest day this week that is due and unlogged, else the latest that can be edited. Null when none can. */
 	targetDate: Date | null;
@@ -318,9 +300,9 @@ function isUnlogged(day: HeatmapDay) {
 }
 
 /**
- * The five week rows of the grid (D1): each one target (HAB-34) with one
- * VoiceOver label for the whole week, its cells decorative. A week with nothing
- * to edit — before the habit started, or still to come — has no target.
+ * The five week rows of the grid: each one tap target with one VoiceOver label for the
+ * whole week, its cells decorative. A week with nothing to edit (before the habit started,
+ * or still to come) has no target.
  */
 export function weekRows(habit: Habit, weeks: HeatmapDay[][]): WeekRow[] {
 	return weeks.map((week) => {
@@ -391,7 +373,6 @@ export function gridLegend(habit: Habit, weeks: HeatmapDay[][]): LegendEntry[] {
 	return entries;
 }
 
-/** "Streak reset on Wed 14 Oct — no freezes were left." — only in the month it happened (D6). */
 export function resetNotice(reset: StreakReset | null): string | null {
 	return reset
 		? detailCopy.grid.resetNotice(format(reset.missedDate, "EEE d MMM"))
@@ -408,11 +389,7 @@ export type HistoryRowView = {
 	accessibilityLabel: string;
 };
 
-/**
- * One line of history (D2): the date, what the day was — Done, Missed, Frozen ·
- * streak kept, Done · off-schedule, not counted — and for a Break habit Resisted
- * or Slipped · not logged. A quantity day says how much. No time.
- */
+/** One line of history: the date and what the day was. A quantity day says how much. No time. */
 export function historyRowView(habit: Habit, row: HistoryRow): HistoryRowView {
 	const copy = detailCopy.history;
 	const isBreak = habit.direction === "break";

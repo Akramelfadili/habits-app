@@ -1,13 +1,9 @@
 # Journey: Progress flags the habit that is slipping → its insight's link
 # opens that habit's Edit screen.
-# Covers HAB-35/38 (Progress week + the slipping insight), HAB-02 (Edit as the
-# insight's destination), HAB-27 (Progress is a tab root; Edit is a modal).
 #
 # Seed (`progress-v3` fixtures, clock pinned to Fri 23 Oct): six habits with
-# history since March; No social media is the slipping one. The old journey
-# backfilled a week by hand to move the insight to another habit; since V3-3b
-# the insight needs 7 days of logs and Detail's backfill goes through its week
-# rows (see hab-09-10), so that half is no longer a Progress journey and the
+# The insight needs 7 days of logs and Detail's backfill goes through its week rows (see hab-09-10),
+# so its recalculation is not a Progress journey; progress-insights unit tests cover it.
 # insight's recalculation is covered by progress-insights unit tests.
 url: ${APP_URL}/?fixtures=progress-v3&clock=2026-10-23T09:00:00
 env:
@@ -17,13 +13,12 @@ tags:
 ---
 - launchApp
 
-# HAB-27, HAB-35: Progress is the tab root and opens on Week.
+# Progress is the tab root and opens on Week.
 - tapOn:
     id: "Progress"
 - assertVisible: "No social media is slipping"
 - takeScreenshot: hab-11-before
 
-# The insight's link opens that habit's Edit screen.
 - tapOn: "Change frequency ›"
 - assertVisible: "Edit habit"
 - takeScreenshot: hab-11-edit

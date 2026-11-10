@@ -4,10 +4,10 @@ import { builtInFixture } from "./category-fixtures";
 import type { FixtureHabit } from "./habit-fixtures";
 
 /**
- * The Today frames' data (T1–T10, docs/mockups/v3/renders/today): one habit
- * per row the mockup draws, pinned to Friday 23 Oct 2026 by the visual
- * checks. `today-v3` is T1; `today-v3-at-risk` T6/T7; `today-v3-all-done` T8;
- * `today-v3-rest` T3 (a Saturday: nothing due).
+ * The Today frames' data (docs/mockups/v3/renders/today): one habit per row the mockup
+ * draws, pinned to Friday 23 Oct 2026 by the visual checks. `today-v3` is the main frame;
+ * `today-v3-at-risk` the streak-at-risk sheets; `today-v3-all-done` the all-done state;
+ * `today-v3-rest` a Saturday with nothing due.
  */
 export type TodayV3Scenario =
 	| "today-v3"

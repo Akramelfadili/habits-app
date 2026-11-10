@@ -6,12 +6,11 @@ export function kilobytesLabel(bytes: number): string {
 	return `${formatCount(Math.max(1, Math.ceil(bytes / 1024)))} KB`;
 }
 
-/** "3.0 (412)" — the About row's value (S6). */
 export function versionLabel(info: { version: string; build: string }): string {
 	return `${info.version} (${info.build})`;
 }
 
-/** What a denied iOS permission holds back (SY6): the enabled times and the active habits they belong to. */
+/** What a denied iOS permission holds back: the enabled times and the active habits they belong to. */
 export function notificationImpact(
 	reminders: readonly Pick<Reminder, "habitId" | "enabled">[],
 	habits: readonly Pick<Habit, "id" | "archivedAt">[],
@@ -30,7 +29,6 @@ export function notificationImpact(
 	};
 }
 
-/** The Notifications row's value: Allowed, Off or Not asked yet (nothing while it is still being read). */
 export function notificationValue(
 	permission: "granted" | "denied" | "undetermined" | undefined,
 ): string {

@@ -35,7 +35,7 @@ const warnings = () =>
 
 beforeEach(() => clearLog());
 
-describe("EditHabitRouteScreen (D-09)", () => {
+describe("EditHabitRouteScreen", () => {
 	it("hands a positive integer id to the form as a number", async () => {
 		await render(<EditHabitRouteScreen id="12" focus="frequency" />);
 		expect(screen.getByText("form:12:frequency")).toBeTruthy();
@@ -64,7 +64,7 @@ describe("EditHabitRouteScreen (D-09)", () => {
 	);
 });
 
-describe("ProgressMonthRouteScreen (D-09)", () => {
+describe("ProgressMonthRouteScreen", () => {
 	it("hands a real yyyy-MM-dd day to the month screen", async () => {
 		await render(<ProgressMonthRouteScreen month="2026-07-01" />);
 		expect(screen.getByText("month:2026-07-01")).toBeTruthy();

@@ -30,42 +30,39 @@ type DestructiveConfirmSheetProps = {
 	headline: string;
 	body: string;
 	/**
-	 * The "with move preview" state (category delete, HAB-25): what the delete
-	 * changes, between the copy and the buttons. Omit for the plain state.
+	 * The "with move preview" state (category delete): what the delete changes, between the copy and the
+	 * buttons. Omit for the plain state.
 	 */
 	preview?: ReactNode;
 	/**
-	 * The reversible alternative (DC1 "Archive instead"): the first control and
-	 * the one the screen reader starts on, ahead of the destructive one.
+	 * The reversible alternative ("Archive instead"): the first control and the one the screen reader
+	 * starts on, ahead of the destructive one.
 	 */
 	safeAction?: { title: string; body: string; onPress: () => unknown };
-	/** The destructive action's label ("Delete permanently"). */
 	confirmLabel: string;
-	/** Under the destructive button: "One tap deletes. This can't be undone." Read as its hint at accessibility sizes instead of shown (DC7). */
+	/** Under the destructive button. Read as its hint at accessibility sizes instead of shown. */
 	confirmHint?: string;
-	/** The label and hint while it runs (DC3): "Deleting…", "Keep the app open — this takes a moment." */
+	/** The label and hint while it runs: "Deleting…", "Keep the app open — this takes a moment." */
 	busy?: { label: string; hint: string };
-	/** The in-sheet banner after a failure (DC4); the destructive action stays available to try again. */
+	/** The in-sheet banner after a failure; the destructive action stays available to try again. */
 	error?: { title: string; message: string };
-	/** The last control: it ends the sheet. There is no Close (V3-24). */
+	/** The last control: it ends the sheet. There is no Close. */
 	cancelLabel: string;
 	onCancel: () => void;
 	onConfirm: () => unknown;
-	/** While the action runs — every control goes inert and the sheet cannot be left (DC3). */
+	/** While the action runs every control goes inert and the sheet cannot be left. */
 	isWorking?: boolean;
 };
 
 /**
- * V3-25 · destructive confirm: a title, the consequence, an optional preview,
- * then the safe way out first (Archive instead — the default focus), the
- * destructive action as an outlined red pill, and Cancel last. Never a Close,
- * never a filled red button. While the action runs (DC3) the label says so and
- * nothing can be pressed or swiped away; a failure (DC4) is a banner next to
- * the action that failed, with the action still there.
+ * Destructive confirm: a title, the consequence, an optional preview, then the safe way out first
+ * (Archive instead, the default focus), the destructive action as an outlined red pill, and Cancel
+ * last. Never a Close, never a filled red button. While the action runs the label says so and nothing
+ * can be pressed or swiped away; a failure is a banner next to the action that failed, with the
+ * action still there.
  *
- * Confirm and the safe action latch on the first tap until their handler
- * settles: `isWorking` only arrives after a re-render, so it alone can't stop a
- * second tap landing in the same frame.
+ * Confirm and the safe action latch on the first tap until their handler settles: `isWorking` only
+ * arrives after a re-render, so it alone can't stop a second tap landing in the same frame.
  */
 export function DestructiveConfirmSheet({
 	visible,
@@ -131,7 +128,7 @@ export function DestructiveConfirmSheet({
 	const hint = isWorking && busy ? busy.hint : confirmHint;
 
 	return (
-		// Swipe down or a tap on the scrim is Cancel (DC1) — until the action runs.
+		// Swipe down or a tap on the scrim is Cancel, until the action runs.
 		<Sheet visible={visible} onDismiss={onCancel} dismissible={!isInert}>
 			<ScrollView
 				testID="destructive-confirm-scroll"
@@ -191,7 +188,7 @@ export function DestructiveConfirmSheet({
 					</Text>
 				) : null}
 				{hint && largeText ? (
-					// Not drawn at large sizes (DC7); VoiceOver reads it instead.
+					// Not drawn at large sizes; VoiceOver reads it instead.
 					<Text
 						accessibilityLiveRegion="polite"
 						style={styles.hiddenHint}

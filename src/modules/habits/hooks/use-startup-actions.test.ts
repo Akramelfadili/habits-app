@@ -39,7 +39,7 @@ describe("useStartupActions", () => {
 		expect(mockReconcile).toHaveBeenCalledTimes(1);
 	});
 
-	it("clears the export and diagnostics files an earlier run left behind (E-03)", async () => {
+	it("clears the export and diagnostics files an earlier run left behind", async () => {
 		const useStartupActions = load();
 		await renderHook(() => useStartupActions());
 		expect(mockClearExports).toHaveBeenCalledTimes(1);

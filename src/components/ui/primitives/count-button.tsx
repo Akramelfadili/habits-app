@@ -3,20 +3,18 @@ import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type CountButtonProps = {
-	/** "5/8" — the quantity so far over its target. */
 	label: string;
 	onPress: () => void;
 	accessibilityLabel: string;
 	accessibilityHint?: string;
 };
 
-/** The visible pill is 28 pt tall (T-27); the hit area around it is 44 × 44 at least. */
+/** The visible pill is 28 pt tall; the hit area around it is 44 × 44 at least. */
 const PILL_HEIGHT = 28;
 
 /**
- * V3-13's count button: a quantity row's "5/8" pill, the visible way into the
- * quantity sheet (the circle's long-press is the other). Replaces the stand-in
- * `Chip` V3-2a used for it.
+ * A quantity row's "5/8" pill, the visible way into the quantity sheet (the circle's long-press is
+ * the other).
  */
 export function CountButton({
 	label,

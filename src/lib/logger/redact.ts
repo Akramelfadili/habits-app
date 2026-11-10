@@ -1,20 +1,19 @@
 import type { LogEntry, LogFields, SerializedError } from "./types";
 
 /**
- * Redaction (audit A3-10), done in the core before any sink sees an entry, so
- * a new sink cannot leak what an old one would not.
+ * Redaction, done in the core before any sink sees an entry, so a new sink cannot leak what an
+ * old one would not.
  *
- * - A field survives only if its NAME is in an allowlist. Anything else
- *   (`name`, `note`, `label`, `title`…) is dropped, whatever its value.
- * - Allowlisted numeric names keep numbers, booleans and null only — ids and
- *   counts. A string there is dropped.
- * - Allowlisted TOKEN names may carry a short lowercase code (`reason:
- *   "storage"`); a string with spaces, capitals or more than 40 characters
- *   looks like free text and is replaced by `[redacted]`.
- * - An error's message is capped and loses its quoted segments
- *   (`Category "Glass of water" is missing` → `Category "…" is missing`).
- *   Unquoted interpolation can't be detected, so: never put user text into an
- *   Error message — use the id.
+ * - A field survives only if its NAME is in an allowlist. Anything else (`name`, `note`,
+ *   `label`, `title`...) is dropped, whatever its value.
+ * - Allowlisted numeric names keep numbers, booleans and null only (ids and counts). A string
+ *   there is dropped.
+ * - Allowlisted TOKEN names may carry a short lowercase code (`reason: "storage"`); a string with
+ *   spaces, capitals or more than 40 characters looks like free text and is replaced by
+ *   `[redacted]`.
+ * - An error's message is capped and loses its quoted segments (`Category "Glass of water" is
+ *   missing` becomes `Category "..." is missing`). Unquoted interpolation can't be detected, so:
+ *   never put user text into an Error message; use the id.
  *
  * To log a new field, add its name here. That is a deliberate, reviewable step.
  */

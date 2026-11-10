@@ -1,6 +1,5 @@
 import { semanticColors, surfaceColors } from "./theme";
 
-/** WCAG 2.x relative luminance / contrast ratio for opaque #RRGGBB colours. */
 function luminance(hex: string): number {
 	const channel = (offset: number) => {
 		const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
@@ -101,7 +100,7 @@ describe.each(["light", "dark"] as const)(
 			}
 		});
 
-		it("toast text clears 4.5:1 on the toast surface (10:1 per F-01)", () => {
+		it("toast text clears 4.5:1 on the toast surface (10:1)", () => {
 			expect(contrast(surface.toastInk, surface.toast)).toBeGreaterThanOrEqual(
 				10,
 			);
@@ -115,7 +114,7 @@ describe.each(["light", "dark"] as const)(
 			}
 		});
 
-		it("text on a frozen day uses ink, which clears 4.5:1 on frozenBg (T-15)", () => {
+		it("text on a frozen day uses ink, which clears 4.5:1 on frozenBg", () => {
 			expect(contrast(surface.ink, semantic.frozenBg)).toBeGreaterThanOrEqual(
 				TEXT_AA,
 			);

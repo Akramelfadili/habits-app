@@ -10,9 +10,9 @@ import type { DayRange, Habit } from "../types";
 import { cancelHabitNotifications, syncAfterWrite } from "./reminder-service";
 
 /**
- * Archive, restore and delete (HAB-13). Each is composite: the habit's row
- * changes *and* its OS notifications have to follow in the same operation —
- * a reminder firing for an archived or deleted habit is a user-facing bug.
+ * Archive, restore and delete. Each is composite: the habit's row changes and its OS
+ * notifications have to follow in the same operation: a reminder firing for an archived or
+ * deleted habit is a user-facing bug.
  */
 
 /**
@@ -39,12 +39,11 @@ export async function archiveHabit(habitId: number): Promise<void> {
 }
 
 /**
- * Back on Today, with its reminders firing again from their next scheduled
- * occurrence (`syncHabitReminders` rebuilds rather than appends, so repeated
- * restores never stack notifications). The archive period becomes a pause, so
- * its days read as paused rather than missed — but the streak starts fresh
- * from the restore day (HAB-20, superseding HAB-13's "resume"): nothing is
- * counted across the gap. Longest streak is untouched.
+ * Back on Today, with its reminders firing again from their next scheduled occurrence
+ * (`syncHabitReminders` rebuilds rather than appends, so repeated restores never stack
+ * notifications). The archive period becomes a pause, so its days read as paused rather
+ * than missed, but the streak starts fresh from the restore day: nothing is counted across
+ * the gap. Longest streak is untouched.
  */
 export async function restoreHabit(habitId: number): Promise<void> {
 	const habit = await getHabit(habitId);
@@ -57,9 +56,9 @@ export async function restoreHabit(habitId: number): Promise<void> {
 }
 
 /**
- * Undo for Restore (HAB-20): re-archives with the archive date and pauses the
- * habit had before the restore, so the banner, heatmap and Reminders row come
- * back exactly as they were — not a fresh archive dated today.
+ * Undo for Restore: re-archives with the archive date and pauses the habit had before the
+ * restore, so the banner, heatmap and Reminders row come back exactly as they were, not a
+ * fresh archive dated today.
  */
 export async function undoRestoreHabit(
 	habitId: number,

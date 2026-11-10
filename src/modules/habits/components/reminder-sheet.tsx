@@ -13,9 +13,7 @@ import { reminderSheetCopy } from "../messages";
 import type { IsoWeekday, ReminderDraft } from "../types";
 
 type ReminderSheetProps = {
-	/** The reminder being added or edited — null keeps the sheet closed. */
 	draft: ReminderDraft | null;
-	/** "Add time" or "Reminder time" — said by the caller, who knows which it is. */
 	title: string;
 	onDismiss: () => void;
 	onSave: (draft: ReminderDraft) => void;
@@ -24,9 +22,9 @@ type ReminderSheetProps = {
 };
 
 /**
- * Bottom sheet with a 24-hour time wheel and the days the time repeats on
- * (F7, R3): one place to set a reminder's time and its own weekdays. The form
- * uses it before the habit exists; the Reminders screen uses it afterwards.
+ * Bottom sheet with a 24-hour time wheel and the days the time repeats on: one place to set a
+ * reminder's time and its own weekdays. The form uses it before the habit exists; the Reminders
+ * screen uses it afterwards.
  */
 export function ReminderSheet({
 	draft,

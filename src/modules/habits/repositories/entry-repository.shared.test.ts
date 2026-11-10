@@ -10,9 +10,8 @@ import type * as EntryRepository from "./entry-repository";
 import type * as FrozenDayRepository from "./frozen-day-repository";
 
 /**
- * Every screen that shows the entry log reads one shared subscription (audit
- * A-03, B-07): N consumers cost one listener, and a write re-renders only the
- * consumers whose slice it changed.
+ * Every screen that shows the entry log reads one shared subscription: N consumers cost one
+ * listener, and a write re-renders only the consumers whose slice it changed.
  */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));

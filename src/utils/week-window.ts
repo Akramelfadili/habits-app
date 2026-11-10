@@ -1,9 +1,9 @@
 import { endOfWeek, startOfDay, startOfWeek } from "date-fns";
 
 /**
- * Weeks run Monday → Sunday (HAB-02). The single source for every week bound in
- * the app: scheduling, summaries, the week strip and the entry ranges read from
- * the database. `modules/habits/constants.ts` re-exports it.
+ * Weeks run Monday → Sunday. The single source for every week bound in the app: scheduling,
+ * summaries, the week strip and the entry ranges read from the database.
+ * `modules/habits/constants.ts` re-exports it.
  */
 export const WEEK_STARTS_ON = 1;
 
@@ -16,17 +16,14 @@ export const WEEK_STARTS_ON = 1;
  */
 export type DayWindow = { start: Date; end: Date };
 
-/** Local midnight of the Monday that starts `date`'s week. */
 export function weekStart(date: Date): Date {
 	return startOfWeek(date, { weekStartsOn: WEEK_STARTS_ON });
 }
 
-/** Local midnight of the Sunday that ends `date`'s week. */
 export function weekLastDay(date: Date): Date {
 	return startOfDay(endOfWeek(date, { weekStartsOn: WEEK_STARTS_ON }));
 }
 
-/** The Monday–Sunday week containing `date`. */
 export function weekWindow(date: Date): DayWindow {
 	return { start: weekStart(date), end: weekLastDay(date) };
 }

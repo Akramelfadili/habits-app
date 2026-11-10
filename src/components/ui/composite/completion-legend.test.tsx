@@ -16,7 +16,6 @@ describe("CompletionLegend", () => {
 		for (const label of ["Done", "Partial", "Frozen", "Not logged yet"]) {
 			expect(screen.getByText(label)).toBeTruthy();
 		}
-		// The partial swatch carries the same notch as the cells it explains.
 		expect(screen.getAllByTestId("completion-cell-notch")).toHaveLength(1);
 	});
 

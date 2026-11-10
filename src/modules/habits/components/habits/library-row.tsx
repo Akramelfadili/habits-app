@@ -9,27 +9,23 @@ type VoiceOverAction = { label: string; onAction: () => void };
 
 type LibraryRowProps = {
 	habit: Habit;
-	/** "Daily · 8 glasses" — see `libraryRowSubtitle`. */
 	subtitle: string;
-	/** "Drink water, Health, daily, 8 glasses" — what VoiceOver reads as the row (08.3). */
+	/** "Drink water, Health, daily, 8 glasses": what VoiceOver reads as the row. */
 	accessibilityLabel: string;
 	onPress: () => void;
 	/**
-	 * Reorder mode (H4): the drag grip, which replaces the chevron. The row stops
-	 * being a link while it is on screen — a tap on it would only open Detail
-	 * mid-drag.
+	 * Reorder mode: the drag grip, which replaces the chevron. The row stops being a link while it is on
+	 * screen, since a tap on it would only open Detail mid-drag.
 	 */
 	handle?: ReactNode;
-	/** Held mid-drag: the E2 lift. */
 	lifted?: boolean;
-	/** VoiceOver's Reorder and Archive (08.3): the gestures a screen reader cannot make. */
+	/** VoiceOver's Reorder and Archive: the gestures a screen reader cannot make. */
 	accessibilityActions?: VoiceOverAction[];
 };
 
 /**
- * One active habit in the library (H1, V3-13 over V3-23): its category's icon
- * square, name, a line saying how it repeats, a chevron to Detail. In reorder
- * mode the grip takes the chevron's place.
+ * One active habit in the library: its category's icon square, name, a line saying how it repeats,
+ * a chevron to Detail. In reorder mode the grip takes the chevron's place.
  */
 export function LibraryRow({
 	habit,
@@ -58,19 +54,16 @@ export function LibraryRow({
 
 type ArchivedLibraryRowProps = {
 	habit: Habit;
-	/** "Archived 12 Oct · best streak 41". */
 	subtitle: string;
 	accessibilityLabel: string;
 	onPress: () => void;
 	onRestore: () => void;
-	/** A restore is in flight: Restore cannot be pressed twice. */
 	disabled?: boolean;
 };
 
 /**
- * One archived habit (H5, H2): dimmed, with the date it left Today and an
- * instant Restore. The row still opens Detail; Restore is its own 44 pt target
- * beside it, never nested inside the row's button.
+ * One archived habit: dimmed, with the date it left Today and an instant Restore. The row still
+ * opens Detail; Restore is its own 44 pt target beside it, never nested inside the row's button.
  */
 export function ArchivedLibraryRow({
 	habit,

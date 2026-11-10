@@ -3,21 +3,19 @@ import { log } from "@/lib/logger/logger";
 import { onTableChange } from "./table-change";
 
 /**
- * One live read of a whole table, shared by every screen that wants it (audit
- * A-03, B-07). Drizzle's `useLiveQuery` is one query and one change listener
- * *per hook call*; with the Today, Habits and Progress tabs all mounted that
- * was a dozen re-reads of the same table per write, each rebuilding its own
- * array. Here the first consumer opens the one subscription and the last one
- * closes it (reference counted through `useSyncExternalStore`'s subscribe), and
- * every consumer reads a slice of the one snapshot (`useSharedLiveTable`).
+ * One live read of a whole table, shared by every screen that wants it. Drizzle's
+ * `useLiveQuery` is one query and one change listener *per hook call*; with the Today, Habits and
+ * Progress tabs all mounted that was a dozen re-reads of the same table per write, each
+ * rebuilding its own array. Here the first consumer opens the one subscription and the last one
+ * closes it (reference counted through `useSyncExternalStore`'s subscribe), and every consumer
+ * reads a slice of the one snapshot (`useSharedLiveTable`).
  *
- * The snapshot keeps the previous row objects whenever a row did not change, and
- * keeps the previous array when nothing did, so a write that touches one row
- * leaves every slice that does not contain it equal to what it was.
+ * The snapshot keeps the previous row objects whenever a row did not change, and keeps the
+ * previous array when nothing did, so a write that touches one row leaves every slice that does
+ * not contain it equal to what it was.
  */
 
 export type SharedSnapshot<Row> = {
-	/** `[]` until the first result. */
 	rows: Row[];
 	loaded: boolean;
 	error: unknown;
@@ -29,14 +27,11 @@ export type SharedLiveTable<Row> = {
 };
 
 type Definition<Source, Row> = {
-	/** The table's name — what the change listener is keyed by. */
 	table: string;
 	/** A fresh query each time (a Drizzle builder re-runs on every `then`). */
 	read: () => PromiseLike<Source[]>;
 	map: (source: Source) => Row;
-	/** A row's identity across reads, to carry its previous object over. */
 	key: (row: Row) => number | string;
-	/** Whether two reads of the same row are equal. */
 	same: (a: Row, b: Row) => boolean;
 };
 
@@ -156,7 +151,6 @@ export function useSharedLiveTable<Row, Slice>(
 	return slice;
 }
 
-/** Same length and the same element objects, in order — what a filtered slice of shared rows compares by. */
 export function sameElements<T>(a: readonly T[], b: readonly T[]): boolean {
 	return a.length === b.length && a.every((item, index) => item === b[index]);
 }

@@ -24,7 +24,6 @@ import { progressCopy } from "../messages";
 import type { Habit, IsoWeekday } from "../types";
 import { scheduleLabel } from "./habit-schedule-label";
 
-/** One stat tile's content (V3-10): label, value, one line under it. */
 export type StatTileData = {
 	key: string;
 	label: string;
@@ -34,7 +33,6 @@ export type StatTileData = {
 	muted?: boolean;
 };
 
-/** The category's identity colour for a habit's 8 pt dot. */
 export type DotColor = (habit: Habit) => string;
 
 const WEEKDAY_SHORT: Record<IsoWeekday, string> = {
@@ -49,9 +47,6 @@ const WEEKDAY_SHORT: Record<IsoWeekday, string> = {
 
 const cell = progressCopy.cell;
 
-// ─── Cells ────────────────────────────────────────────────────────────────────
-
-/** One habit-day, as the shared completion cell draws it (V3-05). */
 export function cellStateOf(day: {
 	status: CellStatus;
 	level: 0 | 1 | 2 | 3;
@@ -80,7 +75,6 @@ export function cellStateOf(day: {
 	}
 }
 
-/** One calendar day across all habits, as a cell (month calendar, year map). */
 export function calendarStateOf(day: CalendarDay): CompletionCellState {
 	switch (day.status) {
 		case "before-start":
@@ -110,7 +104,6 @@ function partialPercent(row: MatrixRow, day: MatrixCell): number {
 	return day.level === 2 ? 75 : 25;
 }
 
-/** "done", "partial 60 percent", "frozen" — what a matrix cell says. A Break habit says resisted / slipped (D8). */
 export function matrixCellWord(row: MatrixRow, day: MatrixCell): string {
 	switch (day.status) {
 		case "done":
@@ -136,12 +129,10 @@ export function matrixCellWord(row: MatrixRow, day: MatrixCell): string {
 	}
 }
 
-/** "Wed, done" — one cell, as VoiceOver reads it in the one-habit and AX3 blocks. */
 export function matrixCellLabel(row: MatrixRow, day: MatrixCell): string {
 	return `${format(day.date, "EEE")}, ${matrixCellWord(row, day)}`;
 }
 
-/** The whole row as one stop: "Drink water, 3 of 7. Monday, done. Tuesday, partial 60 percent …". */
 export function matrixRowLabel(row: MatrixRow): string {
 	const days = row.cells
 		.map((day) => `${format(day.date, "EEEE")}, ${matrixCellWord(row, day)}`)
@@ -158,7 +149,6 @@ function rowCells(row: MatrixRow): CompletionRowsCell[] {
 	}));
 }
 
-/** The week matrix's props: day headers that open Edit this day, and a row per habit. */
 export function weekMatrixProps(
 	matrix: WeekMatrix,
 	dot: DotColor,
@@ -189,7 +179,6 @@ export function weekMatrixProps(
 	};
 }
 
-/** The one-habit card and the AX3 fallback: a block per habit, 40 pt cells with their dates. */
 export function weekBlocksProps(
 	matrix: WeekMatrix,
 	dot: DotColor,
@@ -220,7 +209,6 @@ export function weekBlocksProps(
 	}));
 }
 
-/** One swatch and word per state the week matrix can show (P1). */
 export function weekLegend(): LegendEntry[] {
 	const legend = progressCopy.legend;
 	return [
@@ -234,7 +222,6 @@ export function weekLegend(): LegendEntry[] {
 	];
 }
 
-/** "Mon–Tue", "Mon", "Mon, Wed": consecutive weekdays collapse to a range. */
 export function weekdayRunLabel(weekdays: readonly number[]): string {
 	const sorted = [...weekdays].sort((a, b) => a - b);
 	const runs: number[][] = [];
@@ -252,7 +239,6 @@ export function weekdayRunLabel(weekdays: readonly number[]): string {
 		.join(", ");
 }
 
-/** "Started Wed 21 Oct · Mon–Tue before start" under a too-early week (P2); null when nothing precedes the start. */
 export function weekStartedNote(
 	matrix: WeekMatrix,
 	unlock: ProgressUnlock,
@@ -273,11 +259,8 @@ export function weekStartedNote(
 	);
 }
 
-// ─── Stat tiles ───────────────────────────────────────────────────────────────
-
 type TileContext = {
 	today: Date;
-	/** The one habit Progress is scoped to, or null for all habits. */
 	oneHabit: Habit | null;
 };
 
@@ -286,12 +269,10 @@ const stats = progressCopy.stats;
 const rateValue = (rate: number | null) =>
 	rate === null ? stats.noValue : `${rate}%`;
 
-/** The range still has days to come, so its numbers are "so far". */
 function isSoFar(summary: RangeSummary, today: Date): boolean {
 	return startOfDay(summary.window.end) >= startOfDay(today);
 }
 
-/** "Meditate · days" on Week and Month, "days · Meditate" on Year (P1, P7, P12). */
 function streakTile(
 	label: string,
 	summary: RangeSummary,
@@ -320,7 +301,6 @@ function streakTile(
 	};
 }
 
-/** Week's three tiles (P1), or a one-habit week's (P5). */
 export function weekTiles(
 	summary: RangeSummary,
 	{ today, oneHabit }: TileContext,
@@ -375,7 +355,6 @@ export function weekTiles(
 	];
 }
 
-/** Month's tiles (P7), or a one-habit month's (P10). */
 export function monthTiles(
 	summary: RangeSummary,
 	{ today, oneHabit }: TileContext,
@@ -433,7 +412,6 @@ export function monthTiles(
 	];
 }
 
-/** Year's tiles (P12), or a one-habit year's (P15). */
 export function yearTiles(
 	summary: RangeSummary,
 	best: { month: Date; percent: number | null } | null,
@@ -491,8 +469,6 @@ export function yearTiles(
 	];
 }
 
-// ─── Insights ─────────────────────────────────────────────────────────────────
-
 export type InsightCardData = {
 	symbol: SFSymbol;
 	title: string;
@@ -515,14 +491,12 @@ function periodWords(kind: RangeKind, previous: Date) {
 	return [insightCopy.thisYear, insightCopy.lastYear] as const;
 }
 
-/** One ranked insight as an InsightCard's props (V3-12). */
 export function insightProps(
 	insight: ProgressInsight,
 	context: {
 		kind: RangeKind;
 		previousWindowStart: Date;
 		oneHabit: Habit | null;
-		/** Year: the running month's rate, for "October is at 84 % so far". */
 		currentMonth: { month: Date; percent: number } | null;
 	},
 ): InsightCardData {
@@ -599,9 +573,6 @@ export function insightProps(
 	}
 }
 
-// ─── Unlock ───────────────────────────────────────────────────────────────────
-
-/** The unlock card for a range that has fewer than 7 logged days (P2, P9, P14). */
 export function unlockProps(kind: RangeKind, unlock: ProgressUnlock) {
 	const copy = progressCopy.unlock;
 	const days = unlock.remainingDays;
@@ -623,7 +594,6 @@ export function unlockProps(kind: RangeKind, unlock: ProgressUnlock) {
 	};
 }
 
-/** "Daily · your only habit": the one-habit card's line under the name (P5). */
 export function oneHabitSubline(habit: Habit): string {
 	const schedule =
 		habit.frequency.type === "daily"

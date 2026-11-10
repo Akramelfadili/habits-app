@@ -127,7 +127,6 @@ describe("CompletionCell", () => {
 		);
 		const paused = screen.getByTestId("completion-cell-paused");
 		expect(paused).toHaveStyle({ backgroundColor: "transparent" });
-		// Diagonal lines, clipped to the rounded square, in the outline colour (D4).
 		expect(paused).toHaveStyle({ overflow: "hidden" });
 		const lines = screen.getByTestId("completion-cell-hatch").children;
 		expect(lines.length).toBeGreaterThan(5);
@@ -219,7 +218,6 @@ describe("CompletionCell", () => {
 				) - 0.001,
 			);
 		}
-		// Complete days (the darkest fill) carry onAccent text, at AAA.
 		expect(
 			contrastRatio(intensityColor(3, "light"), light.onAccent),
 		).toBeGreaterThan(7);

@@ -13,8 +13,8 @@ type DayDetailCardProps = {
 };
 
 /**
- * Month's day card (P13): the ringed day, "4 of 5 done · 80%", each habit's
- * state, and "Edit this day" (not on a day that hasn't happened yet).
+ * Month's day card: the ringed day, "4 of 5 done · 80%", each habit's state, and "Edit this day"
+ * (not on a day that hasn't happened yet).
  */
 export function DayDetailCard({ detail, onClose, onEdit }: DayDetailCardProps) {
 	const { colors } = useTheme();

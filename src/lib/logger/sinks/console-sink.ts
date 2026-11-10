@@ -13,7 +13,6 @@ export const consoleSink: LogSink = {
 	},
 };
 
-/** Whether the console mirror belongs in this build: development, not Jest. */
 export function shouldMirrorToConsole(): boolean {
 	return __DEV__ && process.env.NODE_ENV !== "test";
 }

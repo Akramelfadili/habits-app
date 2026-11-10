@@ -4,17 +4,14 @@ import { DatabaseErrorScreen } from "./database-error-screen";
 import { MigrationScreen } from "./migration-screen";
 
 /**
- * Web-only stand-in for `database-provider.tsx`. Web has no SQLite (repositories
- * swap to in-memory fixtures via their own `.web.ts` files), so there's nothing
- * to migrate — and importing `./client` here would crash on expo-sqlite's
- * missing web binding.
+ * Web-only stand-in for `database-provider.tsx`. Web has no SQLite (repositories swap to
+ * in-memory fixtures via their own `.web.ts` files), so there is nothing to migrate, and importing
+ * `./client` here would crash on expo-sqlite's missing web binding.
  *
- * What it keeps are the migration screens, so the visual check and tests can
- * reach them without a dev-only route in the app: `?fixtures=migration-running`
- * stays on the update screen (SY3), `?fixtures=migration-fails` fails every
- * update (SY4), `?fixtures=migration-fails-once` fails the first and lets Retry
- * recover, and `?fixtures=migration-fails-first-open` fails where there was
- * nothing to update (the plain open-failure words).
+ * It keeps the migration screens so the visual check and tests can reach them without a dev-only
+ * route: `?fixtures=migration-running` stays on the update screen, `?fixtures=migration-fails`
+ * fails every update, `?fixtures=migration-fails-once` fails the first and lets Retry recover,
+ * and `?fixtures=migration-fails-first-open` fails where there was nothing to update.
  */
 type Simulation = "running" | "update-fails" | "open-fails" | null;
 

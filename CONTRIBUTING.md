@@ -17,6 +17,10 @@ make check     # Biome (no writes) + tsc + Jest + tooling tests + check-architec
 
 It also runs on `git push` (`.husky/pre-push`) and in CI. Jest skips tests named `*.slow.test.ts(x)` (today: the per-week equivalence test, ~25 s); CI runs them after `make check` with `npm run test:slow` (`make test-slow`). Run them yourself when you touch the code they cover. Name a test `.slow.test.ts` only when it is slow by design (a randomised or exhaustive check), not to hide a slow unit test. Never add an allowlist entry (`scripts/check-architecture.allowlist.json`) or raise the token baseline to get green: fix the code. Both files may only shrink.
 
+## Comments
+
+Write only the why: no comment that restates the code, no banners or file headers, no history, and no spec versions or ticket IDs in code or test titles. `make check-comment-refs` (in `make check`) enforces the last one; `make comment-report` lists the most commented files.
+
 ## What never goes in git
 
 This repo is **public**: anything committed is visible to everyone, and deleting it later does not un-publish it. Never commit:

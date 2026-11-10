@@ -3,7 +3,7 @@ import { builtInCategory, makeHabit } from "../test-support/habit-builder";
 import type { Category, Entry, FrozenDay, Habit } from "../types";
 
 // Pinned so "today" (computed inside the hook) is deterministic.
-const TODAY = new Date(2026, 8, 23, 12); // Wednesday 23 Sep 2026
+const TODAY = new Date(2026, 8, 23, 12);
 
 let mockActive: Habit[] = [];
 let mockArchived: Habit[] = [];
@@ -63,7 +63,7 @@ describe("useHabitsQueries", () => {
 		]);
 	});
 
-	it("orders the groups by the stored category order (HAB-42)", async () => {
+	it("orders the groups by the stored category order", async () => {
 		mockCategories = [builtInCategory("Fitness"), builtInCategory("Health")];
 		mockActive = [
 			makeHabit({ id: 1, category: builtInCategory("Health") }),

@@ -15,10 +15,9 @@ import {
 } from "./range-summary";
 import { buildYearMap } from "./year-map";
 
-// Wednesday 21 Oct 2026.
 const today = new Date(2026, 9, 21, 12);
 const year = rangeWindowFor("year", today);
-const created = new Date(2026, 2, 3); // 3 Mar — Jan and Feb are before the first habit
+const created = new Date(2026, 2, 3);
 const a = makeHabit({ id: 1, createdAt: created });
 const b = makeHabit({ id: 2, createdAt: created, direction: "break" });
 const habits: Habit[] = [a, b];
@@ -36,7 +35,6 @@ function logs(habitId: number, from: Date, to: Date, skip: number[] = []) {
 	return result;
 }
 
-// September: both habits every day. October (to the 21st): habit 2 misses the 5th–6th.
 const entries: Entry[] = [
 	...logs(1, created, today),
 	...logs(2, created, new Date(2026, 8, 30)),
@@ -67,7 +65,6 @@ describe("buildYearMap", () => {
 			perfect: true,
 		});
 		expect(day("2026-10-05")).toMatchObject({ status: "frozen" });
-		// 6 Oct: habit 2 missed, habit 1 done → 1 of 2 → L2 (50 %).
 		expect(day("2026-10-06")).toMatchObject({
 			level: 2,
 			notch: true,
@@ -83,7 +80,7 @@ describe("buildYearMap", () => {
 		expect(months.map((m) => m.kind)).toEqual([
 			"before-start",
 			"before-start",
-			"counted", // March: the habits start on the 3rd
+			"counted",
 			"counted",
 			"counted",
 			"counted",
@@ -100,7 +97,6 @@ describe("buildYearMap", () => {
 			current: false,
 		});
 		expect(months[9]).toMatchObject({ key: "2026-10", current: true });
-		// October so far: 20 days × 2 habits due, minus the frozen 5th, minus the missed 6th.
 		expect(months[9].percent).toBe(
 			Math.round((months[9].completed / months[9].scheduled) * 100),
 		);
@@ -165,7 +161,7 @@ describe("buildYearMap", () => {
 	});
 });
 
-describe("buildYearMap — leap years (G-03)", () => {
+describe("buildYearMap — leap years", () => {
 	function yearOf(y: number) {
 		const habit = makeHabit({ id: 1, createdAt: new Date(y - 1, 11, 1) });
 		return buildYearMap({
@@ -181,7 +177,6 @@ describe("buildYearMap — leap years (G-03)", () => {
 		const result = yearOf(y);
 		expect(result.days).toHaveLength(366);
 		expect(new Set(result.days.map((d) => d.key)).size).toBe(366);
-		// 31 January days, then 1–29 February: 29 Feb is the 60th cell.
 		expect(result.days[59].key).toBe(`${y}-02-29`);
 		expect(result.days[60].key).toBe(`${y}-03-01`);
 		expect(result.days[59]).toMatchObject({ done: 1, due: 1 });

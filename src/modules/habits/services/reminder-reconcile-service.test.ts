@@ -74,7 +74,7 @@ beforeEach(() => {
 	mockEveningSetting = null;
 	mockEveningTime = null;
 	mockHideNames = null;
-	// Reminders already carry the default (generic) titles, as after the first launch with E-01.
+	// Reminders already carry the default (generic) titles, as after the first launch with Hide habit names.
 	mockTitlesApplied = "true";
 	mockHabits = [daily];
 	mockReminders = [];
@@ -322,7 +322,7 @@ describe("reconcileScheduledReminders", () => {
 		await reconcileScheduledReminders();
 		expect(JSON.stringify(getLogEntries())).not.toContain("Meditate");
 	});
-	describe("titles after Hide habit names (E-01)", () => {
+	describe("titles after Hide habit names", () => {
 		const titles = () => [...fake.scheduled.values()].map((s) => s.title);
 
 		it("on the first launch with the setting, rebuilds reminders scheduled under the habit's name", async () => {
@@ -330,8 +330,8 @@ describe("reconcileScheduledReminders", () => {
 			mockHideNames = "false";
 			await syncHabitReminders(daily);
 			expect(titles()).toEqual(["Meditate"]);
-			mockHideNames = null; // the update makes hidden the default
-			mockTitlesApplied = null; // nothing recorded before this update
+			mockHideNames = null;
+			mockTitlesApplied = null;
 
 			await reconcileScheduledReminders();
 

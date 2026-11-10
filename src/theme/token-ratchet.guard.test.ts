@@ -3,12 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Design-token ratchet. The design system says colours, shadows, type sizes and
- * weights come from `src/theme` tokens; today some escapes remain (audit A4).
- * The committed baseline is the number of escapes that exist now — it may only
- * go DOWN:
- *   - a count goes UP   → you added an escape: use a token instead.
- *   - a count goes DOWN → good! run `npm run ratchet:update` to lock it in.
+ * Design-token ratchet. The design system says colours, shadows, type sizes and weights
+ * come from `src/theme` tokens; some escapes remain. The committed baseline is the number
+ * of escapes that exist now: it may only go DOWN:
+ *   - a count goes UP: you added an escape, so use a token instead.
+ *   - a count goes DOWN: good, run `npm run ratchet:update` to lock it in.
  * Counting lives in scripts/lib/token-counts.cjs (shared with that script).
  */
 const { countTokens, PATTERNS } =

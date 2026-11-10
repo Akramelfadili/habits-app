@@ -3,7 +3,6 @@ import type { Entry, Habit } from "../types";
 import { isHabitListedOn } from "./selected-day";
 import { isEntryComplete } from "./streaks";
 
-/** How a day ended: what was due and what was done. */
 export type DaySummary = { completed: number; total: number };
 
 /**

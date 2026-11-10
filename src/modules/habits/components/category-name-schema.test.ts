@@ -47,7 +47,7 @@ describe("makeCategoryNameSchema", () => {
 	});
 });
 
-describe("makeCategoryNameSchema — rename (HAB-25)", () => {
+describe("makeCategoryNameSchema — rename", () => {
 	const garden = makeCategory({ id: 12, name: "Garden" });
 	const all = [...TEST_BUILT_IN_CATEGORIES, music, garden];
 	const renameMusic = makeCategoryNameSchema(all, music.id);

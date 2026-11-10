@@ -11,9 +11,9 @@ import { useSettingsQueries } from "../hooks/use-settings-queries";
 import { settingsCopy } from "../messages";
 
 /**
- * Settings › Freezes (S4): what is left and what is used this month, and the
- * rule in plain words. "Saved" (streaks kept this year) needs the freeze log
- * query of PR-08 and Auto-use is Later: neither is drawn.
+ * Settings > Freezes: what is left and what is used this month, and the rule in plain
+ * words. "Saved" (streaks kept this year) needs a freeze-log query that does not exist yet
+ * and Auto-use is Later: neither is drawn.
  */
 export function SettingsFreezesScreen() {
 	const settings = useSettingsQueries();

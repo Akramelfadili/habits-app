@@ -17,15 +17,13 @@ type HermesLike = {
 let installed = false;
 
 /**
- * Logs unhandled JS errors and promise rejections (audit A3-02). Nothing is
- * swallowed:
- * - the previous `ErrorUtils` handler (React Native's: the dev red box, and the
- *   fatal crash in release) is always called afterwards;
- * - rejections: in development React Native already routes them through
- *   `ExceptionsManager` → the global handler above, so there is no second
- *   tracker (one error, one log line). In release React Native installs none
- *   at all, so this enables Hermes' own tracker — logging only, as an unhandled
- *   rejection was never fatal.
+ * Logs unhandled JS errors and promise rejections. Nothing is swallowed:
+ * - the previous `ErrorUtils` handler (React Native's: the dev red box, and the fatal crash in
+ *   release) is always called afterwards;
+ * - rejections: in development React Native already routes them through `ExceptionsManager` to
+ *   the global handler above, so there is no second tracker (one error, one log line). In release
+ *   React Native installs none at all, so this enables Hermes' own tracker: logging only, as an
+ *   unhandled rejection was never fatal.
  *
  * Idempotent; call once at module load, before anything can fail.
  * Returns an uninstall function (tests).

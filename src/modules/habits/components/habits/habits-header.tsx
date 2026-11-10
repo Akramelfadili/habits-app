@@ -12,11 +12,9 @@ import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 import { habitsCopy } from "../../messages";
 
 type HabitsHeaderProps = {
-	/** "7 active · 2 archived", "No habits", or the reorder line. */
 	eyebrow: string;
-	/** What VoiceOver says for the title block: "Habits, 7 active, 1 archived." */
 	accessibilityLabel: string;
-	/** Reorder mode: Done replaces the gear and the plus (H4). */
+	/** Reorder mode: Done replaces the gear and the plus. */
 	reordering: boolean;
 	onOpenSettings: () => void;
 	onAddHabit: () => void;
@@ -25,15 +23,14 @@ type HabitsHeaderProps = {
 	animatedStyle?: object;
 	/** The inline bar has taken over: this row stops taking taps and leaves VoiceOver. */
 	collapsed?: boolean;
-	/** The title block, so a re-tap of the tab can put the screen reader on it (08.4). */
+	/** The title block, so a re-tap of the tab can put the screen reader on it. */
 	titleRef?: RefObject<HostInstance | null>;
 };
 
 /**
- * V3-02 for the Habits tab (H1, H4): the counts as an eyebrow, the display title,
- * and two 44 pt circles — the gear to Settings and the plus to Add habit — or,
- * while reordering, Done. At accessibility text sizes the buttons move above the
- * title (H10). Eyebrow and title are one VoiceOver stop.
+ * For the Habits tab: the counts as an eyebrow, the display title, and two 44 pt circles (the gear
+ * to Settings and the plus to Add habit) or, while reordering, Done. At accessibility text sizes the
+ * buttons move above the title. Eyebrow and title are one VoiceOver stop.
  */
 export function HabitsHeader({
 	eyebrow,

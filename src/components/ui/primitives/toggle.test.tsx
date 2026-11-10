@@ -36,7 +36,7 @@ describe("Toggle", () => {
 		expect(onValueChange).toHaveBeenCalledWith(false);
 	});
 
-	it("draws off as a track with a visible outline, on as an accent fill (T-06)", async () => {
+	it("draws off as a track with a visible outline, on as an accent fill", async () => {
 		const { rerender } = await render(
 			<Toggle value={false} onValueChange={jest.fn()} accessibilityLabel="x" />,
 		);

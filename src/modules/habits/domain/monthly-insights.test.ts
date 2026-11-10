@@ -145,7 +145,6 @@ describe("improved", () => {
 });
 
 describe("pattern", () => {
-	/** `weekdayDone`/`weekendDone` of 10 slots each, misses from habit 2 on Saturdays. */
 	function slots(weekdayDone: number, weekendDone: number) {
 		const list: DayOutcome[] = [];
 		for (let i = 0; i < 10; i++) {

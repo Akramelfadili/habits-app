@@ -10,11 +10,10 @@ import {
 import type { Habit } from "../types";
 
 /**
- * The Habits tab's writes (HAB-39). Reorder is a single repository write;
- * archive and restore also move the habit's notifications, so they go through
- * the lifecycle service — and say so in one toast with an Undo (D12): the
- * restore toast re-archives with the archive date and pauses it had before, not
- * a fresh archive dated today (HAB-20).
+ * The Habits tab's writes. Reorder is a single repository write; archive and restore also move
+ * the habit's notifications, so they go through the lifecycle service, and say so in one toast
+ * with an Undo: the restore toast re-archives with the archive date and pauses it had before,
+ * not a fresh archive dated today.
  */
 export function useHabitsActions() {
 	const reorder = useAsyncAction(reorderHabits, {
@@ -44,7 +43,7 @@ export function useHabitsActions() {
 				restore.run(habit.id),
 			);
 		},
-		/** Instant, no confirmation: Undo covers a mistake (H5). */
+		/** Instant, no confirmation: Undo covers a mistake. */
 		async restore(habit: Habit) {
 			const { archivedAt, pauses } = habit;
 			const result = await restore.run(habit.id);

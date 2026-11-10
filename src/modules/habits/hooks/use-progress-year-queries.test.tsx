@@ -6,7 +6,6 @@ import { notifyTableChanged } from "@/lib/db/test-live-query";
 import { makeHabitInput } from "../test-support/habit-builder";
 import type * as YearHook from "./use-progress-year-queries";
 
-/** Progress · Year through the real hooks and a real, migrated in-memory database. */
 const mockDb = createTestDb({ onWrite: notifyTableChanged });
 jest.doMock("@/lib/db/client", () => ({ db: mockDb }));
 jest.doMock("drizzle-orm/expo-sqlite", () => ({
@@ -30,7 +29,6 @@ const {
 	useProgressYearQueries,
 }: typeof YearHook = require("./use-progress-year-queries");
 
-// Friday 18 Sep 2026.
 const NOW = new Date(2026, 8, 18, 12);
 const key = (month: number, day: number) =>
 	format(new Date(2026, month, day), "yyyy-MM-dd");

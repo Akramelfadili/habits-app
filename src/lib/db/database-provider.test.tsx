@@ -361,7 +361,7 @@ describe("DatabaseProvider", () => {
 	});
 });
 
-describe("recovery: set aside old data (C-03)", () => {
+describe("recovery: set aside old data", () => {
 	const SET_ASIDE = "Set aside old data and start fresh";
 
 	beforeEach(() => {
@@ -436,7 +436,6 @@ describe("recovery: set aside old data (C-03)", () => {
 		);
 		expect(failed?.fields).toEqual({ errorName: "error" });
 
-		// It can be tried again, or left.
 		mockSetAside.mockReset();
 		await fireEvent.press(screen.getByText("Cancel"));
 		expect(screen.queryByText("Couldn\u2019t set the data aside")).toBeNull();

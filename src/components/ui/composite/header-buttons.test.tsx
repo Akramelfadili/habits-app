@@ -175,7 +175,7 @@ describe("headerNoBackOptions", () => {
 	});
 });
 
-describe("HeaderCircleButton (V3-02)", () => {
+describe("HeaderCircleButton", () => {
 	it("is a 44 pt circle carrying its glyph, labelled by what it does", async () => {
 		await render(
 			<HeaderCircleButton

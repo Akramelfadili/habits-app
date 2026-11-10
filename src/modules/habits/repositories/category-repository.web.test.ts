@@ -20,7 +20,7 @@ function loadRepositories() {
 // Default fixtures: "Evening walk" and "Read before bed" are in Evening.
 const EVENING_HABIT_IDS = [1, 2];
 
-describe("category-repository.web (HAB-25)", () => {
+describe("category-repository.web", () => {
 	it("starts in the order migration 0011 would store: first appearance among the fixture habits, Other last", async () => {
 		const { getCategories, getAllHabits } = loadRepositories();
 		const habits = await getAllHabits();

@@ -3,8 +3,8 @@ import { useAsyncAction } from "@/utils/use-async-action";
 import { setQuantityOnDay } from "../services/day-log-service";
 
 /**
- * A quantity write (HAB-07): a service because reaching the target on a
- * frozen day gives that day's freeze back in the same transaction (PR-11).
+ * A quantity write: a service because reaching the target on a frozen day gives that day's
+ * freeze back in the same transaction.
  */
 export function useQuantityLogActions() {
 	const log = useAsyncAction(setQuantityOnDay, {

@@ -5,11 +5,10 @@ import { useTheme } from "@/theme/use-theme";
 type FieldHelperProps = {
 	children: string;
 	/**
-	 * "blocking" explains why an action is unavailable yet ("Add a name to
-	 * save"); "hint" says what a field does ("Shown after the number…") — both
-	 * neutral, nothing is wrong. "error" flags input that can't be used as-is
-	 * ("You already have…"): danger ink, a "!" and words, never colour alone
-	 * (F-01). "limit" is the amber heads-up at a length cap ("32 characters max").
+	 * "blocking" explains why an action is unavailable yet ("Add a name to save"); "hint" says what a
+	 * field does ("Shown after the number…"); both neutral, nothing is wrong. "error" flags input that
+	 * can't be used as-is ("You already have…"): danger ink, a "!" and words, never colour alone.
+	 * "limit" is the amber heads-up at a length cap ("32 characters max").
 	 */
 	tone?: "blocking" | "hint" | "error" | "limit";
 	align?: "start" | "center";
@@ -17,7 +16,7 @@ type FieldHelperProps = {
 	plain?: boolean;
 };
 
-/** V3-16 helper line — a dot (a "!" for an error) and one message, under a field or above its action. */
+/** A dot (a "!" for an error) and one message, under a field or above its action. */
 export function FieldHelper({
 	children,
 	tone = "blocking",

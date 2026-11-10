@@ -1,11 +1,10 @@
 /**
- * Performance smoke for Progress's year maths on a large log (V3-3a): 20
- * habits (12 daily, 4 on specific days, 4 at 3× per week) over 5 years, ~29k
- * entries. The Year view reads one year's entries (plus the year before for
- * "+N pts"), so that is what the realistic cases pass; the stress cases hand
- * the whole five years to the same functions. Ceilings are generous — a slow
- * CI box must not flake — but low enough that a return to per-day scans of
- * entries fails. Set PERF_REPORT=1 to print the measured times.
+ * Performance smoke for Progress's year maths on a large log: 20 habits (12 daily, 4 on specific
+ * days, 4 at 3× per week) over 5 years, ~29k entries. The Year view reads one year's entries
+ * (plus the year before for "+N pts"), so that is what the realistic cases pass; the stress cases
+ * hand the whole five years to the same functions. Ceilings are generous (a slow CI box must not
+ * flake) but low enough that a return to per-day scans of entries fails. Set PERF_REPORT=1 to
+ * print the measured times.
  */
 import { addDays, format, subYears } from "date-fns";
 import { makeHabit } from "../test-support/habit-builder";
@@ -78,7 +77,6 @@ const yearEntries = entries.filter(
 const yearFrozen = frozenDays.filter(
 	(f) => f.date >= format(span.start, "yyyy-MM-dd"),
 );
-// What the old Yearly hook reads: the year's own Monday-aligned span.
 const ownStart = format(
 	yearEntryRange(yearWindowFor(today)).start,
 	"yyyy-MM-dd",

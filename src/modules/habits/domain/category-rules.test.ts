@@ -14,7 +14,6 @@ const builtIns: Category[] = BUILT_IN_CATEGORIES.map((builtIn, index) => ({
 	builtIn: true,
 }));
 
-/** Customs on the given rotation slots (0-based), named after their slot. */
 function customsOn(slots: number[]): Category[] {
 	return slots.map((slot, index) => ({
 		id: 100 + index,
@@ -25,7 +24,7 @@ function customsOn(slots: number[]): Category[] {
 }
 
 describe("CATEGORY_ROTATION", () => {
-	it("has six slots with unique shape/hue pairs (V3 dropped 15, 350, 175, 230)", () => {
+	it("has six slots with unique shape/hue pairs", () => {
 		expect(CATEGORY_ROTATION).toHaveLength(6);
 		const pairs = CATEGORY_ROTATION.map((slot) => `${slot.shape}/${slot.hue}`);
 		expect(new Set(pairs).size).toBe(CATEGORY_ROTATION.length);
@@ -77,7 +76,6 @@ describe("nextCategoryAppearance", () => {
 	});
 
 	it("reuses a freed slot before repeating any pair", () => {
-		// Slot 2 (index 1) was deleted; slots after it are still in use.
 		expect(
 			nextCategoryAppearance([...builtIns, ...customsOn([0, 2, 3, 4])]),
 		).toEqual(CATEGORY_ROTATION[1]);
@@ -110,7 +108,7 @@ describe("nextCategoryAppearance", () => {
 	});
 });
 
-describe("categoryUsage (HAB-25)", () => {
+describe("categoryUsage", () => {
 	const [music, garden] = customsOn([0, 1]);
 
 	it("lists each category's habits — archived ones included — in category order", () => {

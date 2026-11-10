@@ -13,14 +13,14 @@ import { EXPORT_FORMATS } from "../domain/export-formats";
 import type { ExportFailureReason, ExportOptions } from "../types";
 
 /**
- * Runs a data export (HAB-15): build → serialize (with progress) → write to a
- * scratch path → rename into place → record the date. A composite operation
- * with real ordering rules, hence a service:
+ * Runs a data export: build, serialize (with progress), write to a scratch path, rename
+ * into place, record the date. A composite operation with real ordering rules, hence a
+ * service:
  *
- * - Cancel (an aborted `signal`) and failure both delete the scratch file, so
- *   no partial export is ever left on disk.
- * - "Last export" is written only after the file is in place — a cancelled or
- *   failed run leaves it untouched.
+ * - Cancel (an aborted `signal`) and failure both delete the scratch file, so no partial
+ *   export is ever left on disk.
+ * - "Last export" is written only after the file is in place: a cancelled or failed run
+ *   leaves it untouched.
  * - Earlier exports are cleared first, so the cache never accumulates them.
  */
 

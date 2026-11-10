@@ -13,21 +13,18 @@ import {
 } from "./habit-form-schema";
 
 /**
- * What a suggestion hands the New habit form (BS2, HAB-46): every field the
- * suggestion knows. The form fills them in and says where they came from;
- * nothing is saved until Save is tapped.
+ * What a suggestion hands the New habit form: every field the suggestion knows. The form
+ * fills them in and says where they came from; nothing is saved until Save is tapped.
  */
 export type HabitFormPrefill = {
 	name: string;
 	/** A built-in's name; null leaves the category empty (the habit goes to Other). */
 	category: BuiltInCategoryName | null;
 	direction: HabitDirection;
-	/** A daily quantity target, or null for a check. */
 	target: { amount: number; unit: string } | null;
 	frequency: Frequency;
 };
 
-/** The form's blank state: a Build, Check, Daily habit with no name or category. */
 export function blankFormValues(name = ""): HabitFormInput {
 	return {
 		name,
@@ -90,10 +87,9 @@ const prefillSchema = z.object({
 });
 
 /**
- * Reads a suggestion handed over as the `prefill` route param (a JSON string),
- * so Browse suggestions can push `/new-habit?prefill=…` (BS1 → BS2). Anything
- * that is not a complete, valid suggestion is ignored: the form then opens
- * blank rather than half filled.
+ * Reads a suggestion handed over as the prefill route param (a JSON string), so Browse
+ * suggestions can push the new-habit route with it. Anything that is not a complete, valid
+ * suggestion is ignored: the form then opens blank rather than half filled.
  */
 export function parseHabitPrefill(
 	param: string | undefined,

@@ -41,7 +41,7 @@ describe("Stepper", () => {
 		expect(onChange).not.toHaveBeenCalled();
 	});
 
-	describe("adjustable (A6-06)", () => {
+	describe("adjustable", () => {
 		it("exposes the value as an adjustable with its range", async () => {
 			await renderStepper(3);
 			const value = screen.getByRole("adjustable", { name: "times per week" });
@@ -79,7 +79,7 @@ describe("Stepper", () => {
 		});
 	});
 
-	it("shows its unit or target under the value (V3-18)", async () => {
+	it("shows its unit or target under the value", async () => {
 		await render(
 			<Stepper
 				value={8}

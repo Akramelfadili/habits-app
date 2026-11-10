@@ -6,10 +6,9 @@ import { firstRunCopy, messages, showMessage } from "../../messages";
 import { formatReminderTime } from "../../presenters/reminders-helpers";
 
 /**
- * FR3: our own question, before iOS gets to ask. Shown on Today right after
- * the first habit is saved. "Allow reminders" adds the default 09:00 reminder
- * and only then raises the iOS prompt; "Not now" does nothing, and iOS is
- * asked the first time a reminder is added later.
+ * Our own question, before iOS gets to ask. Shown on Today right after the first habit is saved.
+ * "Allow reminders" adds the default 09:00 reminder and only then raises the iOS prompt; "Not now"
+ * does nothing, and iOS is asked the first time a reminder is added later.
  */
 export function FirstRunReminderOffer() {
 	const { habit } = useFirstRunOfferQueries();

@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react-native";
 import { AccessibilityInfo } from "react-native";
 import { TodayAllDoneCard } from "./today-all-done-card";
 
-describe("TodayAllDoneCard (T8)", () => {
+describe("TodayAllDoneCard", () => {
 	beforeEach(() => jest.useFakeTimers());
 	afterEach(() => jest.useRealTimers());
 

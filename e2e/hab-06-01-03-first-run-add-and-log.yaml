@@ -1,5 +1,4 @@
 # Journey: first run → quick-pick a first habit → add a habit of my own → log it on Today.
-# Covers HAB-46 (first run; HAB-06 before V3), HAB-01/02 (create + frequency, edit from Detail), HAB-03 (Today completion).
 url: ${APP_URL}/?fixtures=first-run&clock=2026-10-01T09:00:00
 env:
   APP_URL: http://localhost:8081
@@ -8,24 +7,21 @@ tags:
 ---
 - launchApp
 
-# HAB-46: First Run opens instead of Today, with no tab bar.
+# First Run opens instead of Today, with no tab bar.
 - assertVisible: "Small habits,.*"
 - assertNotVisible:
     id: "Progress"
 - tapOn: "Add your first habit"
 - assertVisible: "Your first habit"
-# The slim form: Save says why it is off until there is a name.
 - assertVisible: "Add a name to save"
 - tapOn: "Drink water"
 - assertNotVisible: "Add a name to save"
 - tapOn: "Save habit"
 
-# FR3: our own question comes before iOS gets to ask; Not now asks nothing.
+# Our own question comes before iOS gets to ask; Not now asks nothing.
 - assertVisible: "Remind you each day?"
 - tapOn: "Not now"
 
-# Lands on Today (tabs back) with the habit, grouped under its category and
-# a quantity habit as the suggestion promised ("0 of 8 glasses").
 - assertVisible: "Thursday, 1 October"
 - assertVisible: "Drink water"
 - assertVisible: "Health"
@@ -33,15 +29,13 @@ tags:
 - assertVisible:
     id: "Progress"
 
-# HAB-01: add a habit of my own, from the + in Today's header (HAB-27 — the
-# ⋯ menu is gone and the + is an icon button, so it matches by label).
+# Add a habit of my own from the + in Today's header (an icon button, so it matches by label).
 # The collapsed inline bar carries a second, inert +: take the header's.
 - tapOn:
     id: "Add habit"
     index: 1
 - assertVisible: "New habit"
-# HAB-41: only the name is required — Save says so until one is typed, and a
-# habit without a category goes to Other.
+# Only the name is required: Save says so until one is typed, and a habit without a category goes to Other.
 - assertVisible: "Add a name to save"
 - tapOn:
     id: "Name"
@@ -49,7 +43,6 @@ tags:
 - assertNotVisible: "Add a name to save"
 - tapOn: "Save habit"
 
-# HAB-03: it shows on Today and can be ticked off.
 - assertVisible: "Floss"
 - tapOn:
     id: "Floss, not done"
@@ -58,11 +51,10 @@ tags:
 - assertVisible: "Marked 'Floss' complete"
 - takeScreenshot: hab-06-01-03-logged
 
-# HAB-01: the habit can be edited later from its Detail header.
 - tapOn: "Floss"
 - tapOn: "Edit"
 - assertVisible: "Edit habit"
-# With an edit, Close asks first (F9): Keep editing stays, Discard leaves.
+# With an edit, Close asks first: Keep editing stays, Discard leaves.
 - tapOn:
     id: "Name"
 - inputText: "s"
@@ -74,8 +66,7 @@ tags:
 - tapOn: "Discard"
 - assertVisible: "Streak"
 
-# HAB-27: Detail opened from Today, so the Today tab is still the selected
-# one and Back comes back to it.
+# Detail opened from Today, so the Today tab is still the selected one and Back comes back to it.
 - assertVisible:
     id: "Today"
 - back

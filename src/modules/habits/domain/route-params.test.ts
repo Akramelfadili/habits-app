@@ -1,6 +1,6 @@
 import { parseHabitIdParam, parseMonthParam } from "./route-params";
 
-describe("parseHabitIdParam (D-09)", () => {
+describe("parseHabitIdParam", () => {
 	it.each([
 		["1", 1],
 		["42", 42],
@@ -27,7 +27,7 @@ describe("parseHabitIdParam (D-09)", () => {
 	});
 });
 
-describe("parseMonthParam (D-09)", () => {
+describe("parseMonthParam", () => {
 	it.each(["2026-07-01", "2026-07-15", "2028-02-29", "2026-12-31"])(
 		"accepts %s",
 		(raw) => {

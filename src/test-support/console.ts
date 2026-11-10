@@ -43,7 +43,6 @@ export function expectConsole(method: Method, match?: Matcher): jest.Mock {
 	return mock;
 }
 
-/** Called once from jest.setup-after-env.js. */
 export function installConsoleGuard(): void {
 	const originals = {} as Record<Method, typeof console.error>;
 

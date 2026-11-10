@@ -17,7 +17,6 @@ import {
 let dir: string;
 let sqlite: DatabaseSync;
 
-/** A real file database in WAL mode, with the table the migrator writes. */
 function openSource(migrations: number): BackupSource {
 	sqlite = new DatabaseSync(path.join(dir, "habits.db"));
 	sqlite.exec("PRAGMA journal_mode = WAL");

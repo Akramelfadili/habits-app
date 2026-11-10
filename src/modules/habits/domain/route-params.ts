@@ -2,10 +2,9 @@ import { isValid } from "date-fns";
 import { fromDayKey, toDayKey } from "@/utils/day-key";
 
 /**
- * Route params arrive from deep links (`habitsapp://…`) that any app or web
- * page can open, so they are untrusted text (D-09). Each parser returns the
- * value the screen needs, or why it was refused — a short code for the log,
- * never the param itself.
+ * Route params arrive from deep links (`habitsapp://…`) that any app or web page can open, so
+ * they are untrusted text. Each parser returns the value the screen needs, or why it was
+ * refused: a short code for the log, never the param itself.
  */
 export type ParamResult<T> =
 	| { ok: true; value: T }
@@ -25,7 +24,6 @@ function single(raw: string | string[] | undefined): string | undefined {
 
 const POSITIVE_INTEGER = /^[1-9][0-9]*$/;
 
-/** `edit-habit/[id]`: a positive integer, written plainly ("12", not "012", "1.0" or "-3"). */
 export function parseHabitIdParam(
 	raw: string | string[] | undefined,
 ): ParamResult<number> {
@@ -44,7 +42,6 @@ export function parseHabitIdParam(
 
 const DAY_KEY = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 
-/** `month/[month]`: a real calendar day, "yyyy-MM-dd" (any day of the month to show). */
 export function parseMonthParam(
 	raw: string | string[] | undefined,
 ): ParamResult<string> {

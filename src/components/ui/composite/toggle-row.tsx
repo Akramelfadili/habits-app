@@ -5,18 +5,16 @@ import { useTheme } from "@/theme/use-theme";
 
 type ToggleRowProps = {
 	title: string;
-	/** Under the title — what the switch does, or the reason it is off. */
 	subtitle?: string;
 	value: boolean;
 	onValueChange: (value: boolean) => void;
 	disabled?: boolean;
-	/** What VoiceOver reads; defaults to the title (and subtitle). */
 	accessibilityLabel?: string;
 };
 
 /**
- * V3-20 "whole row toggles": the row is the switch (role, label and state on
- * the row), the track beside it is only drawn. At least 44 pt tall.
+ * The row is the switch (role, label and state on the row); the track beside it is only drawn. At
+ * least 44 pt tall.
  */
 export function ToggleRow({
 	title,

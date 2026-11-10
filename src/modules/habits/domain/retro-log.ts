@@ -5,10 +5,9 @@ import type { DayLog, DayLogValue, Entry, Habit } from "../types";
 import { isEntryComplete } from "./streaks";
 
 /**
- * Retro log's day math (HAB-10) — pure functions over one calendar day. The
- * sheet edits a draft of these values; only the diff is written on save, and
- * streaks/rate/heatmap follow automatically because they're always derived
- * from entries, never stored.
+ * Retro log's day math: pure functions over one calendar day. The sheet edits a draft of these
+ * values; only the diff is written on save, and streaks/rate/heatmap follow automatically because
+ * they're always derived from entries, never stored.
  */
 
 /**
@@ -41,7 +40,6 @@ export function habitsForDay(
 	];
 }
 
-/** A habit's saved value for the day: presence for a check habit, the amount (0 = nothing) for a quantity one. */
 export function dayLogValueFor(
 	habit: Habit,
 	entry: Entry | undefined,
@@ -50,7 +48,6 @@ export function dayLogValueFor(
 	return entry !== undefined;
 }
 
-/** Whether a draft value counts as done — the check's state in the sheet. */
 export function isDayLogValueDone(habit: Habit, value: DayLogValue): boolean {
 	if (typeof value === "boolean") return value;
 	return habit.targetAmount !== null && value >= habit.targetAmount;
@@ -69,7 +66,6 @@ export function toggledDayLogValue(
 	return isDayLogValueDone(habit, value) ? 0 : (habit.targetAmount ?? 0);
 }
 
-/** Only the habits whose draft differs from what's saved — what a save writes. */
 export function diffDayLog(
 	saved: Readonly<Record<string, DayLogValue>>,
 	draft: Readonly<Record<string, DayLogValue>>,

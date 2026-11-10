@@ -6,18 +6,15 @@ import type { FixtureHabit } from "./habit-fixtures";
 import { V3_FRAME_HABITS } from "./today-v3-fixtures";
 
 /**
- * The Progress frames' data (P1–P17, HP1/HP2, RL1/RL2): the six habits the
- * Today frames draw, with a history from 3 March to Thursday 22 October 2026 —
- * the visual checks pin "now" to Friday 23 October. Dates are absolute, so the
- * data never depends on the day a check runs.
- *
- * - `progress-v3`: P1, P7, P8, P12, P13. September is perfect (the best month);
- *   Read 20 min slips in October; Meditate has the freezes (7 and 20 Oct,
- *   and 12 Jun), Upper body two bonus logs (3 and 19 Oct); Morning run is
- *   archived (HP1).
- * - `progress-v3-too-early`: P2, P9, P14 — three habits, logged on 21, 22, 23 Oct.
- * - `progress-v3-nothing-logged`: P4 — habits, no logs.
- * - `progress-v3-one-habit`: P5, P10, P15 — Meditate only; 14–15 Oct missed.
+ * The Progress frames' data: the six habits the Today frames draw, with a history from 3
+ * March to Thursday 22 October 2026; the visual checks pin "now" to Friday 23 October. Dates
+ * are absolute, so the data never depends on the day a check runs.
+ * - `progress-v3`: September is perfect (the best month); Read 20 min slips in October;
+ *   Meditate has the freezes (7 and 20 Oct, and 12 Jun), Upper body two bonus logs (3 and
+ *   19 Oct); Morning run is archived.
+ * - `progress-v3-too-early`: three habits, logged on 21, 22, 23 Oct.
+ * - `progress-v3-nothing-logged`: habits, no logs.
+ * - `progress-v3-one-habit`: Meditate only; 14-15 Oct missed.
  */
 export type ProgressV3Scenario =
 	| "progress-v3"
@@ -93,7 +90,7 @@ const IDS = {
 	run: MORNING_RUN.id,
 };
 
-/** October days a habit was missed — written out, so the month reads like the frames (P7, P8). */
+/** October days a habit was missed, written out so the month reads like the frames. */
 const OCTOBER_MISSES: Record<number, number[]> = {
 	[IDS.water]: [2, 9],
 	[IDS.read]: [4, 6, 9, 13, 21],
@@ -136,7 +133,7 @@ function missedOn(habitId: number, date: Date): boolean {
 	if (FROZEN_DATES.includes(key) && habitId === IDS.meditate) return true;
 	if (key === "2026-07-14") return habitId === IDS.read;
 	const month = date.getMonth();
-	if (month === 8) return false; // September: perfect
+	if (month === 8) return false;
 	if (month === 9)
 		return OCTOBER_MISSES[habitId]?.includes(date.getDate()) ?? false;
 	const every = MISS_EVERY[habitId];
@@ -144,7 +141,7 @@ function missedOn(habitId: number, date: Date): boolean {
 	return (date.getDate() * 7 + month * 11 + habitId * 3) % every === 0;
 }
 
-/** Quantity: a few October days stop short of 8 glasses, so the matrix shows partial cells (P1). */
+/** Quantity: a few October days stop short of 8 glasses, so the matrix shows partial cells. */
 function waterValue(date: Date): number {
 	if (date.getMonth() === 9 && [20, 23].includes(date.getDate())) return 4;
 	if ((date.getDate() + date.getMonth()) % 9 === 0 && date.getMonth() !== 8) {
@@ -197,7 +194,6 @@ export function progressV3Entries(scenario: ProgressV3Scenario): Entry[] {
 	}
 	if (oneHabit) return entries;
 
-	// The archived run: daily until the day before it was archived.
 	for (
 		let day = STARTED;
 		day < parseISO("2026-10-12T00:00:00");

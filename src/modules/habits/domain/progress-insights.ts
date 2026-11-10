@@ -4,21 +4,19 @@ import type { RangeHabitRow, RangeSummary } from "./range-summary";
 import { yearUnlock } from "./yearly-summary";
 
 /**
- * Progress's insight cards (HAB-38, V3-3a): up to three per range, ranked
- * **slipping → improved → nothing to fix**. The weekday-pattern insight is
- * Later (PR-03) and is not built here, though Monthly's old `pattern` insight
+ * Progress's insight cards: up to three per range, ranked **slipping → improved → nothing to
+ * fix**. The weekday-pattern insight is not built here, though Monthly's old `pattern` insight
  * still exists until its screen goes.
  *
- * Gate order: (1) too early — the 7-logged-days gate, decided by the caller —
- * gives no insights; (2) perfect / nothing to fix; (3) slipping. A tone and an
- * action travel with each card: only *slipping* is actionable ("Change
- * frequency" → Edit habit scrolled to Frequency); improved and nothing to fix
- * are not tappable.
+ * Gate order: (1) too early (the 7-logged-days gate, decided by the caller) gives no insights;
+ * (2) perfect / nothing to fix; (3) slipping. A tone and an action travel with each card: only
+ * *slipping* is actionable ("Change frequency" → Edit habit scrolled to Frequency); improved and
+ * nothing to fix are not tappable.
  *
- * Thresholds are the existing ones: a habit is slipping by the same rule as its
- * row tag (`slipping.ts`; Month's weekly trend lives in `monthly-insights.ts`),
- * improved from `IMPROVED_MIN_POINTS`, best month from `yearly-insights.ts`.
- * Archived habits are never named or offered as an action target.
+ * Thresholds are the existing ones: a habit is slipping by the same rule as its row tag
+ * (`slipping.ts`; Month's weekly trend lives in `monthly-insights.ts`), improved from
+ * `IMPROVED_MIN_POINTS`, best month from `yearly-insights.ts`. Archived habits are never named or
+ * offered as an action target.
  */
 
 const MAX_PROGRESS_INSIGHTS = 3;
@@ -75,11 +73,9 @@ export type ProgressInsight =
 
 type InsightInput = {
 	summary: RangeSummary;
-	/** False while the 7-logged-days gate is closed: nothing to say yet. */
 	unlocked: boolean;
-	/** Year only: the year map's best finished month. */
 	bestMonth?: { month: Date; percent: number } | null;
-	/** Year only: the first day any habit existed — year-scale insights need 3 months of it (V2 rule). */
+	/** Year only: the first day any habit existed; year-scale insights need 3 months of it. */
 	firstDay?: Date | null;
 	today: Date;
 };
@@ -172,7 +168,6 @@ export function progressInsights({
 			action: null,
 		});
 	}
-	// Nothing is slipping, so there is nothing to fix.
 	if (slipping.length === 0) {
 		ranked.push({
 			kind: "nothing-to-fix",

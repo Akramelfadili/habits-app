@@ -5,13 +5,11 @@ import { useTheme } from "@/theme/use-theme";
 
 type ContainerProps = PropsWithChildren<{
 	/**
-	 * "outlined" is a card with a hairline border, for a card sitting on a
-	 * card-coloured surface (the category move preview inside a sheet, HAB-25).
-	 * "flat" is V3's list card (T-18): no padding, a hairline
-	 * border, radius `l`, and a full-bleed hairline between its children — the
-	 * rows carry their own padding. "summary" is V3's compact info card (Habit
-	 * Detail's history, D1): radius `l`, a hairline border, 14 pt padding and an
-	 * 8 pt gap between its parts.
+	 * "outlined" is a card with a hairline border, for a card sitting on a card-coloured surface (the
+	 * category move preview inside a sheet). "flat" is the list card: no padding, a hairline border,
+	 * radius `l`, and a full-bleed hairline between its children; the rows carry their own padding.
+	 * "summary" is the compact info card (Habit Detail's history): radius `l`, a hairline border, 14 pt
+	 * padding and an 8 pt gap between its parts.
 	 */
 	variant?: "card" | "inset" | "sheet" | "outlined" | "flat" | "summary";
 	/**
@@ -28,15 +26,13 @@ type ContainerProps = PropsWithChildren<{
 	 */
 	compact?: boolean;
 	/**
-	 * A list card whose rows carry their own padding (compact `ListItem`s on
-	 * Manage & Archive, HAB-13) — a thin inset so a lifted row's highlight
-	 * sits just inside the card edge.
+	 * A list card whose rows carry their own padding (compact `ListItem`s on Manage & Archive): a thin
+	 * inset so a lifted row's highlight sits just inside the card edge.
 	 */
 	tight?: boolean;
 	/**
-	 * A list card with a row held mid-drag, the layout unchanged. A tight card
-	 * takes an ink outline; a flat one (V3's library, H4) lets the lifted row's
-	 * shadow out instead of clipping it.
+	 * A list card with a row held mid-drag, the layout unchanged. A tight card takes an ink outline; a
+	 * flat one (the library) lets the lifted row's shadow out instead of clipping it.
 	 */
 	lifted?: boolean;
 	/**

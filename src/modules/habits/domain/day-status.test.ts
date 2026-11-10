@@ -4,11 +4,10 @@ import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, Habit } from "../types";
 import { type CellStatus, fastDayKey, habitDayClassifier } from "./day-status";
 
-// Wednesday 16 Sep 2026; the week is Mon 14 – Sun 20.
 const today = new Date(2026, 8, 16, 12);
 const monday = new Date(2026, 8, 14);
 const longAgo = new Date(2025, 0, 1);
-const day = (offset: number) => addDays(monday, offset); // 0 = Monday
+const day = (offset: number) => addDays(monday, offset);
 
 function entry(offset: number, value?: number): Entry {
 	return {
@@ -124,9 +123,9 @@ describe("habitDayClassifier", () => {
 			frequency: { type: "weekdays", days: [1, 3, 5] },
 		});
 		expect(statuses(weekdays, [entry(1)])).toEqual([
-			"missed", // Monday, scheduled
-			"bonus", // Tuesday, not scheduled
-			"today", // Wednesday
+			"missed",
+			"bonus",
+			"today",
 			"future",
 			"future",
 			"future",
@@ -143,7 +142,7 @@ describe("habitDayClassifier", () => {
 		expect(statuses(weekdays, []).slice(0, 3)).toEqual([
 			"missed",
 			"not-due",
-			"not-due", // today: Wednesday isn't a scheduled day
+			"not-due",
 		]);
 	});
 
@@ -192,7 +191,7 @@ describe("fastDayKey", () => {
 			new Date(2026, 9, 24, 23, 59, 59),
 			new Date(2024, 1, 29, 12),
 			new Date(2026, 11, 31),
-			new Date(2026, 2, 29, 1), // DST night in much of Europe
+			new Date(2026, 2, 29, 1),
 		]) {
 			expect(fastDayKey(date)).toBe(toDayKey(date));
 		}

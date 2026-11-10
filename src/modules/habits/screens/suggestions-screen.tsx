@@ -19,10 +19,9 @@ type SuggestionsScreenProps = {
 };
 
 /**
- * Browse suggestions (HAB-46, BS1): the bundled habits grouped by category,
- * the Break habits last. Tapping one opens Add habit filled in (BS2) — nothing
- * is created here — and one the person already has says Added. The header's
- * Close is the route's own (`src/app/_layout.tsx`).
+ * Browse suggestions: the bundled habits grouped by category, the Break habits last.
+ * Tapping one opens Add habit filled in (nothing is created here), and one the person
+ * already has says Added. The header's Close is the route's own (`src/app/_layout.tsx`).
  */
 export function SuggestionsScreen({
 	firstRun = false,
