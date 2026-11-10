@@ -84,6 +84,7 @@
 	"jest": {
 		"preset": "jest-expo",
 		"testTimeout": 15000,
+		"maxWorkers": "50%",
 		"resolver": "./jest.resolver.js",
 		"globalSetup": "./jest.global-setup.js",
 		"testEnvironment": "./jest.environment.js",
