@@ -27,6 +27,16 @@
 | `npm run visual-check` | renders every screen/state on web (2 pages at a time), diffs vs `docs/visual-baseline/`; a state that differs or errors is re-captured once before it is reported | per feature; never gate commits on it |
 | `src/lib/db/migrations.safety.test.ts` (in `make check`) | journal / snapshot / file parity, every migration step upgraded from a seeded DB with FK on and off, a committed V1-era DB (`src/lib/db/__fixtures__/v1-era-0008.sql`) upgraded to HEAD, and a drizzle-kit drift check against `schema.ts` | every Jest run |
 
+## Strict project (`tsconfig.strict.json`)
+
+`tsconfig.json` is `strict` plus `noFallthroughCasesInSwitch`, `noUnusedLocals`, `noUnusedParameters` and `noImplicitOverride`. `tsconfig.strict.json` extends it with **`noUncheckedIndexedAccess`**, so `items[i]` is `T | undefined` and a computed-offset off-by-one fails the build, not a release. It runs as `make typecheck-strict` (inside `make check`, about 4 s warm, 10 s cold, incremental via `tsconfig.strict.tsbuildinfo`) and in the Stop hook whenever a `.ts`/`.tsx` file changed.
+
+**Exclusions** (one commented list in the file, which may only shrink): `**/*.test.ts(x)` and `**/test-support/**`, about 400 errors, mostly `result[0]` after an assertion (counts in `docs/backlog.md`). `exclude` only removes *root* files: a file that production code imports is checked anyway, which is why the dev fixtures are fixed, not excluded.
+
+**To shrink the list:** delete one pattern (or narrow it to a folder), run `npx tsc -p tsconfig.strict.json --noEmit`, fix every error, run that folder's tests, commit. Fix with narrowing or an early return; `atIndex(items, i)` for a list built to be long enough (fixed-size grids, cells aligned with a date list: it throws a `RangeError` naming the index); `present(value, "what")` for a row an INSERT/UPDATE returns; `Array.at()` with a guard. No blanket `!` and no `as` to silence it; a `!` needs a one-line comment saying why it cannot be undefined.
+
+**Parked flags** (not on, counts in `docs/backlog.md` § Parked): `noPropertyAccessFromIndexSignature` (style only) and `exactOptionalPropertyTypes`.
+
 ## Floating promises (Biome `nursery/noFloatingPromises`)
 
 On as an error in `biome.json` (Biome 2.5; type-aware, so `biome check` takes a few seconds longer). A promise is awaited, returned, handled with `.catch`, or deliberately dropped with `void` and a one-line comment saying why that is safe. Never silence it with a `biome-ignore`. In tests, `await` `fireEvent.*` and `act(...)`.
