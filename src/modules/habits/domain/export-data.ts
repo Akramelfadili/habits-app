@@ -1,4 +1,7 @@
-import { THEME_PREFERENCE_SETTING_KEY } from "@/lib/app-settings/keys";
+import {
+	HAPTICS_SETTING_KEY,
+	THEME_PREFERENCE_SETTING_KEY,
+} from "@/lib/app-settings/keys";
 import { toDayKey } from "@/utils/day-key";
 import {
 	EVENING_REVIEW_SETTING_KEY,
@@ -76,6 +79,8 @@ export type ExportSettings = {
 	seenFirstRun: boolean | null;
 	/** Whether reminders hide the habit name (E-01); null = never set, which the app treats as hidden. */
 	hideHabitNames: boolean | null;
+	/** The Haptics switch; null = never set, which the app treats as on. */
+	haptics: boolean | null;
 };
 
 export type ExportModel = {
@@ -106,6 +111,7 @@ function readSettings(source: ExportSource["settings"]): ExportSettings {
 		eveningReviewTime: source[EVENING_REVIEW_TIME_SETTING_KEY] ?? null,
 		seenFirstRun: readBoolean(source[SEEN_FIRST_RUN_SETTING_KEY]),
 		hideHabitNames: readBoolean(source[HIDE_HABIT_NAMES_SETTING_KEY]),
+		haptics: readBoolean(source[HAPTICS_SETTING_KEY]),
 	};
 }
 

@@ -75,6 +75,7 @@ describe("useExportQueries", () => {
 			"habits.eveningReviewTime": null,
 			"habits.seenFirstRun": null,
 			"habits.hideHabitNames": null,
+			"app.haptics": null,
 		});
 		delete mockSettings["app.themePreference"];
 	});

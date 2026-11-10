@@ -31,7 +31,7 @@ Main database `habits.db` (SQLite through expo-sqlite, `src/lib/db/schema.ts`), 
 
 | Table | Personal content |
 |---|---|
-| `app_settings` | Key and value. User-facing: `app.themePreference`, `habits.seenFirstRun`, `habits.eveningReview`, `habits.eveningReviewTime`, `habits.hideHabitNames`. Bookkeeping: `habits.lastExport` (day), `habits.reminderTitlesHidden` (which title mode the scheduled reminders use). Dev only: `dev.*` |
+| `app_settings` | Key and value. User-facing: `app.themePreference`, `habits.seenFirstRun`, `habits.eveningReview`, `habits.eveningReviewTime`, `habits.hideHabitNames`, `app.haptics`. Bookkeeping: `habits.lastExport` (day), `habits.reminderTitlesHidden` (which title mode the scheduled reminders use). Dev only: `dev.*` |
 | `categories` | Name (free text), shape, hue, order |
 | `habits` | Name, category, direction, target and unit (free text), schedule, order, archive and pause dates. Legacy `icon`, `color`, `category` columns are unused |
 | `entries` | Habit, day, value |

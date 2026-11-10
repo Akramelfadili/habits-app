@@ -191,6 +191,7 @@ async function seed(db: ReturnType<typeof createTestDb>): Promise<Counts> {
 		{ key: "habits.eveningReviewTime", value: "20:45" },
 		{ key: "habits.seenFirstRun", value: "true" },
 		{ key: "habits.hideHabitNames", value: "false" },
+		{ key: "app.haptics", value: "false" },
 		// Not for the file: a date the app writes after an export, the reminder
 		// bookkeeping marker, and a dev key.
 		{ key: "habits.lastExport", value: "2026-09-01" },
@@ -285,6 +286,7 @@ describe("export v2 round trip", () => {
 			eveningReviewTime: "20:45",
 			seenFirstRun: true,
 			hideHabitNames: false,
+			haptics: false,
 		});
 
 		// A clean database, the file loaded through the reader, exported again.
@@ -313,8 +315,9 @@ describe("export v2 round trip", () => {
 		const keys = (await currentDb.select().from(appSettings)).map(
 			(row) => row.key,
 		);
-		// The five user-facing keys came back; the export-date, marker and dev keys were never in the file.
+		// The six user-facing keys came back; the export-date, marker and dev keys were never in the file.
 		expect(keys.sort()).toEqual([
+			"app.haptics",
 			"app.themePreference",
 			"habits.eveningReview",
 			"habits.eveningReviewTime",

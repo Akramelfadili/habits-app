@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import * as Haptics from "expo-haptics";
 import { StyleSheet } from "react-native";
+import { useHapticsStore } from "@/store/haptics-store";
 import { semanticColors, surfaceColors } from "@/theme/theme";
 import { CompletionCircle } from "./completion-circle";
 
@@ -9,6 +11,48 @@ jest.mock("expo-symbols", () => {
 });
 
 const light = { ...surfaceColors.light, ...semanticColors.light };
+
+jest.mock("expo-haptics", () => ({
+	selectionAsync: jest.fn(async () => undefined),
+	notificationAsync: jest.fn(async () => undefined),
+	NotificationFeedbackType: { Success: "success", Warning: "warning" },
+}));
+
+describe("CompletionCircle haptics", () => {
+	beforeEach(() => {
+		(Haptics.selectionAsync as jest.Mock).mockClear();
+		useHapticsStore.setState({ enabled: true });
+	});
+
+	it("ticks once on a tap, and still calls onPress", async () => {
+		const onPress = jest.fn();
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={onPress}
+				accessibilityLabel="Water"
+			/>,
+		);
+		await fireEvent.press(screen.getByLabelText("Water"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+		expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+	});
+
+	it("is silent with the Haptics setting off, and the tap still works", async () => {
+		useHapticsStore.setState({ enabled: false });
+		const onPress = jest.fn();
+		await render(
+			<CompletionCircle
+				completed={false}
+				onPress={onPress}
+				accessibilityLabel="Water"
+			/>,
+		);
+		await fireEvent.press(screen.getByLabelText("Water"));
+		expect(onPress).toHaveBeenCalledTimes(1);
+		expect(Haptics.selectionAsync).not.toHaveBeenCalled();
+	});
+});
 
 function face() {
 	return StyleSheet.flatten(

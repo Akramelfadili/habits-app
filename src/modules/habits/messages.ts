@@ -1273,6 +1273,9 @@ export const settingsCopy = {
 		theme: { light: "Light", dark: "Dark", system: "System" },
 		systemNote: "Follows iOS",
 		note: "Weeks start on Monday. Text size follows iOS Settings › Display & Text Size.",
+		haptics: "Haptics",
+		hapticsBody: "A light tap when you complete a habit",
+		hapticsHint: "Also on finishing the day and on confirming a delete.",
 	},
 	/** S3 and the hub's Reminders group. */
 	reminders: {

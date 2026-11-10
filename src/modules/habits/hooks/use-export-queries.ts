@@ -1,4 +1,7 @@
-import { THEME_PREFERENCE_SETTING_KEY } from "@/lib/app-settings/keys";
+import {
+	HAPTICS_SETTING_KEY,
+	THEME_PREFERENCE_SETTING_KEY,
+} from "@/lib/app-settings/keys";
 import { useAppSetting } from "@/lib/app-settings/repositories/app-settings-repository";
 import {
 	EVENING_REVIEW_SETTING_KEY,
@@ -45,6 +48,7 @@ export function useExportQueries(options: ExportOptions): {
 		),
 		[SEEN_FIRST_RUN_SETTING_KEY]: useAppSetting(SEEN_FIRST_RUN_SETTING_KEY),
 		[HIDE_HABIT_NAMES_SETTING_KEY]: useAppSetting(HIDE_HABIT_NAMES_SETTING_KEY),
+		[HAPTICS_SETTING_KEY]: useAppSetting(HAPTICS_SETTING_KEY),
 	};
 	const source = {
 		habits,

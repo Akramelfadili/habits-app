@@ -10,6 +10,7 @@ jest.mock("@/utils/use-accessibility-text-size", () => ({
 
 type Queries = {
 	themePreference: "light" | "dark" | "system";
+	hapticsEnabled: boolean;
 	resolvedScheme: "light" | "dark";
 	eveningReviewEnabled: boolean;
 	eveningReviewTime: { hour: number; minute: number };
@@ -21,6 +22,7 @@ type Queries = {
 };
 const base = (): Queries => ({
 	themePreference: "system",
+	hapticsEnabled: true,
 	resolvedScheme: "light",
 	eveningReviewEnabled: false,
 	eveningReviewTime: { hour: 21, minute: 30 },
@@ -39,11 +41,13 @@ jest.mock("expo-router", () => ({
 	useRouter: () => ({ push: mockPush }),
 }));
 const mockSetTheme = jest.fn();
+const mockSetHaptics = jest.fn();
 const mockSetEvening = jest.fn();
 const mockSetEveningTime = jest.fn();
 jest.mock("../hooks/use-settings-actions", () => ({
 	useSettingsActions: () => ({
 		setThemePreference: mockSetTheme,
+		setHaptics: mockSetHaptics,
 		setEveningReview: mockSetEvening,
 		setEveningReviewTime: mockSetEveningTime,
 	}),
@@ -75,6 +79,25 @@ describe("SettingsAppearanceScreen (S2)", () => {
 		await render(<SettingsAppearanceScreen />);
 		await fireEvent.press(screen.getByRole("radio", { name: "Dark" }));
 		expect(mockSetTheme).toHaveBeenCalledWith("dark");
+	});
+
+	it("has a Haptics switch, on by default, labelled for VoiceOver, that turns it off", async () => {
+		await render(<SettingsAppearanceScreen />);
+		const row = screen.getByRole("switch", {
+			name: "Haptics, A light tap when you complete a habit",
+		});
+		expect(row.props.accessibilityState.checked).toBe(true);
+		await fireEvent.press(row);
+		expect(mockSetHaptics).toHaveBeenCalledWith(false);
+	});
+
+	it("shows the switch off when haptics are off", async () => {
+		mockQueries = { ...base(), hapticsEnabled: false };
+		await render(<SettingsAppearanceScreen />);
+		expect(
+			screen.getByRole("switch", { name: /^Haptics/ }).props.accessibilityState
+				.checked,
+		).toBe(false);
 	});
 
 	it("System says it follows iOS", async () => {
