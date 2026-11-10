@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
-import { motion, radius, space, squareRadius, textStyles } from "@/theme/theme";
+import { Container } from "@/components/ui/composite/container";
+import { motion, space, squareRadius, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
 
@@ -41,47 +42,44 @@ export function TodayAllDoneCard({ title, body }: TodayAllDoneCardProps) {
 	}, [reduceMotion, reveal]);
 
 	return (
-		<View
+		<Container
+			variant="outlined"
+			padding="snug"
 			testID="today-all-done"
 			accessible
 			accessibilityLabel={`${title}. ${body}`}
-			style={[
-				styles.card,
-				{ backgroundColor: colors.card, borderColor: colors.border },
-			]}
 		>
-			<View style={[styles.square, { backgroundColor: colors.accent }]}>
-				<Animated.View
-					testID="today-all-done-check"
-					style={[
-						styles.reveal,
-						{
-							width: reveal.interpolate({
-								inputRange: [0, 1],
-								outputRange: [0, CHECK_WIDTH],
-							}),
-						},
-					]}
-				>
-					<View style={[styles.check, { borderColor: colors.onAccent }]} />
-				</Animated.View>
+			<View style={styles.content}>
+				<View style={[styles.square, { backgroundColor: colors.accent }]}>
+					<Animated.View
+						testID="today-all-done-check"
+						style={[
+							styles.reveal,
+							{
+								width: reveal.interpolate({
+									inputRange: [0, 1],
+									outputRange: [0, CHECK_WIDTH],
+								}),
+							},
+						]}
+					>
+						<View style={[styles.check, { borderColor: colors.onAccent }]} />
+					</Animated.View>
+				</View>
+				<View style={styles.text}>
+					<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
+					<Text style={[styles.body, { color: colors.sub }]}>{body}</Text>
+				</View>
 			</View>
-			<View style={styles.text}>
-				<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
-				<Text style={[styles.body, { color: colors.sub }]}>{body}</Text>
-			</View>
-		</View>
+		</Container>
 	);
 }
 
 const styles = StyleSheet.create({
-	card: {
+	content: {
 		flexDirection: "row",
 		alignItems: "center",
 		gap: space[300],
-		padding: space[350],
-		borderRadius: radius.l,
-		borderWidth: StyleSheet.hairlineWidth,
 	},
 	square: {
 		width: SQUARE,
