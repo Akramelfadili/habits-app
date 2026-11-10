@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling coverage lint lint-check typecheck typecheck-strict check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
+.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling coverage lint lint-check typecheck typecheck-strict check-architecture check-repo-hygiene check-doc-refs check-comment-refs comment-report secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -56,6 +56,12 @@ check-architecture: ## Check the architecture rules (Drizzle placement, layers, 
 check-repo-hygiene: ## Fail if a tracked file is a secret, env/signing file, log, archive, generated output or >1 MB (repo is public)
 	npm run check-repo-hygiene
 
+check-comment-refs: ## Fail if a code comment or test title in src/ or scripts/ has a ticket id or a spec-version word (allowlist may only shrink)
+	npm run check-comment-refs
+
+comment-report: ## List the 15 files with the highest comment ratio and the comment totals per folder (not part of `make check`)
+	node scripts/comment-report.mjs
+
 check-doc-refs: ## Fail if a doc points at a path or "§ section" that does not exist (tracked .md, CLAUDE.md, .claude/)
 	npm run check-doc-refs
 
@@ -66,7 +72,7 @@ secrets: ## Scan the git history for secrets with gitleaks (same config as CI; -
 deadcode: ## Report unused files/exports/dependencies with knip (report only; not part of `make check`)
 	-npm run deadcode
 
-check: lint-check typecheck typecheck-strict test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + strict tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references
+check: lint-check typecheck typecheck-strict test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs check-comment-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + strict tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references + comment references
 
 check-ci: check test-slow test-tz ## The CI gate (.github/workflows/check.yml): `make check` plus the slow tests and the time-zone runs
 

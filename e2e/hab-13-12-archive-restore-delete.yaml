@@ -75,7 +75,7 @@ tags:
 - assertVisible: "Cold shower"
 - assertVisible: "Meditate"
 
-# Archiving is non-destructive, but reminders pause with the habit (HAB-20),
+# Archiving is non-destructive, but reminders pause with the habit,
 # and an archived habit isn't offered Archive again.
 - tapOn: "Meditate"
 - assertVisible: "Archived on .*"
