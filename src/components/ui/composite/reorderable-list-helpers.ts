@@ -70,8 +70,7 @@ export function moveItem<T>(
 	to: number,
 ): T[] {
 	const next = [...items];
-	const [moved] = next.splice(from, 1);
-	next.splice(to, 0, moved);
+	next.splice(to, 0, ...next.splice(from, 1));
 	return next;
 }
 

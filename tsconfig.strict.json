@@ -15,11 +15,6 @@
 		"**/*.test.ts",
 		"**/*.test.tsx",
 		// Test helpers (jest-only, not shipped).
-		"**/test-support/**",
-		// PENDING (batch 21, removed group by group): production code not yet fixed.
-		"src/components",
-		"src/modules/habits/components",
-		"src/modules/habits/screens",
-		"src/app"
+		"**/test-support/**"
 	]
 }

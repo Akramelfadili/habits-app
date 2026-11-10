@@ -289,6 +289,7 @@ function ChangeDayButton({
 	const { colors, opacity } = useTheme();
 	const [open, setOpen] = useState(false);
 	const selected = days.find((day) => day.key === selectedKey) ?? days[0];
+	if (!selected) return null;
 
 	return (
 		<>
