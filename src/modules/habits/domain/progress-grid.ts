@@ -1,5 +1,6 @@
 import { getISODay, startOfDay } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
+import { atIndex } from "@/utils/indexed";
 import { weekAlignedSpan, weekWindow } from "@/utils/week-window";
 import { getHabitStrategy } from "../strategies/frequency-strategy";
 import type { Entry, FrozenDay, Habit } from "../types";
@@ -114,8 +115,8 @@ export function buildWeekMatrix(
 			isBreak: habit.direction === "break",
 			cells: cells.map((cell, index) => ({
 				...cell,
-				date: dates[index],
-				key: days[index].key,
+				date: atIndex(dates, index),
+				key: atIndex(days, index).key,
 			})),
 			done: cells.filter((cell) => cell.status === "done").length,
 			target: weeklyTarget(habit, dates),
@@ -289,17 +290,21 @@ export function buildDayDetail(input: GridInput & { date: Date }): DayDetail {
 		dates: [day],
 		nothingLogged: input.nothingLogged,
 	});
-	const cells = perHabit.map(({ cells: [cell] }) => cell);
+	// One date was classified, so every habit has exactly one cell.
+	const cells = perHabit.map(({ cells: habitCells }) => atIndex(habitCells, 0));
 	const tally = tallyOf(cells);
 	const items = perHabit
-		.map(({ habit, cells: [cell] }) => ({
-			habit,
-			isBreak: habit.direction === "break",
-			status: cell.status,
-			level: cell.level,
-			value: cell.value,
-			target: habit.targetAmount,
-		}))
+		.map(({ habit, cells: habitCells }) => {
+			const cell = atIndex(habitCells, 0);
+			return {
+				habit,
+				isBreak: habit.direction === "break",
+				status: cell.status,
+				level: cell.level,
+				value: cell.value,
+				target: habit.targetAmount,
+			};
+		})
 		.filter(
 			({ status }) =>
 				status !== "not-due" &&

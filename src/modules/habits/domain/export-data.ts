@@ -207,6 +207,8 @@ export function summarizeExport(
 		...record.frozenDays.map((day) => day.date),
 	]);
 	dates.sort();
+	const first = dates[0];
+	const last = dates.at(-1);
 
 	return {
 		activeHabits: source.habits.filter((habit) => habit.archivedAt === null)
@@ -216,8 +218,9 @@ export function summarizeExport(
 			: 0,
 		logs: model.logCount,
 		notes: model.noteCount,
-		range: dates.length
-			? { from: dates[0], to: dates[dates.length - 1] }
-			: null,
+		range:
+			first !== undefined && last !== undefined
+				? { from: first, to: last }
+				: null,
 	};
 }

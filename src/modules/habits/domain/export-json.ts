@@ -146,7 +146,7 @@ export function buildExportDocument(
 				reminders: record.reminders.map((reminder) => ({
 					id: reminder.id,
 					time: timeOfDay(reminder.hour, reminder.minute),
-					days: reminder.weekdays.map((day) => DAY_NAMES[day - 1]),
+					days: reminder.weekdays.flatMap((day) => DAY_NAMES[day - 1] ?? []),
 					enabled: reminder.enabled,
 					createdAt: reminder.createdAt
 						? reminder.createdAt.toISOString()

@@ -305,11 +305,11 @@ function hexChannels(hex: string): [number, number, number] {
 }
 
 function mixHex(from: string, to: string, share: number): string {
-	const [a, b] = [hexChannels(from), hexChannels(to)];
-	const mixed = a.map((channel, index) =>
-		Math.round(channel + (b[index] - channel) * share),
-	);
-	return `rgb(${mixed.join(",")})`;
+	const [fromRed, fromGreen, fromBlue] = hexChannels(from);
+	const [toRed, toGreen, toBlue] = hexChannels(to);
+	const mix = (start: number, end: number) =>
+		Math.round(start + (end - start) * share);
+	return `rgb(${mix(fromRed, toRed)},${mix(fromGreen, toGreen)},${mix(fromBlue, toBlue)})`;
 }
 
 /**
@@ -325,11 +325,11 @@ export function intensityColor(
 }
 
 function luminance([red, green, blue]: [number, number, number]): number {
-	const [r, g, b] = [red, green, blue].map((channel) => {
+	const linear = (channel: number) => {
 		const unit = channel / 255;
 		return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
-	});
-	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+	};
+	return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
 }
 
 /** WCAG contrast ratio of two `#rrggbb` / `rgb(r,g,b)` colours. */
@@ -338,10 +338,11 @@ export function contrastRatio(first: string, second: string): number {
 		color.startsWith("rgb(")
 			? (color.slice(4, -1).split(",").map(Number) as [number, number, number])
 			: hexChannels(color);
-	const [a, b] = [luminance(parse(first)), luminance(parse(second))].sort(
-		(x, y) => y - x,
-	);
-	return (a + 0.05) / (b + 0.05);
+	const firstLuminance = luminance(parse(first));
+	const secondLuminance = luminance(parse(second));
+	const lighter = Math.max(firstLuminance, secondLuminance);
+	const darker = Math.min(firstLuminance, secondLuminance);
+	return (lighter + 0.05) / (darker + 0.05);
 }
 
 /** The text colour that reads best on `fill`: ink or onAccent, whichever contrasts more. */

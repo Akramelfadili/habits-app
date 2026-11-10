@@ -62,7 +62,8 @@ const QUOTED_SEGMENT = /(["'`‘“])[^"'`’”]*(["'`’”])/g;
 function scrubMessage(raw: string): string {
 	// Drizzle's "Failed query: <sql>\nparams: <values>" carries the written
 	// values unquoted (a habit or category name) — keep the SQL, drop the params.
-	const withoutParams = raw.split(/\r?\nparams:/i)[0];
+	// split() always yields at least one piece; `?? raw` only satisfies the type.
+	const withoutParams = raw.split(/\r?\nparams:/i)[0] ?? raw;
 	const scrubbed = withoutParams.replace(QUOTED_SEGMENT, "$1…$2");
 	return scrubbed.length > MAX_MESSAGE_LENGTH
 		? `${scrubbed.slice(0, MAX_MESSAGE_LENGTH)}…`

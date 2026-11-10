@@ -1,3 +1,4 @@
+import { atIndex } from "@/utils/indexed";
 import type { Habit, IsoWeekday } from "../types";
 import type { DayOutcome, MonthlyHabitRow } from "./monthly-summary";
 
@@ -102,11 +103,14 @@ export function slippingTrend<W extends WeekShare>(
 	if (weeks.length < SLIPPING_MIN_WEEKS) return null;
 	const fractions = weeks.map((week) => week.fraction as number);
 	const neverUp = fractions.every(
-		(fraction, index) => index === 0 || fraction <= fractions[index - 1],
+		(fraction, index) =>
+			index === 0 || fraction <= atIndex(fractions, index - 1),
 	);
-	const drop = fractions[0] - fractions[fractions.length - 1];
+	// At least SLIPPING_MIN_WEEKS (3) weeks survived the filter above.
+	const lastIndex = weeks.length - 1;
+	const drop = atIndex(fractions, 0) - atIndex(fractions, lastIndex);
 	if (!neverUp || drop < SLIPPING_MIN_DROP) return null;
-	return { first: weeks[0], last: weeks[weeks.length - 1], drop };
+	return { first: atIndex(weeks, 0), last: atIndex(weeks, lastIndex), drop };
 }
 
 function slippingInsight(

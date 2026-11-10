@@ -3,6 +3,7 @@ import type { CompletionCellState } from "@/components/ui/composite/completion-c
 import type { LegendEntry } from "@/components/ui/composite/completion-legend";
 import type { CompletionRowsCell } from "@/components/ui/composite/completion-rows";
 import { formatDayMonth, formatDayMonthShort } from "@/utils/format";
+import { atIndex } from "@/utils/indexed";
 import type {
 	CompletionRate,
 	HeatmapDay,
@@ -204,9 +205,10 @@ export function detailRemindersValue(
 			on.map(formatReminderTime).join(", "),
 		);
 	}
-	const days = reminderDaysLabel(on[0].weekdays);
+	const only = atIndex(on, 0); // exactly one is on: the two returns above cover 0 and 2+
+	const days = reminderDaysLabel(only.weekdays);
 	return detailCopy.reminders.timeDays(
-		formatReminderTime(on[0]),
+		formatReminderTime(only),
 		days === "Every day" ? detailCopy.words.dailySpoken : days,
 	);
 }
@@ -224,7 +226,7 @@ export function detailRemindersLabel(
 	if (habit.archivedAt || on.length !== 1) {
 		return `${detailCopy.reminders.label}, ${detailRemindersValue(habit, reminders)}`;
 	}
-	const [only] = on;
+	const only = atIndex(on, 0); // on.length === 1 here
 	const days = [...new Set(only.weekdays)].sort((a, b) => a - b);
 	const spoken =
 		days.length === 7
@@ -322,7 +324,7 @@ function isUnlogged(day: HeatmapDay) {
  */
 export function weekRows(habit: Habit, weeks: HeatmapDay[][]): WeekRow[] {
 	return weeks.map((week) => {
-		const monday = week[0].date;
+		const monday = atIndex(week, 0).date;
 		const spoken = week.flatMap((day) => {
 			const word = statusWord(habit, day);
 			return word

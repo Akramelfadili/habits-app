@@ -11,6 +11,7 @@ import {
 	subYears,
 } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
+import { atIndex } from "@/utils/indexed";
 import { weekAlignedSpan, weekWindow } from "@/utils/week-window";
 import type { Entry, FrozenDay, Habit, IsoWeekday } from "../types";
 import {
@@ -222,7 +223,7 @@ function tallyCells(
 ): Tally {
 	const tally = { ...EMPTY_TALLY };
 	for (let index = from; index < to; index += 1) {
-		addToTally(tally, cells[index]);
+		addToTally(tally, atIndex(cells, index));
 	}
 	return tally;
 }
@@ -263,8 +264,8 @@ export function buildRangeSummary(input: RangeSummaryInput): RangeSummary {
 		mergeTallies(total, own);
 		mergeTallies(previousTotal, before);
 		for (let index = windowFrom; index < dates.length; index += 1) {
-			const { status, value } = cells[index];
-			const date = toDayKey(dates[index]);
+			const { status, value } = atIndex(cells, index);
+			const date = toDayKey(atIndex(dates, index));
 			if (status === "bonus") bonus.push({ habit, date, value });
 			if (status === "frozen") freezes.push({ habit, date });
 		}

@@ -7,6 +7,7 @@ import {
 import type { CompletionRowsCell } from "@/components/ui/composite/completion-rows";
 import type { MonthListItemData } from "@/components/ui/composite/month-list";
 import type { YearBand } from "@/components/ui/composite/year-heat-map";
+import { atIndex } from "@/utils/indexed";
 import { weekStart } from "@/utils/week-window";
 import type {
 	CalendarDay,
@@ -86,18 +87,21 @@ export function dayListLabel(
 	const runs: Date[][] = [];
 	for (const day of days) {
 		const last = runs[runs.length - 1];
-		if (last && differenceInCalendarDays(day, last[last.length - 1]) === 1) {
+		if (
+			last &&
+			differenceInCalendarDays(day, atIndex(last, last.length - 1)) === 1
+		) {
 			last.push(day);
 		} else runs.push([day]);
 	}
 	const text = runs
 		.map((run) =>
 			run.length === 1
-				? format(run[0], "d")
-				: `${format(run[0], "d")}–${format(run[run.length - 1], "d")}`,
+				? format(atIndex(run, 0), "d")
+				: `${format(atIndex(run, 0), "d")}–${format(atIndex(run, run.length - 1), "d")}`,
 		)
 		.join(", ");
-	return withMonth ? `${text} ${format(days[0], "MMM")}` : text;
+	return withMonth ? `${text} ${format(atIndex(days, 0), "MMM")}` : text;
 }
 
 /**
@@ -143,7 +147,7 @@ export function monthNote(
 			frozen.length > 0 ? copy.frozenNote(dayListLabel(frozen, true)) : null,
 			ahead.length > 0 && lastDay
 				? copy.aheadNote(
-						`${format(ahead[0].date, "d")}–${format(lastDay, "d")}`,
+						`${format(atIndex(ahead, 0).date, "d")}–${format(lastDay, "d")}`,
 					)
 				: null,
 		]
@@ -285,8 +289,8 @@ export function yearBandsProps(
 ): YearBand[] {
 	const byKey = new Map(grid.days.map((day) => [day.key, day]));
 	return grid.bands.map((months, bandIndex) => {
-		const first = months[0].month;
-		const last = endOfMonth(months[months.length - 1].month);
+		const first = atIndex(months, 0).month;
+		const last = endOfMonth(atIndex(months, months.length - 1).month);
 		const monday = weekStart(first);
 		const weeks = Math.ceil((differenceInCalendarDays(last, monday) + 1) / 7);
 		const columns = Array.from({ length: weeks }, (_, week) =>

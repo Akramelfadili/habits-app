@@ -1,3 +1,4 @@
+import { atIndex } from "@/utils/indexed";
 import {
 	BUILT_IN_CATEGORIES,
 	CATEGORY_ROTATION,
@@ -48,7 +49,7 @@ function customFixtures(names: string[]): Category[] {
 	const created = names.map((name, index) => ({
 		id: FIXTURE_BUILT_IN_CATEGORIES.length + index + 1,
 		name,
-		...V2_ROTATION[index % V2_ROTATION.length],
+		...atIndex(V2_ROTATION, index % V2_ROTATION.length),
 		builtIn: false,
 	}));
 	const kept = (category: Category) =>
@@ -60,7 +61,10 @@ function customFixtures(names: string[]): Category[] {
 			(slot) =>
 				result.filter((other) => kept(other) && sameLook(other, slot)).length,
 		);
-		Object.assign(category, CATEGORY_ROTATION[uses.indexOf(Math.min(...uses))]);
+		Object.assign(
+			category,
+			atIndex(CATEGORY_ROTATION, uses.indexOf(Math.min(...uses))),
+		);
 	}
 	return result;
 }
@@ -75,8 +79,9 @@ export function builtInFixture(name: string): Category {
 const V1_CUSTOM_FIXTURES = customFixtures(["Morning", "Evening", "Training"]);
 
 export const OTHER_FIXTURE = builtInFixture("Other");
-export const [MORNING_FIXTURE, EVENING_FIXTURE, TRAINING_FIXTURE] =
-	V1_CUSTOM_FIXTURES;
+export const MORNING_FIXTURE = atIndex(V1_CUSTOM_FIXTURES, 0);
+export const EVENING_FIXTURE = atIndex(V1_CUSTOM_FIXTURES, 1);
+export const TRAINING_FIXTURE = atIndex(V1_CUSTOM_FIXTURES, 2);
 
 /** the V1/V2 mockup hab-24-f1c (tag mockups-v1-v2)'s eight customs, in its creation order. */
 const MANY_CUSTOM_FIXTURES = customFixtures([
@@ -94,9 +99,10 @@ const MANY_CUSTOM_FIXTURES = customFixtures([
  * the V1/V2 mockup hab-25-f3c (tag mockups-v1-v2)'s customs (HAB-25): Music (3 habits, one
  * archived), Language (1) and Garden (unused). F3b shows only Music.
  */
-export const [MUSIC_FIXTURE, LANGUAGE_FIXTURE, GARDEN_FIXTURE] = customFixtures(
-	["Music", "Language", "Garden"],
-);
+const F3C_CUSTOM_FIXTURES = customFixtures(["Music", "Language", "Garden"]);
+export const MUSIC_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 0);
+export const LANGUAGE_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 1);
+export const GARDEN_FIXTURE = atIndex(F3C_CUSTOM_FIXTURES, 2);
 
 /**
  * The picker's rows per `?fixtures=` scenario: no customs where nothing exists
