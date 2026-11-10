@@ -21,6 +21,6 @@ The audit found three problems with calling Drizzle's `useLiveQuery` directly:
 ## Consequences
 
 - Swapping the data layer touches `repositories/` only. Screens and hooks never see a Drizzle type.
-- Drizzle's live queries refire on **any** change to a table they read (`enableChangeListener: true` in `client.ts`) and return a fresh array. Unbounded reads (`useAllEntries`, notes, frozen days) and duplicate subscriptions per screen cost CPU after every write (A9-04). The fetch is cheap at personal-app sizes; the cost is in what callers compute from it.
+- Drizzle's live queries refire on **any** change to a table they read (`enableChangeListener: true` in `client.ts`) and return a fresh array. Unbounded reads (notes, reminders) still cost a re-read per hook after every write, but the two big ones, the entry log and frozen days, are now one shared subscription each (`lib/db/shared-live-table.ts`, batch 22; A9-04, audit A-03 / B-07), read as slices, and what Today derives from them is memoised (`domain/streak-reader.ts`). The fetch is cheap at personal-app sizes; the cost is in what callers compute from it.
 - Deps correctness is a convention: `check-architecture` enforces where `useLiveQuery` is called, not which deps a hook passes.
 - Unit tests stand in for live queries with `src/lib/db/test-live-query.ts`. The web build uses `.web.ts` twins with in-memory fixtures, so web and visual-check cannot reproduce native subscription bugs (A7-01 was invisible there).
