@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { space, textStyles, typeScale } from "@/theme/theme";
+import { letterSpacing, space, textStyles, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type SectionHeaderProps = {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	count: {
-		fontSize: typeScale.subtitle,
+		...textStyles.footnote,
 	},
 	groupRow: {
 		justifyContent: "flex-start",
@@ -120,13 +120,12 @@ const styles = StyleSheet.create({
 		paddingHorizontal: space[100],
 	},
 	groupTitle: {
-		fontSize: typeScale.subtitle,
+		...textStyles.footnote,
 		fontWeight: "600",
 	},
 	tag: {
 		marginLeft: "auto",
-		fontSize: typeScale.caption,
-		fontWeight: "500",
+		...textStyles.caption,
 	},
 	eyebrowRow: {
 		alignItems: "center",
@@ -134,13 +133,13 @@ const styles = StyleSheet.create({
 	},
 	eyebrowTitle: {
 		...textStyles.caption,
-		letterSpacing: 1.2,
+		letterSpacing: letterSpacing.eyebrow,
 	},
 	eyebrowCount: {
 		...textStyles.caption,
 		fontVariant: ["tabular-nums"],
 	},
 	groupCount: {
-		fontSize: typeScale.caption,
+		...textStyles.caption,
 	},
 });

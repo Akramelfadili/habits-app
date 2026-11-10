@@ -1,7 +1,13 @@
 import { SymbolView } from "expo-symbols";
 import { StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { radius, space, squareRadius, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	radius,
+	space,
+	squareRadius,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { Button } from "../primitives/button";
 
@@ -86,7 +92,11 @@ export function InsightCard({
 				testID="insight-card-icon"
 				style={[styles.icon, { backgroundColor: iconColors.background }]}
 			>
-				<SymbolView name={symbol} size={16} tintColor={iconColors.glyph} />
+				<SymbolView
+					name={symbol}
+					size={iconSize.m}
+					tintColor={iconColors.glyph}
+				/>
 			</View>
 			<View style={styles.content}>
 				{text}

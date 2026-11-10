@@ -1,5 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { StyleSheet, View } from "react-native";
+import { iconSize } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -14,7 +15,7 @@ export function DragHandle() {
 		<View testID="drag-handle" style={styles.base}>
 			<SymbolView
 				name="line.3.horizontal"
-				size={18}
+				size={iconSize.l}
 				tintColor={colors.sub}
 				fallback={
 					<View style={styles.fallback}>

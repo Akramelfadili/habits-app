@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { space, typeScale } from "@/theme/theme";
+import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type KeyValueRowProps = {
@@ -27,10 +27,10 @@ const styles = StyleSheet.create({
 		gap: space[300],
 	},
 	label: {
-		fontSize: typeScale.subtitle,
+		...textStyles.footnote,
 	},
 	value: {
-		fontSize: typeScale.subtitle,
+		...textStyles.footnote,
 		fontWeight: "500",
 		flexShrink: 1,
 		textAlign: "right",

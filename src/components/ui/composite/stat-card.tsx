@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { radius, space, textStyles } from "@/theme/theme";
+import { letterSpacing, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
 	},
 	label: {
 		...textStyles.caption,
-		letterSpacing: 0.6,
+		letterSpacing: letterSpacing.label,
 	},
 	value: {
 		...textStyles.stat,

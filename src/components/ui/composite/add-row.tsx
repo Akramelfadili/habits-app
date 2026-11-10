@@ -1,6 +1,12 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { radius, space, squareRadius, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	radius,
+	space,
+	squareRadius,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type AddRowProps = {
@@ -52,7 +58,7 @@ export function AddRow({
 			]}
 		>
 			<View style={[styles.badge, { backgroundColor: colors.inner }]}>
-				<SymbolView name="plus" size={14} tintColor={colors.ink} />
+				<SymbolView name="plus" size={iconSize.s} tintColor={colors.ink} />
 			</View>
 			<View style={styles.text}>
 				<Text style={[styles.label, { color: colors.ink }]}>{label}</Text>

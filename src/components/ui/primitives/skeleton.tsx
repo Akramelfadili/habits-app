@@ -42,13 +42,13 @@ export function Skeleton({
 				Animated.timing(opacity, {
 					toValue: PULSE_LOW,
 					duration: half,
-					easing: Easing.inOut(Easing.ease),
+					easing: Easing.bezier(...motion.skeleton.easing),
 					useNativeDriver: true,
 				}),
 				Animated.timing(opacity, {
 					toValue: 1,
 					duration: half,
-					easing: Easing.inOut(Easing.ease),
+					easing: Easing.bezier(...motion.skeleton.easing),
 					useNativeDriver: true,
 				}),
 			]),

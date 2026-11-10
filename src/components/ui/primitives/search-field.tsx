@@ -8,7 +8,13 @@ import {
 	type TextInputInstance,
 	View,
 } from "react-native";
-import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	minTouchTarget,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type SearchFieldProps = {
@@ -63,7 +69,7 @@ export function SearchField({
 			>
 				<SymbolView
 					name="magnifyingglass"
-					size={14}
+					size={iconSize.s}
 					tintColor={colors.faint}
 					style={styles.glyph}
 				/>
@@ -102,7 +108,7 @@ export function SearchField({
 					>
 						<SymbolView
 							name="xmark.circle.fill"
-							size={16}
+							size={iconSize.m}
 							tintColor={colors.faint}
 						/>
 					</Pressable>

@@ -1,7 +1,13 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	minTouchTarget,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -99,7 +105,11 @@ export function CategoryChip({
 				{label}
 			</Text>
 			{isSelected ? (
-				<SymbolView name="checkmark" size={12} tintColor={colors.onAccent} />
+				<SymbolView
+					name="checkmark"
+					size={iconSize.xs}
+					tintColor={colors.onAccent}
+				/>
 			) : null}
 		</>
 	);

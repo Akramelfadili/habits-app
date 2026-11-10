@@ -2,7 +2,13 @@ import type { NativeStackNavigationOptions } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
-import { barMaxFontMultiplier, radius, space, textStyles } from "@/theme/theme";
+import {
+	barMaxFontMultiplier,
+	iconSize,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /**
@@ -186,7 +192,7 @@ export function HeaderCircleButton({
 			{symbol === "plus" ? (
 				<PlusGlyph color={colors.ink} />
 			) : (
-				<SymbolView name={symbol} size={18} tintColor={colors.ink} />
+				<SymbolView name={symbol} size={iconSize.l} tintColor={colors.ink} />
 			)}
 		</Pressable>
 	);
@@ -243,7 +249,7 @@ export function HeaderPillButton({
 			]}
 		>
 			{symbol ? (
-				<SymbolView name={symbol} size={16} tintColor={colors.ink} />
+				<SymbolView name={symbol} size={iconSize.m} tintColor={colors.ink} />
 			) : null}
 			<Text
 				// A 44 pt control holds its size: Dynamic Type may grow the label only so far.

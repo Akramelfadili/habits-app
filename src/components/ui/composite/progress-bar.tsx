@@ -7,7 +7,7 @@ import {
 	Text,
 	View,
 } from "react-native";
-import { radius, space, textStyles } from "@/theme/theme";
+import { motion, radius, space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useFillAnimation } from "@/utils/use-fill-animation";
 import { useReducedMotion } from "@/utils/use-reduced-motion";
@@ -34,8 +34,6 @@ const PERCENT = 100;
 const TRACK_HEIGHT = 6;
 /** The sweeping segment's share of the track, and how long one pass takes. */
 const SEGMENT_SHARE = 0.35;
-const SWEEP_MS = 1200;
-
 /** V3-07: 6 pt track, count left, whole-number % right. Fills over 450 ms (F-07); Reduce Motion jumps. */
 export function ProgressBar({
 	value,
@@ -143,8 +141,8 @@ function IndeterminateBar({ label }: { label?: string }) {
 		const sweep = Animated.loop(
 			Animated.timing(progress, {
 				toValue: 1,
-				duration: SWEEP_MS,
-				easing: Easing.inOut(Easing.ease),
+				duration: motion.skeleton.loop,
+				easing: Easing.bezier(...motion.skeleton.easing),
 				useNativeDriver: true,
 			}),
 		);

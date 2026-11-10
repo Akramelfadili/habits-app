@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { typeScale } from "@/theme/theme";
+import { textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 /** The counter appears from this fraction of the limit onward (design-system NEW-23). */
@@ -41,7 +41,7 @@ export function CharacterCounter({ length, limit }: CharacterCounterProps) {
 
 const styles = StyleSheet.create({
 	counter: {
-		fontSize: typeScale.caption,
+		...textStyles.caption,
 		fontVariant: ["tabular-nums"],
 	},
 });

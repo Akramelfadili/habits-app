@@ -7,7 +7,13 @@ import {
 	Text,
 	View,
 } from "react-native";
-import { minTouchTarget, radius, space, textStyles } from "@/theme/theme";
+import {
+	iconSize,
+	minTouchTarget,
+	radius,
+	space,
+	textStyles,
+} from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 import { useAccessibilityTextSize } from "@/utils/use-accessibility-text-size";
 
@@ -103,7 +109,11 @@ export function ListItem({
 	const largeText = useAccessibilityTextSize();
 
 	const chevron = navigable ? (
-		<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
+		<SymbolView
+			name="chevron.right"
+			size={iconSize.s}
+			tintColor={colors.faint}
+		/>
 	) : selected ? (
 		// Drawn, like the segmented control's check, so the pick shows on web too.
 		<View

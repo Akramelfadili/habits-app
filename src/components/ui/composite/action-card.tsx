@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { SFSymbol } from "sf-symbols-typescript";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
-import { space, typeScale } from "@/theme/theme";
+import { iconSize, space, textStyles, typeScale } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
 
 type ActionCardProps = {
@@ -49,7 +49,11 @@ export function ActionCard({
 				<Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
 				<Text style={[styles.subtitle, { color: colors.sub }]}>{subtitle}</Text>
 			</View>
-			<SymbolView name="chevron.right" size={14} tintColor={colors.faint} />
+			<SymbolView
+				name="chevron.right"
+				size={iconSize.s}
+				tintColor={colors.faint}
+			/>
 		</Pressable>
 	);
 }
@@ -73,7 +77,6 @@ const styles = StyleSheet.create({
 		fontWeight: "500",
 	},
 	subtitle: {
-		fontSize: typeScale.subtitle,
-		lineHeight: 17,
+		...textStyles.footnote,
 	},
 });

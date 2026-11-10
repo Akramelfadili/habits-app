@@ -24,6 +24,8 @@ const PATTERNS = {
 		/\b(?:padding|margin)(?:Top|Bottom|Left|Right|Horizontal|Vertical|Start|End)?\s*:\s*-?(?:[1-9]|0\.\d)|\b(?:gap|rowGap|columnGap)\s*:\s*(?:[1-9]|0\.\d)/,
 	// Non-zero border radii: use `radius.*`, `cellRadius()` or `squareRadius()` (F-05).
 	"radius-literals": /\bborder\w*Radius\s*:\s*(?:[1-9]|0\.\d)/,
+	// Non-zero tracking: use `letterSpacing.*` (eyebrow and label text).
+	"letter-spacing-literals": /\bletterSpacing:\s*-?(?:[1-9]|0?\.\d)/,
 	// Sizes V3 retires (F-03): literals and the old typeScale keys that hold them.
 	"off-scale-font-sizes":
 		/\bfontSize:\s*(?:10|10\.5|11|11\.5|12\.5)\b(?!\.)|\btypeScale\.(?:micro|caption|subtitle)\b/,
