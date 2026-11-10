@@ -1,6 +1,12 @@
 import { renderHook } from "@testing-library/react-native";
 import { formatISO } from "date-fns";
-import { categoryNamed, makeHabit } from "../test-support/habit-builder";
+import {
+	categoryNamed,
+	daily,
+	makeHabit,
+	perWeek,
+	weekdays,
+} from "../test-support/habit-builder";
 
 // Pinned to a Wednesday (matches the V1/V2 mockup today-populated (tag mockups-v1-v2): "WEDNESDAY,
 // 16 SEPTEMBER") so week-boundary math (per-week frequency) is deterministic —
@@ -14,19 +20,19 @@ const dailyHabit = makeHabit({
 	id: 1,
 	name: "Glass of water",
 	category: categoryNamed("Morning"),
-	frequency: { type: "daily" },
+	frequency: daily(),
 });
 const alsoDailyHabit = makeHabit({
 	id: 2,
 	name: "Read",
 	category: categoryNamed("Evening"),
-	frequency: { type: "daily" },
+	frequency: daily(),
 });
 const perWeekHabit = makeHabit({
 	id: 3,
 	name: "Gym",
 	category: categoryNamed("Other"),
-	frequency: { type: "per-week", timesPerWeek: 1 },
+	frequency: perWeek(1),
 });
 const quantityHabit = makeHabit({
 	id: 4,
@@ -35,7 +41,7 @@ const quantityHabit = makeHabit({
 	targetType: "quantity",
 	targetAmount: 20,
 	targetUnit: "reps",
-	frequency: { type: "daily" },
+	frequency: daily(),
 });
 
 type MockEntry = {
@@ -158,7 +164,7 @@ describe("useTodayQueries", () => {
 
 	it("is rest-day when habits exist but none are due today", async () => {
 		mockHabits = [
-			makeHabit({ id: 1, frequency: { type: "weekdays", days: [4] } }), // Thursday only — TODAY is Wednesday.
+			makeHabit({ id: 1, frequency: weekdays(4) }), // Thursday only — TODAY is Wednesday.
 		];
 		const { result } = await renderHook(() => useTodayQueries());
 		expect(result.current.viewState).toBe("rest-day");
@@ -180,7 +186,7 @@ describe("useTodayQueries", () => {
 			makeHabit({
 				id: 1,
 				name: "Glass of water",
-				frequency: { type: "weekdays", days: [4] },
+				frequency: weekdays(4),
 			}), // Thursday only — TODAY is Wednesday.
 		];
 		mockEntries = [{ habitId: 1, date: TODAY_STRING, createdAt: TODAY }];
@@ -192,7 +198,7 @@ describe("useTodayQueries", () => {
 		const habit = makeHabit({
 			id: 5,
 			name: "Run",
-			frequency: { type: "per-week", timesPerWeek: 5 },
+			frequency: perWeek(5),
 		});
 		mockHabits = [habit];
 		mockEntries = [
@@ -247,7 +253,7 @@ describe("useTodayQueries", () => {
 			targetType: "quantity",
 			targetAmount: 5,
 			targetUnit: "km",
-			frequency: { type: "per-week", timesPerWeek: 1 },
+			frequency: perWeek(1),
 		});
 		mockHabits = [perWeekQuantityHabit];
 		mockEntries = [
@@ -381,7 +387,7 @@ describe("useTodayQueries", () => {
 			const wednesdayOnly = makeHabit({
 				id: 6,
 				name: "Yoga",
-				frequency: { type: "weekdays", days: [3] }, // Wednesday (TODAY) only — Tuesday (yesterday) isn't scheduled.
+				frequency: weekdays(3), // Wednesday (TODAY) only — Tuesday (yesterday) isn't scheduled.
 			});
 			mockHabits = [wednesdayOnly];
 			mockAllEntries = [
@@ -464,7 +470,7 @@ describe("useTodayQueries", () => {
 
 		it("does not list a day's not-due habits", async () => {
 			mockHabits = [
-				makeHabit({ id: 1, frequency: { type: "weekdays", days: [3] } }), // Wednesday only
+				makeHabit({ id: 1, frequency: weekdays(3) }), // Wednesday only
 			];
 			const { result } = await renderHook(() => useTodayQueries(PAST)); // a Monday
 			expect(result.current.viewState).toBe("rest-day");

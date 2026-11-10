@@ -1,6 +1,11 @@
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { fakeNotifications as fake } from "../test-support/fake-expo-notifications";
-import { makeHabit } from "../test-support/habit-builder";
+import {
+	daily,
+	makeHabit,
+	perWeek,
+	weekdays,
+} from "../test-support/habit-builder";
 import type { Reminder } from "../types";
 
 // The real notifications adapter runs on top of an in-memory expo-notifications.
@@ -60,9 +65,9 @@ import {
 const weekdayHabit = makeHabit({
 	id: 3,
 	name: "Meditate",
-	frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+	frequency: weekdays(1, 2, 3, 4, 5),
 });
-const dailyHabit = makeHabit({ id: 4, frequency: { type: "daily" } });
+const dailyHabit = makeHabit({ id: 4, frequency: daily() });
 
 function reminder(overrides: Partial<Reminder> = {}): Reminder {
 	return {
@@ -111,7 +116,7 @@ describe("reminder-service", () => {
 			).toEqual([]);
 			expect(
 				unscheduledReminderDays(
-					makeHabit({ frequency: { type: "per-week", timesPerWeek: 3 } }),
+					makeHabit({ frequency: perWeek(3) }),
 					reminder({ weekdays: [1, 6] }),
 				),
 			).toEqual([]);
@@ -479,14 +484,14 @@ describe("reminder-service", () => {
 	});
 
 	it("updateHabitAndSyncReminders re-syncs against the habit's new schedule", async () => {
-		const nowDaily = { ...weekdayHabit, frequency: { type: "daily" as const } };
+		const nowDaily = { ...weekdayHabit, frequency: daily() };
 		mockUpdateHabit.mockResolvedValue(nowDaily);
 		mockGetHabitReminders.mockResolvedValue([reminder({ weekdays: [6, 7] })]);
 
 		const saved = await updateHabitAndSyncReminders(3, {
 			...weekdayHabit,
 			categoryId: weekdayHabit.category.id,
-			frequency: { type: "daily" },
+			frequency: daily(),
 		});
 
 		expect(saved).toBe(nowDaily);
@@ -509,10 +514,10 @@ describe("reminder-service", () => {
 
 		it("sends only on days some active habit can be due, never on a day nothing is due (HAB-44)", async () => {
 			mockGetAllHabits.mockResolvedValue([
-				makeHabit({ id: 5, frequency: { type: "weekdays", days: [2, 4] } }),
+				makeHabit({ id: 5, frequency: weekdays(2, 4) }),
 				makeHabit({
 					id: 6,
-					frequency: { type: "daily" },
+					frequency: daily(),
 					archivedAt: new Date(2026, 8, 1),
 				}),
 			]);
@@ -581,7 +586,7 @@ describe("reminder-service", () => {
 
 			mockGetSetting.mockResolvedValue("true");
 			mockGetAllHabits.mockResolvedValue([
-				makeHabit({ id: 5, frequency: { type: "weekdays", days: [6] } }),
+				makeHabit({ id: 5, frequency: weekdays(6) }),
 			]);
 			await refreshEveningReview();
 			expect(scheduledKeys()).toEqual(["evening-review:day-6:2130"]);
@@ -622,7 +627,7 @@ describe("reminder-service", () => {
 
 		it("moves a running review to the new time, keeping its days", async () => {
 			mockGetAllHabits.mockResolvedValue([
-				makeHabit({ id: 5, frequency: { type: "weekdays", days: [2, 4] } }),
+				makeHabit({ id: 5, frequency: weekdays(2, 4) }),
 			]);
 			settings({ "habits.eveningReview": "true" });
 			await refreshEveningReview();

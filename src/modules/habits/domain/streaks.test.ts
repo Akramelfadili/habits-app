@@ -1,6 +1,12 @@
 import { addDays, startOfDay, subDays } from "date-fns";
 import { toDayKey } from "@/utils/day-key";
-import { makeHabit } from "../test-support/habit-builder";
+import {
+	daily,
+	makeEntry,
+	makeHabit,
+	perWeek,
+	weekdays,
+} from "../test-support/habit-builder";
 import type { Entry, FrozenDay } from "../types";
 import { calculateLongestStreak } from "./habit-history";
 
@@ -17,13 +23,13 @@ import {
 const HABIT_CREATED = new Date(2026, 0, 1);
 const dailyHabit = makeHabit({
 	id: 1,
-	frequency: { type: "daily" },
+	frequency: daily(),
 	createdAt: HABIT_CREATED,
 });
 const breakHabit = makeHabit({
 	id: 2,
 	direction: "break",
-	frequency: { type: "daily" },
+	frequency: daily(),
 	createdAt: HABIT_CREATED,
 });
 const quantityHabit = makeHabit({
@@ -31,12 +37,12 @@ const quantityHabit = makeHabit({
 	targetType: "quantity",
 	targetAmount: 10,
 	targetUnit: "reps",
-	frequency: { type: "daily" },
+	frequency: daily(),
 	createdAt: HABIT_CREATED,
 });
 
 function entry(habitId: number, date: string, value?: number): Entry {
-	return { id: 0, habitId, date, value, createdAt: new Date(date) };
+	return makeEntry({ id: 0, habitId, date, value, createdAt: new Date(date) });
 }
 
 describe("isEntryComplete", () => {
@@ -144,7 +150,7 @@ describe("calculateCurrentStreak", () => {
 	it("skips non-due days without breaking the streak", () => {
 		const weekdaysHabit = makeHabit({
 			id: 4,
-			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] }, // Mon-Fri
+			frequency: weekdays(1, 2, 3, 4, 5), // Mon-Fri
 			createdAt: HABIT_CREATED,
 		});
 		// Fri 09-11, Mon 09-14 completed; Sat/Sun between aren't due, so they don't break it.
@@ -161,7 +167,7 @@ describe("calculateCurrentStreak", () => {
 	it("doesn't break a per-week streak on days the week never owed", () => {
 		const threePerWeek = makeHabit({
 			id: 6,
-			frequency: { type: "per-week", timesPerWeek: 3 },
+			frequency: perWeek(3),
 			createdAt: HABIT_CREATED,
 		});
 		// Mon/Wed/Fri of two consecutive weeks (09-07 and 09-14 are Mondays) —
@@ -186,7 +192,7 @@ describe("calculateCurrentStreak", () => {
 	it("never walks back before the habit's own createdAt", () => {
 		const youngHabit = makeHabit({
 			id: 5,
-			frequency: { type: "daily" },
+			frequency: daily(),
 			createdAt: new Date(2026, 8, 13),
 		});
 		const entries = [entry(5, "2026-09-13"), entry(5, "2026-09-14")];
@@ -270,7 +276,7 @@ describe("getStreakAtRisk", () => {
 	it("returns null when yesterday wasn't due (rest day / off-schedule)", () => {
 		const wednesdayOnly = makeHabit({
 			id: 6,
-			frequency: { type: "weekdays", days: [3] }, // Wednesday only — yesterday was Tuesday.
+			frequency: weekdays(3), // Wednesday only — yesterday was Tuesday.
 			createdAt: HABIT_CREATED,
 		});
 		const entries = [entry(6, "2026-09-09")];
@@ -282,7 +288,7 @@ describe("getStreakAtRisk", () => {
 describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-33)", () => {
 	const threePerWeek = makeHabit({
 		id: 8,
-		frequency: { type: "per-week", timesPerWeek: 3 },
+		frequency: perWeek(3),
 		createdAt: HABIT_CREATED,
 	});
 	const FRIDAY = new Date(2026, 9, 23, 12);
@@ -318,7 +324,7 @@ describe("getStreakAtRisk — × per week habits are never at risk by day (HAB-3
 	it("leaves a specific-day habit at risk exactly as before", () => {
 		const mondayWednesday = makeHabit({
 			id: 9,
-			frequency: { type: "weekdays", days: [1, 3] },
+			frequency: weekdays(1, 3),
 			createdAt: HABIT_CREATED,
 		});
 		// Done Wed 14 Oct; missed Mon 19 Oct, viewed Tue 20 Oct.
@@ -338,7 +344,7 @@ describe("after a restore (HAB-20)", () => {
 	// Logged 1–10 Sep, archived 11 Sep, restored 21 Sep (pause 11–20 Sep).
 	const restored = makeHabit({
 		id: 1,
-		frequency: { type: "daily" },
+		frequency: daily(),
 		createdAt: HABIT_CREATED,
 		pauses: [{ from: "2026-09-11", to: "2026-09-20" }],
 	});
