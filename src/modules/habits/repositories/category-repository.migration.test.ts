@@ -3,9 +3,9 @@ import { BUILT_IN_CATEGORIES, CATEGORY_ROTATION } from "../constants";
 import { categoryFixturesFor } from "../dev/category-fixtures";
 
 /**
- * HAB-24's data migration (0009 + 0010): V1's free-text `category` strings →
- * the managed category set, with every habit backfilled to a `category_id`.
- * Rows are written in the V1 shape (migrated up to 0008), then the rest runs.
+ * The data migration (0009 + 0010): free-text `category` strings become the managed category
+ * set, with every habit backfilled to a `category_id`. Rows are written in the old shape
+ * (migrated up to 0008), then the rest runs.
  */
 
 type CategoryRow = {
@@ -49,7 +49,7 @@ function habitCategoryNames(
 	return Object.fromEntries(rows.map((row) => [row.habit, row.category]));
 }
 
-describe("HAB-24 category migration", () => {
+describe("category migration", () => {
 	it("seeds exactly BUILT_IN_CATEGORIES, in order, with Other's hue null", () => {
 		const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0009");
 		migrateRest();
@@ -68,9 +68,9 @@ describe("HAB-24 category migration", () => {
 		expect(seeded.find((c) => c.name === "Other")?.hue).toBeNull();
 	});
 
-	it("maps every V1 string to a built-in, a deduped custom, or Other", () => {
+	it("maps every old string to a built-in, a deduped custom, or Other", () => {
 		const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0009");
-		// [habit name, V1 category string] — in creation order.
+		// [habit name, old category string], in creation order.
 		const v1: [string, string | null][] = [
 			["h-health-lower", "health"],
 			["h-health-padded", " Health "],
@@ -125,9 +125,8 @@ describe("HAB-24 category migration", () => {
 			"Weekend projects at",
 			"Evening",
 		]);
-		// 0009 hands out its ten V2 slots in order (diamond/175, ring/330,
-		// square/95); 0011 then moves "morning" off 175 (now Health's) to the
-		// emptiest V3 slot, bars/220.
+		// 0009 hands out its ten original slots in order (diamond/175, ring/330, square/95); 0011 then
+		// moves "morning" off 175 (now Health's) to the emptiest slot, bars/220.
 		expect(customs.map(({ shape, hue }) => ({ shape, hue }))).toEqual([
 			CATEGORY_ROTATION[2],
 			CATEGORY_ROTATION[0],
@@ -183,7 +182,7 @@ const HABIT_CHILD_TABLES = [
 describe.each([
 	["on (as Jest's node:sqlite)", true],
 	["off (expo-sqlite's default)", false],
-])("HAB-24 migration with foreign keys %s", (_label, foreignKeys) => {
+])("category migration with foreign keys %s", (_label, foreignKeys) => {
 	it("keeps every row referencing a habit, pointing at the same habit", () => {
 		const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0009", {
 			foreignKeys,
@@ -193,7 +192,7 @@ describe.each([
 				.foreign_keys,
 		).toBe(foreignKeys ? 1 : 0);
 
-		// Ids with a gap (2 was deleted in V1) — copied ids must stay exact.
+		// Ids with a gap (2 was deleted before the upgrade): copied ids must stay exact.
 		for (const [id, name, category] of [
 			[1, "Water", "Health"],
 			[3, "Journal", "Evening"],
@@ -322,12 +321,12 @@ describe.each([
 });
 
 /**
- * HAB-42's data migration (0011): Health/Social off red, customs on dropped
- * rotation hues moved to a V3 slot, and the stored group order backfilled.
- * Rows are written in the 0010 shape (managed categories, no sort_order).
+ * The data migration (0011): Health/Social off red, customs on dropped rotation hues moved to
+ * a current slot, and the stored group order backfilled. Rows are written in the 0010 shape
+ * (managed categories, no sort_order).
  */
 describe.each([true, false])(
-	"HAB-42 category migration (foreign keys %s)",
+	"sort-order category migration (foreign keys %s)",
 	(foreignKeys) => {
 		type Db = ReturnType<typeof createPartiallyMigratedTestDb>["sqlite"];
 
@@ -415,7 +414,7 @@ describe.each([true, false])(
 			const { sqlite, migrateRest } = createPartiallyMigratedTestDb("0011", {
 				foreignKeys,
 			});
-			// Already on V3 slots: ring/330 ×2, square/95 ×1 — they stay put.
+			// Already on current slots: ring/330 x2, square/95 x1, so they stay put.
 			insertCustom(sqlite, "Music", "ring", 330);
 			insertCustom(sqlite, "Language", "square", 95);
 			insertCustom(sqlite, "Garden", "ring", 330);
@@ -578,7 +577,7 @@ describe.each([true, false])(
 
 describe("web fixtures vs migration 0011", () => {
 	it.each(["many-categories", "default"] as const)(
-		"%s customs look exactly as 0011 leaves them on a V2 device",
+		"%s customs look exactly as 0011 leaves them on an upgraded device",
 		(scenario) => {
 			const fixtures = categoryFixturesFor(
 				scenario as Parameters<typeof categoryFixturesFor>[0],

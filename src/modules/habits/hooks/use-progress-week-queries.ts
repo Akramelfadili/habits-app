@@ -24,11 +24,10 @@ import {
 export type ProgressWeekView = ProgressView<WeekMatrix>;
 
 /**
- * Progress · Week (HAB-35): the Mon–Sun week containing `anchor` (default
- * today) as a habits × days matrix, with the week's stats and insights once 7
- * days of logs exist. Entries and freezes are read for the week and the week
- * before it only (the "+N pts" and "slipping" comparison). The exception is the
- * streak tile, which is the streak as it stands and reaches back past the week,
+ * Progress Week: the Mon-Sun week containing `anchor` (default today) as a habits x days
+ * matrix, with the week's stats and insights once 7 days of logs exist. Entries and freezes are
+ * read for the week and the week before it only (the "+N pts" and "slipping" comparison). The
+ * exception is the streak tile, which is the streak as it stands and reaches back past the week,
  * so it reads the whole log, like Habit Detail.
  */
 export function useProgressWeekQueries({

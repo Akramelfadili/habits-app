@@ -278,7 +278,7 @@ describe("useTodayLogActions", () => {
 		});
 	});
 
-	describe("a write that gives a frozen day's freeze back (PR-11)", () => {
+	describe("a write that gives a frozen day's freeze back", () => {
 		const FREEZE = {
 			id: 9,
 			habitId: 1,

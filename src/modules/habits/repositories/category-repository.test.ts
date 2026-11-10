@@ -75,7 +75,7 @@ describe("category-repository", () => {
 		expect(second.id).toBeGreaterThan(created.id);
 	});
 
-	describe("stored order (HAB-42)", () => {
+	describe("stored order", () => {
 		it("puts a new category last (max + 1), after Other", async () => {
 			await newCustom("Music");
 			await newCustom("Garden");
@@ -100,7 +100,7 @@ describe("category-repository", () => {
 		});
 	});
 
-	describe("renameCategory (HAB-25)", () => {
+	describe("renameCategory", () => {
 		it("renames a custom, trimmed, keeping its id, look and position", async () => {
 			const music = await newCustom("Music");
 			await newCustom("Garden");
@@ -126,7 +126,7 @@ describe("category-repository", () => {
 		});
 	});
 
-	describe("deleteCategory (HAB-25)", () => {
+	describe("deleteCategory", () => {
 		it("deletes an unused custom and touches no habit", async () => {
 			const garden = await newCustom("Garden");
 			const habit = await createHabit(

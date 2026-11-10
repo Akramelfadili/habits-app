@@ -13,8 +13,7 @@ export function clearExports(): void {
 }
 
 export function writeScratchFile(content: string): WrittenFile {
-	// `?fixtures=export-fails` — the storage-failure state (B6) can't be
-	// provoked any other way on web.
+	// `?fixtures=export-fails`: the storage-failure state can't be provoked any other way on web.
 	const search = globalThis.location?.search ?? "";
 	if (new URLSearchParams(search).get("fixtures") === "export-fails") {
 		throw new Error("No space left on device");

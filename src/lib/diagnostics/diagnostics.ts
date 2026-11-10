@@ -34,7 +34,6 @@ export async function buildDiagnosticsReport(): Promise<string> {
 	].join("\n");
 }
 
-/** Result of "Copy diagnostics" — `shared` is the fallback when the clipboard module isn't in the build. */
 export type DiagnosticsResult = "copied" | "shared" | "failed";
 
 /** Never rejects: the screens that call it are the ones already showing a failure. */

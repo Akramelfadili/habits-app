@@ -22,13 +22,9 @@ type ExportPhase =
 
 type ExportState = {
 	phase: ExportPhase;
-	/** How many export sheets are on screen: a finished export toasts only when none is. */
 	openSheets: number;
-	/** What Retry re-runs. */
 	last: { source: ExportSource; options: ExportOptions } | null;
-	/** The share sheet could not open (the ready card says so). */
 	shareFailed: boolean;
-	/** A sheet came on screen (+1) or left it (-1). */
 	trackSheet: (delta: 1 | -1) => void;
 	run: (source: ExportSource, options: ExportOptions) => Promise<void>;
 	retry: () => Promise<void>;
@@ -37,10 +33,9 @@ type ExportState = {
 };
 
 /**
- * The export's state lives here, not in the sheet, so closing the sheet while
- * the file is writing leaves the export running (EX2) and the next time any
- * export sheet opens — from Settings or from Progress — it shows where things
- * stand: still writing, ready, or failed.
+ * The export's state lives here, not in the sheet, so closing the sheet while the file is
+ * writing leaves the export running and the next time any export sheet opens (from Settings or
+ * from Progress) it shows where things stand: still writing, ready, or failed.
  */
 export const useExportStore = create<ExportState>((set, get) => ({
 	phase: { name: "confirm" },
@@ -134,7 +129,6 @@ export const useExportStore = create<ExportState>((set, get) => ({
 	},
 }));
 
-/** What the export sheet reads and does (HAB-44, EX1–EX4). */
 export function useExportActions() {
 	const phase = useExportStore((state) => state.phase);
 	const shareFailed = useExportStore((state) => state.shareFailed);

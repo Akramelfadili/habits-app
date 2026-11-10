@@ -112,7 +112,7 @@ describe("useLoggedDays", () => {
 		await mockDb.insert(entries).values(
 			[
 				[inserted[0].id, "2026-09-15"],
-				[inserted[1].id, "2026-09-15"], // same day, other habit
+				[inserted[1].id, "2026-09-15"],
 				[inserted[0].id, "2026-09-08"],
 				[inserted[1].id, "2026-09-16"],
 			].map(([habitId, date]) => ({

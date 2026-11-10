@@ -3,10 +3,10 @@ import { useFirstRunOfferStore } from "../first-run-offer-store";
 import { useFirstRunActions } from "./use-first-run-actions";
 
 /**
- * FR2's Close is a skip: First Run is marked seen and Today opens empty (FR4).
- * Its button sits in the root layout's header, which has no toast host, so a
- * failed write is reported through the store: the form shows it inline above
- * Save (the welcome and the suggestions list show theirs the same way).
+ * Close on the first-run form is a skip: First Run is marked seen and Today opens empty. Its
+ * button sits in the root layout's header, which has no toast host, so a failed write is reported
+ * through the store: the form shows it inline above Save (the welcome and the suggestions list
+ * show theirs the same way).
  */
 export function useFirstRunSkipActions() {
 	const { markFirstRunSeen } = useFirstRunActions();

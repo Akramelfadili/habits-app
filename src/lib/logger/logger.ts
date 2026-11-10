@@ -4,11 +4,10 @@ import { createMemorySink } from "./sinks/memory-sink";
 import type { LogEntry, LogFields, LogLevel, LogSink } from "./types";
 
 /**
- * App-wide logger (audit A3-10). `log.error("migration.failure", { schemaVersion })`:
- * a short dot-separated event name and allowlisted fields. The core redacts
- * (redact.ts), stamps time, level and app version, then hands the entry to
- * every registered sink (sinks/). A sink or the logger itself can fail; the
- * app never sees it. See docs/decisions/008-logging.md.
+ * App-wide logger: `log.error("migration.failure", { schemaVersion })`, a short dot-separated
+ * event name and allowlisted fields. The core redacts (redact.ts), stamps time, level and app
+ * version, then hands the entry to every registered sink (sinks/). A sink or the logger itself
+ * can fail; the app never sees it. See docs/decisions/008-logging.md.
  */
 
 export const SESSION_BUFFER_SIZE = 200;
@@ -31,7 +30,6 @@ export function setMinLevel(level: LogLevel): void {
 	minLevel = level;
 }
 
-/** Adds a sink; returns the function that removes it. Registering twice is a no-op. */
 export function registerSink(sink: LogSink): () => void {
 	sinks.add(sink);
 	return () => {
@@ -39,7 +37,6 @@ export function registerSink(sink: LogSink): () => void {
 	};
 }
 
-/** Awaits every sink's `flush`. Never rejects. */
 export async function flushLogs(): Promise<void> {
 	await Promise.all(
 		[session, ...sinks].map(async (sink) => {
@@ -86,9 +83,7 @@ function write(level: LogLevel, event: string, fields?: LogFields): void {
 				// One broken sink must not stop the others or the app.
 			}
 		}
-	} catch {
-		// Logging is best effort.
-	}
+	} catch {}
 }
 
 export const log = {
@@ -98,12 +93,10 @@ export const log = {
 	error: (event: string, fields?: LogFields) => write("error", event, fields),
 };
 
-/** This session's entries, oldest first. */
 export function getLogEntries(): readonly LogEntry[] {
 	return session.entries();
 }
 
-/** Whether `log` has already recorded this exact error object. */
 export function wasLogged(error: unknown): boolean {
 	return typeof error === "object" && error !== null && reported.has(error);
 }

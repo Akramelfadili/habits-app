@@ -3,15 +3,11 @@ import { THEME_PREFERENCE_SETTING_KEY } from "../keys";
 import type * as NativeAppSettingsRepository from "./app-settings-repository";
 
 /**
- * Web-only stand-in for `app-settings-repository.ts`, mirroring the pattern
- * `habit-repository.web.ts` uses — no real Drizzle/SQLite on web, so this is
- * an in-memory store instead. Seeded as "already seen" by default so the
- * existing `today-empty` visual check still renders HAB-05's plain empty
- * state; `?fixtures=first-run` clears the seed so HAB-06 shows instead.
- * `?fixtures=reminders-at-cap` turns the Evening review on, as
- * the V1/V2 mockup reminders-at-cap (tag mockups-v1-v2) shows it (HAB-12). `?theme=light|dark`
- * seeds the Appearance choice (HAB-15) — "system" when absent;
- * `?fixtures=settings` / `settings-notifications-off` / `export-fails` seed the Settings screen's states (HAB-15).
+ * Web-only in-memory stand-in (no SQLite on web), like `habit-repository.web.ts`.
+ * Seeded as "already seen" so the `today-empty` visual check shows the plain empty state.
+ * `?fixtures=first-run` clears the seed; `?fixtures=reminders-at-cap` turns the Evening review on.
+ * `?theme=light|dark` seeds the Appearance choice ("system" when absent).
+ * `?fixtures=settings` / `settings-notifications-off` / `export-fails` seed the Settings screen states.
  */
 const SEEN_FIRST_RUN_SEED_KEY = "habits.seenFirstRun";
 const EVENING_REVIEW_SEED_KEY = "habits.eveningReview";

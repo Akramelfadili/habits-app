@@ -1,7 +1,6 @@
 const mockShare = jest.fn();
 const mockWrite = jest.fn();
 
-/** The fake disk: the uris that exist, and the ones whose delete should throw. */
 const mockDisk = new Set<string>();
 const mockStuck = new Set<string>();
 const mockEvents: string[] = [];
@@ -106,7 +105,7 @@ describe("shareFile / shareText", () => {
 	});
 });
 
-describe("the shared file is deleted (E-03)", () => {
+describe("the shared file is deleted", () => {
 	it("deletes an export after the share sheet resolves, not before", async () => {
 		mockDisk.add("file:///exports/habits.json");
 		await shareFile("file:///exports/habits.json", "application/json");

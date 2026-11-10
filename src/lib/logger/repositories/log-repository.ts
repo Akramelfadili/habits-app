@@ -44,7 +44,6 @@ export async function appendLogEntries(
 	});
 }
 
-/** Oldest first. A row that no longer parses is skipped. */
 export async function readLogEntries(): Promise<LogEntry[]> {
 	const rows = await open().getAllAsync<{ entry: string }>(
 		"SELECT entry FROM log_entries ORDER BY id ASC",

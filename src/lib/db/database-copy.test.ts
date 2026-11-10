@@ -1,7 +1,6 @@
 import { migrationCopy } from "@/modules/habits/messages";
 import type { DatabaseCopy } from "./database-copy";
 
-/** Every string the catalogue hands the database gate. */
 function strings(copy: DatabaseCopy): string[] {
 	return [
 		...Object.values(copy.updating),

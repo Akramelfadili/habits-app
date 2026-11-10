@@ -4,9 +4,9 @@ import { SEEN_FIRST_RUN_SETTING_KEY } from "../constants";
 import { firstRunCopy } from "../messages";
 
 /**
- * Writes the flag that keeps First Run from ever coming back (HAB-46): after
- * a first habit is saved, when First Run is skipped, and once for an install
- * that already had habits. One repository write — no service needed.
+ * Writes the flag that keeps First Run from ever coming back: after a first habit is saved,
+ * when First Run is skipped, and once for an install that already had habits. One repository
+ * write, no service needed.
  */
 function markFirstRunSeen(): Promise<void> {
 	return setSetting(SEEN_FIRST_RUN_SETTING_KEY, "true");

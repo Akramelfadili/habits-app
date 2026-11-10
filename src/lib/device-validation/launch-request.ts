@@ -1,7 +1,6 @@
 import { File, Paths } from "expo-file-system";
 import { isDeviceValidationBuild } from "./enabled";
 
-/** A state to open at launch: the visual-check route and the clock it is pinned to. */
 export type LaunchRequest = { route: string; clock?: string };
 
 const LAUNCH_REQUEST_FILE = "dev-state.json";
@@ -31,8 +30,6 @@ export function readLaunchRequest(): LaunchRequest | null {
 					: undefined;
 			return { route: parsed.route, clock };
 		}
-	} catch {
-		// No readable request: open the app normally.
-	}
+	} catch {}
 	return null;
 }

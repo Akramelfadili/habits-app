@@ -22,9 +22,9 @@ function sameDeps(a: DependencyList, b: DependencyList): boolean {
 }
 
 /**
- * Drizzle's `useLiveQuery` only looks at the query again when `deps` change, so
- * a query given as a function is built once per deps, not once per render
- * (audit B-09). A query object passed directly is used as it is.
+ * Drizzle's `useLiveQuery` only looks at the query again when `deps` change, so a query given
+ * as a function is built once per deps, not once per render. A query object passed directly is
+ * used as it is.
  */
 function useBuiltQuery(
 	query: LiveQuery | (() => LiveQuery),
@@ -39,14 +39,12 @@ function useBuiltQuery(
 }
 
 /**
- * The one wrapper over Drizzle's `useLiveQuery` (audit A3-06, A5-04):
- * - `loaded` turns true with the first result and stays true across deps
- *   changes (see `resetOnDepsChange`), so screens can hold a neutral blank
- *   instead of flashing an empty state;
- * - a query error is logged once and thrown, which lands in the root
- *   ErrorBoundary as a last resort — "Try again" remounts the screens, and the
- *   new subscription re-runs the query. Drizzle itself only stores it, so
- *   without this the screen would sit on `[]` forever.
+ * The one wrapper over Drizzle's `useLiveQuery`:
+ * - `loaded` turns true with the first result and stays true across deps changes (see
+ *   `resetOnDepsChange`), so screens can hold a neutral blank instead of flashing an empty state;
+ * - a query error is logged once and thrown, which lands in the root ErrorBoundary as a last
+ *   resort: "Try again" remounts the screens, and the new subscription re-runs the query. Drizzle
+ *   itself only stores it, so without this the screen would sit on `[]` forever.
  */
 export function useLiveRows<Row>(
 	query: LiveQuery | (() => LiveQuery),
@@ -56,7 +54,6 @@ export function useLiveRows<Row>(
 	const live = useBuiltQuery(query, deps);
 	const { data, error, updatedAt } = useLiveQuery(live, deps as unknown[]);
 
-	// Only a keyed query reads the key (audit B-09).
 	const key = resetOnDepsChange ? JSON.stringify(deps) : "";
 	const baseline = useRef<{ key: string; updatedAt: Date | undefined }>({
 		key,

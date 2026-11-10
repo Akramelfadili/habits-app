@@ -22,7 +22,7 @@ import {
 import type { Habit } from "../types";
 
 export type HabitsLibrary = {
-	/** False until both lists have loaded — the tab shows a blank, not "No habits yet" (audit A5-04). */
+	/** False until both lists have loaded: the tab shows a blank, not "No habits yet". */
 	isLoaded: boolean;
 	/** The active habits, one group per category in the stored order (as Today), manual order within each. */
 	groups: CategoryGroup[];
@@ -39,10 +39,9 @@ export type HabitsLibrary = {
 };
 
 /**
- * Everything the Habits tab (HAB-39) lists: active habits by category, the
- * archived ones, and the two numbers a row can carry (running streak, best
- * streak). One pass over the log per render of its inputs; the live lists are
- * memo-stable, so a tap elsewhere does not redo it.
+ * Everything the Habits tab lists: active habits by category, the archived ones, and the two
+ * numbers a row can carry (running streak, best streak). One pass over the log per render of its
+ * inputs; the live lists are memo-stable, so a tap elsewhere does not redo it.
  */
 export function useHabitsQueries(): HabitsLibrary {
 	const { habits: active, loaded: activeLoaded } = useActiveHabits();

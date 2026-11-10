@@ -13,8 +13,8 @@ const {
 }: typeof FrozenDayRepository = require("./frozen-day-repository");
 
 const DAY = new Date(2026, 8, 15);
-// Local dates: the repository keys by the local calendar day (toDayKey), so a
-// UTC midnight would make "September" 31 Aug – 29 Sep west of UTC (G-02).
+// Local dates: the repository keys by the local calendar day (toDayKey), so a UTC midnight
+// would make "September" 31 Aug - 29 Sep west of UTC.
 const MONTH_START = new Date(2026, 8, 1);
 const MONTH_END = new Date(2026, 8, 30);
 

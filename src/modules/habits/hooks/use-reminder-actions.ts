@@ -30,7 +30,7 @@ async function editTime(
 	return editReminder(habit, reminderId, patch);
 }
 
-/** Used by Settings (`useSettingsActions`) — the Evening review's only home since HAB-21. */
+/** Used by Settings (`useSettingsActions`), the Evening review's only home. */
 export async function toggleEveningReview(enabled: boolean) {
 	if (enabled) await ensureNotificationPermission();
 	return setEveningReview(enabled);

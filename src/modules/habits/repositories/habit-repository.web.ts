@@ -20,14 +20,13 @@ import { getCategories } from "./category-repository.web";
 import type * as NativeHabitRepository from "./habit-repository";
 
 /**
- * Web-only stand-in for `habit-repository.ts`, picked by Metro's `.web.ts`
- * platform resolution. expo-sqlite has no web binding without WASM + COOP/COEP
- * headers, and web only exists here for visual checks against the mockups (V3 in docs/mockups/v3/, V1/V2 in tag mockups-v1-v2)
- * (scripts/visual-check.mjs) — so it's backed by in-memory fixtures instead.
- * Hooks and screens import `./habit-repository` either way and never know.
+ * Web-only stand-in for `habit-repository.ts`, picked by Metro's `.web.ts` platform resolution.
+ * expo-sqlite has no web binding without WASM + COOP/COEP headers, and web only exists here for
+ * visual checks against the mockups (scripts/visual-check.mjs), so it's backed by in-memory
+ * fixtures instead. Hooks and screens import `./habit-repository` either way and never know.
  *
- * Append `?fixtures=empty` (no habits) or `?fixtures=rest-day` to any URL to
- * render those Today states (HAB-05).
+ * Append `?fixtures=empty` (no habits) or `?fixtures=rest-day` to any URL to render those Today
+ * states.
  */
 
 function initialHabits(): Habit[] {
@@ -157,8 +156,8 @@ export async function updateHabit(
 	if (!existing) throw new Error(`Habit ${id} not found`);
 	const category = await categoryById(input.categoryId);
 
-	// Field-by-field like the native repository — direction stays locked (HAB-01)
-	// even if a caller passes a wider object at runtime.
+	// Field-by-field like the native repository: direction stays locked even if a caller passes a
+	// wider object at runtime.
 	const habit: Habit = {
 		...existing,
 		name: input.name,
@@ -183,7 +182,6 @@ export function useHabitsList(): HabitsResult {
 	);
 }
 
-/** A live query that has not answered yet. */
 const NOT_LOADED: HabitsResult = { habits: [], loaded: false };
 
 export function useActiveHabits(): HabitsResult {
@@ -192,10 +190,9 @@ export function useActiveHabits(): HabitsResult {
 		() => getDerived().active,
 		() => SERVER_ACTIVE,
 	);
-	// The load states (SY1, SY2) are reachable on web without a dev-only route:
-	// `today-loading` never finishes and `today-load-fails` fails every read,
-	// as a live query that throws does. (There is no fail-once: React retries a
-	// throwing render itself, so "once" would never reach the boundary.)
+	// The load states are reachable on web without a dev-only route: `today-loading` never finishes
+	// and `today-load-fails` fails every read, as a live query that throws does. (There is no
+	// fail-once: React retries a throwing render itself, so "once" would never reach the boundary.)
 	const scenario = resolveFixtureScenario();
 	if (scenario === "today-loading") return NOT_LOADED;
 	if (scenario === "today-load-fails")
@@ -219,7 +216,7 @@ export async function getHabit(id: number): Promise<Habit | undefined> {
 	return getHabits().find((h) => h.id === id);
 }
 
-/** Web counterpart of the native repository's slot-preserving reorder (HAB-13). */
+/** Web counterpart of the native repository's slot-preserving reorder. */
 export async function reorderHabits(orderedIds: number[]): Promise<void> {
 	const habits = getHabits();
 	const slots = orderedIds
@@ -256,9 +253,8 @@ export async function setHabitRestored(
 }
 
 /**
- * Web-only (not in the native repository): habits embed their category here,
- * where native resolves it live — so a category rename (HAB-25) has to be
- * copied onto every habit in it.
+ * Web-only (not in the native repository): habits embed their category here, where native
+ * resolves it live, so a category rename has to be copied onto every habit in it.
  */
 export function applyCategoryChange(category: Category): void {
 	setHabits(
@@ -269,9 +265,8 @@ export function applyCategoryChange(category: Category): void {
 }
 
 /**
- * Web-only counterpart of the native category delete's reassignment
- * (HAB-25): every habit in `fromId`, archived ones too, moves to `to` at the
- * end of the manual order, keeping its relative order.
+ * Web-only counterpart of the native category delete's reassignment: every habit in `fromId`,
+ * archived ones too, moves to `to` at the end of the manual order, keeping its relative order.
  */
 export function reassignHabitsToCategory(fromId: number, to: Category): void {
 	const habits = getHabits();

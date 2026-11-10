@@ -1,6 +1,5 @@
 import type { LogEntry } from "./types";
 
-/** One entry as a few plain-text lines (console and "Copy diagnostics"). */
 export function formatEntry(entry: LogEntry): string {
 	const parts = [
 		`${entry.timestamp} ${entry.level.toUpperCase()} ${entry.event}`,

@@ -15,7 +15,7 @@ export function useProgressShellQueries() {
 		today,
 		loaded: loaded && logged.loaded,
 		hasHabits: habits.length > 0,
-		/** At least one log exists: Export has something to put in the file (P3). */
+		/** At least one log exists: Export has something to put in the file. */
 		hasLogs: logged.count > 0,
 	};
 }

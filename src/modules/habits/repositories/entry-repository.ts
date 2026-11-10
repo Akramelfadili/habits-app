@@ -35,11 +35,10 @@ function rowToEntryNote(row: EntryNoteRow): EntryNote {
 }
 
 /**
- * The one live read of the whole entry log (audit A-03, B-07). Every hook below
- * that shows entries reads a slice of this, so Today, Habits, Detail, Progress
- * and Retro-log share one query and one change listener however many are
- * mounted, and a write re-renders only the slices it changed. The rows are
- * ordered by date, as the unbounded read always was.
+ * The one live read of the whole entry log. Every hook below that shows entries reads a slice
+ * of this, so Today, Habits, Detail, Progress and Retro-log share one query and one change
+ * listener however many are mounted, and a write re-renders only the slices it changed. The rows
+ * are ordered by date, as the unbounded read always was.
  */
 const entryLog = createSharedLiveTable({
 	table: "entries",
@@ -104,22 +103,20 @@ export function useLoggedDays(): LoggedDays {
 }
 
 /**
- * Live-query hook — every entry, unbounded (the shared log itself). Streak calculation (HAB-08) can
- * need history arbitrarily far back (and a week-bounded range has a real gap
- * around Sunday/Monday for a per-week habit's own week), so this fetches
- * everything rather than trying to bound the range correctly — a personal
- * habit tracker's total entry count stays small enough that this is simpler
- * and cheaper than getting a tight range right.
+ * Live-query hook: every entry, unbounded (the shared log itself). Streak calculation can need
+ * history arbitrarily far back (and a week-bounded range has a real gap around Sunday/Monday for
+ * a per-week habit's own week), so this fetches everything rather than trying to bound the range
+ * correctly: a personal habit tracker's total entry count stays small enough that this is
+ * simpler and cheaper than getting a tight range right.
  */
 export function useAllEntries(): Entry[] {
 	return useSharedLiveTable(entryLog, allEntries);
 }
 
 /**
- * What a write does to the habit's freeze on the same day, in the same
- * transaction as the entry (PR-11): logging a frozen day gives the freeze back
- * to the pool (`release`), and Undoing that puts it back exactly as it was
- * (`reinstate`, keeping the original `createdAt`).
+ * What a write does to the habit's freeze on the same day, in the same transaction as the
+ * entry: logging a frozen day gives the freeze back to the pool (`release`), and Undoing that
+ * puts it back exactly as it was (`reinstate`, keeping the original `createdAt`).
  */
 export type FreezeChange = { release: true } | { reinstate: Date };
 
@@ -182,10 +179,9 @@ async function writeQuantity(
 }
 
 /**
- * Marks `habitId` completed/resisted (or un-completed) on `date`. Un-checking
- * is always allowed with no confirmation (HAB-03), so this deletes the row
- * rather than flipping a boolean; completing twice is a no-op, not an error.
- * With `freeze`, the day's freeze changes in the same transaction.
+ * Marks `habitId` completed/resisted (or un-completed) on `date`. Un-checking is always allowed
+ * with no confirmation, so this deletes the row rather than flipping a boolean; completing twice
+ * is a no-op, not an error. With `freeze`, the day's freeze changes in the same transaction.
  */
 export async function setHabitCompletedOn(
 	habitId: number,
@@ -202,13 +198,12 @@ export async function setHabitCompletedOn(
 }
 
 /**
- * Sets `habitId`'s logged quantity on `date` (HAB-07). `value <= 0` deletes the
- * row instead of storing a zero — keeping "no entry" as the one signal for
- * "nothing logged," same as `setHabitCompletedOn`, so a zeroed-out quantity
- * habit doesn't spuriously count as a completion anywhere (e.g. per-week
- * scheduling). Otherwise upserts, since a day can be logged more than once as
- * the value is adjusted through the day. With `freeze`, the day's freeze
- * changes in the same transaction.
+ * Sets `habitId`'s logged quantity on `date`. `value <= 0` deletes the row instead of storing a
+ * zero, keeping "no entry" as the one signal for "nothing logged", same as
+ * `setHabitCompletedOn`, so a zeroed-out quantity habit doesn't spuriously count as a completion
+ * anywhere (e.g. per-week scheduling). Otherwise upserts, since a day can be logged more than
+ * once as the value is adjusted through the day. With `freeze`, the day's freeze changes in the
+ * same transaction.
  */
 export async function setHabitQuantityOn(
 	habitId: number,
@@ -224,23 +219,24 @@ export async function setHabitQuantityOn(
 	});
 }
 
-/** Live-query hook — every habit's day notes (HAB-10). Same "small enough to fetch whole" reasoning as `useAllEntries`. */
+/**
+ * Live-query hook: every habit's day notes. Same "small enough to fetch whole" reasoning as
+ * `useAllEntries`.
+ */
 export function useEntryNotes(): EntryNote[] {
 	const { data } = useLiveRows<EntryNoteRow>(() =>
 		db.select().from(entryNotes).orderBy(asc(entryNotes.date)),
 	);
-	// Stable until a row changes (audit B-10): the mapping ran on every render.
+	// Stable until a row changes: the mapping ran on every render.
 	return useMemo(() => data.map(rowToEntryNote), [data]);
 }
 
 /**
- * Saves a retro-logged day (HAB-10) — every changed value plus the note — in
- * one transaction, so a half-applied save can't leave the day inconsistent.
- * Values follow the same rules as the single-day writes above: `false`/`0`
- * deletes the entry, `true` inserts a presence row, an amount upserts. An
- * empty (after trimming) note deletes the note row. Edit this day writes only
- * the note through it now (`useDayNoteActions`); a tap's freeze return is
- * `day-log-service`.
+ * Saves a retro-logged day (every changed value plus the note) in one transaction, so a
+ * half-applied save can't leave the day inconsistent. Values follow the same rules as the
+ * single-day writes above: `false`/`0` deletes the entry, `true` inserts a presence row, an
+ * amount upserts. An empty (after trimming) note deletes the note row. Edit this day writes only
+ * the note through it now (`useDayNoteActions`); a tap's freeze return is `day-log-service`.
  */
 export async function saveDayLog(date: Date, log: DayLog): Promise<void> {
 	const dateString = toDayKey(date);

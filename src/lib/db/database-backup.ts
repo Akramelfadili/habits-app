@@ -3,38 +3,31 @@ import { errorNameOf } from "./error-name";
 
 /**
  * A copy of `habits.db` taken just before the migrator runs on an upgrade
- * (backlog A7-08, docs/how-to/backups-and-recovery.md). A migration that
- * succeeds with wrong data cannot be undone; this is the way back.
+ * (docs/how-to/backups-and-recovery.md). A migration that succeeds with wrong data cannot be
+ * undone; this is the way back.
  *
- * `VACUUM INTO` writes a consistent snapshot of the open database (committed
- * rows, WAL included) to a new file, which a plain file copy of a live WAL
- * database does not guarantee. The copy goes to a `.partial` name and is
- * renamed only when complete, so a half-written file is never taken for a
- * backup. Any failure is logged and swallowed: the migrator is one atomic
- * transaction, so an upgrade without a backup is as safe as it was before.
+ * `VACUUM INTO` writes a consistent snapshot of the open database (committed rows, WAL included)
+ * to a new file, which a plain file copy of a live WAL database does not guarantee. The copy goes
+ * to a `.partial` name and is renamed only when complete, so a half-written file is never taken
+ * for a backup. Any failure is logged and swallowed: the migrator is one atomic transaction, so
+ * an upgrade without a backup is as safe as it was before.
  */
 
-/** Newest backups kept, the one just taken included. */
 export const BACKUPS_TO_KEEP = 3;
 
 const PARTIAL_SUFFIX = ".partial";
 const BACKUP_NAME = /^habits-(\d{8}T\d{6}Z)-v(\d+)\.db$/;
 
-/** The slice of expo-sqlite's database the backup reads and writes through. */
 export type BackupSource = {
 	getFirstSync: <Row>(source: string) => Row | null;
 	runSync: (source: string, ...params: string[]) => unknown;
 };
 
-/** The backups folder, as the backup needs it. The real one is `database-files.ts`. */
 export type BackupFiles = {
-	/** Every file name in the backups folder. */
 	names: () => string[];
-	/** The path SQLite writes a named file to. */
 	pathFor: (name: string) => string;
 	sizeOf: (name: string) => number;
 	rename: (from: string, to: string) => void;
-	/** Missing files are not an error. */
 	remove: (name: string) => void;
 };
 
@@ -52,7 +45,6 @@ export function utcStamp(now: number): string {
 		.replace(/\.\d+Z$/, "Z");
 }
 
-/** `habits-20261108T101500Z-v12.db`: sortable by time, with the schema it holds. */
 export function backupName(schemaVersion: number, now: number): string {
 	return `habits-${utcStamp(now)}-v${schemaVersion}.db`;
 }
@@ -64,7 +56,6 @@ function appliedMigrations(database: BackupSource): number {
 	return Number(row?.n ?? 0);
 }
 
-/** Deletes the oldest finished backups beyond the newest `BACKUPS_TO_KEEP`, and any stale partial. */
 function prune(files: BackupFiles): void {
 	const names = files.names();
 	for (const name of names) {

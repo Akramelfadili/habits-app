@@ -20,14 +20,13 @@ type MigrationScreenProps = {
 };
 
 /**
- * SY3: shown in place of the tabs on the first launch after an update that
- * changes how habits are stored. There is no step or count to give — the
- * migrator is one synchronous run with no progress to report — so the bar is
- * indeterminate and says only what is happening. No cancel: stopping halfway
- * would help no one, and the run is all-or-nothing anyway.
+ * Shown in place of the tabs on the first launch after an update that changes how habits are
+ * stored. There is no step or count to give (the migrator is one synchronous run with no progress
+ * to report), so the bar is indeterminate and says only what is happening. No cancel: stopping
+ * halfway would help no one, and the run is all-or-nothing anyway.
  *
- * The splash is held until the saved Appearance loads, which needs the
- * database, so it has to be dropped here or this screen would never be seen.
+ * The splash is held until the saved Appearance loads, which needs the database, so it has to be
+ * dropped here or this screen would never be seen.
  */
 export function MigrationScreen({ copy }: MigrationScreenProps) {
 	const { colors } = useTheme();

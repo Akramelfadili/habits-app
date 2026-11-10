@@ -24,7 +24,7 @@ beforeEach(() => {
 	mockEnsurePermission.mockResolvedValue("granted");
 });
 
-describe("useSettingsActions (HAB-15)", () => {
+describe("useSettingsActions", () => {
 	it("the Evening review toggle asks for permission turning on, not off", async () => {
 		const { result } = await renderHook(() => useSettingsActions());
 

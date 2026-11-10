@@ -24,7 +24,6 @@ function makeTable() {
 	});
 }
 
-/** A consumer of one group's rows, counting its own renders. */
 function useGroup(
 	table: ReturnType<typeof makeTable>,
 	group: string,

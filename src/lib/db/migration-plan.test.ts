@@ -8,7 +8,6 @@ import { DatabaseSync } from "node:sqlite";
 import { clearLog, getLogEntries } from "@/lib/logger/logger";
 import { planMigrations } from "./migration-plan";
 
-/** A real database: whatever SQLite says is what the plan sees. */
 function reader(sqlite: DatabaseSync) {
 	return {
 		getFirstSync: <Row>(source: string): Row | null =>

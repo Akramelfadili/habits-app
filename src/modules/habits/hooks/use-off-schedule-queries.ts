@@ -10,12 +10,10 @@ import { useActiveHabits } from "../repositories/habit-repository";
 import type { Habit } from "../types";
 
 /**
- * What the rest-day picker (HAB-18) and the rest-day list read, for the day
- * Today shows (`day`): on a past day, a habit that hadn't started or was paused
- * isn't offered.
+ * What the rest-day picker and the rest-day list read, for the day Today shows (`day`): on a past
+ * day, a habit that hadn't started or was paused isn't offered.
  */
 export function useOffScheduleQueries(day: Date): {
-	/** Habits the picker offers — no Break or archived habits. */
 	eligibleHabits: Habit[];
 	/** The day's bonus logs, for the rest-day list and the picker's "logged" rows. */
 	loggedToday: OffScheduleLog[];

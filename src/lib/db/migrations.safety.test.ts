@@ -14,13 +14,13 @@ import * as schema from "./schema";
 import { createPartiallyMigratedTestDb } from "./test-db";
 
 /**
- * Migration safety (audit §9, A7-07). The device migrator applies every pending
- * migration in one BEGIN…COMMIT and only compares the last applied `created_at`
- * with each journal `when`, so a mistake here ships silently. Three layers:
+ * Migration safety. The device migrator applies every pending migration in one BEGIN...COMMIT
+ * and only compares the last applied `created_at` with each journal `when`, so a mistake here
+ * ships silently. Three layers:
  *
  * 1. static journal / snapshot / file-parity checks,
  * 2. every migration step upgraded from a seeded DB with foreign keys ON and OFF,
- * 3. a committed V1-era (0008) database upgraded to HEAD, and drift vs schema.ts.
+ * 3. a committed old-schema (0008) database upgraded to HEAD, and drift vs schema.ts.
  */
 
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
@@ -125,7 +125,6 @@ describe("journal, snapshots and files", () => {
 	});
 });
 
-/** Tables worth seeding: user tables only. */
 function tablesOf(sqlite: DatabaseSync): string[] {
 	return (
 		sqlite
@@ -188,7 +187,6 @@ function seedEveryTable(sqlite: DatabaseSync) {
 			for (const column of columns) {
 				if (autoId && column.name === "id") continue;
 				if (column.notnull === 0 && column.dflt_value !== null && !fks.length) {
-					// nullable with a default: leave it to the default
 				}
 				const fk = fks.find((candidate) => candidate.from === column.name);
 				if (fk) {
@@ -299,7 +297,6 @@ describe.each([true, false])(
 				for (const [name, seq] of Object.entries(seqBefore)) {
 					expect(seqAfter[name] ?? 0).toBeGreaterThanOrEqual(seq);
 				}
-				// No scratch tables left behind by a rebuild.
 				expect(
 					tablesOf(sqlite).filter((name) => name.startsWith("__")),
 				).toEqual([]);
@@ -308,7 +305,7 @@ describe.each([true, false])(
 	},
 );
 
-describe("integrity at HEAD (audit A7-04: foreign keys are off on the device)", () => {
+describe("integrity at HEAD (foreign keys are off on the device)", () => {
 	const lastTag = prefixOf(tags[tags.length - 1]);
 
 	it.each([true, false])(
@@ -341,7 +338,7 @@ describe("integrity at HEAD (audit A7-04: foreign keys are off on the device)", 
 	});
 });
 
-describe("a V1-era database (migration 0008) upgraded to HEAD", () => {
+describe("an old-schema database (migration 0008) upgraded to HEAD", () => {
 	const fixture = fs.readFileSync(
 		path.join(__dirname, "__fixtures__/v1-era-0008.sql"),
 		"utf8",
@@ -377,7 +374,7 @@ describe("a V1-era database (migration 0008) upgraded to HEAD", () => {
 		},
 	);
 
-	it("maps V1's free-text categories onto the managed set", () => {
+	it("maps free-text categories onto the managed set", () => {
 		const { sqlite } = upgraded(true);
 		const rows = sqlite
 			.prepare(

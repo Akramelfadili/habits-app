@@ -4,7 +4,6 @@ import { AppState } from "react-native";
 import { toDayKey } from "@/utils/day-key";
 import { type Clock, systemClock } from "./clock";
 
-/** Local midnight today — the single place the app asks "what day is it" for a write. */
 export function currentDay(): Date {
 	return startOfDay(new Date());
 }
@@ -15,16 +14,15 @@ function msUntilMidnight(now: Date): number {
 }
 
 /**
- * Today (local midnight), kept current (audit A7-02): it changes when the app
- * returns to the foreground on a later day and when midnight passes while the
- * app is open. Without it a screen left open overnight keeps yesterday as
- * "today" and logs onto it.
+ * Today (local midnight), kept current: it changes when the app returns to the foreground on a
+ * later day and when midnight passes while the app is open. Without it a screen left open
+ * overnight keeps yesterday as "today" and logs onto it.
  *
  * `clock` is injectable so tests move midnight by hand; the app passes nothing.
  *
- * The returned Date is the same object for the whole day, so it is safe in
- * memo/effect dependencies. A write should still call `currentDay()` at the
- * moment it runs instead of trusting the last render.
+ * The returned Date is the same object for the whole day, so it is safe in memo/effect
+ * dependencies. A write should still call `currentDay()` at the moment it runs instead of
+ * trusting the last render.
  */
 export function useToday(clock: Clock = systemClock): Date {
 	const dayKey = () => toDayKey(clock.now());
@@ -46,7 +44,6 @@ export function useToday(clock: Clock = systemClock): Date {
 			cancel();
 			subscription.remove();
 		};
-		// `armed` and `key` re-arm the timer for the next midnight.
 	}, [key, armed]);
 
 	// parseISO of a date-only string is local midnight.

@@ -14,10 +14,9 @@ export function useTodayActions() {
 
 	return {
 		/**
-		 * Toggles instantly — un-checking is always allowed, no confirmation
-		 * (HAB-03). Never rejects: a failure is logged and toasted, and resolves
-		 * `{ ok: false }` so the caller skips its Undo toast. Ticking a frozen day
-		 * returns its freeze; the result says so (PR-11).
+		 * Toggles instantly: un-checking is always allowed, no confirmation. Never rejects: a failure
+		 * is logged and toasted, and resolves `{ ok: false }` so the caller skips its Undo toast.
+		 * Ticking a frozen day returns its freeze; the result says so.
 		 */
 		toggleCompletion: toggle.run,
 		/** The Undo of any Today write: the day as it was, and a returned freeze taken again. */

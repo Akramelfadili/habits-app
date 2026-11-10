@@ -21,10 +21,9 @@ import {
 export type ProgressMonthView = ProgressView<MonthCalendar>;
 
 /**
- * Progress · Month (HAB-36): the calendar month containing `month` — the
- * current month by default (D15; Year opens a specific one). The calendar of
- * day levels, and once 7 days of logs exist the month's stats, per-habit
- * rates and insights. Reads the month and the month before it (Monday-aligned).
+ * Progress Month: the calendar month containing `month`, the current month by default (Year
+ * opens a specific one). The calendar of day levels, and once 7 days of logs exist the month's
+ * stats, per-habit rates and insights. Reads the month and the month before it (Monday-aligned).
  */
 export function useProgressMonthQueries({
 	habitId = null,

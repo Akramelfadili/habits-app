@@ -12,7 +12,6 @@ export type ReminderWithConflicts = Reminder & {
 
 export type ReminderScreenData = {
 	habit: Habit;
-	/** Earliest first. */
 	reminders: ReminderWithConflicts[];
 	cap: number;
 	atCap: boolean;
@@ -21,9 +20,8 @@ export type ReminderScreenData = {
 };
 
 /**
- * Everything the Reminders screen (HAB-12) shows for one habit, or null when
- * the id doesn't resolve, or
- * undefined while the habit list is still loading (audit A5-04).
+ * Everything the Reminders screen shows for one habit, or null when the id doesn't resolve, or
+ * undefined while the habit list is still loading.
  */
 export function useReminderQueries(
 	habitId: number,

@@ -87,7 +87,6 @@ describe("currentDay", () => {
 });
 
 describe("useToday with an injected clock (no timers)", () => {
-	/** A clock moved by hand: `advance` moves "now" and runs what was due. */
 	function handClock(start: Date) {
 		let current = start;
 		const pending: { at: number; run: () => void }[] = [];

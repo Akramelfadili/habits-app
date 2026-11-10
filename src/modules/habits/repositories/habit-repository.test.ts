@@ -49,7 +49,7 @@ describe("habit-repository", () => {
 		expect(habit.updatedAt).toBeInstanceOf(Date);
 	});
 
-	it("maps the habit's category — its icon and color come from there (HAB-24)", async () => {
+	it("maps the habit's category: its icon and color come from there", async () => {
 		const habit = await createHabit({ ...baseInput, categoryId: FITNESS.id });
 		expect(habit.category).toEqual(FITNESS);
 		expect((await getHabit(habit.id))?.category).toEqual(FITNESS);
@@ -147,7 +147,7 @@ describe("habit-repository", () => {
 		expect(row.frequencyWeekdays).toBeNull();
 	});
 
-	describe("manual order (HAB-13)", () => {
+	describe("manual order", () => {
 		it("puts each new habit after every existing one", async () => {
 			const first = await createHabit(baseInput);
 			const second = await createHabit({ ...baseInput, name: "Stretch" });
@@ -174,7 +174,7 @@ describe("habit-repository", () => {
 		});
 	});
 
-	describe("archive and restore (HAB-13)", () => {
+	describe("archive and restore", () => {
 		it("starts active with no pauses", async () => {
 			const habit = await createHabit(baseInput);
 			expect(habit.archivedAt).toBeNull();
@@ -206,7 +206,7 @@ describe("habit-repository", () => {
 		});
 	});
 
-	describe("sort positions across reorder, archive and restore (HAB-19)", () => {
+	describe("sort positions across reorder, archive and restore", () => {
 		it("keeps every habit's sort position unique and unchanged through archive → restore", async () => {
 			const a = await createHabit(baseInput);
 			const b = await createHabit({ ...baseInput, name: "B" });
@@ -238,7 +238,7 @@ describe("habit-repository", () => {
 		});
 	});
 
-	describe("deleteHabitAndHistory (HAB-13)", () => {
+	describe("deleteHabitAndHistory", () => {
 		it("deletes the habit and every row that references it, leaving others alone", async () => {
 			const habit = await createHabit(baseInput);
 			const other = await createHabit({ ...baseInput, name: "Keep me" });

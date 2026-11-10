@@ -41,26 +41,23 @@ import { SCHEMA_VERSION } from "./schema-version";
 
 type DatabaseProviderProps = PropsWithChildren<{ copy: DatabaseCopy }>;
 
-// Drizzle Studio is a dev-only tool (a dev-server connection to the DB), so the
-// plugin is a devDependency and a `__DEV__ ? require(...)` keeps it out of a
-// production bundle (audit D-10). `__DEV__` is constant per bundle, so the
-// no-op stand-in never changes the hook-call order within one build.
+// Drizzle Studio is a dev-only tool (a dev-server connection to the DB), so the plugin is a
+// devDependency and a `__DEV__ ? require(...)` keeps it out of a production bundle. `__DEV__` is
+// constant per bundle, so the no-op stand-in never changes the hook-call order within one build.
 const useDrizzleStudio: (database: typeof expoDb) => void = __DEV__
 	? require("expo-drizzle-studio-plugin").useDrizzleStudio
 	: () => {};
 
 /**
- * Runs the migrations before anything reads the database. A failure shows the
- * error screen with Retry (audit A3-01, SY4). The migrator is one atomic
- * transaction, so a failed run leaves the old schema and every row intact;
- * Retry re-runs it on a fresh mount (`useMigrations` only runs once per mount),
- * which mainly helps with transient errors.
+ * Runs the migrations before anything reads the database. A failure shows the error screen with
+ * Retry. The migrator is one atomic transaction, so a failed run leaves the old schema and every
+ * row intact; Retry re-runs it on a fresh mount (`useMigrations` only runs once per mount), which
+ * mainly helps with transient errors.
  *
- * On the first launch after an update the update screen (SY3) is up before the
- * migrator starts. It does not change what the migrator does — only when it
- * begins, a moment later, so the screen can be painted before the JavaScript
- * thread is busy. In that moment a backup of the old database is taken
- * (`database-backup.ts`).
+ * On the first launch after an update the update screen is up before the migrator starts. It does
+ * not change what the migrator does, only when it begins, a moment later, so the screen can be
+ * painted before the JavaScript thread is busy. In that moment a backup of the old database is
+ * taken (`database-backup.ts`).
  */
 export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	const [attempt, setAttempt] = useState(0);
@@ -69,7 +66,6 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	// and a copy per retry would push the older, different backups out.
 	const backupTaken = useRef(false);
 
-	// Try again counts as a retry: the second failure in a row offers the way out.
 	function retry() {
 		dispatch({ type: "retry" });
 		if (getDatabaseOpenError() !== null) retryOpenDatabase();
@@ -128,7 +124,6 @@ export function DatabaseProvider({ children, copy }: DatabaseProviderProps) {
 	);
 }
 
-/** The newest `when` in the journal: what the migrator compares the last applied row against. */
 function newestMigrationAt(): number {
 	return migrations.journal.entries.reduce(
 		(newest, entry) => Math.max(newest, entry.when),

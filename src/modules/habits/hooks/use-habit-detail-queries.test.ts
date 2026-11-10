@@ -4,7 +4,7 @@ import { makeHabit } from "../test-support/habit-builder";
 import type { Entry, EntryNote, FrozenDay } from "../types";
 
 // Pinned so "today" (computed inside the hook) is deterministic.
-const TODAY = new Date(2026, 8, 23, 12); // Wednesday 23 Sep 2026
+const TODAY = new Date(2026, 8, 23, 12);
 
 const habit = makeHabit({
 	id: 1,
@@ -157,7 +157,7 @@ describe("useHabitDetailQueries", () => {
 		expect(result.current?.restoredToday).toBe(false);
 	});
 
-	it("a retro-logged past day updates the heatmap and 90-day rate on the next render (HAB-10)", async () => {
+	it("a retro-logged past day updates the heatmap and 90-day rate on the next render", async () => {
 		mockEntries = [entry(1, "2026-09-22")];
 		const { result, rerender } = await renderHook(() =>
 			useHabitDetailQueries(1),

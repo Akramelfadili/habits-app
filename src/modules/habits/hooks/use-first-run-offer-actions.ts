@@ -3,7 +3,10 @@ import { useFirstRunOfferStore } from "../first-run-offer-store";
 import { firstRunCopy } from "../messages";
 import { enableFirstHabitReminder } from "../services/first-run-service";
 
-/** Answers FR3: Allow reminders (default reminder, then iOS) or Not now (nothing, and iOS is asked later, when a reminder is added). */
+/**
+ * Answers the notification pre-prompt: Allow reminders (default reminder, then iOS) or Not now
+ * (nothing, and iOS is asked later, when a reminder is added).
+ */
 export function useFirstRunOfferActions() {
 	const clear = useFirstRunOfferStore((state) => state.clear);
 	const allow = useAsyncAction(enableFirstHabitReminder, {

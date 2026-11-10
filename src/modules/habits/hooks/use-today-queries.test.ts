@@ -8,13 +8,11 @@ import {
 	weekdays,
 } from "../test-support/habit-builder";
 
-// Pinned to a Wednesday (matches the V1/V2 mockup today-populated (tag mockups-v1-v2): "WEDNESDAY,
-// 16 SEPTEMBER") so week-boundary math (per-week frequency) is deterministic —
-// "today" is computed inside the hook via `new Date()`, so real time can't
-// drive this test's assertions.
+// Pinned to a Wednesday so week-boundary math (per-week frequency) is deterministic: "today"
+// is computed inside the hook via `new Date()`, so real time can't drive this test's assertions.
 const TODAY = new Date("2026-09-16T12:00:00Z");
 const TODAY_STRING = formatISO(TODAY, { representation: "date" });
-const YESTERDAY_STRING = "2026-09-15"; // Tuesday — same ISO week as TODAY.
+const YESTERDAY_STRING = "2026-09-15";
 
 const dailyHabit = makeHabit({
 	id: 1,
@@ -170,7 +168,7 @@ describe("useTodayQueries", () => {
 		expect(result.current.viewState).toBe("rest-day");
 	});
 
-	it("stays populated at 100% — there is no day-closed screen (PR-01 is Later)", async () => {
+	it("stays populated at 100%: there is no day-closed screen", async () => {
 		mockEntries = [
 			{ habitId: 1, date: TODAY_STRING, createdAt: TODAY },
 			{ habitId: 2, date: TODAY_STRING, createdAt: TODAY },
@@ -271,7 +269,7 @@ describe("useTodayQueries", () => {
 		expect(dueIds).toContain(5);
 	});
 
-	describe("streak-at-risk (HAB-08)", () => {
+	describe("streak-at-risk", () => {
 		it("reports the full freeze pool when nothing's been used this month", async () => {
 			const { result } = await renderHook(() => useTodayQueries());
 			expect(result.current.freezesRemainingThisMonth).toBe(2);
@@ -349,7 +347,7 @@ describe("useTodayQueries", () => {
 			expect(result.current.atRiskByHabitId.has(1)).toBe(false);
 		});
 
-		it("reports a covered yesterday with the streak that was kept — the run before it, not counting it (T7)", async () => {
+		it("reports a covered yesterday with the streak that was kept: the run before it, not counting it", async () => {
 			mockHabits = [dailyHabit];
 			mockAllEntries = ["2026-09-12", "2026-09-13", "2026-09-14"].map(
 				(date) => ({
@@ -402,7 +400,7 @@ describe("useTodayQueries", () => {
 		});
 	});
 
-	describe("a selected past day (HAB-30)", () => {
+	describe("a selected past day", () => {
 		// TODAY is Wednesday 16 Sep; Monday 7 Sep is in the week before it.
 		const PAST = "2026-09-07";
 
@@ -469,10 +467,8 @@ describe("useTodayQueries", () => {
 		});
 
 		it("does not list a day's not-due habits", async () => {
-			mockHabits = [
-				makeHabit({ id: 1, frequency: weekdays(3) }), // Wednesday only
-			];
-			const { result } = await renderHook(() => useTodayQueries(PAST)); // a Monday
+			mockHabits = [makeHabit({ id: 1, frequency: weekdays(3) })];
+			const { result } = await renderHook(() => useTodayQueries(PAST));
 			expect(result.current.viewState).toBe("rest-day");
 		});
 

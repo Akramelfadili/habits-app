@@ -2,7 +2,7 @@ import { failureMessage } from "@/utils/failure-message";
 import { useAsyncAction } from "@/utils/use-async-action";
 import { saveDayLog } from "../repositories/entry-repository";
 
-/** Saves one habit's note for a day, leaving every logged value as it is (HAB-10): an empty note removes it. */
+/** Saves one habit's note for a day, leaving every logged value as it is: an empty note removes it. */
 async function saveDayNote(
 	date: Date,
 	habitId: number,

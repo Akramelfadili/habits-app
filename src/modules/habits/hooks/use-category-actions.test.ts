@@ -39,7 +39,7 @@ describe("useCategoryActions", () => {
 		expect(returned).toBe(created);
 	});
 
-	it("renames through the repository (HAB-25)", async () => {
+	it("renames through the repository", async () => {
 		mockRenameCategory.mockResolvedValue(makeCategory({ name: "Piano" }));
 		const { result } = await renderHook(() => useCategoryActions());
 
@@ -50,7 +50,7 @@ describe("useCategoryActions", () => {
 		expect(mockRenameCategory).toHaveBeenCalledWith(11, "Piano");
 	});
 
-	it("reports isDeleting while a delete is in flight (HAB-25)", async () => {
+	it("reports isDeleting while a delete is in flight", async () => {
 		let finish!: () => void;
 		mockDeleteCategory.mockReturnValue(
 			new Promise<void>((resolve) => {

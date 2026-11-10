@@ -9,9 +9,9 @@ type TabRetapState = {
 };
 
 /**
- * 08.4: re-tapping the selected tab scrolls it to the top and puts the screen
- * reader on its title. The pill raises the event; the tab's screen answers it
- * (`useOnTabRetap`), because only the screen owns its scroll view and title.
+ * Re-tapping the selected tab scrolls it to the top and puts the screen reader on its title.
+ * The pill raises the event; the tab's screen answers it (`useOnTabRetap`), because only the
+ * screen owns its scroll view and title.
  */
 export const useTabRetapStore = create<TabRetapState>((set) => ({
 	tab: null,

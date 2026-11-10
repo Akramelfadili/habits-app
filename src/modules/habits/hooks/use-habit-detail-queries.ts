@@ -29,35 +29,33 @@ export type HabitDetail = {
 	currentStreak: number;
 	longestStreak: LongestStreak;
 	completionRate: CompletionRate;
-	/** The 90-day rate against the 90 days before it, in whole points; null with nothing to compare (D1). */
+	/** The 90-day rate against the 90 days before it, in whole points; null with nothing to compare. */
 	rateDelta: number | null;
-	/** 5 Mon→Sun weeks, oldest first (D1's last five weeks). */
+	/** 5 Mon-Sun weeks, oldest first. */
 	heatmapWeeks: HeatmapDay[][];
-	/** Days that were done, missed, frozen or a bonus, with their notes, newest first (D2). */
+	/** Days that were done, missed, frozen or a bonus, with their notes, newest first. */
 	history: HistoryRow[];
-	/** Anything has ever been logged — drives the new-habit variant (D3). */
+	/** Anything has ever been logged; drives the new-habit variant. */
 	hasEntries: boolean;
-	/** Every log: what a delete would erase, and names in its sheet (DC1). */
+	/** Every log: what a delete would erase, and names in its sheet. */
 	logCount: number;
-	/** For the Reminders row's value (D1). */
 	reminders: Reminder[];
-	/** The shared pool's remaining freezes this month — the D6 tile. */
+	/** The shared pool's remaining freezes this month. */
 	freezesRemaining: number;
-	/** Set only in the month a streak reset with the pool empty (D6). */
+	/** Set only in the month a streak reset with the pool empty. */
 	streakReset: StreakReset | null;
-	/** Restored today (its last pause ended yesterday): the one-time banner (D5). */
+	/** Restored today (its last pause ended yesterday): the one-time banner. */
 	restoredToday: boolean;
-	/** Restored and not yet logged since: a streak of 0 is a fresh start, not a loss (D5). */
+	/** Restored and not yet logged since: a streak of 0 is a fresh start, not a loss. */
 	freshStart: boolean;
 	today: Date;
 };
 
 /**
- * Everything Habit Detail shows for one habit, or null when the id doesn't
- * resolve (deleted, or a stale link), or undefined while loading. Reads this
- * habit's slice of the shared entry log (no query or listener of its own, A-03)
- * and the shared frozen days, narrowing the latter here — the pool is shared, so
- * the month's remaining count needs every habit's.
+ * Everything Habit Detail shows for one habit, or null when the id doesn't resolve (deleted, or
+ * a stale link), or undefined while loading. Reads this habit's slice of the shared entry log (no
+ * query or listener of its own) and the shared frozen days, narrowing the latter here: the pool
+ * is shared, so the month's remaining count needs every habit's.
  */
 export function useHabitDetailQueries(
 	habitId: number,
@@ -70,8 +68,8 @@ export function useHabitDetailQueries(
 	const reminders = useHabitReminders(habitId);
 
 	const habit = habits.find((candidate) => candidate.id === habitId);
-	// `undefined` while the habit list is still loading — so "not found" is
-	// never shown for a frame on a cold launch or deep link (audit A5-04).
+	// `undefined` while the habit list is still loading, so "not found" is never shown for a frame
+	// on a cold launch or deep link.
 	if (!loaded) return undefined;
 	if (!habit) return null;
 

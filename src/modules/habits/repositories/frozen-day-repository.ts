@@ -21,7 +21,10 @@ function rowToFrozenDay(row: FrozenDayRow): FrozenDay {
 	};
 }
 
-/** The one live read of every frozen day, shared by the screens that want the pool (audit B-07, as `entry-repository.ts`'s log). */
+/**
+ * The one live read of every frozen day, shared by the screens that want the pool (as
+ * `entry-repository.ts`'s log).
+ */
 const frozenLog = createSharedLiveTable({
 	table: "frozen_days",
 	read: () => db.select().from(frozenDays).orderBy(asc(frozenDays.date)),
@@ -40,7 +43,6 @@ export function useFrozenDays(): FrozenDay[] {
 	return useSharedLiveTable(frozenLog, allFrozenDays);
 }
 
-/** Live-query hook — frozen days with a date in `[start, end]`, inclusive, across every habit. */
 export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
 	const startDate = toDayKey(start);
 	const endDate = toDayKey(end);

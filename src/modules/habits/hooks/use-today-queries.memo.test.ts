@@ -4,9 +4,9 @@ import { makeEntry, makeHabit } from "../test-support/habit-builder";
 import type { Entry } from "../types";
 
 /**
- * Today's derivation is memoised (audit B-04): a re-render that did not change
- * the log, the habits or the day walks no history, and flipping the shown day
- * back to one already shown costs lookups, not streak walks.
+ * Today's derivation is memoised: a re-render that did not change the log, the habits or the
+ * day walks no history, and flipping the shown day back to one already shown costs lookups, not
+ * streak walks.
  */
 const TODAY = new Date("2026-09-16T12:00:00Z");
 const habit = makeHabit({ id: 1, createdAt: new Date(2026, 0, 1) });

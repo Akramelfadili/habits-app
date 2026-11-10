@@ -94,7 +94,7 @@ describe("useRetroLogQueries", () => {
 		expect(result.current?.note).toBe("");
 	});
 
-	it("leaves archived habits out of another habit's day (HAB-13)", async () => {
+	it("leaves archived habits out of another habit's day", async () => {
 		const { result } = await renderHook(() => useRetroLogQueries(1, TUESDAY));
 		expect(result.current?.habits.map((habit) => habit.id)).not.toContain(4);
 	});

@@ -23,10 +23,6 @@ export function installLogging(): void {
 	});
 }
 
-/**
- * Recent history for "Copy diagnostics": earlier launches plus this one, oldest
- * first. Falls back to this session's entries when the store is unreadable.
- */
 export async function readRecentLogEntries(): Promise<readonly LogEntry[]> {
 	const stored = await ringBuffer.recent();
 	return stored.length > 0 ? stored : getLogEntries();

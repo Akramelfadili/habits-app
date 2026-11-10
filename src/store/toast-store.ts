@@ -2,13 +2,11 @@ import { create } from "zustand";
 
 export type ToastTone = "info" | "success" | "warning" | "error";
 
-/** One transient message, optionally with a single inline action (e.g. "Undo"). */
 export type ToastMessage = {
 	message: string;
 	/**
-	 * V3-26 tones. A toast with an action is an Undo and holds 5 s; otherwise
-	 * info and success hold 3 s, warning 6 s, and an error stays until Retry or
-	 * a swipe (HAB-48). Defaults to "info".
+	 * Tones. A toast with an action is an Undo and holds 5 s; otherwise info and success hold 3 s,
+	 * warning 6 s, and an error stays until Retry or a swipe. Defaults to "info".
 	 */
 	tone?: ToastTone;
 	actionLabel?: string;
@@ -21,11 +19,9 @@ type ToastState = {
 	toast: ShownToast | null;
 	/** Replaces whatever is showing — only the most recent action is ever undoable. */
 	showToast: (toast: ToastMessage) => void;
-	/** Clears the toast, but only if it's still the one with this id. */
 	dismissToast: (id: number) => void;
 	/** How many sheets (native Modals) are open — they cover the page-level host. */
 	openSheets: number;
-	/** A sheet calls this while visible; returns the release. */
 	registerSheet: () => () => void;
 };
 
@@ -55,7 +51,6 @@ export const useToastStore = create<ToastState>((set) => ({
 		set((state) => (state.toast?.id === id ? { toast: null } : state)),
 }));
 
-/** For callers outside React (and terse call sites): show a toast. */
 export function showToast(toast: ToastMessage): void {
 	useToastStore.getState().showToast(toast);
 }

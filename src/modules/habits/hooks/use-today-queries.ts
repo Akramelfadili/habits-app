@@ -49,23 +49,21 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	/** Days completed so far in the shown day's Mon–Sun week — per-week habits' "2 of 5". */
 	completedThisWeekByHabitId: ReadonlyMap<number, number>;
 	/**
-	 * The running streak of every listed habit that has one to show (V3-13's status
-	 * line): counted to the shown day when it is done, else to the day before.
-	 * Per-week habits show "3× per week · 1 done" instead and are not counted.
+	 * The running streak of every listed habit that has one to show (the status line): counted to
+	 * the shown day when it is done, else to the day before. Per-week habits show "3x per week - 1
+	 * done" instead and are not counted.
 	 */
 	streakByHabitId: ReadonlyMap<number, number>;
-	/** Habits whose yesterday was covered by a freeze (T7): "Thu frozen · streak kept at 13". Real today only. */
+	/** Habits whose yesterday was covered by a freeze: "Thu frozen - streak kept at 13". Real today only. */
 	frozenYesterdayByHabitId: ReadonlyMap<number, { date: Date; streak: number }>;
-	/** The real today — what streak-at-risk is measured against. */
 	today: Date;
-	/** The day being shown: `today`, or the past day selected. */
 	selectedDay: Date;
-	/** False until the habit list has loaded — Today shows a neutral blank, not "Nothing to track yet" (audit A5-04). */
+	/** False until the habit list has loaded: Today shows a neutral blank, not "Nothing to track yet". */
 	isLoaded: boolean;
 	viewState: TodayViewState;
-	/** Due-today habits currently showing the streak-at-risk prompt (HAB-08), keyed by habit id. */
+	/** Due-today habits currently showing the streak-at-risk prompt, keyed by habit id. */
 	atRiskByHabitId: ReadonlyMap<number, TodayAtRisk>;
-	/** The shared freeze pool's remaining count this month (HAB-08) — across every habit. */
+	/** The shared freeze pool's remaining count this month, across every habit. */
 	freezesRemainingThisMonth: number;
 	/** Freezes used this month, by missed date — the same pool, counted the other way (Settings, toast copy). */
 	freezesUsedThisMonth: number;
@@ -83,10 +81,9 @@ export function useTodayQueries(selectedKey: string | null = null): {
 	const allEntries = useAllEntries();
 	const frozenDays = useFrozenDays();
 
-	// The log-wide part (audit B-04): grouped once per change of the log, and the
-	// streak reader remembers each habit's answers, so a re-render that changed
-	// neither the log nor the habits — the clock, a toast, a day flip back to one
-	// already shown — walks no history.
+	// The log-wide part: grouped once per change of the log, and the streak reader remembers each
+	// habit's answers, so a re-render that changed neither the log nor the habits (the clock, a
+	// toast, a day flip back to one already shown) walks no history.
 	const entriesByHabit = useMemo(
 		() => groupEntriesByHabit(allEntries),
 		[allEntries],
@@ -100,7 +97,6 @@ export function useTodayQueries(selectedKey: string | null = null): {
 		[entriesByHabit, frozenDatesByHabit],
 	);
 
-	// What depends on the shown day only: that week's entries, who is due, done.
 	const day = useMemo(() => {
 		const habitsById = new Map(habits.map((habit) => [habit.id, habit]));
 		const completedDatesByHabit = new Map<number, Date[]>();

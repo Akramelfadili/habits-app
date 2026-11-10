@@ -12,19 +12,17 @@ type QuantitySheetInput = {
 	day: Date;
 	/** What the day held when the sheet opened: the amount Undo restores. */
 	initial: number;
-	/** "Wed 21 Oct" for a day that isn't today, so the toast names it (T10). */
+	/** "Wed 21 Oct" for a day that isn't today, so the toast names it. */
 	dayLabel?: string;
 	/** Opened for a habit that isn't due that day: the toast says bonus. */
 	offSchedule?: boolean;
-	/** Runs after the sheet has finished closing (its last write landed). */
 	onClosed: () => void;
 };
 
 /**
- * The quantity sheet's session (HAB-34, QS1–QS3): every change saves at once,
- * writes run one after the other so the last one wins, and closing shows ONE
- * toast whose Undo restores the amount from before the sheet opened — or, when
- * a write gave a frozen day's freeze back (PR-11), says so and puts both back.
+ * The quantity sheet's session: every change saves at once, writes run one after the other so
+ * the last one wins, and closing shows ONE toast whose Undo restores the amount from before the
+ * sheet opened, or, when a write gave a frozen day's freeze back, says so and puts both back.
  */
 export function useQuantitySheetActions({
 	habit,
@@ -73,7 +71,6 @@ export function useQuantitySheetActions({
 		queue.current = queue.current.then(() => setPending((count) => count - 1));
 	}
 
-	/** One toast for the whole session, then the sheet closes. */
 	async function close() {
 		await queue.current;
 		const final = saved.current;

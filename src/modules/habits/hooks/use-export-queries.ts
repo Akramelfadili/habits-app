@@ -21,14 +21,13 @@ import { useHabitsList } from "../repositories/habit-repository";
 import { useAllReminders } from "../repositories/reminder-repository";
 import type { ExportOptions } from "../types";
 
-/** Archived habits are always included (HAB-44); JSON is the default, as the sheet opens on it. */
+/** Archived habits are always included; JSON is the default, as the sheet opens on it. */
 export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 	format: "json",
 	includeArchived: true,
 	includeNotes: true,
 };
 
-/** The export sheet's data and the counts/range it quotes for the current options. */
 export function useExportQueries(options: ExportOptions): {
 	source: ExportSource;
 	summary: ExportSummary;
