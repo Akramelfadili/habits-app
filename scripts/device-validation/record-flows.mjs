@@ -5,7 +5,7 @@
  *   node record-flows.mjs --bundle-id <id> --out out [--only "day-strip toast"]
  *
  * Two groups: the known-bug flows in scripts/device-validation/flows (a–f of the device-validation
- * brief), and the six web journeys in e2e/*.yaml converted on the fly (the
+ * brief), and every web journey in e2e/*.yaml converted on the fly (the
  * `url:` header becomes a launch request, `id:` selectors become `text:`).
  * Every flow runs from a freshly opened state: the driver writes
  * `Documents/dev-state.json`, relaunches the app, starts

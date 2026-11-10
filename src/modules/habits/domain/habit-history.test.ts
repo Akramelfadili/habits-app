@@ -1,5 +1,10 @@
 import { addDays, format, isSameDay, subDays } from "date-fns";
-import { makeHabit } from "../test-support/habit-builder";
+import {
+	daily as dailyFrequency,
+	makeEntry,
+	makeHabit,
+	weekdays as weekdaysFrequency,
+} from "../test-support/habit-builder";
 import type { Entry } from "../types";
 
 import {
@@ -20,17 +25,17 @@ const dayString = (daysAgo: number) =>
 	format(subDays(today, daysAgo), "yyyy-MM-dd");
 
 function entry(daysAgo: number, value?: number): Entry {
-	return {
+	return makeEntry({
 		id: daysAgo,
 		habitId: 1,
 		date: dayString(daysAgo),
 		value,
 		createdAt: subDays(today, daysAgo),
-	};
+	});
 }
 
 const longAgo = new Date(2025, 0, 1);
-const daily = makeHabit({ frequency: { type: "daily" }, createdAt: longAgo });
+const daily = makeHabit({ frequency: dailyFrequency(), createdAt: longAgo });
 const noFreezes = new Set<string>();
 
 describe("currentStreakAsOf", () => {
@@ -120,7 +125,7 @@ describe("calculateCompletionRate", () => {
 	it("counts only scheduled days in the denominator", () => {
 		// Mon/Wed/Fri habit over the last 3 full weeks' worth of creation.
 		const monWedFri = makeHabit({
-			frequency: { type: "weekdays", days: [1, 3, 5] },
+			frequency: weekdaysFrequency(1, 3, 5),
 			createdAt: subDays(today, 20), // Thu 3 Sep
 		});
 		// 3 Sep → 23 Sep scheduled: 4,7,9,11,14,16,18,21,23 — today (23rd) unlogged so excluded → 8.
@@ -136,7 +141,7 @@ describe("calculateCompletionRate", () => {
 
 	it("uses the actual history for a habit younger than 90 days, not a padded 90", () => {
 		const young = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: subDays(today, 9),
 		});
 		const entries = [entry(9), entry(8), entry(0)];
@@ -168,7 +173,7 @@ describe("calculateCompletionRate", () => {
 
 	it("has no fraction for a brand-new habit with nothing scheduled yet", () => {
 		const brandNew = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: today,
 		});
 		expect(
@@ -205,7 +210,7 @@ describe("calculateCompletionRate", () => {
 	it("leaves a frozen day out of both sides, not counted as missed (D14)", () => {
 		// 10 days old, logged 8; the 2 misses at 3 and 4 days ago — one of them frozen.
 		const young = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: subDays(today, 9),
 		});
 		const entries = [9, 8, 7, 6, 5, 2, 1, 0].map((daysAgo) => entry(daysAgo));
@@ -233,7 +238,7 @@ describe("calculateCompletionRate", () => {
 
 	it("has no fraction when every scheduled day was frozen", () => {
 		const young = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: subDays(today, 1),
 		});
 		const rate = calculateCompletionRate({
@@ -302,7 +307,7 @@ describe("buildHeatmapWeeks", () => {
 
 	it("leaves unscheduled days blank rather than missed", () => {
 		const weekdaysOnly = makeHabit({
-			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
 		const grid = weeks({ habit: weekdaysOnly });
@@ -382,7 +387,7 @@ describe("habitHistoryRows (D2)", () => {
 
 	it("says nothing about today while it is open, and nothing about a day not due", () => {
 		const weekdays = makeHabit({
-			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
 		// Wed 23 Sep: today. 20 Sep (Sun) and 19 Sep (Sat) are not due.
@@ -401,7 +406,7 @@ describe("habitHistoryRows (D2)", () => {
 
 	it("tags an off-schedule log a bonus, with its amount", () => {
 		const weekdays = makeHabit({
-			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
 		// 20 Sep 2026 was a Sunday, three days ago.
@@ -443,7 +448,7 @@ describe("habitHistoryRows (D2)", () => {
 
 	it("lists a noted day that would otherwise be silent, so a note is never hidden", () => {
 		const weekdays = makeHabit({
-			frequency: { type: "weekdays", days: [1, 2, 3, 4, 5] },
+			frequency: weekdaysFrequency(1, 2, 3, 4, 5),
 			createdAt: longAgo,
 		});
 		// 20 Sep 2026 was a Sunday: not due, nothing logged — only its note speaks.
@@ -483,7 +488,7 @@ describe("completionRateDelta (D1's '+N pts')", () => {
 	const young = (daysOld: number) =>
 		makeHabit({
 			createdAt: subDays(today, daysOld),
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 		});
 	const logAll = (from: number, to: number, except: number[] = []) =>
 		Array.from({ length: from - to + 1 }, (_, index) => to + index)
@@ -578,7 +583,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 
 	it("freezes the streak at its archived value while archived", () => {
 		const archived = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: longAgo,
 			archivedAt: subDays(today, 5),
 		});
@@ -594,7 +599,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 
 	it("starts fresh once restored (HAB-20 over HAB-13): 0 until the next completed log", () => {
 		const restored = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: longAgo,
 			// Archived 5 days ago, restored today (the pause ends the day before).
 			pauses: [{ from: dayString(5), to: dayString(1) }],
@@ -615,7 +620,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 
 	it("doesn't join the runs either side of an archive into one longest streak", () => {
 		const restored = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: longAgo,
 			pauses: [{ from: dayString(12), to: dayString(5) }],
 		});
@@ -640,7 +645,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 
 	it("only the latest restore sets the floor when archived and restored several times", () => {
 		const habit = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: longAgo,
 			pauses: [
 				{ from: dayString(30), to: dayString(21) },
@@ -678,7 +683,7 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 
 	it("doesn't count paused days against the 90-day rate", () => {
 		const restored = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: subDays(today, 14),
 			pauses: [{ from: dayString(4), to: dayString(1) }],
 		});
@@ -694,12 +699,12 @@ describe("streaks across an archive (HAB-13, restore semantics HAB-20)", () => {
 
 describe("paused days (HAB-20)", () => {
 	const restored = makeHabit({
-		frequency: { type: "daily" },
+		frequency: dailyFrequency(),
 		createdAt: longAgo,
 		pauses: [{ from: dayString(5), to: dayString(2) }],
 	});
 	const archived = makeHabit({
-		frequency: { type: "daily" },
+		frequency: dailyFrequency(),
 		createdAt: longAgo,
 		archivedAt: subDays(today, 5),
 	});
@@ -750,7 +755,7 @@ describe("paused days (HAB-20)", () => {
 		// Logged every day for the 20 days before the archive.
 		const entries = Array.from({ length: 20 }, (_, index) => entry(index + 6));
 		const young = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: subDays(today, 25),
 			archivedAt: subDays(today, 5),
 		});
@@ -829,7 +834,7 @@ describe("streakResetInfo (HAB-20 / D6)", () => {
 
 	it("never fires for an archived habit", () => {
 		const archived = makeHabit({
-			frequency: { type: "daily" },
+			frequency: dailyFrequency(),
 			createdAt: longAgo,
 			archivedAt: subDays(today, 1),
 		});

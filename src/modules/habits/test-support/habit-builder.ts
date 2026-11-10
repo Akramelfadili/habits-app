@@ -1,5 +1,13 @@
 import { BUILT_IN_CATEGORIES, type BuiltInCategoryName } from "../constants";
-import type { Category, CreateHabitInput, Habit } from "../types";
+import type {
+	Category,
+	CreateHabitInput,
+	Entry,
+	Frequency,
+	FrozenDay,
+	Habit,
+	IsoWeekday,
+} from "../types";
 
 /**
  * Shared test builders — every test that needs a habit starts from these and
@@ -69,6 +77,41 @@ export function makeHabit(overrides: Partial<Habit> = {}): Habit {
 		updatedAt: BUILDER_DATE,
 		...overrides,
 	};
+}
+
+/** A logged day. Override `habitId`, `date` and `value` as the test needs. */
+export function makeEntry(overrides: Partial<Entry> = {}): Entry {
+	return {
+		id: 1,
+		habitId: 1,
+		date: "2026-01-01",
+		createdAt: BUILDER_DATE,
+		...overrides,
+	};
+}
+
+/** A freeze on one missed day (HAB-08). */
+export function makeFreeze(overrides: Partial<FrozenDay> = {}): FrozenDay {
+	return {
+		id: 1,
+		habitId: 1,
+		date: "2026-01-01",
+		createdAt: BUILDER_DATE,
+		...overrides,
+	};
+}
+
+/** Frequency literals — `frequency: daily()` instead of `{ type: "daily" }`. */
+export function daily(): Frequency {
+	return { type: "daily" };
+}
+
+export function weekdays(...days: IsoWeekday[]): Frequency {
+	return { type: "weekdays", days };
+}
+
+export function perWeek(timesPerWeek: number): Frequency {
+	return { type: "per-week", timesPerWeek };
 }
 
 const namedCustoms = new Map<string, Category>();
