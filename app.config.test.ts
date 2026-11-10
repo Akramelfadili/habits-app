@@ -22,6 +22,20 @@ describe("app.config", () => {
 		expect(config.ios?.bundleIdentifier).toBe("com.akramelfadili.habits.dev");
 	});
 
+	it.each(["development", "preview", "production"] as const)(
+		"%s declares no tracking and no collected data, and no accessed-API entries yet",
+		(variant) => {
+			const manifest = buildConfig({ APP_VARIANT: variant }).ios
+				?.privacyManifests;
+			expect(manifest).toEqual({
+				NSPrivacyTracking: false,
+				NSPrivacyTrackingDomains: [],
+				NSPrivacyCollectedDataTypes: [],
+			});
+			expect(manifest).not.toHaveProperty("NSPrivacyAccessedAPITypes");
+		},
+	);
+
 	it("rejects an unknown variant", () => {
 		expect(() => buildConfig({ APP_VARIANT: "prod" })).toThrow(/APP_VARIANT/);
 	});
