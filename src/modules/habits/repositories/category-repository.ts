@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { categories, habits } from "@/lib/db/schema";
 import { rollbackQuietly } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
+import { present } from "@/utils/indexed";
 import { OTHER_CATEGORY_NAME } from "../constants";
 import type { Category, CreateCategoryInput, DeletedCategory } from "../types";
 import { allCategoriesQuery, rowToCategory } from "./category-rows";
@@ -42,7 +43,7 @@ export async function createCategory(
 			createdAt: new Date(),
 		})
 		.returning();
-	return rowToCategory(row);
+	return rowToCategory(present(row, "the category row"));
 }
 
 /** The custom category `id` — built-ins are locked (HAB-25), so they never get past this. */
@@ -68,7 +69,7 @@ export async function renameCategory(
 		.set({ name: name.trim() })
 		.where(eq(categories.id, id))
 		.returning();
-	return rowToCategory(row);
+	return rowToCategory(present(row, "the category row"));
 }
 
 /**
@@ -138,7 +139,7 @@ export async function restoreCategory(
 			createdAt: new Date(),
 		})
 		.returning();
-	return rowToCategory(row);
+	return rowToCategory(present(row, "the category row"));
 }
 
 /**

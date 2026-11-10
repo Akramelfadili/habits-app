@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/schema";
 import { rollbackQuietly, runInTransaction } from "@/lib/db/transaction";
 import { useLiveRows } from "@/lib/db/use-live-rows";
+import { present } from "@/utils/indexed";
 import type {
 	Category,
 	CreateHabitInput,
@@ -67,9 +68,10 @@ function rowToPauses(column: string | null): DayRange[] {
 	return (column ?? "")
 		.split(",")
 		.filter(Boolean)
-		.map((range) => {
+		.flatMap((range) => {
 			const [from, to] = range.split("..");
-			return { from, to };
+			// Written by `pausesToColumn` as "from..to"; a malformed piece is dropped, not thrown on.
+			return from && to ? [{ from, to }] : [];
 		});
 }
 
@@ -180,7 +182,7 @@ export async function createHabit(input: CreateHabitInput): Promise<Habit> {
 		.values(habitInsertValues(input, new Date(), await nextSortOrder()))
 		.returning();
 
-	return toHabit(row);
+	return toHabit(present(row, "the habit row"));
 }
 
 export async function updateHabit(
@@ -201,7 +203,7 @@ export async function updateHabit(
 		.where(eq(habits.id, id))
 		.returning();
 
-	return toHabit(row);
+	return toHabit(present(row, "the habit row"));
 }
 
 /**
@@ -308,7 +310,7 @@ export async function setHabitArchived(
 		)
 		.where(eq(habits.id, id))
 		.returning();
-	return toHabit(row);
+	return toHabit(present(row, "the habit row"));
 }
 
 /** Clears the archive flag and stores the habit's full list of past pauses. */
@@ -321,7 +323,7 @@ export async function setHabitRestored(
 		.set({ archivedAt: null, pausedRanges: pausesToColumn(pauses) })
 		.where(eq(habits.id, id))
 		.returning();
-	return toHabit(row);
+	return toHabit(present(row, "the habit row"));
 }
 
 /**

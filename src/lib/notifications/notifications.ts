@@ -123,13 +123,10 @@ export type ParsedIdentifier = {
 /** Reads an identifier made by `notificationIdentifier`; null for anything else (an older format, or not ours). */
 export function parseIdentifier(identifier: string): ParsedIdentifier | null {
 	const match = identifier.match(/^(.+):(daily|day-\d):(\d{4}):([0-9a-z]+)$/);
-	if (!match) return null;
-	return {
-		reminderId: match[1],
-		slot: match[2],
-		time: match[3],
-		generation: match[4],
-	};
+	const [, reminderId, slot, time, generation] = match ?? [];
+	// All four groups are mandatory in the pattern, so one missing means no match.
+	if (!reminderId || !slot || !time || !generation) return null;
+	return { reminderId, slot, time, generation };
 }
 
 /**

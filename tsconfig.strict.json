@@ -17,10 +17,6 @@
 		// Test helpers (jest-only, not shipped).
 		"**/test-support/**",
 		// PENDING (batch 21, removed group by group): production code not yet fixed.
-		"src/modules/habits/services",
-		"src/modules/habits/hooks",
-		"src/modules/habits/repositories",
-		"src/lib",
 		"src/components",
 		"src/modules/habits/components",
 		"src/modules/habits/screens",

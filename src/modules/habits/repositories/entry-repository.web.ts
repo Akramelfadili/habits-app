@@ -70,7 +70,7 @@ export function useLoggedDays(): LoggedDays {
 	const days = new Set(entries.map((entry) => entry.date));
 	return {
 		count: days.size,
-		firstDate: days.size === 0 ? null : [...days].sort()[0],
+		firstDate: days.size === 0 ? null : ([...days].sort()[0] ?? null),
 		loaded: true,
 	};
 }
