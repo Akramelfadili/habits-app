@@ -1,4 +1,4 @@
-.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline
+.PHONY: help start ios android web test test-perf test-slow test-tz test-tooling lint lint-check typecheck check-architecture check-repo-hygiene check-doc-refs secrets clean clean-all deadcode doctor check check-ci e2e visual-check visual-baseline release-check
 
 help: ## Show this list of commands
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -63,6 +63,9 @@ deadcode: ## Report unused files/exports/dependencies with knip (report only; no
 check: lint-check typecheck test test-perf test-tooling check-architecture check-repo-hygiene check-doc-refs ## Everything the pre-push hook runs: Biome (no writes) + tsc + Jest + tooling tests + architecture rules + repo hygiene + doc references
 
 check-ci: check test-slow test-tz ## The CI gate (.github/workflows/check.yml): `make check` plus the slow tests and the time-zone runs
+
+release-check: ## Export the production iOS bundle to a temp folder and fail on dev-only code in it or >10% growth (slow; own CI job; --update-baseline: node scripts/check-release-bundle.mjs --update-baseline)
+	node scripts/check-release-bundle.mjs
 
 e2e: ## Run the Maestro journeys against the web build (setup: docs/how-to/e2e.md)
 	npm run e2e

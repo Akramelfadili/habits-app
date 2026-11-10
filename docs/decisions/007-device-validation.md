@@ -58,8 +58,12 @@ likes. Rejected for control, not capability.
    -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO`, with the simulator's
    architecture only (`arm64`, `ONLY_ACTIVE_ARCH=YES`) to halve the compile.
 3. **The hook is a build-time flag, not `__DEV__`.** The build sets
-   `EXPO_PUBLIC_DEVICE_VALIDATION=1`; Metro inlines it, so in every other build
-   `isDeviceValidationBuild()` is the constant `false`. The hook is the route
+   `EXPO_PUBLIC_DEVICE_VALIDATION=1`; Metro inlines it. A function that reads it
+   is not enough to drop code (a first release export still carried the whole
+   loader), so the screen requires the loader and the launch-file reader inside
+   `process.env.EXPO_PUBLIC_DEVICE_VALIDATION === "1" ? require(…) : null`, which
+   Metro folds: in every other build neither module is in the bundle
+   (`make release-check` proves it). The hook is the route
    `habitsapp://dev-state?route=<web route>&clock=<local time>`, which pins the
    clock, writes the route's `?fixtures=` scenario into SQLite from the *same*
    fixture generators the web repositories use (`dev/device-state.ts`), applies
@@ -67,7 +71,8 @@ likes. Rejected for control, not capability.
    the route redirects to Today and loads nothing.
    `src/lib/device-validation/device-validation.guard.test.ts` fails if the flag
    is set by any config except the simulator workflow, if the loader is
-   reachable except through that screen, or if the screen stops asking the flag
+   reachable except through that screen, if the screen imports them statically or
+   requires them outside that exact inline check, or if it stops asking the flag
    first.
 4. **Caches cannot let a stale native build pass.** The Pods and DerivedData
    cache keys hash the *generated* native project (`ios/Podfile.lock`,

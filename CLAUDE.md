@@ -33,6 +33,7 @@ Personal iOS habit tracker (Expo / React Native / TypeScript), one module: `src/
 - Commands, hooks, visual-check, allowlists, token ratchet: `docs/how-to/dev-tooling.md`.
 - iOS Simulator and device validation: `docs/decisions/007-device-validation.md`, `docs/how-to/device-validation.md`.
 - App variants, backups, recovery screens, set-aside: `docs/decisions/010-app-variants-and-recovery.md`, `docs/how-to/backups-and-recovery.md`.
+- Builds, versions, TestFlight, rollback, device checklist, `make release-check`: `docs/how-to/release.md`.
 - Next fixes: `docs/backlog.md` (open work only; shipped entries are in `docs/archive/backlog-done.md`, the old audit plan in `docs/archive/audit.md`; both never read by default). Status: `docs/README.md`, `CHANGELOG.md`.
 - Deviations: append to `docs/backlog.md`, never drop silently. Reviewers must not re-flag `docs/backlog.md` § "Decided" or § "Deliberate V3 deviations".
 
