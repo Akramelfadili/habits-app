@@ -68,6 +68,20 @@ describe("useLiveRows", () => {
 		expect(result.current).toEqual({ data: [{ habitId: 2 }], loaded: true });
 	});
 
+	it("builds a query given as a function once per deps, not once per render", async () => {
+		const build = jest.fn(() => query);
+		const { rerender } = await renderHook(
+			(week: string) => useLiveRows(() => build(), [week]),
+			{ initialProps: "w1" },
+		);
+		await rerender("w1");
+		await rerender("w1");
+		expect(build).toHaveBeenCalledTimes(1);
+
+		await rerender("w2");
+		expect(build).toHaveBeenCalledTimes(2);
+	});
+
 	it("logs a query error once and throws it to the boundary", async () => {
 		mockResult = { data: [], error: new Error("no such table") };
 		await expect(renderHook(() => useLiveRows(query))).rejects.toThrow(

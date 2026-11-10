@@ -1,5 +1,5 @@
 import { and, asc, eq, sql } from "drizzle-orm";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { db } from "@/lib/db/client";
 import { entries, entryNotes, frozenDays } from "@/lib/db/schema";
 import {
@@ -88,7 +88,7 @@ export function useLoggedDays(): LoggedDays {
 	const { data, loaded } = useLiveRows<{
 		count: number | null;
 		first: string | null;
-	}>(
+	}>(() =>
 		db
 			.select({
 				count: sql<number>`count(distinct ${entries.date})`,
@@ -226,10 +226,11 @@ export async function setHabitQuantityOn(
 
 /** Live-query hook — every habit's day notes (HAB-10). Same "small enough to fetch whole" reasoning as `useAllEntries`. */
 export function useEntryNotes(): EntryNote[] {
-	const { data } = useLiveRows<EntryNoteRow>(
+	const { data } = useLiveRows<EntryNoteRow>(() =>
 		db.select().from(entryNotes).orderBy(asc(entryNotes.date)),
 	);
-	return data.map(rowToEntryNote);
+	// Stable until a row changes (audit B-10): the mapping ran on every render.
+	return useMemo(() => data.map(rowToEntryNote), [data]);
 }
 
 /**

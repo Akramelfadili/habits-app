@@ -45,13 +45,14 @@ export function useFrozenDaysInRange(start: Date, end: Date): FrozenDay[] {
 	const startDate = toDayKey(start);
 	const endDate = toDayKey(end);
 	const { data } = useLiveRows<FrozenDayRow>(
-		db
-			.select()
-			.from(frozenDays)
-			.where(
-				and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
-			)
-			.orderBy(asc(frozenDays.date)),
+		() =>
+			db
+				.select()
+				.from(frozenDays)
+				.where(
+					and(gte(frozenDays.date, startDate), lte(frozenDays.date, endDate)),
+				)
+				.orderBy(asc(frozenDays.date)),
 		// Subscribes once per deps: without them the first range would be read forever.
 		[startDate, endDate],
 	);

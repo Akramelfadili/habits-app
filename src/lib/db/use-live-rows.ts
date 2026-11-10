@@ -17,6 +17,27 @@ type UseLiveRowsOptions = {
 	resetOnDepsChange?: boolean;
 };
 
+function sameDeps(a: DependencyList, b: DependencyList): boolean {
+	return a.length === b.length && a.every((dep, i) => Object.is(dep, b[i]));
+}
+
+/**
+ * Drizzle's `useLiveQuery` only looks at the query again when `deps` change, so
+ * a query given as a function is built once per deps, not once per render
+ * (audit B-09). A query object passed directly is used as it is.
+ */
+function useBuiltQuery(
+	query: LiveQuery | (() => LiveQuery),
+	deps: DependencyList,
+): LiveQuery {
+	const built = useRef<{ deps: DependencyList; query: LiveQuery } | null>(null);
+	if (typeof query !== "function") return query;
+	if (!built.current || !sameDeps(built.current.deps, deps)) {
+		built.current = { deps: [...deps], query: query() };
+	}
+	return built.current.query;
+}
+
 /**
  * The one wrapper over Drizzle's `useLiveQuery` (audit A3-06, A5-04):
  * - `loaded` turns true with the first result and stays true across deps
@@ -28,13 +49,15 @@ type UseLiveRowsOptions = {
  *   without this the screen would sit on `[]` forever.
  */
 export function useLiveRows<Row>(
-	query: LiveQuery,
+	query: LiveQuery | (() => LiveQuery),
 	deps: DependencyList = [],
 	{ resetOnDepsChange = false }: UseLiveRowsOptions = {},
 ): { data: Row[]; loaded: boolean } {
-	const { data, error, updatedAt } = useLiveQuery(query, [...deps]);
+	const live = useBuiltQuery(query, deps);
+	const { data, error, updatedAt } = useLiveQuery(live, deps as unknown[]);
 
-	const key = JSON.stringify(deps);
+	// Only a keyed query reads the key (audit B-09).
+	const key = resetOnDepsChange ? JSON.stringify(deps) : "";
 	const baseline = useRef<{ key: string; updatedAt: Date | undefined }>({
 		key,
 		updatedAt: undefined,
