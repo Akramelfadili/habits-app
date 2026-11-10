@@ -1,0 +1,60 @@
+# Journey: Habits tab → Categories → add a custom category → open a habit's Edit
+# and assign it → Today groups the habit under the new category.
+# Covers HAB-42 (the Categories list and its add sheet), HAB-24 (a habit's one
+# category, picked in the form), HAB-02 (Edit from Detail), HAB-27 (tabs).
+# UNVERIFIED: written without a run (no Maestro session in the authoring
+# environment); selectors are taken from the source strings. Confirm and drop this
+# line at the next simulator pass (docs/how-to/e2e.md § "Status and coverage").
+#
+# Seed (`categories-in-use` fixtures, clock pinned to Thu 1 Oct): the ten
+# built-ins and three custom categories (Music, Language, Garden); Stretch is a
+# daily Fitness habit.
+url: ${APP_URL}/?fixtures=categories-in-use&clock=2026-10-01T09:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+- assertVisible: "Thursday, 1 October"
+
+# H6: Categories is the last row of the Habits tab; its label carries the count.
+- tapOn:
+    id: "Habits"
+- tapOn:
+    id: "Categories, .*"
+- assertVisible: "Custom · 3"
+
+# C4: the add sheet asks for a name only; the icon and colour are picked for you.
+- tapOn:
+    id: "Add category"
+- assertVisible: "New category"
+- assertVisible: "Icon and colour are picked for you from those not in use."
+- tapOn:
+    id: "Name"
+- inputText: "Journaling"
+# The header's Add category and the sheet's button share a label: the sheet's is the second.
+- tapOn:
+    text: "Add category"
+    index: 1
+- assertVisible: "Custom · 4"
+- assertVisible: "Journaling"
+- takeScreenshot: hab-24-42-added
+
+# F1: the new category is one of the form's chips. Stretch opens from Today
+# (the library's rows are swipeable, which the web driver cannot tap).
+- back
+- tapOn:
+    id: "Today"
+- tapOn: "Stretch"
+- tapOn: "Edit"
+- assertVisible: "Edit habit"
+- tapOn: "Journaling"
+- tapOn: "Save changes"
+- assertVisible: "Streak"
+
+# Back on Today the habit sits under its new category.
+- back
+- assertVisible: "Journaling"
+- assertVisible: "Stretch"
+- takeScreenshot: hab-24-42-assigned

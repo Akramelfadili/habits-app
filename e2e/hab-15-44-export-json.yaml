@@ -1,0 +1,48 @@
+# Journey: Habits tab → Settings → Export data → export JSON → the ready card
+# offers Share file → Done closes the sheet.
+# Covers HAB-44 (the Export data sheet, its writing and ready states), HAB-15
+# (the user's data-out path), HAB-27 (Settings behind the Habits gear).
+# UNVERIFIED: written without a run (no Maestro session in the authoring
+# environment); selectors are taken from the source strings. Confirm and drop this
+# line at the next simulator pass (docs/how-to/e2e.md § "Status and coverage").
+# The web build only stands in for the file system (file-export.web.ts), so what
+# this proves is the sheet's flow, not a file on disk or the iOS share sheet:
+# those are the device checklist's (docs/how-to/release.md).
+#
+# Seed (`settings` fixtures, clock pinned to Thu 1 Oct): habits with history, so
+# there is something to export.
+url: ${APP_URL}/?fixtures=settings&clock=2026-10-01T09:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+- assertVisible: "Thursday, 1 October"
+
+# HAB-27 / D3: Settings is behind the gear in the Habits header. The collapsed
+# inline bar carries a second, inert gear: take the header's.
+- tapOn:
+    id: "Habits"
+- tapOn:
+    id: "Settings"
+    index: 1
+
+# EX1: Export data opens the sheet with JSON picked and the line on what each format is for.
+- tapOn: "Export data"
+- assertVisible: "JSON has everything, for backup or another app.*"
+- assertVisible: "Export JSON"
+- takeScreenshot: hab-15-44-choose
+
+# EX2/EX3: it writes, then the ready card offers the file.
+- tapOn: "Export JSON"
+- extendedWaitUntil:
+    visible: "Share file"
+    timeout: 10000
+- assertVisible: "Share opens the iOS share sheet.*"
+- takeScreenshot: hab-15-44-ready
+
+# Done closes the sheet; Settings is still there.
+- tapOn: "Done"
+- assertNotVisible: "Share file"
+- assertVisible: "Export data"

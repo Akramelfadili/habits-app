@@ -1,6 +1,6 @@
 # E2E journeys (Maestro)
 
-Six full user journeys, one YAML file each, named by the feature IDs they cover. They drive Maestro's **web** driver against `expo start --web` with in-memory fixtures and a pinned clock.
+Nine full user journeys (three of them unverified until the next simulator pass, see the doc below), one YAML file each, named by the feature IDs they cover. They drive Maestro's **web** driver against `expo start --web` with in-memory fixtures and a pinned clock.
 
 ```sh
 npm run e2e                                  # every journey

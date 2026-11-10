@@ -1,0 +1,37 @@
+# Journey: Today flags a habit whose streak a missed day put at risk → open it →
+# the streak-at-risk sheet → Use a freeze → the day reads frozen, the streak is kept.
+# Covers HAB-08 (a freeze covers one missed day from the shared monthly pool),
+# HAB-33 (the at-risk row, the sheet and the frozen row), HAB-03 (Today).
+# UNVERIFIED: written without a run (no Maestro session in the authoring
+# environment); selectors are taken from the source strings. Confirm and drop this
+# line at the next simulator pass (docs/how-to/e2e.md § "Status and coverage").
+#
+# Seed (`today-v3-at-risk` fixtures, clock pinned to Fri 23 Oct): Meditate has a
+# 13-day streak ending the day before yesterday; Thu 22 was missed. The pool has
+# 2 freezes left this month, so the sheet offers one.
+url: ${APP_URL}/?fixtures=today-v3-at-risk&clock=2026-10-23T09:00:00
+env:
+  APP_URL: http://localhost:8081
+tags:
+  - journey
+---
+- launchApp
+- assertVisible: "Friday, 23 October"
+
+# T6: the row names the missed day and what is left in the pool.
+- assertVisible: "Meditate"
+- assertVisible: "Missed Thursday · 2 freezes left"
+
+# SR1: opening the habit asks first. The sheet says what a freeze keeps and when
+# the pool comes back.
+- tapOn: "Meditate"
+- assertVisible: "Keep your Meditate streak?"
+- assertVisible: "Resets on 1 November"
+- takeScreenshot: hab-08-33-sheet
+
+# Use a freeze: one is spent, a toast says which day, and the row reads frozen.
+- tapOn: "Use a freeze"
+- assertVisible: "Freeze used for Thu 22.*"
+- assertVisible: "Thu frozen · streak kept at 13"
+- assertNotVisible: "Keep your Meditate streak?"
+- takeScreenshot: hab-08-33-frozen
