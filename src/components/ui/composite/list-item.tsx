@@ -32,6 +32,8 @@ type ListItemProps = {
 	leading?: React.ReactNode;
 	value?: string;
 	trailing?: React.ReactNode;
+	// Wide controls (text buttons) drop under the text at large Dynamic Type; narrow ones (a handle, a tag) stay beside it.
+	trailingBelowOnLargeText?: boolean;
 	embedded?: boolean;
 	dimmed?: boolean;
 	selected?: boolean;
@@ -54,6 +56,7 @@ export function ListItem({
 	leading,
 	value,
 	trailing,
+	trailingBelowOnLargeText = false,
 	embedded = false,
 	dimmed = false,
 	keepLeading = false,
@@ -68,6 +71,7 @@ export function ListItem({
 	const { colors, scheme, elevation, opacity } = useTheme();
 	const titleColor = destructive ? colors.dangerBg : colors.ink;
 	const largeText = useAccessibilityTextSize();
+	const stacked = largeText && trailingBelowOnLargeText && !!trailing;
 
 	const chevron = navigable ? (
 		<SymbolView
@@ -88,6 +92,7 @@ export function ListItem({
 			testID="list-item"
 			style={[
 				styles.row,
+				stacked && styles.rowStacked,
 				embedded ? styles.embedded : { backgroundColor: colors.card },
 				lifted && [
 					styles.lifted,
@@ -116,6 +121,7 @@ export function ListItem({
 				onPress={onPress}
 				style={({ pressed }) => [
 					styles.pressable,
+					stacked && styles.pressableStacked,
 					!embedded && (largeText ? styles.paddedLarge : styles.padded),
 					trailing ? styles.paddedBeforeTrailing : null,
 					pressed && onPress && { backgroundColor: colors.inner },
@@ -183,7 +189,15 @@ export function ListItem({
 				{trailing ? null : chevron}
 			</Pressable>
 			{trailing ? (
-				<View style={[styles.trailing, !embedded && styles.trailingPadded]}>
+				<View
+					testID="list-item-trailing"
+					style={[
+						styles.trailing,
+						stacked
+							? styles.trailingStacked
+							: !embedded && styles.trailingPadded,
+					]}
+				>
 					{trailing}
 					{chevron}
 				</View>
@@ -204,6 +218,21 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		borderRadius: radius.m,
+	},
+	rowStacked: {
+		flexDirection: "column",
+		alignItems: "stretch",
+	},
+	pressableStacked: {
+		// `flex: 0` means a zero basis on web, which collapses the text area.
+		flexGrow: 0,
+		flexShrink: 0,
+		flexBasis: "auto",
+	},
+	trailingStacked: {
+		flexWrap: "wrap",
+		paddingHorizontal: space[400],
+		paddingBottom: space[400],
 	},
 	lifted: {
 		zIndex: 1,

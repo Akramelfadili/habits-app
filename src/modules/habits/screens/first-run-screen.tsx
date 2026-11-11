@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/primitives/button";
 import { IconBadge } from "@/components/ui/primitives/icon-badge";
 import { space, textStyles } from "@/theme/theme";
 import { useTheme } from "@/theme/use-theme";
+import { singleLine } from "@/utils/single-line";
 import { useInitialFocus } from "@/utils/use-initial-focus";
 import { leaveFirstRun } from "../first-run-navigation";
 import { useFirstRunActions } from "../hooks/use-first-run-actions";
@@ -46,7 +47,7 @@ export function FirstRunScreen() {
 					<Text
 						ref={titleRef}
 						accessibilityRole="header"
-						accessibilityLabel={firstRunCopy.welcome.title.replace("\n", " ")}
+						accessibilityLabel={singleLine(firstRunCopy.welcome.title)}
 						style={[styles.title, { color: colors.ink }]}
 					>
 						{firstRunCopy.welcome.title}

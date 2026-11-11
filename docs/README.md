@@ -71,10 +71,15 @@ A section runs to the next `^## `. Ticket → stage (used by `/implement-feature
 
 | Stage | Status |
 |---|---|
-| V1 (HAB-01–13), V2 (HAB-14–25), V3 (HAB-26–50, batches V3-0a…V3-6) | Shipped; the owner's UI fix batch from device testing is done |
-| Hardening (audit batches B0–B13, archived in `archive/audit.md`) | Cleanups, docs and test hygiene done; what is left is the open backlog (`backlog.md`: reliability, UX and accessibility, polish, tidy-ups, tooling) |
-| Device validation (iOS Simulator run in CI, ADR 007) | Built, merged, run on GitHub Actions |
-| Crash/error reporting, versioning | Not started |
+| V1 (HAB-01–13), V2 (HAB-14–25), V3 (HAB-26–50) | Shipped; the owner's UI fix batch from device testing is done |
+| Audit 2026-11 (82 findings) | Closed in batches 12–22 and the final pass, except the items below. Per-finding table: `archive/audits-2026-11/STATUS.md` |
+| Device validation (iOS Simulator run in CI, ADR 007) | Built and run on a branch. No run on master yet: the freeze, custom-category and export flows are unverified (simulator run pending) |
+
+**Open.** Delete all data (C-04); data-at-rest protection (D-07); OTA and crash-reporter decisions (F-04, F-09); icon artwork (F-05); the module recipe, FlatList and file-size cleanups (B-11, B-12, A-05); two parked TypeScript flags; mutation testing (parked); V4 sync findings B-01..03, B-05, B-06 (parked, ADR 009). The rest of the open work is in `backlog.md`.
+
+**Needs you.** GitHub settings: secret scanning and push protection, Dependabot alerts, private vulnerability reporting, a master ruleset requiring `check` and `secret-scan` (D-01, D-03, D-04, D-06). Apple account: `eas login`, `eas init`, the App ID, the first build and the privacy-manifest check. Run `ios-simulator.yml` on master.
+
+**Needs a device.** The device checklist in `how-to/release.md` (items 1–11): backups, newer-data screen, set-aside, share sheet, lock-screen titles, VoiceOver and Dynamic Type, Hermes timings, haptics.
 
 ## Coming back to this project
 
