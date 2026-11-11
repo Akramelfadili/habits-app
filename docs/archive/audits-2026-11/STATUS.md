@@ -92,3 +92,5 @@ Simulator run: pending. No `ios-simulator` run exists for master yet (the last t
 | I-10 | done | #63 (letterSpacing and icon-size ratchet patterns, motion tokens) |
 
 Found after the audit: the Categories list at large Dynamic Type drew Rename and Delete over the name and count (AX3). Fixed in `chore/final-pass`: the actions drop under the text.
+
+Found by CodeQL after the audit: alert 1, `js/incomplete-sanitization` (high), in the First Run screen, which built its heading's screen-reader label with `replace("\n", " ")`. Fixed in `chore/final-pass`: a global `singleLine` helper (`src/utils/single-line.ts`) with a test for several line breaks.
