@@ -79,6 +79,7 @@ export function CategoryRow({
 				subtitle={meta}
 				leading={<IconBadge symbol={symbol} accent={accent} />}
 				trailing={trailing}
+				trailingBelowOnLargeText={!handle && !tag && !!actions}
 				lifted={lifted}
 				// A reorder row gets the move actions on the row itself; rows with their own buttons read as one line.
 				accessibilityLabel={[name, meta, tag?.toLowerCase()]

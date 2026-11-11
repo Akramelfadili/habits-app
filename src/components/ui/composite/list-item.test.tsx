@@ -256,6 +256,45 @@ describe("ListItem", () => {
 		});
 	});
 
+	it("puts wide trailing controls under the text at large text so they cannot overlap it", async () => {
+		mockAccessibilityText = true;
+		await render(
+			<ListItem
+				title="Music"
+				trailing={<Text>Rename</Text>}
+				trailingBelowOnLargeText
+			/>,
+		);
+		expect(
+			StyleSheet.flatten(screen.getByTestId("list-item").props.style)
+				.flexDirection,
+		).toBe("column");
+		expect(
+			StyleSheet.flatten(screen.getByTestId("list-item-trailing").props.style)
+				.flexWrap,
+		).toBe("wrap");
+	});
+
+	it("keeps trailing controls beside the text at normal size, or when not marked wide", async () => {
+		await render(
+			<ListItem
+				title="Music"
+				trailing={<Text>Rename</Text>}
+				trailingBelowOnLargeText
+			/>,
+		);
+		expect(
+			StyleSheet.flatten(screen.getByTestId("list-item").props.style)
+				.flexDirection,
+		).toBe("row");
+		mockAccessibilityText = true;
+		await render(<ListItem title="Fit" trailing={<Text>Tag</Text>} />);
+		expect(
+			StyleSheet.flatten(screen.getByTestId("list-item").props.style)
+				.flexDirection,
+		).toBe("row");
+	});
+
 	it("selected makes it a radio: announced as picked or not, with a check only on the picked one", async () => {
 		const { rerender } = await render(
 			<ListItem title="Dark" selected={false} onPress={jest.fn()} />,
