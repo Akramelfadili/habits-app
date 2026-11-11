@@ -224,7 +224,10 @@ const styles = StyleSheet.create({
 		alignItems: "stretch",
 	},
 	pressableStacked: {
-		flex: 0,
+		// `flex: 0` means a zero basis on web, which collapses the text area.
+		flexGrow: 0,
+		flexShrink: 0,
+		flexBasis: "auto",
 	},
 	trailingStacked: {
 		flexWrap: "wrap",

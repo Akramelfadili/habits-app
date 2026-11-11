@@ -261,6 +261,7 @@ describe("ListItem", () => {
 		await render(
 			<ListItem
 				title="Music"
+				onPress={() => {}}
 				trailing={<Text>Rename</Text>}
 				trailingBelowOnLargeText
 			/>,
@@ -273,6 +274,11 @@ describe("ListItem", () => {
 			StyleSheet.flatten(screen.getByTestId("list-item-trailing").props.style)
 				.flexWrap,
 		).toBe("wrap");
+		const pressable = StyleSheet.flatten(
+			screen.getByRole("button").props.style,
+		);
+		expect(pressable.flexBasis).toBe("auto");
+		expect(pressable.flexGrow).toBe(0);
 	});
 
 	it("keeps trailing controls beside the text at normal size, or when not marked wide", async () => {
