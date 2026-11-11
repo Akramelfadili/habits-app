@@ -119,6 +119,10 @@ One test in another zone: `withTimeZone(zone, fn)` (also async), or `inTimeZoneE
 
 Day-by-day walks step with `nextDay` (`src/utils/day-key.ts`), not bare `addDays`: where DST starts at midnight (Sao Paulo until 2019, Santiago, Havana) that day begins at 01:00 and `addDays` would carry the 01:00 forward. Week bounds come from `src/utils/week-window.ts`.
 
+## Dependabot (`.github/dependabot.yml`)
+
+Version updates run monthly, grouped, with at most 2 open PRs per ecosystem. Expo, React and React Native packages (`expo`, `expo-*`, `@expo/*`, `react`, `react-dom`, `react-native`, `react-native-*`) are ignored, and so is every semver-major update. Expo pins each of those packages to the version its SDK was tested with, so a lone bump breaks the alignment; move them with `npx expo install --fix` during an SDK upgrade. Security updates are switched on in the repo settings, not in this file.
+
 ## Testing
 
 What a new test should reach for. The test-naming and time-zone rules are in the two subsections above ("Test naming", "Time zones in tests").
